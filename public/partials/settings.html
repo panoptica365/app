@@ -1,0 +1,297 @@
+<!-- ═══ SETTINGS ═══ -->
+<div class="panel-header" style="margin-bottom:16px;">
+  <div class="panel-elbow" style="background: var(--p-secondary-muted);"></div>
+  <span class="panel-title" id="settings-title" data-i18n="settings.title">Settings</span>
+</div>
+
+<!-- Card Grid -->
+<div class="settings-card-grid" id="settings-cards">
+
+  <!-- SMTP Settings Card -->
+  <div class="settings-card" id="card-smtp" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="mail"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_smtp_title">SMTP Settings</div>
+    <div class="settings-card-desc" data-i18n="settings.card_smtp_desc">Outbound email server configuration for alerts and summaries.</div>
+  </div>
+
+  <!-- Notification Settings Card -->
+  <div class="settings-card" id="card-notifications" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="bell"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_notif_title">Notification Settings</div>
+    <div class="settings-card-desc" data-i18n="settings.card_notif_desc">PSA ticket routing, attribution, and personal email recipients.</div>
+  </div>
+
+  <!-- Anthropic API Key Card -->
+  <div class="settings-card" id="card-anthropic" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="key-round"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_anthropic_title">Anthropic API Key</div>
+    <div class="settings-card-desc" data-i18n="settings.card_anthropic_desc">Claude API key used for daily summaries and AI analysis. Rotate here when your key changes.</div>
+  </div>
+
+  <!-- Daily Summary Card -->
+  <div class="settings-card" id="card-briefing" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="sunrise"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_briefing_title">Daily Summary</div>
+    <div class="settings-card-desc" data-i18n="settings.card_briefing_desc">Choose the minimum alert severity included in the 6 AM email. Everything still appears in the dashboard.</div>
+  </div>
+
+  <!-- Access Control Card -->
+  <div class="settings-card" id="card-access" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="shield-check"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_access_title">Access Control</div>
+    <div class="settings-card-desc" data-i18n="settings.card_access_desc">Entra ID groups that gate Admin, Member, and Viewer access to Panoptica.</div>
+  </div>
+
+</div>
+
+<!-- ─── SMTP Sub-View ─── -->
+<div id="settings-smtp-view" style="display:none;">
+  <button class="btn-secondary" id="smtp-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.smtp_section_config">SMTP Configuration</div>
+
+    <div class="form-row">
+      <div class="form-group" style="flex:3;">
+        <label data-i18n="settings.smtp_label_host">SMTP Host</label>
+        <input type="text" id="smtp-host" placeholder="mail.smtp2go.com">
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label data-i18n="settings.smtp_label_port">Port</label>
+        <input type="number" id="smtp-port" placeholder="2525" min="1" max="65535">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.smtp_label_username">Username</label>
+      <input type="text" id="smtp-user" placeholder="SMTP username" data-i18n-attr-placeholder="settings.smtp_placeholder_username">
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.smtp_label_password">Password</label>
+      <div style="position:relative;">
+        <input type="password" id="smtp-pass" placeholder="••••••••">
+        <button type="button" id="smtp-pass-toggle"
+          style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                 background:none; border:none; color:var(--p-text-muted); cursor:pointer;
+                 font-size:0.8rem; padding:4px 8px;" data-i18n="settings.btn_show">
+          Show
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.smtp_label_from">From Address</label>
+      <input type="email" id="smtp-from" placeholder="panoptica@example.com">
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="btn-primary" id="smtp-save" data-i18n="settings.smtp_save_btn">Save SMTP Settings</button>
+    </div>
+
+    <hr style="border:none; border-top:1px solid var(--p-border-subtle); margin:24px 0;">
+
+    <div class="settings-section-title" data-i18n="settings.smtp_section_test">Test Connection</div>
+    <div class="form-group">
+      <label data-i18n="settings.smtp_label_test_to">Send test email to</label>
+      <input type="email" id="smtp-test-to" placeholder="recipient@example.com">
+    </div>
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="btn-secondary" id="smtp-test" data-i18n="settings.smtp_test_btn">Send Test Email</button>
+      <span id="smtp-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Notification Sub-View ─── -->
+<div id="settings-notif-view" style="display:none;">
+  <button class="btn-secondary" id="notif-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+
+    <!-- PSA Section -->
+    <div class="settings-section-title" data-i18n="settings.notif_section_psa">PSA Integration</div>
+
+    <div class="form-group">
+      <label data-i18n="settings.notif_label_psa_email">PSA Email Address</label>
+      <input type="email" id="notif-psa-email" placeholder="support@example.com">
+      <div class="form-hint" data-i18n="settings.notif_hint_psa_email">Alert emails routed to "support" or "both" will be sent to this address.</div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.notif_label_attribution">Attribution String</label>
+      <input type="text" id="notif-psa-attribution" placeholder="//${PSA_NAME}//">
+      <div class="form-hint" data-i18n-html="settings.notif_hint_attribution_html">Inserted as the first line of the email body. Use <code>${PSA_NAME}</code> as a placeholder for the tenant's PSA name.</div>
+    </div>
+
+    <hr style="border:none; border-top:1px solid var(--p-border-subtle); margin:24px 0;">
+
+    <!-- Email Section -->
+    <div class="settings-section-title" data-i18n="settings.notif_section_email">Email Notifications</div>
+
+    <div class="form-group">
+      <label data-i18n="settings.notif_label_recipients">Recipient Email Addresses</label>
+      <textarea id="notif-emails" rows="4" placeholder="user1@example.com, user2@example.com"
+        style="resize:vertical; min-height:60px;"></textarea>
+      <div class="form-hint" data-i18n="settings.notif_hint_recipients">Comma-separated. Alert emails routed to "personal" or "both" will be sent to these addresses. Also used for the daily summary.</div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="btn-primary" id="notif-save" data-i18n="settings.notif_save_btn">Save Notification Settings</button>
+      <span id="notif-status" style="align-self:center; font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Anthropic API Key Sub-View ─── -->
+<div id="settings-anthropic-view" style="display:none;">
+  <button class="btn-secondary" id="anthropic-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.anthropic_section_title">Claude API Key</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n-html="settings.anthropic_rotation_hint_html">
+      The Anthropic API key is used by the daily summary, alert analysis, and any other AI-assisted feature.
+      The key is stored in the server's <code>.env</code> file. For rotation: paste the new key, click <b>Test</b> to verify,
+      then <b>Save</b>. The running process picks up the new key immediately — no restart required.
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.anthropic_label_current">Current Key</label>
+      <input type="text" id="anthropic-current" readonly
+        style="font-family:var(--font-mono); letter-spacing:0.02em; background:var(--p-surface-sunken); color:var(--p-text-muted);"
+        placeholder="(no key set)" data-i18n-attr-placeholder="settings.anthropic_placeholder_current">
+      <div class="form-hint" data-i18n="settings.anthropic_hint_current">Only the prefix and last 4 characters are shown. Full key never leaves the server.</div>
+    </div>
+
+    <div class="form-group">
+      <label data-i18n="settings.anthropic_label_new">New Key</label>
+      <div style="position:relative;">
+        <input type="password" id="anthropic-new" placeholder="sk-ant-api03-..." autocomplete="off"
+          style="font-family:var(--font-mono); padding-right:72px;">
+        <button type="button" id="anthropic-reveal"
+          style="position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                 background:none; border:none; color:var(--p-text-muted); cursor:pointer;
+                 font-size:0.8rem; padding:4px 8px;" data-i18n="settings.btn_show">
+          Show
+        </button>
+      </div>
+      <div class="form-hint" data-i18n-html="settings.anthropic_paste_hint_html">Paste the new key. Use <b>Test</b> before <b>Save</b> to catch bad pastes.</div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+      <button class="btn-secondary" id="anthropic-test" data-i18n="settings.anthropic_test_btn">Test Key</button>
+      <button class="btn-primary" id="anthropic-save" data-i18n="settings.anthropic_save_btn">Save</button>
+      <span id="anthropic-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Daily Summary Sub-View ─── -->
+<div id="settings-briefing-view" style="display:none;">
+  <button class="btn-secondary" id="briefing-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.briefing_section_title">Daily Summary Email</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.briefing_intro">
+      Choose the minimum alert severity included in the 6 AM email. Lower-severity alerts and alerts auto-resolved by exemption rules are still visible in the dashboard — they're simply omitted from the email body and counted in the footer instead.
+    </div>
+
+    <div class="form-group">
+      <div class="form-hint" style="margin-bottom:6px;" data-i18n="settings.briefing_hint_severity">Alerts below this severity are excluded from the daily email. Set higher to reduce noise as your tenant count grows.</div>
+      <label data-i18n="settings.briefing_label_severity">Minimum severity for the daily summary</label>
+      <select id="briefing-min-severity" style="max-width:320px;">
+        <option value="info"   data-i18n="settings.briefing_opt_info">Info — include everything (default)</option>
+        <option value="low"    data-i18n="settings.briefing_opt_low">Low and above</option>
+        <option value="medium" data-i18n="settings.briefing_opt_medium">Medium and above</option>
+        <option value="high"   data-i18n="settings.briefing_opt_high">High and above</option>
+        <option value="severe" data-i18n="settings.briefing_opt_severe">Severe only</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+      <button class="btn-primary" id="briefing-save" data-i18n="settings.briefing_save_btn">Save Daily Summary Settings</button>
+      <span id="briefing-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Access Control Sub-View ─── -->
+<div id="settings-access-view" style="display:none;">
+  <button class="btn-secondary" id="access-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.access_section_title">Entra ID Group-Based Access Control</div>
+
+    <!--
+      A3 enforced — May 9, 2026. The "Not yet enforced" yellow banner was
+      removed when route-level requireAdmin / requireMemberOrAdmin middleware
+      was wired across every mutate endpoint. Every denial writes one row
+      to msp_audit_events with category 'access_denied'.
+    -->
+    <div class="access-notice" style="
+      margin:0 0 20px 0;
+      padding:12px 14px;
+      background: rgba(76, 175, 119, 0.08);
+      border: 1px solid rgba(76, 175, 119, 0.35);
+      border-left: 3px solid var(--p-ok, #4caf77);
+      border-radius: 4px;
+      color: var(--p-text);
+      font-size: 0.85rem;
+      display:flex; gap:10px; align-items:flex-start;">
+      <span style="color:var(--p-ok, #4caf77); display:inline-flex; align-items:center; margin-top:1px;">
+        <i data-lucide="shield-check"></i>
+      </span>
+      <div data-i18n="settings.access_enforced_html" data-i18n-html="true">
+        <b>Enforced.</b> Role-based gating is live across every mutate endpoint. Admin manages templates, settings, lifecycle, and audit log. Operator deploys templates, applies security settings, accepts drift, and clears alerts. Viewer is read-only. Every 403 is logged to the MSP audit log.
+      </div>
+    </div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.access_form_hint">
+      Paste the Entra ID group Object ID for each role. Panoptica365 resolves the display name via Microsoft Graph
+      when you move focus off the field. Groups live in your own Entra tenant.
+    </div>
+
+    <!-- Admins -->
+    <div class="access-row">
+      <label><span data-i18n="settings.access_admins_label">Admins</span> <span class="access-sub" data-i18n="settings.access_admins_sub">Full access — manage tenants, settings, alerts, policies.</span></label>
+      <div class="access-input-wrap">
+        <input type="text" id="access-admin-id" class="access-input" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off">
+        <button type="button" class="access-verify-btn" data-field="admin" title="Verify group" data-i18n-attr-title="settings.access_verify_title">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+      <div class="access-result" id="access-admin-result"></div>
+    </div>
+
+    <!-- Members -->
+    <div class="access-row">
+      <label><span data-i18n="settings.access_members_label">Members</span> <span class="access-sub" data-i18n="settings.access_members_sub">Clear alerts, accept drift. Cannot change settings or onboard tenants.</span></label>
+      <div class="access-input-wrap">
+        <input type="text" id="access-member-id" class="access-input" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off">
+        <button type="button" class="access-verify-btn" data-field="member" title="Verify group" data-i18n-attr-title="settings.access_verify_title">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+      <div class="access-result" id="access-member-result"></div>
+    </div>
+
+    <!-- Viewers -->
+    <div class="access-row">
+      <label><span data-i18n="settings.access_viewers_label">Viewers</span> <span class="access-sub" data-i18n="settings.access_viewers_sub">Read-only. See everything, change nothing.</span></label>
+      <div class="access-input-wrap">
+        <input type="text" id="access-viewer-id" class="access-input" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off">
+        <button type="button" class="access-verify-btn" data-field="viewer" title="Verify group" data-i18n-attr-title="settings.access_verify_title">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+      </div>
+      <div class="access-result" id="access-viewer-result"></div>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+      <button class="btn-primary" id="access-save" data-i18n="settings.access_save_btn">Save Group IDs</button>
+      <span id="access-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>

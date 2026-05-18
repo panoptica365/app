@@ -1,0 +1,145 @@
+<!-- ═══ DAILY ACTIVITY ═══ -->
+<!--
+  Phase 8 (2026-04-09) — Ambient telemetry dashboard.
+  Two donut charts visualize per-tenant activity for events that were previously
+  noisy volume alerts:
+    • Login Failures   — tenant-wide failed sign-in counts
+    • CA Blocks        — tenant-wide Conditional Access blocks
+  Each segment's SIZE is today's raw count for that tenant; its COLOR is today's
+  deviation from the tenant's 7-day rolling average (green → yellow → orange → red).
+  Additional donuts can be added by creating a new alert_policies row flagged with
+  track_daily_telemetry + daily_activity_widget and a corresponding panel below.
+-->
+
+<div class="dashboard-top-row">
+
+  <!-- ─── Login Failures Donut ─── -->
+  <div class="panel dashboard-top-left" id="daily-activity-login-failures">
+    <div class="panel-header">
+      <div class="panel-elbow" style="background: var(--p-highlight);"></div>
+      <span class="panel-title" data-i18n="daily_activity.title_login_failures">Login Failures — Today</span>
+      <span class="label" id="login-failures-subtitle" style="margin-left:auto;"></span>
+    </div>
+    <div class="daily-activity-body">
+      <div class="donut-wrap">
+        <canvas id="login-failures-donut" width="240" height="240"></canvas>
+        <div class="donut-center">
+          <div class="donut-center-value" id="login-failures-total">—</div>
+          <div class="donut-center-label" data-i18n="daily_activity.events_today">events today</div>
+        </div>
+      </div>
+      <div class="donut-legend" id="login-failures-legend"></div>
+    </div>
+  </div>
+
+  <!-- ─── CA Blocks Donut ─── -->
+  <div class="panel dashboard-top-right" id="daily-activity-ca-blocks">
+    <div class="panel-header">
+      <div class="panel-elbow" style="background: var(--p-warm);"></div>
+      <span class="panel-title" data-i18n="daily_activity.title_ca_blocks">CA Blocks — Today</span>
+      <span class="label" id="ca-blocks-subtitle" style="margin-left:auto;"></span>
+    </div>
+    <div class="daily-activity-body">
+      <div class="donut-wrap">
+        <canvas id="ca-blocks-donut" width="240" height="240"></canvas>
+        <div class="donut-center">
+          <div class="donut-center-value" id="ca-blocks-total">—</div>
+          <div class="donut-center-label" data-i18n="daily_activity.events_today">events today</div>
+        </div>
+      </div>
+      <div class="donut-legend" id="ca-blocks-legend"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ EVENT DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="da-event-modal-overlay" style="display:none;">
+  <div class="modal" style="width:900px; max-width:96vw; max-height:92vh;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" id="da-modal-title" data-i18n="daily_activity.modal_title_events">Events</span>
+      <button class="mh-close" id="da-modal-close-btn" data-i18n="modals.close">Close</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- AI Summary -->
+      <div class="da-ai-summary" id="da-ai-summary" style="display:none;">
+        <div class="da-ai-label" data-i18n="daily_activity.ai_assessment_label">AI Assessment</div>
+        <div class="da-ai-text" id="da-ai-text"></div>
+      </div>
+
+      <!-- Event table -->
+      <div class="da-event-table-wrap">
+        <table class="da-event-table" id="da-event-table">
+          <thead>
+            <tr>
+              <th data-i18n="daily_activity.col_time">Time</th>
+              <th data-i18n="daily_activity.col_user">User</th>
+              <th data-i18n="daily_activity.col_application">Application</th>
+              <th data-i18n="daily_activity.col_ip_address">IP Address</th>
+              <th data-i18n="daily_activity.col_location">Location</th>
+              <th data-i18n="daily_activity.col_error">Error</th>
+              <th data-i18n="daily_activity.col_risk">Risk</th>
+            </tr>
+          </thead>
+          <tbody id="da-event-tbody"></tbody>
+        </table>
+        <div class="da-event-empty" id="da-event-empty" style="display:none;" data-i18n="daily_activity.no_events">No events recorded for today.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EVENT DETAIL SLIDE-OUT ═══ -->
+<div class="da-slideout-overlay" id="da-slideout-overlay" style="display:none;">
+  <div class="da-slideout-panel" id="da-slideout-panel">
+    <div class="da-slideout-header">
+      <span class="da-slideout-title" id="da-slideout-title" data-i18n="daily_activity.slideout_title">Event Details</span>
+      <button class="btn btn-secondary btn-sm" id="da-slideout-close-btn" data-i18n="modals.close">Close</button>
+    </div>
+    <div class="da-slideout-body" id="da-slideout-body"></div>
+  </div>
+</div>
+
+<!-- ─── Color legend / explanation ─── -->
+<div class="panel" id="daily-activity-color-legend-panel">
+  <div class="panel-header">
+    <div class="panel-elbow" style="background: var(--p-secondary-muted);"></div>
+    <span class="panel-title" data-i18n="daily_activity.legend_panel_title">How to read this</span>
+    <span class="label" id="daily-activity-generated-at" style="margin-left:auto;"></span>
+  </div>
+  <!-- Color legend — color-chip-label spans use data-i18n-html so the translated
+       text can keep its <strong> color names. Intro paragraph + footnote use
+       data-i18n-html / data-i18n respectively (intro has embedded <strong>,
+       footnote is plain text). -->
+  <div class="daily-activity-legend-body">
+    <p data-i18n-html="daily_activity.legend_intro_html">
+      Each segment represents one tenant. Segment <strong>size</strong> is that tenant's raw event count for today.
+      Segment <strong>color</strong> is today's count compared to the tenant's own 7-day rolling average:
+    </p>
+    <div class="color-legend-row">
+      <span class="color-chip" style="background:#33CC66;"></span>
+      <span class="color-chip-label" data-i18n-html="daily_activity.legend_green_html"><strong>Green</strong> — at or below ~50% above average (normal)</span>
+    </div>
+    <div class="color-legend-row">
+      <span class="color-chip" style="background:#FFCC33;"></span>
+      <span class="color-chip-label" data-i18n-html="daily_activity.legend_yellow_html"><strong>Yellow</strong> — 50% to 200% above average (elevated)</span>
+    </div>
+    <div class="color-legend-row">
+      <span class="color-chip" style="background:#FF9933;"></span>
+      <span class="color-chip-label" data-i18n-html="daily_activity.legend_orange_html"><strong>Orange</strong> — 200% to 500% above average (spike)</span>
+    </div>
+    <div class="color-legend-row">
+      <span class="color-chip" style="background:#CC4444;"></span>
+      <span class="color-chip-label" data-i18n-html="daily_activity.legend_red_html"><strong>Red</strong> — more than 500% above average (anomaly)</span>
+    </div>
+    <div class="color-legend-row">
+      <span class="color-chip" style="background:#888888;"></span>
+      <span class="color-chip-label" data-i18n-html="daily_activity.legend_gray_html"><strong>Gray</strong> — insufficient baseline (<1 day of history)</span>
+    </div>
+    <p class="color-legend-footnote" data-i18n="daily_activity.legend_footnote">
+      Baselines build up over 7 days. Tenants with a lot of normal activity can still look green even if they dominate the donut; check the tooltip for the actual percentage deviation.
+    </p>
+  </div>
+</div>

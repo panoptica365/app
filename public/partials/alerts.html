@@ -1,0 +1,46 @@
+<!-- ═══ ALERT DASHBOARD (Phase 3) ═══ -->
+<div class="panel-header" style="margin-bottom:0;">
+  <div class="panel-elbow" style="background: var(--p-highlight);"></div>
+  <span class="panel-title" data-i18n="alerts.title">Alert Dashboard</span>
+</div>
+
+<!-- Filter Bar (rendered by /js/shared/alert-filter-bar.js) -->
+<div id="alert-filter-bar-container"></div>
+
+<!-- Bulk Action Bar (hidden until selection) -->
+<div class="alert-bulk-bar" id="alert-bulk-bar" style="display:none;">
+  <!-- "0 selected" is overwritten by JS on every selection change — Phase 4 will move that text to t() -->
+  <span id="alert-bulk-count">0 selected</span>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="investigating" data-i18n="alerts.mark_investigating">Mark Investigating</button>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="resolved" data-i18n="alerts.mark_resolved">Mark Resolved</button>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="false_positive" data-i18n="alerts.mark_false_positive">Mark False Positive</button>
+  <span id="alert-bulk-all-link" style="display:none;"></span>
+</div>
+
+<!-- Alert Table -->
+<div class="alert-table-wrap" id="alert-table-wrap">
+  <table class="alert-table" id="alert-table">
+    <thead>
+      <tr>
+        <th class="alert-th-check"><input type="checkbox" id="alert-check-all"></th>
+        <th data-i18n="alerts.severity">Severity</th>
+        <th data-i18n="alerts.tenant">Tenant</th>
+        <th data-i18n="alerts.col_alert">Alert</th>
+        <th data-i18n="alerts.col_category">Category</th>
+        <th data-i18n="alerts.col_time">Time</th>
+        <th data-i18n="alerts.col_recurrence">Recurrence</th>
+        <th data-i18n="alerts.status">Status</th>
+      </tr>
+    </thead>
+    <tbody id="alert-tbody"></tbody>
+  </table>
+  <div id="alert-no-data" class="td-no-data" style="display:none;" data-i18n="alerts.no_data">No alerts found.</div>
+</div>
+
+<!-- Pagination -->
+<div class="alert-pagination" id="alert-pagination"></div>
+
+<!--
+  Slide-out detail panel lives in index.html and is shared across pages.
+  See /js/shared/alert-slideout.js (Panoptica.AlertSlideout).
+-->

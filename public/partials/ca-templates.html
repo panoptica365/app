@@ -1,0 +1,123 @@
+<!-- ═══ CONDITIONAL ACCESS TEMPLATES ═══ -->
+<div class="panel-header" style="margin-bottom:16px;">
+  <div class="panel-elbow" style="background: var(--p-warm);"></div>
+  <span class="panel-title" data-i18n="ca_templates.title">Conditional Access — Policy Templates</span>
+</div>
+
+<!-- Action Bar -->
+<div class="ca-action-bar" style="display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
+  <button class="btn-primary" id="ca-import-btn" data-role-required="admin" data-i18n="ca_templates.import_btn">+ Import Template</button>
+  <button class="btn-secondary" id="ca-export-btn" data-role-required="admin" data-i18n="ca_templates.export_btn">Export from Tenant</button>
+  <span class="ca-count" id="ca-template-count" style="color:var(--p-text-muted); font-size:0.85rem;"></span>
+</div>
+
+<!-- Template Cards -->
+<div id="ca-template-list" class="ca-template-grid">
+  <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="ca_templates.loading">Loading templates...</span></div>
+</div>
+
+<!-- ═══ EXPORT MODAL ═══ -->
+<div class="modal-overlay" id="ca-export-overlay" style="display:none;">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="ca_templates.export_modal_title">Export CA Policies</span>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--p-text-muted); font-size:0.85rem; margin:0 0 12px 0;" data-i18n="ca_templates.export_intro">
+        Select a tenant to export all Conditional Access policies. You'll get a ZIP file with one JSON per policy.
+        Pick the one you want to templatize and paste it into Import Template.
+      </p>
+      <div class="form-group">
+        <label data-i18n="ca_templates.label_source_tenant">Source Tenant</label>
+        <select id="ca-export-tenant" class="form-control">
+          <option value="" data-i18n="ca_templates.option_select_tenant">Select a tenant...</option>
+        </select>
+      </div>
+      <div id="ca-export-progress" style="display:none;">
+        <div class="report-gen-stage">
+          <span class="stage-indicator pending" id="ca-export-indicator"></span>
+          <span class="stage-label" id="ca-export-status" data-i18n="ca_templates.fetching_policies">Fetching policies...</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px 20px; border-top:1px solid var(--p-border);">
+      <button class="btn-secondary" id="ca-export-cancel-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="ca-export-start-btn" data-role-required="admin" data-i18n="ca_templates.export_policies_btn">Export Policies</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="modal-overlay" id="ca-import-overlay" style="display:none;">
+  <div class="modal" style="width:780px; max-width:92vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="ca_templates.import_modal_title">Import CA Policy Template</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label data-i18n="ca_templates.label_template_name">Template Name</label>
+        <input type="text" id="ca-import-name" class="form-control" placeholder="e.g. Require MFA for All Users" data-i18n-attr-placeholder="ca_templates.placeholder_template_name">
+      </div>
+      <div class="form-group">
+        <label data-i18n="ca_templates.label_description">Description (optional)</label>
+        <input type="text" id="ca-import-desc" class="form-control" placeholder="Brief description of this policy template" data-i18n-attr-placeholder="ca_templates.placeholder_description">
+      </div>
+      <div class="form-group">
+        <label><span data-i18n="ca_templates.label_policy_json">Policy JSON</span> <span style="color:var(--p-text-muted); font-size:0.8rem;" data-i18n="ca_templates.policy_json_hint">(paste the Entra CA policy export)</span></label>
+        <textarea id="ca-import-json" class="form-control" rows="10" style="font-family:monospace; font-size:0.8rem; background:var(--p-surface-sunken); color:var(--p-text-bright); border:1px solid var(--p-border-subtle);" placeholder='Paste your CA policy JSON here...' data-i18n-attr-placeholder="ca_templates.placeholder_policy_json"></textarea>
+      </div>
+      <div class="form-group">
+        <label><span data-i18n="ca_templates.label_fields_to_monitor">Fields to Monitor</span> <span style="color:var(--p-text-muted); font-size:0.8rem;" data-i18n="ca_templates.fields_to_monitor_hint">(select which fields to watch for drift)</span></label>
+        <div id="ca-field-checkboxes" class="ca-field-checks" style="display:grid; grid-template-columns:1fr 1fr; gap:6px 16px;">
+          <label class="ca-check"><input type="checkbox" value="state" checked> <span data-i18n="ca_templates.field_state">Policy state (enabled/disabled)</span></label>
+          <label class="ca-check"><input type="checkbox" value="grantControls.builtInControls" checked> <span data-i18n="ca_templates.field_grant_controls">Grant controls (MFA, compliant device, etc.)</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.users.includeUsers" checked> <span data-i18n="ca_templates.field_target_users">Target users</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.users.includeGroups" checked> <span data-i18n="ca_templates.field_target_groups">Target groups</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.applications.includeApplications" checked> <span data-i18n="ca_templates.field_target_applications">Target applications</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.platforms.includePlatforms"> <span data-i18n="ca_templates.field_platforms">Platform conditions</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.locations.includeLocations"> <span data-i18n="ca_templates.field_locations">Location conditions</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.signInRiskLevels"> <span data-i18n="ca_templates.field_signin_risk">Sign-in risk levels</span></label>
+          <label class="ca-check"><input type="checkbox" value="conditions.userRiskLevels"> <span data-i18n="ca_templates.field_user_risk">User risk levels</span></label>
+          <label class="ca-check"><input type="checkbox" value="sessionControls"> <span data-i18n="ca_templates.field_session_controls">Session controls</span></label>
+        </div>
+      </div>
+      <!-- Source-tenant picker — hidden by default, revealed when the pasted
+           policy JSON references raw named-location GUIDs. Placed just above
+           the action buttons so operators see it right before Save. -->
+      <div id="ca-import-source-container" class="form-group" style="display:none; border:1px solid rgba(255, 193, 7, 0.35); border-radius:6px; padding:12px 14px; background:rgba(255, 193, 7, 0.05); margin-top:4px;">
+        <label style="display:block; margin-bottom:6px;">
+          <strong data-i18n="ca_templates.source_tenant_label">Source tenant</strong>
+          <span style="color:var(--p-text-muted); font-weight:400; font-size:0.78rem;" data-i18n="ca_templates.source_tenant_required">(required)</span>
+        </label>
+        <div style="font-size:0.82rem; color:var(--p-text-muted); margin-bottom:8px; line-height:1.4;" data-i18n="ca_templates.source_tenant_intro">
+          This policy references named locations. Panoptica365 needs to know which tenant this JSON came from so it can translate tenant-specific location IDs into portable placeholders. Without this, the template will only work when deployed back to the tenant it came from.
+        </div>
+        <select id="ca-import-source-tenant" class="form-control">
+          <option value="" data-i18n="ca_templates.option_select_source_tenant">Select source tenant…</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px 20px; border-top:1px solid var(--p-border);">
+      <button class="btn-secondary" id="ca-import-cancel-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="ca-import-submit-btn" data-role-required="admin" data-i18n="ca_templates.import_template_btn">Import Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="ca-detail-overlay" style="display:none;">
+  <div class="modal" style="width:820px; max-width:94vw; max-height:88vh;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" id="ca-detail-title" data-i18n="ca_templates.detail_title">Template Details</span>
+    </div>
+    <div class="modal-body" id="ca-detail-body" style="overflow-y:auto;"></div>
+    <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px 20px; border-top:1px solid var(--p-border);">
+      <button class="btn-danger" id="ca-detail-delete-btn" data-role-required="admin" data-i18n="ca_templates.delete_template_btn">Delete Template</button>
+      <button class="btn-secondary" id="ca-detail-close-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="ca-detail-save-btn" data-role-required="admin" data-i18n="ca_templates.save_changes_btn">Save Changes</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,124 @@
+{
+  "security_settings": {
+    "EXO-01": {
+      "writer_recommended_label": "The \"Enabled\" preset turns on all three MailTips features (general tips, external-recipient warnings, large-audience warnings) and sets the large-audience threshold to 25 — matching CIS guidance.",
+      "writer_options": {
+        "all_mailtips_enabled_threshold_25_recommended": "All MailTips enabled, threshold 25 (recommended)",
+        "external_recipient_warnings_off_microsoft_default": "External-recipient warnings off (Microsoft default)"
+      }
+    },
+    "EXO-02": {
+      "writer_recommended_label": "Disabling auto-forward on the Default remote domain blocks the most common BEC exfiltration vector. Non-Default remote domains (deliberate partner federations) are unaffected.",
+      "writer_options": {
+        "auto_forward_disabled_on_default_domain_recommended": "Auto-forward DISABLED on Default domain (recommended)",
+        "auto_forward_enabled_on_default_domain_bec_exfiltration_vector": "Auto-forward enabled on Default domain (BEC exfiltration vector)"
+      }
+    },
+    "EXO-03": {
+      "writer_recommended_label": "Mailbox auditing is the prerequisite for every email-based forensic investigation. Microsoft enables it by default on new mailboxes since 2019, but legacy / migrated mailboxes may have it off. Apply syncs every user mailbox to AuditEnabled = $true.",
+      "writer_options": {
+        "enabled_every_user_mailbox_audited_recommended": "Enabled — every user mailbox audited (recommended)",
+        "disabled_no_per_mailbox_audit_logging_forensics_gap": "Disabled — no per-mailbox audit logging (forensics gap)"
+      }
+    },
+    "EXO-05": {
+      "writer_recommended_label": "The \"Block + alert MSP\" preset stops compromised accounts from sending more outbound mail (24h auto-release) AND alerts the MSP recipient list so operators can investigate. Microsoft default is alert-only, which does NOT block the spam.",
+      "writer_options": {
+        "block_compromised_accounts_24h_alert_msp_recipients_recommended": "Block compromised accounts (24h) + alert MSP recipients (recommended)",
+        "microsoft_default_alert_only_does_not_block_compromised_accounts": "Microsoft default (Alert-only — does NOT block compromised accounts)"
+      }
+    },
+    "EXO-06": {
+      "writer_recommended_label": "Standard alone is the floor every tenant should have — turning it on tenant-wide is the single highest-value EXO hardening step. Standard + Strict adds defense in depth for tenants with high-value targets (executives, finance, legal). Disabled is \"default Microsoft policies\" which Microsoft acknowledges is loose.",
+      "writer_options": {
+        "standard_strict_defense_in_depth_strict_for_high_risk_users_on_top_of_standard_baseline": "Standard + Strict (defense in depth — Strict for high-risk users on top of Standard baseline)",
+        "standard_for_all_users_recommended_baseline": "Standard for all users (recommended baseline)",
+        "no_presets_tenant_runs_on_default_policies_microsoft_acknowledges_these_are_loose": "No presets — tenant runs on default policies (Microsoft acknowledges these are loose)"
+      }
+    },
+    "EXO-08": {
+      "writer_recommended_label": "Setting this to \"Disabled\" turns off basic-auth SMTP submission tenant-wide. Per-mailbox overrides are still possible for specific service accounts that genuinely need SMTP AUTH.",
+      "writer_options": {
+        "smtp_auth_disabled_tenant_wide_recommended": "SMTP AUTH disabled tenant-wide (recommended)",
+        "smtp_auth_enabled_tenant_wide_basic_auth_credential_stuffing_exposure": "SMTP AUTH enabled tenant-wide (basic-auth credential-stuffing exposure)"
+      }
+    },
+    "ENT-01": {
+      "writer_recommended_label": "The \"Standard SSPR config\" enables Microsoft Authenticator (preferred), SMS (fallback), and Email (recovery) for all users — Microsoft's recommended SSPR baseline. Optional advanced methods (FIDO2, TAP, OATH tokens, etc.) can be enabled via the \"Additional Authentication Methods\" expandable section below.",
+      "writer_options": {
+        "standard_sspr_config_authenticator_sms_email_enabled_for_all_users_recommended": "Standard SSPR config — Authenticator + SMS + Email enabled for all users (recommended)",
+        "disabled_authenticator_sms_email_turned_off_no_sspr": "Disabled — Authenticator/SMS/Email turned off (no SSPR)"
+      }
+    },
+    "ENT-05": {
+      "writer_recommended_label": "The recommended configuration enables both app-name and location-context displays alongside Microsoft's tenant-default number matching. The two extras make prompt-bombing attacks meaningfully harder by forcing the user to look at the sign-in screen.",
+      "writer_options": {
+        "number_matching_app_and_location_context_recommended": "Number matching + app and location context (recommended)",
+        "number_matching_only_no_extra_context_displayed": "Number matching only — no extra context displayed"
+      }
+    },
+    "ENT-06": {
+      "writer_recommended_label": "Custom banned words catch the company-specific patterns Microsoft's global list won't — your company name, product names, local geography, founder/exec names. 8-12 terms is the sweet spot. Anything longer has diminishing returns.",
+      "writer_options": {
+        "global_microsoft_list_tenant_specific_custom_banned_words_recommended": "Global Microsoft list + tenant-specific custom banned words (recommended)",
+        "global_microsoft_list_only_no_tenant_specific_words": "Global Microsoft list only (no tenant-specific words)"
+      }
+    },
+    "ENT-07": {
+      "writer_recommended_label": "Microsoft now recommends \"Let Microsoft manage your consent settings\" — they auto-update the underlying policy as their guidance evolves. Choose \"Do not allow user consent\" only if you have an admin-consent request workflow set up and monitored.",
+      "writer_options": {
+        "let_microsoft_manage_your_consent_settings_recommended": "Let Microsoft manage your consent settings (recommended)",
+        "do_not_allow_user_consent_admin_consent_workflow_required": "Do not allow user consent (admin-consent workflow required)",
+        "allow_user_consent_for_verified_publishers_low_impact_permissions_only": "Allow user consent for verified publishers, low-impact permissions only"
+      }
+    },
+    "ENT-09": {
+      "writer_recommended_label": "Microsoft recommends Restricted Guest User for tenants that do not need guests browsing the directory.",
+      "writer_options": {
+        "restricted_guest_user_recommended": "Restricted Guest User (recommended)",
+        "guest_user_default_limited": "Guest User (default — limited)",
+        "same_as_member_user_not_recommended": "Same as member user (NOT recommended)"
+      }
+    },
+    "SPO-01": {
+      "writer_recommended_label": "Microsoft recommends \"Existing guests only\" for SMB tenants that share with named partners but never with anonymous users.",
+      "writer_options": {
+        "existing_guests_only_recommended": "Existing guests only (recommended)",
+        "only_people_in_your_organization": "Only people in your organization",
+        "new_and_existing_guests": "New and existing guests",
+        "anyone_anonymous_links_high_risk": "Anyone (anonymous links — high risk)"
+      }
+    },
+    "SPO-02": {
+      "writer_recommended_label": "Microsoft recommends restricting the OneDrive sync app on unmanaged devices for any tenant that has Conditional Access available.",
+      "writer_options": {
+        "restricted_on_unmanaged_devices_recommended": "Restricted on unmanaged devices (recommended)",
+        "allowed_on_all_devices": "Allowed on all devices"
+      }
+    },
+    "TEA-01": {
+      "writer_recommended_label": "There is NO universal recommendation — choose based on the tenant's external-meeting profile. Tenants that only meet with M365 federated partners → Hardened. Tenants running training, coaching, sales, or other meetings with non-business external attendees → Permissive with lobby. Open mode is genuinely dangerous and should never be deliberately chosen.",
+      "writer_options": {
+        "hardened_anonymous_join_blocked_lobby_holds_external_federated_only_meeting_tenants": "Hardened — anonymous join blocked + lobby holds external (federated-only meeting tenants)",
+        "permissive_with_lobby_anonymous_join_allowed_lobby_holds_external_training_coaching_sales_meetings": "Permissive with lobby — anonymous join allowed + lobby holds external (training, coaching, sales meetings)",
+        "open_anonymous_join_allowed_everyone_auto_admits_zoom_bombing_risk": "Open — anonymous join allowed + everyone auto-admits (Zoom-bombing risk)"
+      }
+    },
+    "TEA-02": {
+      "writer_recommended_label": "Most SMBs want \"Open + consumer blocked\" — federation works with any M365 tenant for business comms, but personal Microsoft accounts cannot chat your users. Allowlist mode is the most secure but requires per-partner curation. Federation OFF is the most restrictive and may be disruptive.",
+      "writer_options": {
+        "open_to_other_businesses_personal_accounts_blocked_recommended_for_most_smbs": "Open to other businesses, personal accounts blocked (recommended for most SMBs)",
+        "federation_restricted_to_specific_partner_domains_most_secure_when_business_needs_allow": "Federation restricted to specific partner domains (most secure when business needs allow)",
+        "federation_disabled_no_external_teams_chat_most_restrictive": "Federation disabled — no external Teams chat (most restrictive)",
+        "open_personal_microsoft_accounts_allowed_microsoft_default_risky": "Open + personal Microsoft accounts allowed (Microsoft default — risky)"
+      }
+    },
+    "CMP-01": {
+      "writer_recommended_label": "Enable the Unified Audit Log on every tenant — without it, no security incident can be investigated. Microsoft typically enables this by default on new tenants, but older tenants sometimes need an explicit Apply.",
+      "writer_options": {
+        "enabled_recommended": "Enabled (recommended)",
+        "disabled_no_forensic_capability": "Disabled — no forensic capability"
+      }
+    }
+  }
+}

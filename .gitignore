@@ -1,0 +1,113 @@
+# ═══════════════════════════════════════════════════════════════
+# Panoptica365 .gitignore
+# ═══════════════════════════════════════════════════════════════
+# Anything matching these patterns will NEVER be tracked by git.
+# This is the single most important file in the repo for safety:
+# if a secret is accidentally committed, removing it from history
+# requires git-filter-repo + force-push. Get this right on commit #1.
+# ═══════════════════════════════════════════════════════════════
+
+# ─── SECRETS — never commit, no exceptions ───
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+# Keep .env.template / .env.example committed as placeholders for newcomers:
+!.env.template
+!.env.example
+
+# ─── Cryptographic material ───
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.thumbprint
+
+# ─── Operational data — host-specific, never ships in source ───
+data/
+backups/
+logs/
+snapshots/
+certs/
+reports/
+uploads/
+exports/
+
+# ─── Personal scratchpads / customer-identifying notes ───
+Links to consoles.txt
+
+# ─── Personal/internal working files (not part of the shipped app) ───
+claude api usage/
+dev/Panoptica/
+Documentation/
+
+# ─── Node.js ───
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.node_repl_history
+*.tgz
+.pnp.*
+
+# ─── SMB / macOS / Linux / editor artifacts ───
+.DS_Store
+._*
+.smbdelete*
+.fuse_hidden*
+*.swp
+*.swo
+*~
+*.tmp
+*.tmp.*
+
+# ─── Test/debug scratchpads from past iterations ───
+.bash-write-test
+.invalidate_cache
+.probe.txt
+.test-touch
+probe-*.txt
+scripts/_test_report_input.json
+
+# ─── LCARS theme leftovers (retired Apr 2026, snapshots only) ───
+public/css/panoptica-LCARS-original.css
+public/css/panoptica.css.lcars-backup
+public/css/themes/lcars.css.archive
+
+# ─── Python bytecode (auto-generated) ───
+__pycache__/
+*.pyc
+*.pyo
+
+# ─── IDEs ───
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ─── Build / cache ───
+dist/
+build/
+.cache/
+.parcel-cache/
+.tmp/
+
+# ─── Per-user tooling (Claude environment, etc.) ───
+.claude/
+
+# ─── Runtime logs ───
+*.log
+
+# ─── Database dumps ───
+*.sql.gz
+*.tar.gz
+*.dump
+mysqldump-*.sql
+
+# ─── OS metadata ───
+Thumbs.db
+desktop.ini

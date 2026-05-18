@@ -1,0 +1,1262 @@
+/**
+ * Panoptica — SPA Engine
+ * Handles AJAX navigation, page lifecycle, toasts, modals, and global state.
+ */
+
+(function () {
+  'use strict';
+
+  // ─── State ───
+  let currentPage = null;
+  let currentModule = null;  // Reference to active page module (for destroy())
+  let i18n = {};
+  let userInfo = null;
+
+  // ─── Page Registry ───
+  // Each page module is loaded dynamically and expected to export: init(), destroy()
+  const pages = {
+    'main-console':     { partial: '/partials/main-console',     script: '/js/pages/main-console.js' },
+    'daily-activity':   { partial: '/partials/daily-activity',   script: '/js/pages/daily-activity.js' },
+    'tenants':          { partial: '/partials/tenants',           script: '/js/pages/tenants.js' },
+    'alerts':           { partial: '/partials/alerts',            script: '/js/pages/alerts.js' },
+    'settings':         { partial: '/partials/settings',          script: '/js/pages/settings.js' },
+    'tenant-dashboard': { partial: '/partials/tenant-dashboard',  script: '/js/pages/tenant-dashboard.js' },
+    'reports':          { partial: '/partials/reports',           script: '/js/pages/reports.js' },
+    'sharepoint':       { partial: '/partials/sharepoint',         script: '/js/pages/sharepoint.js' },
+    'alert-policies':   { partial: '/partials/alert-policies',   script: '/js/pages/alert-policies.js' },
+    'ca-templates':     { partial: '/partials/ca-templates',     script: '/js/pages/ca-templates.js' },
+    'intune-templates': { partial: '/partials/intune-templates', script: '/js/pages/intune-templates.js' },
+    'security':         { partial: '/partials/security',         script: '/js/pages/security.js' },
+    'exemptions':       { partial: '/partials/exemptions',       script: '/js/pages/exemptions.js' },
+    // Admin-only. Server-side requireAdmin gates both the /partials/audit-log
+    // route and the /api/msp-audit/* endpoints. The sidebar nav item is also
+    // hidden for non-admins via applyRoleVisibility() — see init() below. That
+    // hide is cosmetic; the real security boundary is the server gates.
+    'audit-log':        { partial: '/partials/audit-log',         script: '/js/pages/audit-log.js' },
+  };
+
+  // ─── Navigation ───
+
+  async function navigateTo(pageName, params = {}) {
+    const pageConfig = pages[pageName];
+    if (!pageConfig) {
+      console.error(`[SPA] Unknown page: ${pageName}`);
+      return;
+    }
+
+    // Destroy current page module if it has a destroy()
+    if (currentModule && typeof currentModule.destroy === 'function') {
+      try { currentModule.destroy(); } catch (e) { console.error('[SPA] Destroy error:', e); }
+    }
+    currentModule = null;
+
+    // Update active nav item
+    document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.page === pageName);
+    });
+
+    // Show loading
+    const content = document.getElementById('content-area');
+    const loadingText = window.t ? window.t('common.loading') : 'Loading...';
+    content.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div>' + loadingText + '</div>';
+    currentPage = pageName;
+
+    try {
+      // Fetch HTML partial.
+      //
+      // cache: 'no-store' forces the browser to always hit the server rather
+      // than serving a stale cached partial. Hard-refresh on index.html doesn't
+      // cascade to subsequent AJAX fetches, so without this flag edits to
+      // partial HTML can appear to "do nothing" after deploy — even though
+      // the file on disk is current. Symptom: deploy ships, hard-refresh
+      // loads index.html fresh, but the SPA then serves a cached partial.
+      const res = await fetch(pageConfig.partial + buildQueryString(params), {
+        cache: 'no-store',
+      });
+      if (res.status === 401) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      content.innerHTML = html;
+      // Translate any data-i18n / data-i18n-attr-* attributes in the just-
+      // injected partial. Defensive null check in case i18n.js failed to
+      // load — partials still render with their hardcoded English fallback.
+      if (window.PanopticaI18n) window.PanopticaI18n.applyTo(content);
+      refreshIcons();
+
+      // Load and init page script
+      const module = await loadPageScript(pageConfig.script);
+      if (module && typeof module.init === 'function') {
+        currentModule = module;
+        await module.init(params);
+        // Re-walk after page init in case the page module rendered more DOM
+        // with data-i18n attributes (e.g., dynamically built tables, modals).
+        if (window.PanopticaI18n) window.PanopticaI18n.applyTo(content);
+        refreshIcons();  // Page init may have rendered more DOM with data-lucide
+      }
+    } catch (err) {
+      console.error(`[SPA] Navigation to ${pageName} failed:`, err);
+      const failMsg = window.t ? window.t('common.page_load_failed') : 'Failed to load page. Please try again.';
+      content.innerHTML = '<div class="panel-error">' + failMsg + '</div>';
+    }
+  }
+
+  async function loadPageScript(src) {
+    // Remove previous page script if any
+    const existing = document.getElementById('page-script');
+    if (existing) existing.remove();
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.id = 'page-script';
+      script.src = src + '?v=' + Date.now(); // Cache-bust during dev
+      script.onload = () => {
+        // Page scripts register via window.PanopticaPage
+        resolve(window.PanopticaPage || null);
+        window.PanopticaPage = null;
+      };
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.body.appendChild(script);
+    });
+  }
+
+  function buildQueryString(params) {
+    const entries = Object.entries(params).filter(([, v]) => v != null);
+    if (entries.length === 0) return '';
+    return '?' + new URLSearchParams(entries).toString();
+  }
+
+  // ─── Navigate to a specific tenant dashboard ───
+  function openTenantDashboard(tenantId, tenantName) {
+    navigateTo('tenant-dashboard', { id: tenantId });
+  }
+
+  // ─── Toasts ───
+
+  function showToast(message, type = 'info', duration = 4000) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(50px)';
+      toast.style.transition = 'all 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+
+  // ─── Modal ───
+
+  function openModal(title, bodyHtml, footerHtml) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML = bodyHtml;
+    document.getElementById('modal-footer').innerHTML = footerHtml || '';
+    document.getElementById('modal-overlay').classList.add('active');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  });
+
+  // ─── Clock ───
+
+  function updateClock() {
+    const el = document.getElementById('header-clock');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleString('en-CA', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false,
+    });
+  }
+
+  // ─── Header chrome (search / bell / avatar) ───
+
+  // Role-based visibility helper. Two attributes, both rank-driven:
+  //
+  //   [data-role-required="X"] — HIDE for users below rank X.
+  //     Add `.role-hidden` class with display:none !important. Use for
+  //     buttons / nav items / panels that should disappear entirely
+  //     when the user can't act on them.
+  //
+  //   [data-role-readonly="X"] — DISABLE (but show) for users below rank X.
+  //     Set the `disabled` attribute + `.role-readonly` class for visual
+  //     greying. Use for form fields where the user should see the
+  //     CURRENT VALUE but can't change it (e.g., alert policy Severity /
+  //     Routing dropdowns — viewer needs to know what's configured).
+  //
+  // Hierarchy: admin > member > viewer (higher can see/edit lower).
+  // Non-authenticated users (null role) see nothing role-gated.
+  //
+  // IMPORTANT — uses a class, NOT inline style, for the hide path. Many
+  // elements carry their own `style="display:none"` from JS state (e.g.,
+  // digest-refresh shows up only after first generation). Setting
+  // `el.style.display = ''` to un-hide for a permitted role would
+  // incorrectly reveal those elements even when their own state-driven
+  // hide is still in effect. The class approach OVERLAYS a hide.
+  function applyRoleVisibility(userRole) {
+    const RANK = { viewer: 1, member: 2, admin: 3 };
+    const userRank = RANK[userRole] || 0;
+    document.querySelectorAll('[data-role-required]').forEach(el => {
+      const required = el.dataset.roleRequired;
+      const requiredRank = RANK[required] || 99;
+      el.classList.toggle('role-hidden', userRank < requiredRank);
+    });
+    document.querySelectorAll('[data-role-readonly]').forEach(el => {
+      const required = el.dataset.roleReadonly;
+      const requiredRank = RANK[required] || 99;
+      const shouldDisable = userRank < requiredRank;
+      el.classList.toggle('role-readonly', shouldDisable);
+      // Form fields honor the `disabled` attribute; non-form elements
+      // get only the class hook so callers can style as needed.
+      if ('disabled' in el) {
+        el.disabled = shouldDisable;
+      }
+    });
+  }
+
+  /*
+   * A3 (May 9, 2026) — MutationObserver that re-applies role visibility
+   * whenever new `data-role-required` elements appear in the DOM. Page
+   * scripts render mutate buttons dynamically (per-row action buttons in
+   * CA assignments, Intune deployments, alert rows, exemption rows, etc.)
+   * and the static applyRoleVisibility() call at page-load misses them.
+   *
+   * Instead of requiring every render function to call applyRoleVisibility
+   * after innerHTML, this observer watches the content area and runs the
+   * helper whenever new subtrees are added. Cheap — the walk is bounded
+   * by the number of [data-role-required] elements (~200 in practice).
+   *
+   * Set up after the role is known. Re-entry guarded so we don't recurse
+   * via our own style mutations.
+   */
+  let roleObserverActive = false;
+  function startRoleVisibilityObserver() {
+    if (roleObserverActive) return;
+    const content = document.getElementById('content') || document.body;
+    if (!content || !window.MutationObserver) return;
+    let scheduled = false;
+    const observer = new MutationObserver(muts => {
+      // Only react to subtree additions that contain role-gated nodes
+      // (either hide-driven or readonly-driven).
+      const meaningful = muts.some(m =>
+        m.type === 'childList' && m.addedNodes.length > 0 &&
+        Array.from(m.addedNodes).some(n =>
+          n.nodeType === 1 &&
+          (n.hasAttribute?.('data-role-required') ||
+           n.hasAttribute?.('data-role-readonly') ||
+           n.querySelector?.('[data-role-required], [data-role-readonly]'))
+        )
+      );
+      if (!meaningful || scheduled) return;
+      scheduled = true;
+      // rAF so we run after the render settles, not in the middle of it.
+      requestAnimationFrame(() => {
+        scheduled = false;
+        applyRoleVisibility(userInfo?.role);
+      });
+    });
+    observer.observe(content, { childList: true, subtree: true });
+    roleObserverActive = true;
+  }
+
+  function computeInitials(user) {
+    if (!user) return '··';
+    const src = (user.name && user.name.trim()) || user.email || '';
+    if (!src) return '··';
+    // Split on whitespace, punctuation; take first letter of first two tokens.
+    const parts = src.split(/[\s._-]+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    // Fall back to first two letters of the single token (or email local part).
+    const localPart = src.split('@')[0];
+    return localPart.slice(0, 2).toUpperCase();
+  }
+
+  function paintAvatar() {
+    const el = document.getElementById('header-avatar-initials');
+    const wrap = document.getElementById('header-avatar');
+    if (!el || !userInfo) return;
+    el.textContent = computeInitials(userInfo);
+    if (wrap) wrap.title = userInfo.name || userInfo.email || '';
+  }
+
+  /**
+   * Paint the role badge next to the user name in the header chrome.
+   * Code uses 'member' as the operator role; UI label is "Operator" so MSP
+   * customers see the verb they expect when speaking of their staff.
+   *
+   * Added May 9, 2026 (A3 Step 4 / Step 5 mix).
+   */
+  function paintRoleBadge(role) {
+    const badge = document.getElementById('header-role-badge');
+    if (!badge) return;
+    if (!role) {
+      badge.style.display = 'none';
+      return;
+    }
+    // Locale-aware label. Falls back to the English label if i18n isn't loaded yet.
+    const t = (key, fallback) => {
+      try { return window.PanopticaI18n?.t(key) || fallback; }
+      catch (_) { return fallback; }
+    };
+    const labelMap = {
+      admin:  t('role.admin',    'Admin'),
+      member: t('role.operator', 'Operator'),
+      viewer: t('role.viewer',   'Viewer'),
+    };
+    const label = labelMap[role] || role;
+    badge.textContent = label;
+    badge.className = 'header-role-badge header-role-badge--' + role;
+    badge.style.display = '';
+  }
+
+  // ─── User preferences modal (Apr 28, 2026) ───
+  // DB-backed (users + operator_mute_periods tables). One-time localStorage
+  // → DB migration on first load if legacy localStorage prefs exist.
+  // Theme-light is wired but inert until A2 ships the light stylesheet.
+  // Mute is end-to-end wired: notifier subtracts active-mute emails from
+  // recipient lists; failsafe to admins when all are muted.
+  const LEGACY_PREFS_KEYS = {
+    language: 'panoptica365-prefs-language',
+    theme:    'panoptica365-prefs-theme',
+  };
+
+  // Cached snapshot of the last GET /api/user-prefs response — drives the
+  // header mute indicator and avoids re-fetching on every modal open.
+  let userPrefsCache = null;
+
+  // NOTE: window.Panoptica.getActiveMute / openUserPrefs are EXPORTED from
+  // inside initUserPrefs(), NOT here at module level. Reason: the IIFE body
+  // contains a `window.Panoptica = { ... }` reassignment near the bottom
+  // (the main namespace setup) which would wipe any properties attached
+  // before that statement runs. initUserPrefs() runs from init() which is
+  // invoked AFTER the namespace setup, so attachments there persist.
+  // (Bug fix Apr 28, 2026 — chip never appeared because getActiveMute was
+  // attached, then nuked, then read as undefined.)
+
+  async function loadUserPrefs() {
+    try {
+      userPrefsCache = await api('/api/user-prefs');
+      // Sync DB-stored theme to localStorage and apply if different from
+      // currently-loaded theme. Handles cross-device case: log into a
+      // different browser, see your saved theme apply after a brief flash
+      // of the localStorage default.
+      if (userPrefsCache?.user?.theme && window.PanopticaTheme?.setByPref) {
+        try {
+          const dbPref = userPrefsCache.user.theme;
+          const currentPref = window.PanopticaTheme.currentPref();
+          if (dbPref !== currentPref) {
+            window.PanopticaTheme.setByPref(dbPref);
+            localStorage.setItem('panoptica365-prefs-theme', dbPref);
+          }
+        } catch (_) {}
+      }
+      return userPrefsCache;
+    } catch (e) {
+      console.warn('[UserPrefs] Failed to load:', e.message);
+      userPrefsCache = null;
+      return null;
+    }
+  }
+
+  /**
+   * One-time migration: if localStorage has legacy values AND the DB has
+   * defaults (en/dark), push localStorage values to the DB and clear them.
+   * After successful migration the modal is fully DB-backed.
+   */
+  async function migrateLegacyLocalStoragePrefs(prefs) {
+    if (!prefs || !prefs.user) return;
+    let legacyLang = null, legacyTheme = null;
+    try {
+      legacyLang = localStorage.getItem(LEGACY_PREFS_KEYS.language);
+      legacyTheme = localStorage.getItem(LEGACY_PREFS_KEYS.theme);
+    } catch (_) { return; }
+    if (!legacyLang && !legacyTheme) return;
+
+    // Only migrate if the DB row is at defaults — don't overwrite
+    // intentional later changes made directly via the API.
+    const dbAtDefaults = (prefs.user.language === 'en' && prefs.user.theme === 'dark');
+    if (!dbAtDefaults) {
+      // Stale localStorage; clear and move on.
+      try {
+        localStorage.removeItem(LEGACY_PREFS_KEYS.language);
+        localStorage.removeItem(LEGACY_PREFS_KEYS.theme);
+      } catch (_) {}
+      return;
+    }
+
+    const language = (legacyLang === 'en' || legacyLang === 'fr' || legacyLang === 'es') ? legacyLang : 'en';
+    const theme    = (legacyTheme === 'light' || legacyTheme === 'dark') ? legacyTheme : 'dark';
+    if (language === 'en' && theme === 'dark') {
+      // Nothing meaningful to migrate.
+      try {
+        localStorage.removeItem(LEGACY_PREFS_KEYS.language);
+        localStorage.removeItem(LEGACY_PREFS_KEYS.theme);
+      } catch (_) {}
+      return;
+    }
+
+    try {
+      await api('/api/user-prefs', { method: 'PUT', body: JSON.stringify({ language, theme }) });
+      console.log('[UserPrefs] Migrated localStorage → DB:', { language, theme });
+      localStorage.removeItem(LEGACY_PREFS_KEYS.language);
+      localStorage.removeItem(LEGACY_PREFS_KEYS.theme);
+      // Refresh cache to reflect the migrated values.
+      await loadUserPrefs();
+    } catch (e) {
+      console.warn('[UserPrefs] Legacy migration failed (will retry next load):', e.message);
+    }
+  }
+
+  function fmtMuteWindow(mute) {
+    const from = new Date(mute.starts_at);
+    const to = new Date(mute.ends_at);
+    const opts = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return window.t('user_prefs.mute_window_format', {
+      from: from.toLocaleString(undefined, opts),
+      to: to.toLocaleString(undefined, opts),
+    });
+  }
+
+  function renderMuteSection(prefs) {
+    const section = document.getElementById('user-prefs-mute-section');
+    const checkbox = document.getElementById('user-prefs-mute-checkbox');
+    const emailLabel = document.getElementById('user-prefs-mute-email');
+    const activeBlock = document.getElementById('user-prefs-mute-active');
+    const statusText = document.getElementById('user-prefs-mute-status-text');
+    const formBlock = document.getElementById('user-prefs-mute-form');
+    const warningBlock = document.getElementById('user-prefs-mute-warning');
+    const fromInput = document.getElementById('user-prefs-mute-from');
+    const toInput = document.getElementById('user-prefs-mute-to');
+    const reasonInput = document.getElementById('user-prefs-mute-reason');
+    const hintBlock = document.getElementById('user-prefs-mute-hint');
+
+    if (!section || !checkbox) return;
+
+    const userEmail = prefs?.user?.email;
+
+    // Hide entire mute section if user has no email — muting is meaningless.
+    if (!userEmail) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
+
+    if (emailLabel) emailLabel.textContent = `(${userEmail})`;
+
+    // Reset visibility
+    activeBlock.style.display = 'none';
+    formBlock.style.display = 'none';
+    warningBlock.style.display = 'none';
+    checkbox.checked = false;
+
+    // 60-day cap on the To picker. Bound max attribute client-side; server
+    // re-enforces.
+    const maxDays = prefs?.mute_max_days || 60;
+    const nowIso = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const maxIso = new Date(Date.now() + maxDays * 24 * 60 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    fromInput.min = nowIso;
+    fromInput.max = maxIso;
+    toInput.min = nowIso;
+    toInput.max = maxIso;
+
+    // Active mute? Show status + cancel.
+    if (prefs?.active_mute) {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+      activeBlock.style.display = '';
+      statusText.textContent = fmtMuteWindow(prefs.active_mute);
+    } else {
+      checkbox.disabled = false;
+    }
+
+    // Warn if email isn't on any notification list — mute would no-op.
+    if (prefs?.email_in_recipient_list === false) {
+      warningBlock.style.display = '';
+      // Translation contains its own <strong>/<code> markup; safe to inject as
+      // innerHTML because en.json is author-controlled. The {email} placeholder
+      // is the user's own email — already escaped before we feed it in.
+      warningBlock.innerHTML = window.t('user_prefs.mute_warning_html', { email: escapeHtml(userEmail) });
+    }
+
+    // Hint text under the form
+    if (hintBlock) {
+      hintBlock.textContent = window.t('user_prefs.mute_max_hint', { days: maxDays });
+    }
+
+    // Wire checkbox toggle (only meaningful if no active mute).
+    checkbox.onchange = () => {
+      if (prefs?.active_mute) return; // disabled anyway
+      formBlock.style.display = checkbox.checked ? '' : 'none';
+      // Pre-fill From=now, To=now+7d as a sensible default when first checked.
+      if (checkbox.checked && !fromInput.value) {
+        const start = new Date();
+        const end = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        fromInput.value = new Date(start.getTime() - start.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        toInput.value = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      }
+    };
+
+    // Wire cancel-mute button
+    const cancelBtn = document.getElementById('user-prefs-mute-cancel');
+    if (cancelBtn) {
+      cancelBtn.onclick = async () => {
+        if (!confirm(window.t('user_prefs.confirm_cancel_mute'))) return;
+        try {
+          await api('/api/user-prefs/mute', { method: 'DELETE' });
+          await loadUserPrefs();
+          renderMuteSection(userPrefsCache);
+          if (typeof refreshHeaderMuteIndicator === 'function') refreshHeaderMuteIndicator();
+          showToast(window.t('user_prefs.toast_mute_cancelled'), 'success');
+        } catch (e) {
+          showToast(window.t('user_prefs.toast_mute_cancel_failed', { message: e.message }), 'error');
+        }
+      };
+    }
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = String(s);
+    return d.innerHTML;
+  }
+
+  // ─── Header mute indicator chip (Step 6 — Apr 28, 2026) ───
+  // Shown only when the current operator has an active mute. Click opens
+  // the user-prefs modal. Refresh is driven by the existing 60s alert-
+  // signals poll plus immediate refresh after Save / Cancel mute actions.
+  function initHeaderMuteIndicator() {
+    const chip = document.getElementById('header-mute-chip');
+    if (!chip) return;
+    chip.addEventListener('click', () => {
+      window.Panoptica.openUserPrefs();
+    });
+    chip.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        window.Panoptica.openUserPrefs();
+      }
+    });
+    refreshHeaderMuteIndicator();
+    // Re-check on the same cadence as alert signals — cheap (no fetch,
+    // reads cached prefs) but ensures expiring mutes flip the chip off.
+    setInterval(refreshHeaderMuteIndicator, 60_000);
+  }
+
+  function refreshHeaderMuteIndicator() {
+    const chip = document.getElementById('header-mute-chip');
+    if (!chip) return;
+    const mute = window.Panoptica.getActiveMute?.();
+    if (!mute) {
+      chip.classList.remove('active');
+      chip.title = '';
+      return;
+    }
+    // Mute might be expired in cache — double-check end time.
+    const endsAt = new Date(mute.ends_at);
+    if (endsAt <= new Date()) {
+      chip.classList.remove('active');
+      chip.title = '';
+      // Async refresh of cache so the next check uses fresh data.
+      loadUserPrefs();
+      return;
+    }
+    chip.classList.add('active');
+    const opts = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const text = document.getElementById('header-mute-chip-text');
+    if (text) text.textContent = window.t('user_prefs.mute_chip_until', { time: endsAt.toLocaleString(undefined, opts) });
+    chip.title = window.t('user_prefs.mute_chip_title', { time: endsAt.toLocaleString() });
+  }
+
+  function initUserPrefs() {
+    const trigger = document.getElementById('header-user-block');
+    const overlay = document.getElementById('user-prefs-overlay');
+    const closeBtn = document.getElementById('user-prefs-close');
+    const saveBtn = document.getElementById('user-prefs-save');
+    const langSel = document.getElementById('user-prefs-language');
+    if (!trigger || !overlay || !closeBtn || !saveBtn || !langSel) return;
+
+    // Attach helpers to the Panoptica namespace HERE, not at module level.
+    // The IIFE body's `window.Panoptica = { ... }` reassignment (near
+    // bottom of file) runs before init() and would otherwise wipe any
+    // module-level attachments. By attaching here, after init() runs,
+    // these survive.
+    window.Panoptica = window.Panoptica || {};
+    window.Panoptica.getActiveMute = () => userPrefsCache?.active_mute || null;
+    window.Panoptica.openUserPrefs = () => {
+      overlay.classList.add('active');
+    };
+
+    // Initial load + legacy migration. Done in background so the trigger
+    // is responsive even on first ever click.
+    loadUserPrefs().then(prefs => {
+      if (prefs) migrateLegacyLocalStoragePrefs(prefs);
+      if (typeof refreshHeaderMuteIndicator === 'function') refreshHeaderMuteIndicator();
+    });
+
+    async function open() {
+      // Refresh on every open so the modal reflects current state (an
+      // admin could have removed the operator from the recipient list, or
+      // a mute could have expired between opens).
+      const prefs = await loadUserPrefs();
+      if (!prefs) {
+        showToast(window.t('user_prefs.toast_load_failed'), 'error');
+        return;
+      }
+      langSel.value = prefs.user.language || 'en';
+      const themeRadio = document.querySelector(`input[name="user-prefs-theme-radio"][value="${prefs.user.theme || 'dark'}"]`);
+      if (themeRadio) themeRadio.checked = true;
+      renderMuteSection(prefs);
+      overlay.classList.add('active');
+    }
+    function close() { overlay.classList.remove('active'); }
+
+    trigger.addEventListener('click', open);
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+    });
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    saveBtn.addEventListener('click', async () => {
+      const themeChoice = document.querySelector('input[name="user-prefs-theme-radio"]:checked');
+      const language = langSel.value;
+      const theme = themeChoice ? themeChoice.value : 'dark';
+
+      // Save language + theme via PUT
+      try {
+        await api('/api/user-prefs', {
+          method: 'PUT',
+          body: JSON.stringify({ language, theme }),
+        });
+      } catch (e) {
+        showToast(window.t('user_prefs.toast_save_failed', { message: e.message }), 'error');
+        return;
+      }
+
+      // Apply theme immediately. Both light and dark stylesheets ship as of
+      // Apr 28, 2026; PanopticaTheme.setByPref handles the mapping to file
+      // names. Also mirror to localStorage for cross-page consistency and
+      // avoiding FOUC on next load.
+      if (window.PanopticaTheme?.setByPref) {
+        try {
+          window.PanopticaTheme.setByPref(theme);
+          localStorage.setItem('panoptica365-prefs-theme', theme);
+        } catch (_) {}
+      }
+
+      // Apply locale immediately — same FOUC-avoidance pattern as theme.
+      // i18n.js's setLang() re-fetches the locale, swaps the in-memory
+      // dictionary, walks the document via applyTo(), and dispatches
+      // 'panoptica:locale-changed'. Also mirror to localStorage so the
+      // next page load picks the right language on first paint instead
+      // of flashing the previous one before /api/user-prefs returns.
+      if (window.PanopticaI18n && typeof window.PanopticaI18n.setLang === 'function') {
+        try {
+          localStorage.setItem('panoptica365-prefs-lang', language);
+          if (language !== window.PanopticaI18n.currentLang()) {
+            await window.PanopticaI18n.setLang(language);
+          }
+        } catch (_) {}
+      }
+
+      // Handle mute — only POST if checkbox is checked AND no active mute.
+      const muteCheckbox = document.getElementById('user-prefs-mute-checkbox');
+      const hasActiveMute = !!userPrefsCache?.active_mute;
+      if (muteCheckbox && muteCheckbox.checked && !hasActiveMute) {
+        const fromVal = document.getElementById('user-prefs-mute-from')?.value;
+        const toVal   = document.getElementById('user-prefs-mute-to')?.value;
+        const reason  = document.getElementById('user-prefs-mute-reason')?.value || '';
+        if (!fromVal || !toVal) {
+          showToast(window.t('user_prefs.toast_set_both_times'), 'error');
+          return;
+        }
+        // Convert datetime-local (no timezone) to ISO with local offset.
+        const fromIso = new Date(fromVal).toISOString();
+        const toIso   = new Date(toVal).toISOString();
+        try {
+          await api('/api/user-prefs/mute', {
+            method: 'POST',
+            body: JSON.stringify({ starts_at: fromIso, ends_at: toIso, reason }),
+          });
+        } catch (e) {
+          showToast(window.t('user_prefs.toast_mute_create_failed', { message: e.message }), 'error');
+          return;
+        }
+      }
+
+      await loadUserPrefs();
+      if (typeof refreshHeaderMuteIndicator === 'function') refreshHeaderMuteIndicator();
+      close();
+      showToast(window.t('user_prefs.toast_saved'), 'success');
+    });
+  }
+
+  function setNavIndicator(pageName, html) {
+    const item = document.querySelector(`#sidebar-nav .nav-item[data-page="${pageName}"] .nav-indicator`);
+    if (!item) return;
+    item.innerHTML = html;
+  }
+
+  async function refreshAlertSignals() {
+    // One stats fetch feeds the header bell, the Alerts sidebar badge,
+    // and the bottom status bar's "Open Alerts" cell.
+    const badge = document.getElementById('header-bell-badge');
+    const sbOpen = document.getElementById('sb-open-alerts');
+    try {
+      const stats = await api('/api/alerts/stats?range=open');
+      const counts = stats && stats.bySeverity ? stats.bySeverity : {};
+      const total = Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0);
+      const critical = (Number(counts.critical) || 0) + (Number(counts.high) || 0);
+
+      // Bell
+      if (badge) {
+        if (total > 0) {
+          badge.textContent = total > 99 ? '99+' : String(total);
+          badge.style.display = '';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      // Sidebar Alerts count — red if any critical/high, amber if only medium/low
+      if (total > 0) {
+        const cls = critical > 0 ? 'crit' : 'warn';
+        setNavIndicator('alerts', `<span class="nav-count ${cls}">${total}</span>`);
+      } else {
+        setNavIndicator('alerts', '');
+      }
+
+      // Status bar
+      if (sbOpen) sbOpen.textContent = String(total);
+    } catch (e) {
+      console.warn('[SPA] Alert signals refresh failed:', e.message);
+    }
+  }
+
+  async function refreshTenantCount() {
+    const sbTenants = document.getElementById('sb-tenant-count');
+    try {
+      const tenants = await api('/api/tenants');
+      const n = Array.isArray(tenants) ? tenants.length : 0;
+      if (n > 0) {
+        setNavIndicator('tenants', `<span class="nav-count muted">${n}</span>`);
+      } else {
+        setNavIndicator('tenants', '');
+      }
+      if (sbTenants) sbTenants.textContent = String(n);
+    } catch (e) {
+      console.warn('[SPA] Tenant count refresh failed:', e.message);
+    }
+  }
+
+  // Exposed to pages so Main Console can push its computed average secure score
+  // (we don't want to re-hit /api/tenants/scores/secure here — that costs 14
+  // Graph API calls per tenant list).
+  function setStatus(key, value) {
+    const id = ({
+      tenantCount: 'sb-tenant-count',
+      openAlerts: 'sb-open-alerts',
+      secureScore: 'sb-secure-score',
+      version: 'sb-version',
+    })[key];
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) el.textContent = value == null ? '—' : String(value);
+  }
+
+  function initBell() {
+    const bell = document.getElementById('header-bell');
+    if (!bell) return;
+    bell.addEventListener('click', () => navigateTo('alerts'));
+  }
+
+  // ─── System Health (status bar indicator + click-through modal) ───
+
+  // Last payload is cached so clicking the status cell doesn't block on a
+  // fresh fetch — the modal opens instantly, then refreshes behind the scenes.
+  let lastHealthPayload = null;
+
+  // Health state labels — derived via t() so the status bar / health modal
+  // agree with the operator's selected language. The status bar's data-i18n
+  // attribute on initial paint shows the translated "Checking…"; once a
+  // /api/health response lands, refreshHealth() overwrites with one of these.
+  function healthStateLabel(state) {
+    const keyByState = {
+      nominal:  'statusbar.health.all_nominal',
+      degraded: 'statusbar.health.degraded',
+      critical: 'statusbar.health.critical',
+    };
+    const key = keyByState[state];
+    return key ? window.t(key) : state;
+  }
+  const HEALTH_STATE_TO_LED = {
+    nominal:  'sb-led-ok',
+    degraded: 'sb-led-warn',
+    critical: 'sb-led-crit',
+  };
+  const CHECK_STATE_TO_CLASS = { ok: 'state-ok', warn: 'state-warn', crit: 'state-crit' };
+
+  async function refreshHealth() {
+    const led = document.getElementById('sb-health-led');
+    const label = document.getElementById('sb-health-label');
+    const bar = document.getElementById('status-bar');
+    if (!led || !label) return;
+
+    try {
+      const payload = await api('/api/health?lang=' + (window.PanopticaI18n?.currentLang() || 'en'));
+      lastHealthPayload = payload;
+
+      // Update LED class
+      led.classList.remove('sb-led-ok', 'sb-led-warn', 'sb-led-crit');
+      led.classList.add(HEALTH_STATE_TO_LED[payload.overall] || 'sb-led-ok');
+
+      // Update label + status bar state class (for color-shift)
+      label.textContent = payload.overall === 'nominal'
+        ? healthStateLabel('nominal')
+        : payload.summary || healthStateLabel(payload.overall) || payload.overall;
+
+      if (bar) {
+        bar.classList.remove('state-nominal', 'state-degraded', 'state-critical');
+        bar.classList.add(`state-${payload.overall}`);
+      }
+    } catch (e) {
+      // If /api/health itself is unreachable, that IS a critical signal.
+      console.warn('[SPA] Health refresh failed:', e.message);
+      led.classList.remove('sb-led-ok', 'sb-led-warn');
+      led.classList.add('sb-led-crit');
+      label.textContent = window.t('statusbar.health.unreachable');
+      if (bar) {
+        bar.classList.remove('state-nominal', 'state-degraded');
+        bar.classList.add('state-critical');
+      }
+    }
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function renderCheckDetail(check) {
+    const d = check.detail || {};
+    switch (check.id) {
+      case 'alert_poller': {
+        const rows = [];
+        if (d.freshest_minutes != null) {
+          rows.push([
+            window.t('health.alert_poller.freshest_poll'),
+            window.t('health.alert_poller.minutes_ago', { minutes: d.freshest_minutes }),
+          ]);
+        }
+        if (d.stalest_minutes != null) {
+          rows.push([
+            window.t('health.alert_poller.stalest_poll'),
+            window.t('health.alert_poller.minutes_ago', { minutes: d.stalest_minutes }),
+          ]);
+        }
+        let html = rows.map(([k, v]) =>
+          `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v">${escHtml(v)}</span></div>`
+        ).join('');
+
+        if (Array.isArray(d.stale_tenants) && d.stale_tenants.length > 0) {
+          html += `<table class="hc-table"><thead><tr>
+            <th>${escHtml(window.t('health.alert_poller.table_tenant'))}</th>
+            <th>${escHtml(window.t('health.alert_poller.table_last_polled'))}</th>
+            <th>${escHtml(window.t('health.alert_poller.table_overdue_by'))}</th>
+          </tr></thead><tbody>`;
+          for (const st of d.stale_tenants) {
+            const overdue = st.minutes_overdue == null
+              ? window.t('health.alert_poller.never_polled')
+              : window.t('health.alert_poller.minutes_short', { minutes: Math.max(0, st.minutes_overdue) });
+            html += `<tr>
+              <td>${escHtml(st.name)}</td>
+              <td class="mono">${escHtml(st.last_polled_at || '—')}</td>
+              <td>${escHtml(overdue)}</td>
+            </tr>`;
+          }
+          html += '</tbody></table>';
+        }
+        return html;
+      }
+
+      case 'graph_endpoints': {
+        let html = '';
+        html += `<div class="hc-kv"><span class="k">${escHtml(window.t('health.graph_endpoints.window'))}</span><span class="v">${escHtml(window.t('health.graph_endpoints.last_n_hours', { hours: d.window_hours }))}</span></div>`;
+        html += `<div class="hc-kv"><span class="k">${escHtml(window.t('health.graph_endpoints.tenants_affected'))}</span><span class="v">${escHtml(window.t('health.graph_endpoints.x_of_y', { affected: d.failing_tenants, total: d.total_tenants }))}</span></div>`;
+        if (Array.isArray(d.records) && d.records.length > 0) {
+          html += `<table class="hc-table"><thead><tr>
+            <th>${escHtml(window.t('health.graph_endpoints.table_tenant'))}</th>
+            <th>${escHtml(window.t('health.graph_endpoints.table_endpoint'))}</th>
+            <th>${escHtml(window.t('health.graph_endpoints.table_status'))}</th>
+            <th>${escHtml(window.t('health.graph_endpoints.table_fails'))}</th>
+            <th>${escHtml(window.t('health.graph_endpoints.table_last_error'))}</th>
+          </tr></thead><tbody>`;
+          for (const r of d.records) {
+            html += `<tr>
+              <td>${escHtml(r.tenant)}</td>
+              <td class="mono">${escHtml(r.endpoint)}</td>
+              <td>${escHtml(r.status)}</td>
+              <td>${escHtml(r.failure_count)}</td>
+              <td class="mono">${escHtml(r.last_error || '—')}</td>
+            </tr>`;
+          }
+          html += '</tbody></table>';
+        }
+        return html;
+      }
+
+      case 'claude_api': {
+        const rows = [
+          [window.t('health.claude_api.last_briefing'), d.last_generated_at || '—'],
+          [window.t('health.claude_api.hours_since'),   d.hours_since == null ? '—' : `${d.hours_since}h`],
+          [window.t('health.claude_api.warn_threshold'), `${d.warn_threshold_hours}h`],
+          [window.t('health.claude_api.crit_threshold'), `${d.crit_threshold_hours}h`],
+        ];
+        return rows.map(([k, v]) =>
+          `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v mono">${escHtml(v)}</span></div>`
+        ).join('');
+      }
+
+      case 'database': {
+        const rows = [
+          [window.t('health.database.ping'), d.ping_ms != null ? window.t('health.database.ms_unit', { ms: d.ping_ms }) : '—'],
+          [window.t('health.database.warn_threshold'), window.t('health.database.ms_unit', { ms: d.warn_threshold_ms })],
+          [window.t('health.database.crit_threshold'), window.t('health.database.ms_unit', { ms: d.crit_threshold_ms })],
+        ];
+        if (d.error) rows.push([window.t('health.database.error'), d.error]);
+        return rows.map(([k, v]) =>
+          `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v mono">${escHtml(v)}</span></div>`
+        ).join('');
+      }
+
+      default:
+        return '';
+    }
+  }
+
+  function renderHealthModalBody(payload) {
+    const summaryClass = payload.overall === 'nominal' ? 'state-ok'
+                       : payload.overall === 'degraded' ? 'state-warn' : 'state-crit';
+    const overallLabel = healthStateLabel(payload.overall) || payload.overall;
+
+    let html = `<div class="health-summary ${summaryClass}">
+      <span class="hm-led"></span>
+      <span class="hm-overall">${escHtml(overallLabel)}</span>
+      <span class="hm-time">${escHtml(payload.checked_at || '')}</span>
+    </div>`;
+
+    html += (payload.checks || []).map(c => {
+      const checkClass = CHECK_STATE_TO_CLASS[c.state] || 'state-ok';
+      const detailHtml = renderCheckDetail(c);
+      const detailBlock = detailHtml
+        ? `<details class="hc-detail" ${c.state !== 'ok' ? 'open' : ''}>
+             <summary>${window.t('health.modal_details_summary')}</summary>
+             ${detailHtml}
+           </details>`
+        : '';
+      return `<div class="health-check ${checkClass}">
+        <span class="hc-led"></span>
+        <div>
+          <div class="hc-title">${escHtml(c.label)}</div>
+          <div class="hc-summary">${escHtml(c.summary)}</div>
+          ${detailBlock}
+        </div>
+      </div>`;
+    }).join('');
+
+    return html;
+  }
+
+  async function openHealthModal() {
+    // Open with cached payload immediately (if any) for instant UX,
+    // then refetch in the background and rerender.
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.classList.add('health-modal-open');
+
+    const modalTitle = window.t('statusbar.health.modal_title');
+    if (lastHealthPayload) {
+      openModal(modalTitle, renderHealthModalBody(lastHealthPayload), '');
+    } else {
+      openModal(modalTitle,
+        '<div class="loading-container" style="height:120px;">' +
+        '<div class="loading-spinner"></div>' + window.t('statusbar.health.running_checks') + '</div>', '');
+    }
+
+    // Always do a fresh fetch on open. Pass ?lang= so the server returns
+    // labels/summaries pre-translated; otherwise the modal flashes English
+    // even when the operator's locale is fr/es. (May 1, 2026 fix.)
+    try {
+      const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+      const fresh = await api('/api/health?lang=' + encodeURIComponent(lang));
+      lastHealthPayload = fresh;
+      // Only rerender if modal is still open
+      if (overlay && overlay.classList.contains('active')) {
+        document.getElementById('modal-body').innerHTML = renderHealthModalBody(fresh);
+      }
+      // Also keep the status bar in sync with the fresh data
+      refreshHealth();
+    } catch (e) {
+      if (overlay && overlay.classList.contains('active')) {
+        const msg = window.t('statusbar.health.fetch_failed', { message: escHtml(e.message || 'unknown error') });
+        document.getElementById('modal-body').innerHTML =
+          `<div class="panel-error">${msg}</div>`;
+      }
+    }
+  }
+
+  function initHealthIndicator() {
+    const cell = document.getElementById('sb-health-cell');
+    if (!cell) return;
+    cell.addEventListener('click', openHealthModal);
+  }
+
+  // Clear the health-modal-open flag when any modal is closed so a subsequent
+  // generic openModal call doesn't inherit the widened size.
+  function wireHealthModalCleanup() {
+    const overlay = document.getElementById('modal-overlay');
+    if (!overlay) return;
+    const clear = () => overlay.classList.remove('health-modal-open');
+    document.getElementById('modal-close')?.addEventListener('click', clear);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) clear(); });
+  }
+
+  // ─── API Helper ───
+
+  async function api(url, options = {}) {
+    const defaults = {
+      headers: { 'Content-Type': 'application/json' },
+    };
+    const res = await fetch(url, { ...defaults, ...options });
+    if (res.status === 401) {
+      window.location.href = '/auth/login';
+      throw new Error('Unauthorized');
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // ─── Init ───
+
+  async function init() {
+    // Load i18n
+    try {
+      i18n = await api('/api/i18n/en');
+    } catch (e) {
+      console.warn('[SPA] Failed to load i18n:', e);
+    }
+
+    // Load user info
+    try {
+      const status = await api('/auth/status');
+      if (status.authenticated) {
+        userInfo = status.user;
+        const userEl = document.getElementById('header-user');
+        if (userEl) userEl.textContent = userInfo.name || userInfo.email;
+        paintAvatar();
+        paintRoleBadge(userInfo.role);
+      }
+    } catch (e) {
+      console.warn('[SPA] Failed to load user status');
+    }
+
+    // A3 RBAC — UI visibility. Two-layer pattern (see panoptica.css):
+    //   Layer 1: body.role-{admin|member|viewer} class + CSS rules hide
+    //     anything the current role can't see. Immediate, no flash.
+    //   Layer 2: applyRoleVisibility() walks [data-role-required] and
+    //     toggles .role-hidden. Mostly redundant with Layer 1 but kept
+    //     as a safety net; the MutationObserver below also relies on
+    //     this helper for any dynamic content that escapes the CSS rules.
+    // Server-side requireAdmin / requireMemberOrAdmin is the real
+    // enforcement. UI hiding is just UX polish.
+    if (userInfo?.role) {
+      document.body.classList.add('role-' + userInfo.role);
+    }
+    applyRoleVisibility(userInfo?.role);
+    // MutationObserver catches buttons that page scripts render dynamically
+    // after this initial walk (CA assignment rows, Intune deployment rows,
+    // exemption rows, alert slideout actions, etc.).
+    startRoleVisibilityObserver();
+
+    // Clock
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Header chrome: bell / avatar / mute indicator
+    initBell();
+    initUserPrefs();
+    initHeaderMuteIndicator();
+
+    // Sidebar counts + bell badge, shared refresh loop
+    refreshAlertSignals();
+    refreshTenantCount();
+    // 60s is plenty — both pages have their own live refresh when open.
+    setInterval(refreshAlertSignals, 60_000);
+    setInterval(refreshTenantCount, 5 * 60_000);
+
+    // System health indicator (status bar, bottom-left).
+    // 5-minute cadence per Jacques' spec — catches a missed 15-min poll
+    // within roughly one cycle while keeping the check itself near-free
+    // (single aggregated endpoint, all signals derived from DB state,
+    // no outbound API calls per health fetch).
+    initHealthIndicator();
+    wireHealthModalCleanup();
+    refreshHealth();
+    setInterval(refreshHealth, 5 * 60_000);
+    // May 1, 2026 — refetch health on language switch so the status bar's
+    // server-rendered summary swaps to the new locale instantly. Without
+    // this, the previous payload sticks until the next 5-min tick.
+    window.addEventListener('panoptica:locale-changed', refreshHealth);
+
+    // Lazy-init Socket.IO so background server events (e.g. SharePoint audit
+    // completion) can surface toasts even if the user has navigated away.
+    try { getSocket(); } catch (e) { console.warn('[SPA] Socket init failed:', e); }
+
+    // Nav click handlers
+    document.querySelectorAll('#sidebar-nav .nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        if (page && page !== currentPage) {
+          navigateTo(page);
+        }
+      });
+    });
+
+    // Check for page param from redirects (e.g., admin consent callback)
+    const urlParams = new URLSearchParams(window.location.search);
+    const startPage = urlParams.get('page') || 'main-console';
+
+    // Clean URL (remove query params without reload)
+    if (urlParams.toString()) {
+      // Pass params through to the page module
+      const pageParams = {};
+      urlParams.forEach((v, k) => { if (k !== 'page') pageParams[k] = v; });
+      window.history.replaceState({}, '', '/');
+      navigateTo(startPage, pageParams);
+    } else {
+      navigateTo('main-console');
+    }
+  }
+
+  // ─── Lightweight Markdown → HTML (for Claude chat output) ───
+  function mdToHtml(text) {
+    if (!text) return '';
+    // Escape HTML first
+    let h = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Headers: # → h3, ## → h4 (only at start of line)
+    h = h.replace(/^### (.+)$/gm, '<h5 class="chat-h">$1</h5>');
+    h = h.replace(/^## (.+)$/gm, '<h4 class="chat-h">$1</h4>');
+    h = h.replace(/^# (.+)$/gm, '<h3 class="chat-h">$1</h3>');
+    // Bold: **text**
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text*
+    h = h.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    // Inline code: `text`
+    h = h.replace(/`([^`]+)`/g, '<code class="chat-code">$1</code>');
+    // Horizontal rule: ---
+    h = h.replace(/^---$/gm, '<hr class="chat-hr">');
+    // Numbered lists: lines starting with "1. ", "2. " etc.
+    h = h.replace(/^(\d+)\. (.+)$/gm, '<div class="chat-li"><span class="chat-li-num">$1.</span> $2</div>');
+    // Bullet lists: lines starting with "- "
+    h = h.replace(/^- (.+)$/gm, '<div class="chat-li"><span class="chat-li-bullet">•</span> $1</div>');
+    // Newlines to <br> (but not after block elements)
+    h = h.replace(/\n/g, '<br>');
+    // Clean up <br> after block elements
+    h = h.replace(/(<\/h[345]>|<\/div>|<hr[^>]*>)<br>/g, '$1');
+    return h;
+  }
+
+  // ─── Socket.IO — global server → client channel ───
+  // Connected lazily and shared across pages. Used so features like the
+  // SharePoint audit can notify the user even when they've navigated away.
+  let socket = null;
+  function getSocket() {
+    if (socket) return socket;
+    if (typeof window.io !== 'function') return null;
+    socket = window.io({ path: '/socket.io', reconnection: true });
+    socket.on('connect', () => console.log('[WS] Connected'));
+    socket.on('disconnect', () => console.log('[WS] Disconnected'));
+
+    // SharePoint audit completion — show toast from anywhere in the SPA
+    socket.on('sp:audit:complete', (payload) => {
+      try {
+        const msg = window.t('sharepoint.toast_audit_complete', {
+          drive: payload.driveName,
+          folders: payload.foldersScanned,
+          explicit: payload.explicitCount,
+        });
+        showToast(msg, 'success');
+      } catch (e) { console.error('[WS] sp:audit:complete handler:', e); }
+    });
+    socket.on('sp:audit:error', (payload) => {
+      showToast(window.t('sharepoint.toast_audit_failed', {
+        drive: payload.driveName,
+        message: payload.message || 'unknown error',
+      }), 'error');
+    });
+    return socket;
+  }
+
+  // ─── Expose global API for page modules ───
+  /**
+   * Replace all <i data-lucide="..."> elements in the DOM with their SVG.
+   * Safe to call anytime; no-op if Lucide is not loaded.
+   * Page scripts can call Panoptica.refreshIcons() after injecting new markup.
+   */
+  function refreshIcons(root) {
+    if (typeof window.lucide !== 'undefined' && typeof window.lucide.createIcons === 'function') {
+      try {
+        window.lucide.createIcons(root ? { nameAttr: 'data-lucide', icons: undefined, attrs: {}, root } : undefined);
+      } catch (e) {
+        // Fall back to global replace if scoped form isn't supported by this build
+        try { window.lucide.createIcons(); } catch { /* ignore */ }
+      }
+    }
+  }
+
+  window.Panoptica = {
+    navigateTo,
+    openTenantDashboard,
+    showToast,
+    openModal,
+    closeModal,
+    api,
+    mdToHtml,
+    getSocket,
+    setStatus,
+    // Force an immediate refresh of the bell badge / sidebar count / status-bar
+    // open-alerts cell. Call this from any code that changes alert status
+    // (slideout, bulk actions, drift acceptance) so users don't wait up to 60s
+    // for the counts to catch up with what they just did.
+    refreshAlertSignals,
+    refreshIcons,
+    getI18n: () => i18n,
+    getUser: () => userInfo,
+    // A3 (May 9, 2026): page scripts that render mutate buttons dynamically
+    // (alert rows, CA assignments, Intune deployments, exemption rows, etc.)
+    // should call this after innerHTML/createElement so any new buttons
+    // tagged data-role-required get hidden for under-privileged users.
+    // Without this, JS-rendered buttons appear regardless of role until the
+    // next page navigation.
+    applyRoleVisibility: () => applyRoleVisibility(userInfo?.role),
+    getRole: () => userInfo?.role || null,
+  };
+
+  // Go
+  init();
+})();

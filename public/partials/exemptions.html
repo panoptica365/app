@@ -1,0 +1,42 @@
+<!-- ═══ EXEMPTIONS — unified CA + Intune ═══ -->
+<div class="panel-header" style="margin-bottom:16px;">
+  <div class="panel-elbow" style="background: var(--p-warm);"></div>
+  <span class="panel-title" data-i18n="exemptions.title">Exemptions &mdash; Granted exceptions across CA and Intune</span>
+</div>
+
+<!-- Context / explainer — uses data-i18n-html so the translated value can keep
+     its inline <strong> tags. Locale strings are author-controlled, never user
+     input, so innerHTML injection is safe in this codebase. -->
+<div class="info-panel" style="background:var(--p-surface-sunken); border:1px solid var(--p-border-subtle); padding:12px 14px; margin-bottom:16px; border-radius:4px; font-size:0.85rem; color:var(--p-text-muted);" data-i18n-html="exemptions.explainer_html">
+  Unified view of every Panoptica365-granted exception:
+  <strong>CA exemptions</strong> carve specific users or groups out of Conditional Access enforcement (e.g. service accounts that can't MFA, contractors exempt from a Canada-only rule). Alert evaluators skip these principals until expiry or revoke.
+  <strong>Intune accepted drifts</strong> are policy-wide acceptances &mdash; the whole deployment differs from template (e.g. an ASR rule temporarily in Audit mode during a deployment window) but the drift is acknowledged. Both re-fire as drift when revoked or expired.
+</div>
+
+<!-- Filter Bar -->
+<div class="exm-action-bar" style="display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
+  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+    <span data-i18n="exemptions.filter_tenant">Tenant:</span>
+    <select id="exm-tenant-filter" class="form-control" style="width:auto; min-width:200px;">
+      <option value="" data-i18n="exemptions.filter_all_tenants">All tenants</option>
+    </select>
+  </label>
+  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+    <span data-i18n="exemptions.filter_source">Source:</span>
+    <select id="exm-source-filter" class="form-control" style="width:auto; min-width:140px;">
+      <option value="" data-i18n="exemptions.filter_all">All</option>
+      <option value="ca" data-i18n="exemptions.filter_ca_only">CA only</option>
+      <option value="intune" data-i18n="exemptions.filter_intune_only">Intune only</option>
+      <option value="alert_rule" data-i18n="exemptions.filter_alert_rule_only">Alert rules only</option>
+    </select>
+  </label>
+  <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--p-text);">
+    <input type="checkbox" id="exm-include-revoked"> <span data-i18n="exemptions.show_revoked_expired">Show revoked / expired</span>
+  </label>
+  <span id="exm-count" style="color:var(--p-text-muted); font-size:0.85rem; margin-left:auto;"></span>
+</div>
+
+<!-- Exemptions Table -->
+<div id="exm-list-container" style="background:var(--p-surface); border:1px solid var(--p-border-subtle); border-radius:4px;">
+  <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="exemptions.loading">Loading exemptions...</span></div>
+</div>
