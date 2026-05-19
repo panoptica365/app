@@ -1,0 +1,134 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Panoptica365 — Docker Compose Stack
+# ═══════════════════════════════════════════════════════════════════
+#
+# Three containers run on the MSP's box, matching Master Plan §7:
+#
+#   panoptica-app    — Node + pwsh + Python runtime (this repo's Dockerfile)
+#   panoptica-db     — MySQL 8.4 (official upstream image)
+#   panoptica-proxy  — Caddy 2 (official upstream image, auto-TLS)
+#
+# The Stage 5 panoptica-updater container is intentionally NOT in this
+# file. It ships when Stage 5 lands.
+#
+# Volumes are bind-mounted under ./data/ + ./certs/ on the host (NOT
+# Docker named volumes) so the MSP can back them up with their existing
+# tools (Veeam, rclone, restic, robocopy, etc.) without going through
+# Docker. Master Plan §7 layout — do not relocate.
+#
+# Network: only panoptica-proxy exposes ports to the host (80 + 443).
+# panoptica-app and panoptica-db are only reachable on the internal
+# Docker network — never directly from the host or external internet.
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── Application ────────────────────────────────────────────────
+  panoptica-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: panoptica365/app:dev
+    container_name: panoptica-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override DB_HOST inside the container — point at the compose
+      # service name regardless of what's in .env (which is typically
+      # `localhost` for native installs).
+      DB_HOST: panoptica-db
+      # Ensure container processes use the same timezone as the host
+      # (matters for log timestamps, cron schedules, email datetime
+      # formatting). TZ env var is honored by tzdata in Debian.
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Cert bundle (read-only — operator places the Graph PFX here
+      # before first boot; updates are infrequent).
+      - ./certs:/app/certs:ro
+      # Future-use bind mounts (no current code writes to /app/uploads
+      # or /app/logs, but Master Plan §7 reserves them).
+      - ./data/uploads:/app/uploads
+      - ./data/logs:/app/logs
+      # Monthly JSON exports (15th of each month) land here for
+      # Custodia Menses ingestion. Bind-mount so the host's nightly
+      # backup can include them.
+      - ./data/exports:/app/exports
+    depends_on:
+      panoptica-db:
+        condition: service_healthy
+    networks:
+      - panoptica-net
+    # Note: no `ports:` block — the app is internal-only. Caddy
+    # reaches it over the docker network on 3000.
+
+  # ─── Database ───────────────────────────────────────────────────
+  panoptica-db:
+    image: mysql:8.4
+    container_name: panoptica-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-panoptica}
+      MYSQL_USER: ${DB_USER:-panoptica}
+      MYSQL_PASSWORD: ${DB_PASS}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Database files. Survives container destroys + image pulls.
+      # Master Plan §7 explicitly chose bind-mount over named volume
+      # so MSPs can back it up with their own tools.
+      - ./data/mysql:/var/lib/mysql
+      # Pre-update mysqldumps (Stage 5 updater will write here) and
+      # daily backups. Mounted into both the db and app containers
+      # so the eventual updater can read snapshots produced by
+      # mysqldump-from-host or from-inside-db.
+      - ./data/snapshots:/snapshots
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -p${MYSQL_ROOT_PASSWORD}
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - panoptica-net
+    # Note: no `ports:` block — the database is internal-only. Direct
+    # connections from the host or external internet are blocked at
+    # the docker network boundary. To run mysql client commands from
+    # the host, use:  docker compose exec panoptica-db mysql -u root -p
+
+  # ─── Reverse proxy + automatic TLS ──────────────────────────────
+  panoptica-proxy:
+    image: caddy:2
+    container_name: panoptica-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"     # ACME HTTP-01 challenge for Let's Encrypt renewals
+      - "443:443"   # Real traffic
+    environment:
+      PANOPTICA365_HOSTNAME: ${PANOPTICA365_HOSTNAME}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Caddy persists its issued certs + ACME account data here.
+      # Losing this directory triggers re-issuance from Let's Encrypt
+      # (subject to rate limits — 5 duplicate certs per week).
+      - ./data/caddy:/data
+      - ./data/caddy-config:/config
+    depends_on:
+      panoptica-app:
+        condition: service_healthy
+    networks:
+      - panoptica-net
+
+networks:
+  panoptica-net:
+    driver: bridge

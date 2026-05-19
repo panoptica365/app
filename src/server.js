@@ -65,6 +65,14 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Lightweight readiness endpoint for the Stage 5 updater and external monitors.
+// No auth, no DB call — returns 200 as long as the Node process is alive.
+// Mounted BEFORE session middleware so it stays cheap and never touches the
+// session store. Required by Master Plan §5.13. For richer diagnostics
+// (per-check status, DB freshness, etc.) the operator-facing endpoint is
+// /api/health, which IS session-gated and DB-backed.
+app.get('/healthz', (req, res) => res.type('text/plain').send('ok'));
+
 // Session store — MySQL-backed (A5). Replaces the default MemoryStore so:
 //   1. The "MemoryStore is not designed for a production environment" warning
 //      no longer fires on boot.

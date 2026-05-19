@@ -1351,8 +1351,6 @@ function runPdfGenerator(inputData, outputPath) {
     const projectRoot = path.join(__dirname, '..', '..');
     const venvCandidates = [
       path.join(projectRoot, 'venv', 'bin', 'python'),
-      '/opt/Panoptica/venv/bin/python',
-      '/opt/panoptica/venv/bin/python',
     ];
     let pythonBin = 'python3';
     for (const candidate of venvCandidates) {
@@ -1788,8 +1786,6 @@ function runDocumentationPdfGenerator(inputData, outputPath) {
     const projectRoot = path.join(__dirname, '..', '..');
     const venvCandidates = [
       path.join(projectRoot, 'venv', 'bin', 'python'),
-      '/opt/Panoptica/venv/bin/python',
-      '/opt/panoptica/venv/bin/python',
     ];
     let pythonBin = 'python3';
     for (const candidate of venvCandidates) {

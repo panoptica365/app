@@ -1,0 +1,79 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Panoptica365 — Caddy Reverse Proxy
+# ═══════════════════════════════════════════════════════════════════
+#
+# Caddy handles three things for the MSP:
+#   1. HTTPS — automatically requests and renews a Let's Encrypt cert
+#      for $PANOPTICA365_HOSTNAME. The MSP never touches certbot,
+#      openssl, or cron. Renewals happen ~30 days before expiry, in
+#      the background.
+#   2. Reverse proxy — forwards every incoming request to the app
+#      container on its internal port 3000.
+#   3. WebSocket upgrade — Socket.IO (real-time alert updates in the
+#      browser) requires HTTP/1.1 + Upgrade headers. Caddy v2 handles
+#      this automatically; no explicit websocket directive needed.
+#
+# Configuration variables (set in .env, surfaced as compose env):
+#   {$PANOPTICA365_HOSTNAME}  — the public hostname (e.g.
+#                              panoptica.acme-msp.com). For local
+#                              testing without public DNS, set this
+#                              to "localhost" — Caddy will auto-issue
+#                              an internal CA cert instead of trying
+#                              Let's Encrypt.
+#   {$LETSENCRYPT_EMAIL}      — receives cert-expiry warnings + the
+#                              ACME account is bound to this address.
+# ═══════════════════════════════════════════════════════════════════
+
+# ─── Global options ─────────────────────────────────────────────────
+{
+    # Email for the ACME account + Let's Encrypt expiry notices.
+    email {$LETSENCRYPT_EMAIL}
+}
+
+# ─── Site ──────────────────────────────────────────────────────────
+{$PANOPTICA365_HOSTNAME} {
+
+    # Reverse proxy to the app container. The hostname `panoptica-app`
+    # resolves on the internal docker network to the app's container.
+    # WebSocket upgrade is handled automatically — no extra config.
+    reverse_proxy panoptica-app:3000 {
+        # Forward the original client IP + protocol so the app's
+        # `trust proxy` (set in src/server.js) sees them correctly.
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Allow up to 50 MB request bodies — backup downloads + report
+    # PDF intermediates can be large.
+    request_body {
+        max_size 50MB
+    }
+
+    # Read + send timeouts long enough for slow PDF generation
+    # (Sonnet-driven tenant reports can take 30+ seconds).
+    @longRunning path /api/reports/*
+    handle @longRunning {
+        reverse_proxy panoptica-app:3000 {
+            transport http {
+                read_timeout 600s
+                write_timeout 600s
+            }
+        }
+    }
+
+    # Standard security headers. Caddy emits sensible defaults; these
+    # are belt-and-suspenders.
+    header {
+        # Tell browsers this site is HTTPS-only for a year.
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        # Don't let other sites embed Panoptica365 in iframes.
+        X-Frame-Options "DENY"
+        # Don't sniff content-types — let the app's Content-Type win.
+        X-Content-Type-Options "nosniff"
+        # Don't leak referrer to third-party domains.
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Hide the server identity.
+        -Server
+    }
+}

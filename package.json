@@ -12,9 +12,12 @@
     "pm2:restart": "pm2 restart panoptica",
     "pm2:logs": "pm2 logs panoptica"
   },
-  "author": "Trilogiam",
+  "author": "Panoptica365",
   "license": "UNLICENSED",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@azure/msal-node": "^2.16.0",
