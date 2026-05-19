@@ -9,6 +9,7 @@ Panoptica365 ingests signals from across the Microsoft 365 ecosystem — Entra I
 - **Real-time alerting** across 45 alert types covering risky sign-ins, malware delivery, external sharing anomalies, suspicious admin activity, configuration drift, license expiry, and more.
 - **AI-powered analysis** via Anthropic Claude — Haiku for per-alert reasoning, Sonnet for tenant digests, Opus for deep reports. Every alert ships with contextual interpretation rather than raw event data.
 - **Security Settings drift detection** across 17 monitored settings, with auto-attribution of changes to operator actions via Microsoft Graph audit-log correlation.
+- **Cross-tenant policy templates** — capture proven Conditional Access policies and Intune configuration profiles from any tenant, generalize tenant-specific identifiers (named locations, group GUIDs) automatically, and deploy them as standardized templates across the rest of your fleet. Lets an MSP turn one customer's hard-won security baseline into the floor for the entire book.
 - **Daily morning briefings** with severity thresholds and exemption-rule awareness.
 - **Tenant posture reports** and **configuration documentation reports** (PDF, multi-language).
 - **3-tier RBAC** (Admin / Member / Viewer) via Entra ID group membership.
