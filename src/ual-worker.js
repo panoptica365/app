@@ -117,7 +117,27 @@ function shouldBackoff(subRow) {
 function computeWindow(lastBlobTime) {
   const now = new Date();
   const minStart = new Date(now.getTime() - MAX_BACKFILL_DAYS * 24 * 60 * 60 * 1000);
-  let start = lastBlobTime ? new Date(lastBlobTime) : minStart;
+
+  // May 20, 2026 — parse DATETIME strings as UTC, not local. mysql2 returns
+  // DATETIME columns (with dateStrings: true on the pool) as bare strings
+  // like "2026-05-20 16:24:32" with no timezone tag. Our convention is to
+  // STORE these as UTC wall-clock values (via Date.toISOString()-derived
+  // inserts; see feedback_mysql_datetime_z_suffix.md). But Node's
+  // `new Date(str)` parses tag-less ISO strings as LOCAL time, so reads
+  // were being interpreted as Eastern wall clock, making every stored
+  // UTC value appear (TZ-offset) hours in the future. That misread is what
+  // tripped this function's "future-dated watermark" warning on every poll
+  // cycle since UAL ingestion shipped May 4 — even though MySQL itself
+  // saw all the values as past-dated. Explicit UTC parse fixes the misread.
+  let start;
+  if (!lastBlobTime) {
+    start = minStart;
+  } else if (lastBlobTime instanceof Date) {
+    start = lastBlobTime;
+  } else {
+    // Convert "YYYY-MM-DD HH:MM:SS" to ISO-with-Z so new Date treats it as UTC.
+    start = new Date(String(lastBlobTime).replace(' ', 'T') + 'Z');
+  }
   if (start < minStart) start = minStart;
 
   // Defend against clock drift / future-dated watermarks. If start >= now
