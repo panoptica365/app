@@ -51,10 +51,28 @@ async function ensureCaAlertSchema() {
         target_apps     VARCHAR(512),
         conditions_summary VARCHAR(512),
         monitored_fields JSON,
+        -- Added by the Apr 20 classifier refactor. There was no in-code
+        -- migration adding this column (it was applied manually on the
+        -- original production VM), so a fresh-DB CREATE without it would
+        -- break the later source_tenant_id migration's AFTER clause.
+        control_dimensions JSON DEFAULT NULL,
         created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+    // Idempotent backfill for ca_templates rows that were created by the
+    // previous v0.1.1 fix (which didn't include control_dimensions in the
+    // CREATE TABLE). If the column is missing, add it. No-op on production
+    // VMs + on freshly-created v0.1.2+ tables.
+    try {
+      const cdCol = await db.queryRows(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ca_templates' AND COLUMN_NAME = 'control_dimensions'"
+      );
+      if (cdCol.length === 0) {
+        await db.execute("ALTER TABLE ca_templates ADD COLUMN control_dimensions JSON DEFAULT NULL AFTER monitored_fields");
+        console.log('[CA] Added control_dimensions column to ca_templates (Apr 20 classifier refactor backfill)');
+      }
+    } catch (e) { /* fresh table will already have it via the CREATE above */ }
     await db.execute(`
       CREATE TABLE IF NOT EXISTS ca_assignments (
         id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
