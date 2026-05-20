@@ -124,15 +124,13 @@ services:
       PANOPTICA365_HOSTNAME: ${PANOPTICA365_HOSTNAME}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
       TZ: ${TZ:-America/Toronto}
-      # May 20, 2026 — pass-through for the Caddyfile's env-driven listen
-      # address. If CADDY_LISTEN is set in .env (typically to `:80` for
-      # local/IP testing), Caddy serves HTTP-only on port 80 bypassing
-      # the auto-https + IP-address TLS quirks. If unset, the Caddyfile's
-      # default falls through to PANOPTICA365_HOSTNAME (production path
-      # with auto Let's Encrypt). Forgetting this pass-through is the
-      # cleanup-batch bug that masked the env-driven listen — Caddy never
-      # saw CADDY_LISTEN because it wasn't in the proxy container's env.
-      CADDY_LISTEN: ${CADDY_LISTEN:-}
+      # May 20, 2026 — Caddy listen address. Defaults to the production
+      # hostname (auto Let's Encrypt path); can be overridden in .env
+      # to `:80` for HTTP-only local IP testing. The fallback is done
+      # here in compose (not in the Caddyfile) because Caddy's parser
+      # doesn't handle nested {$VAR:{$OTHER}} substitutions cleanly —
+      # see the comment in Caddyfile.
+      CADDY_LISTEN: ${CADDY_LISTEN:-${PANOPTICA365_HOSTNAME}}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Caddy persists its issued certs + ACME account data here.

@@ -34,12 +34,16 @@
 }
 
 # ─── Site ──────────────────────────────────────────────────────────
-# May 20, 2026 — Site address is env-driven via a default-fallback pattern.
-# Caddyfile supports `{$VAR:default}` syntax: use CADDY_LISTEN if set,
-# otherwise fall back to PANOPTICA365_HOSTNAME. A `:80` value listens
-# HTTP-only (Caddy doesn't auto-https port-only listeners), bypassing the
-# IP-address TLS quirks that made local testing painful.
-{$CADDY_LISTEN:{$PANOPTICA365_HOSTNAME}} {
+# May 20, 2026 — Site address is env-driven. CADDY_LISTEN is always
+# set by docker-compose: it defaults to PANOPTICA365_HOSTNAME (production
+# auto-https path) but can be overridden via the .env file to a port-only
+# listen like `:80` for local IP testing (bypasses the IP-address TLS
+# quirks). The fallback-to-hostname happens at the docker-compose layer
+# (not here in the Caddyfile) because Caddy's substitution engine does
+# not handle nested {$VAR:{$OTHER}} defaults — it parses the closing `}`
+# incorrectly and errors with "invalid port '80}'". Compose's
+# `${VAR:-${OTHER}}` interpolation does handle nesting cleanly.
+{$CADDY_LISTEN} {
 
     # Reverse proxy to the app container. The hostname `panoptica-app`
     # resolves on the internal docker network to the app's container.
