@@ -138,6 +138,18 @@ services:
       # (subject to rate limits — 5 duplicate certs per week).
       - ./data/caddy:/data
       - ./data/caddy-config:/config
+    # May 20, 2026 — healthcheck via Caddy's admin API on localhost:2019.
+    # The admin endpoint is bound to localhost-only by default (not exposed
+    # externally), and GET /config/ returns the running config as JSON
+    # when Caddy is up. Probed from inside the container via wget (Alpine's
+    # BusyBox provides it). Stage 5's updater will use container health
+    # status to decide whether an update succeeded; this is the foundation.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
       panoptica-app:
         condition: service_healthy

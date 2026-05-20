@@ -56,7 +56,10 @@ DR-RESTORE.md
 panoptica-setup.sh
 panoptica_backup.sh
 ps-setup.sh
-schema-*.sql
+# Note: legacy schema-*.sql files used to live at the repo root; they
+# now live under dev/Panoptica/legacy-schema/ which is already excluded
+# by the `dev` line above. The schema-*.sql exclusion that used to be
+# here is no longer needed.
 backups
 *.log
 
