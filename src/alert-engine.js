@@ -1655,6 +1655,18 @@ async function evaluatePolicy(policy, logic, ctx) {
     return [];
   }
 
+  // May 20, 2026 — Bundle A-F UAL policies (Defender alerts, anonymous SharePoint
+  // links, mass file deletions, etc.) are evaluated by the separate engine in
+  // src/ual-evaluators.js, not by this threshold_type dispatcher. They appear in
+  // the master policy list iterated by evaluateTenant() because they share the
+  // same alert_policies table, but they don't carry threshold_type. Without this
+  // skip, every poll cycle logs 25 "Unknown threshold_type" warnings per tenant
+  // (one per UAL policy) — pure log noise. Convention: every UAL policy's name
+  // starts with "UAL:" (set at bootstrap time in ual-evaluators.js).
+  if (policy.name && policy.name.startsWith('UAL:')) {
+    return [];
+  }
+
   // Delta/change detection takes priority — snapshot comparison policies
   // may have threshold_type set for event-based fallback, but delta_query
   // or check_mfa_disabled means they need snapshot comparison, not event matching.

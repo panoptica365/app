@@ -251,15 +251,16 @@ async function buildTenantDigestContext(tenantId) {
   // is why the first test run showed Sonnet confabulating "no risky users
   // flagged in the latest security signal captured this morning" with zero
   // evidence. Use real names or nothing.
+  // May 20, 2026 — switched from correlated subquery on metric_snapshots to
+  // direct lookup on metric_snapshots_latest. Same fix as buildChatContext
+  // above; see that comment for the perf rationale. Digest path was less
+  // user-blocking (15-min cache hides the latency), but cache miss could
+  // also 504 on heavy tenants. Cheap fix while we're touching this code.
   context.identitySignals = await db.queryRows(
-    `SELECT ms.metric_name, ms.metric_value, ms.captured_at
-     FROM metric_snapshots ms
-     WHERE ms.tenant_id = ?
-       AND ms.metric_name IN ('risky_user_counts', 'mfa_status')
-       AND ms.captured_at = (
-         SELECT MAX(ms2.captured_at) FROM metric_snapshots ms2
-         WHERE ms2.tenant_id = ms.tenant_id AND ms2.metric_name = ms.metric_name
-       )`,
+    `SELECT metric_name, metric_value, captured_at
+     FROM metric_snapshots_latest
+     WHERE tenant_id = ?
+       AND metric_name IN ('risky_user_counts', 'mfa_status')`,
     [tenantId]
   );
 
@@ -658,17 +659,17 @@ async function buildChatContext(tenantId) {
     );
     context.recentAlerts = recentAlerts;
 
-    // Latest metrics snapshot — get distinct metric names, then fetch most recent for each
-    // Using simple query to avoid mysql2 prepared statement issues with complex subqueries
+    // May 20, 2026 — read latest metrics from the denormalized
+    // metric_snapshots_latest table (introduced May 16 caching pass). On a
+    // heavy tenant like Cuisi-N-Art the old correlated-subquery against
+    // metric_snapshots (~430k rows) ran 30-60s, which 504'd the Ask Claude
+    // chat endpoint. The latest table is indexed by (tenant_id, service,
+    // metric_name) and returns in <1ms. Pattern mirrors api-tenants.js.
     const tenantIdInt = parseInt(tenantId, 10);
     const metrics = await db.queryRows(
-      `SELECT ms.service, ms.metric_name, ms.metric_value, ms.captured_at
-       FROM metric_snapshots ms
-       WHERE ms.tenant_id = ?
-         AND ms.captured_at = (
-           SELECT MAX(ms2.captured_at) FROM metric_snapshots ms2
-           WHERE ms2.tenant_id = ms.tenant_id AND ms2.metric_name = ms.metric_name
-         )`,
+      `SELECT service, metric_name, metric_value, captured_at
+       FROM metric_snapshots_latest
+       WHERE tenant_id = ?`,
       [tenantIdInt]
     );
     context.metrics = metrics;

@@ -29,6 +29,14 @@ services:
       context: .
       dockerfile: Dockerfile
     image: panoptica365/app:dev
+    # May 20, 2026 — force-build when the image isn't present locally,
+    # rather than attempting to pull from a registry that doesn't exist
+    # yet. Default Compose behavior (`pull_policy: missing`) tries the
+    # registry first, fails with "pull access denied" on a fresh VM
+    # because we haven't pushed to GHCR yet. Stage 3 will publish images
+    # to ghcr.io and this directive will get re-tuned to `missing` so
+    # MSPs pull pre-built images instead of building from source.
+    pull_policy: build
     container_name: panoptica-app
     restart: unless-stopped
     env_file:
