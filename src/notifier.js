@@ -520,7 +520,7 @@ function buildEmailHtml(alert, tenant, lang, localizedMessage) {
 
   // Date/time string in recipient locale.
   const dateLocale = targetLang === 'fr' ? 'fr-CA' : (targetLang === 'es' ? 'es' : 'en-CA');
-  const timestampStr = new Date().toLocaleString(dateLocale, { timeZone: 'America/Toronto' });
+  const timestampStr = new Date().toLocaleString(dateLocale, { timeZone: config.timezone });
 
   const headline = localizedMessage || alert.message || '';
 
@@ -553,7 +553,7 @@ function buildEmailHtml(alert, tenant, lang, localizedMessage) {
 
     <!-- Footer -->
     <div style="background:#1a1a2e;border-radius:0 0 8px 8px;padding:16px;border:1px solid #334477;border-top:none;text-align:center">
-      <a href="https://panoptica.trilogiam.net/?page=alerts" style="color:#4488ff;text-decoration:none;font-size:13px">${escHtml(L.viewInDashboard)}</a>
+      ${config.baseUrl ? `<a href="${config.baseUrl}/?page=alerts" style="color:#4488ff;text-decoration:none;font-size:13px">${escHtml(L.viewInDashboard)}</a>` : ''}
       <div style="font-size:11px;color:#666;margin-top:8px">${escHtml(L.footer)}</div>
     </div>
   </div>

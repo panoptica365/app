@@ -55,11 +55,30 @@ async function ensureSystemHealthPolicy() {
 async function createSystemAlert(message) {
   if (!systemHealthPolicyId) return;
   try {
-    // Find Trilogiam tenant (or use tenant ID 1 as fallback)
-    const trilogiam = await db.queryOne(
-      "SELECT id FROM tenants WHERE display_name LIKE '%trilogiam%' OR display_name LIKE '%Trilogiam%' LIMIT 1"
-    );
-    const tenantId = trilogiam ? trilogiam.id : 1;
+    // May 20, 2026 — MSP-agnostic tenant lookup. Three-layer fallback:
+    //   1. If MSP_TENANT_GUID env var is set, look up by that Azure GUID
+    //      (the canonical, MSP-agnostic approach for any deployment).
+    //   2. Otherwise, fall back to the legacy LIKE-based lookup for the
+    //      string "trilogiam" (preserves existing behavior on the original
+    //      install where MSP_TENANT_GUID was never set).
+    //   3. Last-resort: tenant_id=1 (whatever was first onboarded).
+    // Each layer's failure cascades to the next. Worst case we land on
+    // tenant_id=1, which has been the safety net since the briefing
+    // feature shipped.
+    let mspTenant = null;
+    const mspTenantGuid = (process.env.MSP_TENANT_GUID || '').trim();
+    if (mspTenantGuid) {
+      mspTenant = await db.queryOne(
+        'SELECT id FROM tenants WHERE tenant_id = ? LIMIT 1',
+        [mspTenantGuid]
+      );
+    }
+    if (!mspTenant) {
+      mspTenant = await db.queryOne(
+        "SELECT id FROM tenants WHERE display_name LIKE '%trilogiam%' OR display_name LIKE '%Trilogiam%' LIMIT 1"
+      );
+    }
+    const tenantId = mspTenant ? mspTenant.id : 1;
 
     const dedupKey = `system_health_briefing_email`;
     const existing = await db.queryOne(
@@ -812,7 +831,7 @@ function buildBriefingEmailHtml(summary, data, dateStr, lang) {
 
     <!-- Footer -->
     <div style="background:#1a1a2e;border-radius:0 0 8px 8px;padding:16px;border:1px solid #334477;text-align:center">
-      <a href="https://panoptica.trilogiam.net/?page=main-console" style="color:#4488ff;text-decoration:none;font-size:13px">${escHtml(L.openDashboard)}</a>
+      ${config.baseUrl ? `<a href="${config.baseUrl}/?page=main-console" style="color:#4488ff;text-decoration:none;font-size:13px">${escHtml(L.openDashboard)}</a>` : ''}
       <div style="font-size:11px;color:#666;margin-top:8px">${escHtml(L.footer)}</div>
     </div>
   </div>

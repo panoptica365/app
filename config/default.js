@@ -3,11 +3,25 @@
  * All values that can be overridden by .env or runtime settings.
  */
 
+// May 20, 2026 — single-source timezone for the whole app. Default Eastern
+// preserves the MSP datetime-comparison contract documented in
+// feedback_mysql_utc_timestamp.md. Override via TZ env var.
+const TIMEZONE = process.env.TZ || 'America/Toronto';
+
 module.exports = {
   server: {
     port: parseInt(process.env.PORT, 10) || 3000,
     env: process.env.NODE_ENV || 'development',
   },
+
+  // May 20, 2026 — cross-cutting values referenced by multiple modules.
+  // `timezone` is consumed by the notifier email timestamp, the briefing
+  // cron, and the api-settings test email. `baseUrl` is the public-facing
+  // URL used for "View in Dashboard" links inside outbound emails — empty
+  // when unset, in which case email-emitting modules omit the link rather
+  // than emit a broken URL.
+  timezone: TIMEZONE,
+  baseUrl: process.env.PANOPTICA_BASE_URL || '',
 
   db: {
     host: process.env.DB_HOST || 'localhost',
@@ -25,14 +39,18 @@ module.exports = {
     tenantId: process.env.ENTRA_TENANT_ID,
     clientId: process.env.ENTRA_CLIENT_ID,
     clientSecret: process.env.ENTRA_CLIENT_SECRET,
-    redirectUri: process.env.ENTRA_REDIRECT_URI || 'https://panoptica.trilogiam.net/auth/callback',
-    adminConsentRedirectUri: process.env.ENTRA_ADMIN_CONSENT_REDIRECT_URI || 'https://panoptica.trilogiam.net/auth/adminconsent/callback',
+    // May 20, 2026 — MSP-agnostic. Each MSP install must set these explicitly
+    // in .env (they depend on the install's public hostname). Empty default
+    // means a missing .env value surfaces as an obvious problem at first
+    // login attempt rather than silently redirecting to a stranger's domain.
+    redirectUri: process.env.ENTRA_REDIRECT_URI || '',
+    adminConsentRedirectUri: process.env.ENTRA_ADMIN_CONSENT_REDIRECT_URI || '',
     // Apr 28, 2026 — delegated OAuth flow for operator-interactive Teams admin
     // writes (TEA-01, TEA-02). Required because Microsoft Teams admin Set-Cs*
     // cmdlets don't honor cert-based app-only SP auth on customer tenants via
     // GDAP — verified May 2 2026. Operator authenticates via this URI; their
     // delegated token is used for the cmdlet call.
-    teamsDelegatedRedirectUri: process.env.ENTRA_TEAMS_DELEGATED_REDIRECT_URI || 'https://panoptica.trilogiam.net/auth/teams-delegated/callback',
+    teamsDelegatedRedirectUri: process.env.ENTRA_TEAMS_DELEGATED_REDIRECT_URI || '',
     // Entra group ID that grants access to Panoptica UI (legacy — admin-only model).
     // Kept as fallback so existing deployments keep working.
     authorizedGroupId: process.env.ENTRA_AUTHORIZED_GROUP_ID || '',
@@ -103,7 +121,11 @@ module.exports = {
       user: process.env.SMTP_USER || '',
       pass: process.env.SMTP_PASS || '',
     },
-    from: process.env.SMTP_FROM || 'panoptica@trilogiam.ca',
+    // May 20, 2026 — MSP-agnostic. Each MSP install sets this from their own
+    // SMTP-validated sending address. Empty default means missing .env value
+    // surfaces as a clear error when the first email send fails — better than
+    // silently appearing to send from a stranger's domain.
+    from: process.env.SMTP_FROM || '',
   },
 
   // Notification routing
@@ -129,7 +151,7 @@ module.exports = {
   briefing: {
     enabled: true,
     cronSchedule: '0 6 * * *', // Daily 6:00 AM (7 days/week — also serves as system heartbeat)
-    timezone: 'America/Toronto',
+    timezone: TIMEZONE,
     // May 13, 2026 — minimum severity threshold for the daily summary email.
     // Alerts below this threshold (and alerts auto-resolved by alert-exemption
     // rules) are still ingested and visible in the dashboard — they're just
@@ -153,7 +175,10 @@ module.exports = {
   // platformAttribution toggles the "via Panoptica365" tail string —
   // operators can disable it for white-label usage.
   report: {
-    mspName: process.env.MSP_NAME || 'Trilogiam',
+    // May 20, 2026 — MSP-agnostic. Empty default lets the Python PDF
+    // generator's own fallback ('Panoptica365') kick in, which is the
+    // correct brand-neutral label when no MSP_NAME is set.
+    mspName: process.env.MSP_NAME || '',
     platformAttribution: process.env.REPORT_PLATFORM_ATTRIBUTION !== 'false',
     // Default tenant licensing assumption fed to the AI narrative when no
     // tenant-specific licensing data is available. Most Panoptica customers

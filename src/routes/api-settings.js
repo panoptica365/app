@@ -83,7 +83,9 @@ function reloadSmtpConfig() {
   config.smtp.port = parseInt(process.env.SMTP_PORT, 10) || 2525;
   config.smtp.auth.user = process.env.SMTP_USER || '';
   config.smtp.auth.pass = process.env.SMTP_PASS || '';
-  config.smtp.from = process.env.SMTP_FROM || 'panoptica@trilogiam.ca';
+  // May 20, 2026 — MSP-agnostic. Mirror the fallback used at module load
+  // in config/default.js so reload + initial-load behavior stay aligned.
+  config.smtp.from = process.env.SMTP_FROM || '';
 
   // Invalidate cached transporters so next send creates a fresh one
   try {
@@ -210,7 +212,7 @@ router.post('/smtp/test', async (req, res) => {
     <div style="font-size:13px;color:#9999cc">
       Host: ${config.smtp.host}:${config.smtp.port}<br>
       From: ${config.smtp.from}<br>
-      Time: ${new Date().toLocaleString('en-CA', { timeZone: 'America/Toronto' })}
+      Time: ${new Date().toLocaleString('en-CA', { timeZone: config.timezone })}
     </div>
     <div style="font-size:11px;color:#666;margin-top:16px">Panoptica365 — Multi-Tenant M365 Monitoring</div>
   </div>

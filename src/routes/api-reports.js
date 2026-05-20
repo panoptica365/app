@@ -1007,7 +1007,11 @@ router.post('/security-posture', auth.requireMemberOrAdmin, async (req, res) => 
       // Footer / branding config — drives the "Prepared by ___ via Panoptica365" line.
       // Eventually a Settings card will edit these values per MSP installation.
       reportConfig: {
-        mspName: reportCfg.mspName || 'Trilogiam',
+        // May 20, 2026 — empty default. The Python PDF generator (see
+        // scripts/generate-pdf-report.py) falls back to "Panoptica365"
+        // when mspName is empty, which is the correct brand-neutral
+        // label for any deployment without an explicit MSP_NAME set.
+        mspName: reportCfg.mspName || '',
         platformAttribution: reportCfg.platformAttribution !== false,
       },
     };
@@ -1698,7 +1702,9 @@ router.post('/documentation', auth.requireMemberOrAdmin, async (req, res) => {
         })(),
       } : null,
       reportConfig: {
-        mspName: (config.report && config.report.mspName) || 'Trilogiam',
+        // May 20, 2026 — see matching site above; Python PDF generator
+        // fallback handles brand-neutral default.
+        mspName: (config.report && config.report.mspName) || '',
         platformAttribution: (config.report && config.report.platformAttribution) !== false,
       },
     };

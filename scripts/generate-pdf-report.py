@@ -785,9 +785,11 @@ def build_pdf(data, output_path):
     sev_labels = get_severity_labels(lang)
 
     # Build footer string from reportConfig (mspName + platformAttribution).
-    # Defaults preserve the previous behavior (Trilogiam + via Panoptica365).
+    # May 20, 2026 — brand-neutral fallback. When mspName is empty (no
+    # MSP_NAME env var set in the originating deployment), use the platform
+    # brand name. The originating MSP install can override via MSP_NAME.
     rc = data.get('reportConfig', {}) or {}
-    msp_name = rc.get('mspName', 'Trilogiam')
+    msp_name = rc.get('mspName') or 'Panoptica365'
     platform_attr = rc.get('platformAttribution', True)
     footer_template = s['footer_confidential_with_platform'] if platform_attr else s['footer_confidential_no_platform']
     footer_text = footer_template.format(msp=msp_name)
