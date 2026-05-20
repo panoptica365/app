@@ -250,9 +250,22 @@ async function processSubscription(tenant, contentType, subRow) {
         // Only advance watermark if no prior blob in this chunk failed —
         // otherwise we'd jump past the failed blob's contentCreated.
         if (firstFailureInChunk === -1) {
+          // May 20, 2026 — cap watermark at wall-clock now. Microsoft's
+          // contentCreated values can legitimately exceed `now` (their blob
+          // pipeline emits future-dated timestamps due to clock skew between
+          // datacenters and batch-processing delays — sometimes minutes,
+          // occasionally hours). Saving future-dated watermarks meant every
+          // subsequent computeWindow call logged a "future-dated watermark"
+          // warning indefinitely. Capping at now stops the accumulation;
+          // INSERT IGNORE on (tenant_id, record_id) handles any overlap when
+          // the next cycle re-requests the small window we may have skipped.
+          // The read-time defense in computeWindow() stays as belt-and-
+          // suspenders for genuine clock-drift scenarios.
           const blobTime = new Date(blob.contentCreated);
-          if (!watermarkCandidate || blobTime > watermarkCandidate) {
-            watermarkCandidate = blobTime;
+          const nowMs = Date.now();
+          const cappedBlobTime = blobTime.getTime() > nowMs ? new Date(nowMs) : blobTime;
+          if (!watermarkCandidate || cappedBlobTime > watermarkCandidate) {
+            watermarkCandidate = cappedBlobTime;
           }
         }
       } else {
