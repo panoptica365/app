@@ -73,6 +73,38 @@ async function ensureCaAlertSchema() {
         console.log('[CA] Added control_dimensions column to ca_templates (Apr 20 classifier refactor backfill)');
       }
     } catch (e) { /* fresh table will already have it via the CREATE above */ }
+
+    // May 20, 2026 — ca_drift_log.drift_type ENUM expansion.
+    // Phase 11 (Apr 18, 2026) added 4 new drift_type values for the
+    // exemption + accept-drift system: drift_accepted, exemption_granted,
+    // exemption_revoked, exemption_expired. The ALTER lives in
+    // src/db/migrate-ca-exemptions.sql, which was applied manually on
+    // production VM but never carried into code. api-ca.js code inserts
+    // these new values with a `catch (_e) { /* ENUM may not yet include */ }`
+    // suppression — which means on fresh-DB deployments the drift logging
+    // silently fails. Fix: expand the ENUM at boot. Idempotent — check
+    // COLUMN_TYPE first, MODIFY only if missing any of the new values.
+    try {
+      const dtCol = await db.queryOne(
+        "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ca_drift_log' AND COLUMN_NAME = 'drift_type'"
+      );
+      if (dtCol && !dtCol.COLUMN_TYPE.includes("'exemption_granted'")) {
+        await db.execute(`
+          ALTER TABLE ca_drift_log MODIFY COLUMN drift_type ENUM(
+            'field_changed',
+            'policy_disabled',
+            'policy_missing',
+            'policy_deleted',
+            'remediated',
+            'drift_accepted',
+            'exemption_granted',
+            'exemption_revoked',
+            'exemption_expired'
+          ) NOT NULL
+        `);
+        console.log('[CA] Expanded ca_drift_log.drift_type ENUM with Phase 11 values (drift_accepted, exemption_*)');
+      }
+    } catch (e) { console.warn('[CA] ca_drift_log.drift_type ENUM expansion (non-fatal):', e.message); }
     await db.execute(`
       CREATE TABLE IF NOT EXISTS ca_assignments (
         id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

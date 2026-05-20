@@ -153,6 +153,13 @@ async function ensureAlertColumns() {
     { name: 'last_seen_at', sql: "ALTER TABLE alerts ADD COLUMN last_seen_at DATETIME DEFAULT NULL COMMENT 'Last time condition was detected' AFTER recurrence_count" },
     { name: 'notes', sql: "ALTER TABLE alerts ADD COLUMN notes TEXT COMMENT 'Operator working notes (Quill HTML)' AFTER ai_analysis_en" },
     { name: 'auto_attributed_change_id', sql: "ALTER TABLE alerts ADD COLUMN auto_attributed_change_id INT UNSIGNED DEFAULT NULL COMMENT 'FK to tenant_change_events.id when drift is attributed to a Panoptica-initiated change' AFTER notes" },
+    // May 20, 2026 — moved from src/db/migrate-alert-exemption-rules.sql so
+    // fresh-DB MSP installs get these columns automatically. The migrate
+    // file was the only source-of-truth for these two columns; on
+    // production it was applied manually back on Apr 30 (Phase 11 exemption
+    // system). Container deployments need them in code.
+    { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | etc.' AFTER status" },
+    { name: 'resolution_rule_id', sql: "ALTER TABLE alerts ADD COLUMN resolution_rule_id INT UNSIGNED DEFAULT NULL COMMENT 'FK alert_exemption_rules.id when resolution_reason = exemption_rule' AFTER resolution_reason" },
   ];
 
   for (const col of columns) {
@@ -709,6 +716,44 @@ async function ensureAlertColumns() {
   } catch (e) {
     if (!e.message.includes('already exists')) {
       console.error('[AlertEngine] documentation_snapshots migration error:', e.message);
+    }
+  }
+
+  // May 20, 2026 — operator-defined alert exemption rules (Phase 11).
+  // Migrated here from src/db/migrate-alert-exemption-rules.sql so fresh-DB
+  // container deployments get the table automatically. Production VM has
+  // had this since Apr 30; CREATE TABLE IF NOT EXISTS is a no-op there.
+  // Schema mirrored verbatim from the migrate-*.sql file.
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS alert_exemption_rules (
+        id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        tenant_id         INT UNSIGNED NOT NULL,
+        policy_id         INT UNSIGNED NOT NULL,
+        match_upn         VARCHAR(255) NOT NULL COMMENT 'Lowercased UPN; exact match',
+        match_country     CHAR(2) DEFAULT NULL COMMENT 'ISO-3166-1 alpha-2, uppercase',
+        match_ip_cidr     VARCHAR(64) DEFAULT NULL COMMENT 'IPv4/IPv6 CIDR; matcher uses ipaddr.js if available',
+        match_asn         VARCHAR(32) DEFAULT NULL COMMENT 'RESERVED — ASN enrichment not yet wired',
+        reason            TEXT NOT NULL COMMENT 'Operator justification, REQUIRED at create',
+        expires_at        DATETIME NOT NULL COMMENT 'Hard expiry — no never expire',
+        created_by        VARCHAR(255) NOT NULL,
+        created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        revoked_at        DATETIME DEFAULT NULL,
+        revoked_by        VARCHAR(255) DEFAULT NULL,
+        revoke_reason     VARCHAR(64) DEFAULT NULL COMMENT 'manual | expired',
+        match_count       INT UNSIGNED NOT NULL DEFAULT 0,
+        last_matched_at   DATETIME DEFAULT NULL,
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+        FOREIGN KEY (policy_id) REFERENCES alert_policies(id) ON DELETE CASCADE,
+        INDEX idx_lookup (tenant_id, policy_id, match_upn, revoked_at, expires_at),
+        INDEX idx_expiry (expires_at, revoked_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log('[AlertEngine] Ensured alert_exemption_rules table exists');
+  } catch (e) {
+    if (!e.message.includes('already exists')) {
+      console.error('[AlertEngine] alert_exemption_rules migration error:', e.message);
     }
   }
 }
