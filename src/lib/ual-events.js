@@ -187,7 +187,11 @@ async function ensureTenantCutoverColumns() {
       const have = new Set(cols.map(c => c.COLUMN_NAME));
 
       if (!have.has('ual_first_seen_at')) {
-        await db.execute(
+        // May 20, 2026 — deadlock-retry helper. api-tenants.js's tenants.mode
+        // migration also ALTERs the tenants table at module load (concurrent
+        // with this function). On fresh DBs the two ALTERs race and MySQL
+        // deadlocks. Retry-with-backoff lets the loser retry post-winner.
+        await db.executeWithDeadlockRetry(
           `ALTER TABLE tenants
              ADD COLUMN ual_first_seen_at DATETIME(3) DEFAULT NULL
              COMMENT 'When Panoptica started watching this tenant for UAL alerts (forward-only cutover)'`
@@ -202,7 +206,7 @@ async function ensureTenantCutoverColumns() {
       }
 
       if (!have.has('ual_last_evaluated_at')) {
-        await db.execute(
+        await db.executeWithDeadlockRetry(
           `ALTER TABLE tenants
              ADD COLUMN ual_last_evaluated_at DATETIME(3) DEFAULT NULL
              COMMENT 'When UAL evaluators last processed events for this tenant'`

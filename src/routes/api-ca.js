@@ -26,6 +26,113 @@ let caRemediatedPolicyId = null;  // "CA Policy Drift Remediated" alert_policies
 let caExemptionChangePolicyId = null; // "CA Exemption List Changed" alert_policies.id (INFO)
 
 async function ensureCaAlertSchema() {
+  // May 20, 2026 — ensure CA tables exist before attempting ALTERs.
+  // Historical context: the CA table definitions live in schema-ca.sql at
+  // the project root, NOT in src/db/schema.sql (which is what init-schema.js
+  // loads at container boot). On the production VM, the tables exist
+  // because schema-ca.sql was applied manually during Phase 5. On fresh DBs
+  // (container deployments, test VMs), the tables don't exist and every
+  // ALTER below errors with "Table 'panoptica.ca_X' doesn't exist" — non-fatal
+  // but noisy in logs, and CA features silently don't work. Fix: inline
+  // CREATE TABLE IF NOT EXISTS for the 5 CA-related tables here. Schema is
+  // duplicated with schema-ca.sql + migrate-ca-exemptions.sql for now —
+  // proper cleanup is to consolidate all schema into src/db/schema.sql, but
+  // that's a bigger refactor.
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS ca_templates (
+        id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        name            VARCHAR(255) NOT NULL,
+        description     TEXT,
+        policy_json     JSON NOT NULL,
+        state           VARCHAR(32) DEFAULT 'enabled',
+        grant_controls  VARCHAR(512),
+        target_users    VARCHAR(512),
+        target_apps     VARCHAR(512),
+        conditions_summary VARCHAR(512),
+        monitored_fields JSON,
+        created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS ca_assignments (
+        id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        template_id     INT UNSIGNED NOT NULL,
+        tenant_id       INT UNSIGNED NOT NULL,
+        enforcement     ENUM('monitor', 'remediate') DEFAULT 'monitor',
+        live_policy_id  VARCHAR(128),
+        drift_status    ENUM('ok', 'drifted', 'missing', 'unchecked') DEFAULT 'unchecked',
+        drift_details   JSON,
+        last_checked_at DATETIME,
+        created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (template_id) REFERENCES ca_templates(id) ON DELETE CASCADE,
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+        UNIQUE KEY uq_template_tenant (template_id, tenant_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS ca_drift_log (
+        id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        assignment_id   INT UNSIGNED NOT NULL,
+        drift_type      ENUM('field_changed', 'policy_disabled', 'policy_missing', 'policy_deleted', 'remediated') NOT NULL,
+        field_path      VARCHAR(255),
+        expected_value  TEXT,
+        actual_value    TEXT,
+        remediated      BOOLEAN DEFAULT FALSE,
+        created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (assignment_id) REFERENCES ca_assignments(id) ON DELETE CASCADE,
+        INDEX idx_assignment_created (assignment_id, created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS ca_exemptions (
+        id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        assignment_id     INT UNSIGNED NOT NULL,
+        principal_type    ENUM('user', 'group') NOT NULL,
+        principal_id      VARCHAR(128) NOT NULL,
+        principal_label   VARCHAR(512),
+        reason            TEXT,
+        expires_at        DATETIME NOT NULL,
+        accepted_by       VARCHAR(255) NOT NULL,
+        accepted_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        revoked_at        DATETIME,
+        revoked_by        VARCHAR(255),
+        revoke_reason     VARCHAR(64),
+        created_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (assignment_id) REFERENCES ca_assignments(id) ON DELETE CASCADE,
+        INDEX idx_assignment_active (assignment_id, revoked_at, expires_at),
+        INDEX idx_expiry (expires_at, revoked_at),
+        UNIQUE KEY uq_active_principal (assignment_id, principal_type, principal_id, revoked_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS alerts_suppressed (
+        id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        tenant_id         INT UNSIGNED NOT NULL,
+        policy_id         INT UNSIGNED NOT NULL,
+        evaluator         VARCHAR(64) NOT NULL,
+        upn               VARCHAR(255),
+        exemption_id      INT UNSIGNED NOT NULL,
+        assignment_id     INT UNSIGNED NOT NULL,
+        control_dimension VARCHAR(64) NOT NULL,
+        event_snippet     VARCHAR(512),
+        suppressed_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+        FOREIGN KEY (exemption_id) REFERENCES ca_exemptions(id) ON DELETE CASCADE,
+        INDEX idx_tenant_time (tenant_id, suppressed_at),
+        INDEX idx_policy_time (policy_id, suppressed_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+  } catch (e) {
+    // Non-fatal — log and continue. CREATE TABLE IF NOT EXISTS is a no-op
+    // on production VMs where tables already exist; any error here is a real
+    // DB connectivity issue (which the boot will surface elsewhere anyway).
+    console.error('[CA] CREATE TABLE IF NOT EXISTS for CA tables failed (non-fatal):', e.message);
+  }
+
   // Add alert_routing to ca_templates
   try {
     const cols = await db.queryRows(

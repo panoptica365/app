@@ -63,7 +63,13 @@ const router = express.Router();
       "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'mode'"
     );
     if (!col) {
-      await db.execute(
+      // May 20, 2026 — use the deadlock-retry helper. ual-events.js's
+      // ensureTenantCutoverColumns() also ALTERs the tenants table at
+      // module-load (concurrent with this IIFE). On a fresh DB, those
+      // two ALTERs race and MySQL deadlocks them, leaving tenants.mode
+      // unadded. Retry-with-backoff lets whichever loses the deadlock
+      // try again once the winner finishes.
+      await db.executeWithDeadlockRetry(
         "ALTER TABLE tenants " +
         "ADD COLUMN mode ENUM('managed','audit_only') NOT NULL DEFAULT 'managed' AFTER language, " +
         "ADD COLUMN audit_expires_at DATETIME NULL DEFAULT NULL AFTER mode, " +
