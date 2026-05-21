@@ -24,6 +24,12 @@
  *   - morning_briefings  : MSP-wide AI digests (no tenant_id)
  *   - drift_scheduler_runs : scheduler health (no tenant_id)
  *   - sessions           : express-mysql-session operator sessions
+ *   - alert_policies     : GLOBAL rule catalog — no tenant_id column. Was
+ *                          incorrectly listed here in the Apr 28 inventory
+ *                          (an assumed per-tenant-override feature that
+ *                          never existed); removed 2026-05-21 after the
+ *                          first real cascade hit ER_BAD_FIELD_ERROR and
+ *                          dumped it into the customer-facing summary email.
  */
 
 const db = require('../db/database');
@@ -49,10 +55,11 @@ const TENANT_SCOPED_TABLES = [
   { table: 'daily_event_summaries',   column: 'tenant_id', note: 'Per-day rolled-up event summaries' },
   { table: 'daily_event_counts',      column: 'tenant_id', note: 'Per-day event counts (deduped)' },
 
-  // Alerts and policy assignments
+  // Alerts and policy assignments. NOTE: alert_policies is intentionally NOT
+  // listed — it's the global rule catalog (no tenant_id column), see the
+  // header comment.
   { table: 'alerts_suppressed',       column: 'tenant_id', note: 'Suppressed alert ids' },
   { table: 'alerts',                  column: 'tenant_id', note: 'Drift / posture alerts' },
-  { table: 'alert_policies',          column: 'tenant_id', note: 'Per-tenant alert policy overrides' },
 
   // CA exemptions + drift log link to tenants via ca_assignments.id, NOT
   // directly via tenant_id. Delete via the parent table — order matters
