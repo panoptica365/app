@@ -41,10 +41,33 @@
       });
     });
 
+    // Header tenant switcher — populate the dropdown + wire tenant changes.
+    wireTenantSwitcher();
+
     wireTenantChat();
     wireTenantDigest();
     ChangeLog.wire();
+
+    // Tab preservation across a tenant switch: the switcher re-navigates with
+    // params.view set to the tab that was active. Mark that tab active up
+    // front and hide the Overview zone so its cards don't flash before
+    // loadTenantData resolves.
+    const requestedView = params.view;
+    if (requestedView && requestedView !== 'overview' &&
+        document.querySelector('#td-view-toggle .td-view-btn[data-view="' + requestedView + '"]')) {
+      currentView = requestedView;
+      document.querySelectorAll('#td-view-toggle .td-view-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.view === currentView));
+      ['td-card-grid', 'td-digest-card', 'td-ask-claude', 'td-list-panels'].forEach(id => {
+        const node = el(id);
+        if (node) node.style.display = 'none';
+      });
+    }
+
     await loadTenantData();
+
+    // Show the requested non-overview tab now that its scaffolding exists.
+    if (currentView !== 'overview') toggleView();
 
     // Apr 28, 2026: deep-link from the per-alert breadcrumb badge.
     // navigateTo('tenant-dashboard', { id, change_id }) — open the named
@@ -65,6 +88,43 @@
     tenantFilterBar = null; // DOM gets torn down with the page; drop the ref
     chatBusy = false;
     chatSessionId = null;
+  }
+
+  // ─── Tenant switcher (header dropdown) ───
+  // Populates the header <select> with every tenant. Picking one re-navigates
+  // to that tenant's dashboard, carrying the active tab in params.view so the
+  // operator stays on the same tab (e.g. Intune Policies) after the switch.
+  async function wireTenantSwitcher() {
+    const sel = el('td-tenant-switcher');
+    if (!sel) return;
+
+    sel.addEventListener('change', () => {
+      const newId = sel.value;
+      if (!newId || String(newId) === String(tenantId)) return;
+      Panoptica.navigateTo('tenant-dashboard', { id: newId, view: currentView });
+    });
+
+    try {
+      const tenants = await Panoptica.api('/api/tenants');
+      sel.innerHTML = '';
+      tenants.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.display_name;
+        if (String(t.id) === String(tenantId)) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      // Non-fatal — the dashboard still works, switching is just unavailable.
+      // Degrade to a single option for the current tenant.
+      console.error('[TenantDashboard] Failed to load tenant list:', e);
+      sel.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = tenantId;
+      opt.textContent = (tenantInfo && tenantInfo.display_name) || window.t('tenant_dashboard.title');
+      opt.selected = true;
+      sel.appendChild(opt);
+    }
   }
 
   function toggleView() {
@@ -250,7 +310,6 @@
   // ─── Info Bar ───
 
   function renderInfoBar(t) {
-    el('td-tenant-name').textContent = window.t('tenant_dashboard.title_with_name', { name: t.display_name });
     el('td-display-name').textContent = t.display_name;
     const statusEl = el('td-status');
     statusEl.innerHTML = t.enabled

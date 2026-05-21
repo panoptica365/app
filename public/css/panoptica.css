@@ -2948,6 +2948,26 @@ body.role-viewer [data-role-readonly="member"] {
   color: var(--p-text-secondary);
 }
 
+/* ─── Tenant Dashboard — header tenant switcher ─── */
+.td-tenant-switcher {
+  background: var(--p-bg);
+  border: 1px solid var(--p-border);
+  color: var(--p-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  max-width: 460px;
+}
+
+.td-tenant-switcher:hover,
+.td-tenant-switcher:focus {
+  border-color: var(--p-accent);
+  outline: none;
+}
+
 /* ═══════════════════════════════════════════
    REPORTS PAGE — Generation Modal Progress UI
    Frame/header come from the generic .modal-overlay/.modal rules;

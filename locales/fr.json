@@ -2387,7 +2387,9 @@
       "info_governance": "Gouvernance de l’information"
     },
     "btn_polling": "⟳ Sondage...",
-    "title_with_name": "{name} — Tableau de bord",
+    "switcher_title": "Basculer vers le tableau de bord d'un autre locataire",
+    "switcher_loading": "Chargement des locataires…",
+    "header_dashboard_label": "Tableau de bord",
     "status_enabled": "Activé",
     "status_disabled": "Désactivé",
     "minutes_short": "{count} min",

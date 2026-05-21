@@ -2387,7 +2387,9 @@
       "info_governance": "Info Governance"
     },
     "btn_polling": "⟳ Polling...",
-    "title_with_name": "{name} — Dashboard",
+    "switcher_title": "Switch to another tenant's dashboard",
+    "switcher_loading": "Loading tenants…",
+    "header_dashboard_label": "Dashboard",
     "status_enabled": "Enabled",
     "status_disabled": "Disabled",
     "minutes_short": "{count} min",

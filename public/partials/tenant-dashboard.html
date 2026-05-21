@@ -1,8 +1,14 @@
 <!-- ═══ TENANT DASHBOARD (Phase 2 — Card Grid) ═══ -->
 <div class="panel-header" style="margin-bottom:0;">
   <div class="panel-elbow" style="background: var(--p-warm);"></div>
-  <!-- td-tenant-name is JS-set to actual tenant display name; "Tenant Dashboard" is the fallback before load -->
-  <span class="panel-title" id="td-tenant-name">Tenant Dashboard</span>
+  <!-- Tenant switcher: JS-populated with every tenant. Picking one re-loads the
+       dashboard for that tenant while staying on the currently-active tab. -->
+  <select class="td-tenant-switcher" id="td-tenant-switcher"
+          title="Switch to another tenant's dashboard"
+          data-i18n-attr-title="tenant_dashboard.switcher_title">
+    <option data-i18n="tenant_dashboard.switcher_loading">Loading tenants…</option>
+  </select>
+  <span class="panel-title" data-i18n="tenant_dashboard.header_dashboard_label">Dashboard</span>
   <div class="td-view-toggle" id="td-view-toggle" style="margin-left:auto;">
     <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
     <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
