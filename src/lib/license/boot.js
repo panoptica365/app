@@ -40,6 +40,7 @@
 
 const validator = require('./validator');
 const store = require('./store');
+const setupState = require('../setup/state');
 
 function box(lines) {
   // Visual delimiter for the boot error block. Matches the style of the
@@ -128,6 +129,49 @@ function printValidationFailure({ code, message, fingerprint }) {
  * Never returns on failure — calls process.exit(1).
  */
 async function validateLicenseAtBoot() {
+  // ─── 0a. Legacy-install migration (v0.1.10+) ───────────────────────
+  // Installs that pre-date v0.1.10 went through the manual setup
+  // workflow and don't have data/state/setup-completed-once.flag.
+  // Without migration they'd enter setup mode on next boot and the
+  // setup middleware would gate the entire app behind /setup. Detection
+  // is "valid-shaped LICENSE_TOKEN exists" — strong signal of a working
+  // pre-existing install. See src/lib/setup/state.js for the design.
+  try {
+    const migration = setupState.migrateLegacyInstall();
+    if (migration.migrated) {
+      // Already logged by the migrator itself.
+    }
+  } catch (e) {
+    console.warn(`[License] Legacy-install migration failed: ${e.message}`);
+  }
+
+  // ─── 0b. Setup-mode bypass (v0.1.10+) ──────────────────────────────
+  // First-boot wizard: fresh install with no completed setup MUST be able
+  // to boot so the operator can run the wizard. License validation would
+  // otherwise process.exit because LICENSE_TOKEN is empty. The wizard's
+  // license step (Step 6 of 8) calls /api/v1/activate and persists the
+  // resulting token; from the NEXT boot onward setup mode is false and
+  // this bypass no-ops, restoring strict license enforcement.
+  //
+  // Safety: setupState.isInSetupMode() returns false the moment
+  // setup-completed-once.flag exists, even if setup.json is later deleted.
+  // See src/lib/setup/state.js for the load-bearing logic.
+  if (setupState.isInSetupMode()) {
+    console.log(
+      '[License] Boot validation SKIPPED — install is in first-boot setup mode. ' +
+      'Open /setup in a browser to complete the wizard.',
+    );
+    // Still generate + persist the fingerprint so the wizard's license
+    // step has a stable value to pass to /api/v1/activate. The fingerprint
+    // generator is idempotent — won't overwrite an existing value.
+    try {
+      store.getOrCreateFingerprint();
+    } catch (e) {
+      console.warn(`[License] Setup-mode fingerprint generation failed: ${e.message}`);
+    }
+    return { claims: null, stale: false, source: 'setup-mode-bypass', fingerprint: null };
+  }
+
   // ─── 1. Fingerprint ─────────────────────────────────────────────────
   let fingerprint;
   try {

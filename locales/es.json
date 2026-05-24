@@ -3089,6 +3089,96 @@
     "never": "Nunca",
     "page_load_failed": "Error al cargar page. Inténtelo de nuevo."
   },
+  "setup": {
+    "step": {
+      "welcome": "Bienvenida",
+      "hostname": "Nombre de host",
+      "entra": "Entra",
+      "smtp": "SMTP",
+      "anthropic": "IA Claude",
+      "license": "Licencia",
+      "first_tenant": "Inquilinos"
+    },
+    "button": {
+      "back": "Atrás",
+      "next": "Guardar y continuar",
+      "skip": "Omitir",
+      "get_started": "Comenzar",
+      "save_and_test": "Guardar y probar",
+      "save_and_continue": "Guardar y continuar",
+      "skip_and_finish": "Omitir — finalizar configuración",
+      "add_tenant_and_finish": "Añadir inquilino y finalizar"
+    },
+    "error": {
+      "required_fields": "Por favor, complete todos los campos obligatorios.",
+      "boot": "No se pudo cargar la configuración: {detail}"
+    },
+    "toast": {
+      "setup_complete": "Configuración completada. Redirigiendo al consentimiento de administrador…",
+      "setup_complete_redirect": "Configuración completada. Redirigiendo al panel…"
+    },
+    "welcome": {
+      "title": "Bienvenido a Panoptica365",
+      "subtitle": "Vamos a configurar su instalación.",
+      "body": "Este asistente le guía a través de 7 pasos para configurar su instalación de Panoptica365. Necesitará su nombre de host, las credenciales del registro de aplicación de Entra (Azure AD), los detalles SMTP, una clave API de Anthropic y su clave de activación de licencia de Panoptica365. Tiempo estimado: 10-15 minutos.",
+      "lang_note": "Use el selector de idioma en la esquina superior derecha para cambiar el idioma del asistente en cualquier momento. Su selección se guardará como preferencia de operador una vez completada la configuración."
+    },
+    "hostname": {
+      "title": "Nombre de host y TLS",
+      "subtitle": "El nombre de host público donde Panoptica365 estará disponible.",
+      "label_hostname": "Nombre de host",
+      "hint_hostname": "El nombre de dominio completo que apunta a este servidor (por ejemplo, <code>panoptica.su-msp.com</code>). Caddy aprovisionará automáticamente un certificado TLS de Let’s Encrypt.",
+      "label_email": "Correo de contacto de Let’s Encrypt",
+      "hint_email": "Utilizado por Let’s Encrypt para avisos de caducidad del certificado (poco frecuente, pero importante)."
+    },
+    "entra": {
+      "title": "Microsoft Entra (Azure AD)",
+      "subtitle": "Inicio de sesión del operador y acceso a inquilinos de clientes.",
+      "intro": "Panoptica365 necesita un registro de aplicación de Entra en el inquilino propio de su MSP. Cree uno en <a href=\"https://entra.microsoft.com\" target=\"_blank\" rel=\"noopener\">entra.microsoft.com</a> como aplicación multi-inquilino con URI de redirección <code>https://&lt;su nombre de host&gt;/auth/callback</code>. Pegue los valores a continuación.",
+      "label_tenant": "ID de inquilino (GUID)",
+      "label_client": "ID de cliente (GUID)",
+      "label_secret": "Secreto de cliente",
+      "hint_secret": "El valor del secreto (no el ID del secreto). Visible solo en el momento de la creación en el portal de Entra.",
+      "label_admin_group": "ID de objeto del grupo Admin (opcional)",
+      "hint_admin_group": "Los miembros de este grupo de Entra obtienen el rol de Admin en Panoptica365. Deje vacío para permitir todos los usuarios autenticados (instalación de un solo operador)."
+    },
+    "smtp": {
+      "title": "Correo (SMTP)",
+      "subtitle": "Utilizado para notificaciones de alerta y el resumen diario.",
+      "label_host": "Servidor SMTP",
+      "label_port": "Puerto",
+      "label_from": "Dirección remitente",
+      "label_user": "Usuario SMTP",
+      "label_pass": "Contraseña SMTP",
+      "label_test_to": "Enviar correo de prueba a (opcional pero recomendado)",
+      "test_no_to": "Introduzca primero una dirección de correo de destino.",
+      "test_ok": "Correo de prueba enviado a {to}. Revise su bandeja de entrada.",
+      "test_failed": "Prueba fallida: {detail}"
+    },
+    "anthropic": {
+      "title": "Anthropic (IA Claude)",
+      "subtitle": "Impulsa el análisis de alertas, el resumen diario y el widget «Preguntar a Claude».",
+      "intro": "Obtenga una clave API en <a href=\"https://console.anthropic.com\" target=\"_blank\" rel=\"noopener\">console.anthropic.com</a>. Coste mensual estimado para ~15 inquilinos: 5-15 USD.",
+      "label_key": "Clave API (comienza con <code>sk-ant-</code>)",
+      "test_ok": "La clave API de Anthropic funciona. Llamada de prueba exitosa.",
+      "test_failed": "Prueba fallida: {detail}"
+    },
+    "license": {
+      "title": "Activación de licencia",
+      "subtitle": "Active esta instalación contra el servidor de licencias de Panoptica365.",
+      "intro": "Pegue la clave de activación de 24 caracteres de su correo de licencia Panoptica365 (formato: <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> o simplemente los 24 caracteres en bruto). El asistente la intercambiará por un token de licencia y la guardará en <code>.env</code>.",
+      "label_key": "Clave de activación",
+      "activating": "Contactando con el servidor de licencias…",
+      "activated": "Activada para {msp} — licencia {mode}, {seats} asientos.",
+      "failed": "Activación fallida: {detail}"
+    },
+    "first_tenant": {
+      "title": "Añadir su primer inquilino de cliente",
+      "subtitle": "Opcional — puede hacer esto después de completar la configuración.",
+      "intro": "Panoptica365 supervisa los inquilinos de Microsoft 365 de sus clientes. Para empezar, puede otorgar consentimiento de administrador a su primer inquilino de cliente ahora (será redirigido a Microsoft, y luego al panel de Panoptica365), u omitir este paso y añadir inquilinos más tarde desde la página Inquilinos.",
+      "complete_note": "Cuando haga clic en cualquiera de los botones a continuación, el asistente marcará la configuración como completada. Los siguientes arranques irán directamente al panel."
+    }
+  },
   "auth": {
     "login": "Sign In with Microsoft",
     "logging_in": "Signing in...",

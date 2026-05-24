@@ -36,6 +36,7 @@ const securityApiRoutes = require('./routes/api-security');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
 const licenseApiRoutes = require('./routes/api-license');
+const setupApiRoutes = require('./routes/api-setup');
 const partialRoutes = require('./routes/partials');
 
 // MSP audit service (for boot-time table migration)
@@ -52,6 +53,13 @@ const mspAudit = require('./msp-audit');
 const licenseBoot = require('./lib/license/boot');
 const licenseRefresh = require('./lib/license/refresh-client');
 const licenseDegrade = require('./lib/license/degrade-middleware');
+
+// First-boot setup wizard (v0.1.10+). The middleware gates the entire app
+// behind /setup if data/state/setup-completed-once.flag doesn't exist;
+// once the wizard finishes it's a pass-through forever. See
+// src/lib/setup/state.js for the load-bearing isInSetupMode() check.
+const setupState = require('./lib/setup/state');
+const setupMiddleware = require('./lib/setup/middleware');
 
 // Polling engine
 const polling = require('./polling');
@@ -151,6 +159,18 @@ app.use(express.static(path.join(__dirname, '..', 'public'), { index: false }));
 
 // ─── Routes ───
 
+// ─── First-boot setup wizard middleware (v0.1.10+ Stage 4) ──────────
+// Mounted AFTER static (so wizard CSS/JS loads) and BEFORE all auth/API
+// routes (so it can gate them). Pass-through once setup-completed-once.flag
+// exists. In setup mode, only /setup, /api/setup, /api/i18n, /api/meta,
+// /healthz, and static assets are accessible; everything else 302s to
+// /setup (browser nav) or 503s (API/XHR).
+//
+// Setup state file lives at data/state/setup.json (per-step progress) +
+// data/state/setup-completed-once.flag (permanent backstop). See
+// src/lib/setup/state.js for the design rationale.
+app.use(setupMiddleware.setupMiddleware);
+
 // Auth (login, callback, logout, admin consent)
 app.use('/auth', authRoutes);
 // Apr 28, 2026 — separate sub-mount for delegated Teams admin auth flow
@@ -163,6 +183,24 @@ app.use('/auth/teams-delegated', authTeamsDelegatedRoutes);
 // degrade middleware's ALWAYS_ALLOWED_PREFIXES list also includes
 // '/api/license' as belt-and-suspenders.
 app.use('/api/license', licenseApiRoutes);
+
+// First-boot wizard API. Mounted BEFORE degrade middleware (wizard runs
+// pre-license). Each endpoint internally checks setupState.isInSetupMode()
+// and 403s if setup is already complete — so these are NOT a hole on
+// production installs. See src/routes/api-setup.js for the full design.
+app.use('/api/setup', setupApiRoutes);
+
+// First-boot wizard page (HTML shell + JS state machine). Standalone page,
+// NOT served through the main SPA's index.html. Setup middleware's allowlist
+// includes /setup as a prefix, so this route reaches even in setup mode.
+// Once setup completes, redirect /setup → / so the operator doesn't accidentally
+// land on the (now-disabled) wizard.
+app.get('/setup', (req, res) => {
+  if (!setupState.isInSetupMode()) {
+    return res.redirect(302, '/');
+  }
+  res.sendFile(path.join(__dirname, '..', 'public', 'setup.html'));
+});
 
 // ─── License degrade middleware (v0.1.8 Stage C) ───────────────────
 // Three-phase enforcement for PAID licenses past JWT exp:

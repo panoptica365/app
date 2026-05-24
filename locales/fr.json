@@ -3089,6 +3089,96 @@
     "never": "Jamais",
     "page_load_failed": "Échec du chargement de la page. Veuillez réessayer."
   },
+  "setup": {
+    "step": {
+      "welcome": "Bienvenue",
+      "hostname": "Nom d’hôte",
+      "entra": "Entra",
+      "smtp": "SMTP",
+      "anthropic": "IA Claude",
+      "license": "Licence",
+      "first_tenant": "Locataires"
+    },
+    "button": {
+      "back": "Retour",
+      "next": "Enregistrer et continuer",
+      "skip": "Passer",
+      "get_started": "Commencer",
+      "save_and_test": "Enregistrer et tester",
+      "save_and_continue": "Enregistrer et continuer",
+      "skip_and_finish": "Passer — terminer la configuration",
+      "add_tenant_and_finish": "Ajouter un locataire et terminer"
+    },
+    "error": {
+      "required_fields": "Veuillez remplir tous les champs obligatoires.",
+      "boot": "Échec du chargement de la configuration : {detail}"
+    },
+    "toast": {
+      "setup_complete": "Configuration terminée. Redirection vers le consentement d’administrateur…",
+      "setup_complete_redirect": "Configuration terminée. Redirection vers le tableau de bord…"
+    },
+    "welcome": {
+      "title": "Bienvenue dans Panoptica365",
+      "subtitle": "Configurons votre installation.",
+      "body": "Cet assistant vous guide à travers 7 étapes pour configurer votre installation Panoptica365. Vous aurez besoin de votre nom d’hôte, des identifiants d’inscription d’application Entra (Azure AD), des détails SMTP, d’une clé API Anthropic et de votre clé d’activation de licence Panoptica365. Durée estimée : 10 à 15 minutes.",
+      "lang_note": "Utilisez le sélecteur de langue en haut à droite pour changer la langue de l’assistant à tout moment. Votre sélection sera enregistrée comme préférence d’opérateur une fois la configuration terminée."
+    },
+    "hostname": {
+      "title": "Nom d’hôte et TLS",
+      "subtitle": "Le nom d’hôte public où Panoptica365 sera accessible.",
+      "label_hostname": "Nom d’hôte",
+      "hint_hostname": "Le nom de domaine complet pointant vers ce serveur (par ex. <code>panoptica.votre-msp.com</code>). Caddy provisionnera automatiquement un certificat TLS Let’s Encrypt.",
+      "label_email": "Courriel de contact Let’s Encrypt",
+      "hint_email": "Utilisé par Let’s Encrypt pour les avertissements d’expiration de certificat (rare, mais important)."
+    },
+    "entra": {
+      "title": "Microsoft Entra (Azure AD)",
+      "subtitle": "Connexion de l’opérateur et accès aux locataires clients.",
+      "intro": "Panoptica365 a besoin d’une inscription d’application Entra dans votre propre locataire MSP. Créez-en une à <a href=\"https://entra.microsoft.com\" target=\"_blank\" rel=\"noopener\">entra.microsoft.com</a> en tant qu’application multi-locataire avec l’URI de redirection <code>https://&lt;votre nom d’hôte&gt;/auth/callback</code>. Collez les valeurs ci-dessous.",
+      "label_tenant": "ID du locataire (GUID)",
+      "label_client": "ID du client (GUID)",
+      "label_secret": "Secret du client",
+      "hint_secret": "La valeur du secret (pas l’ID du secret). Visible uniquement au moment de la création dans le portail Entra.",
+      "label_admin_group": "ID d’objet du groupe Admin (facultatif)",
+      "hint_admin_group": "Les membres de ce groupe Entra obtiennent le rôle Admin dans Panoptica365. Laissez vide pour autoriser tous les utilisateurs authentifiés (installation à opérateur unique)."
+    },
+    "smtp": {
+      "title": "Courriel (SMTP)",
+      "subtitle": "Utilisé pour les notifications d’alerte et le résumé quotidien.",
+      "label_host": "Serveur SMTP",
+      "label_port": "Port",
+      "label_from": "Adresse d’expédition",
+      "label_user": "Nom d’utilisateur SMTP",
+      "label_pass": "Mot de passe SMTP",
+      "label_test_to": "Envoyer un courriel de test à (facultatif mais recommandé)",
+      "test_no_to": "Entrez d’abord une adresse courriel de destination.",
+      "test_ok": "Courriel de test envoyé à {to}. Vérifiez votre boîte de réception.",
+      "test_failed": "Échec du test : {detail}"
+    },
+    "anthropic": {
+      "title": "Anthropic (IA Claude)",
+      "subtitle": "Alimente l’analyse des alertes, le résumé quotidien et le widget « Demander à Claude ».",
+      "intro": "Obtenez une clé API à <a href=\"https://console.anthropic.com\" target=\"_blank\" rel=\"noopener\">console.anthropic.com</a>. Coût mensuel estimé pour environ 15 locataires : 5 à 15 $.",
+      "label_key": "Clé API (commence par <code>sk-ant-</code>)",
+      "test_ok": "La clé API Anthropic fonctionne. Appel de test réussi.",
+      "test_failed": "Échec du test : {detail}"
+    },
+    "license": {
+      "title": "Activation de licence",
+      "subtitle": "Activez cette installation contre le serveur de licence Panoptica365.",
+      "intro": "Collez la clé d’activation à 24 caractères tirée de votre courriel de licence Panoptica365 (format : <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> ou simplement les 24 caractères bruts). L’assistant l’échangera contre un jeton de licence et le persistera dans <code>.env</code>.",
+      "label_key": "Clé d’activation",
+      "activating": "Contact du serveur de licence…",
+      "activated": "Activé pour {msp} — licence {mode}, {seats} sièges.",
+      "failed": "Échec de l’activation : {detail}"
+    },
+    "first_tenant": {
+      "title": "Ajouter votre premier locataire client",
+      "subtitle": "Facultatif — vous pouvez le faire après la fin de la configuration.",
+      "intro": "Panoptica365 surveille les locataires Microsoft 365 de vos clients. Pour commencer, vous pouvez accorder le consentement d’administrateur à votre premier locataire client maintenant (vous serez redirigé vers Microsoft, puis vers le tableau de bord Panoptica365), ou passer cette étape et ajouter des locataires plus tard depuis la page Locataires.",
+      "complete_note": "Lorsque vous cliquez sur l’un des boutons ci-dessous, l’assistant marquera la configuration comme terminée. Les démarrages suivants iront directement au tableau de bord."
+    }
+  },
   "auth": {
     "login": "Se connecter avec Microsoft",
     "logging_in": "Connexion en cours...",

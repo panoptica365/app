@@ -5,6 +5,27 @@ that release, newest first.
 
 ---
 
+## Version 0.1.10 — 2026-05-24
+
+### First-boot setup wizard
+
+Fresh installs now boot into a guided 7-step web wizard instead of
+requiring hand-editing of `.env` and a manual license-activation `curl`
+call. The wizard walks operators through hostname + TLS, Entra app
+registration, SMTP with test send, Anthropic API key with test call,
+license activation against the license server, and an optional
+first-tenant onboarding.
+
+Existing installs are detected automatically — if a valid `LICENSE_TOKEN`
+is already present in `.env`, setup is marked complete retroactively and
+the wizard never appears. No action required for current operators.
+
+The wizard is fully localized in English, Quebec French, and Spanish.
+Operators choose language via the picker in the top-right; the choice
+carries over to their operator preferences after setup completes.
+
+---
+
 ## Version 0.1.9 — 2026-05-24
 
 ### Container images now pull from GitHub Container Registry

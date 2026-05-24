@@ -5,6 +5,30 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.10 — 2026-05-24
+
+### Asistente de configuración inicial
+
+Las nuevas instalaciones ahora arrancan en un asistente web guiado de 7
+pasos en lugar de requerir la edición manual del archivo `.env` y una
+llamada `curl` de activación de licencia. El asistente guía a los
+operadores a través del nombre de host y TLS, el registro de aplicación
+de Entra, el SMTP con envío de prueba, la clave API de Anthropic con
+llamada de prueba, la activación de licencia contra el servidor de
+licencias y un onboarding opcional del primer inquilino.
+
+Las instalaciones existentes se detectan automáticamente — si ya hay un
+`LICENSE_TOKEN` válido en `.env`, la configuración se marca como
+completada retroactivamente y el asistente nunca aparece. No se
+requiere ninguna acción de los operadores actuales.
+
+El asistente está completamente localizado en inglés, francés de Quebec
+y español. Los operadores eligen el idioma mediante el selector en la
+esquina superior derecha; la elección se traslada a las preferencias
+del operador una vez completada la configuración.
+
+---
+
 ## Versión 0.1.9 — 2026-05-24
 
 ### Las imágenes de contenedor ahora se descargan desde GitHub Container Registry

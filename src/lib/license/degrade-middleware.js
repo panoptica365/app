@@ -43,6 +43,7 @@
 'use strict';
 
 const validator = require('./validator');
+const setupState = require('../setup/state');
 
 // Phase boundaries — measured in DAYS past exp. Inclusive lower bound.
 const WARNING_FROM_DAYS = 1;   // days 1-14
@@ -168,6 +169,15 @@ function isAlwaysAllowed(req) {
  * error handling.
  */
 function degradeMiddleware(req, res, next) {
+  // ─── Setup-mode bypass (v0.1.10+) ──────────────────────────────────
+  // Fresh installs running the first-boot wizard don't yet have a
+  // license at all. The setup middleware (mounted earlier) gates most
+  // routes, but the wizard's own /api/setup/* endpoints would otherwise
+  // hit this degrade middleware — which would try to read claims (null
+  // in setup mode, returns 'ok' anyway) and pass through, but better to
+  // short-circuit cleanly than rely on the fail-open branch.
+  if (setupState.isInSetupMode()) return next();
+
   // GETs always pass — read access is preserved in all phases.
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') {
     return next();

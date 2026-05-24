@@ -3089,6 +3089,96 @@
     "never": "Never",
     "page_load_failed": "Failed to load page. Please try again."
   },
+  "setup": {
+    "step": {
+      "welcome": "Welcome",
+      "hostname": "Hostname",
+      "entra": "Entra",
+      "smtp": "SMTP",
+      "anthropic": "Claude AI",
+      "license": "License",
+      "first_tenant": "Tenants"
+    },
+    "button": {
+      "back": "Back",
+      "next": "Save & Continue",
+      "skip": "Skip",
+      "get_started": "Get started",
+      "save_and_test": "Save & test",
+      "save_and_continue": "Save & continue",
+      "skip_and_finish": "Skip — finish setup",
+      "add_tenant_and_finish": "Add tenant & finish setup"
+    },
+    "error": {
+      "required_fields": "Please fill in all required fields.",
+      "boot": "Setup failed to load: {detail}"
+    },
+    "toast": {
+      "setup_complete": "Setup complete. Redirecting to admin consent…",
+      "setup_complete_redirect": "Setup complete. Redirecting to dashboard…"
+    },
+    "welcome": {
+      "title": "Welcome to Panoptica365",
+      "subtitle": "Let's get your install configured.",
+      "body": "This wizard walks you through 7 steps to configure your Panoptica365 install. You will need your hostname, Entra (Azure AD) app registration credentials, SMTP details, an Anthropic API key, and your Panoptica365 license activation key. Estimated time: 10-15 minutes.",
+      "lang_note": "Use the language picker in the top-right to change the wizard's language at any time. Your selection will be saved as your operator preference after setup completes."
+    },
+    "hostname": {
+      "title": "Hostname & TLS",
+      "subtitle": "The public hostname where Panoptica365 will be reachable.",
+      "label_hostname": "Hostname",
+      "hint_hostname": "The fully qualified domain name pointing at this server (e.g. <code>panoptica.your-msp.com</code>). Caddy will auto-provision a Let's Encrypt TLS certificate.",
+      "label_email": "Let's Encrypt contact email",
+      "hint_email": "Used by Let's Encrypt for certificate-expiry warnings (rare, but important)."
+    },
+    "entra": {
+      "title": "Microsoft Entra (Azure AD)",
+      "subtitle": "Operator login + customer-tenant access.",
+      "intro": "Panoptica365 needs an Entra app registration in your MSP's own tenant. Create one at <a href=\"https://entra.microsoft.com\" target=\"_blank\" rel=\"noopener\">entra.microsoft.com</a> as a multi-tenant app with redirect URI <code>https://&lt;your hostname&gt;/auth/callback</code>. Paste the values below.",
+      "label_tenant": "Tenant ID (GUID)",
+      "label_client": "Client ID (GUID)",
+      "label_secret": "Client Secret",
+      "hint_secret": "The secret value (not the secret ID). Visible only at creation time in the Entra portal.",
+      "label_admin_group": "Admin group Object ID (optional)",
+      "hint_admin_group": "Members of this Entra group get admin role in Panoptica365. Leave blank to allow all authenticated users (single-operator setup)."
+    },
+    "smtp": {
+      "title": "Email (SMTP)",
+      "subtitle": "Used for alert notifications + daily summary.",
+      "label_host": "SMTP host",
+      "label_port": "Port",
+      "label_from": "From address",
+      "label_user": "SMTP username",
+      "label_pass": "SMTP password",
+      "label_test_to": "Send test email to (optional but recommended)",
+      "test_no_to": "Enter a destination email address first.",
+      "test_ok": "Test email sent to {to}. Check your inbox.",
+      "test_failed": "Test failed: {detail}"
+    },
+    "anthropic": {
+      "title": "Anthropic (Claude AI)",
+      "subtitle": "Powers alert analysis + daily summary + the Ask Claude widget.",
+      "intro": "Get an API key at <a href=\"https://console.anthropic.com\" target=\"_blank\" rel=\"noopener\">console.anthropic.com</a>. Estimated monthly cost across ~15 tenants: $5-15.",
+      "label_key": "API key (starts with <code>sk-ant-</code>)",
+      "test_ok": "Anthropic API key works. Test call succeeded.",
+      "test_failed": "Test failed: {detail}"
+    },
+    "license": {
+      "title": "License Activation",
+      "subtitle": "Activate this install against the Panoptica365 license server.",
+      "intro": "Paste the 24-character activation key from your Panoptica365 license email (format: <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> or just the raw 24 chars). The wizard will exchange it for a license token and persist it to <code>.env</code>.",
+      "label_key": "Activation key",
+      "activating": "Contacting license server…",
+      "activated": "Activated for {msp} — {mode} license, {seats} seats.",
+      "failed": "Activation failed: {detail}"
+    },
+    "first_tenant": {
+      "title": "Add Your First Customer Tenant",
+      "subtitle": "Optional — you can do this after setup completes.",
+      "intro": "Panoptica365 monitors your customers' Microsoft 365 tenants. To start, you can grant admin consent to your first customer tenant now (you will be redirected to Microsoft, then back to the Panoptica365 dashboard), or skip this step and add tenants later from the Tenants page.",
+      "complete_note": "When you click either button below, the wizard will mark setup complete. Subsequent boots will go straight to the dashboard."
+    }
+  },
   "auth": {
     "login": "Sign In with Microsoft",
     "logging_in": "Signing in...",
