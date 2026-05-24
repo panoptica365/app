@@ -122,3 +122,4 @@ Thumbs.db
 desktop.ini
 
 # License server public key (safe to commit — public half of Ed25519 pair)
+!keys/license-server-public-key.pem
