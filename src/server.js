@@ -35,10 +35,23 @@ const mspAuditApiRoutes = require('./routes/api-msp-audit');
 const securityApiRoutes = require('./routes/api-security');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
+const licenseApiRoutes = require('./routes/api-license');
 const partialRoutes = require('./routes/partials');
 
 // MSP audit service (for boot-time table migration)
 const mspAudit = require('./msp-audit');
+
+// License boot orchestrator (v0.1.8+). Validates LICENSE_TOKEN against the
+// embedded Ed25519 public key, generates+persists the install fingerprint
+// if missing, and refuses to start the server if the license isn't valid.
+// Stage B (refresh client) and Stage C (degrade middleware) will consume
+// the verified claims via licenseValidator.getLicenseClaims() — that
+// module's in-memory cache is updated by every loadAndVerifyLicenseToken
+// call, so it stays current after weekly refreshes too. No need to thread
+// the claims back out through server.js exports.
+const licenseBoot = require('./lib/license/boot');
+const licenseRefresh = require('./lib/license/refresh-client');
+const licenseDegrade = require('./lib/license/degrade-middleware');
 
 // Polling engine
 const polling = require('./polling');
@@ -144,6 +157,24 @@ app.use('/auth', authRoutes);
 // (used by TEA-01, TEA-02 writers). Routes live under /auth/teams-delegated.
 app.use('/auth/teams-delegated', authTeamsDelegatedRoutes);
 
+// License status + manual refresh. Mounted BEFORE the degrade middleware so
+// operators always have a way to see "your license is in hard phase" and
+// trigger a manual refresh, even when everything else is gated. The
+// degrade middleware's ALWAYS_ALLOWED_PREFIXES list also includes
+// '/api/license' as belt-and-suspenders.
+app.use('/api/license', licenseApiRoutes);
+
+// ─── License degrade middleware (v0.1.8 Stage C) ───────────────────
+// Three-phase enforcement for PAID licenses past JWT exp:
+//   - ok / warning (0-14d past exp): pass-through (frontend shows banner)
+//   - soft (15-21d):                 block new tenant + Intune template +
+//                                    CA template creation with 402
+//   - hard (22+d):                   block all non-GET except /auth, /healthz,
+//                                    /api/license, /api/meta, /css, /js, etc.
+// NFR licenses skip all phases. Mounted AFTER /auth + /api/license so those
+// always work, BEFORE the rest of /api/* so writes get gated.
+app.use(licenseDegrade.degradeMiddleware);
+
 // API
 app.use('/api/tenants', tenantApiRoutes);
 app.use('/api/alerts', alertApiRoutes);
@@ -212,6 +243,22 @@ app.use((err, req, res, _next) => {
 // ─── Startup ───
 
 async function start() {
+  // ─── License validation (v0.1.8+) ─────────────────────────────────
+  // First gate. Runs BEFORE any DB connection, scheduler, or route mount.
+  // Reasons for ordering:
+  //   - A bad license should never trigger DB pool creation (wasted
+  //     connections, possible noise in MySQL audit logs).
+  //   - A bad license should never trigger session-store table creation
+  //     in a fresh DB (sessions table is the express-mysql-session lib's
+  //     boot hook; it would land before we'd noticed the license issue).
+  //   - The fingerprint generator may write to .env, which is harmless if
+  //     subsequent steps fail, but cleaner if it's the only side effect.
+  //
+  // validateLicenseAtBoot() process.exit(1)s on failure — never returns.
+  // On success, the verified claims live in licenseValidator's module-scope
+  // cache and are readable from anywhere via getLicenseClaims().
+  await licenseBoot.validateLicenseAtBoot();
+
   // Verify database connection
   try {
     await db.ping();
@@ -302,6 +349,15 @@ async function start() {
     // Then start the worker — concurrency 1, polls every 2s, 30-min hard
     // cap per job. Fully separate from the UAL worker.
     securityApplyWorker.start();
+
+    // License refresh client (v0.1.8). Schedules a weekly heartbeat to the
+    // license server based on the current JWT's iat. On success, writes the
+    // new token to both .env and the cache sidecar; on failure, retries in
+    // 24h. Boot validation has already verified the token, so the refresh
+    // client safely assumes a valid current claims set is in
+    // licenseValidator's in-memory cache. The timer is unref'd so a pending
+    // refresh never blocks shutdown.
+    licenseRefresh.start();
   });
 }
 
@@ -315,6 +371,7 @@ process.on('SIGINT', async () => {
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
   securityApplyWorker.stop();
+  licenseRefresh.stop();
   await db.close();
   server.close(() => process.exit(0));
 });
@@ -328,6 +385,7 @@ process.on('SIGTERM', async () => {
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
   securityApplyWorker.stop();
+  licenseRefresh.stop();
   await db.close();
   server.close(() => process.exit(0));
 });

@@ -966,6 +966,69 @@
     }
   }
 
+  // ─── License banner (v0.1.8 Stage D) ──────────────────────────
+  // Polls /api/license/status. Shows top-of-page strip in warning/soft/hard
+  // phases for paid licenses past JWT exp. NFR + pre-expiry paid licenses
+  // never see the banner. Banner copy is locale-aware via window.t(); a
+  // panoptica:locale-changed event re-renders from the cached status without
+  // an extra network round-trip. License status is the same in every locale.
+  let _licenseStatusCache = null;
+
+  async function refreshLicenseBanner() {
+    try {
+      _licenseStatusCache = await api('/api/license/status');
+    } catch (e) {
+      // 500 from server, transient network down — don't fabricate a banner.
+      console.warn('[SPA] License status fetch failed:', e.message);
+      _licenseStatusCache = null;
+    }
+    renderLicenseBanner(_licenseStatusCache);
+  }
+
+  function renderLicenseBanner(status) {
+    const el = document.getElementById('license-banner');
+    if (!el) return;
+
+    const phase = status && status.phase;
+    if (!phase || phase === 'ok') {
+      el.style.display = 'none';
+      return;
+    }
+
+    const daysPast = Number(status.days_past_expiry) || 0;
+    const daysUntilSoft = Math.max(0, 14 - daysPast);
+    const daysUntilHard = Math.max(0, 21 - daysPast);
+
+    let titleKey, bodyKey, bodyParams;
+    if (phase === 'warning') {
+      titleKey = 'license_banner.warning_title';
+      bodyKey  = 'license_banner.warning_body';
+      bodyParams = { days_until_soft: daysUntilSoft };
+    } else if (phase === 'soft') {
+      titleKey = 'license_banner.soft_title';
+      bodyKey  = 'license_banner.soft_body';
+      bodyParams = { days_until_hard: daysUntilHard };
+    } else {
+      // hard
+      titleKey = 'license_banner.hard_title';
+      bodyKey  = 'license_banner.hard_body';
+      bodyParams = {};
+    }
+
+    const titleParams = { days: daysPast };
+
+    const titleEl = document.getElementById('license-banner-title');
+    const bodyEl  = document.getElementById('license-banner-body');
+    if (titleEl) titleEl.textContent = (window.t && window.t(titleKey, titleParams)) || ('License expired ' + daysPast + ' day(s) ago');
+    if (bodyEl)  bodyEl.textContent  = (window.t && window.t(bodyKey, bodyParams)) || '';
+
+    el.setAttribute('data-phase', phase);
+    el.style.display = '';
+
+    // Translate the CTA's data-i18n attribute via the i18n helper.
+    if (window.PanopticaI18n) window.PanopticaI18n.applyTo(el);
+  }
+
   async function refreshTenantCount() {
     const sbTenants = document.getElementById('sb-tenant-count');
     try {
@@ -1291,14 +1354,15 @@
         if (userEl) userEl.textContent = userInfo.name || userInfo.email;
         paintAvatar();
         paintRoleBadge(userInfo.role);
-        // v0.1.7 — pick up app version and paint the sidebar badge.
-        // /auth/status is the single fetch that brings this to the SPA on
-        // first load; the What's-New modal also embeds it in its header.
+        // v0.1.8 — pick up app version. /auth/status is the single fetch
+        // that brings this to the SPA on first load; the What's-New modal
+        // also embeds it in its header. Version is rendered in the
+        // status-bar bottom-right via setStatus (sb-version); the v0.1.7
+        // sidebar-version badge was removed for single-source-of-truth.
         if (status.version && status.version.version) {
           appVersion = status.version.version;
           appReleasedAt = status.version.releasedAt || null;
-          const verEl = document.getElementById('sidebar-version');
-          if (verEl) verEl.textContent = 'v' + appVersion;
+          setStatus('version', 'Panoptica365 v' + appVersion);
         }
       }
     } catch (e) {
@@ -1339,6 +1403,15 @@
     // 60s is plenty — both pages have their own live refresh when open.
     setInterval(refreshAlertSignals, 60_000);
     setInterval(refreshTenantCount, 5 * 60_000);
+
+    // License banner (Stage D — v0.1.8). 5-minute cadence matches the
+    // health indicator; the status endpoint is server-cheap (reads from
+    // the validator's in-memory cache). Re-render on locale change from
+    // the cached status — no extra fetch needed since the same status
+    // renders identically in every locale.
+    refreshLicenseBanner();
+    setInterval(refreshLicenseBanner, 5 * 60_000);
+    window.addEventListener('panoptica:locale-changed', () => renderLicenseBanner(_licenseStatusCache));
 
     // System health indicator (status bar, bottom-left).
     // 5-minute cadence per Jacques' spec — catches a missed 15-min poll

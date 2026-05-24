@@ -12,6 +12,26 @@
 </head>
 <body>
 
+  <!-- ═══ LICENSE BANNER (v0.1.8 Stage D) ═══
+       Shown ABOVE the header when the install's paid license is past its
+       expiry. Three phase variants (warning / soft / hard) driven by the
+       `data-phase` attribute. Hidden by default; populated by app.js via
+       /api/license/status polling. NFR installs and pre-expiry paid never
+       see this banner. Copy is fully i18n'd via license_banner.* keys. -->
+  <div id="license-banner" class="license-banner" style="display:none;" role="alert">
+    <div class="license-banner-inner">
+      <span class="license-banner-icon" aria-hidden="true">⚠</span>
+      <div class="license-banner-text">
+        <strong id="license-banner-title"></strong>
+        <span id="license-banner-body"></span>
+      </div>
+      <a id="license-banner-cta" class="license-banner-cta"
+         href="mailto:license@panoptica365.com?subject=Panoptica365%20license%20renewal"
+         target="_blank" rel="noopener"
+         data-i18n="license_banner.cta">Contact license@panoptica365.com</a>
+    </div>
+  </div>
+
   <!-- ═══ HEADER FRAME — v6 ═══ -->
   <header class="header-frame">
     <div class="header-brand">
@@ -122,9 +142,10 @@
         <div class="nav-item" data-page="audit-log" data-role-required="admin"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.audit_log">Audit Log</span><span class="nav-indicator"></span></div>
       </div>
 
-      <!-- v0.1.7 — small app-version badge pinned to the bottom of the
-           sidebar via margin-top:auto (the sidebar is a flex column). -->
-      <div class="sidebar-version" id="sidebar-version" aria-hidden="true">v—</div>
+      <!-- v0.1.8 — sidebar-version block removed; the running app version is
+           now exclusively rendered in the status-bar bottom-right (#sb-version).
+           Single source of truth for "what version am I running" instead of
+           the v0.1.7 dual display. -->
 
     </nav>
 

@@ -5,6 +5,47 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.8 — 2026-05-24
+
+### Validación de licencia
+
+Panoptica365 ahora requiere una licencia válida para iniciarse. Cada
+instalación se activa una sola vez contra `license.panoptica365.com` para
+canjear una clave de activación por un token firmado, y luego renueva ese
+token cada semana para mantenerlo al día. El servidor de licencias solo se
+contacta para la activación y la renovación — la verificación diaria es
+totalmente fuera de línea, así que una caída del servidor de licencias no
+puede dejar fuera de servicio su instalación.
+
+La activación se hace una sola vez por instalación. Después de que el
+instalador (o un `curl` contra `/api/v1/activate`) coloque el token en
+`.env`, el arranque lo verifica y guarda una copia de respaldo en
+`data/state/license-cache.json`, de modo que un borrado accidental de
+`.env` nunca le costará tiempo de inactividad.
+
+### Banner de caducidad
+
+Si una licencia de pago supera su fecha de caducidad, aparece un banner en
+la parte superior de la página — ámbar durante el período de aviso de 14
+días, ligeramente más oscuro durante los días 15 al 21, cuando ya no se
+pueden añadir nuevos inquilinos, plantillas de Intune ni plantillas de
+acceso condicional, y rojo a partir del día 22, cuando la instalación pasa
+a modo de solo lectura. Las licencias NFR nunca ven el banner porque son
+perpetuas por diseño.
+
+El texto del banner y el botón **Contacte con license@panoptica365.com**
+están completamente localizados en inglés, francés de Quebec y español.
+
+### Lo que NO cambia
+
+Las alertas existentes, el sondeo, la detección de desviaciones, los
+ajustes de seguridad, los informes y todas las demás funcionalidades
+siguen funcionando exactamente como antes. La validación de licencia es
+una capa fina en el arranque y un middleware — no afecta a ningún
+comportamiento operativo cuando la licencia está en regla.
+
+---
+
 ## Versión 0.1.7 — 2026-05-22
 
 ### Ver las novedades — dentro de la aplicación

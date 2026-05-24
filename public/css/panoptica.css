@@ -18,6 +18,72 @@ body {
 .mono { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.05em; }
 .label { text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.7rem; color: var(--p-text-secondary); }
 
+/* ─── LICENSE BANNER (v0.1.8 Stage D) ─── */
+/* Top-of-page strip shown when paid license is past expiry. Three phase
+   variants driven by data-phase="warning|soft|hard" on the container.
+   Token-driven colors so light/dark themes work without per-theme overrides.
+   Sits above the header at z-index high enough to overlay any sticky
+   element, but BELOW any modal overlay (modals use 10000+). */
+.license-banner {
+  position: relative;
+  z-index: 50;
+  background: var(--p-warn);
+  color: #000;
+  padding: 10px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.license-banner[data-phase="warning"] { background: var(--p-warn); color: #000; }
+.license-banner[data-phase="soft"]    { background: var(--p-warn); color: #000; filter: brightness(0.93); }
+.license-banner[data-phase="hard"]    { background: var(--p-danger); color: #fff; }
+.license-banner-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.license-banner-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.license-banner-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.license-banner-text strong { font-weight: 700; }
+.license-banner-text span   { font-weight: 400; opacity: 0.92; }
+.license-banner-cta {
+  flex: 0 0 auto;
+  background: rgba(0, 0, 0, 0.16);
+  color: inherit;
+  text-decoration: none;
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  transition: background 0.15s ease;
+}
+.license-banner-cta:hover {
+  background: rgba(0, 0, 0, 0.26);
+}
+.license-banner[data-phase="hard"] .license-banner-cta {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.license-banner[data-phase="hard"] .license-banner-cta:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
 /* ─── HEADER FRAME (v6 — light chrome) ─── */
 .header-frame {
   display: flex;
@@ -4741,17 +4807,9 @@ td.monospace {
   flex: 0 0 auto;
 }
 
-/* Sidebar app-version badge — pinned to the bottom of the flex column. */
-.sidebar-version {
-  margin-top: auto;
-  padding: 14px 16px 6px;
-  font-family: var(--font-heading, system-ui);
-  font-size: 0.62rem;
-  color: var(--p-text-muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  user-select: none;
-}
+/* v0.1.8 — .sidebar-version block removed. The running app version is now
+   rendered exclusively in the status-bar bottom-right (#sb-version).
+   Single source of truth. */
 
 /* ═══════════════════════════════════════════════════════════════════
    "WHAT'S NEW" MODAL  (v0.1.7)

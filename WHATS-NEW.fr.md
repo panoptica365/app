@@ -5,6 +5,48 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.8 — 2026-05-24
+
+### Validation de licence
+
+Panoptica365 exige désormais une licence valide pour démarrer. Chaque
+installation s'active une fois contre `license.panoptica365.com` pour
+échanger une clé d'activation contre un jeton signé, puis renouvelle ce
+jeton chaque semaine pour rester à jour. Le serveur de licence n'est
+contacté que pour l'activation et le renouvellement — la vérification
+quotidienne est entièrement hors ligne, donc une panne du serveur de
+licence ne peut pas mettre votre installation hors service.
+
+L'activation est unique par installation. Une fois que l'installateur (ou
+un `curl` contre `/api/v1/activate`) a déposé le jeton dans `.env`, le
+démarrage le vérifie et conserve une copie de sauvegarde dans
+`data/state/license-cache.json`, de sorte qu'un effacement accidentel de
+`.env` ne vous coûte jamais de temps d'arrêt.
+
+### Bannière d'expiration
+
+Si une licence payante dépasse sa date d'expiration, une bannière apparaît
+en haut de page — ambre pendant la période d'avertissement de 14 jours,
+légèrement plus foncée pour les jours 15 à 21 lorsque l'ajout de nouveaux
+locataires, modèles Intune et modèles d'accès conditionnel est désactivé,
+puis rouge à partir du jour 22 lorsque l'installation passe en mode
+lecture seule. Les licences NFR ne voient jamais la bannière, car elles
+sont perpétuelles par conception.
+
+Le texte de la bannière et le bouton **Contactez license@panoptica365.com**
+sont entièrement localisés en anglais, en français québécois et en
+espagnol.
+
+### Ce qui NE change PAS
+
+Les alertes existantes, l'interrogation, la détection de dérive, les
+paramètres de sécurité, les rapports et toutes les autres fonctionnalités
+continuent exactement comme avant. La validation de licence est une couche
+mince au niveau du démarrage et d'un middleware — elle ne touche à aucun
+comportement opérationnel sur une licence en règle.
+
+---
+
 ## Version 0.1.7 — 2026-05-22
 
 ### Voir les nouveautés — dans l'application

@@ -48,6 +48,15 @@
     "loading": "Chargement…",
     "load_failed": "Impossible de charger les notes de version."
   },
+  "license_banner": {
+    "warning_title": "La licence a expiré il y a {days} jour(s)",
+    "warning_body": "Renouvelez d'ici {days_until_soft} jour(s) pour éviter des restrictions de fonctionnalités.",
+    "soft_title": "La licence a expiré il y a {days} jours — restrictions activées",
+    "soft_body": "L'ajout de locataires, de modèles Intune et de modèles d'accès conditionnel est désactivé. Renouvelez d'ici {days_until_hard} jour(s) pour éviter le mode lecture seule complet.",
+    "hard_title": "La licence a expiré il y a {days} jours — mode lecture seule",
+    "hard_body": "Seules les données existantes sont accessibles. Renouvelez immédiatement pour rétablir toutes les fonctionnalités.",
+    "cta": "Contactez license@panoptica365.com"
+  },
   "role": {
     "admin": "Administrateur",
     "operator": "Opérateur",

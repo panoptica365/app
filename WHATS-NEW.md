@@ -5,6 +5,42 @@ that release, newest first.
 
 ---
 
+## Version 0.1.8 — 2026-05-24
+
+### Licensing enforcement
+
+Panoptica365 now requires a valid license token to run. Every install
+activates once against `license.panoptica365.com` to exchange an activation
+key for a signed token, then refreshes that token weekly to stay current.
+The license server is only contacted for activation and refresh — day-to-day
+verification is fully offline, so a license-server outage cannot take down
+your install.
+
+Activation is one-time per install. After your installer (or `curl` against
+`/api/v1/activate`) lands the token in `.env`, the boot path verifies it and
+keeps a backup copy in `data/state/license-cache.json` so an accidental `.env`
+wipe never costs you uptime.
+
+### Expiry banner
+
+If a paid license passes its expiry, a top-of-page banner surfaces — amber
+for the 14-day warning period, slightly darker for days 15-21 when new
+tenants, Intune templates, and Conditional Access templates can no longer
+be created, then red for day 22+ when the install enters read-only mode.
+NFR licenses never see the banner because they are perpetual by design.
+
+The banner copy and the **Contact license@panoptica365.com** call-to-action
+are fully localized in English, Quebec French, and Spanish.
+
+### What does NOT change
+
+Existing alerts, polling, drift detection, security settings, reports, and
+every other feature continue exactly as before. Licensing is a thin layer
+at the boot path plus a middleware gate — it does not touch operational
+behavior on a healthy license.
+
+---
+
 ## Version 0.1.7 — 2026-05-22
 
 ### See what's new — in the app

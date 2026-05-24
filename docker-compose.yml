@@ -62,6 +62,13 @@ services:
       # Custodia Menses ingestion. Bind-mount so the host's nightly
       # backup can include them.
       - ./data/exports:/app/exports
+      # Persistent app state — currently just the license-cache sidecar
+      # (data/state/license-cache.json) that backs up the LICENSE_TOKEN
+      # env var so a fumbled .env edit doesn't take the install down.
+      # Bind-mounted so the cache survives container destroys + image
+      # pulls. Permissions: writable by the app's runtime user (root in
+      # the current image — Stage 4 hardening may add a dedicated user).
+      - ./data/state:/app/data/state
     depends_on:
       panoptica-db:
         condition: service_healthy

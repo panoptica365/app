@@ -48,6 +48,15 @@
     "loading": "Loading…",
     "load_failed": "Could not load release notes."
   },
+  "license_banner": {
+    "warning_title": "License expired {days} day(s) ago",
+    "warning_body": "Renew within {days_until_soft} day(s) to avoid feature restrictions.",
+    "soft_title": "License expired {days} days ago — feature restrictions active",
+    "soft_body": "Adding tenants, Intune templates and Conditional Access templates is disabled. Renew within {days_until_hard} day(s) to avoid full read-only mode.",
+    "hard_title": "License expired {days} days ago — read-only mode",
+    "hard_body": "Only existing data is accessible. Renew immediately to restore full functionality.",
+    "cta": "Contact license@panoptica365.com"
+  },
   "role": {
     "admin": "Admin",
     "operator": "Operator",

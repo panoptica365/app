@@ -48,6 +48,15 @@
     "loading": "Cargando…",
     "load_failed": "No se pudieron cargar las notas de versión."
   },
+  "license_banner": {
+    "warning_title": "La licencia caducó hace {days} día(s)",
+    "warning_body": "Renueve la licencia en {days_until_soft} día(s) para evitar restricciones de funcionalidad.",
+    "soft_title": "La licencia caducó hace {days} días — restricciones activas",
+    "soft_body": "No se pueden añadir inquilinos, plantillas de Intune ni plantillas de acceso condicional. Renueve la licencia en {days_until_hard} día(s) para evitar el modo de solo lectura.",
+    "hard_title": "La licencia caducó hace {days} días — modo de solo lectura",
+    "hard_body": "Solo se puede ver la información existente. Renueve de inmediato para restaurar toda la funcionalidad.",
+    "cta": "Contacte con license@panoptica365.com"
+  },
   "role": {
     "admin": "Administrador",
     "operator": "Operador",
