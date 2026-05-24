@@ -25,18 +25,23 @@ services:
 
   # ─── Application ────────────────────────────────────────────────
   panoptica-app:
+    # May 24, 2026 (v0.1.9) — steady-state image pulling. GHCR package was
+    # flipped to public on the panoptica365 org, so `docker compose pull`
+    # works for any MSP on any box without GitHub credentials. The Stage 2
+    # `pull_policy: build` temporary is now retired.
+    #
+    # `:latest` is the safe default for fresh installs (Stage 4 installer
+    # will substitute a pinned version like `:0.1.9` for stability — the
+    # Stage 5 updater rewrites the tag on upgrade). For dev/test installs
+    # that want to iterate on local source, the `build:` block below is
+    # preserved: `docker compose build` produces an image tagged
+    # `ghcr.io/panoptica365/app:latest` locally, and `pull_policy: missing`
+    # then finds it locally and skips the pull on the next `up`.
+    image: ghcr.io/panoptica365/app:latest
+    pull_policy: missing
     build:
       context: .
       dockerfile: Dockerfile
-    image: panoptica365/app:dev
-    # May 20, 2026 — force-build when the image isn't present locally,
-    # rather than attempting to pull from a registry that doesn't exist
-    # yet. Default Compose behavior (`pull_policy: missing`) tries the
-    # registry first, fails with "pull access denied" on a fresh VM
-    # because we haven't pushed to GHCR yet. Stage 3 will publish images
-    # to ghcr.io and this directive will get re-tuned to `missing` so
-    # MSPs pull pre-built images instead of building from source.
-    pull_policy: build
     container_name: panoptica-app
     restart: unless-stopped
     env_file:

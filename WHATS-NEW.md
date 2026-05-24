@@ -5,6 +5,24 @@ that release, newest first.
 
 ---
 
+## Version 0.1.9 — 2026-05-24
+
+### Container images now pull from GitHub Container Registry
+
+Fresh customer installs no longer build the Panoptica365 image from source.
+The published Docker image is now publicly available at
+`ghcr.io/panoptica365/app:latest`, and `docker-compose.yml` pulls it
+directly. This is the prerequisite for the Stage 4 installer
+(`install.panoptica365.com/run`, shipping shortly) — a one-line install
+command can stand up a working Panoptica365 stack on a fresh Ubuntu host
+in minutes, no developer build environment needed.
+
+Existing installs see no behavior change. If you're iterating on local
+source for dev purposes, the compose `build:` block is preserved —
+`docker compose build && docker compose up` still works exactly as before.
+
+---
+
 ## Version 0.1.8 — 2026-05-24
 
 ### Licensing enforcement

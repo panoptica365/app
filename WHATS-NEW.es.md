@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.9 — 2026-05-24
+
+### Las imágenes de contenedor ahora se descargan desde GitHub Container Registry
+
+Las nuevas instalaciones de clientes ya no construyen la imagen de
+Panoptica365 a partir del código fuente. La imagen Docker publicada está
+ahora disponible públicamente en `ghcr.io/panoptica365/app:latest`, y
+`docker-compose.yml` la descarga directamente. Este es el requisito previo
+para el instalador de la etapa 4 (`install.panoptica365.com/run`, próximo
+a publicarse) — un comando de instalación de una sola línea podrá levantar
+una pila Panoptica365 funcional en un host Ubuntu nuevo en minutos, sin
+entorno de desarrollo.
+
+Las instalaciones existentes no verán ningún cambio de comportamiento.
+Para quienes iteran sobre el código fuente local con fines de desarrollo,
+el bloque `build:` del archivo compose se conserva — `docker compose build
+&& docker compose up` sigue funcionando exactamente igual que antes.
+
+---
+
 ## Versión 0.1.8 — 2026-05-24
 
 ### Validación de licencia
