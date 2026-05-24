@@ -629,92 +629,103 @@ function stripSettingIds(setting) {
 // EXPORT — Pull all policies from a tenant
 // ═══════════════════════════════════════════
 
+// Pull every Intune policy from a tenant, live from Graph. Extracted into a
+// plain function so it can be reused server-side by the Quick Assessment
+// report (see src/routes/api-reports.js) — not only by the route below.
+// `tenant` must carry { tenant_id (Azure GUID), display_name }.
+async function exportTenantIntunePolicies(tenant, opts = {}) {
+  // opts.includeSettings=false skips the per-policy settings / definitions /
+  // intent fetches — a large speed-up when only the policy inventory is
+  // needed (the Quick Assessment report). Defaults to a full export so the
+  // GET /export route behaviour is unchanged.
+  const includeSettings = opts.includeSettings !== false;
+  const azureTenantId = tenant.tenant_id;
+  const results = [];
+  const errors = [];
+
+  for (const pType of POLICY_TYPES) {
+    try {
+      console.log(`[Intune:Export] Fetching ${pType.label} from ${tenant.display_name}...`);
+      const policies = await graph.callGraphPaged(azureTenantId, pType.listEndpoint, {
+        version: pType.version,
+        maxPages: 20,
+      });
+
+      for (const policy of policies) {
+        const item = {
+          policyType: pType.key,
+          name: pType.extractName(policy),
+          description: pType.extractDesc(policy),
+          category: pType.extractCategory(policy),
+          templateFamily: policy.templateReference?.templateFamily || null,
+          policy: pType.stripForTemplate(policy),
+        };
+
+        if (includeSettings && pType.key === 'configurationPolicies' && pType.settingsEndpoint) {
+          try {
+            const settingsData = await graph.callGraphPaged(
+              azureTenantId, pType.settingsEndpoint(policy.id),
+              { version: 'beta', maxPages: 5 }
+            );
+            item.settings = settingsData.map(s => stripSettingIds(s));
+          } catch (sErr) {
+            console.warn(`[Intune:Export] Failed to fetch settings for ${item.name}: ${sErr.message}`);
+            item.settings = [];
+          }
+        }
+
+        if (includeSettings && pType.key === 'groupPolicyConfigurations' && pType.definitionsEndpoint) {
+          try {
+            const defValues = await graph.callGraphPaged(
+              azureTenantId, pType.definitionsEndpoint(policy.id),
+              { version: 'beta', maxPages: 5 }
+            );
+            item.definitionValues = defValues;
+          } catch (dErr) {
+            console.warn(`[Intune:Export] Failed to fetch definitions for ${item.name}: ${dErr.message}`);
+            item.definitionValues = [];
+          }
+        }
+
+        if (includeSettings && pType.key === 'intents' && pType.settingsEndpoint) {
+          try {
+            const intentSettings = await graph.callGraphPaged(
+              azureTenantId, pType.settingsEndpoint(policy.id),
+              { version: 'beta', maxPages: 5 }
+            );
+            item.settings = intentSettings;
+          } catch (sErr) {
+            console.warn(`[Intune:Export] Failed to fetch intent settings for ${item.name}: ${sErr.message}`);
+            item.settings = [];
+          }
+        }
+
+        results.push(item);
+      }
+
+      console.log(`[Intune:Export] ${pType.label}: ${policies.length} policies`);
+    } catch (err) {
+      const msg = `${pType.label}: ${err.message}`;
+      console.warn(`[Intune:Export] ${msg}`);
+      errors.push(msg);
+    }
+  }
+
+  return {
+    tenant: tenant.display_name,
+    exportedAt: new Date().toISOString(),
+    totalPolicies: results.length,
+    errors: errors.length > 0 ? errors : undefined,
+    policies: results,
+  };
+}
+
 router.get('/export/:tenantId', async (req, res) => {
   try {
     const tenantDbId = parseInt(req.params.tenantId, 10);
     const tenant = await db.queryOne('SELECT id, tenant_id, display_name FROM tenants WHERE id = ?', [tenantDbId]);
     if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
-
-    const azureTenantId = tenant.tenant_id;
-    const results = [];
-    const errors = [];
-
-    for (const pType of POLICY_TYPES) {
-      try {
-        console.log(`[Intune:Export] Fetching ${pType.label} from ${tenant.display_name}...`);
-        const policies = await graph.callGraphPaged(azureTenantId, pType.listEndpoint, {
-          version: pType.version,
-          maxPages: 20,
-        });
-
-        for (const policy of policies) {
-          const item = {
-            policyType: pType.key,
-            name: pType.extractName(policy),
-            description: pType.extractDesc(policy),
-            category: pType.extractCategory(policy),
-            templateFamily: policy.templateReference?.templateFamily || null,
-            policy: pType.stripForTemplate(policy),
-          };
-
-          if (pType.key === 'configurationPolicies' && pType.settingsEndpoint) {
-            try {
-              const settingsData = await graph.callGraphPaged(
-                azureTenantId, pType.settingsEndpoint(policy.id),
-                { version: 'beta', maxPages: 5 }
-              );
-              item.settings = settingsData.map(s => stripSettingIds(s));
-            } catch (sErr) {
-              console.warn(`[Intune:Export] Failed to fetch settings for ${item.name}: ${sErr.message}`);
-              item.settings = [];
-            }
-          }
-
-          if (pType.key === 'groupPolicyConfigurations' && pType.definitionsEndpoint) {
-            try {
-              const defValues = await graph.callGraphPaged(
-                azureTenantId, pType.definitionsEndpoint(policy.id),
-                { version: 'beta', maxPages: 5 }
-              );
-              item.definitionValues = defValues;
-            } catch (dErr) {
-              console.warn(`[Intune:Export] Failed to fetch definitions for ${item.name}: ${dErr.message}`);
-              item.definitionValues = [];
-            }
-          }
-
-          if (pType.key === 'intents' && pType.settingsEndpoint) {
-            try {
-              const intentSettings = await graph.callGraphPaged(
-                azureTenantId, pType.settingsEndpoint(policy.id),
-                { version: 'beta', maxPages: 5 }
-              );
-              item.settings = intentSettings;
-            } catch (sErr) {
-              console.warn(`[Intune:Export] Failed to fetch intent settings for ${item.name}: ${sErr.message}`);
-              item.settings = [];
-            }
-          }
-
-          results.push(item);
-        }
-
-        console.log(`[Intune:Export] ${pType.label}: ${policies.length} policies`);
-      } catch (err) {
-        const msg = `${pType.label}: ${err.message}`;
-        console.warn(`[Intune:Export] ${msg}`);
-        errors.push(msg);
-      }
-    }
-
-    res.json({
-      tenant: tenant.display_name,
-      exportedAt: new Date().toISOString(),
-      totalPolicies: results.length,
-      errors: errors.length > 0 ? errors : undefined,
-      policies: results,
-    });
-
+    res.json(await exportTenantIntunePolicies(tenant));
   } catch (err) {
     console.error('[Intune:Export] Error:', err);
     res.status(500).json({ error: err.message });
@@ -2662,3 +2673,5 @@ router.schemaReady = intuneSchemaReady;
 router.exportIntunePoliciesLive = exportIntunePoliciesLive;
 
 module.exports = router;
+// Reused server-side by the Quick Assessment report (api-reports.js).
+module.exports.exportTenantIntunePolicies = exportTenantIntunePolicies;

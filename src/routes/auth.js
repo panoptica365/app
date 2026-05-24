@@ -10,6 +10,7 @@ const auth = require('../auth');
 const db = require('../db/database');
 const mspAudit = require('../msp-audit');
 const usersStore = require('../users-store');
+const versionInfo = require('../version');
 
 const router = express.Router();
 
@@ -204,11 +205,15 @@ router.get('/adminconsent', auth.requireAuth, (req, res) => {
   const state = uuidv4();
   req.session.consentState = state;
   // Tenant mode picked in the Add Tenant modal — applied at first INSERT in the
-  // callback, ignored for re-consent of existing tenants. Validate strictly;
-  // unknown values fall back to 'managed' (the safe default).
+  // Graph-consent callback, ignored for re-consent of existing tenants.
+  // Validate strictly; unknown values fall back to 'managed' (safe default).
   const requestedMode = (req.query.mode || '').toString().trim();
   req.session.consentMode = (requestedMode === 'audit_only') ? 'audit_only' : 'managed';
-  const consentUrl = auth.getAdminConsentUrl(state);
+  // Onboarding consent is a two-pass flow (see auth.getGraphConsentUrl):
+  // pass 1 = Graph. The callback advances consentStep to 'teams' for pass 2.
+  req.session.consentStep = 'graph';
+  delete req.session.consentTenantId;
+  const consentUrl = auth.getGraphConsentUrl(state);
   // Force-flush the session BEFORE redirecting to Microsoft. Without this
   // express-session writes asynchronously on res.end and the redirect can
   // race the MySQL UPDATE. If the write hasn't landed by the time Microsoft
@@ -227,37 +232,28 @@ router.get('/adminconsent', auth.requireAuth, (req, res) => {
 });
 
 router.get('/adminconsent/callback', auth.requireAuth, async (req, res) => {
+  // Onboarding consent is a two-pass flow (Graph, then Skype-Teams) that
+  // shares this single registered redirect URI; req.session.consentStep
+  // says which pass just returned. Default to 'graph' so a consent that was
+  // in flight across the upgrade to this flow is still handled correctly.
+  if ((req.session.consentStep || 'graph') === 'teams') {
+    return handleTeamsConsentCallback(req, res);
+  }
+  return handleGraphConsentCallback(req, res);
+});
+
+// ─── Pass 1: Graph consent — this is what onboards the tenant ───
+async function handleGraphConsentCallback(req, res) {
   try {
     const { admin_consent, state, error, error_description } = req.query;
-    let tenant = req.query.tenant;
+    const tenant = req.query.tenant;
 
-    // May 11, 2026 — Microsoft's /adminconsent against a brand-new tenant
-    // with a multi-resource .default scope (Graph + Skype-Teams Tenant Admin
-    // API, see src/auth.js getAdminConsentUrl) can return ?error=access_denied
-    // &error_description=AADSTS650051... alongside admin_consent=True and a
-    // valid state. The SP IS created in the customer tenant (verified manually
-    // on tenant b2b16b18-451d-43ed-bbb0-918ff354f7da first onboarding) —
-    // Microsoft's internal duplicate "create SP" pass for the second resource
-    // is what trips 650051. The `tenant` query param is absent in this
-    // redirect; the customer GUID lives only in error_description. Pull it
-    // out and proceed. NOTE: the second resource's permissions may not have
-    // landed on this attempt — TEA-* writers surface that separately via
-    // AADSTS65001 on first run and the operator re-consents via tenant-
-    // specific /adminconsent URL (see src/auth.js comment). Recovery here
-    // gets the basic onboarding to one click; Phase D Partner Center bulk
-    // consent will replace this whole flow.
+    // Single-resource Graph /adminconsent is reliable — no multi-resource
+    // create-SP quirk — so a genuine error here means consent did not
+    // happen. Log it and surface it; the operator simply retries.
     if (error) {
-      const isAadsts650051 = (error_description || '').includes('AADSTS650051');
-      const tenantMatch = isAadsts650051
-        ? (error_description || '').match(/for the tenant\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)
-        : null;
-      if (isAadsts650051 && admin_consent === 'True' && tenantMatch) {
-        tenant = tenantMatch[1];
-        console.log(`[Auth] Recovered AADSTS650051 for tenant ${tenant} — SP confirmed present, treating as successful onboarding`);
-      } else {
-        console.error(`[Auth] Admin consent error: ${error} — ${error_description}`);
-        return res.redirect('/?page=tenants&consent_error=' + encodeURIComponent(error_description || error));
-      }
+      console.error(`[Auth] Graph admin consent error: ${error} — ${error_description || ''}`);
+      return res.redirect('/?page=tenants&consent_error=' + encodeURIComponent(error_description || error));
     }
 
     // Validate state
@@ -341,12 +337,51 @@ router.get('/adminconsent/callback', auth.requireAuth, async (req, res) => {
       }).catch(() => {});
     }
 
-    res.redirect('/?page=tenants&consent_success=true');
+    // ─── Graph consent done, tenant onboarded — kick off pass 2 ───
+    // Consent the Skype-Teams resource so the cert-based Teams readers
+    // (TEA-01/TEA-02) work. Best-effort: the tenant row already exists, so
+    // if this pass fails or the operator cancels it, the tenant still
+    // functions — only those two settings can't be polled until a
+    // re-consent (re-running Add Tenant on the tenant repeats both passes).
+    const teamsState = uuidv4();
+    req.session.consentState = teamsState;
+    req.session.consentStep = 'teams';
+    req.session.consentTenantId = tenant;
+    req.session.save((saveErr) => {
+      if (saveErr) {
+        console.error('[Auth] Session save before Teams consent failed:', saveErr.message);
+        return res.redirect('/?page=tenants&consent_success=true&teams_consent=skipped');
+      }
+      res.redirect(auth.getTeamsConsentUrl(teamsState, tenant));
+    });
   } catch (err) {
     console.error('[Auth] Admin consent callback failed:', err.message);
     res.redirect('/?page=tenants&consent_error=callback_failed');
   }
-});
+}
+
+// ─── Pass 2: Skype-Teams consent — best-effort, tenant already onboarded ───
+function handleTeamsConsentCallback(req, res) {
+  const { admin_consent, state, error, error_description } = req.query;
+  const tenantId = req.session.consentTenantId || '(unknown)';
+  const expectedState = req.session.consentState;
+  // Clear the consent session state regardless of outcome — the tenant was
+  // already inserted by the Graph pass, so this pass never blocks onboarding.
+  delete req.session.consentState;
+  delete req.session.consentStep;
+  delete req.session.consentTenantId;
+
+  if (!expectedState || state !== expectedState) {
+    console.warn(`[Auth] Teams consent state mismatch for tenant ${tenantId} — tenant stays onboarded; Teams permissions unconfirmed`);
+    return res.redirect('/?page=tenants&consent_success=true&teams_consent=incomplete');
+  }
+  if (error || admin_consent !== 'True') {
+    console.warn(`[Auth] Teams consent for tenant ${tenantId} did not complete (${error || 'admin_consent!=True'}${error_description ? ' — ' + error_description : ''}) — tenant stays onboarded; TEA-01/TEA-02 need a re-consent`);
+    return res.redirect('/?page=tenants&consent_success=true&teams_consent=incomplete');
+  }
+  console.log(`[Auth] Teams resource consented for tenant ${tenantId}`);
+  return res.redirect('/?page=tenants&consent_success=true');
+}
 
 // ─── Session Status (for frontend) ───
 
@@ -359,7 +394,7 @@ router.get('/status', (req, res) => {
     // their role on next login.
     const user = { ...req.session.user };
     if (!user.role) user.role = 'viewer';
-    res.json({ authenticated: true, user });
+    res.json({ authenticated: true, user, version: versionInfo.asObject() });
   } else {
     res.json({ authenticated: false });
   }

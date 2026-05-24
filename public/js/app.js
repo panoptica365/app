@@ -11,6 +11,12 @@
   let currentModule = null;  // Reference to active page module (for destroy())
   let i18n = {};
   let userInfo = null;
+  // v0.1.7 — current app version + release date from /auth/status; drives
+  // the sidebar badge, the "unread release notes" dot, and the one-time
+  // update toast (which only fires once per session — guarded below).
+  let appVersion = null;
+  let appReleasedAt = null;
+  let whatsNewToastShown = false;
 
   // ─── Page Registry ───
   // Each page module is loaded dynamically and expected to export: init(), destroy()
@@ -166,6 +172,219 @@
   document.getElementById('modal-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });
+
+  // ─── Header dropdown menu + What's New (v0.1.7) ───────────────────────
+
+  function escHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Numeric compare of dotted version strings. Positive ⇒ a > b. Treats
+  // missing components as 0. Robust to "0.1.7" vs "0.1.7-dev" (only the
+  // leading numeric segments matter).
+  function compareVersions(a, b) {
+    const parse = v => String(v || '').split('.').map(p => parseInt(p, 10) || 0);
+    const pa = parse(a), pb = parse(b);
+    const len = Math.max(pa.length, pb.length);
+    for (let i = 0; i < len; i++) {
+      const da = pa[i] || 0, db = pb[i] || 0;
+      if (da !== db) return da - db;
+    }
+    return 0;
+  }
+
+  // Called from initUserPrefs's loadUserPrefs().then() once the user's
+  // last_seen_version is known. Lights up the unread dot (on the pill +
+  // the menu item) and fires the one-time update toast.
+  function updateWhatsNewIndicators(prefs) {
+    const last = prefs && prefs.user ? (prefs.user.last_seen_version || null) : null;
+    // Treat NULL last_seen_version (first-ever login) as "seen everything"
+    // — we don't want to nag new operators on their first session.
+    const unread = !!appVersion && !!last && compareVersions(appVersion, last) > 0;
+    const dot = document.getElementById('header-user-dot');
+    const menuDot = document.getElementById('header-menu-dot');
+    if (dot) dot.style.display = unread ? '' : 'none';
+    if (menuDot) menuDot.style.display = unread ? '' : 'none';
+    if (unread && !whatsNewToastShown) {
+      whatsNewToastShown = true;
+      showUpdateToast();
+    }
+  }
+
+  // Clickable "you've been updated" toast — distinct from the generic
+  // showToast so the whole toast is a clickable shortcut to the modal.
+  function showUpdateToast() {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast info';
+    toast.style.cursor = 'pointer';
+    const msg = (window.t && window.t('whats_new.toast_message', { version: appVersion })) || `Panoptica365 has been updated to v${appVersion}`;
+    const action = (window.t && window.t('whats_new.toast_action')) || 'See what’s new';
+    toast.innerHTML = `${escHtml(msg)} &nbsp; <strong style="text-decoration:underline;">${escHtml(action)} →</strong>`;
+    toast.addEventListener('click', () => {
+      try { openWhatsNewModal(); } catch (e) { /* ignore */ }
+      toast.remove();
+    });
+    container.appendChild(toast);
+    // Auto-dismiss after 8s — slightly longer than the standard 4s because
+    // there's a call-to-action the user needs time to notice.
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(50px)';
+      toast.style.transition = 'all 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, 8000);
+  }
+
+  // WHATS-NEW.md is hard-wrapped at ~78 columns in the source (so the file
+  // stays readable in an editor). The shared mdToHtml converts EVERY '\n'
+  // to a <br>, which renders those soft wraps as visible line breaks
+  // mid-sentence. Standard markdown collapses single newlines within a
+  // paragraph to a space; only blank lines mark paragraph breaks. This
+  // helper applies that scoped to the What's New flow — without touching
+  // mdToHtml, which other features (chat, AI analysis) rely on as-is.
+  function unwrapSoftLineBreaks(md) {
+    if (!md) return '';
+    return md
+      .split(/\n{2,}/) // split on blank-line paragraph breaks
+      .map(block => {
+        const first = block.replace(/^\s+/, '');
+        // Preserve internal newlines for any block-level markdown so list
+        // items, headings, blockquotes, code fences, and horizontal rules
+        // stay structured. Plain paragraphs get their soft wraps collapsed.
+        if (/^(#{1,6}\s|[-*+]\s|>\s|```|---|\d+\.\s)/.test(first)) {
+          return block;
+        }
+        return block.replace(/\s*\n\s*/g, ' ').trim();
+      })
+      .join('\n\n');
+  }
+
+  async function openWhatsNewModal() {
+    const modalTitle = (window.t && window.t('whats_new.modal_title')) || 'What’s New in Panoptica365';
+    const loadingTxt = (window.t && window.t('whats_new.loading')) || 'Loading…';
+    openModal(modalTitle, `<div style="color:var(--p-text-muted); text-align:center; padding:30px 0;">${escHtml(loadingTxt)}</div>`, '');
+    try {
+      // Pass the active UI language so we get the localized WHATS-NEW.<lang>.md
+      // from the server. Unknown / missing locales fall back to English on the
+      // backend, so this is always safe to send.
+      const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+      const data = await api('/api/meta/whats-new?lang=' + encodeURIComponent(lang));
+      const markdown = unwrapSoftLineBreaks(data.markdown || '');
+      // Split the markdown into [intro, latest release, earlier releases].
+      // Each release section starts with a localized "Version" header — in
+      // English/French that word is "Version", in Spanish it's "Versión". We
+      // accept either so a translated file splits cleanly into latest vs
+      // earlier the same way the English one does.
+      const sectionRe = /^## Versi(?:on|ón) /m;
+      const firstIdx = markdown.search(sectionRe);
+      let releases = firstIdx >= 0 ? markdown.slice(firstIdx) : markdown;
+      let latest = releases;
+      let earlier = '';
+      // Find the SECOND release header to split latest vs earlier.
+      const nextRe = /\n## Versi(?:on|ón) /;
+      const m2 = releases.match(nextRe);
+      const secondIdx = m2 ? m2.index : -1;
+      if (secondIdx > 0) {
+        latest = releases.slice(0, secondIdx).replace(/\n+---\s*$/g, '').trimEnd();
+        earlier = releases.slice(secondIdx + 1); // strip leading newline
+      }
+
+      const releasedLabel = (window.t && window.t('whats_new.released')) || 'Released';
+      const earlierLabel = (window.t && window.t('whats_new.earlier_releases')) || 'Earlier releases';
+
+      const headerHtml = `
+        <div class="whats-new-meta">
+          <span class="wn-version">v${escHtml(data.version || appVersion || '')}</span>
+          ${data.releasedAt ? `<span class="wn-released">${escHtml(releasedLabel)}: ${escHtml(data.releasedAt)}</span>` : ''}
+        </div>`;
+      const latestHtml = `<div class="whats-new-body">${mdToHtml(latest)}</div>`;
+      const earlierHtml = earlier
+        ? `<details class="whats-new-history">
+             <summary>${escHtml(earlierLabel)}</summary>
+             <div class="whats-new-body">${mdToHtml(earlier)}</div>
+           </details>`
+        : '';
+      document.getElementById('modal-body').innerHTML = headerHtml + latestHtml + earlierHtml;
+
+      // Mark this version as seen for the current operator — clears the
+      // unread dot + ensures the toast won't fire on next login.
+      if (data.version) {
+        api('/api/user-prefs/whats-new-seen', {
+          method: 'POST',
+          body: JSON.stringify({ version: data.version }),
+        }).catch(() => { /* non-fatal */ });
+        const dot = document.getElementById('header-user-dot');
+        const menuDot = document.getElementById('header-menu-dot');
+        if (dot) dot.style.display = 'none';
+        if (menuDot) menuDot.style.display = 'none';
+      }
+    } catch (err) {
+      const failTxt = (window.t && window.t('whats_new.load_failed')) || 'Could not load release notes.';
+      document.getElementById('modal-body').innerHTML = `<div style="color:var(--p-text-muted);">${escHtml(failTxt)}</div>`;
+    }
+  }
+
+  function initHeaderMenu() {
+    const trigger = document.getElementById('header-user-block');
+    const menu = document.getElementById('header-menu');
+    if (!trigger || !menu) return;
+
+    function openMenu() {
+      menu.classList.add('active');
+      trigger.setAttribute('aria-expanded', 'true');
+      menu.setAttribute('aria-hidden', 'false');
+    }
+    function closeMenu() {
+      menu.classList.remove('active');
+      trigger.setAttribute('aria-expanded', 'false');
+      menu.setAttribute('aria-hidden', 'true');
+    }
+    function toggleMenu() {
+      if (menu.classList.contains('active')) closeMenu(); else openMenu();
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); }
+    });
+    // Click anywhere outside the menu closes it.
+    document.addEventListener('click', (e) => {
+      if (!menu.classList.contains('active')) return;
+      if (trigger.contains(e.target) || menu.contains(e.target)) return;
+      closeMenu();
+    });
+    // ESC closes.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.classList.contains('active')) closeMenu();
+    });
+
+    const prefsBtn = document.getElementById('header-menu-prefs');
+    if (prefsBtn) prefsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+      if (window.Panoptica && typeof window.Panoptica.openUserPrefs === 'function') {
+        window.Panoptica.openUserPrefs();
+      }
+    });
+    const whatsNewBtn = document.getElementById('header-menu-whats-new');
+    if (whatsNewBtn) whatsNewBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+      openWhatsNewModal();
+    });
+    // Log out is a plain <a href="/auth/logout"> — default navigation; just
+    // close the menu so it's not left hanging during the redirect.
+    const logoutA = document.getElementById('header-menu-logout');
+    if (logoutA) logoutA.addEventListener('click', () => closeMenu());
+  }
 
   // ─── Clock ───
 
@@ -594,15 +813,17 @@
     // these survive.
     window.Panoptica = window.Panoptica || {};
     window.Panoptica.getActiveMute = () => userPrefsCache?.active_mute || null;
-    window.Panoptica.openUserPrefs = () => {
-      overlay.classList.add('active');
-    };
+    // v0.1.7: expose the full open() (which refreshes prefs first), so the
+    // header menu's "Preferences" item shows up-to-date state.
+    window.Panoptica.openUserPrefs = () => open();
 
     // Initial load + legacy migration. Done in background so the trigger
-    // is responsive even on first ever click.
+    // is responsive even on first ever click. Also drives the v0.1.7
+    // What's-New unread indicators once last_seen_version is loaded.
     loadUserPrefs().then(prefs => {
       if (prefs) migrateLegacyLocalStoragePrefs(prefs);
       if (typeof refreshHeaderMuteIndicator === 'function') refreshHeaderMuteIndicator();
+      if (typeof updateWhatsNewIndicators === 'function') updateWhatsNewIndicators(prefs);
     });
 
     async function open() {
@@ -622,10 +843,10 @@
     }
     function close() { overlay.classList.remove('active'); }
 
-    trigger.addEventListener('click', open);
-    trigger.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
-    });
+    // v0.1.7: the user-name pill no longer opens Preferences directly —
+    // it now opens the header dropdown menu (initHeaderMenu below). The
+    // menu's "Preferences" item calls Panoptica.openUserPrefs() to open
+    // this overlay via the full open() above.
     closeBtn.addEventListener('click', close);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
@@ -1070,6 +1291,15 @@
         if (userEl) userEl.textContent = userInfo.name || userInfo.email;
         paintAvatar();
         paintRoleBadge(userInfo.role);
+        // v0.1.7 — pick up app version and paint the sidebar badge.
+        // /auth/status is the single fetch that brings this to the SPA on
+        // first load; the What's-New modal also embeds it in its header.
+        if (status.version && status.version.version) {
+          appVersion = status.version.version;
+          appReleasedAt = status.version.releasedAt || null;
+          const verEl = document.getElementById('sidebar-version');
+          if (verEl) verEl.textContent = 'v' + appVersion;
+        }
       }
     } catch (e) {
       console.warn('[SPA] Failed to load user status');
@@ -1100,6 +1330,7 @@
     // Header chrome: bell / avatar / mute indicator
     initBell();
     initUserPrefs();
+    initHeaderMenu();
     initHeaderMuteIndicator();
 
     // Sidebar counts + bell badge, shared refresh loop
@@ -1255,6 +1486,10 @@
     // next page navigation.
     applyRoleVisibility: () => applyRoleVisibility(userInfo?.role),
     getRole: () => userInfo?.role || null,
+    // v0.1.7 — expose for page scripts that may want to surface "what's new"
+    // links of their own. The header menu uses this too.
+    openWhatsNew: () => openWhatsNewModal(),
+    getAppVersion: () => appVersion,
   };
 
   // Go

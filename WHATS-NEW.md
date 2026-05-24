@@ -5,6 +5,86 @@ that release, newest first.
 
 ---
 
+## Version 0.1.7 — 2026-05-22
+
+### See what's new — in the app
+
+The header now has a **What's New** menu (click your name in the top-right).
+Each release puts its highlights one click away — the latest version is shown
+by default, with an **Earlier releases** expander for the full history.
+
+You also get a small unread dot on your name whenever there's a release you
+have not read yet, and a one-time toast on first load after an update — so a
+new version never slips by unnoticed.
+
+Two other small additions in the same area: the **Log out** button has been
+folded into the same dropdown menu (alongside Preferences), and the current
+app version is now shown at the bottom of the left sidebar.
+
+---
+
+## Version 0.1.6 — 2026-05-22
+
+### New report — Quick Assessment
+
+A new report type is available under **Reports → Quick Assessment**. Where the
+Configuration Documentation report is a pure data snapshot, the Quick
+Assessment is an *advisory* report: it takes a tenant's current configuration
+and runs it through an in-depth AI analysis that highlights strengths,
+weaknesses, and — most importantly — **what is missing**.
+
+It reviews Conditional Access, Intune, and the full security-settings posture,
+and calls out gaps against Microsoft's recommended baselines: missing
+Conditional Access policies, absent or weak Intune policies, security settings
+that have drifted from their recommended state. Where Panoptica365 already has
+a template that would close a gap, the recommendation is flagged as a one-click
+deploy — and a gap is still reported even when no template exists for it.
+
+When you click **Generate Report**, a box appears where you can add free-text
+context for the analysis — the customer's business type, known concerns,
+anything the analysis should weigh (you can paste in notes). The report is a
+point-in-time snapshot — no date range — and it is available for audit-only
+tenants, which makes it a natural deliverable for a trial engagement.
+
+### "Poll Now" no longer reports a false timeout
+
+Triggering an on-demand poll of a tenant — especially a newly added one,
+where the first poll has to fetch everything — could show a
+"Poll failed: HTTP 504" error even though the poll was still running and
+went on to finish successfully.
+
+On-demand polls now run in the background. The poll starts immediately, the
+dashboard keeps its "Polling…" state, and the page refreshes on its own the
+moment the poll completes (or reports a clear error if it genuinely fails).
+A long-running poll can no longer trip a gateway timeout.
+
+### PDF reports now generate on server installations
+
+Generating a tenant Documentation or Security Posture report could fail on a
+server install with a "No module named …" error — the installer did not
+provision the Python libraries (ReportLab, matplotlib) that the PDF
+generators depend on. The setup script now creates a dedicated Python
+environment with those libraries, so PDF report generation works out of the
+box on a fresh install.
+
+### Adding a new tenant is now reliable on the first attempt
+
+Onboarding a brand-new tenant could fail on the first attempt with a consent
+error — the Panoptica365 app ended up registered in the customer tenant with
+its permissions granted, but the tenant did not appear in your tenant list,
+so you had to run **Add Tenant** a second time before it showed up.
+
+The cause was Microsoft's admin-consent endpoint intermittently failing the
+redirect when permissions for two different APIs (Microsoft Graph and the
+Teams administration API) were requested in a single consent — even though
+the consent itself succeeded. Add Tenant now requests them as two separate
+consent steps: the first registers the tenant, the second grants the Teams
+administration permissions. A first-attempt failure no longer happens. You
+will see two Microsoft consent screens during Add Tenant instead of one, and
+the tenant is saved after the first one regardless of the second.
+
+---
+
 ## Version 0.1.5 — 2026-05-21
 
 ### Cleaner audit-only tenant deletions

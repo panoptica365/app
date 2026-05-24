@@ -4650,3 +4650,183 @@ td.monospace {
 .sec-hist-evt-poll_ok        { color: var(--p-text-muted); }
 .sec-hist-evt-poll_error     { color: #f59e0b; }
 
+
+/* ═══════════════════════════════════════════════════════════════════
+   HEADER USER MENU + UNREAD DOT + SIDEBAR VERSION  (v0.1.7)
+   The user-name pill becomes the trigger for a small dropdown
+   (Preferences / What's New / Log out). The unread-dot turns on
+   when current_version > last_seen_version. The sidebar version
+   badge is pinned to the bottom of the column via margin-top:auto.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.header-user-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-user-block {
+  position: relative; /* anchor the unread dot to the pill */
+}
+
+.header-user-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--p-accent);
+  border: 2px solid var(--p-chrome-top, var(--p-bg, #1a1f2e));
+  box-sizing: content-box;
+  pointer-events: none;
+}
+
+.header-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  padding: 6px 0;
+  background: var(--p-plate-bg);
+  border: 1px solid var(--p-plate-border);
+  border-radius: var(--corner-radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.30);
+  z-index: 1000;
+  display: none;
+}
+.header-menu.active { display: block; }
+
+.header-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: 0;
+  color: var(--p-chrome-text);
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--p-transition), color var(--p-transition);
+}
+.header-menu-item:hover,
+.header-menu-item:focus-visible {
+  background: rgba(92, 203, 244, 0.10);
+  color: var(--p-accent);
+  outline: none;
+}
+.header-menu-logout:hover,
+.header-menu-logout:focus-visible {
+  color: #E07070;
+}
+
+.header-menu-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--p-border-subtle, var(--p-plate-border));
+}
+
+.header-menu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--p-accent);
+  flex: 0 0 auto;
+}
+
+/* Sidebar app-version badge — pinned to the bottom of the flex column. */
+.sidebar-version {
+  margin-top: auto;
+  padding: 14px 16px 6px;
+  font-family: var(--font-heading, system-ui);
+  font-size: 0.62rem;
+  color: var(--p-text-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   "WHAT'S NEW" MODAL  (v0.1.7)
+   Reuses the shared #modal-overlay (Panoptica.openModal) — these
+   rules just style the inner body content the modal is populated with.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.whats-new-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--p-border-subtle, var(--p-plate-border));
+}
+.whats-new-meta .wn-version {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--p-accent);
+  letter-spacing: 0.04em;
+}
+.whats-new-meta .wn-released {
+  font-size: 0.78rem;
+  color: var(--p-text-muted);
+}
+
+.whats-new-body {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--p-text);
+}
+/* mdToHtml maps `## …` to h4.chat-h and `### …` to h5.chat-h. */
+.whats-new-body h4 {
+  font-size: 1.05rem;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: var(--p-chrome-text);
+}
+.whats-new-body h5 {
+  font-size: 0.95rem;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  color: var(--p-accent);
+}
+.whats-new-body p { margin: 6px 0; }
+.whats-new-body hr {
+  border: 0;
+  border-top: 1px solid var(--p-border-subtle, var(--p-plate-border));
+  margin: 14px 0;
+}
+
+.whats-new-history {
+  margin-top: 18px;
+  border-top: 1px solid var(--p-border-subtle, var(--p-plate-border));
+  padding-top: 8px;
+}
+.whats-new-history > summary {
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+  padding: 6px 0;
+  list-style: none;
+}
+.whats-new-history > summary::-webkit-details-marker { display: none; }
+.whats-new-history > summary:hover { color: var(--p-accent); }
+.whats-new-history > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  transition: transform 0.15s;
+}
+.whats-new-history[open] > summary::before { transform: rotate(90deg); }
+.whats-new-history .whats-new-body { margin-top: 10px; }

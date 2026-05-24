@@ -15,6 +15,8 @@
   let tenantFilterBar = null; // Panoptica.AlertFilterBar instance for the alerts tab
   let chatBusy = false;
   let chatSessionId = null;
+  let pollWatchdog = null;       // safety-net timer for a missed poll-complete event
+  let pollSocketHandlers = null; // { socket, updated, failed } — kept for destroy() cleanup
 
   // ─── Lifecycle ───
 
@@ -28,6 +30,7 @@
 
     const pollBtn = document.getElementById('td-poll-now');
     if (pollBtn) pollBtn.addEventListener('click', () => pollNow());
+    wirePollSocket();
 
     // Wire view toggle
     document.querySelectorAll('#td-view-toggle .td-view-btn').forEach(btn => {
@@ -81,6 +84,14 @@
   function destroy() {
     // Close any open alert slideout so it doesn't stay stuck over the next page
     if (window.Panoptica && Panoptica.AlertSlideout) Panoptica.AlertSlideout.close();
+    // Drop the poll-completion socket listeners + any pending watchdog so they
+    // don't fire against a torn-down page or leak across tenant navigations.
+    if (pollSocketHandlers) {
+      pollSocketHandlers.socket.off('tenant:updated', pollSocketHandlers.updated);
+      pollSocketHandlers.socket.off('tenant:poll_failed', pollSocketHandlers.failed);
+      pollSocketHandlers = null;
+    }
+    if (pollWatchdog) { clearTimeout(pollWatchdog); pollWatchdog = null; }
     tenantId = null;
     tenantData = null;
     tenantInfo = null;
@@ -268,6 +279,30 @@
   }
 
   // ─── Poll Now ───
+  //
+  // The server runs the poll in the background and returns 202 right away —
+  // a full poll can take minutes (see api-tenants.js). The button stays in
+  // its "polling" state until the poll engine emits `tenant:updated` for
+  // this tenant, or `tenant:poll_failed` on error — both handled in
+  // wirePollSocket(). The watchdog is a safety net: if neither event lands
+  // (socket dropped, or a poll running past the timeout) it releases the
+  // button so it can't stay stuck.
+
+  const POLL_WATCHDOG_MS = 8 * 60 * 1000;
+
+  function isPolling() {
+    const btn = document.getElementById('td-poll-now');
+    return !!(btn && btn.classList.contains('polling'));
+  }
+
+  function endPollUi() {
+    const btn = document.getElementById('td-poll-now');
+    if (btn) {
+      btn.classList.remove('polling');
+      btn.textContent = window.t('tenant_dashboard.btn_poll_now');
+    }
+    if (pollWatchdog) { clearTimeout(pollWatchdog); pollWatchdog = null; }
+  }
 
   async function pollNow() {
     const btn = document.getElementById('td-poll-now');
@@ -277,14 +312,41 @@
 
     try {
       await Panoptica.api(`/api/tenants/${tenantId}/poll`, { method: 'POST', body: JSON.stringify({ full: true }) });
-      Panoptica.showToast(window.t('tenant_dashboard.toast_full_poll_completed'), 'success');
-      await loadTenantData();
+      pollWatchdog = setTimeout(() => {
+        pollWatchdog = null;
+        if (!isPolling()) return;
+        endPollUi();
+        Panoptica.showToast(window.t('tenant_dashboard.toast_poll_running_bg'), 'info');
+        loadTenantData();
+      }, POLL_WATCHDOG_MS);
     } catch (err) {
+      // The request to *start* the poll failed (network / 5xx) — nothing is
+      // running server-side, so release the button immediately.
+      endPollUi();
       Panoptica.showToast(window.t('tenant_dashboard.toast_poll_failed', { message: err.message }), 'error');
-    } finally {
-      btn.classList.remove('polling');
-      btn.textContent = window.t('tenant_dashboard.btn_poll_now');
     }
+  }
+
+  function wirePollSocket() {
+    const socket = window.Panoptica && Panoptica.getSocket && Panoptica.getSocket();
+    if (!socket) return; // Socket.IO unavailable — pollNow() still finishes via its watchdog
+
+    const updated = (payload) => {
+      if (!payload || String(payload.tenantId) !== String(tenantId)) return;
+      if (!isPolling()) return; // a scheduled background poll, not our manual one
+      endPollUi();
+      Panoptica.showToast(window.t('tenant_dashboard.toast_full_poll_completed'), 'success');
+      loadTenantData();
+    };
+    const failed = (payload) => {
+      if (!payload || String(payload.tenantId) !== String(tenantId)) return;
+      if (!isPolling()) return;
+      endPollUi();
+      Panoptica.showToast(window.t('tenant_dashboard.toast_poll_failed', { message: payload.error || 'unknown error' }), 'error');
+    };
+    socket.on('tenant:updated', updated);
+    socket.on('tenant:poll_failed', failed);
+    pollSocketHandlers = { socket, updated, failed };
   }
 
   // ─── Data Loading ───

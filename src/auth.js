@@ -102,40 +102,70 @@ async function acquireManagementTokenForTenant(tenantId) {
   return result.accessToken;
 }
 
+// Skype-Teams Tenant Admin API — Microsoft's well-known resource app id.
+// The cert-based app-only Teams readers (registry poll_strategy
+// 'powershell_teams' — TEA-01/TEA-02 — connect via Connect-MicrosoftTeams)
+// need this resource consented in the customer tenant.
+const SKYPE_TEAMS_RESOURCE_ID = '48ac35b8-9aa8-4d74-927d-1f4a14a0b239';
+
 /**
- * Generate the admin consent URL for onboarding a new customer tenant.
- * Jacques clicks this → Microsoft login → approves permissions → callback.
+ * Onboarding admin consent runs as TWO single-resource passes, not one
+ * multi-resource pass:
+ *
+ *   1. getGraphConsentUrl()  — Microsoft Graph permissions. This pass is
+ *      what onboards the tenant (its callback inserts the tenant row).
+ *   2. getTeamsConsentUrl()  — Skype-Teams Tenant Admin API permissions,
+ *      needed by the cert-based Teams security readers (TEA-01/TEA-02).
+ *
+ * Why split: a single multi-resource /common/adminconsent call against a
+ * brand-new tenant (no service principal yet) is Microsoft-side flaky. Its
+ * internal "create SP" pass for the second resource intermittently fails
+ * the whole redirect — observed as AADSTS650051 AND AADSTS90092 — even
+ * though consent actually succeeded, and the error redirect carries no
+ * tenant GUID, so the callback can't recover it. One resource per call
+ * sidesteps this: the Graph pass creates the SP, then the Teams pass only
+ * adds permissions to an SP that already exists — no create-SP step, no
+ * quirk.
+ *
+ * Both passes reuse the same registered redirect URI
+ * (config.entra.adminConsentRedirectUri → /auth/adminconsent/callback);
+ * the route tells the two apart via req.session.consentStep, so no extra
+ * redirect URI needs registering in the Entra app.
+ *
+ * NOTE: prompt=consent does NOT work on /adminconsent (Microsoft ignores
+ * it on this specific endpoint). Tested Apr 25 2026. When a tenant has
+ * prior consent for an OLDER version of the app's permission set,
+ * /adminconsent skips silently and new permissions never propagate to the
+ * customer SP. The reliable fix for picking up newly-added permissions on
+ * already-consented tenants is the Partner Center
+ * New-PartnerCustomerApplicationConsent API (GDAP-gated bulk consent),
+ * the Phase D migration deliverable. For one-off cases the customer admin
+ * clicks "Grant admin consent" in their Enterprise applications page.
  */
-function getAdminConsentUrl(state) {
+function getGraphConsentUrl(state) {
   const params = new URLSearchParams({
     client_id: config.entra.clientId,
     redirect_uri: config.entra.adminConsentRedirectUri,
     state: state || '',
-    // May 3, 2026 — multi-resource scope so newly-onboarded customer
-    // tenants get BOTH Microsoft Graph permissions AND the Skype-Teams
-    // Tenant Admin API permissions consented in one /adminconsent click.
-    // Without the second scope, the operator hits AADSTS65001 the first
-    // time TEA-* Apply runs against the new tenant — verified May 3 on
-    // CAE customer tenant.
-    //
-    // The Skype-Teams API resource ID 48ac35b8-9aa8-4d74-927d-1f4a14a0b239
-    // is Microsoft's well-known app id for that API. Constants kept here
-    // (rather than imported from oauth-delegated.js) to avoid a circular
-    // require — auth.js loads early in the boot sequence.
-    scope: 'https://graph.microsoft.com/.default 48ac35b8-9aa8-4d74-927d-1f4a14a0b239/.default',
-    // NOTE: prompt=consent does NOT work on /adminconsent (Microsoft
-    // ignores it on this specific endpoint). Tested Apr 25 2026. When a
-    // tenant has prior consent for an OLDER version of the app's
-    // permission set, /adminconsent skips silently and new permissions
-    // never propagate to the customer SP. The reliable fix for picking up
-    // newly-added permissions on already-consented tenants is the
-    // Partner Center New-PartnerCustomerApplicationConsent API (GDAP-
-    // gated bulk consent), which is the Phase D migration deliverable.
-    // For one-off cases the customer admin has to click "Grant admin
-    // consent" in their Enterprise applications page, OR navigate to a
-    // tenant-specific /{tenantId}/adminconsent URL with the same scope.
+    scope: 'https://graph.microsoft.com/.default',
   });
   return `https://login.microsoftonline.com/common/adminconsent?${params.toString()}`;
+}
+
+/**
+ * Second consent pass — the Skype-Teams resource for the tenant the Graph
+ * pass just onboarded. Issued against the tenant-specific
+ * /{tenantId}/adminconsent endpoint (the GUID is known by now), so the
+ * operator doesn't re-pick the tenant and the app SP already exists.
+ */
+function getTeamsConsentUrl(state, tenantId) {
+  const params = new URLSearchParams({
+    client_id: config.entra.clientId,
+    redirect_uri: config.entra.adminConsentRedirectUri,
+    state: state || '',
+    scope: `${SKYPE_TEAMS_RESOURCE_ID}/.default`,
+  });
+  return `https://login.microsoftonline.com/${encodeURIComponent(tenantId)}/adminconsent?${params.toString()}`;
 }
 
 /**
@@ -426,7 +456,8 @@ module.exports = {
   acquireTokenByCode,
   acquireTokenForTenant,
   acquireManagementTokenForTenant,
-  getAdminConsentUrl,
+  getGraphConsentUrl,
+  getTeamsConsentUrl,
   checkGroupMembership,
   resolveUserRole,
   requireAuth,

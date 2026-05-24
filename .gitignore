@@ -85,10 +85,12 @@ public/css/panoptica-LCARS-original.css
 public/css/panoptica.css.lcars-backup
 public/css/themes/lcars.css.archive
 
-# ─── Python bytecode (auto-generated) ───
+# ─── Python bytecode + venv (auto-generated) ───
 __pycache__/
 *.pyc
 *.pyo
+# ReportLab venv — provisioned by panoptica-setup.sh / Dockerfile, never committed.
+venv/
 
 # ─── IDEs ───
 .vscode/
@@ -118,3 +120,5 @@ mysqldump-*.sql
 # ─── OS metadata ───
 Thumbs.db
 desktop.ini
+
+# License server public key (safe to commit — public half of Ed25519 pair)

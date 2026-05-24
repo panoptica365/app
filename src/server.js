@@ -34,6 +34,7 @@ const changeEventsApiRoutes = require('./routes/api-change-events');
 const mspAuditApiRoutes = require('./routes/api-msp-audit');
 const securityApiRoutes = require('./routes/api-security');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
+const metaApiRoutes = require('./routes/api-meta');
 const partialRoutes = require('./routes/partials');
 
 // MSP audit service (for boot-time table migration)
@@ -160,6 +161,7 @@ app.use('/api/change-events', changeEventsApiRoutes);
 app.use('/api/msp-audit', mspAuditApiRoutes);
 app.use('/api/security', securityApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
+app.use('/api/meta', metaApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings
 app.get('/api/i18n/:lang?', (req, res) => {

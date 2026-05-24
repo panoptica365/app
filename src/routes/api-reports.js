@@ -1817,4 +1817,421 @@ function runDocumentationPdfGenerator(inputData, outputPath) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// QUICK ASSESSMENT REPORT (v0.1.6)
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Point-in-time advisory report. Takes the same current-state snapshot the
+// Documentation report uses, runs it through an Opus deep gap analysis, and
+// renders a narrative PDF — strengths, weaknesses, and "what's MISSING"
+// across Conditional Access, Intune, and the security-settings posture.
+//
+// Grounding (the layered model — enforced in the system prompt):
+//   - Security-settings posture is Panoptica's registry-derived
+//     tenant_security_config — code-owned, authoritative.
+//   - CA / Intune gap detection is grounded in Microsoft's published
+//     baselines via Opus, and is NOT capped by the template catalog.
+//   - The CA / Intune template catalog is a secondary input only: it lets a
+//     recommendation be tagged "deployable" when Panoptica already has a
+//     matching template. A template an MSP has deleted costs a deployable
+//     tag — never a finding.
+//
+// AUDIT-ONLY CARVE-OUT: this report uses AI, and audit-only tenants are
+// otherwise gated out of AI (the Apr 29 sweep — Security Posture is gated
+// for that reason). The Quick Assessment is deliberately exempt: it is the
+// core deliverable that makes audit-only mode worth selling, so it must run
+// for audit-only tenants. Conscious policy exception, not an oversight.
+
+function getAssessmentModel() {
+  return process.env.OPUS_MODEL || config.ai.opusModel;
+}
+
+async function gatherQuickAssessmentData(tenantId) {
+  // Reuse the Documentation report's proven current-state assembly: tenant,
+  // services (incl. entra licensing), securitySettings, exemptions,
+  // caPolicies + caPolicySummaries, etc.
+  const data = await gatherDocumentationData(tenantId);
+
+  // Panoptica's own template catalogs — the "deployable" cross-reference.
+  // MSP-editable, so this can legitimately be partial or empty.
+  const [caTemplates, intuneTemplates] = await Promise.all([
+    db.queryRows('SELECT name, description FROM ca_templates ORDER BY name').catch(() => []),
+    db.queryRows('SELECT name, description, category, platform FROM intune_templates ORDER BY name').catch(() => []),
+  ]);
+
+  // Live Intune policy export — the tenant's ACTUAL device-management config,
+  // pulled from Graph (the same logic behind the Intune "Export from Tenant"
+  // action). This is what lets the report assess Intune for real instead of
+  // guessing. Best-effort and entirely server-side/in-memory: a failure (or a
+  // tenant with no Intune) must not block the report. Can take a minute on a
+  // policy-heavy tenant — the SSE heartbeat keeps the connection alive.
+  let intuneExport = null;
+  try {
+    const intuneRoutes = require('./api-intune');
+    if (typeof intuneRoutes.exportTenantIntunePolicies === 'function') {
+      intuneExport = await intuneRoutes.exportTenantIntunePolicies({
+        id: data.tenant.id,
+        tenant_id: data.tenant.azure_tenant_id,
+        display_name: data.tenant.display_name,
+      }, { includeSettings: false }); // inventory only — keeps the export fast
+    }
+  } catch (err) {
+    console.warn('[Reports] Quick Assessment — Intune export failed (non-fatal):', err.message);
+  }
+
+  return { ...data, caTemplates, intuneTemplates, intuneExport };
+}
+
+// Build the text data block fed to Opus. A condensed, readable summary —
+// not a raw JSON dump — same approach as buildDataSummary().
+function buildAssessmentInput(data) {
+  const svc = data.services || {};
+  const sec = svc.security || {};
+  const entra = svc.entra || {};
+  let s = '';
+
+  s += `TENANT: ${data.tenant.display_name}\n`;
+  s += `MODE: ${data.tenant.mode}\n`;
+  s += `CONFIGURATION CAPTURED: ${data.capturedAt || 'unknown'}\n\n`;
+
+  // ── Licensing — drives which CA/Intune controls are even available ──
+  const licenses = entra.licenses || [];
+  s += 'LICENSING (subscribed SKUs — respect these boundaries in every recommendation):\n';
+  if (licenses.length) {
+    for (const l of licenses) {
+      s += `  - ${l.displayName || l.skuPartNumber || 'Unknown SKU'}`;
+      if (l.consumedUnits != null) s += ` (${l.consumedUnits} assigned)`;
+      s += '\n';
+    }
+  } else {
+    s += '  (no licensing data captured — state your licensing assumption explicitly)\n';
+  }
+  s += '\n';
+
+  // ── Headline posture ──
+  if (sec.secure_score) {
+    s += `MICROSOFT SECURE SCORE: ${sec.secure_score.percentage ?? sec.secure_score.currentScore ?? 'N/A'}%\n`;
+  }
+  if (sec.mfa_status) {
+    s += `MFA REGISTRATION: ${sec.mfa_status.registration_percentage ?? 'N/A'}%\n`;
+  }
+  if (sec.global_admins) {
+    s += `GLOBAL ADMINS: ${sec.global_admins.count ?? 'N/A'}\n`;
+  }
+  if (entra.user_summary) {
+    s += `USERS: ${entra.user_summary.total ?? '?'} total, ${entra.user_summary.licensed ?? '?'} licensed, ${entra.user_summary.guests ?? '?'} guests\n`;
+  }
+  s += '\n';
+
+  // ── Conditional Access policies the tenant HAS ──
+  const caPolicies = data.caPolicies || [];
+  s += `CONDITIONAL ACCESS POLICIES CONFIGURED (${caPolicies.length}):\n`;
+  if (caPolicies.length) {
+    for (const p of caPolicies) {
+      s += `  - "${p.name || p.displayName || 'Unnamed'}" [state=${p.state || 'unknown'}]`;
+      const summary = (data.caPolicySummaries || {})[p.id] || (data.caPolicySummaries || {})[p.name];
+      if (summary) s += ` — ${String(summary).replace(/\s+/g, ' ').slice(0, 240)}`;
+      s += '\n';
+    }
+  } else {
+    s += '  (none configured)\n';
+  }
+  s += '\n';
+
+  // ── Security-settings posture — per-setting current state ──
+  // CRITICAL: judge each setting by current_value (what the poll actually
+  // read from the tenant), NEVER by `status`. `status` is a MANAGEMENT
+  // state — and audit-only tenants are read-only, so every setting is
+  // permanently `not_applied`. That carries zero security signal; the
+  // current_value is the truth. (This is the bug behind the false v1
+  // findings — see the system prompt.)
+  const settings = data.securitySettings || [];
+  s += `SECURITY SETTINGS — CURRENT STATE (${settings.length} settings tracked by Panoptica)\n`;
+  s += 'Each line: [priority] NAME (category) | panoptica_status=<state> | current_value=<value the last poll actually read from the tenant>\n';
+  s += 'panoptica_status is a MANAGEMENT state, NOT a security verdict:\n';
+  s += '  monitored   = Panoptica applied a baseline and the tenant matches it (good).\n';
+  s += '  drift       = a baseline was applied and the tenant has since diverged (a genuine regression).\n';
+  s += '  not_applied = Panoptica is NOT managing this setting. Says NOTHING about whether it is secure — judge ONLY by current_value. Audit-only tenants are read-only, so EVERY setting is not_applied — that is normal and is NOT itself a finding.\n';
+  s += '  pending / poll_error / unavailable = no reliable reading — do not treat as a gap.\n';
+  for (const st of settings) {
+    let cv = st.current_value;
+    if (cv && typeof cv === 'object') cv = JSON.stringify(cv);
+    cv = (cv === null || cv === undefined || cv === '') ? '(not captured)' : String(cv);
+    if (cv.length > 400) cv = cv.slice(0, 400) + '…';
+    s += `  - [${st.priority || 'n/a'}] ${st.name} (${st.category}) | panoptica_status=${st.status} | current_value=${cv}`;
+    if (st.applied_value !== null && st.applied_value !== undefined) {
+      let av = typeof st.applied_value === 'object' ? JSON.stringify(st.applied_value) : String(st.applied_value);
+      if (av.length > 200) av = av.slice(0, 200) + '…';
+      s += ` | panoptica_baseline=${av}`;
+    }
+    if (st.security_impact) s += ` | impact: ${String(st.security_impact).replace(/\s+/g, ' ').slice(0, 200)}`;
+    s += '\n';
+  }
+  s += '\n';
+
+  // ── Intune — live policy export pulled from the tenant via Graph ──
+  const intuneExport = data.intuneExport;
+  if (intuneExport && Array.isArray(intuneExport.policies) && intuneExport.policies.length) {
+    s += `INTUNE POLICIES — LIVE EXPORT FROM THE TENANT (${intuneExport.policies.length} policies — this is the authoritative list of what is actually configured in Intune)\n`;
+    for (const p of intuneExport.policies) {
+      s += `  - [${p.policyType}] ${p.name}`;
+      if (p.category) s += ` | category: ${p.category}`;
+      if (p.templateFamily) s += ` | family: ${p.templateFamily}`;
+      if (Array.isArray(p.settings)) s += ` | ${p.settings.length} settings`;
+      if (p.description) s += ` | ${String(p.description).replace(/\s+/g, ' ').slice(0, 120)}`;
+      s += '\n';
+    }
+    if (intuneExport.errors && intuneExport.errors.length) {
+      s += `  NOTE: some Intune policy types could not be read (${intuneExport.errors.join('; ')}) — treat those areas as "not assessed", not as gaps.\n`;
+    }
+    s += '\n';
+  } else if (intuneExport && Array.isArray(intuneExport.policies)
+             && !(intuneExport.errors && intuneExport.errors.length)) {
+    // Export ran cleanly (no errors) and found nothing — a genuine zero.
+    s += 'INTUNE POLICIES — LIVE EXPORT FROM THE TENANT: the export completed with no errors and returned ZERO policies. This tenant genuinely has no Intune device-management policies configured — that is a real, confirmed finding.\n\n';
+  } else {
+    // No export object, or zero policies WITH errors — i.e. the export
+    // failed (Graph error / permissions). Do NOT claim the tenant has no
+    // Intune; we simply could not read it.
+    s += 'INTUNE: the live Intune export could not be completed for this tenant (Graph error or permissions';
+    if (intuneExport && intuneExport.errors && intuneExport.errors.length) {
+      s += `: ${intuneExport.errors.join('; ')}`;
+    }
+    s += '). You do NOT have reliable Intune data — follow the Intune accuracy rule and do not speculate about what is or is not configured.\n\n';
+  }
+
+  // ── Active exemptions ──
+  const exemptions = data.exemptions || [];
+  if (exemptions.length) {
+    s += `ACTIVE ALERT EXEMPTIONS (${exemptions.length}):\n`;
+    for (const e of exemptions) {
+      s += `  - ${e.policy_name || 'policy'} — reason: ${(e.reason || '').slice(0, 160)}\n`;
+    }
+    s += '\n';
+  }
+
+  // ── Panoptica template catalog — the "deployable" cross-reference ──
+  const caT = data.caTemplates || [];
+  s += `PANOPTICA CONDITIONAL ACCESS TEMPLATE CATALOG (${caT.length} — what the MSP can deploy in one click):\n`;
+  for (const t of caT) s += `  - "${t.name}"${t.description ? ': ' + String(t.description).replace(/\s+/g, ' ').slice(0, 160) : ''}\n`;
+  if (!caT.length) s += '  (catalog empty — recommend gaps anyway; just do not tag them deployable)\n';
+  s += '\n';
+
+  const intuneT = data.intuneTemplates || [];
+  s += `PANOPTICA INTUNE TEMPLATE CATALOG (${intuneT.length} — what the MSP can deploy in one click):\n`;
+  for (const t of intuneT) s += `  - "${t.name}" [${t.platform || 'any'}/${t.category || 'general'}]${t.description ? ': ' + String(t.description).replace(/\s+/g, ' ').slice(0, 140) : ''}\n`;
+  if (!intuneT.length) s += '  (catalog empty — recommend gaps anyway; just do not tag them deployable)\n';
+  s += '\n';
+
+  return s;
+}
+
+/**
+ * Run the Opus deep gap analysis. Streamed (large input + large structured
+ * output) per Anthropic guidance — avoids HTTP timeouts. Returns the parsed
+ * structured analysis object.
+ */
+async function runQuickAssessmentAnalysis(data, operatorContext) {
+  const anthropic = getAiClient();
+  if (!anthropic) {
+    throw new Error('AI is not configured (ANTHROPIC_API_KEY missing) — the Quick Assessment requires AI analysis.');
+  }
+
+  const lang = data.language || 'en';
+  let langInstruction = 'Write all narrative values in English.';
+  if (lang === 'fr') {
+    langInstruction = 'IMPORTANT: write ALL narrative values in Canadian French (Quebec spelling and accents). JSON keys stay in English; every value is in French.';
+  } else if (lang === 'es') {
+    langInstruction = 'IMPORTANT: write ALL narrative values in neutral Latin American Spanish (proper spelling and accents). JSON keys stay in English; every value is in Spanish.';
+  }
+
+  const system = `You are a senior Microsoft 365 security consultant writing a "Quick Assessment" — a point-in-time advisory report on one tenant's current security configuration. The audience is the MSP operator and, ultimately, their customer.
+
+WHAT THIS REPORT IS: a narrative assessment of the tenant's CURRENT state — Conditional Access, Intune, and the broader security-settings posture. It explains what is configured well, what is weak, and crucially WHAT IS MISSING. It is advisory and narrative — write in clear, explanatory prose, not terse bullet fragments. Highlight strengths as well as weaknesses; be honest and specific, never generic.
+
+═══ ACCURACY — NON-NEGOTIABLE, READ TWICE ═══
+
+Every single finding MUST be backed by the data provided below. A false finding — telling the customer a control is missing when it is actually in place — destroys the credibility of the entire report. This has happened before; do not let it happen again.
+
+- Only state that something is missing, disabled, or misconfigured when the data POSITIVELY shows it.
+- NEVER infer a gap from the ABSENCE of data. If Panoptica did not capture something, say it was not captured — do not assume it is wrong or missing.
+- The configured-items lists and current_value data below are authoritative. If a security setting's current_value shows it is already correctly configured, it is NOT a finding — do not report it.
+- If a value is ambiguous or you cannot determine whether it is secure, do NOT report it as a gap.
+
+═══ GROUNDING — how to decide what is "missing" ═══
+
+1. SECURITY SETTINGS: the "SECURITY SETTINGS — CURRENT STATE" block lists every tracked setting with the value the last poll actually read (current_value). JUDGE EACH SETTING BY ITS current_value — never by panoptica_status. A setting is a finding ONLY when its current_value clearly shows an insecure configuration, OR its panoptica_status is "drift" (a baseline regression). panoptica_status of "not_applied" means Panoptica is not actively managing the setting — it is NOT evidence the setting is off or wrong, and on audit-only tenants EVERY setting is not_applied by design. NEVER write that a setting is "not enabled", "not configured", "missing", or "off" when its current_value shows it IS in place. When current_value confirms a setting is correctly configured, treat it as a STRENGTH, not a gap.
+
+2. CONDITIONAL ACCESS: the CONDITIONAL ACCESS POLICIES CONFIGURED block is the authoritative list of what exists. Detect gaps against Microsoft's published CA baseline (require MFA, block legacy auth, require compliant/hybrid-joined devices, sign-in/user risk policies, etc.) — but ONLY claim a control is missing if it is genuinely absent from that list. If a policy in the list already covers a control, it is not missing.
+
+3. INTUNE: the "INTUNE POLICIES — LIVE EXPORT FROM THE TENANT" block is a live export of the tenant's ACTUAL Intune policies — the authoritative inventory of what is configured. Assess device management against it: a control (device compliance, BitLocker/disk encryption, Defender configuration, ASR rules, firewall, app protection, etc.) is a gap ONLY if it is genuinely absent from that list. If a matching policy IS in the list, it is configured — treat it as a strength, never report it as missing. If the block says the export returned ZERO policies, the tenant has no Intune policies and you may state that as a confirmed finding. If instead the block says the export could not be completed, you DO NOT have the data — the "intune" section's "gaps" must then contain at most one entry noting that and recommending a direct review, and you must not speculate.
+
+4. THE PANOPTICA TEMPLATE CATALOGS are a SECONDARY input, used ONLY for actionability. When a gap you identified matches a catalog template, set "deployable_template" to that template's exact name so the MSP knows it is a one-click deploy. If no catalog template matches, set "deployable_template" to null — the gap still stands as a manual recommendation. NEVER limit your findings to what is in the catalog, and never invent a finding just because a template exists.
+
+═══ LICENSING ═══
+
+Respect the LICENSING block. Entra ID P2 features (sign-in risk and user risk Conditional Access policies, PIM, full Identity Governance) are NOT in Business Basic/Standard/Business Premium — only E5 / E5 Security / P2 add-on. If a tenant lacks the license for a control you would recommend, either recommend the license upgrade explicitly as part of the recommendation, or recommend a tier-appropriate alternative. Never silently recommend a control the tenant cannot license.
+
+${langInstruction}
+
+Return ONLY a JSON object (no markdown fence, no preamble) with exactly these keys:
+{
+  "overall_posture": "2-3 paragraphs. Open with a one-line verdict. Summarize the tenant's overall security standing across identity, devices, and configuration. End with the single most important thing to address.",
+  "conditional_access": {
+    "narrative": "1-2 paragraphs assessing the CA policies that ARE configured — coverage, gaps, and weaknesses.",
+    "strengths": ["short strings — CA things done well; [] if none"],
+    "gaps": [{"title": "short", "detail": "1-3 sentences — what is missing/weak and why it matters", "priority": "high|medium|low", "deployable_template": "exact catalog template name, or null"}]
+  },
+  "intune": {
+    "narrative": "1-2 paragraphs assessing device management against the live Intune policy export. If the export could not be completed, say exactly that and do not speculate.",
+    "strengths": ["Intune policies confirmed present in the export; [] if none or export unavailable"],
+    "gaps": [{"title": "...", "detail": "...", "priority": "high|medium|low", "deployable_template": "name or null"}]
+  },
+  "security_settings": {
+    "narrative": "1-2 paragraphs on the security-settings posture, based on the current_value of each setting — what is genuinely insecure or drifting, and what is correctly configured.",
+    "strengths": ["settings whose current_value confirms they are correctly configured"],
+    "gaps": [{"title": "...", "detail": "...", "priority": "high|medium|low", "deployable_template": "name or null"}]
+  },
+  "strengths_summary": "1 paragraph — what this tenant genuinely does well. Be specific; do not invent strengths.",
+  "prioritized_actions": [{"title": "short", "detail": "1-2 sentences", "priority": "high|medium|low", "area": "Conditional Access|Intune|Security Settings|Other", "deployable_template": "name or null"}]
+}
+
+Order "prioritized_actions" hardest-hitting first. Use real numbers and real names from the data. Be specific — no "enable MFA" filler unless MFA truly is the gap.`;
+
+  let userContent = `Assess this tenant's current security configuration:\n\n${buildAssessmentInput(data)}`;
+  if (operatorContext && operatorContext.trim()) {
+    userContent += `\n\n═══ OPERATOR-PROVIDED CONTEXT ═══\nThe MSP operator added the following context for this assessment. Weigh it, but do not let it override what the data shows:\n\n${operatorContext.trim().slice(0, 20000)}\n`;
+  }
+
+  // Streamed: large grounded input + a large structured report. Streaming
+  // avoids SDK HTTP timeouts on a multi-minute Opus call. (Adaptive thinking
+  // / effort can be layered on later — kept minimal here to match the other
+  // report call sites and the pinned SDK.)
+  const stream = anthropic.messages.stream({
+    model: getAssessmentModel(),
+    max_tokens: 16000,
+    system,
+    messages: [{ role: 'user', content: userContent }],
+  });
+  const message = await stream.finalMessage();
+
+  const textBlock = (message.content || []).find(b => b && b.type === 'text');
+  const raw = textBlock ? (textBlock.text || '') : '';
+  try {
+    return JSON.parse(raw.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim());
+  } catch {
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (m) {
+      try { return JSON.parse(m[0]); } catch { /* fall through */ }
+    }
+    throw new Error('The AI analysis did not return valid structured output. Try generating the report again.');
+  }
+}
+
+/**
+ * Run the Python Quick Assessment PDF generator. Same spawn pattern as the
+ * other report generators.
+ */
+function runQuickAssessmentPdfGenerator(inputData, outputPath) {
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(__dirname, '..', '..', 'scripts', 'generate-quick-assessment-report.py');
+    const inputPath = outputPath.replace('.pdf', '.json');
+    fs.writeFileSync(inputPath, JSON.stringify(inputData));
+
+    const projectRoot = path.join(__dirname, '..', '..');
+    let pythonBin = 'python3';
+    const venvPython = path.join(projectRoot, 'venv', 'bin', 'python');
+    if (fs.existsSync(venvPython)) pythonBin = venvPython;
+
+    const proc = spawn(pythonBin, [scriptPath, inputPath, outputPath], {
+      cwd: projectRoot,
+      timeout: 180000,
+    });
+    let stderr = '';
+    proc.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+    proc.stdout.on('data', (chunk) => { console.log('[QuickAssess-Gen]', chunk.toString().trim()); });
+    proc.on('close', (code) => {
+      try { fs.unlinkSync(inputPath); } catch { /* ignore */ }
+      if (code === 0 && fs.existsSync(outputPath)) resolve(outputPath);
+      else reject(new Error(`Quick Assessment PDF generation failed (code ${code}): ${stderr.slice(-500)}`));
+    });
+    proc.on('error', (err) => {
+      try { fs.unlinkSync(inputPath); } catch { /* ignore */ }
+      reject(new Error(`Failed to spawn Quick Assessment PDF generator: ${err.message}`));
+    });
+  });
+}
+
+/**
+ * POST /api/reports/quick-assessment
+ *
+ * SSE-streamed. Body: { tenant_id, context }. `context` is free-text the
+ * operator typed in the Add-context modal — optional. Current-state only,
+ * no date range. Allowed for audit-only tenants (see the carve-out note
+ * above).
+ */
+router.post('/quick-assessment', auth.requireMemberOrAdmin, async (req, res) => {
+  const { tenant_id } = req.body;
+  const operatorContext = typeof req.body.context === 'string' ? req.body.context : '';
+  if (!tenant_id) return res.status(400).json({ error: 'tenant_id is required' });
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+  function sendEvent(d) { res.write(`data: ${JSON.stringify(d)}\n\n`); }
+  const heartbeat = setInterval(() => {
+    try { res.write(`: heartbeat ${Date.now()}\n\n`); } catch { /* socket gone */ }
+  }, 10000);
+  req.on('close', () => clearInterval(heartbeat));
+
+  try {
+    sendEvent({ stage: 'data' });
+    const data = await gatherQuickAssessmentData(tenant_id);
+
+    sendEvent({ stage: 'analysis' });
+    const analysis = await runQuickAssessmentAnalysis(data, operatorContext);
+
+    sendEvent({ stage: 'pdf' });
+    const svc = data.services || {};
+    const sec = svc.security || {};
+    const pdfFilename = `${data.tenant.display_name.replace(/[^a-zA-Z0-9]/g, '_')}_Quick_Assessment_${Date.now()}.pdf`;
+    const pdfPath = path.join(REPORTS_DIR, pdfFilename);
+
+    const pdfInput = {
+      tenant: {
+        display_name: data.tenant.display_name,
+        azure_tenant_id: data.tenant.azure_tenant_id,
+        mode: data.tenant.mode,
+      },
+      language: data.language || 'en',
+      generatedAt: new Date().toISOString(),
+      capturedAt: data.capturedAt || null,
+      headline: {
+        secure_score: sec.secure_score?.percentage ?? sec.secure_score?.currentScore ?? null,
+        mfa_pct: sec.mfa_status?.registration_percentage ?? null,
+        ca_policy_count: Array.isArray(data.caPolicies) ? data.caPolicies.length : null,
+        security_settings_total: (data.securitySettings || []).length,
+      },
+      analysis,
+      reportConfig: {
+        mspName: (config.report && config.report.mspName) || '',
+        platformAttribution: (config.report && config.report.platformAttribution) !== false,
+      },
+    };
+
+    await runQuickAssessmentPdfGenerator(pdfInput, pdfPath);
+
+    clearInterval(heartbeat);
+    sendEvent({ done: true, url: `/api/reports/download/${encodeURIComponent(pdfFilename)}` });
+    res.end();
+  } catch (err) {
+    console.error('[Reports] Quick Assessment generation failed:', err.message);
+    clearInterval(heartbeat);
+    sendEvent({ error: err.message });
+    res.end();
+  }
+});
+
 module.exports = router;

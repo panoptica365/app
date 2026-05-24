@@ -62,6 +62,7 @@ router.get('/', async (req, res) => {
           role: req.session?.user?.role || 'viewer',
           language: 'en',
           theme: 'dark',
+          last_seen_version: null,
           first_login_at: null,
           last_login_at: null,
         },
@@ -105,6 +106,7 @@ router.get('/', async (req, res) => {
         role: user.role,
         language: user.language,
         theme: user.theme,
+        last_seen_version: user.last_seen_version || null,
         first_login_at: user.first_login_at,
         last_login_at: user.last_login_at,
       },
@@ -141,6 +143,26 @@ router.put('/', async (req, res) => {
   } catch (err) {
     console.error('[UserPrefs] PUT failed:', err.message);
     res.status(500).json({ error: 'Failed to save preferences' });
+  }
+});
+
+/**
+ * POST /api/user-prefs/whats-new-seen
+ * Body: { version }
+ * Marks the given app version as "seen" by this operator. Drives the
+ * unread-dot + one-time toast in the v0.1.7 What's New flow.
+ */
+router.post('/whats-new-seen', async (req, res) => {
+  try {
+    const internalId = req.session?.user?.internal_user_id;
+    if (!internalId) return res.status(404).json({ error: 'User row missing — log out and back in.' });
+    const version = (req.body && typeof req.body.version === 'string') ? req.body.version.trim() : '';
+    if (!version) return res.status(400).json({ error: 'version is required' });
+    await usersStore.setLastSeenVersion(internalId, version);
+    res.json({ ok: true, last_seen_version: version.slice(0, 20) });
+  } catch (err) {
+    console.error('[UserPrefs] whats-new-seen failed:', err.message);
+    res.status(500).json({ error: 'Failed to update' });
   }
 });
 

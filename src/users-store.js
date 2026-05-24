@@ -41,6 +41,7 @@ async function ensureSchema() {
           role ENUM('admin','member','viewer') NOT NULL DEFAULT 'viewer' COMMENT 'Cached from resolveUserRole at last login',
           language ENUM('en','fr','es') NOT NULL DEFAULT 'en',
           theme ENUM('light','dark') NOT NULL DEFAULT 'dark',
+          last_seen_version VARCHAR(20) DEFAULT NULL COMMENT 'Most recent version the operator viewed in What''s New (v0.1.7+)',
           first_login_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           last_login_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -53,6 +54,28 @@ async function ensureSchema() {
     } catch (e) {
       console.error('[UsersStore] Schema ensure failed:', e.message);
       throw e;
+    }
+
+    // v0.1.7 migration — add last_seen_version to existing installs that
+    // pre-date the CREATE TABLE update above. Column-existence check first
+    // because MySQL 8 has no ADD COLUMN IF NOT EXISTS.
+    try {
+      const colExists = await db.queryOne(
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'users'
+            AND COLUMN_NAME = 'last_seen_version'`
+      );
+      if (!colExists) {
+        await db.execute(
+          "ALTER TABLE users ADD COLUMN last_seen_version VARCHAR(20) DEFAULT NULL AFTER theme"
+        );
+        console.log('[UsersStore] Added last_seen_version column to users');
+      }
+    } catch (e) {
+      console.error('[UsersStore] last_seen_version migration failed:', e.message);
+      // Non-fatal — the app still works; the What's New "unread dot" just
+      // won't track per-user state until this column exists.
     }
 
     try {
@@ -115,7 +138,7 @@ async function getUserById(id) {
   await ensureSchema();
   return db.queryOne(
     `SELECT id, oid, upn, email, display_name, role, language, theme,
-            first_login_at, last_login_at
+            last_seen_version, first_login_at, last_login_at
        FROM users WHERE id = ? LIMIT 1`,
     [id]
   );
@@ -136,6 +159,22 @@ async function updatePrefs(id, { language, theme }) {
     [language, theme, id]
   );
   return affected;
+}
+
+/**
+ * Record the most-recent WHATS-NEW.md version this operator has viewed
+ * (v0.1.7+). Used to drive the "unread dot" + one-time toast: when the
+ * app's current version is newer than this value, the user sees the
+ * notification until they open the modal (or dismiss the toast).
+ */
+async function setLastSeenVersion(id, version) {
+  if (!id || !version) return;
+  await ensureSchema();
+  // VARCHAR(20) — trim defensively in case a caller passes something long.
+  await db.execute(
+    'UPDATE users SET last_seen_version = ? WHERE id = ?',
+    [String(version).slice(0, 20), id]
+  );
 }
 
 /**
@@ -181,6 +220,7 @@ module.exports = {
   upsertUserOnLogin,
   getUserById,
   updatePrefs,
+  setLastSeenVersion,
   getMutedEmails,
   getAdminFailsafeRecipients,
 };

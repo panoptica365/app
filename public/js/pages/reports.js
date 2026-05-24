@@ -7,6 +7,8 @@
   'use strict';
 
   const reportHistory = []; // Session-scoped list of generated reports
+  let qaTenantId = null;    // Quick Assessment — tenant chosen when the context modal opens
+  let qaTenantName = '';
 
   // ─── Stage management for the generation modal ───
   const STAGES = ['data', 'ca_policies', 'charts', 'ai', 'pdf'];
@@ -106,8 +108,11 @@
     }
 
     container.innerHTML = reportHistory.map(r => {
-      const icon = r.type === 'security-posture' ? '&#128196;' : '&#128203;';
+      const icon = r.type === 'security-posture' ? '&#128196;'
+        : r.type === 'quick-assessment' ? '&#128269;'
+        : '&#128203;';
       const typeLabel = r.type === 'security-posture' ? window.t('reports.history.type_security_posture')
+        : r.type === 'quick-assessment' ? window.t('reports.history.type_quick_assessment')
         : r.type === 'data-export' ? window.t('reports.history.type_data_export')
         : window.t('reports.history.type_json_export');
       return `
@@ -136,6 +141,13 @@
 
     if (!tenantId) {
       Panoptica.showToast(window.t('reports.toast_select_tenant'), 'error');
+      return;
+    }
+
+    // Quick Assessment collects free-text context via a modal first; the
+    // modal's own Generate button (runQuickAssessment) kicks off the report.
+    if (reportType === 'quick-assessment') {
+      showQaContextModal(tenantId, tenantName);
       return;
     }
 
@@ -377,6 +389,95 @@
     }
   }
 
+  // ─── Quick Assessment: context modal + generation ───
+
+  function showQaContextModal(tenantId, tenantName) {
+    qaTenantId = tenantId;
+    qaTenantName = tenantName;
+    const ta = document.getElementById('qa-context-text');
+    if (ta) ta.value = '';
+    const overlay = document.getElementById('qa-context-overlay');
+    if (overlay) overlay.classList.add('active');
+    if (ta) ta.focus();
+  }
+
+  function hideQaContextModal() {
+    const overlay = document.getElementById('qa-context-overlay');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  async function runQuickAssessment() {
+    const tenantId = qaTenantId;
+    const tenantName = qaTenantName;
+    if (!tenantId) return;
+    const context = (document.getElementById('qa-context-text')?.value || '').trim();
+    hideQaContextModal();
+
+    const btn = document.getElementById('report-generate-btn');
+    if (btn) { btn.disabled = true; btn.textContent = window.t('reports.btn_generating'); }
+    showGenModal(tenantName, '');
+    setStage('data');
+
+    try {
+      const response = await fetch('/api/reports/quick-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant_id: parseInt(tenantId, 10), context }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: window.t('reports.error_generation_failed') }));
+        throw new Error(err.error || window.t('reports.error_generation_failed'));
+      }
+
+      // Backend stages: data → analysis → pdf → done. Map onto the modal's
+      // stage ids (analysis → the 'ai' stage).
+      const stageMap = { data: 'data', analysis: 'ai', pdf: 'pdf' };
+      let pdfUrl = null;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value, { stream: true });
+        for (const line of text.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const msg = JSON.parse(line.substring(6));
+            if (msg.stage) setStage(stageMap[msg.stage] || msg.stage);
+            if (msg.done) { showDone(); pdfUrl = msg.url; }
+            if (msg.error) throw new Error(msg.error);
+          } catch (e) {
+            if (e.message && !e.message.includes('JSON')) throw e;
+          }
+        }
+      }
+
+      if (pdfUrl) {
+        await new Promise(r => setTimeout(r, 1200));
+        hideGenModal();
+        const a = document.createElement('a');
+        a.href = pdfUrl;
+        a.download = `${tenantName.replace(/[^a-zA-Z0-9]/g, '_')}_Quick_Assessment.pdf`;
+        a.click();
+        reportHistory.unshift({
+          type: 'quick-assessment',
+          tenantName,
+          range: 'snapshot',
+          time: new Date().toLocaleTimeString(),
+          url: pdfUrl,
+        });
+        renderHistory();
+        Panoptica.showToast(window.t('reports.toast_quick_assessment_generated'), 'success');
+      }
+    } catch (err) {
+      hideGenModal();
+      console.error('[Reports] Quick Assessment generation failed:', err);
+      Panoptica.showToast(err.message || window.t('reports.toast_generation_failed'), 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = window.t('reports.btn_generate'); }
+    }
+  }
+
   // ─── Init ───
   async function init() {
     // Load tenant list
@@ -394,6 +495,12 @@
     // Button handler
     const btn = document.getElementById('report-generate-btn');
     if (btn) btn.addEventListener('click', generate);
+
+    // Quick Assessment context modal buttons
+    const qaCancel = document.getElementById('qa-context-cancel');
+    if (qaCancel) qaCancel.addEventListener('click', hideQaContextModal);
+    const qaGenerate = document.getElementById('qa-context-generate');
+    if (qaGenerate) qaGenerate.addEventListener('click', runQuickAssessment);
 
     // Update modal stage labels + gray out the Time Range select when the
     // selected report type doesn't use a time window (Data Export is a
@@ -418,21 +525,35 @@
           if (chartsStage) chartsStage.style.display = 'none';
           if (aiStage) aiStage.style.display = 'none';
           if (pdfStage) pdfStage.querySelector('.stage-label').textContent = window.t('reports.stage.assembling');
+        } else if (typeSelect.value === 'quick-assessment') {
+          // Quick Assessment flow: data → analysis (ai) → pdf. CA-fetch and
+          // charts stages don't apply — hide them.
+          if (dataStage) dataStage.querySelector('.stage-label').textContent = window.t('reports.stage.gathering_config');
+          if (caStage) caStage.style.display = 'none';
+          if (chartsStage) chartsStage.style.display = 'none';
+          if (aiStage) {
+            aiStage.style.display = '';
+            aiStage.querySelector('.stage-label').textContent = window.t('reports.stage.opus_analyzing');
+          }
+          if (pdfStage) pdfStage.querySelector('.stage-label').textContent = window.t('reports.stage.assembling');
         } else if (typeSelect.value !== 'data-export') {
-          // Restore charts + ai if they were hidden by an earlier documentation pick.
+          // Restore charts + ai + ca stages if a prior pick hid them.
           if (chartsStage) chartsStage.style.display = '';
           if (aiStage) {
             aiStage.style.display = '';
             aiStage.querySelector('.stage-label').textContent = window.t('reports.stage.sonnet_analyzing');
           }
-          if (caStage) caStage.querySelector('.stage-label').textContent = window.t('reports.gen_stage_ca');
+          if (caStage) {
+            caStage.style.display = '';
+            caStage.querySelector('.stage-label').textContent = window.t('reports.gen_stage_ca');
+          }
           if (dataStage) dataStage.querySelector('.stage-label').textContent = window.t('reports.gen_stage_data');
           if (pdfStage) pdfStage.querySelector('.stage-label').textContent = window.t('reports.stage.assembling');
         }
         // Time range applies to security-posture + json-export only. Data Export
         // and Documentation are current-state snapshots — no range.
         if (rangeSelect) {
-          const rangeIrrelevant = (typeSelect.value === 'data-export' || typeSelect.value === 'documentation');
+          const rangeIrrelevant = (typeSelect.value === 'data-export' || typeSelect.value === 'documentation' || typeSelect.value === 'quick-assessment');
           rangeSelect.disabled = rangeIrrelevant;
           rangeSelect.style.opacity = rangeIrrelevant ? '0.45' : '1';
           rangeSelect.title = rangeIrrelevant

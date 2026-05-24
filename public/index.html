@@ -40,24 +40,44 @@
         🔇 <span id="header-mute-chip-text" data-i18n="header.muted_label">Muted</span>
       </span>
 
-      <!-- User avatar + name + role badge — click opens the user-prefs modal -->
-      <div class="header-user-block" id="header-user-block" role="button" tabindex="0"
-           title="Open preferences" data-i18n-attr-title="header.user_block_title">
-        <div class="header-avatar" id="header-avatar" title="">
-          <span class="ha-initials" id="header-avatar-initials">··</span>
+      <!-- User avatar + name + role badge — click opens the header menu
+           (Preferences / What's New / Log out). Wrapped in a relative
+           container so the menu can position-absolute against it. -->
+      <div class="header-user-wrap">
+        <div class="header-user-block" id="header-user-block" role="button" tabindex="0"
+             title="Open menu" data-i18n-attr-title="header.user_block_title"
+             aria-haspopup="menu" aria-expanded="false" aria-controls="header-menu">
+          <div class="header-avatar" id="header-avatar" title="">
+            <span class="ha-initials" id="header-avatar-initials">··</span>
+          </div>
+          <div class="header-user-stack">
+            <span class="header-user" id="header-user"></span>
+            <!--
+              A3 (May 9, 2026): visible role badge. Populated by app.js from the
+              session user object on /api/user-prefs load. Hidden by default
+              until the role is known, to avoid a brief "Viewer" flash.
+            -->
+            <span class="header-role-badge" id="header-role-badge" style="display:none;"></span>
+          </div>
+          <!-- v0.1.7 "unread release notes" dot — shown when current_version
+               > last_seen_version. Hidden by default; app.js toggles. -->
+          <span class="header-user-dot" id="header-user-dot" style="display:none;" aria-hidden="true"></span>
         </div>
-        <div class="header-user-stack">
-          <span class="header-user" id="header-user"></span>
-          <!--
-            A3 (May 9, 2026): visible role badge. Populated by app.js from the
-            session user object on /api/user-prefs load. Hidden by default
-            until the role is known, to avoid a brief "Viewer" flash.
-          -->
-          <span class="header-role-badge" id="header-role-badge" style="display:none;"></span>
+
+        <!-- v0.1.7 header dropdown — Preferences / What's New / Log out.
+             Hidden by default; app.js toggles .active. -->
+        <div class="header-menu" id="header-menu" role="menu" aria-hidden="true">
+          <button class="header-menu-item" id="header-menu-prefs" role="menuitem" type="button"
+                  data-i18n="header.menu.preferences">Preferences</button>
+          <button class="header-menu-item" id="header-menu-whats-new" role="menuitem" type="button">
+            <span data-i18n="header.menu.whats_new">What's New</span>
+            <span class="header-menu-dot" id="header-menu-dot" style="display:none;" aria-hidden="true"></span>
+          </button>
+          <div class="header-menu-divider" role="separator"></div>
+          <a class="header-menu-item header-menu-logout" id="header-menu-logout" role="menuitem"
+             href="/auth/logout" data-i18n="header.menu.logout">Log out</a>
         </div>
       </div>
-
-      <a href="/auth/logout" class="header-logout" data-i18n="header.logout">Log Out</a>
     </div>
   </header>
 
@@ -101,6 +121,10 @@
         <div class="nav-item" data-page="settings" data-role-required="admin"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.settings">Settings</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="audit-log" data-role-required="admin"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.audit_log">Audit Log</span><span class="nav-indicator"></span></div>
       </div>
+
+      <!-- v0.1.7 — small app-version badge pinned to the bottom of the
+           sidebar via margin-top:auto (the sidebar is a flex column). -->
+      <div class="sidebar-version" id="sidebar-version" aria-hidden="true">v—</div>
 
     </nav>
 

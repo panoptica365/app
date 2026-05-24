@@ -100,10 +100,14 @@ WORKDIR /app
 # ─── 6. Python venv for ReportLab (PDF generation) ──────────────────
 # Created at /app/venv so the existing fallback in
 # src/routes/api-reports.js (path.join(projectRoot, 'venv', 'bin', 'python'))
-# finds it without any code change.
+# finds it without any code change. Dependency list is shared with the
+# host installer (panoptica-setup.sh) via scripts/requirements.txt so the
+# two install paths can't drift. Copied on its own first to keep this
+# layer cached as long as the requirements don't change.
+COPY scripts/requirements.txt ./scripts/requirements.txt
 RUN python3 -m venv /app/venv \
     && /app/venv/bin/pip install --no-cache-dir --upgrade pip \
-    && /app/venv/bin/pip install --no-cache-dir reportlab
+    && /app/venv/bin/pip install --no-cache-dir -r scripts/requirements.txt
 
 # ─── 7. npm dependencies ────────────────────────────────────────────
 # package.json + package-lock.json copied first to maximize layer cache

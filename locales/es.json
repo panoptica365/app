@@ -31,8 +31,22 @@
     "system_time_title": "Hora del sistema",
     "bell_title": "Abrir alertas",
     "muted_label": "Silenciado",
-    "user_block_title": "Abrir preferencias",
-    "logout": "Cerrar sesión"
+    "user_block_title": "Abrir menú",
+    "logout": "Cerrar sesión",
+    "menu": {
+      "preferences": "Preferencias",
+      "whats_new": "Novedades",
+      "logout": "Cerrar sesión"
+    }
+  },
+  "whats_new": {
+    "modal_title": "Novedades en Panoptica365",
+    "released": "Publicado el",
+    "earlier_releases": "Versiones anteriores",
+    "toast_message": "Panoptica365 se ha actualizado a la versión {version}",
+    "toast_action": "Ver novedades",
+    "loading": "Cargando…",
+    "load_failed": "No se pudieron cargar las notas de versión."
   },
   "role": {
     "admin": "Administrador",
@@ -1419,6 +1433,7 @@
     "label_report_type": "Tipo de informe",
     "type_security_posture": "Informe de postura de seguridad (PDF)",
     "type_documentation": "Documentación de configuración (PDF)",
+    "type_quick_assessment": "Evaluación rápida (PDF)",
     "type_data_export_json": "Exportación de datos (JSON)",
     "type_tenant_snapshot": "Instantánea del inquilino (ZIP)",
     "label_time_range": "Intervalo de tiempo",
@@ -1440,7 +1455,13 @@
     "toast_json_downloaded": "Exportación JSON descargada",
     "toast_security_generated": "Informe de postura de seguridad generado",
     "toast_documentation_generated": "Documentación de configuración generada",
+    "toast_quick_assessment_generated": "Informe de evaluación rápida generado",
     "toast_generation_failed": "Error al generar el informe",
+    "qa_modal_title": "Evaluación rápida — Agregar contexto",
+    "qa_modal_intro": "Opcionalmente, agregue contexto para el análisis — tipo de empresa, preocupaciones conocidas, cualquier cosa que deba tenerse en cuenta. Puede pegar notas. Déjelo en blanco para evaluar solo a partir de los datos del inquilino.",
+    "qa_context_placeholder": "p. ej. firma contable de 40 personas; preocupada por la preparación ante ransomware; usa Google Workspace para algunas colaboraciones externas.",
+    "qa_btn_cancel": "Cancelar",
+    "qa_btn_run": "Generar informe",
     "option_select_tenant": "— Seleccione inquilino —",
     "range": {
       "last_7_days": "Últimos 7 días",
@@ -1451,6 +1472,7 @@
       "empty": "No se generaron informes en esta sesión.",
       "type_security_posture": "Postura de seguridad (PDF)",
       "type_documentation": "Documentación de configuración (PDF)",
+      "type_quick_assessment": "Evaluación rápida (PDF)",
       "type_data_export": "Instantánea del inquilino (ZIP)",
       "type_json_export": "Exportación de datos (JSON)",
       "generated_at": "Generado {time}"
@@ -1465,6 +1487,7 @@
       "packaging_data": "Empaquetando datos",
       "creating_json": "Creando exportación JSON",
       "sonnet_analyzing": "Sonnet analiza postura y políticas de CA",
+      "opus_analyzing": "Opus analiza la postura de seguridad y las brechas",
       "assembling": "Ensamblando informe",
       "gathering_config": "Recopilando configuración del inquilino",
       "previous_snapshot": "Cargando instantánea previa"
@@ -2296,6 +2319,7 @@
     "intune_add_deploy_btn": "Add & Implementar",
     "toast_full_poll_completed": "Full poll completed",
     "toast_poll_failed": "Poll con error: {message}",
+    "toast_poll_running_bg": "El sondeo está tardando más de lo habitual — continúa ejecutándose en segundo plano.",
     "toast_routing_updated": "Alerta routing actualizado",
     "toast_routing_update_failed": "Error al actualizar routing: {message}",
     "toast_running_drift": "Running deriva check...",

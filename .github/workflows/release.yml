@@ -62,6 +62,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Guardrail (v0.1.7+) — fail fast if the VERSION file in the repo
+      # disagrees with the pushed tag. Without this you can ship an image
+      # tagged v0.1.X whose running app reports itself as v0.1.X-1 because
+      # someone forgot to bump VERSION before tagging. Pure shell, no deps.
+      - name: Verify VERSION file matches the pushed tag
+        run: |
+          file_version=$(tr -d '[:space:]' < VERSION)
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$file_version" != "$tag_version" ]; then
+            echo "::error::VERSION file ($file_version) does not match git tag ($GITHUB_REF_NAME) — bump VERSION before tagging."
+            exit 1
+          fi
+          echo "VERSION ($file_version) matches tag ($GITHUB_REF_NAME) ✓"
+
       # Buildx is Docker's newer build frontend. Enables the GHA cache
       # backend (`type=gha`) plus multi-platform support if we ever
       # need it later.

@@ -24,6 +24,9 @@
 #   • Microsoft.Online.SharePoint.PowerShell module
 #   • MicrosoftTeams module
 #
+#   ─── PDF report generation ──────────────────────────────────────
+#   • Python 3 venv at /opt/panoptica/venv with ReportLab
+#
 #   ─── Graph app-only authentication ──────────────────────────────
 #   • Self-signed 4096-bit RSA cert (2-year validity) at
 #     /opt/panoptica/certs/panoptica-graph.{pfx,cer,crt,key,thumbprint}
@@ -201,7 +204,7 @@ echo ""
 
 # ─── Step tracker ───
 STEP=0
-TOTAL_STEPS=15
+TOTAL_STEPS=16
 step() {
     STEP=$((STEP + 1))
     echo ""
@@ -242,12 +245,15 @@ apt install -y \
     gnupg \
     jq \
     unzip \
-    rsync
+    rsync \
+    python3 \
+    python3-venv \
+    python3-pip
 
 systemctl enable ssh
 systemctl start ssh
 
-echo -e "${GREEN}✓ Essentials installed (incl. SSH server, jq, rsync)${NC}"
+echo -e "${GREEN}✓ Essentials installed (incl. SSH server, jq, rsync, python3)${NC}"
 
 # ═══════════════════════════════════════════════════════════════
 # STEP 3: Node.js 20 LTS via nvm (as REAL_USER)
@@ -657,7 +663,37 @@ sudo -u "$REAL_USER" pwsh -NoProfile -NonInteractive -Command "
 echo -e "${GREEN}✓ Smoke test passed${NC}"
 
 # ═══════════════════════════════════════════════════════════════
-# STEP 15: Final ownership pass + .env preservation check
+# STEP 15: Python venv + ReportLab (PDF report generation)
+# ═══════════════════════════════════════════════════════════════
+# The Documentation and Security Posture reports are rendered by
+# Python scripts under scripts/ that depend on ReportLab (and
+# matplotlib, for the Security Posture report's charts). The app
+# (src/routes/api-reports.js) looks for an interpreter at
+# /opt/panoptica/venv/bin/python and only falls back to a bare
+# `python3` — which on a stock Ubuntu box has no ReportLab — if that
+# venv is absent. Provisioning it here is what makes PDF generation
+# work on a host install (the Docker image already does the
+# equivalent in its Dockerfile).
+step "Creating Python venv + installing ReportLab"
+
+python3 -m venv /opt/panoptica/venv
+/opt/panoptica/venv/bin/pip install --quiet --upgrade pip
+
+# scripts/requirements.txt only exists once the app code has been
+# restored from backup (which happens AFTER this script). Use it when
+# present; otherwise install the dependency directly so PDF generation
+# works even on a first run before the code restore.
+REQ_FILE=/opt/panoptica/scripts/requirements.txt
+if [ -f "$REQ_FILE" ]; then
+    /opt/panoptica/venv/bin/pip install --quiet -r "$REQ_FILE"
+else
+    /opt/panoptica/venv/bin/pip install --quiet 'reportlab>=4,<5' 'matplotlib>=3,<4'
+fi
+
+echo -e "${GREEN}✓ Python venv ready ($(/opt/panoptica/venv/bin/python --version 2>&1)) — ReportLab + matplotlib installed${NC}"
+
+# ═══════════════════════════════════════════════════════════════
+# STEP 16: Final ownership pass + .env preservation check
 # ═══════════════════════════════════════════════════════════════
 step "Final ownership pass"
 

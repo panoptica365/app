@@ -97,6 +97,10 @@ module.exports = {
     apiKey: process.env.ANTHROPIC_API_KEY,
     haikuModel: 'claude-haiku-4-5-20251001',
     sonnetModel: 'claude-sonnet-4-6',
+    // Opus tier — used by the Quick Assessment report (deep gap analysis).
+    // Generic knob so other features can reach for Opus later. Override the
+    // exact model id via OPUS_MODEL in .env.
+    opusModel: process.env.OPUS_MODEL || 'claude-opus-4-7',
     // Reports use sonnetModel by default. Set REPORT_MODEL env to override
     // (e.g., 'claude-opus-4-6' for Opus tier). Single knob, no other call sites
     // affected.

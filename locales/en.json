@@ -31,8 +31,22 @@
     "system_time_title": "System time",
     "bell_title": "Open alerts",
     "muted_label": "Muted",
-    "user_block_title": "Open preferences",
-    "logout": "Log Out"
+    "user_block_title": "Open menu",
+    "logout": "Log Out",
+    "menu": {
+      "preferences": "Preferences",
+      "whats_new": "What's New",
+      "logout": "Log out"
+    }
+  },
+  "whats_new": {
+    "modal_title": "What's New in Panoptica365",
+    "released": "Released",
+    "earlier_releases": "Earlier releases",
+    "toast_message": "Panoptica365 has been updated to v{version}",
+    "toast_action": "See what's new",
+    "loading": "Loading…",
+    "load_failed": "Could not load release notes."
   },
   "role": {
     "admin": "Admin",
@@ -1419,6 +1433,7 @@
     "label_report_type": "Report Type",
     "type_security_posture": "Security Posture Report (PDF)",
     "type_documentation": "Configuration Documentation (PDF)",
+    "type_quick_assessment": "Quick Assessment (PDF)",
     "type_data_export_json": "Data Export (JSON)",
     "type_tenant_snapshot": "Tenant Snapshot (ZIP)",
     "label_time_range": "Time Range",
@@ -1440,7 +1455,13 @@
     "toast_json_downloaded": "JSON export downloaded",
     "toast_security_generated": "Security Posture report generated",
     "toast_documentation_generated": "Configuration Documentation generated",
+    "toast_quick_assessment_generated": "Quick Assessment report generated",
     "toast_generation_failed": "Report generation failed",
+    "qa_modal_title": "Quick Assessment — Add Context",
+    "qa_modal_intro": "Optionally add context for the analysis — business type, known concerns, anything the analysis should weigh. You can paste in notes. Leave blank to assess from the tenant data alone.",
+    "qa_context_placeholder": "e.g. 40-person accounting firm; concerned about ransomware readiness; uses Google Workspace for some external collaboration.",
+    "qa_btn_cancel": "Cancel",
+    "qa_btn_run": "Generate Report",
     "option_select_tenant": "— Select tenant —",
     "range": {
       "last_7_days": "Last 7 Days",
@@ -1451,6 +1472,7 @@
       "empty": "No reports generated this session.",
       "type_security_posture": "Security Posture (PDF)",
       "type_documentation": "Configuration Documentation (PDF)",
+      "type_quick_assessment": "Quick Assessment (PDF)",
       "type_data_export": "Tenant Snapshot (ZIP)",
       "type_json_export": "Data Export (JSON)",
       "generated_at": "Generated {time}"
@@ -1465,6 +1487,7 @@
       "packaging_data": "Packaging data",
       "creating_json": "Creating JSON export",
       "sonnet_analyzing": "Sonnet analyzing posture + CA policies",
+      "opus_analyzing": "Opus analyzing security posture + gaps",
       "assembling": "Assembling report",
       "gathering_config": "Gathering tenant configuration",
       "previous_snapshot": "Loading previous snapshot"
@@ -2296,6 +2319,7 @@
     "intune_add_deploy_btn": "Add & Deploy",
     "toast_full_poll_completed": "Full poll completed",
     "toast_poll_failed": "Poll failed: {message}",
+    "toast_poll_running_bg": "Poll is taking longer than usual — it's still running in the background.",
     "toast_routing_updated": "Alert routing updated",
     "toast_routing_update_failed": "Failed to update routing: {message}",
     "toast_running_drift": "Running drift check...",

@@ -475,6 +475,16 @@ router.get('/:id/data', async (req, res) => {
 
 // ─── Poll Now: trigger immediate poll for a tenant ───
 // Operator: operational refresh action, not a config change.
+//
+// Fire-and-forget: a full poll of a tenant runs for anywhere from a few
+// seconds to several minutes (all Graph fetchers + pwsh spawns for
+// EXO/SharePoint/Teams + the security-settings pass). Awaiting it inside
+// the HTTP request held the connection open long enough to trip the
+// reverse proxy's read timeout (nginx -> 504, Caddy likewise) — the poll
+// itself kept running server-side, but the operator saw a failure. So we
+// kick the poll off in the background and return 202 immediately; the
+// dashboard finishes the UI off the `tenant:updated` Socket.IO event the
+// poll already emits on success, or `tenant:poll_failed` emitted below.
 router.post('/:id/poll', auth.requireMemberOrAdmin, async (req, res) => {
   try {
     const tenant = await db.queryOne(
@@ -486,10 +496,19 @@ router.post('/:id/poll', auth.requireMemberOrAdmin, async (req, res) => {
     console.log(`[API] Poll Now triggered for "${tenant.display_name}" by ${req.session.user.email}`);
     const io = req.app.get('io');
     const forceFull = req.body.full !== false; // Default: full poll on manual trigger
-    await polling.pollTenant(tenant, io, forceFull);
 
-    const updated = await db.queryOne('SELECT last_polled_at FROM tenants WHERE id = ?', [req.params.id]);
-    res.json({ success: true, last_polled_at: updated.last_polled_at });
+    polling.pollTenant(tenant, io, forceFull).catch((err) => {
+      console.error(`[API] Background poll failed for "${tenant.display_name}":`, err.message);
+      if (io) {
+        io.emit('tenant:poll_failed', {
+          tenantId: tenant.id,
+          displayName: tenant.display_name,
+          error: err.message,
+        });
+      }
+    });
+
+    res.status(202).json({ success: true, started: true });
   } catch (err) {
     console.error('[API] Poll Now failed:', err.message);
     res.status(500).json({ error: 'Poll failed: ' + err.message });

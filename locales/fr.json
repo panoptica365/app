@@ -31,8 +31,22 @@
     "system_time_title": "Heure du système",
     "bell_title": "Ouvrir les alertes",
     "muted_label": "En sourdine",
-    "user_block_title": "Ouvrir les préférences",
-    "logout": "Déconnexion"
+    "user_block_title": "Ouvrir le menu",
+    "logout": "Déconnexion",
+    "menu": {
+      "preferences": "Préférences",
+      "whats_new": "Quoi de neuf",
+      "logout": "Se déconnecter"
+    }
+  },
+  "whats_new": {
+    "modal_title": "Quoi de neuf dans Panoptica365",
+    "released": "Publié le",
+    "earlier_releases": "Versions antérieures",
+    "toast_message": "Panoptica365 a été mis à jour vers la version {version}",
+    "toast_action": "Voir les nouveautés",
+    "loading": "Chargement…",
+    "load_failed": "Impossible de charger les notes de version."
   },
   "role": {
     "admin": "Administrateur",
@@ -1419,6 +1433,7 @@
     "label_report_type": "Type de rapport",
     "type_security_posture": "Rapport de posture de sécurité (PDF)",
     "type_documentation": "Documentation de configuration (PDF)",
+    "type_quick_assessment": "Évaluation rapide (PDF)",
     "type_data_export_json": "Exportation des données (JSON)",
     "type_tenant_snapshot": "Instantané du locataire (ZIP)",
     "label_time_range": "Période",
@@ -1440,7 +1455,13 @@
     "toast_json_downloaded": "Exportation JSON téléchargée",
     "toast_security_generated": "Rapport de posture de sécurité généré",
     "toast_documentation_generated": "Documentation de configuration générée",
+    "toast_quick_assessment_generated": "Rapport d’évaluation rapide généré",
     "toast_generation_failed": "Échec de la génération du rapport",
+    "qa_modal_title": "Évaluation rapide — Ajouter du contexte",
+    "qa_modal_intro": "Ajoutez facultativement du contexte pour l’analyse — type d’entreprise, préoccupations connues, tout élément à prendre en compte. Vous pouvez y coller des notes. Laissez vide pour évaluer uniquement à partir des données du locataire.",
+    "qa_context_placeholder": "p. ex. cabinet comptable de 40 personnes; préoccupé par la résilience aux rançongiciels; utilise Google Workspace pour certaines collaborations externes.",
+    "qa_btn_cancel": "Annuler",
+    "qa_btn_run": "Générer le rapport",
     "option_select_tenant": "— Sélectionnez un locataire —",
     "range": {
       "last_7_days": "7 derniers jours",
@@ -1451,6 +1472,7 @@
       "empty": "Aucun rapport généré dans cette session.",
       "type_security_posture": "Posture de sécurité (PDF)",
       "type_documentation": "Documentation de configuration (PDF)",
+      "type_quick_assessment": "Évaluation rapide (PDF)",
       "type_data_export": "Instantané du locataire (ZIP)",
       "type_json_export": "Exportation de données (JSON)",
       "generated_at": "Généré {time}"
@@ -1465,6 +1487,7 @@
       "packaging_data": "Mise en paquet des données",
       "creating_json": "Création de l’exportation JSON",
       "sonnet_analyzing": "Sonnet analyse la posture et les stratégies CA",
+      "opus_analyzing": "Opus analyse la posture de sécurité et les lacunes",
       "assembling": "Assemblage du rapport",
       "gathering_config": "Collecte de la configuration du locataire",
       "previous_snapshot": "Chargement de l’instantané précédent"
@@ -2296,6 +2319,7 @@
     "intune_add_deploy_btn": "Ajouter et déployer",
     "toast_full_poll_completed": "Interrogation complète terminée",
     "toast_poll_failed": "Échec de l’interrogation : {message}",
+    "toast_poll_running_bg": "L’interrogation est plus longue que d’habitude — elle se poursuit en arrière-plan.",
     "toast_routing_updated": "Acheminement des alertes mis à jour",
     "toast_routing_update_failed": "Échec de la mise à jour de l’acheminement : {message}",
     "toast_running_drift": "Exécution de la vérification de dérive...",

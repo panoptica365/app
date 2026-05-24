@@ -11,7 +11,7 @@ Panoptica365 ingests signals from across the Microsoft 365 ecosystem — Entra I
 - **Security Settings drift detection** across 17 monitored settings, with auto-attribution of changes to operator actions via Microsoft Graph audit-log correlation.
 - **Cross-tenant policy templates** — capture proven Conditional Access policies and Intune configuration profiles from any tenant, generalize tenant-specific identifiers (named locations, group GUIDs) automatically, and deploy them as standardized templates across the rest of your fleet. Lets an MSP turn one customer's hard-won security baseline into the floor for the entire book.
 - **Daily morning briefings** with severity thresholds and exemption-rule awareness.
-- **Tenant posture reports** and **configuration documentation reports** (PDF, multi-language).
+- **Tenant reports** (PDF, multi-language) — a Security Posture report, a Configuration Documentation snapshot, and a **Quick Assessment**: an Opus-driven advisory analysis that flags strengths, weaknesses, and missing controls across Conditional Access, Intune, and security settings.
 - **3-tier RBAC** (Admin / Member / Viewer) via Entra ID group membership.
 - **Full localization** in English, French, and Spanish — UI text, AI-generated narrative, and operator notifications.
 - **Per-tenant exemption rules** with operator-acknowledged expiry to suppress known false positives without losing audit trail.

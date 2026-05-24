@@ -22,6 +22,7 @@
         <label data-i18n="reports.label_report_type">Report Type</label>
         <select id="report-type">
           <option value="security-posture" data-i18n="reports.type_security_posture">Security Posture Report (PDF)</option>
+          <option value="quick-assessment" data-i18n="reports.type_quick_assessment">Quick Assessment (PDF)</option>
           <option value="documentation" data-i18n="reports.type_documentation">Configuration Documentation (PDF)</option>
           <option value="json-export" data-i18n="reports.type_data_export_json">Data Export (JSON)</option>
           <option value="data-export" data-i18n="reports.type_tenant_snapshot">Tenant Snapshot (ZIP)</option>
@@ -105,6 +106,31 @@
 
       <!-- Tenant/range info -->
       <div class="report-gen-info" id="gen-info-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ QUICK ASSESSMENT — CONTEXT MODAL ═══ -->
+<!-- Shown when the operator clicks Generate with "Quick Assessment" picked.
+     Collects optional free-text context fed to the AI analysis. -->
+<div id="qa-context-overlay" class="modal-overlay">
+  <div class="modal" style="width:560px; max-width:92vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" id="qa-context-title" data-i18n="reports.qa_modal_title">Quick Assessment — Add Context</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.88rem; color:var(--p-text-muted); margin:0 0 10px 0;" data-i18n="reports.qa_modal_intro">
+        Optionally add context for the analysis — business type, known concerns, anything the analysis should weigh. You can paste in notes. Leave blank to assess from the tenant data alone.
+      </p>
+      <textarea id="qa-context-text" class="form-control" rows="8" maxlength="20000"
+        style="resize:vertical; min-height:150px; width:100%; box-sizing:border-box;"
+        data-i18n-attr-placeholder="reports.qa_context_placeholder"
+        placeholder="e.g. 40-person accounting firm; concerned about ransomware readiness; uses Google Workspace for some external collaboration."></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+        <button id="qa-context-cancel" class="btn-secondary" data-i18n="reports.qa_btn_cancel">Cancel</button>
+        <button id="qa-context-generate" class="btn-primary" data-i18n="reports.qa_btn_run">Generate Report</button>
+      </div>
     </div>
   </div>
 </div>
