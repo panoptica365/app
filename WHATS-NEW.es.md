@@ -5,6 +5,38 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.15 — 2026-05-25
+
+### Detección de desviación CA: los cambios en listas de exclusión ya se detectan
+
+Agregar o quitar un usuario/grupo de la lista **excludeUsers** o
+**excludeGroups** de una política de Acceso Condicional pasaba
+silenciosamente inadvertido para la detección de desviación en algunas
+plantillas — el comparador nunca comparaba esos campos porque no
+figuraban en la lista de campos supervisados de la plantilla. Un
+operador que agregara un usuario excluido a una política CA desplegada
+(por ej. «Permitir acceso solo desde Canadá») no veía ninguna
+desviación, ninguna alerta, ninguna entrada en la tarjeta CA.
+
+La corrección reinyecta `conditions.users.excludeUsers` y
+`conditions.users.excludeGroups` en los campos supervisados de cada
+plantilla CA al arrancar el servidor. Idempotente — las plantillas que
+ya los tenían quedan intactas. Los mismos valores predeterminados ya se
+aplicaban a las *nuevas* importaciones de plantillas desde que llegó el
+sistema de exenciones, pero el rellenado para las plantillas
+preexistentes solo vivía en una migración SQL manual no cableada al
+arranque — lo que significaba que una instalación nueva o cualquier
+importación posterior al arreglo podía caer en el estado roto. Ahora
+ambos caminos convergen.
+
+Tras la actualización, el siguiente ciclo de desviación (o un «Verificar
+desviación» manual en la tarjeta CA) detectará correctamente los
+cambios en las listas de exclusión y disparará la alerta informativa
+«Lista de exención CA modificada», que luego puede aceptar como una
+exención intencional o revertir a través de la política en vivo.
+
+---
+
 ## Versión 0.1.14 — 2026-05-24
 
 ### Modal de registro de app: las etiquetas de negrita se muestran + no más icono de copia duplicado

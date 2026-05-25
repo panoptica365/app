@@ -263,6 +263,44 @@ async function ensureCaAlertSchema() {
     }
   } catch (e) { console.warn('[CA] Phase 10 drift_status enum upgrade (non-fatal):', e.message); }
 
+  // Backfill conditions.users.excludeUsers / excludeGroups into monitored_fields.
+  // The in-code defaults at template-import time (defaultMonitored in POST
+  // /api/ca/templates) have included these since 2026-04-18, but pre-existing
+  // templates — and any import that explicitly overrode monitored_fields —
+  // can still be missing them. Without these paths in monitored_fields the
+  // drift comparator silently never compares the exclusion lists, so an
+  // operator adding/removing an excluded user produces no drift alert at all.
+  // This backfill was previously only in src/db/migrate-ca-exemptions.sql,
+  // which was applied manually on the original prod VM and never carried into
+  // code — meaning fresh installs and post-Apr-18 imports could land in the
+  // broken state. Mirrors the SQL exactly. Idempotent via JSON_CONTAINS guard.
+  try {
+    // (a) Seed defaults for any template missing monitored_fields entirely.
+    await db.execute(
+      "UPDATE ca_templates SET monitored_fields = JSON_ARRAY('state', 'grantControls.builtInControls') WHERE monitored_fields IS NULL"
+    );
+    // (b) Append excludeUsers if missing.
+    const beforeExclUsers = await db.queryOne(
+      "SELECT COUNT(*) AS n FROM ca_templates WHERE JSON_CONTAINS(monitored_fields, '\"conditions.users.excludeUsers\"') = 0"
+    );
+    if (beforeExclUsers && beforeExclUsers.n > 0) {
+      await db.execute(
+        "UPDATE ca_templates SET monitored_fields = JSON_ARRAY_APPEND(monitored_fields, '$', 'conditions.users.excludeUsers') WHERE JSON_CONTAINS(monitored_fields, '\"conditions.users.excludeUsers\"') = 0"
+      );
+      console.log(`[CA] Backfilled conditions.users.excludeUsers into monitored_fields on ${beforeExclUsers.n} template(s)`);
+    }
+    // (c) Append excludeGroups if missing.
+    const beforeExclGroups = await db.queryOne(
+      "SELECT COUNT(*) AS n FROM ca_templates WHERE JSON_CONTAINS(monitored_fields, '\"conditions.users.excludeGroups\"') = 0"
+    );
+    if (beforeExclGroups && beforeExclGroups.n > 0) {
+      await db.execute(
+        "UPDATE ca_templates SET monitored_fields = JSON_ARRAY_APPEND(monitored_fields, '$', 'conditions.users.excludeGroups') WHERE JSON_CONTAINS(monitored_fields, '\"conditions.users.excludeGroups\"') = 0"
+      );
+      console.log(`[CA] Backfilled conditions.users.excludeGroups into monitored_fields on ${beforeExclGroups.n} template(s)`);
+    }
+  } catch (e) { console.warn('[CA] monitored_fields backfill for exclusion fields (non-fatal):', e.message); }
+
   // Ensure system alert policies exist for CA drift
   const driftPolicy = await db.queryOne(
     "SELECT id FROM alert_policies WHERE name = 'CA Policy Drift Detected' LIMIT 1"

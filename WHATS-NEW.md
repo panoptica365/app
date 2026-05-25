@@ -5,6 +5,33 @@ that release, newest first.
 
 ---
 
+## Version 0.1.15 — 2026-05-25
+
+### CA drift detection: exclusion-list changes are now caught
+
+Adding or removing a user/group from a Conditional Access policy's
+**excludeUsers** or **excludeGroups** list was silently invisible to drift
+detection on some templates — the comparator never compared those fields
+because they weren't in the template's monitored field list. An operator
+adding an excluded user to a deployed CA policy (e.g. "Only allow access
+from Canada") would see no drift, no alert, no entry on the CA tile.
+
+The fix backfills `conditions.users.excludeUsers` and
+`conditions.users.excludeGroups` into every CA template's monitored fields
+on server startup. Idempotent — templates that already had them are
+untouched. The same defaults already applied to *new* template imports
+since the exemption-aware drift work shipped, but the backfill for
+pre-existing templates only lived in a manual SQL migration that wasn't
+wired into boot — meaning fresh installs and any post-fix imports could
+land in the broken state. Now both paths converge.
+
+After upgrading, the next drift cycle (or a manual "Check Drift" on the
+CA tile) will correctly detect exclusion-list changes and fire the
+informational "CA Exemption List Changed" alert, which you can then accept
+as an intentional exemption or push back via the live policy.
+
+---
+
 ## Version 0.1.14 — 2026-05-24
 
 ### App Registration modal: bold tags render + no more duplicate copy icon

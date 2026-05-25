@@ -5,6 +5,38 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.15 — 2026-05-25
+
+### Détection de dérive CA : les changements de listes d’exclusion sont désormais captés
+
+L’ajout ou le retrait d’un utilisateur/groupe de la liste **excludeUsers**
+ou **excludeGroups** d’une politique d’accès conditionnel passait
+silencieusement inaperçu pour la détection de dérive sur certains
+modèles — le comparateur ne comparait jamais ces champs parce qu’ils ne
+figuraient pas dans la liste des champs surveillés du modèle. Un opérateur
+ajoutant un utilisateur exclu à une politique CA déployée (par ex. «
+N’autoriser l’accès qu’à partir du Canada ») ne voyait aucune dérive,
+aucune alerte, aucune entrée sur la tuile CA.
+
+Le correctif réinjecte `conditions.users.excludeUsers` et
+`conditions.users.excludeGroups` dans les champs surveillés de chaque
+modèle CA au démarrage du serveur. Idempotent — les modèles qui les
+contenaient déjà sont laissés intacts. Les mêmes valeurs par défaut
+s’appliquaient déjà aux *nouveaux* imports de modèles depuis l’arrivée du
+système d’exemptions, mais le rattrapage pour les modèles préexistants
+n’existait que dans une migration SQL manuelle non câblée au démarrage —
+ce qui faisait qu’une installation neuve, ou tout import postérieur au
+correctif, pouvait se retrouver dans l’état cassé. Les deux chemins
+convergent maintenant.
+
+Après la mise à niveau, le prochain cycle de dérive (ou un « Vérifier la
+dérive » manuel sur la tuile CA) détectera correctement les changements
+de listes d’exclusion et déclenchera l’alerte informationnelle « Liste
+d’exemption CA modifiée », que vous pouvez ensuite accepter comme une
+exemption volontaire ou repousser via la politique en direct.
+
+---
+
 ## Version 0.1.14 — 2026-05-24
 
 ### Modal d’inscription d’app : balises gras s’affichent + plus d’icône de copie en double
