@@ -59,6 +59,9 @@ const SCHEMA_VERSION = 1;
 const REQUIRED_STEPS = [
   'language',     // operator picked / confirmed wizard language
   'hostname',     // PANOPTICA365_HOSTNAME + LETSENCRYPT_EMAIL written to .env
+  'app_reg',      // operator acknowledged completing the Entra app registration
+                  //   (v0.1.13+; no data captured — just a "yes I did it" ack
+                  //   that gates the wizard until they've followed the modal).
   'entra',        // ENTRA_TENANT_ID + ENTRA_CLIENT_ID + ENTRA_CLIENT_SECRET written
   'smtp',         // SMTP_HOST + SMTP_PORT + SMTP_USER + SMTP_PASS + SMTP_FROM written
   'anthropic',    // ANTHROPIC_API_KEY written

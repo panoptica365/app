@@ -5,6 +5,54 @@ that release, newest first.
 
 ---
 
+## Version 0.1.13 — 2026-05-24
+
+### Wizard: full Entra app registration walkthrough + Test Connection
+
+The Entra step in the first-boot wizard was the longest manual chunk of
+the install — operators had to know to create the app reg themselves
+with the right multi-tenant setting, the right ~58 permissions, admin
+consent, and the two RBAC roles for PowerShell modules. Easy to miss
+something and find out months later when a feature silently doesn't work.
+
+This release adds a dedicated **App Registration** step with a large
+modal containing detailed click-by-click instructions:
+
+- The complete 58-permission catalog (47 Microsoft Graph application
+  + 6 delegated, 1 Exchange Online, 2 Management APIs, 2 Skype/Teams),
+  ordered to match the Entra portal's UI, with a copy-icon on every
+  permission name (plus a "copy all" button per category).
+- The hostname-derived redirect URI as a one-click copy.
+- Step-by-step Service Principal role assignments (Exchange Administrator
+  + Compliance Administrator), with explicit warnings against the
+  similarly-named "Exchange Recipient Administrator" / "Compliance Data
+  Administrator" roles that look right but won't work.
+- Guidance for creating the three RBAC groups (Panoptica365 Admins /
+  Operators / Viewers) with suggested names that match Panoptica365's
+  internal role naming, plus copy buttons.
+- Color-coded callouts: red for "do NOT" footguns, amber for
+  easy-to-miss steps, green for "you should see this" confirmation cues.
+- "I already have an app reg — skip" link for operators who provisioned
+  via PowerShell or are reinstalling.
+
+The credentials paste step now has:
+
+- Three group ID fields (Admins / Operators / Viewers) instead of just
+  the admin one, with admin marked recommended and the other two
+  optional.
+- A **Test Connection** button that acquires an app-only token + fires
+  ~9 representative Graph calls in parallel. If the token request fails
+  it diagnoses common Microsoft error codes (AADSTS7000215 = wrong secret
+  value pasted, AADSTS90002 = wrong tenant ID, etc.). If the token works
+  but Graph calls 403 it lists exactly which permissions are missing
+  (the most common cause is "forgot to click Grant admin consent").
+- A "Reopen App Registration instructions" link in case the operator
+  needs to double-check a step.
+
+Fully localized en/fr/es.
+
+---
+
 ## Version 0.1.12 — 2026-05-24
 
 ### Wizard: embedded links and code spans now render properly

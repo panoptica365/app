@@ -428,3 +428,271 @@ html, body {
 .setup-status-line.success { border-color: var(--p-ok, #2fa84f); color: var(--p-ok, #2fa84f); }
 .setup-status-line.error   { border-color: var(--p-danger); color: var(--p-danger); }
 .setup-status-line.info    { border-color: var(--p-accent); color: var(--p-text); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   APP REGISTRATION MODAL (v0.1.13 — Stage 4 Part B addition)
+   Full-window overlay used to deliver the detailed Entra app registration
+   instructions. Body rendered dynamically by setup.js renderAppRegModal().
+   ═══════════════════════════════════════════════════════════════════ */
+
+.setup-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 22, 0.85);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.setup-modal-overlay.open { display: flex; }
+
+.setup-modal {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1080px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+
+.setup-modal-header {
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--p-border);
+  background: var(--p-surface-alt);
+  flex: 0 0 auto;
+}
+
+.setup-modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--p-text);
+}
+
+.setup-modal-close {
+  background: transparent;
+  color: var(--p-text-muted);
+  border: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.setup-modal-close:hover {
+  background: var(--p-surface);
+  color: var(--p-text);
+}
+
+.setup-modal-body {
+  padding: 24px 32px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scroll-behavior: smooth;
+  font-size: 0.92rem;
+  line-height: 1.62;
+  color: var(--p-text);
+}
+
+.setup-modal-body h3 {
+  margin: 28px 0 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--p-border);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--p-text);
+  letter-spacing: 0.01em;
+}
+.setup-modal-body h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.setup-modal-body h4 {
+  margin: 18px 0 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--p-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setup-modal-body p {
+  margin: 0 0 12px 0;
+}
+
+.setup-modal-body ol,
+.setup-modal-body ul {
+  margin: 0 0 14px 0;
+  padding-left: 22px;
+}
+.setup-modal-body ol li,
+.setup-modal-body ul li {
+  margin-bottom: 8px;
+}
+
+.setup-modal-body code {
+  background: var(--p-surface-sunken, var(--p-bg));
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  border: 1px solid var(--p-border);
+}
+
+.setup-modal-body a {
+  color: var(--p-accent);
+  text-decoration: underline;
+}
+.setup-modal-body a:hover { filter: brightness(1.15); }
+
+.setup-modal-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--p-border);
+  background: var(--p-surface-alt);
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+/* ─── Color-coded callout boxes inside the modal ─── */
+
+.setup-callout {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 14px 0;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.setup-callout-icon {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  flex: 0 0 auto;
+}
+.setup-callout-body {
+  flex: 1 1 auto;
+}
+.setup-callout-body strong { font-weight: 700; }
+
+.setup-callout.danger {
+  border-left-color: var(--p-danger);
+  background: rgba(220, 60, 60, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.danger strong { color: var(--p-danger); }
+
+.setup-callout.warn {
+  border-left-color: var(--p-warn);
+  background: rgba(230, 160, 50, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.warn strong { color: var(--p-warn); }
+
+.setup-callout.ok {
+  border-left-color: var(--p-ok, #2fa84f);
+  background: rgba(47, 168, 79, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.ok strong { color: var(--p-ok, #2fa84f); }
+
+/* ─── Copy-to-clipboard buttons (used for hostname, redirect URI,
+       permission names, group name suggestions) ─── */
+
+.setup-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--p-surface-sunken, var(--p-bg));
+  border: 1px solid var(--p-border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  color: var(--p-text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: all;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.setup-copy:hover {
+  border-color: var(--p-accent);
+  background: var(--p-surface);
+}
+.setup-copy.copied {
+  border-color: var(--p-ok, #2fa84f);
+  background: rgba(47, 168, 79, 0.14);
+  color: var(--p-ok, #2fa84f);
+}
+.setup-copy-icon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+/* Permission list — flat alphabetical with copy buttons per row */
+.setup-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 16px;
+  padding: 10px 12px;
+  background: var(--p-surface-sunken, var(--p-bg));
+  border: 1px solid var(--p-border);
+  border-radius: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.setup-perm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 0.88rem;
+}
+.setup-perm-row:hover { background: var(--p-surface); }
+.setup-perm-name {
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  color: var(--p-text);
+}
+
+/* "Copy all 47" / "Copy all 6" buttons */
+.setup-copy-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--p-accent);
+  color: var(--p-bg);
+  border: 0;
+  border-radius: 5px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.setup-copy-all:hover { filter: brightness(1.1); }
+.setup-copy-all.copied {
+  background: var(--p-ok, #2fa84f);
+  color: #fff;
+}

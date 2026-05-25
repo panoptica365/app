@@ -205,6 +205,131 @@ router.post('/entra', (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── POST /api/setup/app-reg ───────────────────────────────────────────
+// Operator acknowledges they've completed the Entra app registration via
+// the modal's instructions. No data captured — just marks the step done.
+// v0.1.13+
+router.post('/app-reg', (req, res) => {
+  setupState.markStepComplete('app_reg', { acknowledged: true });
+  res.json({ ok: true });
+});
+
+// ─── POST /api/setup/entra/test ────────────────────────────────────────
+// Multi-permission spot-check. Acquires an app-only access token using
+// the just-saved ENTRA_TENANT_ID/CLIENT_ID/CLIENT_SECRET, then fires ~9
+// representative Graph calls in parallel. Categorizes failures:
+//   - Token request failed → cred problem (401 / wrong secret / wrong IDs)
+//   - Token OK but Graph calls 403 → missing permission or missing admin consent
+//   - All 200 → all spot-checks passed
+//
+// Doesn't validate EVERY permission (58 calls would be slow + noisy). The
+// 9 reps cover the major permission buckets so the common "operator
+// forgot to grant admin consent" failure mode lights up immediately.
+//
+// v0.1.13+
+const ENTRA_TEST_CHECKS = [
+  { perm: 'User.Read.All',            url: '/users?$top=1' },
+  { perm: 'Application.Read.All',     url: '/applications?$top=1' },
+  { perm: 'Group.Read.All',           url: '/groups?$top=1' },
+  { perm: 'Directory.Read.All',       url: '/devices?$top=1' },
+  { perm: 'Policy.Read.All',          url: '/policies/conditionalAccessPolicies?$top=1' },
+  { perm: 'Reports.Read.All',         url: "/reports/getOffice365ActiveUserCounts(period='D7')" },
+  { perm: 'SecurityIncident.Read.All', url: '/security/incidents?$top=1' },
+  { perm: 'AuditLog.Read.All',        url: '/auditLogs/signIns?$top=1' },
+];
+
+router.post('/entra/test', async (req, res) => {
+  const tenantId = process.env.ENTRA_TENANT_ID;
+  const clientId = process.env.ENTRA_CLIENT_ID;
+  const clientSecret = process.env.ENTRA_CLIENT_SECRET;
+
+  if (!tenantId || !clientId || !clientSecret) {
+    return res.status(400).json({
+      error: 'entra_not_configured',
+      detail: 'Save Entra credentials before testing.',
+    });
+  }
+
+  // ─── Step 1: Acquire an app-only access token ─────────────────────
+  let token;
+  try {
+    const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(tenantId)}/oauth2/v2.0/token`;
+    const body = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+      scope: 'https://graph.microsoft.com/.default',
+    });
+    const tokenRes = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    if (!tokenRes.ok) {
+      let err = {};
+      try { err = await tokenRes.json(); } catch { /* */ }
+      // Common MS error codes that map to specific fixes:
+      //   AADSTS90002 — tenant not found (wrong Tenant ID)
+      //   AADSTS700016 — app not found in tenant (wrong Client ID or app not multi-tenant)
+      //   AADSTS7000215 — invalid client secret (wrong Secret VALUE or Secret ID pasted)
+      //   AADSTS50012 — invalid client (wrong Client ID format)
+      const code = (err.error_description || '').match(/AADSTS\d+/)?.[0] || null;
+      let hint = 'Double-check Tenant ID, Client ID, and Secret VALUE (NOT the Secret ID).';
+      if (code === 'AADSTS7000215') hint = 'The Client Secret is wrong. Did you paste the Secret VALUE instead of the Secret ID? The VALUE is shown once at creation time.';
+      else if (code === 'AADSTS90002') hint = 'The Tenant ID is wrong — Microsoft does not recognize it. Verify the Directory (tenant) ID on the app Overview page.';
+      else if (code === 'AADSTS700016') hint = 'The Client ID is not registered in this tenant, OR the app is not configured as multi-tenant. Verify "Supported account types" is set to "Accounts in any organizational directory".';
+      return res.status(401).json({
+        error: 'token_request_failed',
+        ms_error_code: code,
+        detail: err.error_description || err.error || `HTTP ${tokenRes.status}`,
+        hint,
+      });
+    }
+    const tokenJson = await tokenRes.json();
+    token = tokenJson.access_token;
+  } catch (e) {
+    return res.status(502).json({
+      error: 'network_failure',
+      detail: `Could not reach Microsoft token endpoint: ${e.message}`,
+    });
+  }
+
+  // ─── Step 2: Run permission spot-checks in parallel ────────────────
+  const results = await Promise.all(ENTRA_TEST_CHECKS.map(async (c) => {
+    try {
+      const r = await fetch(`https://graph.microsoft.com/v1.0${c.url}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+      });
+      return { perm: c.perm, status: r.status, ok: r.ok };
+    } catch (e) {
+      return { perm: c.perm, status: 0, ok: false, network_error: e.message };
+    }
+  }));
+
+  const failed = results.filter(r => !r.ok);
+
+  // Mark entra step's `tested` flag if everything passed.
+  if (failed.length === 0) {
+    const state = setupState.readSetupState();
+    const prev = state.steps.entra || { complete: true, at: new Date().toISOString() };
+    setupState.markStepComplete('entra', { ...prev, tested: true });
+    return res.json({
+      ok: true,
+      checks_performed: results.length,
+      message: 'All representative permissions are granted. Credentials look correct.',
+    });
+  }
+
+  // Some permissions failed — report what's missing.
+  return res.json({
+    ok: false,
+    checks_performed: results.length,
+    checks_failed: failed.length,
+    failed_permissions: failed.map(f => f.perm),
+    hint: 'Token acquired successfully, but Graph calls were rejected. Most likely: admin consent was not granted for one or more permissions. Re-open the App Registration instructions and verify the "Grant admin consent" step was completed and shows green checkmarks for every permission.',
+  });
+});
+
 // ─── POST /api/setup/smtp ──────────────────────────────────────────────
 router.post('/smtp', (req, res) => {
   const { host, port, user, password, from } = req.body || {};

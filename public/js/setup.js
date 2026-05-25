@@ -21,16 +21,103 @@
 
   // ─── State ─────────────────────────────────────────────────────────
 
-  // 7 wizard steps. Maps display index → step key (matches state.js
+  // 8 wizard steps. Maps display index → step key (matches state.js
   // REQUIRED_STEPS + OPTIONAL_STEPS naming).
+  // v0.1.13 — added 'app_reg' between hostname and entra. The app_reg
+  // step is the modal-driven Entra app registration instructions.
   const WIZARD_STEPS = [
     { key: 'language',     i18nKey: 'setup.step.welcome',      renderer: renderWelcomeStep },
     { key: 'hostname',     i18nKey: 'setup.step.hostname',     renderer: renderHostnameStep },
+    { key: 'app_reg',      i18nKey: 'setup.step.app_reg',      renderer: renderAppRegStep },
     { key: 'entra',        i18nKey: 'setup.step.entra',        renderer: renderEntraStep },
     { key: 'smtp',         i18nKey: 'setup.step.smtp',         renderer: renderSmtpStep },
     { key: 'anthropic',    i18nKey: 'setup.step.anthropic',    renderer: renderAnthropicStep },
     { key: 'license',      i18nKey: 'setup.step.license',      renderer: renderLicenseStep },
     { key: 'first_tenant', i18nKey: 'setup.step.first_tenant', renderer: renderFirstTenantStep },
+  ];
+
+  // ─── Permission catalog (v0.1.13) ──────────────────────────────────
+  // Canonical list of Entra app-registration permissions Panoptica365
+  // requires. Ordered to match the Entra portal's "Add permission" UI:
+  // grouped by API, alphabetical within each. Source-of-truth: the
+  // production Trilogiam app reg as of 2026-05-24 (53 + 1 + 2 + 2 = 58).
+  // If a new feature adds a permission, add it here AND grant on Trilogiam.
+  const PERMISSION_CATALOG = [
+    {
+      api: 'Microsoft Graph',
+      application: [
+        'Application.Read.All',
+        'AuditLog.Read.All',
+        'Device.Read.All',
+        'DeviceManagementConfiguration.Read.All',
+        'DeviceManagementConfiguration.ReadWrite.All',
+        'DeviceManagementManagedDevices.Read.All',
+        'DeviceManagementManagedDevices.ReadWrite.All',
+        'Directory.Read.All',
+        'Directory.ReadWrite.All',
+        'Domain.Read.All',
+        'Group.Read.All',
+        'Group.ReadWrite.All',
+        'HealthMonitoringAlert.Read.All',
+        'IdentityProvider.Read.All',
+        'IdentityRiskEvent.Read.All',
+        'IdentityRiskyUser.Read.All',
+        'InformationProtectionPolicy.Read.All',
+        'LicenseAssignment.Read.All',
+        'Mail.Read',
+        'MailboxItem.Read.All',
+        'MailboxSettings.Read',
+        'Organization.Read.All',
+        'Policy.Read.All',
+        'Policy.Read.AuthenticationMethod',
+        'Policy.Read.ConditionalAccess',
+        'Policy.Read.DeviceConfiguration',
+        'Policy.ReadWrite.AuthenticationMethod',
+        'Policy.ReadWrite.Authorization',
+        'Policy.ReadWrite.ConditionalAccess',
+        'Policy.ReadWrite.DeviceConfiguration',
+        'Policy.ReadWrite.SecurityDefaults',
+        'Reports.Read.All',
+        'RoleManagement.ReadWrite.Directory',
+        'SecurityAlert.Read.All',
+        'SecurityAnalyzedMessage.Read.All',
+        'SecurityEvents.Read.All',
+        'SecurityIncident.Read.All',
+        'SharePointTenantSettings.Read.All',
+        'SharePointTenantSettings.ReadWrite.All',
+        'Sites.Read.All',
+        'ThreatAssessment.Read.All',
+        'ThreatHunting.Read.All',
+        'ThreatIndicators.Read.All',
+        'ThreatIntelligence.Read.All',
+        'User.Read.All',
+        'User.ReadWrite.All',
+        'UserAuthenticationMethod.Read.All',
+      ],
+      delegated: [
+        'email',
+        'GroupMember.Read.All',
+        'offline_access',
+        'openid',
+        'profile',
+        'User.Read',
+      ],
+    },
+    {
+      api: 'Office 365 Exchange Online',
+      application: ['Exchange.ManageAsApp'],
+      delegated: [],
+    },
+    {
+      api: 'Office 365 Management APIs',
+      application: ['ActivityFeed.Read', 'ActivityFeed.ReadDlp'],
+      delegated: [],
+    },
+    {
+      api: 'Skype and Teams Tenant Admin API',
+      application: ['application_access'],
+      delegated: ['user_impersonation'],
+    },
   ];
 
   let currentStepIdx = 0;     // 0-indexed into WIZARD_STEPS
@@ -71,6 +158,276 @@
     if (window.PanopticaI18n && typeof window.PanopticaI18n.applyTo === 'function') {
       window.PanopticaI18n.applyTo(root || document);
     }
+  }
+
+  // ─── Copy-to-clipboard helper (v0.1.13) ──────────────────────────────
+  // Used by the app-reg modal for hostname, redirect URI, every permission
+  // name, the three suggested group names, etc. Each `.setup-copy` element
+  // has data-copy="value-to-copy" — we read that and write to clipboard.
+  // Visual feedback: button briefly turns green via .copied class.
+  async function copyToClipboard(value, btn) {
+    try {
+      await navigator.clipboard.writeText(value);
+      if (btn) {
+        btn.classList.add('copied');
+        setTimeout(() => btn.classList.remove('copied'), 1200);
+      }
+      return true;
+    } catch (e) {
+      console.warn('[setup] clipboard write failed:', e.message);
+      // Fallback: select the text so operator can Ctrl+C manually
+      if (btn) {
+        const range = document.createRange();
+        range.selectNodeContents(btn);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      return false;
+    }
+  }
+
+  // Wire clipboard handlers for all .setup-copy elements within a container.
+  function wireCopyButtons(container) {
+    if (!container) return;
+    container.querySelectorAll('.setup-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.copy;
+        if (val) copyToClipboard(val, btn);
+      });
+    });
+    container.querySelectorAll('.setup-copy-all').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.copy;
+        if (val) copyToClipboard(val, btn);
+      });
+    });
+  }
+
+  // ─── App-Registration modal (v0.1.13) ────────────────────────────────
+  // Big modal containing detailed Entra app-reg instructions. Triggered
+  // from renderAppRegStep's "Open detailed instructions" button.
+  function openAppRegModal() {
+    const overlay = $('#setup-modal-overlay');
+    const titleEl = $('#setup-modal-title');
+    const bodyEl  = $('#setup-modal-body');
+    if (!overlay || !bodyEl) return;
+
+    titleEl.textContent = t('setup.app_reg.modal_title') || 'Entra App Registration — detailed instructions';
+
+    // Read hostname from cache so the redirect URI is concrete
+    const hostname = valueFor('hostname', 'hostname') || '<your-hostname>';
+    const redirectUri = `https://${hostname}/auth/callback`;
+
+    bodyEl.innerHTML = renderAppRegModalBody(redirectUri);
+    applyI18n(bodyEl);
+    wireCopyButtons(bodyEl);
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Scroll body to top in case it was previously scrolled
+    bodyEl.scrollTop = 0;
+  }
+
+  function closeAppRegModal() {
+    const overlay = $('#setup-modal-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  // Wire one-time global modal handlers (close button + done button + ESC).
+  // Called once from boot().
+  function wireModalGlobals() {
+    const overlay = $('#setup-modal-overlay');
+    const closeBtn = $('#setup-modal-close');
+    const doneBtn = $('#setup-modal-done');
+    if (closeBtn) closeBtn.addEventListener('click', closeAppRegModal);
+    if (doneBtn) {
+      doneBtn.addEventListener('click', async () => {
+        try {
+          await apiPost('/api/setup/app-reg', {});
+          closeAppRegModal();
+          advance();
+        } catch (e) {
+          showToast(e.message, 'error');
+        }
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAppRegModal();
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) {
+        closeAppRegModal();
+      }
+    });
+  }
+
+  // Render a copy-button for a value. `value` is what gets put on clipboard;
+  // `display` is the text shown in the button (defaults to value).
+  function copyBtn(value, display) {
+    const d = display == null ? value : display;
+    return `<button type="button" class="setup-copy" data-copy="${esc(value)}" title="${esc(t('setup.app_reg.copy_tooltip') || 'Copy to clipboard')}"><span class="setup-copy-text">${esc(d)}</span> <span class="setup-copy-icon" aria-hidden="true">⧉</span></button>`;
+  }
+
+  // Build the modal body HTML. All copy is via t() so it's localized;
+  // structural markup stays in JS so we don't have to maintain an HTML
+  // template + a translation map. Tradeoff: longer JS file, simpler i18n.
+  function renderAppRegModalBody(redirectUri) {
+    let html = '';
+
+    // ─── Intro ─────────────────────────────────────────────────────
+    html += `<p data-i18n="setup.app_reg.intro">This is the longest step. Plan ~10-15 minutes. You'll need Global Admin access to your MSP's Entra tenant.</p>`;
+
+    html += `<div class="setup-callout warn">
+      <span class="setup-callout-icon">⚠</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_global_admin"><strong>Sign in as a Global Administrator</strong> of your MSP's own Entra tenant. Anything less and several steps will fail with permission errors.</div>
+    </div>`;
+
+    // ─── Step 1: Create the app reg ────────────────────────────────
+    html += `<h3>1. <span data-i18n="setup.app_reg.h_create">Create the App Registration</span></h3>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.create_1">Go to <a href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com</a> → <strong>Applications</strong> → <strong>App registrations</strong> → <strong>New registration</strong>.</li>
+      <li data-i18n-html="setup.app_reg.create_2"><strong>Name</strong>: <code>Panoptica365</code> (or whatever you want; the name is operator-only and doesn't affect anything).</li>
+      <li data-i18n-html="setup.app_reg.create_3"><strong>Supported account types</strong>: <em>Accounts in any organizational directory (Any Microsoft Entra ID tenant — Multitenant)</em>. This MUST be multi-tenant — your customers' tenants will grant consent against this app.</li>
+      <li><span data-i18n-html="setup.app_reg.create_4"><strong>Redirect URI</strong>: pick <strong>Web</strong>, paste this exact value:</span> ${copyBtn(redirectUri)}</li>
+      <li data-i18n="setup.app_reg.create_5">Click <strong>Register</strong>.</li>
+    </ol>`;
+
+    html += `<div class="setup-callout danger">
+      <span class="setup-callout-icon">🛑</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_single_tenant"><strong>Do NOT pick single-tenant.</strong> A single-tenant app reg cannot accept admin consent from customer tenants. If you picked the wrong type, delete the app reg and start over.</div>
+    </div>`;
+
+    // ─── Step 2: Grab IDs ──────────────────────────────────────────
+    html += `<h3>2. <span data-i18n="setup.app_reg.h_grab_ids">Copy the Tenant ID and Application ID</span></h3>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.ids_1">On the new app's <strong>Overview</strong> page, find <strong>Directory (tenant) ID</strong> and <strong>Application (client) ID</strong>.</li>
+      <li data-i18n="setup.app_reg.ids_2">Save them somewhere temporary (Notepad, 1Password, etc.) — you'll paste them into the next wizard step.</li>
+    </ol>`;
+
+    // ─── Step 3: Client secret ─────────────────────────────────────
+    html += `<h3>3. <span data-i18n="setup.app_reg.h_secret">Create a Client Secret</span></h3>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.secret_1">In the left sidebar of your app, click <strong>Certificates &amp; secrets</strong> → <strong>Client secrets</strong> → <strong>New client secret</strong>.</li>
+      <li data-i18n-html="setup.app_reg.secret_2"><strong>Description</strong>: <code>Panoptica365 setup</code>. <strong>Expires</strong>: pick whatever your security policy requires (24 months is typical).</li>
+      <li data-i18n="setup.app_reg.secret_3">Click <strong>Add</strong>.</li>
+      <li data-i18n="setup.app_reg.secret_4">Immediately copy the secret's <strong>Value</strong> column and save it. You'll paste it into the next wizard step.</li>
+    </ol>`;
+
+    html += `<div class="setup-callout danger">
+      <span class="setup-callout-icon">🛑</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_value_vs_id"><strong>Copy the VALUE, not the Secret ID.</strong> The "Value" column shows the actual secret <em>only once</em> at creation time — if you leave the page without copying it, you'll have to delete and re-create the secret. The "Secret ID" is a different field that looks similar but will NOT work.</div>
+    </div>`;
+
+    // ─── Step 4: API permissions ───────────────────────────────────
+    html += `<h3>4. <span data-i18n="setup.app_reg.h_perms">Add API Permissions</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(58 total)</span></h3>`;
+    html += `<p data-i18n-html="setup.app_reg.perms_intro">In your app's left sidebar, click <strong>API permissions</strong> → <strong>Add a permission</strong>. You'll add permissions from <strong>four different APIs</strong>. Within each API, Entra groups permissions alphabetically by category — the lists below follow that order so you can scroll down without searching.</p>`;
+
+    html += `<div class="setup-callout warn">
+      <span class="setup-callout-icon">⚠</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_app_vs_delegated">For each API, you'll switch between the <strong>Application permissions</strong> tab and the <strong>Delegated permissions</strong> tab. Don't mix them up — the wrong tab gives you a perm with the same name but different semantics.</div>
+    </div>`;
+
+    // Render each API's permission lists
+    for (const apiBlock of PERMISSION_CATALOG) {
+      html += `<h4>${esc(apiBlock.api)}</h4>`;
+
+      if (apiBlock.application && apiBlock.application.length > 0) {
+        const all = apiBlock.application.join(', ');
+        html += `<p style="margin-bottom: 4px;"><strong>${esc(t('setup.app_reg.perms_app_tab') || 'Application permissions')}</strong> (${apiBlock.application.length}):</p>`;
+        html += `<button type="button" class="setup-copy-all" data-copy="${esc(all)}"><span>${esc(t('setup.app_reg.copy_all_perms', { count: apiBlock.application.length }) || `Copy all ${apiBlock.application.length}`)}</span> <span aria-hidden="true">⧉</span></button>`;
+        html += `<div class="setup-perm-list">`;
+        for (const p of apiBlock.application) {
+          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyBtn(p, '⧉')}</div>`;
+        }
+        html += `</div>`;
+      }
+
+      if (apiBlock.delegated && apiBlock.delegated.length > 0) {
+        const all = apiBlock.delegated.join(', ');
+        html += `<p style="margin-bottom: 4px;"><strong>${esc(t('setup.app_reg.perms_del_tab') || 'Delegated permissions')}</strong> (${apiBlock.delegated.length}):</p>`;
+        html += `<button type="button" class="setup-copy-all" data-copy="${esc(all)}"><span>${esc(t('setup.app_reg.copy_all_perms', { count: apiBlock.delegated.length }) || `Copy all ${apiBlock.delegated.length}`)}</span> <span aria-hidden="true">⧉</span></button>`;
+        html += `<div class="setup-perm-list">`;
+        for (const p of apiBlock.delegated) {
+          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyBtn(p, '⧉')}</div>`;
+        }
+        html += `</div>`;
+      }
+    }
+
+    // ─── Step 5: Grant admin consent ───────────────────────────────
+    html += `<h3>5. <span data-i18n="setup.app_reg.h_consent">Grant Admin Consent</span></h3>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.consent_1">After adding all 58 permissions, click the <strong>Grant admin consent for &lt;your tenant&gt;</strong> button at the top of the API permissions table.</li>
+      <li data-i18n="setup.app_reg.consent_2">Confirm in the popup. Wait a few seconds for Microsoft to process.</li>
+      <li data-i18n-html="setup.app_reg.consent_3">Every permission row should now show a green checkmark in the <strong>Status</strong> column. If any are still amber/red, scroll down and click <strong>Grant admin consent</strong> again.</li>
+    </ol>`;
+
+    html += `<div class="setup-callout ok">
+      <span class="setup-callout-icon">✅</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.ok_consent_check">When done, ALL 58 permissions should show <strong style="color: var(--p-ok);">green checkmarks</strong>. If any are missing, the Test Connection button on the next wizard step will tell you exactly which ones.</div>
+    </div>`;
+
+    // ─── Step 6: RBAC roles ────────────────────────────────────────
+    html += `<h3>6. <span data-i18n="setup.app_reg.h_roles">Assign Entra Roles to the App's Service Principal</span></h3>`;
+    html += `<p data-i18n-html="setup.app_reg.roles_intro">Panoptica365 uses PowerShell modules (Exchange Online + Compliance Center) for several security settings. These modules require Entra <strong>directory roles</strong> on top of the Graph permissions.</p>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.roles_1">In the Entra portal sidebar, go to <strong>Identity</strong> → <strong>Roles &amp; admins</strong> → <strong>Roles &amp; administrators</strong>.</li>
+      <li data-i18n-html="setup.app_reg.roles_2">Search for <strong>Exchange Administrator</strong>. Click into the role.</li>
+      <li data-i18n-html="setup.app_reg.roles_3">Click <strong>Add assignments</strong>. Search for <code>Panoptica365</code> (the name of your app reg) — it should appear as an enterprise application / service principal. Select it and click <strong>Add</strong>.</li>
+      <li data-i18n-html="setup.app_reg.roles_4">Repeat for <strong>Compliance Administrator</strong>: search the role list, add assignment, search Panoptica365, add.</li>
+    </ol>`;
+
+    html += `<div class="setup-callout danger">
+      <span class="setup-callout-icon">🛑</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_role_names"><strong>Pick the EXACT role names</strong> — there are similar-sounding roles that will NOT work: <em>Exchange Recipient Administrator</em> (lesser scope), <em>Compliance Data Administrator</em> (lesser scope). Verify the name matches exactly <strong>Exchange Administrator</strong> and <strong>Compliance Administrator</strong>.</div>
+    </div>`;
+
+    // ─── Step 7: Three RBAC groups ─────────────────────────────────
+    html += `<h3>7. <span data-i18n="setup.app_reg.h_groups">Create the Three RBAC Groups</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(optional but recommended)</span></h3>`;
+    html += `<p data-i18n-html="setup.app_reg.groups_intro">Panoptica365 has three operator roles (admin / operator / viewer). Map each role to an Entra security group. Members of those groups get the corresponding role inside Panoptica365.</p>`;
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.groups_1">In the Entra portal sidebar, go to <strong>Identity</strong> → <strong>Groups</strong> → <strong>All groups</strong> → <strong>New group</strong>.</li>
+      <li data-i18n-html="setup.app_reg.groups_2"><strong>Group type</strong>: Security. Create three groups with these suggested names:</li>
+    </ol>`;
+    html += `<ul style="margin-left: 16px;">
+      <li>${copyBtn('Panoptica365 Admins')} — ${t('setup.app_reg.group_admin_desc') || 'full access to everything, including system + audit log'}</li>
+      <li>${copyBtn('Panoptica365 Operators')} — ${t('setup.app_reg.group_operator_desc') || 'day-to-day work — alerts, deploys, settings (no destructive ops)'}</li>
+      <li>${copyBtn('Panoptica365 Viewers')} — ${t('setup.app_reg.group_viewer_desc') || 'read-only access'}</li>
+    </ul>`;
+    html += `<p data-i18n="setup.app_reg.groups_naming_note">You can name them anything you want — the wizard will ask you for each group's Object ID, not its name.</p>`;
+    html += `<ol start="3">
+      <li data-i18n-html="setup.app_reg.groups_3">For each group, after creation, copy the <strong>Object Id</strong> from the group's Overview page. You'll paste them into the next wizard step (admin is recommended; operator + viewer are optional).</li>
+      <li data-i18n="setup.app_reg.groups_4">Add yourself (and any colleagues) to the appropriate group(s).</li>
+    </ol>`;
+
+    html += `<div class="setup-callout warn">
+      <span class="setup-callout-icon">⚠</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_skip_groups">If you skip group creation entirely and leave all three Object ID fields blank in the next step, <strong>any</strong> authenticated user from your MSP tenant gets full Admin access in Panoptica365. That's fine for single-operator installs — risky for multi-person MSPs.</div>
+    </div>`;
+
+    // ─── Step 8: Recap ─────────────────────────────────────────────
+    html += `<h3>8. <span data-i18n="setup.app_reg.h_recap">Recap — What You Should Have</span></h3>`;
+    html += `<p data-i18n="setup.app_reg.recap_intro">Before closing this modal and continuing the wizard, make sure you have all of these:</p>`;
+    html += `<ul>
+      <li data-i18n-html="setup.app_reg.recap_1"><strong>Directory (tenant) ID</strong> — GUID from the app's Overview page</li>
+      <li data-i18n-html="setup.app_reg.recap_2"><strong>Application (client) ID</strong> — GUID from the app's Overview page</li>
+      <li data-i18n-html="setup.app_reg.recap_3"><strong>Client Secret Value</strong> — the long random string from "Certificates &amp; secrets" (NOT the Secret ID)</li>
+      <li data-i18n-html="setup.app_reg.recap_4"><strong>Admin group Object ID</strong> (recommended) — GUID from the "Panoptica365 Admins" group's Overview</li>
+      <li data-i18n-html="setup.app_reg.recap_5"><strong>Operator group Object ID</strong> (optional) — GUID from "Panoptica365 Operators"</li>
+      <li data-i18n-html="setup.app_reg.recap_6"><strong>Viewer group Object ID</strong> (optional) — GUID from "Panoptica365 Viewers"</li>
+    </ul>`;
+
+    html += `<div class="setup-callout ok">
+      <span class="setup-callout-icon">✅</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.ok_close_modal">When you have those values, click <strong>I've completed the steps above</strong> at the bottom of this modal. The next wizard step is where you'll paste them, and a <strong>Test Connection</strong> button there will validate every permission was granted correctly.</div>
+    </div>`;
+
+    return html;
   }
 
   // ─── Toast ─────────────────────────────────────────────────────────
@@ -337,7 +694,52 @@
     });
   }
 
-  // Step 3: Entra app registration
+  // Step 3 (v0.1.13+): App Registration — small card with a "Open
+  // detailed instructions" button. The actual instructions live in the
+  // large modal (openAppRegModal). Two ways out of this step:
+  //   - Click "Open detailed instructions" → modal → walk through → click
+  //     "I've completed the steps above" in modal footer → modal POSTs
+  //     /api/setup/app-reg + advances.
+  //   - Click "I already have an app reg — skip" → POST /api/setup/app-reg
+  //     immediately + advance. For operators who provisioned the app reg
+  //     via a script or are reinstalling.
+  function renderAppRegStep(container) {
+    container.innerHTML = `
+      <header class="setup-step-header">
+        <h2 class="setup-step-title" data-i18n="setup.app_reg.title">Entra App Registration</h2>
+        <p class="setup-step-subtitle" data-i18n="setup.app_reg.subtitle">The longest step — ~10-15 minutes of Entra portal work.</p>
+      </header>
+      <div class="setup-step-body">
+        <p data-i18n="setup.app_reg.summary">Before you can paste credentials in the next step, you need an Entra app registration in your MSP's own tenant. The detailed instructions walk you through every click, with copy-to-clipboard buttons for every value and warnings around the easy-to-miss steps.</p>
+        <div style="display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin-top: 8px;">
+          <button type="button" class="setup-btn setup-btn-primary" data-action="open-modal" data-i18n="setup.app_reg.open_modal_btn">Open detailed instructions</button>
+          <button type="button" class="setup-btn setup-btn-secondary" data-action="skip-app-reg" data-i18n="setup.app_reg.skip_btn">I already have an app reg — skip to credentials</button>
+        </div>
+      </div>
+      ${renderFooter({ backDisabled: false, primaryAction: null })}
+    `;
+    // Hide the default primary "Save & Continue" — this step has its
+    // own two custom buttons (Open modal / Skip). Operator advances via
+    // the modal's "Done" button OR the Skip button.
+    const primary = container.querySelector('[data-action="primary"]');
+    if (primary) primary.style.display = 'none';
+
+    wireFooter(container, {});  // wires Back only
+
+    container.querySelector('[data-action="open-modal"]').addEventListener('click', () => {
+      openAppRegModal();
+    });
+    container.querySelector('[data-action="skip-app-reg"]').addEventListener('click', async () => {
+      try {
+        await apiPost('/api/setup/app-reg', {});
+        advance();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    });
+  }
+
+  // Step 4: Entra credentials paste
   function renderEntraStep(container) {
     container.innerHTML = `
       <header class="setup-step-header">
@@ -360,25 +762,111 @@
           <input type="password" id="setup-entra-secret" name="client_secret" required value="${esc(valueFor('entra', 'client_secret'))}">
         </div>
         <div class="setup-field">
-          <label for="setup-entra-admin-group" data-i18n="setup.entra.label_admin_group">Admin group Object ID (optional)</label>
-          <p class="hint" data-i18n="setup.entra.hint_admin_group">Members of this Entra group get admin role in Panoptica365. Leave blank to allow all authenticated users (single-operator setup).</p>
+          <label for="setup-entra-admin-group" data-i18n="setup.entra.label_admin_group">Panoptica365 Admins group — Object ID (recommended)</label>
+          <p class="hint" data-i18n-html="setup.entra.hint_admin_group">Members of this Entra group get the <strong>Admin</strong> role in Panoptica365. Leave blank to allow all authenticated users (single-operator setup).</p>
           <input type="text" id="setup-entra-admin-group" name="admin_group_id" placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'admin_group_id'))}">
         </div>
+        <div class="setup-field">
+          <label for="setup-entra-member-group" data-i18n="setup.entra.label_member_group">Panoptica365 Operators group — Object ID (optional)</label>
+          <p class="hint" data-i18n-html="setup.entra.hint_member_group">Members get the <strong>Operator</strong> role — can clear alerts, deploy templates, generate reports. Leave blank to skip the Operator tier.</p>
+          <input type="text" id="setup-entra-member-group" name="member_group_id" placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'member_group_id'))}">
+        </div>
+        <div class="setup-field">
+          <label for="setup-entra-viewer-group" data-i18n="setup.entra.label_viewer_group">Panoptica365 Viewers group — Object ID (optional)</label>
+          <p class="hint" data-i18n-html="setup.entra.hint_viewer_group">Members get the <strong>Viewer</strong> role — read-only access. Leave blank to skip the Viewer tier.</p>
+          <input type="text" id="setup-entra-viewer-group" name="viewer_group_id" placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'viewer_group_id'))}">
+        </div>
+        <p class="hint" style="margin-top: 4px;"><a href="#" id="setup-entra-reopen-modal" data-i18n="setup.entra.reopen_modal_link">→ Reopen the App Registration instructions modal</a></p>
+        <div id="setup-entra-status"></div>
       </div>
-      ${renderFooter({})}
+      ${renderFooter({
+        secondaryButtons: [{ action: 'test-connection', i18nKey: 'setup.entra.test_connection_btn' }],
+        primaryKey: 'setup.button.save_and_continue',
+      })}
     `;
+    const status = container.querySelector('#setup-entra-status');
+
+    function readEntraForm() {
+      const body = {
+        tenant_id: container.querySelector('#setup-entra-tenant').value.trim(),
+        client_id: container.querySelector('#setup-entra-client').value.trim(),
+        client_secret: container.querySelector('#setup-entra-secret').value.trim(),
+      };
+      const adminGroup = container.querySelector('#setup-entra-admin-group').value.trim();
+      const memberGroup = container.querySelector('#setup-entra-member-group').value.trim();
+      const viewerGroup = container.querySelector('#setup-entra-viewer-group').value.trim();
+      if (adminGroup)  body.admin_group_id = adminGroup;
+      if (memberGroup) body.member_group_id = memberGroup;
+      if (viewerGroup) body.viewer_group_id = viewerGroup;
+      return body;
+    }
+
+    async function saveEntra() {
+      const body = readEntraForm();
+      stepValues.entra = {
+        ...body,
+        admin_group_id: container.querySelector('#setup-entra-admin-group').value.trim(),
+        member_group_id: container.querySelector('#setup-entra-member-group').value.trim(),
+        viewer_group_id: container.querySelector('#setup-entra-viewer-group').value.trim(),
+      };
+      await apiPost('/api/setup/entra', body);
+    }
+
+    // "Reopen instructions" link — bring back the big modal in case the
+    // operator forgot a step. Doesn't trigger app-reg ack (already done
+    // when they got to this step).
+    container.querySelector('#setup-entra-reopen-modal').addEventListener('click', (e) => {
+      e.preventDefault();
+      openAppRegModal();
+      // Hide the modal's "Done" button while reopening — they've already
+      // ack'd the step. Just let them re-read + close via X or ESC.
+      const doneBtn = $('#setup-modal-done');
+      if (doneBtn) doneBtn.style.display = 'none';
+      // Restore on next close
+      const overlay = $('#setup-modal-overlay');
+      const restore = () => {
+        if (doneBtn) doneBtn.style.display = '';
+        overlay.removeEventListener('transitionend', restore);
+      };
+      overlay.addEventListener('transitionend', restore);
+    });
+
     wireFooter(container, {
       primaryAction: async () => {
-        const body = {
-          tenant_id: container.querySelector('#setup-entra-tenant').value.trim(),
-          client_id: container.querySelector('#setup-entra-client').value.trim(),
-          client_secret: container.querySelector('#setup-entra-secret').value.trim(),
-        };
-        const adminGroup = container.querySelector('#setup-entra-admin-group').value.trim();
-        if (adminGroup) body.admin_group_id = adminGroup;
-        stepValues.entra = { ...body, admin_group_id: adminGroup };
-        await apiPost('/api/setup/entra', body);
+        await saveEntra();
         advance();
+      },
+      secondaryActions: {
+        'test-connection': async () => {
+          await saveEntra();
+          status.innerHTML = `<div class="setup-status-line info">${esc(t('setup.entra.testing') || 'Testing credentials + permissions…')}</div>`;
+          try {
+            const res = await apiPost('/api/setup/entra/test', {});
+            if (res.ok) {
+              status.innerHTML = `<div class="setup-status-line success">✅ ${esc(res.message || t('setup.entra.test_ok') || 'All permissions OK.')}</div>`;
+            } else {
+              const list = (res.failed_permissions || []).map(p => `<li><code>${esc(p)}</code></li>`).join('');
+              status.innerHTML = `<div class="setup-status-line error">
+                <div>
+                  <strong>${esc(t('setup.entra.test_partial', { failed: res.checks_failed, total: res.checks_performed }) || `${res.checks_failed} of ${res.checks_performed} permission checks failed`)}</strong>
+                  <ul style="margin: 8px 0 4px 18px;">${list}</ul>
+                  <p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(res.hint || '')}</p>
+                </div>
+              </div>`;
+            }
+          } catch (e) {
+            // Token-acquisition failures land here (401 from MS) with a structured body
+            const hint = e.body?.hint || '';
+            const code = e.body?.ms_error_code ? ` (${e.body.ms_error_code})` : '';
+            status.innerHTML = `<div class="setup-status-line error">
+              <div>
+                <strong>${esc(t('setup.entra.test_cred_fail') || 'Credential test failed')}${esc(code)}</strong><br>
+                <span style="font-size: 0.9rem;">${esc(e.message)}</span><br>
+                ${hint ? `<p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(hint)}</p>` : ''}
+              </div>
+            </div>`;
+          }
+        },
       },
     });
   }
@@ -630,7 +1118,11 @@
       return;
     }
 
-    // 3. Render current step
+    // 3. Wire global modal handlers (close button + done button + ESC + overlay click).
+    // One-time setup; modal stays in DOM permanently, opens/closes via .open class.
+    wireModalGlobals();
+
+    // 4. Render current step
     renderCurrentStep();
   }
 

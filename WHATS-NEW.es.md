@@ -5,6 +5,62 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.13 — 2026-05-24
+
+### Asistente: guía completa de registro de aplicación de Entra + botón Probar conexión
+
+El paso de Entra en el asistente de configuración inicial era el bloque
+manual más largo de la instalación — los operadores tenían que saber
+crear ellos mismos el registro de aplicación con la configuración
+multi-inquilino correcta, los ~58 permisos correctos, el consentimiento
+de administrador y los dos roles RBAC para los módulos de PowerShell.
+Es fácil omitir algo y enterarse meses después cuando una funcionalidad
+no funciona en silencio.
+
+Esta versión añade un paso dedicado de **Registro de aplicación** con
+un modal grande que contiene instrucciones detalladas clic por clic:
+
+- El catálogo completo de los 58 permisos (47 de aplicación de
+  Microsoft Graph + 6 delegados, 1 Exchange Online, 2 Management APIs,
+  2 Skype/Teams), ordenado para coincidir con la interfaz del portal
+  de Entra, con un icono de copia en cada nombre de permiso (más un
+  botón «copiar todo» por categoría).
+- La URI de redirección derivada del nombre de host, copiable con un
+  solo clic.
+- Asignaciones de roles del principal de servicio paso a paso
+  (Administrador de Exchange + Administrador de cumplimiento), con
+  advertencias explícitas contra los roles con nombres similares
+  «Administrador de destinatarios de Exchange» / «Administrador de
+  datos de cumplimiento» que parecen correctos pero no funcionarán.
+- Guía para crear los tres grupos RBAC (Panoptica365 Admins / Operators
+  / Viewers) con nombres sugeridos que coinciden con la nomenclatura
+  interna de roles de Panoptica365, más botones de copia.
+- Cuadros codificados por color: rojo para trampas «NO hacer», ámbar
+  para pasos fáciles de omitir, verde para señales «debería ver» de
+  confirmación.
+- Enlace «Ya tengo un registro de app — saltar» para operadores que
+  aprovisionaron mediante PowerShell o están reinstalando.
+
+El paso de pegar credenciales ahora tiene:
+
+- Tres campos de ID de grupo (Admins / Operators / Viewers) en lugar
+  de solo el de admin, con admin marcado como recomendado y los otros
+  dos opcionales.
+- Un botón **Probar conexión** que adquiere un token de aplicación y
+  lanza ~9 llamadas Graph representativas en paralelo. Si la solicitud
+  de token falla, diagnostica códigos de error comunes de Microsoft
+  (AADSTS7000215 = valor de secreto incorrecto pegado, AADSTS90002 =
+  ID de inquilino incorrecto, etc.). Si el token funciona pero las
+  llamadas Graph devuelven 403, lista exactamente qué permisos faltan
+  (la causa más común es «olvidó hacer clic en Otorgar consentimiento
+  de administrador»).
+- Un enlace «Reabrir el modal de instrucciones del registro de
+  aplicación» por si el operador necesita volver a verificar un paso.
+
+Completamente localizado en/fr/es.
+
+---
+
 ## Versión 0.1.12 — 2026-05-24
 
 ### Asistente: los enlaces y bloques de código incrustados se muestran correctamente

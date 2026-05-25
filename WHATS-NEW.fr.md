@@ -5,6 +5,61 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.13 — 2026-05-24
+
+### Assistant : guide complet d’inscription d’app Entra + bouton Tester la connexion
+
+L’étape Entra de l’assistant de configuration initiale était le plus
+long bloc manuel de l’installation — les opérateurs devaient savoir
+créer eux-mêmes l’inscription d’app avec le bon paramètre multi-locataire,
+les ~58 bonnes autorisations, le consentement d’administrateur et les
+deux rôles RBAC pour les modules PowerShell. Facile de manquer quelque
+chose et de s’en rendre compte des mois plus tard, quand une
+fonctionnalité ne marche pas en silence.
+
+Cette version ajoute une étape **Inscription d’application** dédiée avec
+un grand modal contenant des instructions clic par clic détaillées :
+
+- Le catalogue complet des 58 autorisations (47 Microsoft Graph
+  application + 6 déléguées, 1 Exchange Online, 2 Management APIs, 2
+  Skype/Teams), ordonné pour correspondre à l’interface du portail
+  Entra, avec une icône de copie sur chaque nom d’autorisation (plus
+  un bouton « tout copier » par catégorie).
+- L’URI de redirection dérivée du nom d’hôte, copiable en un clic.
+- Attributions de rôles du principal de service étape par étape
+  (Administrateur Exchange + Administrateur de la conformité), avec
+  des avertissements explicites contre les rôles aux noms similaires
+  « Administrateur des destinataires Exchange » / « Administrateur des
+  données de conformité » qui ont l’air bons mais ne fonctionneront pas.
+- Guide pour créer les trois groupes RBAC (Panoptica365 Admins /
+  Operators / Viewers) avec des noms suggérés correspondant à la
+  nomenclature interne des rôles de Panoptica365, plus boutons de copie.
+- Encadrés codés en couleur : rouge pour les pièges « ne pas faire »,
+  ambre pour les étapes faciles à manquer, vert pour les indices
+  « vous devriez voir » de confirmation.
+- Lien « J’ai déjà une inscription d’app — passer » pour les opérateurs
+  qui ont provisionné via PowerShell ou qui réinstallent.
+
+L’étape de collage des identifiants a maintenant :
+
+- Trois champs d’ID de groupe (Admins / Operators / Viewers) au lieu
+  d’uniquement l’admin, avec admin marqué recommandé et les deux autres
+  facultatifs.
+- Un bouton **Tester la connexion** qui acquiert un jeton applicatif
+  et lance ~9 appels Graph représentatifs en parallèle. Si la demande
+  de jeton échoue, il diagnostique les codes d’erreur Microsoft courants
+  (AADSTS7000215 = mauvaise valeur de secret collée, AADSTS90002 =
+  mauvais ID de locataire, etc.). Si le jeton fonctionne mais que les
+  appels Graph retournent 403, il liste exactement quelles autorisations
+  sont manquantes (la cause la plus fréquente est « oublié de cliquer
+  sur Accorder le consentement de l’administrateur »).
+- Un lien « Rouvrir le modal d’instructions d’inscription d’app » au cas
+  où l’opérateur doit revérifier une étape.
+
+Entièrement localisé en/fr/es.
+
+---
+
 ## Version 0.1.12 — 2026-05-24
 
 ### Assistant : les liens et blocs de code intégrés s'affichent correctement

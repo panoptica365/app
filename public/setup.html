@@ -63,6 +63,29 @@
 
   </div>
 
+  <!-- ─── APP REGISTRATION INSTRUCTIONS MODAL (v0.1.13) ─── -->
+  <!-- Full-window overlay shown when operator clicks "Open detailed
+       instructions" on the App Registration wizard step. Body content
+       rendered by setup.js renderAppRegModal() — instructions, copy
+       buttons for hostnames + permissions + group names, color-coded
+       warnings, etc. Hidden by default; .open class toggles visibility. -->
+  <div id="setup-modal-overlay" class="setup-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="setup-modal-title">
+    <div class="setup-modal">
+      <header class="setup-modal-header">
+        <h2 id="setup-modal-title" class="setup-modal-title"></h2>
+        <button type="button" class="setup-modal-close" id="setup-modal-close" aria-label="Close">×</button>
+      </header>
+      <div class="setup-modal-body" id="setup-modal-body">
+        <!-- populated by setup.js -->
+      </div>
+      <footer class="setup-modal-footer">
+        <button type="button" class="setup-btn setup-btn-primary" id="setup-modal-done">
+          <span data-i18n="setup.app_reg.modal_done_btn">I've completed the steps above</span>
+        </button>
+      </footer>
+    </div>
+  </div>
+
   <script src="/js/setup.js"></script>
 </body>
 </html>
