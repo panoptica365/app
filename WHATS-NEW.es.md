@@ -5,6 +5,28 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.14 — 2026-05-24
+
+### Modal de registro de app: las etiquetas de negrita se muestran + no más icono de copia duplicado
+
+Dos pequeñas correcciones detectadas durante la verificación de v0.1.13
+en P365-Test:
+
+- Tres viñetas en el modal (pasos 3.5, 3.6 sobre el secreto del cliente,
+  y paso 1.5 sobre hacer clic en Registrar) mostraban
+  `<strong>Agregar</strong>`, `<strong>Valor</strong>` y
+  `<strong>Registrar</strong>` como texto HTML en bruto en lugar de
+  poner las palabras en negrita. Misma corrección que en v0.1.12 — tres
+  atributos `data-i18n` cambiados a `data-i18n-html`.
+
+- Las filas de permisos en el modal tenían dos iconos de copia uno al
+  lado del otro por fila. Causado por pasar el carácter del icono como
+  texto de visualización del botón además del span del icono siempre
+  presente. Ahora usa un ayudante de botón de copia solo con icono
+  dedicado.
+
+---
+
 ## Versión 0.1.13 — 2026-05-24
 
 ### Asistente: guía completa de registro de aplicación de Entra + botón Probar conexión

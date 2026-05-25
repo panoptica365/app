@@ -268,9 +268,21 @@
 
   // Render a copy-button for a value. `value` is what gets put on clipboard;
   // `display` is the text shown in the button (defaults to value).
+  // Used for the hostname/redirect URI/group-name suggestions where the
+  // operator benefits from seeing the value alongside the icon.
   function copyBtn(value, display) {
     const d = display == null ? value : display;
     return `<button type="button" class="setup-copy" data-copy="${esc(value)}" title="${esc(t('setup.app_reg.copy_tooltip') || 'Copy to clipboard')}"><span class="setup-copy-text">${esc(d)}</span> <span class="setup-copy-icon" aria-hidden="true">⧉</span></button>`;
+  }
+
+  // Icon-only copy button. Used inside permission-list rows where the
+  // permission name is already shown next to the button as a label, so
+  // we only need the copy affordance, not duplicated text. v0.1.14 — fixes
+  // the double-icon bug that came from passing '⧉' as `display` to copyBtn
+  // (which then rendered both the display text AND the always-present
+  // icon span).
+  function copyIconBtn(value) {
+    return `<button type="button" class="setup-copy" data-copy="${esc(value)}" title="${esc(t('setup.app_reg.copy_tooltip') || 'Copy to clipboard')}"><span class="setup-copy-icon" aria-hidden="true">⧉</span></button>`;
   }
 
   // Build the modal body HTML. All copy is via t() so it's localized;
@@ -294,7 +306,7 @@
       <li data-i18n-html="setup.app_reg.create_2"><strong>Name</strong>: <code>Panoptica365</code> (or whatever you want; the name is operator-only and doesn't affect anything).</li>
       <li data-i18n-html="setup.app_reg.create_3"><strong>Supported account types</strong>: <em>Accounts in any organizational directory (Any Microsoft Entra ID tenant — Multitenant)</em>. This MUST be multi-tenant — your customers' tenants will grant consent against this app.</li>
       <li><span data-i18n-html="setup.app_reg.create_4"><strong>Redirect URI</strong>: pick <strong>Web</strong>, paste this exact value:</span> ${copyBtn(redirectUri)}</li>
-      <li data-i18n="setup.app_reg.create_5">Click <strong>Register</strong>.</li>
+      <li data-i18n-html="setup.app_reg.create_5">Click <strong>Register</strong>.</li>
     </ol>`;
 
     html += `<div class="setup-callout danger">
@@ -314,8 +326,8 @@
     html += `<ol>
       <li data-i18n-html="setup.app_reg.secret_1">In the left sidebar of your app, click <strong>Certificates &amp; secrets</strong> → <strong>Client secrets</strong> → <strong>New client secret</strong>.</li>
       <li data-i18n-html="setup.app_reg.secret_2"><strong>Description</strong>: <code>Panoptica365 setup</code>. <strong>Expires</strong>: pick whatever your security policy requires (24 months is typical).</li>
-      <li data-i18n="setup.app_reg.secret_3">Click <strong>Add</strong>.</li>
-      <li data-i18n="setup.app_reg.secret_4">Immediately copy the secret's <strong>Value</strong> column and save it. You'll paste it into the next wizard step.</li>
+      <li data-i18n-html="setup.app_reg.secret_3">Click <strong>Add</strong>.</li>
+      <li data-i18n-html="setup.app_reg.secret_4">Immediately copy the secret's <strong>Value</strong> column and save it. You'll paste it into the next wizard step.</li>
     </ol>`;
 
     html += `<div class="setup-callout danger">
@@ -342,7 +354,7 @@
         html += `<button type="button" class="setup-copy-all" data-copy="${esc(all)}"><span>${esc(t('setup.app_reg.copy_all_perms', { count: apiBlock.application.length }) || `Copy all ${apiBlock.application.length}`)}</span> <span aria-hidden="true">⧉</span></button>`;
         html += `<div class="setup-perm-list">`;
         for (const p of apiBlock.application) {
-          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyBtn(p, '⧉')}</div>`;
+          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyIconBtn(p)}</div>`;
         }
         html += `</div>`;
       }
@@ -353,7 +365,7 @@
         html += `<button type="button" class="setup-copy-all" data-copy="${esc(all)}"><span>${esc(t('setup.app_reg.copy_all_perms', { count: apiBlock.delegated.length }) || `Copy all ${apiBlock.delegated.length}`)}</span> <span aria-hidden="true">⧉</span></button>`;
         html += `<div class="setup-perm-list">`;
         for (const p of apiBlock.delegated) {
-          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyBtn(p, '⧉')}</div>`;
+          html += `<div class="setup-perm-row"><span class="setup-perm-name">${esc(p)}</span> ${copyIconBtn(p)}</div>`;
         }
         html += `</div>`;
       }

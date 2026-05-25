@@ -5,6 +5,27 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.14 — 2026-05-24
+
+### Modal d’inscription d’app : balises gras s’affichent + plus d’icône de copie en double
+
+Deux petits correctifs détectés lors de la vérification de v0.1.13 sur
+P365-Test :
+
+- Trois puces dans le modal (étapes 3.5, 3.6 sur le secret client, et
+  étape 1.5 sur le clic sur Inscrire) affichaient
+  `<strong>Ajouter</strong>`, `<strong>Valeur</strong>` et
+  `<strong>S’inscrire</strong>` comme texte HTML brut au lieu de mettre
+  les mots en gras. Même correctif qu’en v0.1.12 — trois attributs
+  `data-i18n` basculés en `data-i18n-html`.
+
+- Les lignes de permissions dans le modal avaient deux icônes de copie
+  côte à côte par ligne. Causé par le passage du caractère d’icône comme
+  texte d’affichage du bouton en plus du span d’icône toujours présent.
+  Utilise maintenant un assistant de bouton de copie icône seule dédié.
+
+---
+
 ## Version 0.1.13 — 2026-05-24
 
 ### Assistant : guide complet d’inscription d’app Entra + bouton Tester la connexion

@@ -5,6 +5,25 @@ that release, newest first.
 
 ---
 
+## Version 0.1.14 — 2026-05-24
+
+### App Registration modal: bold tags render + no more duplicate copy icon
+
+Two small fixes caught during v0.1.13 P365-Test verification:
+
+- Three bullets in the modal (steps 3.5, 3.6 about the client secret,
+  and step 1.5 about clicking Register) were rendering `<strong>Add</strong>`,
+  `<strong>Value</strong>`, and `<strong>Register</strong>` as raw HTML
+  text instead of bolding the words. Same fix as v0.1.12 — flipped the
+  three `data-i18n` attrs to `data-i18n-html`.
+
+- The permission rows in the modal had two copy icons side-by-side per
+  row. Caused by passing the icon character as the button's display text
+  in addition to the always-present icon span. Now uses a dedicated
+  icon-only copy button helper.
+
+---
+
 ## Version 0.1.13 — 2026-05-24
 
 ### Wizard: full Entra app registration walkthrough + Test Connection
