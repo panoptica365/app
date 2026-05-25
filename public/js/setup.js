@@ -36,6 +36,20 @@
   let currentStepIdx = 0;     // 0-indexed into WIZARD_STEPS
   let setupStateCache = null; // cached server state
 
+  // Per-step form values cached in module scope so the Back button can
+  // restore everything the operator typed (including long GUIDs + secrets).
+  // Browser-memory only — wiped on page reload. Not a new secret-exposure
+  // vector because anyone with DevTools could already inspect the form
+  // submission. Shape: { hostname: {hostname, letsencrypt_email}, entra:
+  // {tenant_id, ...}, smtp: {...}, anthropic: {...}, license: {...} }.
+  // v0.1.11 — fix for Back-button-wipes-form-values reported during P365-Test.
+  const stepValues = {};
+
+  // Read a previously-entered value for prefill. Returns '' if not cached.
+  function valueFor(stepKey, fieldName) {
+    return (stepValues[stepKey] && stepValues[stepKey][fieldName]) || '';
+  }
+
   // ─── DOM helpers ───────────────────────────────────────────────────
 
   function $(sel, root) { return (root || document).querySelector(sel); }
@@ -298,12 +312,12 @@
         <div class="setup-field">
           <label for="setup-hostname" data-i18n="setup.hostname.label_hostname">Hostname</label>
           <p class="hint" data-i18n="setup.hostname.hint_hostname">The fully qualified domain name pointing at this server (e.g. <code>panoptica.your-msp.com</code>). Caddy will auto-provision a Let's Encrypt TLS certificate.</p>
-          <input type="text" id="setup-hostname" name="hostname" required placeholder="panoptica.your-msp.com">
+          <input type="text" id="setup-hostname" name="hostname" required placeholder="panoptica.your-msp.com" value="${esc(valueFor('hostname', 'hostname'))}">
         </div>
         <div class="setup-field">
           <label for="setup-letsencrypt-email" data-i18n="setup.hostname.label_email">Let's Encrypt contact email</label>
           <p class="hint" data-i18n="setup.hostname.hint_email">Used by Let's Encrypt for certificate-expiry warnings (rare, but important).</p>
-          <input type="email" id="setup-letsencrypt-email" name="letsencrypt_email" required placeholder="admin@your-msp.com">
+          <input type="email" id="setup-letsencrypt-email" name="letsencrypt_email" required placeholder="admin@your-msp.com" value="${esc(valueFor('hostname', 'letsencrypt_email'))}">
         </div>
       </div>
       ${renderFooter({})}
@@ -316,6 +330,7 @@
           showToast(t('setup.error.required_fields') || 'Please fill both fields.', 'error');
           return;
         }
+        stepValues.hostname = { hostname, letsencrypt_email: email };
         await apiPost('/api/setup/hostname', { hostname, letsencrypt_email: email });
         advance();
       },
@@ -333,21 +348,21 @@
         <p data-i18n="setup.entra.intro">Panoptica365 needs an Entra app registration in your MSP's own tenant. Create one at <a href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com</a> as a multi-tenant app with redirect URI <code>https://&lt;your hostname&gt;/auth/callback</code>. Paste the values below.</p>
         <div class="setup-field">
           <label for="setup-entra-tenant" data-i18n="setup.entra.label_tenant">Tenant ID (GUID)</label>
-          <input type="text" id="setup-entra-tenant" name="tenant_id" required placeholder="00000000-0000-0000-0000-000000000000">
+          <input type="text" id="setup-entra-tenant" name="tenant_id" required placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'tenant_id'))}">
         </div>
         <div class="setup-field">
           <label for="setup-entra-client" data-i18n="setup.entra.label_client">Client ID (GUID)</label>
-          <input type="text" id="setup-entra-client" name="client_id" required placeholder="00000000-0000-0000-0000-000000000000">
+          <input type="text" id="setup-entra-client" name="client_id" required placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'client_id'))}">
         </div>
         <div class="setup-field">
           <label for="setup-entra-secret" data-i18n="setup.entra.label_secret">Client Secret</label>
           <p class="hint" data-i18n="setup.entra.hint_secret">The secret value (not the secret ID). Visible only at creation time in the Entra portal.</p>
-          <input type="password" id="setup-entra-secret" name="client_secret" required>
+          <input type="password" id="setup-entra-secret" name="client_secret" required value="${esc(valueFor('entra', 'client_secret'))}">
         </div>
         <div class="setup-field">
           <label for="setup-entra-admin-group" data-i18n="setup.entra.label_admin_group">Admin group Object ID (optional)</label>
           <p class="hint" data-i18n="setup.entra.hint_admin_group">Members of this Entra group get admin role in Panoptica365. Leave blank to allow all authenticated users (single-operator setup).</p>
-          <input type="text" id="setup-entra-admin-group" name="admin_group_id" placeholder="00000000-0000-0000-0000-000000000000">
+          <input type="text" id="setup-entra-admin-group" name="admin_group_id" placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'admin_group_id'))}">
         </div>
       </div>
       ${renderFooter({})}
@@ -361,6 +376,7 @@
         };
         const adminGroup = container.querySelector('#setup-entra-admin-group').value.trim();
         if (adminGroup) body.admin_group_id = adminGroup;
+        stepValues.entra = { ...body, admin_group_id: adminGroup };
         await apiPost('/api/setup/entra', body);
         advance();
       },
@@ -377,29 +393,29 @@
       <div class="setup-step-body">
         <div class="setup-field">
           <label for="setup-smtp-host" data-i18n="setup.smtp.label_host">SMTP host</label>
-          <input type="text" id="setup-smtp-host" name="host" required placeholder="mail.smtp2go.com">
+          <input type="text" id="setup-smtp-host" name="host" required placeholder="mail.smtp2go.com" value="${esc(valueFor('smtp', 'host'))}">
         </div>
         <div class="setup-field-row">
           <div class="setup-field">
             <label for="setup-smtp-port" data-i18n="setup.smtp.label_port">Port</label>
-            <input type="number" id="setup-smtp-port" name="port" required value="2525" min="1" max="65535">
+            <input type="number" id="setup-smtp-port" name="port" required value="${esc(valueFor('smtp', 'port') || '2525')}" min="1" max="65535">
           </div>
           <div class="setup-field">
             <label for="setup-smtp-from" data-i18n="setup.smtp.label_from">From address</label>
-            <input type="email" id="setup-smtp-from" name="from" required placeholder="alerts@your-msp.com">
+            <input type="email" id="setup-smtp-from" name="from" required placeholder="alerts@your-msp.com" value="${esc(valueFor('smtp', 'from'))}">
           </div>
         </div>
         <div class="setup-field">
           <label for="setup-smtp-user" data-i18n="setup.smtp.label_user">SMTP username</label>
-          <input type="text" id="setup-smtp-user" name="user" required>
+          <input type="text" id="setup-smtp-user" name="user" required value="${esc(valueFor('smtp', 'user'))}">
         </div>
         <div class="setup-field">
           <label for="setup-smtp-pass" data-i18n="setup.smtp.label_pass">SMTP password</label>
-          <input type="password" id="setup-smtp-pass" name="password" required>
+          <input type="password" id="setup-smtp-pass" name="password" required value="${esc(valueFor('smtp', 'password'))}">
         </div>
         <div class="setup-field">
           <label for="setup-smtp-test-to" data-i18n="setup.smtp.label_test_to">Send test email to (optional but recommended)</label>
-          <input type="email" id="setup-smtp-test-to" name="test_to" placeholder="your-email@your-msp.com">
+          <input type="email" id="setup-smtp-test-to" name="test_to" placeholder="your-email@your-msp.com" value="${esc(valueFor('smtp', 'test_to'))}">
         </div>
         <div id="setup-smtp-status"></div>
       </div>
@@ -418,6 +434,8 @@
         password: container.querySelector('#setup-smtp-pass').value,
         from: container.querySelector('#setup-smtp-from').value.trim(),
       };
+      const testTo = container.querySelector('#setup-smtp-test-to').value.trim();
+      stepValues.smtp = { ...body, test_to: testTo };
       await apiPost('/api/setup/smtp', body);
     }
 
@@ -456,7 +474,7 @@
         <p data-i18n="setup.anthropic.intro">Get an API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>. Estimated monthly cost across ~15 tenants: $5-15.</p>
         <div class="setup-field">
           <label for="setup-anthropic-key" data-i18n="setup.anthropic.label_key">API key (starts with <code>sk-ant-</code>)</label>
-          <input type="password" id="setup-anthropic-key" name="api_key" required placeholder="sk-ant-...">
+          <input type="password" id="setup-anthropic-key" name="api_key" required placeholder="sk-ant-..." value="${esc(valueFor('anthropic', 'api_key'))}">
         </div>
         <div id="setup-anthropic-status"></div>
       </div>
@@ -469,6 +487,7 @@
 
     async function saveAnthropic() {
       const key = container.querySelector('#setup-anthropic-key').value.trim();
+      stepValues.anthropic = { api_key: key };
       await apiPost('/api/setup/anthropic', { api_key: key });
     }
 
@@ -502,7 +521,7 @@
         <p data-i18n="setup.license.intro">Paste the 24-character activation key from your Panoptica365 license email (format: <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> or just the raw 24 chars). The wizard will exchange it for a license token and persist it to <code>.env</code>.</p>
         <div class="setup-field">
           <label for="setup-license-key" data-i18n="setup.license.label_key">Activation key</label>
-          <input type="text" id="setup-license-key" name="activation_key" required placeholder="PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF">
+          <input type="text" id="setup-license-key" name="activation_key" required placeholder="PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF" value="${esc(valueFor('license', 'activation_key'))}">
         </div>
         <div id="setup-license-status"></div>
       </div>
@@ -517,6 +536,7 @@
           showToast(t('setup.error.required_fields') || 'Activation key is required.', 'error');
           return;
         }
+        stepValues.license = { activation_key: key };
         status.innerHTML = `<div class="setup-status-line info">${esc(t('setup.license.activating') || 'Contacting license server…')}</div>`;
         try {
           const res = await apiPost('/api/setup/license', { activation_key: key });

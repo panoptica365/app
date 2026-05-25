@@ -5,6 +5,28 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.11 — 2026-05-24
+
+### Peaufinage de l'assistant
+
+Deux petits correctifs détectés lors de la vérification de bout en bout
+sur P365-Test (v0.1.10) :
+
+- **Le bouton Retour préserve désormais les valeurs saisies.** Les
+  champs du formulaire (y compris les longs GUID Entra, le serveur,
+  l'utilisateur et le mot de passe SMTP, la clé Anthropic et la clé
+  d'activation de licence) ne sont plus réinitialisés lorsque vous
+  cliquez sur Retour. Les valeurs sont mémorisées lors de la navigation
+  entre les étapes au sein de la même session d'assistant.
+
+- **Bandeau d'en-tête redessiné.** L'assistant dispose maintenant d'un
+  bandeau chromé pleine largeur en haut, avec un logo Panoptica365 bien
+  visible et le sélecteur de langue, dans le style visuel de l'en-tête
+  de l'application principale. Remplace le petit logo flottant qui
+  était peu visible sur le fond sombre.
+
+---
+
 ## Version 0.1.10 — 2026-05-24
 
 ### Assistant de configuration initiale

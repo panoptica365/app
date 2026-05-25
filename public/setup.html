@@ -30,15 +30,19 @@
 </head>
 <body>
 
-  <div class="setup-app">
-
-    <!-- ─── HEADER: brand + language picker ─── -->
-    <header class="setup-header">
+  <!-- ─── HEADER BANNER: full-width chrome bar, mirrors the main app header ─── -->
+  <!-- Lives OUTSIDE setup-app so it spans the full viewport width (the app
+       container is padded + centered for the wizard card). v0.1.11 refit. -->
+  <header class="setup-header">
+    <div class="setup-header-inner">
       <img src="/img/panoptica365-logo.png" alt="Panoptica365" class="setup-logo">
       <div class="setup-lang-picker" id="setup-lang-picker" role="group" aria-label="Language">
         <!-- buttons rendered by setup.js -->
       </div>
-    </header>
+    </div>
+  </header>
+
+  <div class="setup-app">
 
     <!-- ─── STEPPER: 8-step progress indicator ─── -->
     <nav class="setup-stepper" id="setup-stepper" aria-label="Setup progress">

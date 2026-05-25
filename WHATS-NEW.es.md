@@ -5,6 +5,28 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.11 — 2026-05-24
+
+### Pulido del asistente
+
+Dos pequeñas correcciones detectadas durante la verificación de extremo
+a extremo en P365-Test (v0.1.10):
+
+- **El botón Atrás conserva ahora los valores introducidos.** Los
+  campos del formulario (incluidos los largos GUID de Entra, el
+  servidor, el usuario y la contraseña SMTP, la clave de Anthropic y la
+  clave de activación de licencia) ya no se borran al hacer clic en
+  Atrás. Los valores se recuerdan al navegar entre los pasos dentro de
+  la misma sesión del asistente.
+
+- **Banner de encabezado rediseñado.** El asistente cuenta ahora con un
+  banner cromado de ancho completo en la parte superior, con un logotipo
+  de Panoptica365 destacado y el selector de idioma, en el estilo visual
+  del encabezado de la aplicación principal. Reemplaza el pequeño logo
+  flotante que era poco visible sobre el fondo oscuro.
+
+---
+
 ## Versión 0.1.10 — 2026-05-24
 
 ### Asistente de configuración inicial

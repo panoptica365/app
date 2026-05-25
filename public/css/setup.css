@@ -27,46 +27,82 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Wizard frame ─── */
+/* ─── Wizard frame (content area below the banner) ─── */
 
 .setup-app {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 32px 16px;
 }
 
-/* ─── Header (brand + language picker) ─── */
+/* ─── Header banner (full-width chrome bar — mirrors main app header) ─── */
+/* v0.1.11 — was previously a small dark header with a tiny floating logo.
+   Now matches the main app's .header-frame style: light chrome gradient,
+   diagonal pinstripes, prominent logo. Lives OUTSIDE .setup-app so it
+   spans full viewport width regardless of the card's max-width below. */
 
 .setup-header {
   width: 100%;
-  max-width: 760px;
+  height: var(--header-height, 64px);
+  background:
+    repeating-linear-gradient(135deg, var(--p-chrome-pinstripe) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, var(--p-chrome-top) 0%, var(--p-chrome-bot) 100%);
+  border-bottom: 1px solid var(--p-chrome-border);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 14px rgba(0, 0, 0, 0.38),
+    0 8px 34px rgba(0, 0, 0, 0.16);
+  position: relative;
+  z-index: 10;
+}
+
+/* Cyan hairline accent at the bottom of the header — echoes the "365" in
+   the logo, matches the main app's .header-frame::after detail. */
+.setup-header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(38, 197, 197, 0.4) 30%,
+    rgba(38, 197, 197, 0.6) 50%,
+    rgba(38, 197, 197, 0.4) 70%,
+    transparent 100%);
+}
+
+.setup-header-inner {
+  height: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+  gap: 20px;
 }
 
 .setup-logo {
-  height: 36px;
+  height: 44px;
   width: auto;
+  display: block;
 }
 
 .setup-lang-picker {
   display: inline-flex;
   gap: 4px;
-  background: var(--p-surface);
-  border: 1px solid var(--p-border);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--p-chrome-border-soft);
   border-radius: 6px;
   padding: 3px;
 }
 
 .setup-lang-picker button {
   background: transparent;
-  color: var(--p-text-muted);
+  color: var(--p-chrome-text-mut);
   border: 0;
-  padding: 5px 11px;
+  padding: 6px 12px;
   border-radius: 4px;
   font-size: 0.78rem;
   font-weight: 600;
@@ -76,13 +112,13 @@ html, body {
 }
 
 .setup-lang-picker button:hover {
-  background: var(--p-surface-alt);
-  color: var(--p-text);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--p-chrome-text);
 }
 
 .setup-lang-picker button.active {
   background: var(--p-accent);
-  color: var(--p-bg);
+  color: #fff;
 }
 
 /* ─── Stepper (1-2-3-...-8) ─── */

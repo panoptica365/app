@@ -5,6 +5,27 @@ that release, newest first.
 
 ---
 
+## Version 0.1.11 — 2026-05-24
+
+### Wizard polish
+
+Two small fixes caught during the v0.1.10 end-to-end verification on
+P365-Test:
+
+- **Back button now preserves entered values.** Form fields (including
+  the long Entra GUIDs, SMTP host / username / password, Anthropic key,
+  and license activation key) are no longer wiped when you click Back.
+  Values are remembered across step navigation within the same wizard
+  session.
+
+- **Header banner refit.** The wizard now has a full-width chrome
+  banner along the top with a prominent Panoptica365 logo and the
+  language picker, matching the visual style of the main app's header.
+  Replaces the small floating logo that was hard to see on the dark
+  background.
+
+---
+
 ## Version 0.1.10 — 2026-05-24
 
 ### First-boot setup wizard
