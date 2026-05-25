@@ -311,7 +311,7 @@
       <div class="setup-step-body">
         <div class="setup-field">
           <label for="setup-hostname" data-i18n="setup.hostname.label_hostname">Hostname</label>
-          <p class="hint" data-i18n="setup.hostname.hint_hostname">The fully qualified domain name pointing at this server (e.g. <code>panoptica.your-msp.com</code>). Caddy will auto-provision a Let's Encrypt TLS certificate.</p>
+          <p class="hint" data-i18n-html="setup.hostname.hint_hostname">The fully qualified domain name pointing at this server (e.g. <code>panoptica.your-msp.com</code>). Caddy will auto-provision a Let's Encrypt TLS certificate.</p>
           <input type="text" id="setup-hostname" name="hostname" required placeholder="panoptica.your-msp.com" value="${esc(valueFor('hostname', 'hostname'))}">
         </div>
         <div class="setup-field">
@@ -345,7 +345,7 @@
         <p class="setup-step-subtitle" data-i18n="setup.entra.subtitle">Operator login + customer-tenant access.</p>
       </header>
       <div class="setup-step-body">
-        <p data-i18n="setup.entra.intro">Panoptica365 needs an Entra app registration in your MSP's own tenant. Create one at <a href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com</a> as a multi-tenant app with redirect URI <code>https://&lt;your hostname&gt;/auth/callback</code>. Paste the values below.</p>
+        <p data-i18n-html="setup.entra.intro">Panoptica365 needs an Entra app registration in your MSP's own tenant. Create one at <a href="https://entra.microsoft.com" target="_blank" rel="noopener">entra.microsoft.com</a> as a multi-tenant app with redirect URI <code>https://&lt;your hostname&gt;/auth/callback</code>. Paste the values below.</p>
         <div class="setup-field">
           <label for="setup-entra-tenant" data-i18n="setup.entra.label_tenant">Tenant ID (GUID)</label>
           <input type="text" id="setup-entra-tenant" name="tenant_id" required placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'tenant_id'))}">
@@ -471,9 +471,9 @@
         <p class="setup-step-subtitle" data-i18n="setup.anthropic.subtitle">Powers alert analysis + daily summary + the Ask Claude widget.</p>
       </header>
       <div class="setup-step-body">
-        <p data-i18n="setup.anthropic.intro">Get an API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>. Estimated monthly cost across ~15 tenants: $5-15.</p>
+        <p data-i18n-html="setup.anthropic.intro">Get an API key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>. Estimated monthly cost across ~15 tenants: $5-15.</p>
         <div class="setup-field">
-          <label for="setup-anthropic-key" data-i18n="setup.anthropic.label_key">API key (starts with <code>sk-ant-</code>)</label>
+          <label for="setup-anthropic-key" data-i18n-html="setup.anthropic.label_key">API key (starts with <code>sk-ant-</code>)</label>
           <input type="password" id="setup-anthropic-key" name="api_key" required placeholder="sk-ant-..." value="${esc(valueFor('anthropic', 'api_key'))}">
         </div>
         <div id="setup-anthropic-status"></div>
@@ -518,7 +518,7 @@
         <p class="setup-step-subtitle" data-i18n="setup.license.subtitle">Activate this install against the Panoptica365 license server.</p>
       </header>
       <div class="setup-step-body">
-        <p data-i18n="setup.license.intro">Paste the 24-character activation key from your Panoptica365 license email (format: <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> or just the raw 24 chars). The wizard will exchange it for a license token and persist it to <code>.env</code>.</p>
+        <p data-i18n-html="setup.license.intro">Paste the 24-character activation key from your Panoptica365 license email (format: <code>PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF</code> or just the raw 24 chars). The wizard will exchange it for a license token and persist it to <code>.env</code>.</p>
         <div class="setup-field">
           <label for="setup-license-key" data-i18n="setup.license.label_key">Activation key</label>
           <input type="text" id="setup-license-key" name="activation_key" required placeholder="PNX-AAAA-BBBB-CCCC-DDDD-EEEE-FFFF" value="${esc(valueFor('license', 'activation_key'))}">

@@ -9,7 +9,7 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ### Peaufinage de l'assistant
 
-Deux petits correctifs détectés lors de la vérification de bout en bout
+Trois petits correctifs détectés lors de la vérification de bout en bout
 sur P365-Test (v0.1.10) :
 
 - **Le bouton Retour préserve désormais les valeurs saisies.** Les
@@ -24,6 +24,14 @@ sur P365-Test (v0.1.10) :
   visible et le sélecteur de langue, dans le style visuel de l'en-tête
   de l'application principale. Remplace le petit logo flottant qui
   était peu visible sur le fond sombre.
+
+- **Les liens et blocs de code intégrés s'affichent correctement.**
+  Plusieurs descriptions de l'assistant font référence à Entra
+  (entra.microsoft.com), à la console Anthropic, à des exemples de noms
+  d'hôte et au format de clé d'activation `PNX-...`. Ces liens `<a>` et
+  fragments `<code>` étaient affichés sous forme de texte HTML brut. Le
+  rendu utilise maintenant le bon mode innerHTML pour les clés i18n
+  contenant du balisage.
 
 ---
 

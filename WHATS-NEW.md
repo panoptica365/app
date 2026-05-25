@@ -9,7 +9,7 @@ that release, newest first.
 
 ### Wizard polish
 
-Two small fixes caught during the v0.1.10 end-to-end verification on
+Three small fixes caught during the v0.1.10 end-to-end verification on
 P365-Test:
 
 - **Back button now preserves entered values.** Form fields (including
@@ -23,6 +23,13 @@ P365-Test:
   language picker, matching the visual style of the main app's header.
   Replaces the small floating logo that was hard to see on the dark
   background.
+
+- **Embedded links and code spans now render properly.** A handful of
+  wizard descriptions reference Entra (entra.microsoft.com), the
+  Anthropic console, sample hostnames, and the `PNX-...` activation key
+  format. Those `<a>` links and `<code>` snippets were being shown as
+  raw HTML text. The renderer now uses the correct innerHTML pathway for
+  i18n keys that contain markup.
 
 ---
 
