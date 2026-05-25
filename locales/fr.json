@@ -133,6 +133,8 @@
     "chat_new": "Nouveau",
     "chat_new_title": "Démarrer une nouvelle conversation",
     "tenants_panel": "Locataires",
+    "tenant_filter_placeholder": "Filtrer les locataires…",
+    "tenant_filter_clear_title": "Effacer le filtre",
     "scores_alerts_title": "Vue d’ensemble du score de sécurité et des alertes",
     "range_open": "Ouvertes",
     "range_24h": "Dernières 24 heures",

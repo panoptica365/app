@@ -5,6 +5,35 @@ that release, newest first.
 
 ---
 
+## Version 0.1.17 — 2026-05-25
+
+### Main console: tenant search box
+
+The tenants panel on the Main Console now has a search box just below the
+header. Start typing any part of a tenant's display name — the list
+filters in real time, case-insensitively, on substring match. Useful when
+an MSP has dozens (or hundreds) of customers and needs to jump to one
+quickly without scrolling.
+
+- **Substring, not prefix.** Typing `CAE` matches every tenant with
+  "CAE" anywhere in the name, not just those starting with `CAE`.
+- **Case-insensitive.** `cae` and `CAE` and `Cae` all return the same
+  matches.
+- **Clear button + Esc.** A `×` button appears in the search bar when
+  there's an active filter; clicking it clears the input and restores
+  the full list. Pressing Esc while focused in the search box does the
+  same.
+- **Survives auto-refresh.** The tenant panel re-fetches scores every
+  5 minutes; your filter and what you've typed are preserved across the
+  refresh.
+- **Counter reflects the filter.** The header count switches from
+  "12 tenants" to "3 of 12 tenants" while filtering, so it's obvious
+  how much of the full list is being hidden.
+
+Localized en/fr/es.
+
+---
+
 ## Version 0.1.16 — 2026-05-25
 
 ### CA auto-remediation retired — safety fix

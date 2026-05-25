@@ -5,6 +5,37 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.17 — 2026-05-25
+
+### Consola principal: cuadro de búsqueda de inquilinos
+
+El panel de inquilinos en la Consola Principal ahora tiene un cuadro
+de búsqueda justo debajo del encabezado. Empiece a escribir cualquier
+parte del nombre de visualización de un inquilino — la lista se filtra
+en tiempo real, sin distinguir mayúsculas, por coincidencia de
+subcadena. Útil cuando un MSP tiene decenas (o cientos) de clientes y
+necesita saltar a uno rápidamente sin desplazarse.
+
+- **Subcadena, no prefijo.** Escribir `CAE` coincide con todos los
+  inquilinos que contengan «CAE» en cualquier parte del nombre, no solo
+  los que empiezan por `CAE`.
+- **Sin distinguir mayúsculas.** `cae`, `CAE` y `Cae` devuelven las
+  mismas coincidencias.
+- **Botón de limpiar + Esc.** Aparece un botón `×` en la barra de
+  búsqueda cuando hay un filtro activo; al hacer clic se borra el
+  campo y se restaura la lista completa. Pulsar Esc mientras el cuadro
+  de búsqueda tiene el foco hace lo mismo.
+- **Sobrevive al refresco automático.** El panel de inquilinos
+  recarga los puntajes cada 5 minutos; su filtro y lo que ha escrito
+  se conservan a través del refresco.
+- **El contador refleja el filtro.** El contador del encabezado pasa
+  de «12 inquilinos» a «3 de 12 inquilinos» durante el filtrado, para
+  que sea obvio cuánto de la lista completa está oculto.
+
+Localizado en/fr/es.
+
+---
+
 ## Versión 0.1.16 — 2026-05-25
 
 ### Remediación automática CA retirada — corrección de seguridad

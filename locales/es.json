@@ -133,6 +133,8 @@
     "chat_new": "Nuevo",
     "chat_new_title": "Iniciar nueva conversación",
     "tenants_panel": "Inquilinos",
+    "tenant_filter_placeholder": "Filtrar inquilinos…",
+    "tenant_filter_clear_title": "Borrar filtro",
     "scores_alerts_title": "Resumen de puntuación segura y alertas",
     "range_open": "Abierto",
     "range_24h": "Últimas 24 horas",

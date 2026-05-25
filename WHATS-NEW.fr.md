@@ -5,6 +5,37 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.17 — 2026-05-25
+
+### Console principale : boîte de recherche de locataires
+
+Le panneau des locataires sur la console principale dispose maintenant
+d’une boîte de recherche juste sous l’en-tête. Tapez n’importe quelle
+partie du nom d’affichage d’un locataire — la liste se filtre en temps
+réel, sans tenir compte de la casse, par correspondance de sous-chaîne.
+Utile lorsqu’un MSP a des dizaines (ou des centaines) de clients et doit
+sauter rapidement à l’un d’eux sans faire défiler.
+
+- **Sous-chaîne, pas préfixe.** Taper `CAE` correspond à tous les
+  locataires contenant « CAE » n’importe où dans le nom, pas seulement
+  ceux qui commencent par `CAE`.
+- **Insensible à la casse.** `cae`, `CAE` et `Cae` retournent toutes
+  les mêmes correspondances.
+- **Bouton d’effacement + Échap.** Un bouton `×` apparaît dans la barre
+  de recherche quand un filtre est actif ; cliquer dessus efface le
+  champ et restaure la liste complète. Appuyer sur Échap pendant que la
+  boîte de recherche a le focus fait la même chose.
+- **Survit au rafraîchissement automatique.** Le panneau des locataires
+  recharge les scores toutes les 5 minutes ; votre filtre et ce que
+  vous avez tapé sont conservés à travers le rafraîchissement.
+- **Le compteur reflète le filtre.** Le compteur d’en-tête passe de
+  « 12 locataires » à « 3 sur 12 locataires » pendant le filtrage,
+  donc il est évident combien de la liste complète est masqué.
+
+Localisé en/fr/es.
+
+---
+
 ## Version 0.1.16 — 2026-05-25
 
 ### Remédiation automatique CA retirée — correctif de sécurité

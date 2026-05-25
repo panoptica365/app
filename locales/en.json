@@ -133,6 +133,8 @@
     "chat_new": "New",
     "chat_new_title": "Start new conversation",
     "tenants_panel": "Tenants",
+    "tenant_filter_placeholder": "Filter tenants…",
+    "tenant_filter_clear_title": "Clear filter",
     "scores_alerts_title": "Secure Score & Alert Overview",
     "range_open": "Open",
     "range_24h": "Last 24 Hours",
