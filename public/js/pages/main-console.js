@@ -13,6 +13,13 @@
   let chatBusy = false;
   let chatSessionId = null;
 
+  // v0.1.17 tenant filter — cache the last fetched tenant list so the filter
+  // input can re-render a subset without re-fetching. `tenantListMode` tracks
+  // whether we have scored data (from /scores/secure) or basic data (from
+  // /tenants) so applyTenantFilter() dispatches to the right renderer.
+  let cachedTenants = [];
+  let tenantListMode = 'scored'; // 'scored' | 'basic'
+
   // Alert bar chart
   let alertBarChart = null;
   // DB uses 'severe' but we display 'Critical' to the user
@@ -26,6 +33,7 @@
     loadAlertBarChart();
     wireChat();
     wireAlertGaugeFilter();
+    wireTenantFilter();
     // Auto-refresh every 5 minutes
     refreshInterval = setInterval(() => {
       loadData();
@@ -155,18 +163,81 @@
     }
   }
 
+  // v0.1.17: renderTenantList() and renderTenantListBasic() now cache the
+  // full tenant list and delegate to applyTenantFilter(), which re-reads the
+  // filter input and dispatches to the matching internal renderer with the
+  // filtered subset. Lets the 5-minute auto-refresh land fresh data without
+  // clobbering the operator's in-progress filter.
+
   function renderTenantList(tenants) {
-    const body = document.getElementById('tenant-list-body');
-    const countEl = document.getElementById('tenant-count');
-    if (!body) return;
-
-    // Sort alphabetically by display name
+    // Sort once at cache time so applyTenantFilter() doesn't re-sort on
+    // every keystroke.
     tenants.sort((a, b) => (a.display_name || '').localeCompare(b.display_name || ''));
+    cachedTenants = tenants;
+    tenantListMode = 'scored';
+    applyTenantFilter();
+  }
 
-    if (countEl) countEl.textContent = `${tenants.length} tenant${tenants.length !== 1 ? 's' : ''}`;
+  function renderTenantListBasic(tenants) {
+    cachedTenants = tenants;
+    tenantListMode = 'basic';
+    applyTenantFilter();
+  }
+
+  function applyTenantFilter() {
+    const input = document.getElementById('tenant-filter-input');
+    const q = (input?.value || '').trim().toLowerCase();
+    const filtered = q
+      ? cachedTenants.filter(t => (t.display_name || '').toLowerCase().includes(q))
+      : cachedTenants;
+
+    // Clear-button visibility tracks whether there's anything to clear.
+    const clear = document.getElementById('tenant-filter-clear');
+    if (clear) clear.style.display = q ? 'inline-flex' : 'none';
+
+    if (tenantListMode === 'scored') {
+      doRenderTenantListScored(filtered, cachedTenants.length, q);
+    } else {
+      doRenderTenantListBasic(filtered, cachedTenants.length, q);
+    }
+  }
+
+  function updateCountLabel(shown, total, isFiltering) {
+    const countEl = document.getElementById('tenant-count');
+    if (!countEl) return;
+    if (isFiltering) {
+      countEl.textContent = `${shown} of ${total} tenant${total !== 1 ? 's' : ''}`;
+    } else {
+      countEl.textContent = `${total} tenant${total !== 1 ? 's' : ''}`;
+    }
+  }
+
+  function renderEmptyTenantBody(isFiltering) {
+    const body = document.getElementById('tenant-list-body');
+    if (!body) return;
+    if (isFiltering) {
+      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants match your filter.</div>';
+    } else {
+      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants configured. Go to Tenant Management to add your first tenant.</div>';
+    }
+  }
+
+  function wireTenantRowClicks(body) {
+    body.querySelectorAll('.tenant-row').forEach(row => {
+      row.addEventListener('click', () => {
+        Panoptica.openTenantDashboard(row.dataset.tenantId, row.dataset.tenantName);
+      });
+    });
+  }
+
+  function doRenderTenantListScored(tenants, total, q) {
+    const body = document.getElementById('tenant-list-body');
+    if (!body) return;
+    const isFiltering = q.length > 0;
+    updateCountLabel(tenants.length, total, isFiltering);
 
     if (tenants.length === 0) {
-      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants configured. Go to Tenant Management to add your first tenant.</div>';
+      renderEmptyTenantBody(isFiltering);
       return;
     }
 
@@ -196,23 +267,17 @@
 
     html += '</tbody></table>';
     body.innerHTML = html;
-
-    body.querySelectorAll('.tenant-row').forEach(row => {
-      row.addEventListener('click', () => {
-        Panoptica.openTenantDashboard(row.dataset.tenantId, row.dataset.tenantName);
-      });
-    });
+    wireTenantRowClicks(body);
   }
 
-  function renderTenantListBasic(tenants) {
+  function doRenderTenantListBasic(tenants, total, q) {
     const body = document.getElementById('tenant-list-body');
-    const countEl = document.getElementById('tenant-count');
     if (!body) return;
-
-    if (countEl) countEl.textContent = `${tenants.length} tenant${tenants.length !== 1 ? 's' : ''}`;
+    const isFiltering = q.length > 0;
+    updateCountLabel(tenants.length, total, isFiltering);
 
     if (tenants.length === 0) {
-      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants configured. Go to Tenant Management to add your first tenant.</div>';
+      renderEmptyTenantBody(isFiltering);
       return;
     }
 
@@ -238,11 +303,28 @@
 
     html += '</tbody></table>';
     body.innerHTML = html;
+    wireTenantRowClicks(body);
+  }
 
-    body.querySelectorAll('.tenant-row').forEach(row => {
-      row.addEventListener('click', () => {
-        Panoptica.openTenantDashboard(row.dataset.tenantId, row.dataset.tenantName);
+  function wireTenantFilter() {
+    const input = document.getElementById('tenant-filter-input');
+    const clear = document.getElementById('tenant-filter-clear');
+    if (!input) return;
+    input.addEventListener('input', applyTenantFilter);
+    if (clear) {
+      clear.addEventListener('click', () => {
+        input.value = '';
+        applyTenantFilter();
+        input.focus();
       });
+    }
+    // Esc clears the filter when the input has focus
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && input.value) {
+        e.preventDefault();
+        input.value = '';
+        applyTenantFilter();
+      }
     });
   }
 
