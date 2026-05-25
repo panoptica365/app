@@ -1347,10 +1347,6 @@
         : a.drift_status === 'accepted' ? 'ca-drift-accepted'
         : a.drift_status === 'missing' ? 'ca-drift-missing' : 'ca-drift-unchecked';
       const driftLabel = a.drift_status === 'unchecked' ? window.t('tenant_dashboard.ca.not_checked') : a.drift_status;
-      const isRemediate = a.enforcement === 'remediate';
-      const enfLabel = isRemediate ? window.t('tenant_dashboard.ca.enforcement.monitor_remediate') : window.t('tenant_dashboard.ca.enforcement.monitor_only');
-      const enfToggleLabel = isRemediate ? window.t('tenant_dashboard.ca.enforcement.switch_to_monitor') : window.t('tenant_dashboard.ca.enforcement.switch_to_remediate');
-      const enfToggleClass = isRemediate ? 'btn-secondary' : 'btn-primary';
       const _lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
       const _dateLocale = _lang === 'fr' ? 'fr-CA' : (_lang === 'es' ? 'es' : 'en-CA');
       const lastChecked = a.last_checked_at ? new Date(a.last_checked_at).toLocaleString(_dateLocale) : window.t('common.never');
@@ -1380,7 +1376,6 @@
             </div>
           </div>
           <div class="ca-card-fields">
-            <div class="ca-field-row"><span class="ca-field-label">${esc(window.t('tenant_dashboard.ca.field.enforcement'))}</span> ${esc(enfLabel)}</div>
             <div class="ca-field-row"><span class="ca-field-label">${esc(window.t('tenant_dashboard.ca.field.alerts'))}</span>
               <select class="ca-inline-select" data-role-required="member" data-action="change-routing" data-id="${a.id}">
                 <option value="" ${!isOverridden ? 'selected' : ''}>${esc(window.t('tenant_dashboard.ca.template_default', { routing: ROUTING_LABELS[a.template_alert_routing || 'both'] }))}</option>
@@ -1397,8 +1392,7 @@
           </div>
           <div class="ca-card-toolbar">
             <button class="ca-toolbar-btn" data-role-required="member" data-action="check-drift" data-id="${a.id}">${esc(window.t('tenant_dashboard.ca.btn.check_drift'))}</button>
-            <button class="ca-toolbar-btn ${enfToggleClass}" data-role-required="member" data-action="toggle-enforcement" data-id="${a.id}">${esc(enfToggleLabel)}</button>
-            ${a.drift_status === 'drifted' && a.enforcement === 'remediate' ? `<button class="ca-toolbar-btn ca-toolbar-primary" data-role-required="member" data-action="remediate" data-id="${a.id}">${esc(window.t('tenant_dashboard.ca.btn.remediate'))}</button>` : ''}
+            ${a.live_policy_id && a.drift_status === 'drifted' ? `<button class="ca-toolbar-btn ca-toolbar-danger" data-role-required="member" data-action="remediate" data-id="${a.id}" title="${esc(window.t('tenant_dashboard.ca.btn.push_template_tooltip'))}">${esc(window.t('tenant_dashboard.ca.btn.push_template'))}</button>` : ''}
             ${!a.live_policy_id ? `<button class="ca-toolbar-btn ca-toolbar-primary" data-role-required="member" data-action="deploy" data-id="${a.id}">${esc(window.t('tenant_dashboard.ca.btn.deploy'))}</button>` : ''}
             ${!a.live_policy_id ? `<button class="ca-toolbar-btn" data-role-required="member" data-action="auto-match" data-id="${a.id}">${esc(window.t('tenant_dashboard.ca.btn.match'))}</button>` : ''}
             <button class="ca-toolbar-btn ca-toolbar-danger" data-role-required="member" data-action="remove" data-id="${a.id}">${esc(window.t('tenant_dashboard.ca.btn.remove'))}</button>
@@ -1416,7 +1410,6 @@
         const id = parseInt(btn.dataset.id, 10);
         const action = btn.dataset.action;
         if (action === 'check-drift') checkDrift(id);
-        else if (action === 'toggle-enforcement') toggleEnforcement(id);
         else if (action === 'ca-accept-drift') caAcceptDrift(id);
         else if (action === 'remediate') remediate(id);
         else if (action === 'deploy') deployToTenant(id);
@@ -1447,9 +1440,8 @@
     Panoptica.showToast(window.t('tenant_dashboard.toast_running_drift'), 'info');
     try {
       const result = await Panoptica.api(`/api/ca/assignments/${assignmentId}/check`, { method: 'POST' });
-      if (result.remediated) {
-        Panoptica.showToast(window.t('tenant_dashboard.toast_drift_auto_remediated', { count: result.drifts.length }), 'success');
-      } else if (result.drift_status === 'ok') {
+      // v0.1.16: result.remediated path removed — scheduler never auto-remediates.
+      if (result.drift_status === 'ok') {
         Panoptica.showToast(window.t('tenant_dashboard.toast_no_drift'), 'success');
       } else if (result.drift_status === 'drifted') {
         Panoptica.showToast(window.t('tenant_dashboard.toast_drift_changed', { count: result.drifts.length }), 'error');
@@ -1608,23 +1600,7 @@
     });
   }
 
-  async function toggleEnforcement(assignmentId) {
-    const assignment = caAssignments.find(a => a.id === assignmentId);
-    if (!assignment) return;
-    const newMode = assignment.enforcement === 'remediate' ? 'monitor' : 'remediate';
-    const label = newMode === 'remediate' ? window.t('tenant_dashboard.ca.enforcement.monitor_remediate') : window.t('tenant_dashboard.ca.enforcement.monitor_only');
-    if (!confirm(window.t('tenant_dashboard.confirm_switch_enforcement', { label, name: assignment.template_name }))) return;
-    try {
-      await Panoptica.api(`/api/ca/assignments/${assignmentId}/enforcement`, {
-        method: 'PATCH',
-        body: JSON.stringify({ enforcement: newMode }),
-      });
-      Panoptica.showToast(window.t('tenant_dashboard.toast_enforcement_changed', { label }), 'success');
-      await loadCaAssignments();
-    } catch (err) {
-      Panoptica.showToast(window.t('tenant_dashboard.toast_enforcement_update_failed', { message: err.message }), 'error');
-    }
-  }
+  // toggleEnforcement() removed in v0.1.16 — see CA scheduler comment block.
 
   async function checkAllDrift() {
     Panoptica.showToast(window.t('tenant_dashboard.toast_checking_all'), 'info');
@@ -1656,10 +1632,15 @@
   }
 
   async function remediate(assignmentId) {
-    if (!confirm(window.t('tenant_dashboard.confirm_remediate_push'))) return;
+    const assignment = caAssignments.find(a => a.id === assignmentId);
+    const name = assignment ? assignment.template_name : '';
+    // v0.1.16: explicit operator-initiated push. Confirm dialog calls out the
+    // wipe-on-PATCH semantics for excludeUsers/excludeGroups so the operator
+    // can't be bitten without consent.
+    if (!confirm(window.t('tenant_dashboard.confirm_push_template', { name }))) return;
     try {
       await Panoptica.api(`/api/ca/assignments/${assignmentId}/remediate`, { method: 'POST' });
-      Panoptica.showToast(window.t('tenant_dashboard.toast_remediated'), 'success');
+      Panoptica.showToast(window.t('tenant_dashboard.toast_template_pushed'), 'success');
       await loadCaAssignments();
     } catch (err) {
       Panoptica.showToast(window.t('tenant_dashboard.toast_remediate_failed', { message: err.message }), 'error');
@@ -1755,7 +1736,8 @@
   async function assignTemplate() {
     const listEl = el('td-ca-template-list');
     const selectedIds = [...listEl.querySelectorAll('.ca-assign-cb:checked')].map(cb => parseInt(cb.value, 10));
-    const enforcement = el('td-ca-enforcement-select').value;
+    // v0.1.16: enforcement dropdown removed from modal — all new assignments
+    // are created in monitor mode (auto-remediation has been retired).
 
     if (selectedIds.length === 0) return Panoptica.showToast(window.t('tenant_dashboard.toast_select_template'), 'error');
 
@@ -1766,7 +1748,7 @@
       try {
         await Panoptica.api('/api/ca/assignments', {
           method: 'POST',
-          body: JSON.stringify({ template_id: templateId, tenant_id: parseInt(tenantId, 10), enforcement }),
+          body: JSON.stringify({ template_id: templateId, tenant_id: parseInt(tenantId, 10) }),
         });
         successCount++;
       } catch (err) {

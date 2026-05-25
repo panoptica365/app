@@ -5,6 +5,51 @@ that release, newest first.
 
 ---
 
+## Version 0.1.16 — 2026-05-25
+
+### CA auto-remediation retired — safety fix
+
+The Conditional Access drift checker no longer auto-PATCHes live policies
+back to template state, even on assignments that were previously set to
+"Monitor + Remediate". This is a safety fix.
+
+**Why.** The `NON_REMEDIABLE_FIELDS` denylist added in April was supposed
+to keep per-tenant `excludeUsers` / `excludeGroups` lists safe by omitting
+those fields from the PATCH body. But Microsoft Graph PATCH semantics on
+a nested object (`conditions.users`) **replace the whole sub-object** with
+whatever is sent — so omitting `excludeUsers` caused Graph to clear it to
+an empty array. Confirmed in production on 2026-05-25: nine user-exclusions
+were wiped across five tenants in a single drift cycle right after v0.1.15
+enabled drift detection on the Canada-only template's exclusion list.
+
+**What changes.**
+
+- The hourly drift scheduler now only **detects** drift and fires alerts.
+  It never PATCHes a live policy. The `enforcement` column is preserved
+  for backward compatibility but is no longer read by application code.
+- The **SWITCH TO MONITOR / SWITCH TO REMEDIATE** toggle is removed from
+  the CA assignment tile. The "Enforcement" row is also removed.
+- The previous "REMEDIATE" button on a drifted assignment is renamed to
+  **PUSH TEMPLATE** and is now styled as a destructive action. The confirm
+  dialog explicitly warns about the `excludeUsers` / `excludeGroups` wipe
+  semantics so an operator can't be bitten without consent.
+- The Assign-Template modal no longer asks for an enforcement mode — all
+  new assignments are created in monitor mode by default.
+
+**Operational model going forward** (now matches Intune Deployments):
+drift is detected → alert fires → operator either clicks **Accept Drift**
+to acknowledge the per-tenant variation as intentional (orange ACCEPTED
+state, hash-suppressed) or clicks **Push Template** to explicitly
+overwrite the live policy with the template state, accepting the wipe.
+
+**For affected tenants**: nine user-exclusions across Calogy Solutions,
+Dienamex, Tatum, Thymox, and Trilogiam were wiped during the v0.1.15
+incident window. Panoptica365's own `ca_drift_log` table preserves every
+wiped GUID in `actual_value`, so restoration is a copy/paste back into
+the Entra portal's user picker. Operator action required.
+
+---
+
 ## Version 0.1.15 — 2026-05-25
 
 ### CA drift detection: exclusion-list changes are now caught

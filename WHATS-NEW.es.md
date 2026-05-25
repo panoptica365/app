@@ -5,6 +5,59 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.16 — 2026-05-25
+
+### Remediación automática CA retirada — corrección de seguridad
+
+El verificador de desviación de Acceso Condicional ya no aplica
+automáticamente (PATCH) las directivas activas para restaurarlas al
+estado de la plantilla, incluso en asignaciones previamente configuradas
+como «Supervisar + Remediar». Es una corrección de seguridad.
+
+**Por qué.** La lista de denegación `NON_REMEDIABLE_FIELDS` añadida en
+abril estaba destinada a proteger las listas `excludeUsers` /
+`excludeGroups` propias del inquilino, omitiendo esos campos del cuerpo
+del PATCH. Pero la semántica PATCH de Microsoft Graph sobre un objeto
+anidado (`conditions.users`) **reemplaza todo el subobjeto** con lo que
+se envía — por lo que omitir `excludeUsers` hacía que Graph lo vaciara a
+un arreglo vacío. Confirmado en producción el 2026-05-25: se eliminaron
+nueve exclusiones de usuarios en cinco inquilinos en un solo ciclo de
+desviación, justo después de que v0.1.15 habilitara la detección de
+desviación en la lista de exclusión de la plantilla solo-Canadá.
+
+**Lo que cambia.**
+
+- El planificador de desviación horario ahora solo **detecta** la
+  desviación y dispara alertas. Nunca hace PATCH de una directiva
+  activa. La columna `enforcement` se conserva por compatibilidad
+  retroactiva pero ya no la lee el código de la aplicación.
+- El botón **CAMBIAR A SUPERVISAR / CAMBIAR A REMEDIAR** se elimina de
+  la tarjeta de asignación CA. La fila «Aplicación» también se elimina.
+- El antiguo botón «REMEDIAR» sobre una asignación con desviación se
+  renombra a **APLICAR PLANTILLA** y se estiliza como acción destructiva.
+  El cuadro de confirmación advierte explícitamente sobre la semántica
+  de borrado de `excludeUsers` / `excludeGroups`, para que un operador
+  no pueda ser sorprendido sin consentimiento.
+- El modal de asignación de plantilla ya no pregunta por el modo de
+  aplicación — todas las nuevas asignaciones se crean en modo
+  supervisar por defecto.
+
+**Modelo operativo a partir de ahora** (ahora coincide con Despliegues
+Intune): se detecta la desviación → se dispara la alerta → el operador
+hace clic en **Aceptar desviación** para reconocer la variación propia
+del inquilino como intencional (estado naranja ACEPTADO, suprimido por
+hash) o **Aplicar plantilla** para sobrescribir explícitamente la
+directiva activa con el estado de la plantilla, aceptando el borrado.
+
+**Para los inquilinos afectados**: nueve exclusiones de usuarios en
+Calogy Solutions, Dienamex, Tatum, Thymox y Trilogiam fueron eliminadas
+durante la ventana del incidente v0.1.15. La tabla `ca_drift_log` de
+Panoptica365 conserva cada GUID eliminado en `actual_value`, por lo que
+la restauración consiste en pegar los GUID en el selector de usuarios
+del portal Entra. Se requiere acción del operador.
+
+---
+
 ## Versión 0.1.15 — 2026-05-25
 
 ### Detección de desviación CA: los cambios en listas de exclusión ya se detectan

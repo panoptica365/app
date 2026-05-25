@@ -963,13 +963,14 @@ router.get('/assignments', async (req, res) => {
 
 /**
  * POST /api/ca/assignments — Assign a template to a tenant.
- * Body: { template_id, tenant_id, enforcement? }
+ * Body: { template_id, tenant_id }
  *
  * A3 (May 9, 2026): operator — per-tenant deployment is an operator action.
+ * v0.1.16 (2026-05-25): enforcement removed from request body; always 'monitor'.
  */
 router.post('/assignments', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const { template_id, tenant_id, enforcement } = req.body;
+    const { template_id, tenant_id } = req.body;
     if (!template_id || !tenant_id) {
       return res.status(400).json({ error: 'template_id and tenant_id are required' });
     }
@@ -983,14 +984,16 @@ router.post('/assignments', auth.requireMemberOrAdmin, async (req, res) => {
       return res.status(409).json({ error: 'This template is already assigned to this tenant' });
     }
 
+    // enforcement is always 'monitor' as of v0.1.16. The column is preserved
+    // for backward compat (no destructive migration) but no code path ever
+    // writes 'remediate' anymore — the scheduler doesn't read it either.
     const id = await db.insert(
       `INSERT INTO ca_assignments (template_id, tenant_id, enforcement)
-       VALUES (?, ?, ?)`,
-      [template_id, tenant_id, enforcement || 'monitor']
+       VALUES (?, ?, 'monitor')`,
+      [template_id, tenant_id]
     );
 
-    const enforcementMode = enforcement || 'monitor';
-    console.log(`[CA] Template ${template_id} assigned to tenant ${tenant_id} (enforcement=${enforcementMode}) by ${req.session.user.email}`);
+    console.log(`[CA] Template ${template_id} assigned to tenant ${tenant_id} by ${req.session.user.email}`);
 
     const created = await db.queryOne(
       `SELECT a.*, t.name AS template_name, tn.display_name AS tenant_name
@@ -1006,9 +1009,9 @@ router.post('/assignments', auth.requireMemberOrAdmin, async (req, res) => {
     mspAudit.logMspAudit({
       category: mspAudit.CATEGORY.TEMPLATE_CRUD,
       action: 'ca_assignment.create',
-      description: `Assigned template "${created?.template_name || '?'}" to tenant "${created?.tenant_name || '?'}" (enforcement: ${enforcementMode})`,
+      description: `Assigned template "${created?.template_name || '?'}" to tenant "${created?.tenant_name || '?'}"`,
       templateKey: 'ca_assignment.create',
-      templateParams: { templateName: created?.template_name || '?', tenantName: created?.tenant_name || '?', enforcement: enforcementMode },
+      templateParams: { templateName: created?.template_name || '?', tenantName: created?.tenant_name || '?' },
       targetType: 'ca_assignment',
       targetId: String(id),
       targetName: created?.template_name || null,
@@ -1016,7 +1019,6 @@ router.post('/assignments', auth.requireMemberOrAdmin, async (req, res) => {
         template_id,
         tenant_id,
         tenant_name: created?.tenant_name || null,
-        enforcement: enforcementMode,
       },
       req,
     }).catch(() => {});
@@ -1035,13 +1037,13 @@ router.post('/assignments', auth.requireMemberOrAdmin, async (req, res) => {
  */
 router.put('/assignments/:id', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const { enforcement, live_policy_id } = req.body;
+    // enforcement is silently ignored as of v0.1.16 — the column is dead.
+    const { live_policy_id } = req.body;
     const affected = await db.execute(
       `UPDATE ca_assignments SET
-        enforcement = COALESCE(?, enforcement),
         live_policy_id = COALESCE(?, live_policy_id)
        WHERE id = ?`,
-      [enforcement || null, live_policy_id || null, req.params.id]
+      [live_policy_id || null, req.params.id]
     );
     if (affected === 0) return res.status(404).json({ error: 'Assignment not found' });
 
@@ -1057,68 +1059,12 @@ router.put('/assignments/:id', auth.requireMemberOrAdmin, async (req, res) => {
   }
 });
 
-/**
- * PATCH /api/ca/assignments/:id/enforcement — Toggle enforcement mode.
- *
- * A3 (May 9, 2026): operator.
- */
-router.patch('/assignments/:id/enforcement', auth.requireMemberOrAdmin, async (req, res) => {
-  try {
-    const { enforcement } = req.body;
-    if (!enforcement || !['monitor', 'remediate'].includes(enforcement)) {
-      return res.status(400).json({ error: 'enforcement must be "monitor" or "remediate"' });
-    }
-
-    // Capture pre-update state for audit diff. Separate query rather than
-    // joining into the UPDATE because we need prior enforcement value.
-    const priorCtx = await db.queryOne(
-      `SELECT a.tenant_id, a.enforcement AS prior_enforcement, t.name AS template_name
-         FROM ca_assignments a JOIN ca_templates t ON t.id = a.template_id
-        WHERE a.id = ?`,
-      [req.params.id]
-    );
-    if (!priorCtx) return res.status(404).json({ error: 'Assignment not found' });
-
-    const affected = await db.execute(
-      `UPDATE ca_assignments SET enforcement = ? WHERE id = ?`,
-      [enforcement, req.params.id]
-    );
-    if (affected === 0) return res.status(404).json({ error: 'Assignment not found' });
-
-    const updated = await db.queryOne(
-      `SELECT a.*, t.name AS template_name
-       FROM ca_assignments a JOIN ca_templates t ON t.id = a.template_id
-       WHERE a.id = ?`, [req.params.id]
-    );
-    console.log(`[CA] Enforcement changed to "${enforcement}" for assignment ${req.params.id} by ${req.session.user.email}`);
-
-    // Audit — only log when mode actually changed (skip no-op writes). This
-    // toggle has real blast radius: monitor→remediate means future drifts will
-    // auto-PATCH the live policy back to template values. An MSP needs a clear
-    // trail of when that authorization was granted.
-    if (priorCtx.prior_enforcement !== enforcement) {
-      try {
-        await changeLog.logPanopticaChange({
-          tenantId: priorCtx.tenant_id,
-          category: changeLog.CATEGORY.ENFORCEMENT_TOGGLE,
-          surfaces: [changeLog.SURFACE.CA],
-          description: `CA enforcement on "${priorCtx.template_name}" changed ${priorCtx.prior_enforcement} → ${enforcement}`,
-          templateKey: 'enforcement_toggle',
-          templateParams: { newState: enforcement, policyName: priorCtx.template_name, priorState: priorCtx.prior_enforcement },
-          createdBy: req.session.user.email,
-          ...changeLog.captureActorContext(req),
-        });
-      } catch (logErr) {
-        console.warn(`[CA] Enforcement-toggle audit log failed (non-fatal): ${logErr.message}`);
-      }
-    }
-
-    res.json(updated);
-  } catch (err) {
-    console.error('[CA] Update enforcement failed:', err.message);
-    res.status(500).json({ error: 'Failed to update enforcement' });
-  }
-});
+// PATCH /api/ca/assignments/:id/enforcement — REMOVED in v0.1.16.
+// The monitor/remediate toggle was retired with the scheduler's auto-remediation
+// path (see comment block in checkDrift). The enforcement DB column is left in
+// place for backward compat but is never read or written by application code.
+// Any caller still hitting this endpoint will get 404 from the Express router,
+// which is the right signal: the operation no longer exists.
 
 /**
  * PATCH /api/ca/assignments/:id/alert-routing — Update alert routing override.
@@ -2439,20 +2385,25 @@ async function checkDrift(assignment) {
       );
     }
 
-    // Auto-remediate if enforcement mode is 'remediate' and drift was detected (not accepted).
-    // NOTE: remediatePolicy() may return { skipped: true } when every drifted monitored field
-    // is on the NON_REMEDIABLE_FIELDS denylist (e.g. excludeUsers/excludeGroups) — in that
-    // case the live policy was NOT touched and the alert must remain "drift detected",
-    // not "auto-remediated", otherwise we mis-label the dashboard.
-    if (assignment.enforcement === 'remediate') {
-      try {
-        console.log(`[CA] Auto-remediating assignment ${assignment.id} (enforcement=remediate)`);
-        const result = await remediatePolicy(assignment, livePolicy);
-        remediated = !(result && result.skipped);
-      } catch (err) {
-        console.error(`[CA] Auto-remediation failed for assignment ${assignment.id}:`, err.message);
-      }
-    }
+    // v0.1.16 (2026-05-25): auto-remediation REMOVED from the scheduler.
+    //
+    // The previous block called remediatePolicy() when assignment.enforcement
+    // === 'remediate'. The NON_REMEDIABLE_FIELDS denylist was supposed to keep
+    // excludeUsers/excludeGroups safe by omitting them from the PATCH body, but
+    // Microsoft Graph PATCH semantics on a nested object (conditions.users)
+    // REPLACE the whole sub-object with whatever is sent. Omitting excludeUsers
+    // therefore caused Graph to clear it to []. Confirmed in production
+    // 2026-05-25: 9 user-exclusions wiped across 5 tenants in a single drift
+    // cycle right after v0.1.15 deployed (which had enabled drift detection on
+    // the Canada template's excludeUsers field).
+    //
+    // The operator-facing model now matches Intune: drift is DETECTED and
+    // alerted, then the operator either (a) accepts it via the Accept Drift
+    // button (orange ACCEPTED state, suppressed via SHA-256 hash) or (b)
+    // explicitly clicks "Push Template" on the CA tile — manual remediate via
+    // POST /api/ca/assignments/:id/remediate, with a strong confirm dialog
+    // that calls out the wipe-on-PATCH semantics. The enforcement column is
+    // left in place for backward compat but is never read by the scheduler.
 
     // Create alert
     try {

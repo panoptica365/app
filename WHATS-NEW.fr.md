@@ -5,6 +5,60 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.16 — 2026-05-25
+
+### Remédiation automatique CA retirée — correctif de sécurité
+
+Le vérificateur de dérive d’accès conditionnel ne ré-applique plus
+automatiquement (PATCH) les stratégies actives vers l’état du modèle,
+même sur les affectations précédemment réglées à « Surveiller + Corriger ».
+Il s’agit d’un correctif de sécurité.
+
+**Pourquoi.** La liste de refus `NON_REMEDIABLE_FIELDS` ajoutée en avril
+devait protéger les listes `excludeUsers` / `excludeGroups` propres au
+locataire en omettant ces champs du corps du PATCH. Mais la sémantique
+PATCH de Microsoft Graph sur un objet imbriqué (`conditions.users`)
+**remplace tout le sous-objet** par ce qui est envoyé — donc omettre
+`excludeUsers` faisait que Graph le vidait en tableau vide. Confirmé en
+production le 2026-05-25 : neuf exclusions d’utilisateurs ont été effacées
+sur cinq locataires dans un seul cycle de dérive, juste après que v0.1.15
+ait activé la détection de dérive sur la liste d’exclusions du modèle
+Canada seulement.
+
+**Ce qui change.**
+
+- L’ordonnanceur de dérive horaire ne fait plus que **détecter** la dérive
+  et déclencher des alertes. Il ne PATCH jamais une stratégie active. La
+  colonne `enforcement` est conservée pour la compatibilité ascendante
+  mais n’est plus lue par le code applicatif.
+- Le bouton **PASSER À SURVEILLANCE / PASSER À CORRIGER** est retiré de
+  la tuile d’affectation CA. La ligne « Application » est aussi retirée.
+- L’ancien bouton « CORRIGER » sur une affectation en dérive est renommé
+  **POUSSER LE MODÈLE** et stylisé comme action destructrice. Le dialogue
+  de confirmation avertit explicitement de la sémantique d’effacement
+  d’`excludeUsers` / `excludeGroups`, pour qu’un opérateur ne puisse pas
+  se faire piéger sans consentement.
+- Le modal d’affectation de modèle ne demande plus de mode d’application
+  — toutes les nouvelles affectations sont créées en mode surveillance
+  par défaut.
+
+**Modèle opérationnel à partir de maintenant** (correspond maintenant à
+Déploiements Intune) : la dérive est détectée → l’alerte se déclenche →
+l’opérateur clique soit **Accepter la dérive** pour reconnaître la
+variation propre au locataire comme intentionnelle (état orange ACCEPTÉE,
+supprimé par hachage), soit **Pousser le modèle** pour écraser
+explicitement la stratégie active avec l’état du modèle, en acceptant
+l’effacement.
+
+**Pour les locataires affectés** : neuf exclusions d’utilisateurs chez
+Calogy Solutions, Dienamex, Tatum, Thymox et Trilogiam ont été effacées
+pendant la fenêtre de l’incident v0.1.15. La table `ca_drift_log` de
+Panoptica365 conserve chaque GUID effacé dans `actual_value`, la
+restauration consiste donc à coller les GUID dans le sélecteur
+d’utilisateurs du portail Entra. Action de l’opérateur requise.
+
+---
+
 ## Version 0.1.15 — 2026-05-25
 
 ### Détection de dérive CA : les changements de listes d’exclusion sont désormais captés
