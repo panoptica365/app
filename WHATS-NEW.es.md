@@ -5,11 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.12 — 2026-05-24
+
+### Asistente: los enlaces y bloques de código incrustados se muestran correctamente
+
+Varias descripciones del asistente hacen referencia a Entra
+(entra.microsoft.com), a la consola de Anthropic, a ejemplos de nombres
+de host y al formato de clave de activación `PNX-...`. Esos enlaces
+`<a>` y fragmentos `<code>` se mostraban como texto HTML en bruto. El
+renderizado utiliza ahora el modo innerHTML correcto para las claves de
+i18n que contienen marcado.
+
+(Detectado durante la verificación del pulido de v0.1.11 en P365-Test.)
+
+---
+
 ## Versión 0.1.11 — 2026-05-24
 
 ### Pulido del asistente
 
-Tres pequeñas correcciones detectadas durante la verificación de extremo
+Dos pequeñas correcciones detectadas durante la verificación de extremo
 a extremo en P365-Test (v0.1.10):
 
 - **El botón Atrás conserva ahora los valores introducidos.** Los
@@ -24,14 +39,6 @@ a extremo en P365-Test (v0.1.10):
   de Panoptica365 destacado y el selector de idioma, en el estilo visual
   del encabezado de la aplicación principal. Reemplaza el pequeño logo
   flotante que era poco visible sobre el fondo oscuro.
-
-- **Los enlaces y bloques de código incrustados se muestran
-  correctamente.** Varias descripciones del asistente hacen referencia a
-  Entra (entra.microsoft.com), a la consola de Anthropic, a ejemplos de
-  nombres de host y al formato de clave de activación `PNX-...`. Esos
-  enlaces `<a>` y fragmentos `<code>` se mostraban como texto HTML en
-  bruto. El renderizado utiliza ahora el modo innerHTML correcto para
-  las claves de i18n que contienen marcado.
 
 ---
 
