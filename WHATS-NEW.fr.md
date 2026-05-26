@@ -5,6 +5,35 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.19 — 2026-05-25
+
+### Correctif : instanciation MSAL de auth.js désormais paresseuse
+
+Une installation entièrement neuve (installateur + `ENTRA_CLIENT_SECRET`
+vide dans `.env` jusqu’à ce que l’assistant le collecte) faisait planter
+l’application au démarrage, avant que `setupMiddleware` ne puisse
+rediriger l’utilisateur vers `/setup`. Cause racine :
+`new ConfidentialClientApplication(...)` de MSAL était appelé au
+chargement du module dans `src/auth.js` et lance
+`invalid_client_credential` sur un secret vide.
+
+Le client MSAL unique est désormais construit paresseusement via
+`getCCA()` à la première utilisation. Le module se charge proprement
+avec une configuration Entra vide ; tout appel de route d’authentification
+avant que l’assistant ne soit terminé échoue avec un message clair
+« terminez l’assistant à /setup d’abord » au lieu de faire planter le
+processus. L’export `cca` est remplacé par `getCCA` (aucun appelant
+externe n’utilisait `auth.cca`).
+
+C’était le dernier bogue qui bloquait le flux
+`curl install.panoptica365.com/run` → démarrage de la pile Docker →
+parcours de l’assistant → arrivée sur la Console principale. Détecté
+par le test de bout en bout de la phase 4 partie A sur P365-Test, qui
+est le premier chemin d’installation à avoir réellement testé une
+configuration Entra entièrement vide au démarrage.
+
+---
+
 ## Version 0.1.18 — 2026-05-25
 
 ### Assistant : étape Nom d’hôte supprimée (7 étapes maintenant)
@@ -25,28 +54,6 @@ v0.1.10 à v0.1.17 ont déjà le nom d’hôte marqué comme terminé dans leur
 filet de sécurité `setup-completed-once.flag`. Le point de terminaison
 hérité `/api/setup/hostname` reste dans `api-setup.js` pour la
 rétrocompatibilité mais n’est plus appelé par le frontend.
-
-### Correctif : instanciation MSAL de auth.js désormais paresseuse
-
-Une installation entièrement neuve (installateur + `ENTRA_CLIENT_SECRET`
-vide dans `.env` jusqu’à ce que l’assistant le collecte) faisait
-auparavant planter l’application au démarrage, avant que
-`setupMiddleware` ne puisse rediriger l’utilisateur vers `/setup`.
-Cause racine : `new ConfidentialClientApplication(...)` de MSAL était
-appelé au chargement du module dans `src/auth.js` et lance
-`invalid_client_credential` sur un secret vide.
-
-Le client MSAL unique est désormais construit paresseusement via
-`getCCA()` à la première utilisation. Le module se charge proprement
-avec une configuration Entra vide ; tout appel de route d’authentification
-avant que l’assistant ne soit terminé échoue avec un message clair
-« terminez l’assistant à /setup d’abord » au lieu de faire planter le
-processus. L’export `cca` est remplacé par `getCCA` (aucun appelant
-externe n’utilisait `auth.cca`).
-
-C’était le dernier bogue qui bloquait le flux
-`curl install.panoptica365.com/run` → démarrage de la pile Docker →
-parcours de l’assistant → arrivée sur la Console principale.
 
 ---
 

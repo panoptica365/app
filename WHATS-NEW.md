@@ -5,6 +5,30 @@ that release, newest first.
 
 ---
 
+## Version 0.1.19 — 2026-05-25
+
+### Fix: auth.js MSAL instantiation is now lazy
+
+A truly fresh install (installer + empty `ENTRA_CLIENT_SECRET` in `.env`
+until the wizard collects it) was crashing the app at boot, before
+`setupMiddleware` could redirect the user to `/setup`. Root cause: MSAL's
+`new ConfidentialClientApplication(...)` was called at module-load time
+in `src/auth.js` and throws `invalid_client_credential` on an empty secret.
+
+The single MSAL client is now constructed lazily via `getCCA()` on first
+use. The module loads cleanly with empty Entra config; any auth-route
+call before setup completes fails with a clear "complete the setup wizard
+at /setup first" error instead of crashing the process. The `cca` export
+is replaced by `getCCA` (no external callers were using `auth.cca`).
+
+This was the last bug blocking the
+`curl install.panoptica365.com/run` → Docker stack up → walk the wizard
+→ land on Main Console flow. Surfaced by the Stage 4 Part A end-to-end
+test on P365-Test, which is the first install path that ever exercised
+a truly-empty Entra config at boot.
+
+---
+
 ## Version 0.1.18 — 2026-05-25
 
 ### Wizard: Hostname step dropped (now 7 steps)
@@ -23,23 +47,6 @@ their setup state; the new step list still respects the
 `setup-completed-once.flag` backstop. The legacy `/api/setup/hostname`
 endpoint stays in `api-setup.js` for backward compat but is no longer
 called by the frontend.
-
-### Fix: auth.js MSAL instantiation is now lazy
-
-A truly fresh install (installer + empty `ENTRA_CLIENT_SECRET` in `.env`
-until the wizard collects it) used to crash the app at boot, before
-`setupMiddleware` could redirect the user to `/setup`. Root cause: MSAL's
-`new ConfidentialClientApplication(...)` was called at module-load time
-in `src/auth.js` and throws `invalid_client_credential` on an empty secret.
-
-The single MSAL client is now constructed lazily via `getCCA()` on first
-use. The module loads cleanly with empty Entra config; any auth-route
-call before setup completes fails with a clear "complete the setup wizard
-at /setup first" error instead of crashing the process. The `cca` export
-is replaced by `getCCA` (no external callers were using `auth.cca`).
-
-This was the last bug blocking the `curl install.panoptica365.com/run`
-→ Docker stack up → walk the wizard → land on Main Console flow.
 
 ---
 
