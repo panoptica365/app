@@ -26,6 +26,28 @@ filet de sécurité `setup-completed-once.flag`. Le point de terminaison
 hérité `/api/setup/hostname` reste dans `api-setup.js` pour la
 rétrocompatibilité mais n’est plus appelé par le frontend.
 
+### Correctif : instanciation MSAL de auth.js désormais paresseuse
+
+Une installation entièrement neuve (installateur + `ENTRA_CLIENT_SECRET`
+vide dans `.env` jusqu’à ce que l’assistant le collecte) faisait
+auparavant planter l’application au démarrage, avant que
+`setupMiddleware` ne puisse rediriger l’utilisateur vers `/setup`.
+Cause racine : `new ConfidentialClientApplication(...)` de MSAL était
+appelé au chargement du module dans `src/auth.js` et lance
+`invalid_client_credential` sur un secret vide.
+
+Le client MSAL unique est désormais construit paresseusement via
+`getCCA()` à la première utilisation. Le module se charge proprement
+avec une configuration Entra vide ; tout appel de route d’authentification
+avant que l’assistant ne soit terminé échoue avec un message clair
+« terminez l’assistant à /setup d’abord » au lieu de faire planter le
+processus. L’export `cca` est remplacé par `getCCA` (aucun appelant
+externe n’utilisait `auth.cca`).
+
+C’était le dernier bogue qui bloquait le flux
+`curl install.panoptica365.com/run` → démarrage de la pile Docker →
+parcours de l’assistant → arrivée sur la Console principale.
+
 ---
 
 ## Version 0.1.17 — 2026-05-25

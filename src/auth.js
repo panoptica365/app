@@ -15,6 +15,13 @@ const config = require('../config/default');
 const mspAudit = require('./msp-audit');
 
 // ─── MSAL Confidential Client (single-tenant — Trilogiam users login) ───
+// Defer instantiation until first use. On a truly fresh install (installer
+// from install.panoptica365.com/run + setup wizard pending), ENTRA_CLIENT_*
+// values are empty in .env and MSAL throws "invalid_client_credential" at
+// construction time — which would crash the server before the setupMiddleware
+// can redirect the user to /setup. By going lazy, the module loads cleanly,
+// the wizard runs, and getCCA() only fails (with a clear error) if anything
+// other than /setup tries to authenticate before the wizard completes.
 const msalConfig = {
   auth: {
     clientId: config.entra.clientId,
@@ -23,7 +30,17 @@ const msalConfig = {
   },
 };
 
-const cca = new msal.ConfidentialClientApplication(msalConfig);
+let _cca = null;
+function getCCA() {
+  if (_cca) return _cca;
+  if (!config.entra.clientSecret || !config.entra.clientId) {
+    throw new Error(
+      'Entra authentication is not yet configured. Complete the setup wizard at /setup before using auth routes.'
+    );
+  }
+  _cca = new msal.ConfidentialClientApplication(msalConfig);
+  return _cca;
+}
 
 // ─── Token cache for client credential flows (per customer tenant) ───
 // MSAL handles its own in-memory cache, but we track CCAs per tenant
@@ -51,7 +68,7 @@ function getTenantCCA(tenantId) {
  * Generate the authorization URL for user login (Panoptica UI access).
  */
 async function getAuthUrl(state) {
-  return cca.getAuthCodeUrl({
+  return getCCA().getAuthCodeUrl({
     scopes: ['openid', 'profile', 'email', 'User.Read', 'GroupMember.Read.All'],
     redirectUri: config.entra.redirectUri,
     state: state || '',
@@ -63,7 +80,7 @@ async function getAuthUrl(state) {
  * Exchange authorization code for tokens (user login callback).
  */
 async function acquireTokenByCode(code) {
-  return cca.acquireTokenByCode({
+  return getCCA().acquireTokenByCode({
     code,
     scopes: ['openid', 'profile', 'email', 'User.Read', 'GroupMember.Read.All'],
     redirectUri: config.entra.redirectUri,
@@ -451,7 +468,11 @@ function canMemberOrAdmin(req) {
 }
 
 module.exports = {
-  cca,
+  // `cca` export removed in v0.1.18 — it's now lazy via getCCA(). No external
+  // callers used auth.cca (verified by grep), but if a future consumer needs
+  // direct access they should call getCCA() to get the same wizard-pending
+  // guard rather than touching the bare client.
+  getCCA,
   getAuthUrl,
   acquireTokenByCode,
   acquireTokenForTenant,
