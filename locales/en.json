@@ -3111,7 +3111,7 @@
     "welcome": {
       "title": "Welcome to Panoptica365",
       "subtitle": "Let's get your install configured.",
-      "body": "This wizard walks you through 7 steps to configure your Panoptica365 install. You will need your hostname, Entra (Azure AD) app registration credentials, SMTP details, an Anthropic API key, and your Panoptica365 license activation key. Estimated time: 10-15 minutes.",
+      "body": "This wizard walks you through 7 steps to finish configuring your Panoptica365 install. You'll need: Entra (Azure AD) app registration credentials, SMTP details, an Anthropic API key, and your Panoptica365 license activation key. Estimated time: 10-15 minutes.",
       "lang_note": "Use the language picker in the top-right to change the wizard's language at any time. Your selection will be saved as your operator preference after setup completes."
     },
     "hostname": {

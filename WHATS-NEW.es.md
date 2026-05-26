@@ -5,6 +5,29 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.18 — 2026-05-25
+
+### Asistente: paso de Nombre de host eliminado (ahora 7 pasos)
+
+El asistente de configuración inicial ya no pregunta por el nombre de
+host ni el correo de Let’s Encrypt. Esos valores ahora son recopilados
+por el instalador de la etapa 4 en `install.panoptica365.com/run` ANTES
+de que arranque la pila Docker — así Caddy aprovisiona el TLS desde el
+arranque, y el operador va directamente a la URL
+`https://<nombre-de-host>/setup` con TLS válido ya en su lugar. El
+asistente pasa de 8 a 7 pasos: Bienvenida → Registro de aplicación →
+Credenciales de Entra → SMTP → Anthropic → Licencia → Primer inquilino.
+
+Las instalaciones existentes que ya superaron la configuración no se
+ven afectadas. Las instalaciones que ejecutaron el asistente de las
+versiones v0.1.10 a v0.1.17 ya tienen el nombre de host marcado como
+completado en su estado de configuración; la nueva lista de pasos sigue
+respetando la red de seguridad `setup-completed-once.flag`. El endpoint
+heredado `/api/setup/hostname` permanece en `api-setup.js` para
+compatibilidad hacia atrás pero ya no es llamado por el frontend.
+
+---
+
 ## Versión 0.1.17 — 2026-05-25
 
 ### Consola principal: cuadro de búsqueda de inquilinos

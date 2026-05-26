@@ -5,6 +5,27 @@ that release, newest first.
 
 ---
 
+## Version 0.1.18 — 2026-05-25
+
+### Wizard: Hostname step dropped (now 7 steps)
+
+The first-boot wizard no longer prompts for hostname + Let's Encrypt email.
+Those values are now collected by the Stage 4 installer at
+`install.panoptica365.com/run` BEFORE the Docker stack comes up — so Caddy
+provisions TLS from boot, and the operator goes straight to the
+`https://<hostname>/setup` URL with valid TLS already in place. Wizard
+goes from 8 steps to 7: Welcome → App Registration → Entra Credentials →
+SMTP → Anthropic → License → First Tenant.
+
+Existing installs already past setup are unaffected. Installs that ran
+the v0.1.10–v0.1.17 wizard previously have hostname marked complete in
+their setup state; the new step list still respects the
+`setup-completed-once.flag` backstop. The legacy `/api/setup/hostname`
+endpoint stays in `api-setup.js` for backward compat but is no longer
+called by the frontend.
+
+---
+
 ## Version 0.1.17 — 2026-05-25
 
 ### Main console: tenant search box

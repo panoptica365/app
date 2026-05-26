@@ -21,13 +21,19 @@
 
   // ─── State ─────────────────────────────────────────────────────────
 
-  // 8 wizard steps. Maps display index → step key (matches state.js
+  // 7 wizard steps. Maps display index → step key (matches state.js
   // REQUIRED_STEPS + OPTIONAL_STEPS naming).
   // v0.1.13 — added 'app_reg' between hostname and entra. The app_reg
   // step is the modal-driven Entra app registration instructions.
+  // v0.1.18 — dropped 'hostname'. Stage 4 installer at
+  // install.panoptica365.com/run prompts for hostname + Let's Encrypt
+  // email upfront and writes both to .env before the stack comes up.
+  // Caddy provisions TLS from boot. Wizard never sees hostname now —
+  // renderHostnameStep is dead code, left in this file as a no-op safety
+  // net in case some future code path (operator visiting old /setup URL
+  // with a half-state setup.json) lands on it.
   const WIZARD_STEPS = [
     { key: 'language',     i18nKey: 'setup.step.welcome',      renderer: renderWelcomeStep },
-    { key: 'hostname',     i18nKey: 'setup.step.hostname',     renderer: renderHostnameStep },
     { key: 'app_reg',      i18nKey: 'setup.step.app_reg',      renderer: renderAppRegStep },
     { key: 'entra',        i18nKey: 'setup.step.entra',        renderer: renderEntraStep },
     { key: 'smtp',         i18nKey: 'setup.step.smtp',         renderer: renderSmtpStep },

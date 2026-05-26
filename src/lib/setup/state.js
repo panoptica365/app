@@ -58,7 +58,13 @@ const SCHEMA_VERSION = 1;
 // adding new required wizard steps. Order is the wizard's display order.
 const REQUIRED_STEPS = [
   'language',     // operator picked / confirmed wizard language
-  'hostname',     // PANOPTICA365_HOSTNAME + LETSENCRYPT_EMAIL written to .env
+                  // (v0.1.18 — hostname step dropped; the Stage 4 installer at
+                  //  install.panoptica365.com/run prompts for hostname +
+                  //  Let's Encrypt email upfront and writes them to .env BEFORE
+                  //  the stack comes up. Caddy provisions TLS from boot. The
+                  //  wizard never asks for hostname. The legacy /api/setup/hostname
+                  //  endpoint stays in api-setup.js for backward compat but is
+                  //  no longer called from the wizard's frontend.)
   'app_reg',      // operator acknowledged completing the Entra app registration
                   //   (v0.1.13+; no data captured — just a "yes I did it" ack
                   //   that gates the wizard until they've followed the modal).

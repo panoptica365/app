@@ -3111,7 +3111,7 @@
     "welcome": {
       "title": "Bienvenue dans Panoptica365",
       "subtitle": "Configurons votre installation.",
-      "body": "Cet assistant vous guide à travers 7 étapes pour configurer votre installation Panoptica365. Vous aurez besoin de votre nom d’hôte, des identifiants d’inscription d’application Entra (Azure AD), des détails SMTP, d’une clé API Anthropic et de votre clé d’activation de licence Panoptica365. Durée estimée : 10 à 15 minutes.",
+      "body": "Cet assistant vous guide à travers 7 étapes pour finaliser la configuration de votre installation Panoptica365. Vous aurez besoin : des identifiants d’inscription d’application Entra (Azure AD), des détails SMTP, d’une clé API Anthropic et de votre clé d’activation de licence Panoptica365. Durée estimée : 10 à 15 minutes.",
       "lang_note": "Utilisez le sélecteur de langue en haut à droite pour changer la langue de l’assistant à tout moment. Votre sélection sera enregistrée comme préférence d’opérateur une fois la configuration terminée."
     },
     "hostname": {
