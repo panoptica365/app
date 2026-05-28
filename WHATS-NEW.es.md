@@ -5,6 +5,72 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.20 — 2026-05-28
+
+### Panel del inquilino: los conteos de dispositivos Intune ahora cuadran
+
+El panel del inquilino mostraba tres conteos de dispositivos que no
+coincidían: la tarjeta **Dispositivos** (total de dispositivos
+registrados en Entra), el subtítulo `X/Y cumplen` debajo (dispositivos
+con un veredicto de cumplimiento registrado en Entra) y el contador de
+la tabla **Dispositivos administrados por Intune** (dispositivos
+inscritos en Intune). Entra e Intune rastrean poblaciones diferentes —
+Entra cuenta cada dispositivo que alguna vez se registró en el
+directorio, Intune solo cuenta los dispositivos actualmente inscritos en
+MDM — así que los tres números eran cada uno correctos por separado
+pero parecían contradictorios juntos.
+
+Las tarjetas Dispositivos y Administrados se reemplazaron por una sola
+tarjeta **Dispositivos que cumplen**. Muestra el porcentaje de
+dispositivos Intune evaluables que cumplen — la única fuente donde
+Microsoft realmente produce un veredicto de cumplimiento por
+dispositivo. El subtítulo indica `X de Y cumplen`, más `Z no evaluados`
+cuando algunos dispositivos caen en la categoría no evaluados
+(típicamente servidores administrados por Defender for Endpoint en lugar
+de Intune). Los servidores en MDE ya no arrastran la puntuación a la
+baja — simplemente no forman parte del porcentaje.
+
+Aparece una pequeña flecha de tendencia junto al porcentaje cuando la
+puntuación de cumplimiento ha cambiado desde el sondeo anterior:
+`▲ +N%` verde si mejoró, `▼ −N%` rojo si empeoró, nada cuando está
+estable o es el primer sondeo. La tendencia se calcula por inquilino
+en cada ciclo de sondeo y se incrusta en la métrica
+`intune_compliance`.
+
+### Panel del inquilino: la tabla de Intune muestra todos los dispositivos
+
+El panel **Dispositivos administrados por Intune** estaba limitado a
+30 filas con un sustituto `... y N más` — inútil en inquilinos con más
+de 100 dispositivos. El panel ahora muestra cada dispositivo en un
+contenedor desplazable (≈25 filas visibles, el resto accesibles
+desplazándose) con encabezado fijo. La columna **Cumplimiento** muestra
+`Cumple`, `No cumple` o `No evaluado` en lugar del vocabulario crudo
+de ocho estados de Microsoft (`unknown`, `inGracePeriod`, `conflict`,
+`error`, `notAssigned`, `configManager`, etc.). Las reglas de
+agrupación: `compliant` y `inGracePeriod` cuentan como cumplen
+(Microsoft mismo trata los dispositivos en período de gracia como
+conformes para el acceso condicional); `noncompliant`, `conflict` y
+`error` cuentan como no cumplen; todo lo demás es no evaluado.
+
+### Panel del inquilino: el subtítulo de Usuarios totales ahora cuadra
+
+El subtítulo de la tarjeta **Usuarios totales** decía antes
+`{licensed} con licencia, {guests} invitados` — lo que excluía
+silenciosamente a los miembros sin licencia, por lo que las dos cifras no
+sumaban el total (por ejemplo, un inquilino con 58 usuarios mostraba
+`8 con licencia, 40 invitados`, dejando 10 miembros sin licencia
+invisibles). El subtítulo ahora indica `{licensed} con licencia,
+{unlicensed} sin licencia, {guests} invitados` para que las tres cifras
+siempre cuadren con el total.
+
+El conteo `licensed` en el subtítulo ahora excluye a los invitados con
+licencia — útil para comprender el tamaño de la plantilla interna. La
+telemetría interna de facturación de asientos al servidor de licencias
+permanece sin cambios (sigue contando todos los usuarios con licencia,
+miembros o invitados); solo se ajustó el subtítulo del panel.
+
+---
+
 ## Versión 0.1.19 — 2026-05-25
 
 ### Corrección: la instanciación MSAL de auth.js ahora es perezosa

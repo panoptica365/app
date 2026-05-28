@@ -2027,6 +2027,44 @@ body.role-viewer [data-role-readonly="member"] {
   background: rgba(68, 136, 255, 0.04);
 }
 
+/* Intune Managed Devices table — scrollable container so tenants with
+   100+ devices don't make the whole dashboard scroll. ~25 rows visible
+   (row ≈ 28px under .td-list-table padding) + room for the sticky header. */
+.td-intune-scroll {
+  max-height: 740px;
+  overflow-y: auto;
+  border: 1px solid rgba(51, 68, 119, 0.25);
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.td-intune-scroll .td-list-table {
+  margin-top: 0;
+}
+.td-intune-scroll .td-list-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--p-surface);
+  z-index: 1;
+}
+.td-compliance-not-eval {
+  color: var(--p-text-muted);
+  font-style: italic;
+}
+
+/* Trend arrow on the Compliant Devices stat card — small inline glyph
+   following the percentage. Green when the percentage rose since the
+   previous poll, red when it fell. */
+.td-trend {
+  display: inline-block;
+  font-size: 0.55em;
+  font-weight: 600;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+.td-trend-up { color: var(--status-healthy); }
+.td-trend-down { color: var(--status-broken); }
+
 /* ─── Section Header ─── */
 .td-section-header {
   font-family: var(--font-heading);

@@ -5,6 +5,66 @@ that release, newest first.
 
 ---
 
+## Version 0.1.20 — 2026-05-28
+
+### Tenant dashboard: Intune device counts now reconcile
+
+The tenant dashboard had three different device counts that didn't agree:
+the **Devices** stat card (total Entra-registered devices), the
+`X/Y compliant` subtitle under it (devices with a compliance verdict
+recorded in Entra), and the **Intune Managed Devices** table count (devices
+enrolled in Intune). Entra and Intune track different populations — Entra
+counts every device that ever registered with the directory, Intune only
+counts devices currently enrolled in MDM — so the three numbers were each
+correct in isolation but looked contradictory side-by-side.
+
+The Devices and Managed stat cards have been replaced with a single
+**Compliant Devices** card. It shows the percentage of Intune-evaluable
+devices that are compliant — the only source where Microsoft actually
+produces a per-device compliance verdict. The subtitle reads
+`X of Y compliant` plus `Z not evaluated` when any devices fall into the
+not-evaluated bucket (typically servers managed by Defender for Endpoint
+rather than Intune). Servers on MDE no longer drag the score down — they
+simply aren't part of the percentage.
+
+A small trend arrow appears next to the percentage when the compliance
+score has changed since the previous poll: green `▲ +N%` if it improved,
+red `▼ −N%` if it regressed, nothing when it's flat or this is the first
+poll. Trend is computed per tenant per poll cycle and embedded in the
+`intune_compliance` metric snapshot.
+
+### Tenant dashboard: Intune table shows every device
+
+The **Intune Managed Devices** panel was capped at 30 rows with a
+`... and N more` placeholder — useless on tenants with 100+ devices.
+The panel now renders every device in a scrollable container (≈25 rows
+visible, the rest reachable by scroll) with a sticky header. The
+**Compliance** column shows `Compliant`, `Non compliant`, or
+`Not evaluated` instead of Microsoft's raw eight-state vocabulary
+(`unknown`, `inGracePeriod`, `conflict`, `error`, `notAssigned`,
+`configManager`, etc.). The bucketing rules: `compliant` and
+`inGracePeriod` count as compliant (Microsoft itself treats grace-period
+devices as compliant for CA purposes); `noncompliant`, `conflict`, and
+`error` count as non compliant; everything else is not evaluated.
+
+### Tenant dashboard: Total Users subtitle now adds up
+
+The **Total Users** card subtitle previously read
+`{licensed} licensed, {guests} guests` — which silently excluded
+unlicensed members from the breakdown, so the two numbers didn't add
+up to the total (e.g. a tenant with 58 users would show
+`8 licensed, 40 guests`, leaving 10 unlicensed members invisible).
+The subtitle is now `{licensed} licensed, {unlicensed} unlicensed,
+{guests} guests` so the three numbers always reconcile to the total.
+
+The `licensed` count in the subtitle now excludes licensed guests —
+useful for understanding the in-house workforce sizing. The platform's
+internal seat-billing telemetry to the license server is unchanged
+(still counts all licensed users regardless of guest/member); only the
+dashboard subtitle was tightened.
+
+---
+
 ## Version 0.1.19 — 2026-05-25
 
 ### Fix: auth.js MSAL instantiation is now lazy

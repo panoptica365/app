@@ -317,6 +317,46 @@ async function pollTenant(tenant, socketIO, forceFull = false) {
  * O(1) — see ensureLatestSnapshotsTable() for context.
  */
 async function storeSnapshot(tenantDbId, service, metricName, metricValue) {
+  // intune_compliance carries a poll-over-poll trend signal — read the
+  // previous poll's value out of metric_snapshots_latest BEFORE we
+  // overwrite it, then embed previous_percentage + trend into the new
+  // payload. Done here (vs. in fetchers.js) because fetchers don't have
+  // a DB handle and we want fetchers.js to stay a pure Graph→data layer.
+  if (metricName === 'intune_compliance' && metricValue && typeof metricValue === 'object') {
+    try {
+      const prev = await db.queryOne(
+        `SELECT metric_value FROM metric_snapshots_latest
+         WHERE tenant_id = ? AND service = ? AND metric_name = 'intune_compliance'`,
+        [tenantDbId, service]
+      );
+      if (prev && prev.metric_value != null) {
+        let prevVal = prev.metric_value;
+        if (typeof prevVal === 'string') {
+          try { prevVal = JSON.parse(prevVal); } catch { prevVal = null; }
+        }
+        const prevPct = prevVal && typeof prevVal.percentage === 'number' ? prevVal.percentage : null;
+        const curPct = typeof metricValue.percentage === 'number' ? metricValue.percentage : null;
+        metricValue.previous_percentage = prevPct;
+        if (prevPct == null || curPct == null) {
+          metricValue.trend = null;
+        } else if (curPct > prevPct) {
+          metricValue.trend = 'up';
+        } else if (curPct < prevPct) {
+          metricValue.trend = 'down';
+        } else {
+          metricValue.trend = 'flat';
+        }
+      } else {
+        metricValue.previous_percentage = null;
+        metricValue.trend = null;
+      }
+    } catch (err) {
+      console.warn(`[Polling] intune_compliance trend lookup failed (tenant ${tenantDbId}):`, err.message);
+      metricValue.previous_percentage = null;
+      metricValue.trend = null;
+    }
+  }
+
   const payload = JSON.stringify(metricValue);
   try {
     await db.insert(

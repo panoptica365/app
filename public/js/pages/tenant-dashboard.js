@@ -428,7 +428,27 @@
     // Licensing summary
     const us = entra.user_summary;
     if (us) {
-      cards += statCard(window.t('tenant_dashboard.card.total_users'), us.total, window.t('tenant_dashboard.card.total_users_subtitle', { licensed: us.licensed, guests: us.guests }));
+      // Subtitle has to reconcile to the displayed total: previously it
+      // showed only `licensed` + `guests`, which silently hid unlicensed
+      // members (e.g. 8 licensed + 40 guests = 48, not the 58 shown).
+      // licensed_members + unlicensed + guests = total always (members =
+      // licensed_members + unlicensed; total = members + guests).
+      //
+      // Fallback for snapshots polled before licensed_members was added:
+      // members − unlicensed gives the same value without needing the
+      // new field.
+      const licensedMembers = us.licensed_members != null
+        ? us.licensed_members
+        : Math.max(0, (us.total ?? 0) - (us.guests ?? 0) - (us.unlicensed ?? 0));
+      cards += statCard(
+        window.t('tenant_dashboard.card.total_users'),
+        us.total,
+        window.t('tenant_dashboard.card.total_users_subtitle', {
+          licensed: licensedMembers,
+          unlicensed: us.unlicensed,
+          guests: us.guests,
+        })
+      );
       cards += statCard(window.t('tenant_dashboard.card.licensed'), us.licensed, window.t('tenant_dashboard.card.licensed_subtitle', { unlicensed: us.unlicensed }), us.unlicensed > 0 ? 'var(--status-degraded)' : 'var(--status-healthy)');
     }
 
@@ -473,12 +493,58 @@
         syncOn ? lastSync : '', syncOn ? 'var(--status-healthy)' : 'var(--p-text-muted)');
     }
 
-    // Devices
-    const dc = entra.device_counts;
-    if (dc) {
-      cards += statCard(window.t('tenant_dashboard.card.devices'), dc.total, window.t('tenant_dashboard.card.devices_compliant', { compliant: dc.compliant, total: (dc.compliant_applicable || dc.total) }));
-      cards += statCard(window.t('tenant_dashboard.card.managed'), window.t('tenant_dashboard.card.managed_value', { managed: dc.managed, total: (dc.managed_applicable || dc.total) }), '',
-        dc.managed === (dc.managed_applicable || dc.total) ? 'var(--status-healthy)' : 'var(--status-degraded)');
+    // Devices — single "Compliant Devices" card driven off Intune managed
+    // devices (the only source where Microsoft actually evaluates
+    // compliance). The previous two cards (Entra device count + Entra
+    // managed ratio) caused MSP confusion: Entra devices and Intune-managed
+    // devices are different populations, and showing both totals next to a
+    // "X of Y compliant" subtitle from Entra (which counts isCompliant!=null,
+    // not actual policy state) produced apparently-contradictory numbers.
+    // Now: one card, percentage of evaluable Intune devices that are
+    // compliant, with a trend arrow vs. the previous poll.
+    const ic = entra.intune_compliance;
+    const dc = entra.device_counts; // kept for the "Devices by OS" panel below
+    if (ic && ic.total > 0) {
+      const evaluable = ic.compliant + ic.noncompliant;
+      const pct = ic.percentage;
+      const pctDisplay = pct == null ? '—' : (pct + '%');
+      const color = pct == null
+        ? 'var(--p-text-muted)'
+        : pct >= 90 ? 'var(--status-healthy)'
+        : pct >= 70 ? 'var(--status-degraded)'
+        : 'var(--status-broken)';
+      let subtitle = window.t('tenant_dashboard.card.compliant_subtitle', { compliant: ic.compliant, evaluated: evaluable });
+      if (ic.notEvaluated > 0) {
+        subtitle += window.t('tenant_dashboard.card.not_evaluated_suffix', { count: ic.notEvaluated });
+      }
+      // Trend arrow: ▲ if percentage rose since last poll, ▼ if it fell,
+      // — if unchanged or no prior data point. Color matches direction
+      // (green for improvement, red for regression).
+      let trendHtml = '';
+      if (ic.trend === 'up' || ic.trend === 'down') {
+        const delta = (pct != null && ic.previous_percentage != null) ? (pct - ic.previous_percentage) : null;
+        const sign = ic.trend === 'up' ? '▲' : '▼';
+        const cls = ic.trend === 'up' ? 'td-trend-up' : 'td-trend-down';
+        const deltaTxt = delta == null ? '' : ` ${delta > 0 ? '+' : ''}${delta}%`;
+        const title = window.t('tenant_dashboard.card.trend_vs_previous_poll');
+        trendHtml = ` <span class="td-trend ${cls}" title="${esc(title)}">${sign}${esc(deltaTxt)}</span>`;
+      }
+      cards += statCard(
+        window.t('tenant_dashboard.card.compliant_devices'),
+        pctDisplay + trendHtml,
+        subtitle,
+        color
+      );
+    } else if (dc && dc.total > 0) {
+      // Tenant has Entra devices but no Intune license / no Intune
+      // managed devices. Fall back to a plain device count so the card
+      // doesn't disappear entirely.
+      cards += statCard(
+        window.t('tenant_dashboard.card.devices'),
+        dc.total,
+        window.t('tenant_dashboard.card.no_intune_data'),
+        'var(--p-text-muted)'
+      );
     }
 
     // SharePoint
@@ -688,16 +754,29 @@
       const intune = entra.intune_devices;
       if (intune && intune.length > 0) {
         panels += collapsePanel(window.t('tenant_dashboard.panel.intune_managed_devices'), intune.length, () => {
-          let t = `<table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.device')}</th><th>${window.t('tenant_dashboard.col.os')}</th><th>${window.t('tenant_dashboard.col.compliance')}</th><th>${window.t('tenant_dashboard.col.user')}</th><th>${window.t('tenant_dashboard.col.last_sync')}</th></tr></thead><tbody>`;
+          // Render ALL rows — operators were getting confused when the
+          // visible count (capped at 30) didn't match the badge count.
+          // Height is constrained by .td-intune-scroll CSS so a tenant
+          // with 200+ devices doesn't make the dashboard scroll forever.
+          let t = `<div class="td-intune-scroll"><table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.device')}</th><th>${window.t('tenant_dashboard.col.os')}</th><th>${window.t('tenant_dashboard.col.compliance')}</th><th>${window.t('tenant_dashboard.col.user')}</th><th>${window.t('tenant_dashboard.col.last_sync')}</th></tr></thead><tbody>`;
           const _lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
           const _dateLocale = _lang === 'fr' ? 'fr-CA' : (_lang === 'es' ? 'es' : 'en-CA');
-          intune.slice(0, 30).forEach(d => {
-            const cCls = d.complianceState === 'compliant' ? 'score-green' : d.complianceState === 'noncompliant' ? 'severity-high' : '';
+          intune.forEach(d => {
+            // Display the 3-bucket label (Compliant / Non compliant /
+            // Not evaluated), not the raw Graph complianceState string.
+            // complianceBucket is set in fetchers.js; fall back for any
+            // historical row written before this rolled out.
+            const bucket = d.complianceBucket || bucketComplianceStateClient(d.complianceState);
+            const cCls = bucket === 'compliant' ? 'score-green'
+              : bucket === 'noncompliant' ? 'severity-high'
+              : 'td-compliance-not-eval';
+            const label = bucket === 'compliant' ? window.t('tenant_dashboard.compliance.compliant')
+              : bucket === 'noncompliant' ? window.t('tenant_dashboard.compliance.noncompliant')
+              : window.t('tenant_dashboard.compliance.not_evaluated');
             const lastSync = d.lastSync ? new Date(d.lastSync).toLocaleDateString(_dateLocale) : '—';
-            t += `<tr><td>${esc(d.deviceName)}</td><td>${esc(d.os)}</td><td class="${cCls}">${esc(d.complianceState || '—')}</td><td>${esc(d.user || '—')}</td><td>${lastSync}</td></tr>`;
+            t += `<tr><td>${esc(d.deviceName)}</td><td>${esc(d.os)}</td><td class="${cCls}">${esc(label)}</td><td>${esc(d.user || '—')}</td><td>${lastSync}</td></tr>`;
           });
-          if (intune.length > 30) t += `<tr><td colspan="5" style="text-align:center; color:var(--p-text-muted);">${window.t('tenant_dashboard.more_rows', { count: intune.length - 30 })}</td></tr>`;
-          return t + '</tbody></table>';
+          return t + '</tbody></table></div>';
         });
       }
     }
@@ -1287,6 +1366,15 @@
   }
   function esc(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
   function el(id) { return document.getElementById(id); }
+
+  // Backstop for rows polled before the fetcher started writing
+  // complianceBucket. Mirrors bucketComplianceState() in src/fetchers.js;
+  // keep the two in sync if the bucketing rules ever change.
+  function bucketComplianceStateClient(state) {
+    if (state === 'compliant' || state === 'inGracePeriod') return 'compliant';
+    if (state === 'noncompliant' || state === 'conflict' || state === 'error') return 'noncompliant';
+    return 'not_evaluated';
+  }
 
   // ═══════════════════════════════════════
   // CA POLICIES — TENANT ASSIGNMENTS

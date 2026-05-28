@@ -2435,7 +2435,7 @@
       "similar_size_avg": "Similar size avg: {pct}%",
       "score_format": "{cur} / {max}",
       "total_users": "Total Users",
-      "total_users_subtitle": "{licensed} licensed, {guests} guests",
+      "total_users_subtitle": "{licensed} licensed, {unlicensed} unlicensed, {guests} guests",
       "licensed": "Licensed",
       "licensed_subtitle": "{unlicensed} unlicensed",
       "global_admins": "Global Admins",
@@ -2453,6 +2453,11 @@
       "devices_compliant": "{compliant}/{total} compliant",
       "managed": "Managed",
       "managed_value": "{managed}/{total}",
+      "compliant_devices": "Compliant Devices",
+      "compliant_subtitle": "{compliant} of {evaluated} compliant",
+      "not_evaluated_suffix": ", {count} not evaluated",
+      "trend_vs_previous_poll": "Change since the previous poll",
+      "no_intune_data": "No Intune data — license or permission missing",
       "sp_sites": "SP Sites",
       "sp_sites_subtitle": "{gb} GB, {files} files",
       "anon_links": "Anon Links",
@@ -2588,6 +2593,11 @@
       "last_activity": "Last Activity",
       "trust_type": "Trust Type",
       "risk_level": "Risk Level"
+    },
+    "compliance": {
+      "compliant": "Compliant",
+      "noncompliant": "Non compliant",
+      "not_evaluated": "Not evaluated"
     },
     "dns_label": {
       "default": "DEFAULT",

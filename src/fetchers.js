@@ -222,6 +222,7 @@ async function fetchLicensing(tenantId) {
             displayName: user.displayName,
             userPrincipalName: user.userPrincipalName,
             enabled: user.accountEnabled,
+            isGuest: guest,
             licenses: []
           };
         }
@@ -243,11 +244,24 @@ async function fetchLicensing(tenantId) {
   data.licenses = licenses;
   data.licensedUsers = licensedUsers;
   data.unlicensedUsers = unlicensedUsers;
+  // licensed_members vs licensed: the dashboard Total Users subtitle
+  // needs licensed_members + unlicensed + guests to reconcile to total,
+  // which means it can't use `licensed` (which counts licensed users of
+  // either type — members AND guests). DO NOT change `licensed` itself:
+  // src/lib/license/refresh-client.js sums it across tenants for the
+  // billing seat count reported to the license server, and api-reports.js
+  // uses it in tenant PDFs. Add a new field instead.
+  // licensedUsers comes from Object.values(licensedUserMap) and carries
+  // the per-user isGuest flag from the build loop above. Using that flag
+  // is more reliable than re-deriving from the UPN — B2B guests can
+  // have custom-domain UPNs without the standard #EXT# marker.
+  const licensedMembers = licensedUsers.filter(u => u.isGuest !== true).length;
   data.user_summary = {
     total: users.length,
     members: users.length - guestCount,
     guests: guestCount,
     licensed: licensedUsers.length,
+    licensed_members: licensedMembers,
     unlicensed: unlicensedUsers.length,
   };
 
@@ -303,6 +317,7 @@ async function fetchDevices(tenantId) {
       os: d.operatingSystem,
       osVersion: d.osVersion,
       complianceState: d.complianceState,
+      complianceBucket: bucketComplianceState(d.complianceState),
       managementAgent: d.managementAgent,
       enrolled: d.enrolledDateTime,
       lastSync: d.lastSyncDateTime,
@@ -320,7 +335,55 @@ async function fetchDevices(tenantId) {
     data.intune_devices = [];
   }
 
+  // Derived: a single source of truth for the "Compliant Devices" dashboard
+  // widget. Bucketing the 8 Intune complianceState values down to 3 buckets
+  // (compliant / noncompliant / not_evaluated) keeps the operator UI free of
+  // Graph-internal jargon. The percentage uses (compliant + noncompliant) as
+  // the denominator on purpose: MDE-managed servers report complianceState
+  // 'unknown' (no Intune policy assigned) and would otherwise drag the
+  // score down on every fleet with a server population.
+  {
+    const summary = { total: 0, compliant: 0, noncompliant: 0, notEvaluated: 0, percentage: null };
+    for (const d of (data.intune_devices || [])) {
+      summary.total++;
+      if (d.complianceBucket === 'compliant') summary.compliant++;
+      else if (d.complianceBucket === 'noncompliant') summary.noncompliant++;
+      else summary.notEvaluated++;
+    }
+    const evaluable = summary.compliant + summary.noncompliant;
+    if (evaluable > 0) {
+      summary.percentage = Math.round((summary.compliant / evaluable) * 100);
+    }
+    data.intune_compliance = summary;
+  }
+
   return data;
+}
+
+// Map Microsoft's 8 Intune complianceState values to the 3 buckets we
+// surface in the UI. Intune docs list: unknown, compliant, noncompliant,
+// conflict, error, inGracePeriod, configManager, notAssigned.
+//   - inGracePeriod → compliant (Microsoft itself treats grace-period
+//     devices as compliant for CA purposes; surfacing them as a separate
+//     bucket would just confuse the operator).
+//   - conflict + error → noncompliant (something is wrong on the device
+//     and no policy is being applied cleanly — operator needs to know).
+//   - unknown + notAssigned + configManager → not_evaluated (no Intune
+//     compliance policy is producing a verdict for this device; typical
+//     for MDE-managed servers, Co-managed devices, freshly-enrolled
+//     devices whose first eval hasn't run).
+function bucketComplianceState(state) {
+  switch (state) {
+    case 'compliant':
+    case 'inGracePeriod':
+      return 'compliant';
+    case 'noncompliant':
+    case 'conflict':
+    case 'error':
+      return 'noncompliant';
+    default:
+      return 'not_evaluated';
+  }
 }
 
 // ─── SharePoint Usage (two-source merge from PA) ───

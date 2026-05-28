@@ -5,6 +5,71 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.20 — 2026-05-28
+
+### Tableau de bord du locataire : les nombres d'appareils Intune se réconcilient
+
+Le tableau de bord du locataire affichait trois nombres d'appareils qui ne
+concordaient pas : la tuile **Appareils** (total des appareils enregistrés
+dans Entra), le sous-titre `X/Y conformes` en dessous (appareils ayant un
+verdict de conformité enregistré dans Entra) et le compteur du tableau
+**Appareils gérés par Intune** (appareils inscrits à Intune). Entra et
+Intune comptent des populations différentes — Entra compte chaque appareil
+qui s'est déjà enregistré dans le répertoire, Intune ne compte que les
+appareils actuellement inscrits en MDM — donc les trois chiffres étaient
+chacun corrects isolément mais semblaient se contredire côte à côte.
+
+Les tuiles Appareils et Gérés ont été remplacées par une seule tuile
+**Appareils conformes**. Elle affiche le pourcentage d'appareils Intune
+évaluables qui sont conformes — la seule source où Microsoft produit
+réellement un verdict de conformité par appareil. Le sous-titre indique
+`X sur Y conformes`, plus `Z non évalués` lorsque certains appareils
+tombent dans le panier non évalué (typiquement les serveurs gérés par
+Defender for Endpoint plutôt que par Intune). Les serveurs sur MDE ne
+font plus baisser le score — ils ne font tout simplement pas partie du
+pourcentage.
+
+Une petite flèche de tendance apparaît à côté du pourcentage lorsque le
+score de conformité a changé depuis le dernier sondage : `▲ +N%` vert si
+amélioration, `▼ −N%` rouge si régression, rien quand c'est stable ou
+qu'il s'agit du premier sondage. La tendance est calculée par locataire
+à chaque cycle de sondage et embarquée dans le métrique
+`intune_compliance`.
+
+### Tableau de bord du locataire : le tableau Intune montre tous les appareils
+
+Le panneau **Appareils gérés par Intune** était plafonné à 30 lignes avec
+un substitut `... et N de plus` — inutile sur les locataires avec
+100+ appareils. Le panneau affiche maintenant chaque appareil dans un
+conteneur défilant (≈25 lignes visibles, le reste accessible par
+défilement) avec un en-tête fixe. La colonne **Conformité** affiche
+`Conforme`, `Non conforme` ou `Non évalué` au lieu du vocabulaire brut de
+huit états de Microsoft (`unknown`, `inGracePeriod`, `conflict`, `error`,
+`notAssigned`, `configManager`, etc.). Les règles de regroupement :
+`compliant` et `inGracePeriod` comptent comme conformes (Microsoft
+lui-même traite les appareils en période de grâce comme conformes pour
+les besoins de l'accès conditionnel) ; `noncompliant`, `conflict` et
+`error` comptent comme non conformes ; tout le reste est non évalué.
+
+### Tableau de bord du locataire : le sous-titre Utilisateurs totaux se réconcilie
+
+Le sous-titre de la tuile **Utilisateurs totaux** affichait auparavant
+`{licensed} licenciés, {guests} invités` — ce qui omettait silencieusement
+les membres non licenciés, de sorte que les deux chiffres ne s'additionnaient
+pas au total (par exemple, un locataire avec 58 utilisateurs affichait
+`8 licenciés, 40 invités`, laissant 10 membres non licenciés invisibles).
+Le sous-titre indique désormais `{licensed} licenciés, {unlicensed} non
+licenciés, {guests} invités` pour que les trois chiffres se réconcilient
+toujours au total.
+
+Le compte `licensed` dans le sous-titre exclut maintenant les invités
+licenciés — utile pour comprendre la taille de l'effectif interne. La
+télémétrie interne de facturation des sièges vers le serveur de licence
+reste inchangée (compte toujours tous les utilisateurs licenciés, membre
+ou invité) ; seul le sous-titre du tableau de bord a été resserré.
+
+---
+
 ## Version 0.1.19 — 2026-05-25
 
 ### Correctif : instanciation MSAL de auth.js désormais paresseuse
