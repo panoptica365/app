@@ -5,6 +5,24 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.21 — 2026-05-29
+
+### La Evaluación rápida ahora usa Claude Opus 4.8
+
+El informe de Evaluación rápida — el análisis profundo de las brechas en la
+postura de seguridad de un inquilino, redactado por la IA — ahora usa el
+modelo de nivel superior más reciente de Anthropic, Claude Opus 4.8, lanzado
+esta semana. Anteriormente estaba fijado en Opus 4.7.
+
+Se trata únicamente de una actualización del modelo: nada cambia en la forma
+en que genera una evaluación ni en lo que cubre el informe. Opus 4.8 aporta un
+razonamiento más sólido y un análisis más preciso, así que espere hallazgos
+más ajustados y mejor priorizados. El modelo aún puede sobrescribirse por
+instalación mediante la variable de entorno `OPUS_MODEL` para los operadores
+que deseen fijar una versión específica.
+
+---
+
 ## Versión 0.1.20 — 2026-05-28
 
 ### Panel del inquilino: los conteos de dispositivos Intune ahora cuadran

@@ -5,6 +5,22 @@ that release, newest first.
 
 ---
 
+## Version 0.1.21 — 2026-05-29
+
+### Quick Assessment now runs on Claude Opus 4.8
+
+The Quick Assessment report — the deep, AI-written gap analysis of a
+tenant's security posture — now uses Anthropic's latest top-tier model,
+Claude Opus 4.8, released this week. Previously it was pinned to Opus 4.7.
+
+This is a model upgrade only: nothing changes in how you generate an
+assessment or what the report covers. Opus 4.8 brings stronger reasoning
+and more accurate analysis, so expect tighter, better-prioritized findings.
+The model can still be overridden per-install via the `OPUS_MODEL`
+environment variable for operators who want to pin a specific version.
+
+---
+
 ## Version 0.1.20 — 2026-05-28
 
 ### Tenant dashboard: Intune device counts now reconcile
