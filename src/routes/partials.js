@@ -44,6 +44,10 @@ router.get('/tenant-dashboard', servePartial('tenant-dashboard.html'));
 // ─── Alert Dashboard ───
 router.get('/alerts', servePartial('alerts.html'));
 
+// ─── Heatmap (multi-tenant posture roll-up) ───
+// Read-only, visible to all tiers (requireAuth via router.use above; no admin gate).
+router.get('/heatmap', servePartial('heatmap.html'));
+
 // ─── Reports ───
 router.get('/reports', servePartial('reports.html'));
 

@@ -5,6 +5,51 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.24 — 2026-05-30
+
+### Nouveauté : Carte thermique — la posture de sécurité de chaque locataire, côte à côte
+
+Une nouvelle page **Carte thermique** s'ajoute à la section Console (juste
+au-dessus de Locataires). Elle présente la posture de sécurité de chaque
+locataire géré selon les mêmes catégories — Identité, Courriel et Exchange,
+SharePoint, Teams, Conformité — dans une seule grille, afin de repérer d'un
+coup d'œil quel contrôle est faible dans l'ensemble du parc et de lancer une
+seule campagne « corriger partout ».
+
+Chaque cellule de catégorie affiche une rangée de pastilles d'état, une par
+contrôle, colorée selon l'état réel du contrôle : vert (sain), rouge (dérive),
+ambre (pas encore configuré), une pastille neutre hachurée (non disponible sur
+ce locataire) et une pastille texturée (aucune donnée pour l'instant). Cliquez
+sur un en-tête de catégorie pour la développer en contrôles individuels, et
+cliquez sur n'importe quel locataire, cellule ou pastille pour accéder
+directement à la page de détail Sécurité de ce locataire. Toute la page est en
+lecture seule — elle ne modifie jamais rien sur un locataire.
+
+Au-dessus de la grille : un pourcentage de santé pour l'ensemble du parc, un
+panneau « Faiblesses générales » classant les contrôles faibles chez le plus
+de locataires (cliquez sur l'un d'eux pour voir les locataires touchés et la
+description du contrôle), et un panneau « Variations » qui mettra en évidence
+le locataire ayant le plus régressé sur une fenêtre glissante de 7 jours. Le
+panneau Variations affiche un message « constitution de la référence » jusqu'à
+ce qu'une semaine d'historique quotidien soit accumulée, puis commence à
+présenter les tendances réelles.
+
+Le pourcentage principal sous le nom de chaque locataire se lit « sains ÷
+contrôles applicables » et affiche désormais aussi la fraction brute — p. ex.
+**100 % (17/17)** — afin qu'il soit clair qu'il signifie « parmi les contrôles
+qui s'appliquent à ce locataire, voici combien sont sains », et non une
+proportion de tous les contrôles offerts par Panoptica365. Les locataires en
+mode audit sont exclus partout, avec une légende dans l'en-tête expliquant la
+différence de nombre par rapport à la liste Locataires.
+
+La Carte thermique s'appuie sur les mêmes verdicts par contrôle qui alimentent
+la page Sécurité de chaque locataire, de sorte que les deux ne peuvent jamais
+se contredire. Elle est accessible à tous les niveaux d'utilisateur
+(administrateur, opérateur, observateur) et entièrement traduite en anglais,
+français et espagnol.
+
+---
+
 ## Version 0.1.23 — 2026-05-30
 
 ### Précision des alertes : fini les fausses vagues lors d'un échec de collecte

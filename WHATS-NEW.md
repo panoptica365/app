@@ -5,6 +5,45 @@ that release, newest first.
 
 ---
 
+## Version 0.1.24 — 2026-05-30
+
+### New: Heatmap — every tenant's security posture, side by side
+
+A new **Heatmap** page joins the Console section (just above Tenants). It
+shows every managed tenant's security posture across the same categories —
+Identity, Email & Exchange, SharePoint, Teams, Compliance — in one grid, so
+you can spot at a glance which control is weak across the whole book of
+business and run a single "fix it everywhere" campaign.
+
+Each category cell shows a row of status dots, one per control, colored by
+the control's real state: green (healthy), red (drifted), amber (not set up
+yet), a neutral striped dot (not available on that tenant), and a textured
+dot (no data yet). Click a category header to expand it into its individual
+controls, and click any tenant, cell, or dot to jump straight to that
+tenant's Security detail page. The whole page is read-only — it never changes
+anything on a tenant.
+
+Above the grid: a fleet-wide health percentage, a "Universally weak" panel
+ranking the controls that are weak at the most tenants (click one to see the
+affected tenants and the control's write-up), and a "Movers" panel that will
+highlight which tenant regressed most over a rolling 7-day window. The Movers
+panel shows a "collecting baseline" message until a week of daily history has
+accrued, then begins reporting real trends.
+
+The headline percentage under each tenant name reads as "healthy ÷ applicable
+controls" and now shows the raw fraction too — e.g. **100% (17/17)** — so it's
+clear it means "of the controls that apply to this tenant, this many are
+healthy," not a share of every control Panoptica365 offers. Audit-only tenants
+are excluded everywhere, with a caption in the header explaining the count
+difference versus the Tenants list.
+
+The Heatmap reads the same per-control verdicts that drive each tenant's
+Security page, so the two can never disagree. It is available to all user
+tiers (admin, operator, viewer) and is fully localized in English, French,
+and Spanish.
+
+---
+
 ## Version 0.1.23 — 2026-05-30
 
 ### Alert accuracy: no more false waves from failed polls

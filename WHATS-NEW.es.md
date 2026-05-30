@@ -5,6 +5,50 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.24 — 2026-05-30
+
+### Novedad: Mapa de calor — la postura de seguridad de cada inquilino, en paralelo
+
+Una nueva página **Mapa de calor** se incorpora a la sección Consola (justo
+encima de Inquilinos). Muestra la postura de seguridad de cada inquilino
+gestionado según las mismas categorías — Identidad, Correo y Exchange,
+SharePoint, Teams, Cumplimiento — en una sola cuadrícula, para detectar de un
+vistazo qué control es débil en toda la cartera de clientes y lanzar una única
+campaña de «corregir en todas partes».
+
+Cada celda de categoría muestra una fila de puntos de estado, uno por control,
+coloreados según el estado real del control: verde (en buen estado), rojo
+(desviado), ámbar (sin configurar todavía), un punto neutro rayado (no
+disponible en ese inquilino) y un punto texturizado (aún sin datos). Haga clic
+en el encabezado de una categoría para expandirla en sus controles
+individuales, y haga clic en cualquier inquilino, celda o punto para ir
+directamente a la página de detalle de Seguridad de ese inquilino. Toda la
+página es de solo lectura: nunca modifica nada en un inquilino.
+
+Encima de la cuadrícula: un porcentaje de estado para toda la cartera, un panel
+de «Debilidades generalizadas» que clasifica los controles débiles en la mayor
+cantidad de inquilinos (haga clic en uno para ver los inquilinos afectados y la
+descripción del control) y un panel de «Cambios» que destacará qué inquilino
+empeoró más en una ventana móvil de 7 días. El panel de Cambios muestra un
+mensaje de «recopilando línea base» hasta que se acumule una semana de
+historial diario, y luego comienza a presentar tendencias reales.
+
+El porcentaje principal bajo el nombre de cada inquilino se lee como «en buen
+estado ÷ controles aplicables» y ahora también muestra la fracción en bruto —
+p. ej. **100 % (17/17)** — para que quede claro que significa «de los controles
+que aplican a este inquilino, esta cantidad está en buen estado», y no una
+proporción de todos los controles que ofrece Panoptica365. Los inquilinos en
+modo auditoría se excluyen en todas partes, con una leyenda en el encabezado que
+explica la diferencia de recuento respecto a la lista de Inquilinos.
+
+El Mapa de calor se basa en los mismos veredictos por control que alimentan la
+página de Seguridad de cada inquilino, de modo que ambos nunca pueden
+contradecirse. Está disponible para todos los niveles de usuario
+(administrador, operador, observador) y totalmente traducido al inglés, francés
+y español.
+
+---
+
 ## Versión 0.1.23 — 2026-05-30
 
 ### Precisión de alertas: se acabaron las falsas oleadas por sondeos fallidos

@@ -47,7 +47,7 @@
   let refreshPollInterval = null;
   let refreshPollStartedAt = null;
 
-  async function init() {
+  async function init(params = {}) {
     await loadTenantsForPicker();
     document.getElementById('sec-tenant-picker').addEventListener('change', onTenantChanged);
     document.getElementById('sec-refresh-btn').addEventListener('click', onRefreshClick);
@@ -120,6 +120,30 @@
     // Remediate tab actions
     document.getElementById('sec-rem-restore-btn').addEventListener('click', onRemediateRestore);
     document.getElementById('sec-rem-accept-btn').addEventListener('click', onRemediateAccept);
+
+    // Deep-link support (Heatmap → Security). When the SPA passes a tenant
+    // (and optionally a category/setting), preselect the picker, load that
+    // tenant's settings, optionally filter to a category, and open the
+    // setting detail modal — so a Heatmap cell lands the operator exactly
+    // where the dot pointed. Read-only; this is pure navigation.
+    if (params && params.tenant) {
+      const picker = document.getElementById('sec-tenant-picker');
+      if (picker) {
+        picker.value = String(params.tenant);
+        if (params.category) {
+          const validCats = ['exchange', 'identity', 'sharepoint', 'teams', 'defender', 'compliance'];
+          if (validCats.includes(params.category)) {
+            filters.category = params.category;
+            document.querySelectorAll('#sec-category-chips .sec-chip').forEach(b =>
+              b.classList.toggle('active', b.dataset.value === params.category));
+          }
+        }
+        await onTenantChanged({ target: picker });
+        if (params.setting) {
+          try { await openDetailModal(String(params.setting).toUpperCase()); } catch (_e) { /* non-fatal */ }
+        }
+      }
+    }
   }
 
   async function loadTenantsForPicker() {
