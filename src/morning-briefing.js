@@ -219,6 +219,7 @@ async function gatherBriefingData() {
      JOIN tenants t ON a.tenant_id = t.id
      LEFT JOIN alert_policies ap ON a.policy_id = ap.id
      WHERE a.triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+       AND a.status <> 'false_positive'
      ORDER BY a.triggered_at DESC`
   );
 

@@ -98,9 +98,13 @@ async function gatherReportData(tenantId, range) {
   const aiAnalysisExpr = `COALESCE(a.ai_analysis_${lang}, a.ai_analysis_en)`;
 
   // Alert summary by severity
+  // Reports exclude false_positive (dismissed-as-noise) but KEEP resolved —
+  // a resolved alert is real handled history the tenant should see
+  // (2026-05-30). Mirror this filter across every report/count query below.
   const alertsBySeverity = await db.queryRows(
     `SELECT severity, COUNT(*) AS cnt
      FROM alerts WHERE tenant_id = ? AND triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND status <> 'false_positive'
      GROUP BY severity`,
     [tenantIdInt]
   );
@@ -109,6 +113,7 @@ async function gatherReportData(tenantId, range) {
   const alertsByStatus = await db.queryRows(
     `SELECT status, COUNT(*) AS cnt
      FROM alerts WHERE tenant_id = ? AND triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND status <> 'false_positive'
      GROUP BY status`,
     [tenantIdInt]
   );
@@ -118,6 +123,7 @@ async function gatherReportData(tenantId, range) {
     `SELECT p.category, COUNT(*) AS cnt
      FROM alerts a JOIN alert_policies p ON a.policy_id = p.id
      WHERE a.tenant_id = ? AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND a.status <> 'false_positive'
      GROUP BY p.category ORDER BY cnt DESC`,
     [tenantIdInt]
   );
@@ -129,6 +135,7 @@ async function gatherReportData(tenantId, range) {
      FROM alerts a
      JOIN alert_policies p ON a.policy_id = p.id
      WHERE a.tenant_id = ? AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND a.status <> 'false_positive'
      ORDER BY FIELD(a.severity, 'severe', 'high', 'medium', 'low', 'info'), a.recurrence_count DESC, a.triggered_at DESC
      LIMIT 15`,
     [tenantIdInt]
@@ -142,6 +149,7 @@ async function gatherReportData(tenantId, range) {
      FROM alerts a
      JOIN alert_policies p ON a.policy_id = p.id
      WHERE a.tenant_id = ? AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND a.status <> 'false_positive'
      ORDER BY a.triggered_at DESC`,
     [tenantIdInt]
   );
@@ -151,6 +159,7 @@ async function gatherReportData(tenantId, range) {
     `SELECT DATE(triggered_at) AS day, severity, COUNT(*) AS cnt
      FROM alerts
      WHERE tenant_id = ? AND triggered_at >= DATE_SUB(NOW(), INTERVAL ${interval})
+       AND status <> 'false_positive'
      GROUP BY day, severity
      ORDER BY day`,
     [tenantIdInt]

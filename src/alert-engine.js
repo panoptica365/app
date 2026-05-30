@@ -1982,8 +1982,13 @@ async function evaluateMfaDisabled(policy, logic, ctx) {
   const prev = await getPreviousSnapshot(ctx.tenant.id, 'security', 'mfa_not_registered_users');
   if (!Array.isArray(prev)) return [];
 
-  const prevSet = new Set(prev.map(u => u.userPrincipalName || u.id));
-  let newUnregistered = current.filter(u => !prevSet.has(u.userPrincipalName || u.id));
+  // Collector (fetchMfaStatus) emits { name, upn } — NOT userDisplayName/
+  // userPrincipalName/id. Reading the wrong keys made every entry's identity
+  // resolve to `undefined`, collapsing all unregistered users into a single
+  // alert keyed `:mfa:undefined` with an ever-climbing recurrence_count
+  // (latent since initial import; surfaced 2026-05-30).
+  const prevSet = new Set(prev.map(u => u.upn));
+  let newUnregistered = current.filter(u => !prevSet.has(u.upn));
 
   // Exemption-aware: if the policy declares depends_on_controls, any UPN in
   // the tenant's active exemption set for *any* of those control dimensions
@@ -1999,7 +2004,7 @@ async function evaluateMfaDisabled(policy, logic, ctx) {
     const tenantDbId = ctx.tenant?.id;
     const policyId = policy?.id;
     newUnregistered = newUnregistered.filter(u => {
-      const upn = (u.userPrincipalName || '').toLowerCase();
+      const upn = (u.upn || '').toLowerCase();
       if (!upn) return true; // no UPN, can't match an exemption — keep it
       for (const dim of dependsOn) {
         const exemptSet = ctx.exemptedUpnsByControl.get(dim);
@@ -2010,7 +2015,7 @@ async function evaluateMfaDisabled(policy, logic, ctx) {
             evaluator: 'mfaDisabled',
             upn,
             controlDimension: dim,
-            eventSnippet: `${u.userDisplayName || upn} — MFA not registered`,
+            eventSnippet: `${u.name || upn} — MFA not registered`,
           }).catch(() => {});
           console.log(`[AlertEngine:MfaDisabled] SUPPRESSED ${upn} — exempted for '${dim}'`);
           return false;
@@ -2021,17 +2026,17 @@ async function evaluateMfaDisabled(policy, logic, ctx) {
   }
 
   return newUnregistered.map(user => ({
-    message: `${policy.name}: ${user.userDisplayName || user.userPrincipalName} — MFA not registered`,
+    message: `${policy.name}: ${user.name || user.upn} — MFA not registered`,
     raw_data: {
       user,
       message_template_key: 'alerts.message_format.mfa_disabled_users',
       message_template_params: {
         policyNameKey: `alert_policy_names.${policySlug(policy.name)}`,
         policyNameFallback: policy.name,
-        userName: user.userDisplayName || user.userPrincipalName || '',
+        userName: user.name || user.upn || '',
       },
     },
-    dedup_key: `${policy.id}:mfa:${user.userPrincipalName || user.id}`,
+    dedup_key: `${policy.id}:mfa:${user.upn}`,
   }));
 }
 

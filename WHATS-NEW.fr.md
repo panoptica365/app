@@ -5,6 +5,44 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.23 — 2026-05-30
+
+### Précision des alertes : fini les fausses vagues lors d'un échec de collecte
+
+Lorsque Panoptica vérifie un client, il compare ce qu'il voit maintenant à ce
+qu'il a vu la dernière fois, et vous alerte sur la différence — une nouvelle
+application d'entreprise, une règle de boîte de réception supprimée, etc. Le
+problème : si une vérification touchait une API Microsoft momentanément limitée
+ou indisponible, Panoptica pouvait lire l'inventaire du client comme
+brièvement *vide*, enregistrer cette lecture vide, puis — à la vérification
+suivante réussie — signaler **tout** l'inventaire comme nouvellement créé (ou,
+dans l'autre sens, entièrement supprimé). Résultat : une rafale de fausses
+alertes, souvent datées de la création d'origine de l'objet, des mois ou des
+années plus tôt.
+
+Les vérifications échouées n'écrasent plus les bonnes données. Lorsqu'une
+collecte échoue ou revient incomplète, Panoptica conserve maintenant la
+dernière image valide au lieu d'en enregistrer une vide ; un raté temporaire de
+Microsoft ne peut donc plus fabriquer une vague de fausses alertes « créé » /
+« supprimé ».
+
+### Les alertes MFA nomment l'utilisateur
+
+Les alertes « MFA non enregistré » affichaient auparavant `undefined` au lieu
+du nom de la personne et regroupaient tous les utilisateurs touchés en une
+seule alerte. Elles affichent désormais l'utilisateur réel et suivent une
+alerte par personne.
+
+### Les rapports excluent les alertes rejetées
+
+Les alertes que vous marquez comme **faux positif** ne comptent plus dans les
+chiffres des rapports PDF, du breffage du matin ni des tuiles du tableau de
+bord. Les alertes que vous marquez **résolues** demeurent — une alerte résolue
+est un véritable historique de sécurité, et vos rapports doivent en tenir
+compte.
+
+---
+
 ## Version 0.1.22 — 2026-05-29
 
 ### Nouveau : Apprendre — le programme de formation en sécurité intégré

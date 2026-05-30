@@ -185,12 +185,15 @@ router.get('/stats', async (req, res) => {
 
     // Build the range condition
     let rangeCondition = '';
+    // Time-range KPI counts exclude false_positive (dismissed noise) but KEEP
+    // resolved (real handled history) — 2026-05-30. The 'open' default below
+    // still hides both, which is correct for an active-alert view.
     if (range === '24h') {
-      rangeCondition = ' AND triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)';
+      rangeCondition = " AND triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND status <> 'false_positive'";
     } else if (range === '7d') {
-      rangeCondition = ' AND triggered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)';
+      rangeCondition = " AND triggered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status <> 'false_positive'";
     } else if (range === '30d') {
-      rangeCondition = ' AND triggered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)';
+      rangeCondition = " AND triggered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND status <> 'false_positive'";
     } else {
       // 'open' (default) — only active alerts
       rangeCondition = " AND status NOT IN ('resolved', 'false_positive')";
@@ -205,7 +208,7 @@ router.get('/stats', async (req, res) => {
       params
     );
     const recent = await db.queryRows(
-      `SELECT COUNT(*) AS cnt FROM alerts WHERE triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)${tenantFilter}`,
+      `SELECT COUNT(*) AS cnt FROM alerts WHERE triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND status <> 'false_positive'${tenantFilter}`,
       params
     );
 

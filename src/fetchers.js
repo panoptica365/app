@@ -612,9 +612,11 @@ async function fetchMfaStatus(tenantId) {
       .filter(u => !u.isMfaRegistered)
       .map(u => ({ name: u.userDisplayName, upn: u.userPrincipalName }));
   } catch (e) {
+    // Preserve baseline — see fetchApplications note (2026-05-30). An empty
+    // mfa_not_registered_users stored on a failed poll makes the next good
+    // poll flag every unregistered user as newly-unregistered.
     console.warn(`[Fetcher] MFA registration failed for ${tenantId}:`, e.message);
-    data.mfa_status = { total_users: 0, mfa_registered: 0, mfa_capable: 0, mfa_not_registered: 0, registration_percentage: 0 };
-    data.mfa_not_registered_users = [];
+    throw e;
   }
 
   return data;
@@ -977,8 +979,13 @@ async function fetchApplications(tenantId) {
       })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
     };
   } catch (e) {
+    // Re-throw instead of returning an empty array. polling.js catches this,
+    // sets data:null, and SKIPS storeSnapshot — preserving the last-good
+    // baseline. Returning [] here would be stored as a real snapshot, so the
+    // next successful poll diffs the full inventory as "newly created"
+    // (snapshot-flip false alerts — 2026-05-30 investigation).
     console.warn(`[Fetcher] Registered apps failed for ${tenantId}:`, e.message);
-    return { registered_apps: [] };
+    throw e;
   }
 }
 
@@ -1006,8 +1013,9 @@ async function fetchEnterpriseApps(tenantId) {
       })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
     };
   } catch (e) {
+    // Preserve baseline — see fetchApplications note (2026-05-30).
     console.warn(`[Fetcher] Enterprise apps failed for ${tenantId}:`, e.message);
-    return { enterprise_apps: [] };
+    throw e;
   }
 }
 
@@ -1087,7 +1095,16 @@ async function fetchMailForwarding(tenantId) {
     }
 
     if (failedUsers.length > 0) {
-      console.warn(`[Fetcher] Mail forwarding: ${failedUsers.length} user fetch(es) failed for ${tenantId} (set PANOPTICA_DEBUG=1 for per-user detail; also surfaced in snapshot.mail_forwarding.failedUsers)`);
+      // Partial sweep = incomplete allRules. Storing it would make the missing
+      // users' rules read as "deleted" this cycle and "created" next cycle
+      // (snapshot-flip false alerts — 2026-05-30). Abort the snapshot instead;
+      // polling.js keeps the last-good baseline and we retry next cycle.
+      const sample = failedUsers.map(f => f.userPrincipalName).slice(0, 5).join(', ');
+      const msg = `Mail forwarding incomplete for ${tenantId}: ${failedUsers.length} mailbox fetch(es) failed (${sample}${failedUsers.length > 5 ? '…' : ''})`;
+      console.warn(`[Fetcher] ${msg} (set PANOPTICA_DEBUG=1 for per-user detail)`);
+      const err = new Error(msg);
+      err.partialFailure = true;
+      throw err;
     }
 
     return {
@@ -1108,8 +1125,10 @@ async function fetchMailForwarding(tenantId) {
       }
     };
   } catch (e) {
+    // Preserve baseline — see fetchApplications note (2026-05-30). Covers both
+    // the org/users top-level fetch failing AND the partial-sweep re-throw above.
     console.warn(`[Fetcher] Mail forwarding failed for ${tenantId}:`, e.message);
-    return { mail_forwarding: { rules: [], externalRules: [], allRules: [], usersChecked: 0, usersSkippedNoMailbox: 0, failedUsers: [], orgDomains: [] } };
+    throw e;
   }
 }
 

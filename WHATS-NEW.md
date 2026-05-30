@@ -5,6 +5,40 @@ that release, newest first.
 
 ---
 
+## Version 0.1.23 — 2026-05-30
+
+### Alert accuracy: no more false waves from failed polls
+
+When Panoptica checks a tenant, it compares what it sees now against what it
+saw last time, and alerts you on the difference — a new enterprise app, a
+deleted inbox rule, and so on. The problem: if a check hit a momentarily
+throttled or unavailable Microsoft API, Panoptica could read the tenant's
+inventory as briefly *empty*, store that empty reading, and then — on the next
+healthy check — flag the tenant's **entire** inventory as newly created (or, if
+it flipped the other way, entirely deleted). The result was a burst of false
+alerts, often stamped with the object's original creation date months or years
+ago.
+
+Failed checks no longer overwrite good data. When a fetch fails or comes back
+incomplete, Panoptica now keeps the last known-good picture instead of storing
+an empty one, so a transient Microsoft hiccup can't manufacture a wave of
+phantom "created" / "deleted" alerts.
+
+### MFA alerts now name the user
+
+"MFA not registered" alerts previously showed `undefined` instead of the
+person's name, and collapsed every affected user into a single alert. They now
+show the actual user and track one alert per person.
+
+### Reports exclude dismissed alerts
+
+Alerts you mark as **false positive** no longer count toward the numbers in PDF
+reports, the morning briefing, or the dashboard tiles. Alerts you mark
+**resolved** still appear — a resolved alert is real security history, and your
+reports should reflect it.
+
+---
+
 ## Version 0.1.22 — 2026-05-29
 
 ### New: Learn — the built-in security curriculum

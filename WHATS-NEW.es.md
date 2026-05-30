@@ -5,6 +5,41 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.23 — 2026-05-30
+
+### Precisión de alertas: se acabaron las falsas oleadas por sondeos fallidos
+
+Cuando Panoptica revisa un inquilino, compara lo que ve ahora con lo que vio la
+última vez y le alerta sobre la diferencia — una nueva aplicación empresarial,
+una regla de bandeja de entrada eliminada, etc. El problema: si una revisión
+encontraba una API de Microsoft momentáneamente limitada o no disponible,
+Panoptica podía leer el inventario del inquilino como brevemente *vacío*,
+almacenar esa lectura vacía y luego — en la siguiente revisión correcta —
+marcar **todo** el inventario como recién creado (o, en sentido contrario,
+totalmente eliminado). El resultado era una ráfaga de falsas alertas, a menudo
+fechadas en la creación original del objeto, meses o años atrás.
+
+Los sondeos fallidos ya no sobrescriben los datos buenos. Cuando una
+recolección falla o regresa incompleta, Panoptica ahora conserva la última
+imagen válida en lugar de almacenar una vacía, de modo que un fallo transitorio
+de Microsoft no puede fabricar una oleada de falsas alertas de «creado» /
+«eliminado».
+
+### Las alertas de MFA ahora nombran al usuario
+
+Las alertas «MFA no registrado» antes mostraban `undefined` en lugar del nombre
+de la persona y agrupaban a todos los usuarios afectados en una sola alerta.
+Ahora muestran al usuario real y rastrean una alerta por persona.
+
+### Los informes excluyen las alertas descartadas
+
+Las alertas que marque como **falso positivo** ya no cuentan en las cifras de
+los informes PDF, el resumen matutino ni los mosaicos del panel. Las alertas
+que marque como **resueltas** siguen apareciendo — una alerta resuelta es
+historial de seguridad real, y sus informes deben reflejarlo.
+
+---
+
 ## Versión 0.1.22 — 2026-05-29
 
 ### Novedad: Aprender — el plan de formación en seguridad integrado
