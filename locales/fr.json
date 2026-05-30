@@ -313,6 +313,7 @@
   },
   "_comment_alert_policy_names": "Clés générées à partir de slugs pour les noms de stratégies. Slug = nom mis en minuscules, caractères non alphanumériques remplacés par _. Si une stratégie est ajoutée à la BD sans clé correspondante, le nom anglais de la BD est affiché en repli.",
   "alert_policy_names": {
+    "microsoft_planned_change": "Changement prévu par Microsoft",
     "sign_ins_blocked_by_conditional_access": "Connexions bloquées par l’accès conditionnel",
     "impossible_travel_detections": "Détections de voyage impossible",
     "account_lockouts": "Verrouillages de compte",
@@ -454,6 +455,13 @@
     "section_what_to_do": "Quoi faire lorsqu'elle se déclenche",
     "section_example_scenario": "Exemple concret",
     "no_content_yet": "Une explication détaillée pour cette alerte n'a pas encore été rédigée. Revenez après la prochaine mise à jour de Panoptica365.",
+    "microsoft_planned_change": {
+      "what_is_this": "Microsoft vient d'annoncer — dans le Centre de messages, le fil du centre d'administration où Microsoft publie chaque changement de sa feuille de route — qu'il s'apprête à modifier le fonctionnement de quelque chose dans Microsoft 365. Panoptica365 lit ce fil une fois par jour à partir d'un locataire que vous avez choisi, soumet chaque nouvelle publication à l'IA, et déclenche cette alerte seulement lorsque le changement semble toucher un paramètre que nous surveillons pour vous.\n\nCe n'est ni une attaque ni une dérive causée volontairement par quelqu'un. C'est Microsoft qui déplace le plancher sous vos pieds. L'alerte nomme le changement, sa date d'entrée en vigueur et les locataires qu'il pourrait toucher.",
+      "why_it_matters": "Vous investissez des efforts réels à verrouiller les locataires — audits, renvoi de courrier, Safe Links, posture MFA. Puis Microsoft change une valeur par défaut, retire un contrôle ou modifie à qui une stratégie s'applique, et un paramètre que vous croyiez bien fermé dérive sans bruit. Personne n'y a touché. Il a simplement cessé de vouloir dire ce qu'il voulait dire la semaine dernière.\n\nC'est le troisième type de dérive. Vous surveillez déjà la dérive causée par un opérateur et celle causée par un attaquant. Voici la dérive causée par Microsoft — et c'est la plus facile à manquer, car il n'y a aucune connexion à examiner ni aucun changement de configuration dans votre journal d'audit. Le seul signal, c'est l'annonce elle-même, généralement avec des semaines de préavis. Attrapez-la maintenant et vous vous ajustez à votre rythme. Manquez-la et vous l'apprendrez quand quelque chose brisera ou qu'un contrôle s'affaiblira en silence.",
+      "attack_vectors": "Cette alerte ne porte pas sur un attaquant — elle explique pourquoi un changement de Microsoft peut vous nuire même sans intention malveillante.\n\n- Une valeur par défaut renforcée est assouplie. Microsoft relâche une valeur par défaut sur laquelle vous comptiez, et les locataires qui héritaient du comportement strict retombent discrètement vers le comportement plus permissif.\n\n- Un contrôle change de portée. Une stratégie qui s'appliquait à tout le monde commence à ne viser que les utilisateurs sous licence, ou exclut un groupe qu'elle incluait — la couverture rétrécit sans qu'aucun paramètre ne change visiblement.\n\n- Une fonctionnalité est retirée ou remplacée. Le contrôle que vous aviez configuré est déprécié au profit d'une nouvelle surface; votre ancien paramètre cesse d'être appliqué et le nouveau n'est pas encore activé.\n\n- Le changement dépend du niveau de licence. L'annonce ne mord qu'à un niveau supérieur (P2/E5). Vos locataires Business Premium sont peut-être épargnés — mais vous voulez le confirmer, pas le supposer.\n\nLe fil conducteur : un paramètre que vous croyez verrouillé peut s'affaiblir de lui-même. Cette alerte est votre avertissement précoce.",
+      "what_to_do": "Étape 1. Ouvrez l'alerte et lisez ce que Microsoft change ainsi que la date d'entrée en vigueur. Utilisez le lien « Lire la publication du Centre de messages » pour voir le texte original de Microsoft — il contient le détail et toute fenêtre de désactivation.\n\nÉtape 2. Vérifiez quel domaine surveillé l'IA a signalé et confirmez le niveau de licence présumé. Si le changement ne compte qu'à P2/E5 et que vos locataires sont en Business Premium, notez-le et passez à autre chose. S'il mord en Business Premium, continuez.\n\nÉtape 3. Regardez la liste des locataires concernés sur l'alerte. La v1 liste tous les locataires actifs — les valeurs par défaut de Microsoft touchent tout le monde — alors traitez-la comme « à vérifier », et non « tous brisés ».\n\nÉtape 4. Décidez de votre action avant la date : réappliquer ou renforcer le gabarit pertinent, pousser le paramètre, ou accepter le changement de façon délibérée. Le faire maintenant, à votre rythme, vaut mieux que de réagir après coup.\n\nÉtape 5. Après la date du changement, réinterrogez les locataires concernés et confirmez que le paramètre surveillé se lit toujours comme prévu. Si le changement de Microsoft l'a déplacé, vous le verrez dans la posture de sécurité et pourrez remédier.",
+      "example_scenario": "Un lundi, la lecture quotidienne du Centre de messages par Panoptica365 capte une publication : Microsoft change le comportement par défaut des contrôles de renvoi de courrier externe dans Exchange Online, en vigueur dans environ trois semaines. L'IA l'associe au contrôle de renvoi de boîte aux lettres que vous surveillez et déclenche une seule alerte pour l'ensemble du parc listant vos 12 locataires gérés — pas 12 alertes distinctes.\n\nVous aviez ignoré le Centre de messages depuis des mois parce que c'est surtout du bruit. Mais voici comment celle-ci serait passée inaperçue sans l'alerte : le changement n'apparaît dans aucun journal de connexion ni piste d'audit. Trois semaines plus tard, la valeur par défaut bascule discrètement, et sur quelques locataires qui comptaient sur l'ancienne valeur, le renvoi externe redevient possible. Vous ne l'apprenez que lorsqu'un utilisateur renvoie sa boîte vers un Gmail personnel et que ça fonctionne — exactement ce que vous aviez configuré le locataire pour bloquer.\n\nComme l'alerte s'est déclenchée trois semaines à l'avance, vous l'ouvrez plutôt ce lundi-là, lisez la publication de Microsoft, confirmez qu'elle touche Business Premium, et poussez votre gabarit de blocage du renvoi vers les 12 locataires avant l'entrée en vigueur. Le plancher a bougé; vous l'aviez déjà recloué."
+    },
     "account_lockouts": {
       "what_is_this": "Microsoft Entra ID a temporairement verrouillé un ou plusieurs comptes d'utilisateur en raison d'un nombre trop élevé de tentatives de connexion infructueuses sur une courte période. La fonction Smart Lockout intégrée d'Entra effectue le verrouillage automatiquement; Panoptica365 vous signale qu'il a eu lieu pour que vous puissiez enquêter sur la cause.\n\nLe verrouillage lui-même est court (généralement environ une minute au premier déclenchement, plus long lors des récidives). Le compte se déverrouille tout seul — vous n'avez rien à faire pour le libérer.",
       "why_it_matters": "Les verrouillages de compte sont rarement anodins dans les environnements modernes. Les gestionnaires de mots de passe, l'auto-remplissage des navigateurs et les identifiants enregistrés sur les téléphones font qu'un véritable utilisateur ne tape presque jamais son mot de passe incorrectement assez de fois d'affilée pour atteindre le seuil de verrouillage d'Entra.\n\nQuand un verrouillage se déclenche, l'explication la plus probable est que quelqu'un essaie activement de deviner le mot de passe de l'utilisateur — soit un attaquant externe exécutant une attaque par force brute ou par pulvérisation de mots de passe automatisée, soit un appareil oublié quelque part qui utilise encore un ancien mot de passe. Le verrouillage est une victoire défensive (Entra a bloqué la tentative), mais il vous indique que le compte est ciblé, et c'est un signal pour enquêter, pas pour ignorer.",
@@ -1225,6 +1233,7 @@
       "settings.notifications.update": "Modification des paramètres de notifications ({fields})",
       "settings.briefing.update": "Sévérité minimale du résumé quotidien modifiée : {from} → {to}",
       "settings.briefing.update_failed": "Échec de l’enregistrement des paramètres du résumé quotidien : {error}",
+      "settings.message_center.update": "Locataire source du fil Microsoft modifié : {from} → {to}",
       "settings.anthropic_key.rotate": "Clé API Anthropic remplacée (aperçu : {oldPreview} → {newPreview})",
       "settings.anthropic_key.rotate_failed": "Échec du remplacement de la clé API Anthropic : {error}",
       "rbac.group_mapping.update": "Modification de l'association des groupes de contrôle d'accès ({fields}) — actif à la prochaine connexion",
@@ -1297,6 +1306,7 @@
     "col_time": "Heure",
     "col_recurrence": "Récurrence",
     "no_data": "Aucune alerte trouvée.",
+    "msp_wide_scope": "Ensemble du parc",
     "toast_marked_as": "Alertes marquées comme {status}",
     "toast_update_failed": "Échec de la mise à jour des alertes : {message}",
     "security_drift_message_format": "Dérive sur {settingName} : maintenant {interpretedText}",
@@ -1307,6 +1317,7 @@
         "other": "{policyName} : {user} — {count} occurrences en {windowMinutes} minutes"
       },
       "global_admin_privilege_elevation": "{policyName} : {displayName} ({userPrincipalName}) ajouté comme administrateur général",
+      "ms_change": "Changement Microsoft — {msTitle}",
       "enterprise_application_creation": "{policyName} : « {appName} » enregistrée",
       "external_user_addition": "{policyName} : {guestName} invité comme utilisateur externe",
       "mfa_disabled_users": "{policyName} : {userName} — MFA non enregistrée",
@@ -1421,6 +1432,9 @@
       "category": "Catégorie",
       "policy": "Stratégie",
       "tenant": "Locataire",
+      "affected_tenants": "Locataires concernés",
+      "learn_more": "Microsoft",
+      "learn_more_link": "Lire la publication du Centre de messages →",
       "alert_id": "ID de l'alerte",
       "email_sent": "Courriel envoyé"
     },
@@ -2174,6 +2188,18 @@
     "briefing_save_btn": "Enregistrer les paramètres du résumé quotidien",
     "toast_briefing_load_failed": "Échec du chargement des paramètres du résumé quotidien : {message}",
     "toast_briefing_saved": "Paramètres du résumé quotidien enregistrés. Le prochain résumé utilise le nouveau seuil.",
+    "message_center": {
+      "card_title": "Fil de messages Microsoft",
+      "card_desc": "Surveillez le Centre de messages Microsoft d’un locataire et soyez alerté lorsque Microsoft annonce un changement pouvant toucher un paramètre surveillé.",
+      "section_title": "Fil du Centre de messages Microsoft",
+      "intro": "Panoptica365 consulte le Centre de messages Microsoft de ce locataire une fois par jour et vous alerte lorsque Microsoft annonce un changement pouvant toucher des paramètres que nous surveillons. Laissez à « Aucun » pour désactiver.",
+      "hint_picker": "Choisissez le locataire dont nous lisons le Centre de messages. C’est généralement votre propre locataire de FSG, mais n’importe quel locataire intégré convient — le fil est la même feuille de route Microsoft, peu importe le locataire d’où vous le lisez.",
+      "label_picker": "Locataire source",
+      "option_none": "Aucun (désactivé)",
+      "save_btn": "Enregistrer les paramètres du fil",
+      "toast_load_failed": "Échec du chargement des paramètres du fil Microsoft : {message}",
+      "toast_saved": "Fil de messages Microsoft enregistré. La prochaine vérification quotidienne lira à partir du locataire sélectionné."
+    },
     "card_access_title": "Contrôle d’accès",
     "card_access_desc": "Groupes Entra ID qui contrôlent l’accès Administrateur, Opérateur et Observateur à Panoptica365.",
     "access_enforced_html": "<b>Appliqué.</b> Le contrôle d'accès basé sur les rôles est actif sur chaque point d'écriture. L'Administrateur gère les modèles, les paramètres, le cycle de vie et le journal d'audit. L'Opérateur déploie les modèles, applique les paramètres de sécurité, accepte les dérives et ferme les alertes. L'Observateur est en lecture seule. Chaque 403 est consigné dans le journal d'audit MSP.",

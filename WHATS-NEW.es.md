@@ -5,6 +5,54 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.25 — 2026-05-30
+
+### Novedad: Feed de mensajes de Microsoft — avísese cuando Microsoft mueve el piso
+
+Existe un tercer tipo de desviación de configuración y, hasta ahora,
+Panoptica365 solo vigilaba dos. Ya recibe alertas cuando un operador cambia
+algo (desviación causada por un operador) y cuando un atacante cambia algo
+(desviación causada por un atacante). La que no podía ver era Microsoft
+cambiando en silencio un valor predeterminado, retirando un control o
+reduciendo a quién se aplica una política: la **desviación causada por
+Microsoft**. Nadie tocó el inquilino; el ajuste simplemente dejó de significar
+lo que significaba la semana pasada, y no hay ningún inicio de sesión que
+investigar ni nada en el registro de auditoría.
+
+El nuevo **Feed de mensajes de Microsoft** cierra esa brecha. Elija un inquilino
+en **Ajustes → Feed de mensajes de Microsoft** (su propio inquilino de MSP o
+cualquier cliente incorporado: es la misma hoja de ruta de Microsoft en ambos
+casos) y, una vez al día, Panoptica365 lee el Centro de mensajes de Microsoft
+365 de ese inquilino, envía cada anuncio nuevo a Claude y genera una alerta
+**solo cuando el cambio parece afectar un ajuste que ya vigilamos para usted**.
+La mayoría de las publicaciones del Centro de mensajes son ruido; esto resalta
+las pocas que importan, normalmente con semanas de antelación para que pueda
+ajustarse a su propio ritmo en lugar de enterarse cuando algo se rompe.
+
+Estas alertas son para **todo el parque**, no para un solo cliente. Un cambio de
+Microsoft que afecta a toda su cartera produce **una sola** alerta que nombra a
+los inquilinos afectados, nunca una docena de alertas casi idénticas. Cada
+alerta incluye una explicación en lenguaje claro en su idioma, un enlace directo
+a la publicación original de Microsoft y el explicativo (icono de birrete) si
+quiere el «por qué importa» completo. La función se entrega **desactivada**: no
+ocurre nada hasta que elige un inquilino de origen, y puede cambiarlo o volver a
+«Ninguno» en cualquier momento.
+
+De forma predeterminada, estas alertas aparecen **solo en el panel** y no se
+envían por correo, ya que la desviación causada por Microsoft es de
+concienciación, no un incidente. Si prefiere recibir también un correo, cambie
+la política de alertas **«Cambio planificado de Microsoft»** a
+soporte/personal/ambos. Y la primera vez que se lee un inquilino de origen, todo
+su historial del Centro de mensajes se incorpora de una vez al panel sin
+enviarle correo, de modo que activar el feed nunca satura su bandeja de entrada.
+
+Esto requiere un nuevo permiso de Microsoft, `ServiceMessage.Read.All`,
+concedido en el inquilino del que lee. Las instalaciones nuevas lo toman en la
+guía de configuración; las instalaciones existentes lo conceden una vez en el
+inquilino de origen elegido.
+
+---
+
 ## Versión 0.1.24 — 2026-05-30
 
 ### Novedad: Mapa de calor — la postura de seguridad de cada inquilino, en paralelo

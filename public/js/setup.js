@@ -46,7 +46,7 @@
   // Canonical list of Entra app-registration permissions Panoptica365
   // requires. Ordered to match the Entra portal's "Add permission" UI:
   // grouped by API, alphabetical within each. Source-of-truth: the
-  // production Trilogiam app reg as of 2026-05-24 (53 + 1 + 2 + 2 = 58).
+  // production Trilogiam app reg as of 2026-05-24 (54 + 1 + 2 + 2 = 59).
   // If a new feature adds a permission, add it here AND grant on Trilogiam.
   const PERMISSION_CATALOG = [
     {
@@ -89,6 +89,7 @@
         'SecurityAnalyzedMessage.Read.All',
         'SecurityEvents.Read.All',
         'SecurityIncident.Read.All',
+        'ServiceMessage.Read.All',
         'SharePointTenantSettings.Read.All',
         'SharePointTenantSettings.ReadWrite.All',
         'Sites.Read.All',

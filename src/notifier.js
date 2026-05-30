@@ -505,8 +505,39 @@ function buildEmailHtml(alert, tenant, lang, localizedMessage) {
     ? `<div style="color:#f39c12;font-size:13px;margin-top:8px">⟳ ${escHtml(L.recurrence.replace('{count}', alert.recurrence_count))}</div>`
     : '';
 
-  // PSA attribution tag — first line of body for ticket matching
-  const companyTag = buildAttribution(tenant);
+  // Feature 8.8 — MSP-level alerts (Message Center) are NOT attributed to the
+  // configured source tenant. Render them as an MSP-wide notice listing the
+  // affected tenants, and suppress the PSA attribution tag (which would
+  // misroute the ticket to the source customer's company in the PSA).
+  const isMsp = alert.alert_scope === 'msp';
+  let rawForBody = alert.raw_data;
+  if (typeof rawForBody === 'string') {
+    try { rawForBody = JSON.parse(rawForBody); } catch { rawForBody = null; }
+  }
+  rawForBody = rawForBody || {};
+  const affectedTenantNames = Array.isArray(rawForBody.affectedTenantNames)
+    ? rawForBody.affectedTenantNames : [];
+  const learnMoreUrl = rawForBody.ms_web_url || rawForBody.learn_more_url || null;
+
+  // PSA attribution tag — first line of body for ticket matching.
+  // Suppressed for MSP-wide notices (no single customer to attribute).
+  const companyTag = isMsp ? '' : buildAttribution(tenant);
+
+  // The sub-header line under the headline: tenant name for tenant-scoped
+  // alerts, an MSP-wide label for MSP-scoped notices.
+  const scopeLine = isMsp ? L.mspWideScope : tenant.display_name;
+
+  // The "Tenant" detail row: a single tenant name normally; for MSP-wide
+  // notices, the list of affected tenants (or a count if none resolved).
+  const detailRowLabel = isMsp ? L.affectedTenants : L.tenant;
+  const detailRowValue = isMsp
+    ? (affectedTenantNames.length ? affectedTenantNames.join(', ') : '—')
+    : tenant.display_name;
+
+  // Optional "learn more" link for MSP-wide notices (Message Center deep link).
+  const learnMoreRow = (isMsp && learnMoreUrl)
+    ? `<tr><td style="color:#9999cc"></td><td><a href="${escHtml(learnMoreUrl)}" style="color:#4488ff;text-decoration:none">${escHtml(L.learnMore)}</a></td></tr>`
+    : '';
 
   // Translate policy_name via alert_policy_names.<slug>; fall back to the
   // English DB string if no key (graceful for new policies). N/A localized.
@@ -535,7 +566,7 @@ function buildEmailHtml(alert, tenant, lang, localizedMessage) {
     <div style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);border-radius:8px 8px 0 0;padding:20px;border-bottom:3px solid ${color}">
       <div style="display:inline-block;background:${color};color:#fff;font-weight:bold;font-size:11px;letter-spacing:1px;padding:4px 12px;border-radius:12px;text-transform:uppercase">${escHtml(sevDisplay)}</div>
       <div style="font-size:20px;font-weight:600;color:#fff;margin-top:12px">${escHtml(headline)}</div>
-      <div style="font-size:13px;color:#9999cc;margin-top:6px">${escHtml(tenant.display_name)} — ${escHtml(timestampStr)}</div>
+      <div style="font-size:13px;color:#9999cc;margin-top:6px">${escHtml(scopeLine)} — ${escHtml(timestampStr)}</div>
       ${recurrenceNote}
     </div>
 
@@ -544,8 +575,9 @@ function buildEmailHtml(alert, tenant, lang, localizedMessage) {
       <table style="width:100%;font-size:14px;color:#ccc" cellpadding="6">
         <tr><td style="color:#9999cc;width:120px">${escHtml(L.category)}</td><td>${escHtml(categoryLabel(alert.category, targetLang))}</td></tr>
         <tr><td style="color:#9999cc">${escHtml(L.policy)}</td><td>${escHtml(policyDisplay)}</td></tr>
-        <tr><td style="color:#9999cc">${escHtml(L.tenant)}</td><td>${escHtml(tenant.display_name)}</td></tr>
+        <tr><td style="color:#9999cc">${escHtml(detailRowLabel)}</td><td>${escHtml(detailRowValue)}</td></tr>
         <tr><td style="color:#9999cc">${escHtml(L.alertId)}</td><td>#${alert.id}</td></tr>
+        ${learnMoreRow}
       </table>
     </div>
 
@@ -583,6 +615,9 @@ function getEmailChromeLabels(lang) {
       notAvailable: 'N/A',
       failsafeBannerTitle: '⚠ Failsafe delivery',
       failsafeBannerBody: '— this alert was originally routed to recipients who have all muted alerts. It was redirected to administrators because someone needs to see it.',
+      mspWideScope: 'MSP-wide notice',
+      affectedTenants: 'Affected tenants',
+      learnMore: 'Learn more on Microsoft’s site →',
     },
     fr: {
       aiAnalysisLabel: 'Analyse IA (Claude Haiku)',
@@ -596,6 +631,9 @@ function getEmailChromeLabels(lang) {
       notAvailable: 'S.O.',
       failsafeBannerTitle: '⚠ Livraison de secours',
       failsafeBannerBody: '— cette alerte avait été acheminée à des destinataires qui ont tous mis les alertes en sourdine. Elle a été redirigée vers les administrateurs parce que quelqu’un doit la voir.',
+      mspWideScope: 'Avis pour l’ensemble du parc',
+      affectedTenants: 'Locataires concernés',
+      learnMore: 'En savoir plus sur le site de Microsoft →',
     },
     es: {
       aiAnalysisLabel: 'Análisis de IA (Claude Haiku)',
@@ -609,6 +647,9 @@ function getEmailChromeLabels(lang) {
       notAvailable: 'N/D',
       failsafeBannerTitle: '⚠ Entrega de respaldo',
       failsafeBannerBody: '— esta alerta estaba dirigida a destinatarios que han silenciado todas las alertas. Se redirigió a los administradores porque alguien tiene que verla.',
+      mspWideScope: 'Aviso para todo el parque',
+      affectedTenants: 'Inquilinos afectados',
+      learnMore: 'Más información en el sitio de Microsoft →',
     },
   };
   return labels[lang] || labels.en;

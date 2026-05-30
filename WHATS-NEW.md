@@ -5,6 +5,50 @@ that release, newest first.
 
 ---
 
+## Version 0.1.25 — 2026-05-30
+
+### New: Microsoft message feed — get warned when Microsoft moves the floor
+
+There's a third kind of configuration drift, and until now Panoptica365 only
+watched two of them. You already get alerted when an operator changes
+something (operator-caused drift) and when an attacker changes something
+(attacker-caused drift). The one you couldn't see was Microsoft quietly
+changing a default, retiring a control, or narrowing who a policy applies to —
+**Microsoft-caused drift**. Nobody touched the tenant; the setting just stopped
+meaning what it meant last week, and there's no sign-in to investigate and
+nothing in the audit log.
+
+The new **Microsoft message feed** closes that gap. Pick one tenant in
+**Settings → Microsoft message feed** (your own MSP tenant or any onboarded
+customer — it's the same Microsoft roadmap either way), and once a day
+Panoptica365 reads that tenant's Microsoft 365 Message Center, sends each new
+announcement to Claude, and raises an alert **only when the change looks like it
+affects a setting we already monitor for you**. Most Message Center posts are
+noise; this surfaces the handful that matter, usually with weeks of lead time so
+you can adjust on your own schedule instead of finding out when something breaks.
+
+These alerts are **MSP-wide**, not tied to a single customer. One Microsoft
+change that touches your whole book of business produces **one** alert that
+lists the affected tenants by name — never a dozen near-identical ones. Each
+alert carries a plain-language explanation in your language, a link straight to
+Microsoft's original post, and the graduation-cap explainer if you want the full
+"why this matters" writeup. The feature ships **off** — nothing happens until you
+choose a source tenant, and you can switch it or turn it back to None at any time.
+
+By default these alerts are **dashboard-only** — they appear in the Alert
+Dashboard but are not emailed, since Microsoft-caused drift is awareness-grade,
+not an incident. If you'd rather be emailed too, switch the **"Microsoft planned
+change"** alert policy to support/personal/both. And the first time a source
+tenant is read, its entire historical Message Center backlog is brought into the
+dashboard at once without emailing you, so enabling the feed never floods your
+inbox.
+
+This needs one new Microsoft permission, `ServiceMessage.Read.All`, granted on
+the tenant you read from. New installs pick it up in the setup guide; existing
+installs grant it once on the chosen source tenant.
+
+---
+
 ## Version 0.1.24 — 2026-05-30
 
 ### New: Heatmap — every tenant's security posture, side by side

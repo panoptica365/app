@@ -214,7 +214,7 @@ async function gatherBriefingData() {
   const allAlerts = await db.queryRows(
     `SELECT a.id, a.tenant_id, a.severity, a.message, ap.category, a.status,
             a.ai_analysis_en AS ai_analysis, a.triggered_at, a.policy_id, a.recurrence_count,
-            a.resolution_reason, t.display_name AS tenant_name
+            a.resolution_reason, a.alert_scope, t.display_name AS tenant_name
      FROM alerts a
      JOIN tenants t ON a.tenant_id = t.id
      LEFT JOIN alert_policies ap ON a.policy_id = ap.id
@@ -278,13 +278,21 @@ async function gatherBriefingData() {
     [staleThresholdMinutes]
   );
 
-  // Group alerts by tenant
+  // Group alerts by tenant. Feature 8.8 — MSP-level alerts (Message Center)
+  // carry alert_scope='msp' and must NOT be attributed to their source
+  // tenant; they're bucketed under a single MSP-wide group so the briefing
+  // reads as an MSP-wide notice, not as a finding against the source customer.
   const alertsByTenant = {};
   for (const a of alerts) {
-    if (!alertsByTenant[a.tenant_id]) {
-      alertsByTenant[a.tenant_id] = { tenantName: a.tenant_name, alerts: [] };
+    const isMsp = a.alert_scope === 'msp';
+    const key = isMsp ? 'msp' : a.tenant_id;
+    if (!alertsByTenant[key]) {
+      alertsByTenant[key] = {
+        tenantName: isMsp ? 'Microsoft Message Center (MSP-wide)' : a.tenant_name,
+        alerts: [],
+      };
     }
-    alertsByTenant[a.tenant_id].alerts.push(a);
+    alertsByTenant[key].alerts.push(a);
   }
 
   // Severity counts

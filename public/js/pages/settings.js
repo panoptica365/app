@@ -11,6 +11,7 @@
     document.getElementById('card-notifications')?.addEventListener('click', () => showView('notif'));
     document.getElementById('card-anthropic')?.addEventListener('click', () => showView('anthropic'));
     document.getElementById('card-briefing')?.addEventListener('click', () => showView('briefing'));
+    document.getElementById('card-message-center')?.addEventListener('click', () => showView('message_center'));
     document.getElementById('card-access')?.addEventListener('click', () => showView('access'));
 
     // Back buttons
@@ -18,10 +19,14 @@
     document.getElementById('notif-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('anthropic-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('briefing-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('message-center-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('access-back')?.addEventListener('click', () => showView('cards'));
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
+
+    // Microsoft Message Feed handlers
+    document.getElementById('message-center-save')?.addEventListener('click', saveMessageCenter);
 
     // SMTP handlers (unchanged)
     document.getElementById('smtp-save')?.addEventListener('click', saveSmtp);
@@ -66,6 +71,7 @@
       notif:     document.getElementById('settings-notif-view'),
       anthropic: document.getElementById('settings-anthropic-view'),
       briefing:  document.getElementById('settings-briefing-view'),
+      message_center: document.getElementById('settings-message-center-view'),
       access:    document.getElementById('settings-access-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
@@ -75,7 +81,64 @@
     if (view === 'notif')     loadNotifications();
     if (view === 'anthropic') loadAnthropicKey();
     if (view === 'briefing')  loadBriefing();
+    if (view === 'message_center') loadMessageCenter();
     if (view === 'access')    loadAccessControl();
+  }
+
+  // ─── Microsoft Message Feed (Feature 8.8) ───
+
+  async function loadMessageCenter() {
+    const sel = document.getElementById('mc-source-tenant');
+    if (!sel) return;
+    try {
+      // Populate the picker from the operator's tenants, then select the
+      // currently-configured source tenant (or None). The first <option>
+      // (None) is defined in the partial and preserved here.
+      const [tenants, current] = await Promise.all([
+        Panoptica.api('/api/tenants'),
+        Panoptica.api('/api/settings/message-center'),
+      ]);
+      const list = Array.isArray(tenants) ? tenants : (tenants.tenants || []);
+      // Rebuild options: keep the None option, append one per tenant.
+      const noneLabel = window.t('settings.message_center.option_none');
+      sel.innerHTML = `<option value="">${noneLabel}</option>` +
+        list
+          .slice()
+          .sort((a, b) => (a.display_name || '').localeCompare(b.display_name || ''))
+          .map(t => `<option value="${t.tenant_id}">${escHtml(t.display_name)}</option>`)
+          .join('');
+      sel.value = current.source_tenant || '';
+    } catch (err) {
+      Panoptica.showToast(window.t('settings.message_center.toast_load_failed', { message: err.message }), 'error');
+    }
+  }
+
+  async function saveMessageCenter() {
+    const statusEl = document.getElementById('message-center-status');
+    const sel = document.getElementById('mc-source-tenant');
+    if (!sel) return;
+    statusEl.textContent = window.t('settings.status.saving');
+    statusEl.style.color = 'var(--p-text-muted)';
+    try {
+      await Panoptica.api('/api/settings/message-center', {
+        method: 'PUT',
+        body: JSON.stringify({ source_tenant: sel.value || null }),
+      });
+      statusEl.textContent = window.t('settings.status.saved');
+      statusEl.style.color = '#27ae60';
+      Panoptica.showToast(window.t('settings.message_center.toast_saved'), 'success');
+    } catch (err) {
+      statusEl.textContent = window.t('settings.status.error');
+      statusEl.style.color = '#e74c3c';
+      Panoptica.showToast(window.t('settings.toast_save_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // Minimal HTML escape for option labels (display names are operator-controlled
+  // but rendered as HTML here).
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
   }
 
   // ─── Daily Summary ───

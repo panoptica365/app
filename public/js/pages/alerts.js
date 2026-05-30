@@ -105,7 +105,7 @@
       <tr class="alert-row" data-id="${a.id}">
         <td class="alert-td-check"><input type="checkbox" class="alert-check" data-id="${a.id}" ${selectedIds.has(a.id) ? 'checked' : ''}></td>
         <td><span class="alert-severity-badge sev-${a.severity}">${esc(window.t('alerts.' + a.severity))}</span></td>
-        <td class="alert-td-tenant">${esc(a.tenant_name)}</td>
+        <td class="alert-td-tenant">${a.alert_scope === 'msp' ? esc(window.t('alerts.msp_wide_scope')) : esc(a.tenant_name)}</td>
         <td class="alert-td-message">${esc(renderAlertMessage(a))}${attributionChip(a)}</td>
         <td class="alert-td-category">${formatCategory(a.category)}</td>
         <td class="alert-td-time">${formatTime(a.triggered_at)}</td>

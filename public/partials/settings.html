@@ -35,6 +35,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_briefing_desc">Choose the minimum alert severity included in the 6 AM email. Everything still appears in the dashboard.</div>
   </div>
 
+  <!-- Microsoft Message Feed Card (Feature 8.8) -->
+  <div class="settings-card" id="card-message-center" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="megaphone"></i></div>
+    <div class="settings-card-title" data-i18n="settings.message_center.card_title">Microsoft message feed</div>
+    <div class="settings-card-desc" data-i18n="settings.message_center.card_desc">Watch one tenant's Microsoft Message Center and alert you when Microsoft announces a change that may affect a monitored setting.</div>
+  </div>
+
   <!-- Access Control Card -->
   <div class="settings-card" id="card-access" style="cursor:pointer;">
     <div class="settings-card-icon"><i data-lucide="shield-check"></i></div>
@@ -213,6 +220,32 @@
     <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
       <button class="btn-primary" id="briefing-save" data-i18n="settings.briefing_save_btn">Save Daily Summary Settings</button>
       <span id="briefing-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Microsoft Message Feed Sub-View (Feature 8.8) ─── -->
+<div id="settings-message-center-view" style="display:none;">
+  <button class="btn-secondary" id="message-center-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.message_center.section_title">Microsoft Message Center Feed</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.message_center.intro">
+      Panoptica365 checks this tenant's Microsoft Message Center once a day and alerts you when Microsoft announces a change that may affect settings we monitor. Leave on None to turn this off.
+    </div>
+
+    <div class="form-group">
+      <div class="form-hint" style="margin-bottom:6px;" data-i18n="settings.message_center.hint_picker">Pick the tenant whose Message Center we read. This is usually your own MSP tenant, but any onboarded tenant works — the feed is the same Microsoft roadmap regardless of which tenant you read it from.</div>
+      <label data-i18n="settings.message_center.label_picker">Source tenant</label>
+      <select id="mc-source-tenant" style="max-width:420px;">
+        <option value="" data-i18n="settings.message_center.option_none">None (disabled)</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+      <button class="btn-primary" id="message-center-save" data-i18n="settings.message_center.save_btn">Save Message Feed Settings</button>
+      <span id="message-center-status" style="font-size:0.85rem;"></span>
     </div>
   </div>
 </div>

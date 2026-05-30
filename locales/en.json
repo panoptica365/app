@@ -313,6 +313,7 @@
   },
   "_comment_alert_policy_names": "Slug-derived keys for policy names. Slug = lowercased name with non-alphanumerics → underscore. If a policy is added in DB without a corresponding key here, the live English name from the DB is used as graceful fallback (slugify('Account lockouts') → 'account_lockouts').",
   "alert_policy_names": {
+    "microsoft_planned_change": "Microsoft planned change",
     "sign_ins_blocked_by_conditional_access": "Sign-ins blocked by Conditional Access",
     "impossible_travel_detections": "Impossible travel detections",
     "account_lockouts": "Account lockouts",
@@ -454,6 +455,13 @@
     "section_what_to_do": "What to do when it fires",
     "section_example_scenario": "Example scenario",
     "no_content_yet": "A detailed explanation for this alert hasn't been written yet. Check back after the next Panoptica365 update.",
+    "microsoft_planned_change": {
+      "what_is_this": "Microsoft just announced — in the Message Center, the admin-center feed where Microsoft posts every roadmap change — that it's about to change how something in Microsoft 365 works. Panoptica365 reads that feed once a day from one tenant you chose, hands each new post to AI, and fires this alert only when the change looks like it touches a setting we monitor for you.\n\nThis is not an attack and not drift someone caused on purpose. It's Microsoft moving the floor under your feet. The alert names the change, when it lands, and which of your tenants it may affect.",
+      "why_it_matters": "You spend real effort locking tenants down — auditing, mailbox forwarding, Safe Links, MFA posture. Then Microsoft flips a default, retires a control, or changes who a policy applies to, and a setting you thought was nailed shut quietly drifts. Nobody touched it. It just stopped meaning what it meant last week.\n\nThat's the third kind of drift. You already watch for the drift an operator causes and the drift an attacker causes. This is the drift Microsoft causes — and it's the easiest to miss, because there's no login to investigate and no config change in your audit log. The only signal is the announcement itself, usually with weeks of lead time. Catch it now and you adjust on your schedule. Miss it and you find out when something breaks or a control silently weakens.",
+      "attack_vectors": "This alert isn't about an attacker — it's about why a Microsoft change can hurt you even when no one is acting maliciously.\n\n- A hardened default gets softened. Microsoft loosens a default you were relying on, and tenants that inherited the strict behavior quietly fall back to the looser one.\n\n- A control changes scope. A policy that used to apply to everyone starts applying only to licensed users, or excludes a group it used to include — so coverage shrinks without any setting visibly changing.\n\n- A feature is retired or replaced. The control you configured is deprecated in favor of a new surface; your old setting stops being enforced and the new one isn't turned on yet.\n\n- A change is tier-gated. The announcement only bites at a higher license tier (P2/E5). Your Business Premium tenants may be untouched — but you want to confirm that, not assume it.\n\nThe through-line: a setting you believe is locked down can weaken on its own. This alert is your early warning.",
+      "what_to_do": "Step 1. Open the alert and read what Microsoft is changing and the date it lands. Use the \"Read the Message Center post\" link to see Microsoft's original wording — it carries the detail and any opt-out window.\n\nStep 2. Check which monitored area the AI flagged and confirm the assumed license tier. If the change only matters at P2/E5 and your tenants are Business Premium, note it and move on. If it bites at Business Premium, keep going.\n\nStep 3. Look at the affected-tenants list on the alert. v1 lists every enabled tenant — Microsoft defaults touch everyone — so treat it as \"check these,\" not \"all of these are broken.\"\n\nStep 4. Decide your move before the date lands: re-apply or tighten the relevant template, push the setting, or accept the change deliberately. Doing it now, on your timeline, beats reacting after it ships.\n\nStep 5. After the change date, re-poll the affected tenants and confirm the monitored setting still reads the way you expect. If Microsoft's change moved it, you'll see it in the security posture and can remediate.",
+      "example_scenario": "On a Monday, Panoptica365's daily Message Center pull picks up a post: Microsoft is changing the default behavior of external email forwarding controls in Exchange Online, effective in about three weeks. The AI matches it to the mailbox-forwarding control you monitor and fires one MSP-wide alert listing your 12 managed tenants — not 12 separate alerts.\n\nYou'd ignored Message Center for months because it's mostly noise. But here's how this one would have slipped past without the alert: the change doesn't show up in any sign-in log or audit trail. Three weeks later the default quietly shifts, and on a handful of tenants that relied on the old default, external forwarding becomes possible again. You don't find out until a user forwards a mailbox to a personal Gmail and it just works — the exact thing you'd configured the tenant to block.\n\nBecause the alert fired with three weeks of lead time, you instead open it that Monday, read Microsoft's post, confirm it hits Business Premium, and push your forwarding-block template to all 12 tenants before the change lands. The floor moved; you'd already nailed it back down."
+    },
     "account_lockouts": {
       "what_is_this": "Microsoft Entra ID has temporarily locked one or more user accounts because of too many failed sign-in attempts in a short window. Entra's built-in Smart Lockout feature does the locking automatically; Panoptica365 is reporting that it happened so you can investigate why.\n\nThe lockout itself is short (usually around a minute on first lockout, longer on repeats). The account unlocks on its own — you don't need to do anything to release it.",
       "why_it_matters": "Account lockouts are rarely innocent in modern environments. Password managers, browser auto-fill, and saved credentials on phones mean a real user almost never types their password wrong enough times in a row to trigger Entra's lockout threshold.\n\nWhen a lockout fires, the most likely explanation is that someone is actively trying to guess the user's password — either an outside attacker running an automated brute-force or password-spray attack, or a stale device somewhere still using an outdated password. The lockout is a defensive win (Entra blocked the attempt), but it tells you the account is being targeted, and that's a signal to investigate, not dismiss.",
@@ -1225,6 +1233,7 @@
       "settings.notifications.update": "Notification settings changed ({fields})",
       "settings.briefing.update": "Daily summary minimum severity changed: {from} → {to}",
       "settings.briefing.update_failed": "Daily summary settings save failed: {error}",
+      "settings.message_center.update": "Microsoft message feed source tenant changed: {from} → {to}",
       "settings.anthropic_key.rotate": "Anthropic API key rotated (preview: {oldPreview} → {newPreview})",
       "settings.anthropic_key.rotate_failed": "Anthropic API key rotation failed: {error}",
       "rbac.group_mapping.update": "Access-control group mapping changed ({fields}) — takes effect on next login",
@@ -1297,6 +1306,7 @@
     "col_time": "Time",
     "col_recurrence": "Recurrence",
     "no_data": "No alerts found.",
+    "msp_wide_scope": "MSP-wide",
     "toast_marked_as": "Alerts marked as {status}",
     "toast_update_failed": "Failed to update alerts: {message}",
     "security_drift_message_format": "Drift on {settingName}: now {interpretedText}",
@@ -1307,6 +1317,7 @@
         "other": "{policyName}: {user} — {count} occurrences in {windowMinutes} minutes"
       },
       "global_admin_privilege_elevation": "{policyName}: {displayName} ({userPrincipalName}) added as Global Administrator",
+      "ms_change": "Microsoft change — {msTitle}",
       "enterprise_application_creation": "{policyName}: \"{appName}\" registered",
       "external_user_addition": "{policyName}: {guestName} invited as external user",
       "mfa_disabled_users": "{policyName}: {userName} — MFA not registered",
@@ -1421,6 +1432,9 @@
       "category": "Category",
       "policy": "Policy",
       "tenant": "Tenant",
+      "affected_tenants": "Affected tenants",
+      "learn_more": "Microsoft",
+      "learn_more_link": "Read the Message Center post →",
       "alert_id": "Alert ID",
       "email_sent": "Email Sent"
     },
@@ -2174,6 +2188,18 @@
     "briefing_save_btn": "Save Daily Summary Settings",
     "toast_briefing_load_failed": "Failed to load daily summary settings: {message}",
     "toast_briefing_saved": "Daily summary settings saved. The next briefing uses the new threshold.",
+    "message_center": {
+      "card_title": "Microsoft message feed",
+      "card_desc": "Watch one tenant's Microsoft Message Center and get alerted when Microsoft announces a change that may affect a monitored setting.",
+      "section_title": "Microsoft Message Center Feed",
+      "intro": "Panoptica365 checks this tenant's Microsoft Message Center once a day and alerts you when Microsoft announces a change that may affect settings we monitor. Leave on None to turn this off.",
+      "hint_picker": "Pick the tenant whose Message Center we read. This is usually your own MSP tenant, but any onboarded tenant works — the feed is the same Microsoft roadmap regardless of which tenant you read it from.",
+      "label_picker": "Source tenant",
+      "option_none": "None (disabled)",
+      "save_btn": "Save Message Feed Settings",
+      "toast_load_failed": "Failed to load Microsoft message feed settings: {message}",
+      "toast_saved": "Microsoft message feed saved. The next daily check reads from the selected tenant."
+    },
     "card_access_title": "Access Control",
     "card_access_desc": "Entra ID groups that gate Admin, Operator, and Viewer access to Panoptica365.",
     "access_enforced_html": "<b>Enforced.</b> Role-based gating is live across every mutate endpoint. Admin manages templates, settings, lifecycle, and audit log. Operator deploys templates, applies security settings, accepts drift, and clears alerts. Viewer is read-only. Every 403 is logged to the MSP audit log.",

@@ -175,7 +175,7 @@
       </div>
       <div style="font-family:Inter,sans-serif;font-size:1.3rem;color:var(--p-text);margin-bottom:4px;">${esc(renderAlertMessage(alert))}</div>
       <div style="font-family:Inter,sans-serif;font-size:0.85rem;color:var(--p-text-muted);">
-        ${esc(alert.tenant_name)} &bull; ${formatTime(alert.triggered_at)}
+        ${alert.alert_scope === 'msp' ? esc(window.t('alerts.msp_wide_scope')) : esc(alert.tenant_name)} &bull; ${formatTime(alert.triggered_at)}
         ${alert.recurrence_count > 1 ? ` &bull; ${esc(window.t('alerts.header.detected_n_times', { count: alert.recurrence_count }))}` : ''}
       </div>
       ${aiAdjusted && alert.ai_severity_reason
@@ -369,13 +369,27 @@
       ? window.Panoptica.AlertExplainer.iconHtml({ policyName: alert.policy_name })
       : '';
 
+    // Feature 8.8 — MSP-level (Message Center) alerts render an "Affected
+    // tenants" list instead of attributing the alert to the source tenant.
+    const isMspScope = alert.alert_scope === 'msp';
+    const rawForDetail = (alert.raw_data && typeof alert.raw_data === 'object') ? alert.raw_data : {};
+    const mspAffectedNames = Array.isArray(rawForDetail.affectedTenantNames) ? rawForDetail.affectedTenantNames : [];
+    const mspLearnMoreUrl = rawForDetail.ms_web_url || rawForDetail.learn_more_url || null;
+    const tenantRowHtml = isMspScope
+      ? `<tr><td>${esc(window.t('alerts.details.affected_tenants'))}</td><td>${mspAffectedNames.length ? esc(mspAffectedNames.join(', ')) : '—'}</td></tr>`
+      : `<tr><td>${esc(window.t('alerts.details.tenant'))}</td><td>${esc(alert.tenant_name)}</td></tr>`;
+    const mspLearnMoreRowHtml = (isMspScope && mspLearnMoreUrl)
+      ? `<tr><td>${esc(window.t('alerts.details.learn_more'))}</td><td><a href="${esc(mspLearnMoreUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--p-accent);">${esc(window.t('alerts.details.learn_more_link'))}</a></td></tr>`
+      : '';
+
     el('alert-slideout-body').innerHTML = `
       <div class="alert-detail-section">
         <div class="alert-detail-label">${esc(window.t('alerts.section.details'))}</div>
         <table class="alert-detail-table">
           <tr><td>${esc(window.t('alerts.details.category'))}</td><td>${formatCategory(alert.category)}</td></tr>
           <tr><td>${esc(window.t('alerts.details.policy'))}</td><td><span style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">${esc(policyDisplay)}${explainerIcon}</span></td></tr>
-          <tr><td>${esc(window.t('alerts.details.tenant'))}</td><td>${esc(alert.tenant_name)}</td></tr>
+          ${tenantRowHtml}
+          ${mspLearnMoreRowHtml}
           <tr><td>${esc(window.t('alerts.details.alert_id'))}</td><td>#${alert.id}</td></tr>
           <tr><td>${esc(window.t('alerts.details.email_sent'))}</td><td>${alert.email_sent ? esc(window.t('alerts.common.yes')) : esc(window.t('alerts.common.no'))}</td></tr>
         </table>

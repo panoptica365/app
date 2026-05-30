@@ -236,6 +236,7 @@ const ENTRA_TEST_CHECKS = [
   { perm: 'Reports.Read.All',         url: "/reports/getOffice365ActiveUserCounts(period='D7')" },
   { perm: 'SecurityIncident.Read.All', url: '/security/incidents?$top=1' },
   { perm: 'AuditLog.Read.All',        url: '/auditLogs/signIns?$top=1' },
+  { perm: 'ServiceMessage.Read.All',  url: '/admin/serviceAnnouncement/messages?$top=1' },
 ];
 
 router.post('/entra/test', async (req, res) => {

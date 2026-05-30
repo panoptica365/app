@@ -313,6 +313,7 @@
   },
   "_comment_alert_policy_names": "Claves derivadas del slug para nombres de directivas. Slug = nombre en minúsculas con caracteres no alfanuméricos → guion bajo. Si se añade una directiva a la BD sin una clave correspondiente aquí, se usa el nombre en inglés de la BD como alternativa segura (slugify('Account lockouts') → 'account_lockouts').",
   "alert_policy_names": {
+    "microsoft_planned_change": "Cambio planificado de Microsoft",
     "sign_ins_blocked_by_conditional_access": "Inicios de sesión bloqueados por Acceso Condicional",
     "impossible_travel_detections": "Detecciones de viaje imposible",
     "account_lockouts": "Bloqueos de cuenta",
@@ -454,6 +455,13 @@
     "section_what_to_do": "Qué hacer cuando se dispara",
     "section_example_scenario": "Ejemplo concreto",
     "no_content_yet": "Aún no se ha redactado una explicación detallada para esta alerta. Vuelva a consultar tras la próxima actualización de Panoptica365.",
+    "microsoft_planned_change": {
+      "what_is_this": "Microsoft acaba de anunciar — en el Centro de mensajes, el feed del centro de administración donde Microsoft publica cada cambio de su hoja de ruta — que está por modificar el funcionamiento de algo en Microsoft 365. Panoptica365 lee ese feed una vez al día desde un inquilino que usted eligió, entrega cada publicación nueva a la IA y dispara esta alerta solo cuando el cambio parece afectar un ajuste que vigilamos para usted.\n\nEsto no es un ataque ni una desviación causada a propósito por nadie. Es Microsoft moviendo el piso bajo sus pies. La alerta nombra el cambio, cuándo entra en vigor y qué inquilinos podría afectar.",
+      "why_it_matters": "Usted invierte un esfuerzo real en blindar inquilinos: auditorías, reenvío de correo, Safe Links, postura de MFA. Luego Microsoft cambia un valor predeterminado, retira un control o modifica a quién se aplica una política, y un ajuste que creía bien cerrado se desvía en silencio. Nadie lo tocó. Simplemente dejó de significar lo que significaba la semana pasada.\n\nEse es el tercer tipo de desviación. Usted ya vigila la desviación causada por un operador y la causada por un atacante. Esta es la desviación causada por Microsoft, y es la más fácil de pasar por alto, porque no hay ningún inicio de sesión que investigar ni ningún cambio de configuración en su registro de auditoría. La única señal es el propio anuncio, normalmente con semanas de antelación. Atrápela ahora y se ajusta a su ritmo. Pásela por alto y se enterará cuando algo se rompa o un control se debilite en silencio.",
+      "attack_vectors": "Esta alerta no trata de un atacante: explica por qué un cambio de Microsoft puede perjudicarle aunque nadie actúe con malicia.\n\n- Un valor predeterminado reforzado se relaja. Microsoft afloja un valor predeterminado en el que usted confiaba, y los inquilinos que heredaban el comportamiento estricto vuelven discretamente al más permisivo.\n\n- Un control cambia de alcance. Una política que se aplicaba a todos pasa a aplicarse solo a los usuarios con licencia, o excluye a un grupo que antes incluía, de modo que la cobertura se reduce sin que ningún ajuste cambie visiblemente.\n\n- Una función se retira o se reemplaza. El control que usted configuró queda obsoleto en favor de una nueva superficie; su ajuste anterior deja de aplicarse y el nuevo todavía no está activado.\n\n- El cambio depende del nivel de licencia. El anuncio solo afecta en un nivel superior (P2/E5). Sus inquilinos de Business Premium quizá queden intactos, pero conviene confirmarlo, no suponerlo.\n\nEl hilo común: un ajuste que usted cree bloqueado puede debilitarse por sí solo. Esta alerta es su aviso temprano.",
+      "what_to_do": "Paso 1. Abra la alerta y lea qué cambia Microsoft y la fecha en que entra en vigor. Use el enlace «Leer la publicación del Centro de mensajes» para ver el texto original de Microsoft, que trae el detalle y cualquier ventana de exclusión voluntaria.\n\nPaso 2. Revise qué área vigilada marcó la IA y confirme el nivel de licencia supuesto. Si el cambio solo importa en P2/E5 y sus inquilinos son Business Premium, anótelo y continúe. Si afecta en Business Premium, siga adelante.\n\nPaso 3. Mire la lista de inquilinos afectados en la alerta. La v1 lista todos los inquilinos activos —los valores predeterminados de Microsoft afectan a todos—, así que trátela como «revisar estos», no como «todos están rotos».\n\nPaso 4. Decida su acción antes de la fecha: volver a aplicar o reforzar la plantilla correspondiente, enviar el ajuste o aceptar el cambio de forma deliberada. Hacerlo ahora, a su ritmo, es mejor que reaccionar después de que se publique.\n\nPaso 5. Tras la fecha del cambio, vuelva a sondear los inquilinos afectados y confirme que el ajuste vigilado sigue leyéndose como espera. Si el cambio de Microsoft lo movió, lo verá en la postura de seguridad y podrá remediarlo.",
+      "example_scenario": "Un lunes, la lectura diaria del Centro de mensajes de Panoptica365 capta una publicación: Microsoft cambia el comportamiento predeterminado de los controles de reenvío de correo externo en Exchange Online, con efecto en unas tres semanas. La IA lo asocia con el control de reenvío de buzón que usted vigila y dispara una sola alerta para todo el parque que lista sus 12 inquilinos gestionados, no 12 alertas separadas.\n\nUsted había ignorado el Centro de mensajes durante meses porque es sobre todo ruido. Pero así habría pasado inadvertida esta sin la alerta: el cambio no aparece en ningún registro de inicio de sesión ni rastro de auditoría. Tres semanas después, el valor predeterminado cambia en silencio, y en algunos inquilinos que dependían del valor anterior el reenvío externo vuelve a ser posible. No se entera hasta que un usuario reenvía su buzón a un Gmail personal y funciona, justo lo que usted había configurado el inquilino para bloquear.\n\nComo la alerta se disparó con tres semanas de antelación, en cambio la abre ese lunes, lee la publicación de Microsoft, confirma que afecta a Business Premium y envía su plantilla de bloqueo de reenvío a los 12 inquilinos antes de que el cambio entre en vigor. El piso se movió; usted ya lo había vuelto a clavar."
+    },
     "account_lockouts": {
       "what_is_this": "Microsoft Entra ID ha bloqueado temporalmente una o más cuentas de usuario debido a demasiados intentos de inicio de sesión fallidos en un período corto. La función Smart Lockout integrada en Entra realiza el bloqueo de forma automática; Panoptica365 le informa de que ocurrió para que pueda investigar la causa.\n\nEl bloqueo en sí es breve (normalmente alrededor de un minuto en el primer disparo, más largo en bloqueos repetidos). La cuenta se desbloquea por sí sola — no es necesario que usted haga nada para liberarla.",
       "why_it_matters": "Los bloqueos de cuenta rara vez son inocentes en entornos modernos. Los gestores de contraseñas, el autorrelleno del navegador y las credenciales guardadas en los teléfonos hacen que un usuario real casi nunca escriba mal su contraseña tantas veces seguidas como para alcanzar el umbral de bloqueo de Entra.\n\nCuando se dispara un bloqueo, la explicación más probable es que alguien esté intentando activamente adivinar la contraseña del usuario — ya sea un atacante externo ejecutando un ataque automatizado de fuerza bruta o de pulverización de contraseñas, o un dispositivo olvidado en alguna parte que sigue usando una contraseña antigua. El bloqueo es una victoria defensiva (Entra detuvo el intento), pero le indica que la cuenta está siendo atacada, y eso es una señal para investigar, no para descartar.",
@@ -1225,6 +1233,7 @@
       "settings.notifications.update": "Configuración de notificaciones modificada ({fields})",
       "settings.briefing.update": "Severidad mínima del resumen diario modificada: {from} → {to}",
       "settings.briefing.update_failed": "Falló el guardado de los ajustes del resumen diario: {error}",
+      "settings.message_center.update": "Inquilino de origen del feed de Microsoft cambiado: {from} → {to}",
       "settings.anthropic_key.rotate": "Clave API de Anthropic rotada (vista previa: {oldPreview} → {newPreview})",
       "settings.anthropic_key.rotate_failed": "Falló la rotación de la clave API de Anthropic: {error}",
       "rbac.group_mapping.update": "Mapeo de grupos de control de acceso modificado ({fields}) — surtirá efecto en el próximo inicio de sesión",
@@ -1297,6 +1306,7 @@
     "col_time": "Hora",
     "col_recurrence": "Recurrencia",
     "no_data": "No se encontraron alertas.",
+    "msp_wide_scope": "Todo el parque",
     "toast_marked_as": "Alertas marcadas como {status}",
     "toast_update_failed": "Error al actualizar las alertas: {message}",
     "security_drift_message_format": "Deriva en {settingName}: ahora {interpretedText}",
@@ -1307,6 +1317,7 @@
         "other": "{policyName}: {user} — {count} ocurrencias en {windowMinutes} minutos"
       },
       "global_admin_privilege_elevation": "{policyName}: {displayName} ({userPrincipalName}) añadido como administrador global",
+      "ms_change": "Cambio de Microsoft — {msTitle}",
       "enterprise_application_creation": "{policyName}: «{appName}» registrada",
       "external_user_addition": "{policyName}: {guestName} invitado como usuario externo",
       "mfa_disabled_users": "{policyName}: {userName} — MFA no registrada",
@@ -1421,6 +1432,9 @@
       "category": "Categoría",
       "policy": "Política",
       "tenant": "Inquilino",
+      "affected_tenants": "Inquilinos afectados",
+      "learn_more": "Microsoft",
+      "learn_more_link": "Leer la publicación del Centro de mensajes →",
       "alert_id": "ID de alerta",
       "email_sent": "Correo enviado"
     },
@@ -2174,6 +2188,18 @@
     "briefing_save_btn": "Guardar ajustes del resumen diario",
     "toast_briefing_load_failed": "Error al cargar los ajustes del resumen diario: {message}",
     "toast_briefing_saved": "Ajustes del resumen diario guardados. El próximo resumen usará el nuevo umbral.",
+    "message_center": {
+      "card_title": "Feed de mensajes de Microsoft",
+      "card_desc": "Vigile el Centro de mensajes de Microsoft de un inquilino y reciba una alerta cuando Microsoft anuncie un cambio que pueda afectar un ajuste vigilado.",
+      "section_title": "Feed del Centro de mensajes de Microsoft",
+      "intro": "Panoptica365 consulta el Centro de mensajes de Microsoft de este inquilino una vez al día y le avisa cuando Microsoft anuncia un cambio que puede afectar los ajustes que vigilamos. Deje en Ninguno para desactivarlo.",
+      "hint_picker": "Elija el inquilino cuyo Centro de mensajes leemos. Suele ser su propio inquilino de MSP, pero sirve cualquier inquilino incorporado: el feed es la misma hoja de ruta de Microsoft, sin importar desde qué inquilino lo lea.",
+      "label_picker": "Inquilino de origen",
+      "option_none": "Ninguno (desactivado)",
+      "save_btn": "Guardar ajustes del feed",
+      "toast_load_failed": "No se pudieron cargar los ajustes del feed de Microsoft: {message}",
+      "toast_saved": "Feed de mensajes de Microsoft guardado. La próxima comprobación diaria leerá desde el inquilino seleccionado."
+    },
     "card_access_title": "Control de acceso",
     "card_access_desc": "Grupos de Entra ID que controlan el acceso Administrador, Operador y Observador a Panoptica365.",
     "access_enforced_html": "<b>Aplicado.</b> El control de acceso basado en roles está activo en cada endpoint de escritura. El Administrador gestiona plantillas, configuración, ciclo de vida y registro de auditoría. El Operador implementa plantillas, aplica configuración de seguridad, acepta deriva y cierra alertas. El Observador es de solo lectura. Cada 403 se registra en el registro de auditoría MSP.",

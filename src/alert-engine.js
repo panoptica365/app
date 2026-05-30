@@ -160,6 +160,13 @@ async function ensureAlertColumns() {
     // system). Container deployments need them in code.
     { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | etc.' AFTER status" },
     { name: 'resolution_rule_id', sql: "ALTER TABLE alerts ADD COLUMN resolution_rule_id INT UNSIGNED DEFAULT NULL COMMENT 'FK alert_exemption_rules.id when resolution_reason = exemption_rule' AFTER resolution_reason" },
+    // Feature 8.8 (2026-05-30) — alert scope. Existing alerts are all single-
+    // tenant. Message Center alerts are MSP-level: tenant_id holds the
+    // configured source tenant (satisfies NOT NULL) but the alert is NOT
+    // attributed to that customer — the notifier / briefing / list UI render
+    // alert_scope='msp' rows as an MSP-wide notice listing affected tenants
+    // (carried in raw_data). Default 'tenant' keeps every prior row correct.
+    { name: 'alert_scope', sql: "ALTER TABLE alerts ADD COLUMN alert_scope ENUM('tenant','msp') NOT NULL DEFAULT 'tenant' COMMENT 'tenant = single-customer (default); msp = MSP-wide notice, do not attribute to tenant_id' AFTER status" },
   ];
 
   for (const col of columns) {

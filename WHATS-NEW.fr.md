@@ -5,6 +5,58 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.25 — 2026-05-30
+
+### Nouveauté : Fil de messages Microsoft — soyez prévenu quand Microsoft déplace le plancher
+
+Il existe un troisième type de dérive de configuration, et jusqu'ici
+Panoptica365 n'en surveillait que deux. Vous êtes déjà alerté quand un
+opérateur change quelque chose (dérive causée par un opérateur) et quand un
+attaquant change quelque chose (dérive causée par un attaquant). Celle que vous
+ne pouviez pas voir, c'était Microsoft modifiant discrètement une valeur par
+défaut, retirant un contrôle ou réduisant la portée d'une stratégie — la
+**dérive causée par Microsoft**. Personne n'a touché au locataire; le paramètre
+a simplement cessé de vouloir dire ce qu'il voulait dire la semaine dernière, et
+il n'y a aucune connexion à examiner ni rien dans le journal d'audit.
+
+Le nouveau **Fil de messages Microsoft** comble cette lacune. Choisissez un
+locataire dans **Paramètres → Fil de messages Microsoft** (votre propre
+locataire de FSG ou n'importe quel client intégré — c'est la même feuille de
+route Microsoft dans les deux cas), et une fois par jour Panoptica365 lit le
+Centre de messages Microsoft 365 de ce locataire, soumet chaque nouvelle annonce
+à Claude, et déclenche une alerte **uniquement lorsque le changement semble
+toucher un paramètre que nous surveillons déjà pour vous**. La plupart des
+publications du Centre de messages sont du bruit; ceci fait ressortir les
+quelques-unes qui comptent, généralement avec des semaines de préavis pour que
+vous puissiez vous ajuster à votre rythme plutôt que de l'apprendre quand
+quelque chose brise.
+
+Ces alertes visent **l'ensemble du parc**, pas un seul client. Un changement de
+Microsoft qui touche tout votre portefeuille produit **une seule** alerte qui
+nomme les locataires concernés — jamais une douzaine d'alertes presque
+identiques. Chaque alerte contient une explication en langage clair dans votre
+langue, un lien direct vers la publication originale de Microsoft, et l'explicatif
+(icône mortier) si vous voulez le « pourquoi ça compte » au complet. La
+fonctionnalité est livrée **désactivée** — rien ne se passe tant que vous n'avez
+pas choisi un locataire source, et vous pouvez en changer ou revenir à « Aucun »
+à tout moment.
+
+Par défaut, ces alertes apparaissent **uniquement dans le tableau de bord** et
+ne sont pas envoyées par courriel, car la dérive causée par Microsoft relève de
+la sensibilisation, pas de l'incident. Si vous préférez aussi être averti par
+courriel, réglez la stratégie d'alerte **« Changement prévu par Microsoft »** sur
+support/personnel/les deux. Et la première fois qu'un locataire source est lu,
+tout son historique du Centre de messages est versé d'un coup dans le tableau de
+bord sans vous envoyer de courriel, afin que l'activation du fil n'inonde jamais
+votre boîte de réception.
+
+Cela nécessite une nouvelle permission Microsoft, `ServiceMessage.Read.All`,
+accordée sur le locataire que vous lisez. Les nouvelles installations la captent
+dans le guide de configuration; les installations existantes l'accordent une fois
+sur le locataire source choisi.
+
+---
+
 ## Version 0.1.24 — 2026-05-30
 
 ### Nouveauté : Carte thermique — la posture de sécurité de chaque locataire, côte à côte

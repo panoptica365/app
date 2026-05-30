@@ -151,6 +151,15 @@ module.exports = {
     low: 30,
   },
 
+  // Microsoft Message Center feed (Feature 8.8)
+  // sourceTenant holds the Azure tenant GUID the daily worker pulls the
+  // Message Center from. Empty/unset = None / disabled (the default — no
+  // pull, no alerts). Changeable at any time via the Settings card; the
+  // settings route rewrites MESSAGE_CENTER_SOURCE_TENANT and reloads this.
+  messageCenter: {
+    sourceTenant: process.env.MESSAGE_CENTER_SOURCE_TENANT || '',
+  },
+
   // Morning Briefing
   briefing: {
     enabled: true,

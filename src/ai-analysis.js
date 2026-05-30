@@ -525,4 +525,225 @@ function tryParseJson(raw) {
   };
 }
 
-module.exports = { analyzeAlert, getParseStats, ensureAlertAiColumns };
+// ───────────────────────────────────────────────────────────────────────────
+// Feature 8.8 — Microsoft Message Center correlation
+//
+// Reuses the same Haiku plumbing (model, client, 3-locale JSON envelope) but
+// answers a different question: "does this Microsoft-announced change plausibly
+// affect a monitored control?" Classification only — the affected-tenant list
+// is a deterministic local DB join done by the worker, never by Haiku.
+//
+// House rules baked into the prompt:
+//   - Internal control IDs are LABELLED as internal in the data dump so the
+//     model never echoes EXO-NN / ENT-NN into operator-facing copy.
+//   - State assumed M365 tier (Business Premium); flag higher-tier-only changes.
+//   - No severity anchoring; false positives are tolerated, false negatives are
+//     the thing to minimize.
+// ───────────────────────────────────────────────────────────────────────────
+
+const MC_VALID_CATEGORIES = new Set(['planForChange', 'preventOrFixIssue', 'stayInformed']);
+const MC_BODY_CAP = 12000; // Message Center bodies are short; cap defensively.
+
+/** Strip HTML tags + decode the handful of entities Graph emits to plain text. */
+function stripHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+
+/**
+ * Ask Haiku whether one Message Center message affects a monitored control.
+ *
+ * @param {object} message       - { title, category, services, body: { content } }
+ * @param {Array}  controlCatalog - [{ setting_id, name, description }] from the
+ *                                  security-settings registry. setting_id is
+ *                                  labelled as internal in the prompt dump.
+ * @returns {object|null} {
+ *   affects_monitored_control: boolean,
+ *   affected_control_names: string[],   // human-readable, operator-safe
+ *   affected_setting_ids: string[],     // internal, code-side only
+ *   proposed_severity: 'info'|'low'|'medium'|'high'|'severe'|null,
+ *   severity_reason: string|null,
+ *   en, fr, es: string                  // operator-facing explanation per locale
+ * } or null on API/parse failure.
+ */
+async function analyzeMessageCenterItem(message, controlCatalog) {
+  const anthropic = getClient();
+  if (!anthropic) {
+    console.warn('[AI] No Anthropic API key configured — skipping Message Center correlation');
+    return null;
+  }
+
+  const prompt = buildMessageCenterPrompt(message, controlCatalog || []);
+
+  try {
+    const response = await anthropic.messages.create({
+      model: config.ai.haikuModel,
+      max_tokens: Math.max(config.ai.maxTokens || 0, 4096),
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const text = response.content?.[0]?.text || null;
+    if (!text) return null;
+    if (response.usage) {
+      console.log(
+        `[AI] Message Center correlation tokens — input=${response.usage.input_tokens || 0} ` +
+        `output=${response.usage.output_tokens || 0}`
+      );
+    }
+    return parseMessageCenterResponse(text);
+  } catch (e) {
+    console.error('[AI] Message Center correlation failed:', e.message);
+    return null;
+  }
+}
+
+function buildMessageCenterPrompt(message, controlCatalog) {
+  const bodyText = stripHtml(message?.body?.content || '');
+  const bodyForPrompt = bodyText.length > MC_BODY_CAP
+    ? bodyText.substring(0, MC_BODY_CAP) + '\n...(truncated)'
+    : bodyText;
+
+  const services = Array.isArray(message?.services) ? message.services.join(', ') : '';
+
+  // Catalog dump — internal id explicitly labelled so the model treats it as
+  // code-side metadata, never operator copy.
+  const catalogDump = (controlCatalog || [])
+    .map(c => `[internal_id=${c.setting_id}] ${c.name} — ${c.description || ''}`)
+    .join('\n');
+
+  return `You are a Microsoft 365 security analyst for a managed services provider (MSP).
+A Microsoft 365 Message Center post announces an upcoming or in-progress change.
+Decide whether that change plausibly affects ANY of the security controls this
+MSP monitors (listed below), then explain it for the operator.
+
+You perform CLASSIFICATION ONLY. Do NOT speculate about which specific customer
+tenants are affected — that is computed separately from the MSP's own database.
+
+═══ ASSUMED ENVIRONMENT ═══
+Assume the monitored tenants are on Microsoft 365 Business Premium unless the
+message text clearly indicates otherwise. If the change only matters at a higher
+tier (Entra ID P2, Defender for Office 365 P2, E5), say so explicitly in the
+explanation and lean toward a lower severity.
+
+═══ MONITORED CONTROLS (internal_id is INTERNAL — never put it in operator copy) ═══
+${catalogDump || '(no controls supplied)'}
+
+═══ THE MICROSOFT MESSAGE ═══
+TITLE: ${message?.title || '(untitled)'}
+CATEGORY: ${message?.category || 'unknown'}
+IMPACTED SERVICES: ${services || '(none listed)'}
+
+BODY:
+${bodyForPrompt || '(no body)'}
+
+═══ DECISION RULES ═══
+- Err toward "affects = true" when uncertain. A false positive only costs the
+  operator a glance; a false negative means a Microsoft-caused weakening of a
+  control slips by unnoticed. Minimize false negatives.
+- Only mark "affects = true" if the change could change the behavior, default,
+  availability, or configuration surface of one of the monitored controls above.
+- Map affected controls to their human-readable NAMES for operator copy, and
+  separately list their internal_id values for code-side use.
+
+═══ MANDATORY OPERATOR-COPY RULE ═══
+NEVER write an internal id (EXO-01, ENT-05, ATP-01, etc.) in any of the en/fr/es
+explanations or in affected_control_names. Refer to controls by their
+human-readable names only. Internal ids belong ONLY in affected_setting_ids.
+
+═══ OUTPUT FORMAT (exact) ═══
+Output ONLY a single valid JSON object. No preamble, no Markdown fences. Keys:
+
+  "affects_monitored_control": true | false
+  "affected_control_names":    array of human-readable control names ([] if none)
+  "affected_setting_ids":      array of internal ids, e.g. ["EXO-01"] ([] if none)
+  "proposed_severity":         "info" | "low" | "medium" | "high" | "severe"
+  "severity_reason":           one English sentence (machine-readable)
+  "en":                        operator explanation + what to watch for (English)
+  "fr":                        Quebec French (fr-CA) rendition of the same
+  "es":                        neutral Spanish rendition of the same
+
+Each en/fr/es value is a STANDALONE 2–4 sentence explanation: what Microsoft is
+changing, when (cite the date if present), why it matters for the monitored
+control(s), and what the operator should watch for. Do NOT translate the
+Microsoft message TITLE, product names (SharePoint, Exchange Online, Intune,
+Entra, Defender, Conditional Access), dates, or URLs. fr uses « » guillemets and
+"Locataire"/"Stratégie"; es uses neutral vocabulary and "Inquilino"/"Política".
+Do not cross-reference languages ("in English", "en français", etc.).
+
+If affects_monitored_control is false, still provide a brief one-sentence en/fr/es
+explanation of why it's not relevant, set proposed_severity to "info", and leave
+the two arrays empty.`;
+}
+
+/**
+ * Parse Haiku's Message Center JSON envelope. Returns the structured object,
+ * or null if the response can't be salvaged (caller treats null as "skip,
+ * leave unprocessed for next run" — better than a confabulated alert).
+ */
+function parseMessageCenterResponse(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  let cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  let obj;
+  try {
+    obj = JSON.parse(cleaned);
+  } catch {
+    console.warn('[AI] Message Center JSON parse failed — skipping item this run');
+    return null;
+  }
+  if (!obj || typeof obj !== 'object') return null;
+
+  const en = typeof obj.en === 'string' ? obj.en.trim() : '';
+  const fr = typeof obj.fr === 'string' ? obj.fr.trim() : '';
+  const es = typeof obj.es === 'string' ? obj.es.trim() : '';
+  if (!en || !fr || !es) {
+    console.warn('[AI] Message Center response missing a locale — skipping item this run');
+    return null;
+  }
+
+  let proposedSeverity = null;
+  if (typeof obj.proposed_severity === 'string') {
+    const c = obj.proposed_severity.toLowerCase().trim();
+    if (VALID_SEVERITIES.has(c)) proposedSeverity = c;
+  }
+
+  let severityReason = null;
+  if (typeof obj.severity_reason === 'string') {
+    severityReason = obj.severity_reason.trim().replace(/\s+/g, ' ');
+    if (severityReason.length > 500) severityReason = severityReason.substring(0, 497) + '...';
+    if (!severityReason) severityReason = null;
+  }
+
+  const sanitizeArr = (a) => Array.isArray(a)
+    ? a.map(x => String(x || '').trim()).filter(Boolean)
+    : [];
+
+  return {
+    affects_monitored_control: obj.affects_monitored_control === true,
+    affected_control_names: sanitizeArr(obj.affected_control_names),
+    affected_setting_ids: sanitizeArr(obj.affected_setting_ids),
+    proposed_severity: proposedSeverity,
+    severity_reason: severityReason,
+    en, fr, es,
+  };
+}
+
+module.exports = {
+  analyzeAlert,
+  getParseStats,
+  ensureAlertAiColumns,
+  analyzeMessageCenterItem,
+  _stripHtml: stripHtml,
+  MC_VALID_CATEGORIES,
+};

@@ -128,6 +128,7 @@ router.get('/', async (req, res) => {
     // we don't want to ship full raw_data for every row in the list.
     const alerts = await db.queryRows(
       `SELECT a.id, a.tenant_id, a.policy_id, a.severity, a.message, a.status,
+              a.alert_scope,
               a.email_sent, a.recurrence_count, a.last_seen_at, a.triggered_at,
               a.closed_at, a.dedup_key, a.auto_attributed_change_id,
               SUBSTRING(COALESCE(a.ai_analysis_en, ''), 1, 200) AS ai_summary,

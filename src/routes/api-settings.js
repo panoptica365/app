@@ -11,6 +11,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const auth = require('../auth');
 const config = require('../../config/default');
 const mspAudit = require('../msp-audit');
+const db = require('../db/database');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -386,6 +387,118 @@ router.put('/briefing', (req, res) => {
 
 // Initialize briefing config on module load
 reloadBriefingConfig();
+
+// ─── Microsoft Message Center Feed (Feature 8.8) ───
+//
+// MSP-level setting: the Azure tenant GUID the daily Message Center worker
+// pulls from. Empty/unset = None / disabled (default — no pull, no alerts).
+// Stored as MESSAGE_CENTER_SOURCE_TENANT in .env; reloaded into
+// config.messageCenter.sourceTenant live so the next daily cycle reads the
+// new value without a restart. Admin-only (the whole surface is requireAdmin).
+//
+// Mirrors the BRIEFING_MIN_SEVERITY flow above; the only extra step is
+// validating that the chosen GUID belongs to a tenant Panoptica365 knows.
+
+function reloadMessageCenterConfig() {
+  config.messageCenter = config.messageCenter || {};
+  config.messageCenter.sourceTenant = process.env.MESSAGE_CENTER_SOURCE_TENANT || '';
+}
+
+router.get('/message-center', async (req, res) => {
+  reloadMessageCenterConfig();
+  const guid = config.messageCenter.sourceTenant || '';
+  let sourceTenantName = null;
+  if (guid) {
+    try {
+      const row = await db.queryOne(
+        'SELECT display_name FROM tenants WHERE tenant_id = ? LIMIT 1',
+        [guid]
+      );
+      sourceTenantName = row ? row.display_name : null;
+    } catch (err) {
+      console.warn('[Settings] message-center tenant name lookup failed:', err.message);
+    }
+  }
+  res.json({
+    source_tenant: guid || null,
+    source_tenant_name: sourceTenantName,
+  });
+});
+
+router.put('/message-center', async (req, res) => {
+  try {
+    let { source_tenant } = req.body || {};
+    if (source_tenant === undefined) {
+      return res.status(400).json({ error: 'source_tenant is required (use null/empty for None)' });
+    }
+
+    // Normalize: null / '' / 'none' all mean "disable".
+    let next = (source_tenant === null) ? '' : String(source_tenant).trim();
+    if (next.toLowerCase() === 'none') next = '';
+
+    // If enabling/switching, validate the GUID format AND that it belongs to a
+    // tenant we know. Empty = disable (always allowed).
+    let nextName = null;
+    if (next) {
+      if (!GUID_RE.test(next)) {
+        return res.status(400).json({ error: 'source_tenant is not a valid tenant GUID' });
+      }
+      const row = await db.queryOne(
+        'SELECT display_name FROM tenants WHERE tenant_id = ? LIMIT 1',
+        [next]
+      );
+      if (!row) {
+        return res.status(400).json({ error: 'source_tenant does not match any known tenant' });
+      }
+      nextName = row.display_name;
+    }
+
+    reloadMessageCenterConfig();
+    const before = config.messageCenter.sourceTenant || '';
+    if (next === before) {
+      return res.json({ success: true, no_changes: true });
+    }
+
+    // Resolve the previous GUID to a display name for the audit "from" param.
+    let beforeName = null;
+    if (before) {
+      try {
+        const prev = await db.queryOne(
+          'SELECT display_name FROM tenants WHERE tenant_id = ? LIMIT 1',
+          [before]
+        );
+        beforeName = prev ? prev.display_name : before;
+      } catch { beforeName = before; }
+    }
+
+    updateEnvVars({ MESSAGE_CENTER_SOURCE_TENANT: next });
+    reloadMessageCenterConfig();
+
+    const fromLabel = beforeName || 'None';
+    const toLabel = nextName || 'None';
+    console.log(`[Settings] Message Center source tenant: ${fromLabel} → ${toLabel} (by ${req.session.user.email})`);
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.SETTINGS_CHANGE,
+      action: 'settings.message_center.update',
+      description: `Microsoft Message Center source tenant changed: ${fromLabel} → ${toLabel}`,
+      templateKey: 'settings.message_center.update',
+      templateParams: { from: fromLabel, to: toLabel },
+      targetType: 'setting',
+      targetId: 'message_center',
+      targetName: 'Microsoft message feed',
+      metadata: { diff: { source_tenant: { from: before || null, to: next || null } } },
+      req,
+    }).catch(() => {});
+
+    res.json({ success: true, source_tenant: next || null, source_tenant_name: nextName });
+  } catch (err) {
+    console.error('[Settings] Message Center save failed:', err.message);
+    res.status(500).json({ error: 'Failed to save Microsoft message feed settings' });
+  }
+});
+
+// Initialize message-center config on module load
+reloadMessageCenterConfig();
 
 // ─── Access Control (3 Entra group Object IDs) ───
 //

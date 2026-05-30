@@ -74,6 +74,7 @@ const usersStore = require('./users-store');
 const morningBriefing = require('./morning-briefing');
 const auditExpiryScheduler = require('./audit-expiry-scheduler');
 const ualWorker = require('./ual-worker');
+const messageCenterWorker = require('./message-center-worker');
 const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 
@@ -356,6 +357,13 @@ async function start() {
       console.error('[Server] users-store schema ensure failed at boot:', err.message)
     );
 
+    // Feature 8.8 — eager-create message_center_items + state tables at boot
+    // (spec §4.1 eager-migration pattern), so the schema exists regardless of
+    // whether the Message Center feed is currently enabled. Fire-and-forget.
+    require('./lib/message-center-store').ensureSchema().catch(err =>
+      console.error('[Server] message-center schema ensure failed at boot:', err.message)
+    );
+
     // Start CA drift scheduler (60-minute cycle). Also passes
     // expireExemptions so overdue exemption grants are auto-revoked at the
     // top of each cycle — part of the exemption-aware alert suppression
@@ -379,6 +387,12 @@ async function start() {
     // cycle is deferred 30s to avoid piling onto startup work.
     // Wired May 4, 2026 (UAL Phase 2b).
     ualWorker.startLoop();
+
+    // Start Microsoft Message Center worker (Feature 8.8). Wakes hourly but
+    // acts once per 24h; no-ops entirely unless an operator has selected a
+    // source tenant in Settings → Microsoft message feed. Surfaces
+    // Microsoft-caused configuration drift as MSP-level alerts.
+    messageCenterWorker.start();
 
     // Async-Apply infrastructure (May 6, 2026).
     // Stranded-job recovery FIRST — any apply jobs in 'running' state from
@@ -412,6 +426,7 @@ process.on('SIGINT', async () => {
   morningBriefing.stop();
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
+  messageCenterWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
   await db.close();
@@ -426,6 +441,7 @@ process.on('SIGTERM', async () => {
   morningBriefing.stop();
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
+  messageCenterWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
   await db.close();
