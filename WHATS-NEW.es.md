@@ -5,6 +5,31 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.22 — 2026-05-29
+
+### Novedad: Aprender — el plan de formación en seguridad integrado
+
+Panoptica365 ahora incluye una sección **Aprender** en la barra lateral
+(debajo de SharePoint). Lleva todo el plan de formación en seguridad
+directamente a la consola: 49 lecciones repartidas en seis temas — desde una
+orientación al panorama de seguridad de Microsoft 365, pasando por los ataques
+de identidad reales que afectan a los inquilinos hoy, hasta el acceso
+condicional, Intune, la seguridad del correo y el Secure Score.
+
+Haga clic en **Aprender** para ver las seis tarjetas de temas, abra un tema
+para explorar sus lecciones y haga clic en cualquier lección para leerla en un
+espacio de lectura amplio y cómodo. Un punto azul indica las lecciones que aún
+no ha leído — desaparece en cuanto las abre — y una etiqueta **ACTUALIZADO**
+señala las lecciones modificadas en las últimas dos semanas, para reconocer de
+un vistazo lo que es nuevo. Todo sigue el idioma de su interfaz: español,
+inglés o francés.
+
+La sección es de solo lectura. Está ahí para aprender, ya sea que esté
+poniendo al día a un técnico nuevo o repasando un control concreto antes de
+configurarlo.
+
+---
+
 ## Versión 0.1.21 — 2026-05-29
 
 ### La Evaluación rápida ahora usa Claude Opus 4.8

@@ -50,6 +50,9 @@ router.get('/reports', servePartial('reports.html'));
 // ─── SharePoint (ported from Tabula Accessus) ───
 router.get('/sharepoint', servePartial('sharepoint.html'));
 
+// ─── Learn (curriculum / Learning Hub) ───
+router.get('/learn', servePartial('learn.html'));
+
 // ─── CA Templates ───
 router.get('/ca-templates', servePartial('ca-templates.html'));
 

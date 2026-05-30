@@ -1,0 +1,23 @@
+{
+  "card_number": 6,
+  "slug": "secure-score",
+  "icon": "gauge",
+  "titles": {
+    "en": "Microsoft Secure Score",
+    "fr": "Microsoft Secure Score",
+    "es": "Microsoft Secure Score"
+  },
+  "subtitles": {
+    "en": "Read, interpret, and leverage Microsoft Secure Score across your entire MSP book — from mechanics to customer-facing renewal narrative.",
+    "fr": "Lire, interpréter et exploiter Microsoft Secure Score sur tout votre carnet MSP — de la mécanique au récit de renouvellement face client.",
+    "es": "Lee, interpreta y aprovecha Microsoft Secure Score en toda tu cartera MSP — desde la mecánica hasta la narrativa de renovación de cara al cliente."
+  },
+  "lessons": [
+    "secure-score-101",
+    "how-the-score-is-calculated",
+    "mapping-curriculum-to-score",
+    "where-secure-score-misleads",
+    "operating-at-scale-and-closing",
+    "customer-facing-secure-score"
+  ]
+}

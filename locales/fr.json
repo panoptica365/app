@@ -12,6 +12,7 @@
     "tenants": "Locataires",
     "reports": "Rapports",
     "sharepoint": "SharePoint",
+    "learn": "Apprendre",
     "alert_policies": "Stratégies d’alerte",
     "ca_templates": "Stratégies AC",
     "intune_templates": "Stratégies Intune",
@@ -2907,6 +2908,15 @@
         "other": "Autre"
       }
     }
+  },
+  "learn": {
+    "title": "Apprendre",
+    "back_to_topics": "Retour aux sujets",
+    "last_updated": "Mis à jour",
+    "updated_badge": "MIS À JOUR",
+    "close": "Fermer",
+    "empty_state": "Aucune leçon dans ce sujet pour l'instant.",
+    "unread": "Non lu"
   },
   "sharepoint": {
     "preflight_btn": "Vérifier les autorisations",

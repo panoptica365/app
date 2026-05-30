@@ -5,6 +5,29 @@ that release, newest first.
 
 ---
 
+## Version 0.1.22 — 2026-05-29
+
+### New: Learn — the built-in security curriculum
+
+Panoptica365 now has a **Learn** section in the sidebar (under SharePoint).
+It brings the full security curriculum directly into the console: 49 lessons
+across six topics — from an orientation to the Microsoft 365 security
+landscape, through the real-world identity attacks hitting tenants today, to
+Conditional Access, Intune, email security, and Secure Score.
+
+Click **Learn** to see the six topic cards, open a topic to browse its
+lessons, and click any lesson to read it in a large, comfortable reading
+view. A blue dot marks lessons you haven't read yet — it clears once you open
+them — and an **UPDATED** badge flags lessons changed in the last two weeks,
+so you can tell at a glance what's new. Everything follows your interface
+language: English, French, or Spanish.
+
+The whole section is read-only. It's there to learn from, whether you're
+bringing a new technician up to speed or brushing up on a specific control
+before you configure it.
+
+---
+
 ## Version 0.1.21 — 2026-05-29
 
 ### Quick Assessment now runs on Claude Opus 4.8

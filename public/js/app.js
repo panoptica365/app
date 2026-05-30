@@ -29,6 +29,7 @@
     'tenant-dashboard': { partial: '/partials/tenant-dashboard',  script: '/js/pages/tenant-dashboard.js' },
     'reports':          { partial: '/partials/reports',           script: '/js/pages/reports.js' },
     'sharepoint':       { partial: '/partials/sharepoint',         script: '/js/pages/sharepoint.js' },
+    'learn':            { partial: '/partials/learn',              script: '/js/pages/learn.js' },
     'alert-policies':   { partial: '/partials/alert-policies',   script: '/js/pages/alert-policies.js' },
     'ca-templates':     { partial: '/partials/ca-templates',     script: '/js/pages/ca-templates.js' },
     'intune-templates': { partial: '/partials/intune-templates', script: '/js/pages/intune-templates.js' },

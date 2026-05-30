@@ -12,6 +12,7 @@
     "tenants": "Inquilinos",
     "reports": "Informes",
     "sharepoint": "SharePoint",
+    "learn": "Aprender",
     "alert_policies": "Directivas de alerta",
     "ca_templates": "Directivas de CA",
     "intune_templates": "Directivas de Intune",
@@ -2907,6 +2908,15 @@
         "other": "Otro"
       }
     }
+  },
+  "learn": {
+    "title": "Aprender",
+    "back_to_topics": "Volver a los temas",
+    "last_updated": "Actualizado",
+    "updated_badge": "ACTUALIZADO",
+    "close": "Cerrar",
+    "empty_state": "Aún no hay lecciones en este tema.",
+    "unread": "No leído"
   },
   "sharepoint": {
     "preflight_btn": "Check Permissions",

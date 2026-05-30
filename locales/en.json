@@ -12,6 +12,7 @@
     "tenants": "Tenants",
     "reports": "Reports",
     "sharepoint": "SharePoint",
+    "learn": "Learn",
     "alert_policies": "Alert Policies",
     "ca_templates": "CA Policies",
     "intune_templates": "Intune Policies",
@@ -2907,6 +2908,15 @@
         "other": "Other"
       }
     }
+  },
+  "learn": {
+    "title": "Learn",
+    "back_to_topics": "Back to topics",
+    "last_updated": "Last updated",
+    "updated_badge": "UPDATED",
+    "close": "Close",
+    "empty_state": "No lessons in this topic yet.",
+    "unread": "Unread"
   },
   "sharepoint": {
     "preflight_btn": "Check Permissions",
