@@ -5,7 +5,7 @@ that release, newest first.
 
 ---
 
-## Version 0.1.27 — 2026-05-31
+## Version 0.1.28 — 2026-05-31
 
 ### New: Identity timeline — one click from an alert to the whole story
 

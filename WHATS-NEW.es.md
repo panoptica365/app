@@ -5,7 +5,7 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
-## Versión 0.1.27 — 2026-05-31
+## Versión 0.1.28 — 2026-05-31
 
 ### Novedad: cronología de identidad — un clic desde una alerta hacia toda la historia
 
