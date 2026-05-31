@@ -1257,7 +1257,8 @@
       "mute.create": "{email} silenció las alertas desde {startsAt} hasta {endsAt}",
       "mute.create_with_reason": "{email} silenció las alertas desde {startsAt} hasta {endsAt} ({reason})",
       "mute.revoke": "{email} canceló su silencio activo antes de tiempo",
-      "access_denied": "Acceso denegado: {method} {path} (rol requerido: {required}, rol actual: {actual})"
+      "access_denied": "Acceso denegado: {method} {path} (rol requerido: {required}, rol actual: {actual})",
+      "identity_timeline.analyze": "Análisis de correlación de identidad generado para {upn}"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -1506,6 +1507,63 @@
       "investigating": "En investigación",
       "resolved": "Resuelta",
       "false_positive": "Falso positivo"
+    },
+    "identity_timeline": {
+      "open": "Ver cronología de identidad",
+      "timeline": "Cronología",
+      "window_24h": "Últimas 24 h",
+      "window_7d": "Últimos 7 días",
+      "reanalyze": "Reanalizar",
+      "analyzing": "Analizando…",
+      "next_check": "Qué revisar a continuación",
+      "ai_generated": "Resumen generado por IA",
+      "stale": "puede estar desactualizado",
+      "story_none": "Resumen de IA no generado.",
+      "story_generating": "Generando resumen de IA…",
+      "no_events": "No se encontró actividad para este usuario en el período seleccionado.",
+      "load_error": "No se pudo cargar la cronología de identidad.",
+      "signin_success": "Inicio de sesión exitoso",
+      "signin_failed": "Error de inicio de sesión",
+      "audit_event": "Evento de auditoría",
+      "defender_incident": "Incidente de Defender",
+      "alert": "Alerta",
+      "anchor": "esta alerta",
+      "sensitive": "sensible",
+      "risk": "riesgo",
+      "open_incident": "Abrir incidente",
+      "learn_link": "Aprender: compromiso de cuenta y rociado de contraseñas",
+      "entra_link": "Buscar usuario en Entra",
+      "defender_link": "Incidente de Defender",
+      "source": {
+        "ual": "Registro de auditoría",
+        "defender": "Defender"
+      },
+      "classification": {
+        "failed_auth_only": "Solo intentos fallidos",
+        "password_spray": "Rociado de contraseñas",
+        "brute_force": "Fuerza bruta",
+        "possible_compromise": "Posible compromiso",
+        "inconclusive": "No concluyente"
+      },
+      "error_code": {
+        "50053": "Cuenta bloqueada",
+        "50058": "Falta información de sesión",
+        "50074": "MFA requerida",
+        "50076": "MFA requerida (dispositivo)",
+        "50079": "Inscripción de MFA requerida",
+        "50097": "Se requiere autenticación del dispositivo",
+        "50125": "Inicio de sesión interrumpido (restablecimiento de contraseña)",
+        "50126": "Usuario o contraseña incorrectos",
+        "50140": "Inicio de sesión interrumpido (mantener sesión iniciada)",
+        "53003": "Bloqueado por Acceso Condicional",
+        "53004": "Inscripción de MFA requerida por Acceso Condicional",
+        "65001": "Se requiere consentimiento",
+        "700016": "Aplicación no encontrada en el directorio"
+      },
+      "progress_collect": "Recopilando inicios de sesión y registros de auditoría…",
+      "progress_correlate": "Correlacionando eventos entre fuentes…",
+      "progress_analyze": "Pidiendo a Claude que correlacione la actividad…",
+      "progress_finish": "Casi listo…"
     }
   },
   "reports": {

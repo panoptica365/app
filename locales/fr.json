@@ -1257,7 +1257,8 @@
       "mute.create": "{email} a coupé les alertes du {startsAt} au {endsAt}",
       "mute.create_with_reason": "{email} a coupé les alertes du {startsAt} au {endsAt} ({reason})",
       "mute.revoke": "{email} a annulé son silence actif avant l'échéance",
-      "access_denied": "Accès refusé : {method} {path} (rôle requis : {required}, rôle actuel : {actual})"
+      "access_denied": "Accès refusé : {method} {path} (rôle requis : {required}, rôle actuel : {actual})",
+      "identity_timeline.analyze": "Analyse de corrélation d'identité générée pour {upn}"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1506,6 +1507,63 @@
       "investigating": "En enquête",
       "resolved": "Résolue",
       "false_positive": "Faux positif"
+    },
+    "identity_timeline": {
+      "open": "Voir la chronologie de l'identité",
+      "timeline": "Chronologie",
+      "window_24h": "Dernières 24 h",
+      "window_7d": "7 derniers jours",
+      "reanalyze": "Réanalyser",
+      "analyzing": "Analyse en cours…",
+      "next_check": "À vérifier ensuite",
+      "ai_generated": "Résumé généré par l'IA",
+      "stale": "peut être désuet",
+      "story_none": "Résumé IA non généré.",
+      "story_generating": "Génération du résumé IA…",
+      "no_events": "Aucune activité trouvée pour cet utilisateur dans la période sélectionnée.",
+      "load_error": "Échec du chargement de la chronologie de l'identité.",
+      "signin_success": "Connexion réussie",
+      "signin_failed": "Échec de la connexion",
+      "audit_event": "Événement d'audit",
+      "defender_incident": "Incident Defender",
+      "alert": "Alerte",
+      "anchor": "cette alerte",
+      "sensitive": "sensible",
+      "risk": "risque",
+      "open_incident": "Ouvrir l'incident",
+      "learn_link": "Apprendre : compromission de compte et pulvérisation",
+      "entra_link": "Trouver l’utilisateur dans Entra",
+      "defender_link": "Incident Defender",
+      "source": {
+        "ual": "Journal d'audit",
+        "defender": "Defender"
+      },
+      "classification": {
+        "failed_auth_only": "Tentatives échouées seulement",
+        "password_spray": "Pulvérisation de mots de passe",
+        "brute_force": "Force brute",
+        "possible_compromise": "Compromission possible",
+        "inconclusive": "Non concluant"
+      },
+      "error_code": {
+        "50053": "Compte verrouillé",
+        "50058": "Informations de session manquantes",
+        "50074": "MFA requise",
+        "50076": "MFA requise (appareil)",
+        "50079": "Inscription MFA requise",
+        "50097": "Authentification de l'appareil requise",
+        "50125": "Connexion interrompue (réinitialisation du mot de passe)",
+        "50126": "Nom d'utilisateur ou mot de passe erroné",
+        "50140": "Connexion interrompue (rester connecté)",
+        "53003": "Bloqué par l'Accès conditionnel",
+        "53004": "Inscription MFA requise par l'Accès conditionnel",
+        "65001": "Consentement requis",
+        "700016": "Application introuvable dans le répertoire"
+      },
+      "progress_collect": "Collecte des connexions et des journaux d’audit…",
+      "progress_correlate": "Corrélation des événements entre les sources…",
+      "progress_analyze": "Analyse de l’activité par Claude…",
+      "progress_finish": "Presque terminé…"
     }
   },
   "reports": {

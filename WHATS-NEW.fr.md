@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.27 — 2026-05-31
+
+### Nouveauté : chronologie de l'identité — un clic depuis une alerte vers toute l'histoire
+
+Quand une alerte d'identité se déclenche — le plus souvent un verrouillage de compte après des connexions échouées répétées — la question est toujours la même : s'agit-il d'un mot de passe oublié et d'une pulvérisation sans danger venue de l'étranger, ou de la seule fois où un compte a vraiment été pris d'assaut? Jusqu'ici, y répondre voulait dire quitter l'alerte, ouvrir l'Activité quotidienne, choisir le locataire et filtrer à la main les connexions de l'utilisateur.
+
+Le nouveau bouton **Voir la chronologie de l'identité**, sur le panneau de détail de toute alerte d'identité, réduit tout cela à un seul clic. Un panneau en lecture seule glisse à l'écran et montre les dernières 24 h d'activité de l'utilisateur (extensible à 7 jours), assemblées à partir de quatre sources que Panoptica365 recueille déjà — connexions, journal d'audit unifié, incidents Defender et autres alertes Panoptica — sur un seul écran trié par heure. Les connexions réussies et échouées sont distinguées par couleur, de sorte qu'une seule réussite dans un mur d'échecs est impossible à manquer; les rafales répétées d'une même action sont regroupées en une ligne avec un compte, et chaque adresse IP est étiquetée IPv4 ou IPv6.
+
+En haut, Claude lit l'ensemble du portrait et rédige une courte évaluation en langage clair — s'agit-il d'une tentative de force brute à laquelle le compte a résisté, ou d'une compromission possible qui exige une action — en citant les événements exacts sur lesquels il s'appuie. Les attaques uniquement en échec sont clairement signalées comme « compte protégé », et non maquillées en intrusions. L'évaluation est rédigée dans la langue de votre interface et mise en cache, de sorte que rouvrir la même alerte ne coûte rien; appuyez sur **Réanalyser** pour la rafraîchir. Panoptica365 ne touche jamais au locataire : le panneau est en lecture seule, avec des liens vers le Carrefour d'apprentissage et les consoles Entra et Defender pour le moment où vous voudrez agir.
+
+---
+
 ## Version 0.1.26 — 2026-05-30
 
 ### Nouveauté : onglet Applications — connaissez chaque application d'un locataire, et repérez celles qui changent

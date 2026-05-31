@@ -150,6 +150,29 @@
          </button>`
       : '';
 
+    // Identity-timeline chip (May 30, 2026) — read-only triage pivot to the
+    // identity timeline drawer. Shown for ANY alert that resolves a UPN,
+    // regardless of category/status (unlike the exemption button, which is a
+    // write action gated to risky_signins). One chip per distinct UPN; the
+    // common case is exactly one. When multiple, append the UPN to the label
+    // so the operator can tell them apart. data-i18n carries the base label
+    // (translated via PanopticaI18n.applyTo if available) on the single case.
+    const timelineUpns = extractAlertUpns(alert);
+    const identityTimelineBtnHtml = timelineUpns.length > 0
+      ? timelineUpns.map(upn => {
+          const baseLabel = esc(window.t('alerts.identity_timeline.open'));
+          const label = timelineUpns.length > 1
+            ? `${baseLabel} — ${esc(upn)}`
+            : baseLabel;
+          const i18nAttr = timelineUpns.length > 1
+            ? ''
+            : ' data-i18n="alerts.identity_timeline.open"';
+          // Accent-filled + leading icon so this read-only triage pivot stands
+          // out from the neutral status/exemption controls beside it.
+          return `<button class="alert-identity-timeline-btn" data-upn="${esc(upn)}" data-tenant-id="${esc(String(alert.tenant_id))}" data-alert-id="${esc(String(alert.id))}"${i18nAttr} style="display:inline-flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-size:0.75rem;font-weight:600;padding:5px 12px;cursor:pointer;color:#fff;background:var(--p-accent,#2563eb);border:1px solid var(--p-accent,#2563eb);border-radius:6px;box-shadow:0 1px 3px rgba(37,99,235,0.3);"><span aria-hidden="true">🔍</span>${label}</button>`;
+        }).join('')
+      : '';
+
     // Auto-resolved provenance pill — when an alert was auto-resolved by an
     // active exemption rule, surface that fact in the header so operators
     // know why the row is in 'resolved' state without manual action.
@@ -172,6 +195,7 @@
         ${adjustedBadgeHtml}
         ${autoResolvedPillHtml}
         ${createExemptionBtnHtml}
+        ${identityTimelineBtnHtml}
       </div>
       <div style="font-family:Inter,sans-serif;font-size:1.3rem;color:var(--p-text);margin-bottom:4px;">${esc(renderAlertMessage(alert))}</div>
       <div style="font-family:Inter,sans-serif;font-size:0.85rem;color:var(--p-text-muted);">
@@ -214,6 +238,24 @@
       if (createExBtn) {
         createExBtn.addEventListener('click', () => {
           openCreateExemptionModal(alert);
+        });
+      }
+
+      // Identity-timeline chip handler(s) — open the read-only timeline drawer
+      // for the chip's UPN. Strings from data attributes are fine; the drawer
+      // / API coerce them.
+      const header = el('alert-detail-header');
+      if (header) {
+        header.querySelectorAll('.alert-identity-timeline-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (window.Panoptica && window.Panoptica.IdentityTimeline) {
+              window.Panoptica.IdentityTimeline.open({
+                tenantId: btn.dataset.tenantId,
+                upn: btn.dataset.upn,
+                anchorAlertId: btn.dataset.alertId,
+              });
+            }
+          });
         });
       }
 
@@ -516,6 +558,38 @@
       country: country ? String(country).toUpperCase() : null,
       ip: ip ? String(ip) : null,
     };
+  }
+
+  // Identity-timeline (May 30, 2026) — collect every distinct UPN an alert
+  // references so the operator can pivot to the read-only identity timeline
+  // drawer. Unlike extractAlertSignal (single signal for exemption matching)
+  // this returns an array: Defender "security alert" rows can implicate
+  // multiple accounts via raw.accounts. Mirrors extractAlertSignal's parse
+  // of raw_data when it arrives as a JSON string.
+  function extractAlertUpns(alert) {
+    if (!alert || !alert.raw_data) return [];
+    let raw = alert.raw_data;
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch (_) { return []; }
+    }
+    const upns = [];
+    if (Array.isArray(raw.accounts)) {
+      for (const a of raw.accounts) {
+        if (a && typeof a === 'string' && a.includes('@')) {
+          upns.push(a.toLowerCase());
+        }
+      }
+    }
+    let single = raw.userPrincipalName || raw.upn;
+    if (!single && raw.user) {
+      single = (typeof raw.user === 'object') ? raw.user.upn : raw.user;
+    }
+    if (!single && raw.signIn && raw.signIn.userPrincipalName) {
+      single = raw.signIn.userPrincipalName;
+    }
+    if (single) upns.push(String(single).toLowerCase());
+    // Dedupe, preserving order.
+    return Array.from(new Set(upns));
   }
 
   function t(key, fallback) {

@@ -1257,7 +1257,8 @@
       "mute.create": "{email} muted alerts from {startsAt} until {endsAt}",
       "mute.create_with_reason": "{email} muted alerts from {startsAt} until {endsAt} ({reason})",
       "mute.revoke": "{email} cancelled their active mute early",
-      "access_denied": "Denied {method} {path} (required: {required}, actual: {actual})"
+      "access_denied": "Denied {method} {path} (required: {required}, actual: {actual})",
+      "identity_timeline.analyze": "Generated an identity correlation analysis for {upn}"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1506,6 +1507,63 @@
       "investigating": "Investigating",
       "resolved": "Resolved",
       "false_positive": "False Positive"
+    },
+    "identity_timeline": {
+      "open": "View identity timeline",
+      "timeline": "Timeline",
+      "window_24h": "Last 24h",
+      "window_7d": "Last 7 days",
+      "reanalyze": "Re-analyze",
+      "analyzing": "Analyzing…",
+      "next_check": "What to check next",
+      "ai_generated": "AI-generated summary",
+      "stale": "may be out of date",
+      "story_none": "AI summary not generated.",
+      "story_generating": "Generating AI summary…",
+      "no_events": "No activity found for this user in the selected window.",
+      "load_error": "Failed to load the identity timeline.",
+      "signin_success": "Successful sign-in",
+      "signin_failed": "Sign-in failed",
+      "audit_event": "Audit event",
+      "defender_incident": "Defender incident",
+      "alert": "Alert",
+      "anchor": "this alert",
+      "sensitive": "sensitive",
+      "risk": "risk",
+      "open_incident": "Open incident",
+      "learn_link": "Learn: account compromise & spray",
+      "entra_link": "Find user in Entra",
+      "defender_link": "Defender incident",
+      "source": {
+        "ual": "Audit log",
+        "defender": "Defender"
+      },
+      "classification": {
+        "failed_auth_only": "Failed attempts only",
+        "password_spray": "Password spray",
+        "brute_force": "Brute force",
+        "possible_compromise": "Possible compromise",
+        "inconclusive": "Inconclusive"
+      },
+      "error_code": {
+        "50053": "Account locked",
+        "50058": "Session information missing",
+        "50074": "MFA required",
+        "50076": "MFA required (device)",
+        "50079": "MFA enrollment required",
+        "50097": "Device authentication required",
+        "50125": "Sign-in interrupted (password reset)",
+        "50126": "Wrong username or password",
+        "50140": "Sign-in interrupted (keep me signed in)",
+        "53003": "Blocked by Conditional Access",
+        "53004": "MFA registration required by Conditional Access",
+        "65001": "Consent required",
+        "700016": "Application not found in directory"
+      },
+      "progress_collect": "Collecting sign-ins & audit logs…",
+      "progress_correlate": "Correlating events across sources…",
+      "progress_analyze": "Asking Claude to correlate the activity…",
+      "progress_finish": "Almost there…"
     }
   },
   "reports": {

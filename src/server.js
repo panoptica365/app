@@ -40,6 +40,7 @@ const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
 const learnApiRoutes = require('./routes/api-learn');
 const applicationsApiRoutes = require('./routes/api-applications');
+const identityTimelineApiRoutes = require('./routes/api-identity-timeline');
 const partialRoutes = require('./routes/partials');
 
 // MSP audit service (for boot-time table migration)
@@ -239,6 +240,7 @@ app.use('/api/heatmap', heatmapApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
 app.use('/api/learn', learnApiRoutes);
 app.use('/api/applications', applicationsApiRoutes);
+app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings

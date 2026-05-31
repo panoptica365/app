@@ -105,6 +105,10 @@ module.exports = {
     // (e.g., 'claude-opus-4-6' for Opus tier). Single knob, no other call sites
     // affected.
     reportModel: process.env.REPORT_MODEL || null,
+    // Feature 8.7 Identity Threat Correlation uses Sonnet by default (deeper
+    // cross-source correlation + calmer escalation than Haiku). Override the
+    // exact model id via IDENTITY_TIMELINE_MODEL; falls back to sonnetModel.
+    identityTimelineModel: process.env.IDENTITY_TIMELINE_MODEL || null,
     maxTokens: 2048,
     // When true (default), Haiku's per-alert analysis can downgrade severity
     // (e.g. SEVERE → INFO for a 50097 device-auth interrupt that Microsoft's

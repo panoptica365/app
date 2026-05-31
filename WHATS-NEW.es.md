@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.27 — 2026-05-31
+
+### Novedad: cronología de identidad — un clic desde una alerta hacia toda la historia
+
+Cuando se dispara una alerta de identidad —casi siempre un bloqueo de cuenta por inicios de sesión fallidos repetidos— la pregunta es siempre la misma: ¿fue una contraseña olvidada y un rociado inofensivo desde el extranjero, o la única vez en que una cuenta fue realmente tomada? Hasta ahora, responderla implicaba salir de la alerta, abrir la Actividad diaria, elegir el inquilino y filtrar a mano los inicios de sesión del usuario.
+
+El nuevo botón **Ver cronología de identidad**, en el panel de detalle de cualquier alerta de identidad, reduce todo eso a un solo clic. Un panel de solo lectura se desliza en pantalla y muestra las últimas 24 h de actividad del usuario (ampliable a 7 días), reunidas a partir de cuatro fuentes que Panoptica365 ya recopila —inicios de sesión, registro de auditoría unificado, incidentes de Defender y otras alertas de Panoptica— en una sola pantalla ordenada por hora. Los inicios de sesión exitosos y fallidos se distinguen por color, de modo que un único éxito en un muro de fallos es imposible de pasar por alto; las ráfagas repetidas de la misma acción se agrupan en una línea con un recuento, y cada dirección IP se etiqueta como IPv4 o IPv6.
+
+Arriba, Claude lee el panorama completo y redacta una breve evaluación en lenguaje claro —si se trata de un intento de fuerza bruta que la cuenta resistió, o de un posible compromiso que requiere acción— citando los eventos exactos en que se basó. Los ataques que solo fallan se señalan claramente como «cuenta protegida», no disfrazados de intrusiones. La evaluación se redacta en el idioma de su interfaz y se almacena en caché, de modo que reabrir la misma alerta no cuesta nada; pulse **Reanalizar** para actualizarla. Panoptica365 nunca toca el inquilino: el panel es de solo lectura, con enlaces al Centro de aprendizaje y a las consolas de Entra y Defender para cuando quiera actuar.
+
+---
+
 ## Versión 0.1.26 — 2026-05-30
 
 ### Novedad: pestaña Aplicaciones — conozca cada aplicación de un inquilino y detecte las que cambian

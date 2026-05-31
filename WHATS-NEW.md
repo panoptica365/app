@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.27 — 2026-05-31
+
+### New: Identity timeline — one click from an alert to the whole story
+
+When an identity alert fires — most often an account lockout from repeated failed sign-ins — the question is always the same: was this a forgotten password and a harmless spray from abroad, or the one time an account actually got taken over? Until now, answering it meant leaving the alert, opening Daily Activity, picking the tenant, and hand-filtering that user's sign-ins.
+
+The new **View identity timeline** button, on any identity alert's detail panel, collapses that into one click. A read-only panel slides in showing that user's last 24 hours of activity (widen to 7 days) stitched together from four sources Panoptica365 already collects — sign-ins, the Unified Audit Log, Defender incidents, and other Panoptica alerts — on a single time-sorted screen. Successful and failed sign-ins are colour-coded so a lone success in a wall of failures is impossible to miss, repeated bursts of the same action are folded into one line with a count, and every IP is labelled IPv4 or IPv6.
+
+At the top, Claude reads the whole picture and writes a short plain-language assessment — is this a brute-force attempt the account held against, or a possible compromise that needs action — citing the exact events it relied on. Failed-only attacks are called out plainly as "the account held," not dressed up as breaches. The assessment is written in your interface language and cached, so re-opening the same alert costs nothing; press **Re-analyze** to refresh it. Panoptica365 never touches the tenant: the panel is read-only, with links out to the Learn Hub and the Entra and Defender consoles for when you want to act.
+
+---
+
 ## Version 0.1.26 — 2026-05-30
 
 ### New: Applications tab — know every app in a tenant, and catch the ones that change
