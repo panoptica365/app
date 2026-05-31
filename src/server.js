@@ -36,6 +36,7 @@ const securityApiRoutes = require('./routes/api-security');
 const heatmapApiRoutes = require('./routes/api-heatmap');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
+const updateApiRoutes = require('./routes/api-update');
 const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
 const learnApiRoutes = require('./routes/api-learn');
@@ -56,6 +57,7 @@ const mspAudit = require('./msp-audit');
 // the claims back out through server.js exports.
 const licenseBoot = require('./lib/license/boot');
 const licenseRefresh = require('./lib/license/refresh-client');
+const updateChecker = require('./lib/update/update-checker');
 const licenseDegrade = require('./lib/license/degrade-middleware');
 
 // First-boot setup wizard (v0.1.10+). The middleware gates the entire app
@@ -107,6 +109,21 @@ app.use(express.urlencoded({ extended: true }));
 // (per-check status, DB freshness, etc.) the operator-facing endpoint is
 // /api/health, which IS session-gated and DB-backed.
 app.get('/healthz', (req, res) => res.type('text/plain').send('ok'));
+
+// Strict readiness probe for the Stage 5 updater health gate: returns 503
+// until the DB is reachable AND the schema has been applied. Unlike /healthz
+// (process-alive only) and /api/health (session-gated, always 200), this is
+// the signal the updater trusts before declaring a new image healthy (spec 2.8).
+app.get('/healthz/ready', async (req, res) => {
+  try {
+    await db.queryOne('SELECT 1 AS ok');
+    const row = await db.queryOne("SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tenants'");
+    if (!row || !row.c) return res.status(503).type('text/plain').send('not-ready: schema');
+    return res.type('text/plain').send('ready');
+  } catch (e) {
+    return res.status(503).type('text/plain').send('not-ready: db');
+  }
+});
 
 // Boot-status probe for the setup wizard's "reconnecting…" screen.
 //
@@ -277,6 +294,7 @@ app.use('/api/learn', learnApiRoutes);
 app.use('/api/applications', applicationsApiRoutes);
 app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
+app.use('/api/update', updateApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings
 app.get('/api/i18n/:lang?', (req, res) => {
@@ -466,6 +484,8 @@ async function start() {
     // licenseValidator's in-memory cache. The timer is unref'd so a pending
     // refresh never blocks shutdown.
     licenseRefresh.start();
+    updateChecker.start();
+    updateChecker.reconcileTerminalStatus().catch(() => {});
   });
 }
 

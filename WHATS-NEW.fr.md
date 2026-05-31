@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.31 — 2026-05-31
+
+### Mises à jour logicielles en un clic, avec retour arrière automatique
+
+Panoptica365 peut maintenant se mettre à jour lui-même. Lorsqu'une version plus récente est publiée, chaque opérateur voit une bannière discrète l'informant de sa disponibilité, et un administrateur peut l'appliquer d'un seul clic depuis le menu du compte — sans terminal, sans commande `docker`, sans accès à l'interpréteur de commandes.
+
+Lorsque vous cliquez sur **Mettre à jour maintenant**, Panoptica365 prend une copie de sécurité de sa base de données, télécharge la nouvelle version, la met en place, et confirme que celle-ci démarre correctement avant de déclarer la réussite. Si la nouvelle version ne démarre **pas** correctement, elle est **automatiquement annulée** au profit de la version que vous utilisiez, et le résultat vous est clairement indiqué — votre instance n'est jamais laissée dans un état défectueux. La base de données n'est jamais restaurée automatiquement; la copie de sécurité est conservée uniquement à titre d'assurance.
+
+La bannière de mise à jour s'affiche pour tout le monde, mais seuls les administrateurs voient l'action **Mettre à jour**. Une mise à jour requise est signalée par un libellé plus ferme, mais son application demeure toujours un choix délibéré de l'administrateur. Chaque tentative de mise à jour — réussite, retour arrière ou échec — est consignée dans le journal d'audit.
+
+---
+
 ## Version 0.1.30 — 2026-05-31
 
 ### Correction : la configuration d'une nouvelle installation tient enfin — et se termine d'elle-même

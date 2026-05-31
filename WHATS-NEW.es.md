@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.31 — 2026-05-31
+
+### Actualizaciones de software con un clic y reversión automática
+
+Panoptica365 ahora puede actualizarse a sí mismo. Cuando se publica una versión más reciente, todos los operadores ven un aviso discreto que les informa de su disponibilidad, y un administrador puede aplicarla con un solo clic desde el menú de la cuenta, sin terminal, sin comandos `docker` y sin necesidad de acceso al intérprete de comandos.
+
+Al hacer clic en **Actualizar ahora**, Panoptica365 crea una copia de seguridad de su base de datos, descarga la nueva versión, la pone en marcha y confirma que arranca correctamente antes de dar la actualización por exitosa. Si la nueva versión **no** arranca correctamente, se **revierte automáticamente** a la versión que estaba usando y se le informa con claridad de lo sucedido: su instancia nunca queda en un estado defectuoso. La base de datos nunca se restaura de forma automática; la copia de seguridad se conserva únicamente como medida de seguridad.
+
+El aviso de actualización se muestra a todos, pero solo los administradores ven la acción **Actualizar**. Una actualización obligatoria se señala con un texto más firme, pero aplicarla siempre es una decisión deliberada del administrador. Cada intento de actualización (éxito, reversión o error) queda registrado en el registro de auditoría.
+
+---
+
 ## Versión 0.1.30 — 2026-05-31
 
 ### Corregido: la configuración de una instalación nueva ahora se conserva, y se completa sola

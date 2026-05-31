@@ -18,6 +18,18 @@
        `data-phase` attribute. Hidden by default; populated by app.js via
        /api/license/status polling. NFR installs and pre-expiry paid never
        see this banner. Copy is fully i18n'd via license_banner.* keys. -->
+  <!-- Stage 5 in-app self-update banner. Shown to ALL roles when a newer
+       version is available; the "Update" action is admin-only (app.js gates it
+       and the menu item is removed for non-admins). Copy via update.* keys. -->
+  <div id="update-banner" class="update-banner" style="display:none;" role="status">
+    <div class="update-banner-inner">
+      <span class="update-banner-icon" aria-hidden="true">↑</span>
+      <span class="update-banner-text" id="update-banner-text"></span>
+      <button class="update-banner-action" id="update-banner-action" type="button"></button>
+      <button class="update-banner-dismiss" id="update-banner-dismiss" type="button" aria-label="Dismiss">×</button>
+    </div>
+  </div>
+
   <div id="license-banner" class="license-banner" style="display:none;" role="alert">
     <div class="license-banner-inner">
       <span class="license-banner-icon" aria-hidden="true">⚠</span>
@@ -93,6 +105,8 @@
             <span data-i18n="header.menu.whats_new">What's New</span>
             <span class="header-menu-dot" id="header-menu-dot" style="display:none;" aria-hidden="true"></span>
           </button>
+          <button class="header-menu-item" id="header-menu-update" role="menuitem" type="button"
+                  data-role-required="admin" data-i18n="update.menu_item">Update</button>
           <div class="header-menu-divider" role="separator"></div>
           <a class="header-menu-item header-menu-logout" id="header-menu-logout" role="menuitem"
              href="/auth/logout" data-i18n="header.menu.logout">Log out</a>

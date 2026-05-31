@@ -100,3 +100,6 @@ Caddyfile
 "Panoptica365 Report Cover.png"
 graphics
 "Links to consoles.txt"
+
+# Updater-managed image pin (host runtime file; keep out of the image build context)
+docker-compose.override.yml

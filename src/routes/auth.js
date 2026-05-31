@@ -11,6 +11,7 @@ const db = require('../db/database');
 const mspAudit = require('../msp-audit');
 const usersStore = require('../users-store');
 const versionInfo = require('../version');
+const updateChecker = require('../lib/update/update-checker');
 
 const router = express.Router();
 
@@ -394,7 +395,7 @@ router.get('/status', (req, res) => {
     // their role on next login.
     const user = { ...req.session.user };
     if (!user.role) user.role = 'viewer';
-    res.json({ authenticated: true, user, version: versionInfo.asObject() });
+    res.json({ authenticated: true, user, version: versionInfo.asObject(), update: updateChecker.getStatus() });
   } else {
     res.json({ authenticated: false });
   }

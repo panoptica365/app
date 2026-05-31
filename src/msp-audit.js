@@ -43,6 +43,7 @@ const CATEGORY = {
   USER_PREFS:           'user_prefs',           // per-operator prefs — mute create/revoke (Apr 28, 2026)
   ACCESS_DENIED:        'access_denied',        // 403 from requireAdmin / requireMemberOrAdmin (May 9, 2026)
   OTHER:                'other',
+  MAINTENANCE:          'maintenance',          // app self-update events (Stage 5)
 };
 
 /**
@@ -226,7 +227,7 @@ async function ensureMspAuditTable() {
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         category ENUM(
           'auth','template_crud','rbac_change','settings_change',
-          'tenant_lifecycle_msp','export','user_prefs','access_denied','other'
+          'tenant_lifecycle_msp','export','user_prefs','access_denied','other','maintenance'
         ) NOT NULL,
         action VARCHAR(64) NOT NULL,
         actor_email VARCHAR(255) DEFAULT NULL,
@@ -275,7 +276,7 @@ async function ensureMspAuditTable() {
         ALTER TABLE msp_audit_events
           MODIFY COLUMN category ENUM(
             'auth','template_crud','rbac_change','settings_change',
-            'tenant_lifecycle_msp','export','user_prefs','access_denied','other'
+            'tenant_lifecycle_msp','export','user_prefs','access_denied','other','maintenance'
           ) NOT NULL
       `);
       console.log("[MspAudit] Extended category ENUM with 'user_prefs' + 'access_denied'");

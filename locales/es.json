@@ -1262,7 +1262,11 @@
       "mute.create_with_reason": "{email} silenció las alertas desde {startsAt} hasta {endsAt} ({reason})",
       "mute.revoke": "{email} canceló su silencio activo antes de tiempo",
       "access_denied": "Acceso denegado: {method} {path} (rol requerido: {required}, rol actual: {actual})",
-      "identity_timeline.analyze": "Análisis de correlación de identidad generado para {upn}"
+      "identity_timeline.analyze": "Análisis de correlación de identidad generado para {upn}",
+      "update.requested": "Actualización solicitada: {from} → {to}",
+      "update.succeeded": "Actualización correcta: {from} → {to}",
+      "update.rolled_back": "La actualización a {to} falló la comprobación — se revirtió a {from}",
+      "update.failed": "La actualización a {to} falló"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -3610,5 +3614,40 @@
       "failsafe_banner_title": "⚠ Entrega de respaldo",
       "failsafe_banner_body": "— esta alerta estaba dirigida a destinatarios que han silenciado todas las alertas. Se redirigió a los administradores porque alguien tiene que verla."
     }
+  },
+  "update": {
+    "banner_available": "Panoptica365 {version} está disponible.",
+    "banner_mandatory": "Hay una actualización obligatoria ({version}) disponible: aplíquela pronto.",
+    "banner_action": "Actualizar",
+    "banner_dismiss": "Descartar",
+    "menu_item": "Actualizar",
+    "modal_title": "Actualización de software",
+    "current_version": "Versión actual",
+    "target_version": "Nueva versión",
+    "released_label": "Publicada",
+    "up_to_date": "Está en la última versión ({version}).",
+    "check_again": "Comprobar de nuevo",
+    "checking": "Comprobando…",
+    "update_now": "Actualizar ahora",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirm_intro": "Esto descargará la versión {version} y reiniciará Panoptica365. La actualización se verifica y se revierte automáticamente si la nueva versión no se inicia correctamente.",
+    "mandatory_note": "Esta es una actualización obligatoria.",
+    "min_supported_note": "Su versión es anterior a la mínima admitida: se recomienda encarecidamente actualizar.",
+    "progress_title": "Actualizando Panoptica365",
+    "phase_queued": "Preparando…",
+    "phase_snapshotting": "Realizando copia de seguridad de la base de datos…",
+    "phase_pulling": "Descargando la nueva versión…",
+    "phase_restarting": "Reiniciando…",
+    "phase_health_check": "Comprobando que funcione correctamente…",
+    "phase_reconnecting": "Reconectando…",
+    "result_success": "Actualización completada. Recargando…",
+    "result_rolled_back": "La actualización a {version} no superó la comprobación de estado y se revirtió automáticamente. Está a salvo en la versión {previous}.",
+    "result_failed": "La actualización no se completó. Su versión anterior sigue en ejecución. Comuníquese con el soporte.",
+    "copy_details": "Copiar detalles",
+    "copied": "Copiado",
+    "error_no_update": "No hay ninguna actualización disponible en este momento.",
+    "error_in_progress": "Ya hay una actualización en curso.",
+    "trigger_failed": "No se pudo iniciar la actualización. Inténtelo de nuevo."
   }
 }

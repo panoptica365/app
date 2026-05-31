@@ -159,6 +159,238 @@
 
   // ─── Modal ───
 
+  // ─── In-App Self-Update (Stage 5 / C2) ───────────────────────────────
+  // Banner (all roles) + admin-only modal with a live progress view that
+  // tolerates the app restarting underneath it. The update-status file written
+  // by the panoptica-updater sidecar is the source of truth; the app process
+  // is replaced mid-update, so we poll with a raw fetch and keep retrying
+  // through the connection-refused window.
+  let appUpdateStatus = null;
+  let updateBannerDismissed = false;
+  let updatePollTimer = null;
+  let updateStartedByUser = false;
+
+  function ut(key, params) {
+    return (window.t && window.t('update.' + key, params)) || key;
+  }
+
+  function currentUiLang() {
+    return (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+  }
+
+  function renderUpdateBanner() {
+    const el = document.getElementById('update-banner');
+    if (!el) return;
+    const u = appUpdateStatus;
+    if (!u || !u.update_available || updateBannerDismissed) {
+      el.style.display = 'none';
+      return;
+    }
+    const isAdmin = userInfo && userInfo.role === 'admin';
+    const version = u.latest_version || '';
+    const msgKey = u.mandatory ? 'banner_mandatory' : 'banner_available';
+    const textEl = document.getElementById('update-banner-text');
+    if (textEl) textEl.textContent = ut(msgKey, { version });
+    const actionBtn = document.getElementById('update-banner-action');
+    if (actionBtn) {
+      actionBtn.textContent = ut('banner_action');
+      actionBtn.style.display = isAdmin ? '' : 'none';
+    }
+    el.setAttribute('data-mandatory', u.mandatory ? 'true' : 'false');
+    el.style.display = '';
+  }
+
+  function escForCopy(obj) {
+    try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); }
+  }
+
+  // Build the "confirm" view inside the modal body.
+  function updateConfirmHtml(check) {
+    const lang = currentUiLang();
+    const notes = check.notes_summary && (check.notes_summary[lang] || check.notes_summary.en);
+    const rows = [];
+    rows.push(`<div class="update-modal-row"><span class="update-modal-label">${escHtml(ut('current_version'))}</span><span class="update-modal-value">${escHtml(check.running_version || appVersion || '')}</span></div>`);
+    rows.push(`<div class="update-modal-row"><span class="update-modal-label">${escHtml(ut('target_version'))}</span><span class="update-modal-value">${escHtml(check.latest_version || '')}</span></div>`);
+    if (check.released_at) {
+      rows.push(`<div class="update-modal-row"><span class="update-modal-label">${escHtml(ut('released_label'))}</span><span class="update-modal-value">${escHtml(check.released_at)}</span></div>`);
+    }
+    let html = `<div class="update-modal-rows">${rows.join('')}</div>`;
+    if (notes) html += `<p class="update-modal-notes">${escHtml(notes)}</p>`;
+    html += `<p class="update-modal-intro">${escHtml(ut('confirm_intro', { version: check.latest_version || '' }))}</p>`;
+    if (check.mandatory) html += `<p class="update-modal-mandatory">${escHtml(ut('mandatory_note'))}</p>`;
+    if (check.below_min_supported) html += `<p class="update-modal-mandatory">${escHtml(ut('min_supported_note'))}</p>`;
+    return html;
+  }
+
+  function updateProgressHtml() {
+    return `
+      <div class="update-progress" id="update-progress">
+        <div class="update-progress-spinner" aria-hidden="true"></div>
+        <p class="update-progress-phase" id="update-progress-phase">${escHtml(ut('phase_queued'))}</p>
+        <p class="update-progress-detail" id="update-progress-detail"></p>
+      </div>`;
+  }
+
+  const PHASE_KEYS = {
+    queued: 'phase_queued',
+    snapshotting: 'phase_snapshotting',
+    pulling: 'phase_pulling',
+    restarting: 'phase_restarting',
+    health_check: 'phase_health_check',
+  };
+
+  async function rawUpdateStatus() {
+    // Raw fetch (not api()) so a 401/connection-refused during the restart
+    // window does not redirect us to /auth/login — we just retry.
+    try {
+      const res = await fetch('/api/update/status', { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null; // app is mid-restart — keep polling
+    }
+  }
+
+  function setProgress(phaseKey, detail) {
+    const p = document.getElementById('update-progress-phase');
+    const d = document.getElementById('update-progress-detail');
+    if (p) p.textContent = ut(phaseKey);
+    if (d) d.textContent = detail || '';
+  }
+
+  function stopUpdatePolling() {
+    if (updatePollTimer) { clearInterval(updatePollTimer); updatePollTimer = null; }
+  }
+
+  function showUpdateResult(result, status) {
+    stopUpdatePolling();
+    const body = document.getElementById('modal-body');
+    const footer = document.getElementById('modal-footer');
+    if (!body) return;
+    if (result === 'success') {
+      body.innerHTML = `<p class="update-modal-intro">${escHtml(ut('result_success'))}</p>`;
+      // The browser was just talking to the NEW container; reload so the SPA
+      // and the What's New modal reflect the new version.
+      setTimeout(() => window.location.reload(), 1500);
+      return;
+    }
+    let msg;
+    if (result === 'rolled_back') {
+      msg = ut('result_rolled_back', { version: status && status.to_version, previous: (status && status.from_version) || appVersion });
+    } else {
+      msg = ut('result_failed');
+    }
+    body.innerHTML = `<p class="update-modal-result update-modal-result-bad">${escHtml(msg)}</p>`;
+    if (footer) {
+      footer.innerHTML = `<button class="btn-secondary" id="update-copy-details" type="button">${escHtml(ut('copy_details'))}</button><button class="btn-primary" id="update-close-btn" type="button">${escHtml(ut('close'))}</button>`;
+      const copyBtn = document.getElementById('update-copy-details');
+      if (copyBtn) copyBtn.addEventListener('click', () => {
+        const details = escForCopy(status || {});
+        if (navigator.clipboard) navigator.clipboard.writeText(details).catch(() => {});
+        copyBtn.textContent = ut('copied');
+      });
+      const closeBtn = document.getElementById('update-close-btn');
+      if (closeBtn) closeBtn.addEventListener('click', () => { closeModal(); refreshUpdateState(); });
+    }
+  }
+
+  function pollUpdateProgress() {
+    stopUpdatePolling();
+    updatePollTimer = setInterval(async () => {
+      const s = await rawUpdateStatus();
+      if (!s) { setProgress('phase_reconnecting'); return; }
+      const prog = s.progress;
+      if (!prog) { setProgress('phase_reconnecting'); return; }
+      const result = prog.result || prog.phase;
+      if (result === 'success' || result === 'rolled_back' || result === 'failed') {
+        showUpdateResult(result, prog);
+        return;
+      }
+      const key = PHASE_KEYS[prog.phase] || 'phase_reconnecting';
+      setProgress(key, prog.message || '');
+    }, 3000);
+  }
+
+  function enterProgressView() {
+    const body = document.getElementById('modal-body');
+    const footer = document.getElementById('modal-footer');
+    if (body) body.innerHTML = updateProgressHtml();
+    if (footer) footer.innerHTML = '';
+    pollUpdateProgress();
+  }
+
+  async function triggerUpdate() {
+    try {
+      const res = await fetch('/api/update/trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const errKey = data.error === 'update_in_progress' ? 'error_in_progress'
+          : data.error === 'no_update_available' ? 'error_no_update'
+          : 'trigger_failed';
+        if (typeof showToast === 'function') showToast(ut(errKey), 'error');
+        return;
+      }
+      updateStartedByUser = true;
+      enterProgressView();
+    } catch (e) {
+      if (typeof showToast === 'function') showToast(ut('trigger_failed'), 'error');
+    }
+  }
+
+  async function openUpdateModal() {
+    openModal(ut('modal_title'), `<div style="text-align:center; padding:24px 0; color:var(--p-text-muted);">${escHtml(ut('checking'))}</div>`, '');
+    let data = null;
+    try { data = await api('/api/update/status'); } catch (e) { data = null; }
+
+    // If an update is already running (e.g. another admin started it), jump
+    // straight into the progress view.
+    if (data && data.in_progress) {
+      enterProgressView();
+      return;
+    }
+
+    const check = (data && data.check) || appUpdateStatus || {};
+    if (!check.update_available) {
+      const body = `<p class="update-modal-intro">${escHtml(ut('up_to_date', { version: check.running_version || appVersion || '' }))}</p>`;
+      const footer = `<button class="btn-secondary" id="update-check-again" type="button">${escHtml(ut('check_again'))}</button>`;
+      openModal(ut('modal_title'), body, footer);
+      const again = document.getElementById('update-check-again');
+      if (again) again.addEventListener('click', async () => {
+        again.textContent = ut('checking');
+        again.setAttribute('disabled', 'disabled');
+        try { await api('/api/update/check', { method: 'POST' }); } catch (e) {}
+        await refreshUpdateState();
+        openUpdateModal();
+      });
+      return;
+    }
+
+    const footer = `<button class="btn-secondary" id="update-cancel" type="button">${escHtml(ut('cancel'))}</button><button class="btn-primary" id="update-confirm" type="button">${escHtml(ut('update_now'))}</button>`;
+    openModal(ut('modal_title'), updateConfirmHtml(check), footer);
+    const cancel = document.getElementById('update-cancel');
+    if (cancel) cancel.addEventListener('click', closeModal);
+    const confirm = document.getElementById('update-confirm');
+    if (confirm) confirm.addEventListener('click', () => {
+      confirm.setAttribute('disabled', 'disabled');
+      triggerUpdate();
+    });
+  }
+
+  // Re-pull the cached check result and re-render the banner (used after a
+  // manual re-check or after a terminal update result).
+  async function refreshUpdateState() {
+    try {
+      const data = await api('/api/update/status');
+      if (data && data.check) {
+        appUpdateStatus = data.check;
+        renderUpdateBanner();
+      }
+    } catch (e) { /* non-event */ }
+  }
+
   function openModal(title, bodyHtml, footerHtml) {
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-body').innerHTML = bodyHtml;
@@ -381,6 +613,19 @@
       e.stopPropagation();
       closeMenu();
       openWhatsNewModal();
+    });
+    const updateBtn = document.getElementById('header-menu-update');
+    if (updateBtn) updateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+      openUpdateModal();
+    });
+    const bannerAction = document.getElementById('update-banner-action');
+    if (bannerAction) bannerAction.addEventListener('click', openUpdateModal);
+    const bannerDismiss = document.getElementById('update-banner-dismiss');
+    if (bannerDismiss) bannerDismiss.addEventListener('click', () => {
+      updateBannerDismissed = true;
+      renderUpdateBanner();
     });
     // Log out is a plain <a href="/auth/logout"> — default navigation; just
     // close the menu so it's not left hanging during the redirect.
@@ -1356,6 +1601,9 @@
         if (userEl) userEl.textContent = userInfo.name || userInfo.email;
         paintAvatar();
         paintRoleBadge(userInfo.role);
+        // Stage 5 — capture the cached update-check result and light the banner.
+        appUpdateStatus = status.update || null;
+        renderUpdateBanner();
         // v0.1.8 — pick up app version. /auth/status is the single fetch
         // that brings this to the SPA on first load; the What's-New modal
         // also embeds it in its header. Version is rendered in the

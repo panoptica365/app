@@ -1262,7 +1262,11 @@
       "mute.create_with_reason": "{email} a coupé les alertes du {startsAt} au {endsAt} ({reason})",
       "mute.revoke": "{email} a annulé son silence actif avant l'échéance",
       "access_denied": "Accès refusé : {method} {path} (rôle requis : {required}, rôle actuel : {actual})",
-      "identity_timeline.analyze": "Analyse de corrélation d'identité générée pour {upn}"
+      "identity_timeline.analyze": "Analyse de corrélation d'identité générée pour {upn}",
+      "update.requested": "Mise à jour demandée : {from} → {to}",
+      "update.succeeded": "Mise à jour réussie : {from} → {to}",
+      "update.rolled_back": "La mise à jour vers {to} a échoué à la vérification — retour à {from}",
+      "update.failed": "La mise à jour vers {to} a échoué"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -3610,5 +3614,40 @@
       "failsafe_banner_title": "⚠ Livraison de secours",
       "failsafe_banner_body": "— cette alerte avait été acheminée à des destinataires qui ont tous mis les alertes en sourdine. Elle a été redirigée vers les administrateurs parce que quelqu’un doit la voir."
     }
+  },
+  "update": {
+    "banner_available": "Panoptica365 {version} est disponible.",
+    "banner_mandatory": "Une mise à jour requise ({version}) est disponible — veuillez l'appliquer bientôt.",
+    "banner_action": "Mettre à jour",
+    "banner_dismiss": "Ignorer",
+    "menu_item": "Mettre à jour",
+    "modal_title": "Mise à jour logicielle",
+    "current_version": "Version actuelle",
+    "target_version": "Nouvelle version",
+    "released_label": "Publiée",
+    "up_to_date": "Vous utilisez la dernière version ({version}).",
+    "check_again": "Vérifier de nouveau",
+    "checking": "Vérification…",
+    "update_now": "Mettre à jour maintenant",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirm_intro": "Cette opération téléchargera la version {version} et redémarrera Panoptica365. La mise à jour est vérifiée et automatiquement annulée si la nouvelle version ne démarre pas correctement.",
+    "mandatory_note": "Il s'agit d'une mise à jour requise.",
+    "min_supported_note": "Votre version est antérieure à la version minimale prise en charge — la mise à niveau est fortement recommandée.",
+    "progress_title": "Mise à jour de Panoptica365",
+    "phase_queued": "Préparation…",
+    "phase_snapshotting": "Sauvegarde de la base de données…",
+    "phase_pulling": "Téléchargement de la nouvelle version…",
+    "phase_restarting": "Redémarrage…",
+    "phase_health_check": "Vérification de son bon fonctionnement…",
+    "phase_reconnecting": "Reconnexion…",
+    "result_success": "Mise à jour terminée. Rechargement…",
+    "result_rolled_back": "La mise à jour vers {version} a échoué à la vérification d'intégrité et a été automatiquement annulée. Vous êtes en sécurité sur la version {previous}.",
+    "result_failed": "La mise à jour ne s'est pas terminée. Votre version précédente fonctionne toujours. Veuillez communiquer avec le soutien.",
+    "copy_details": "Copier les détails",
+    "copied": "Copié",
+    "error_no_update": "Aucune mise à jour n'est disponible pour le moment.",
+    "error_in_progress": "Une mise à jour est déjà en cours.",
+    "trigger_failed": "Impossible de démarrer la mise à jour. Veuillez réessayer."
   }
 }

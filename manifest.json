@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "latest": {
+    "version": "0.1.31",
+    "image_tag": "v0.1.31",
+    "released_at": "2026-05-31",
+    "mandatory": false,
+    "min_supported": "0.1.0",
+    "notes_summary": {
+      "en": "One-click in-app updates with automatic rollback if a new version is not healthy.",
+      "fr": "Mises à jour en un clic dans l'application, avec retour arrière automatique si une nouvelle version n'est pas saine.",
+      "es": "Actualizaciones con un clic desde la aplicación, con reversión automática si una versión nueva no está sana."
+    }
+  },
+  "yanked": []
+}

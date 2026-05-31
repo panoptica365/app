@@ -76,6 +76,21 @@ jobs:
           fi
           echo "VERSION ($file_version) matches tag ($GITHUB_REF_NAME) ✓"
 
+      - name: Verify manifest.json matches the pushed tag
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          manifest_version=$(node -e "process.stdout.write(require(\"./manifest.json\").latest.version)")
+          manifest_tag=$(node -e "process.stdout.write(require(\"./manifest.json\").latest.image_tag)")
+          if [ "$manifest_version" != "$tag_version" ]; then
+            echo "::error::manifest.json latest.version ($manifest_version) does not match git tag ($GITHUB_REF_NAME) — bump manifest.json before tagging."
+            exit 1
+          fi
+          if [ "$manifest_tag" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::manifest.json latest.image_tag ($manifest_tag) does not match git tag ($GITHUB_REF_NAME)."
+            exit 1
+          fi
+          echo "manifest.json (version $manifest_version, tag $manifest_tag) matches tag ($GITHUB_REF_NAME) ✓"
+
       # Buildx is Docker's newer build frontend. Enables the GHA cache
       # backend (`type=gha`) plus multi-platform support if we ever
       # need it later.

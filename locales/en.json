@@ -1262,7 +1262,11 @@
       "mute.create_with_reason": "{email} muted alerts from {startsAt} until {endsAt} ({reason})",
       "mute.revoke": "{email} cancelled their active mute early",
       "access_denied": "Denied {method} {path} (required: {required}, actual: {actual})",
-      "identity_timeline.analyze": "Generated an identity correlation analysis for {upn}"
+      "identity_timeline.analyze": "Generated an identity correlation analysis for {upn}",
+      "update.requested": "Update requested: {from} → {to}",
+      "update.succeeded": "Update succeeded: {from} → {to}",
+      "update.rolled_back": "Update to {to} failed health check — rolled back to {from}",
+      "update.failed": "Update to {to} failed"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -3610,5 +3614,40 @@
       "failsafe_banner_title": "⚠ Failsafe delivery",
       "failsafe_banner_body": "— this alert was originally routed to recipients who have all muted alerts. It was redirected to administrators because someone needs to see it."
     }
+  },
+  "update": {
+    "banner_available": "Panoptica365 {version} is available.",
+    "banner_mandatory": "A required update ({version}) is available — please apply it soon.",
+    "banner_action": "Update",
+    "banner_dismiss": "Dismiss",
+    "menu_item": "Update",
+    "modal_title": "Software Update",
+    "current_version": "Current version",
+    "target_version": "New version",
+    "released_label": "Released",
+    "up_to_date": "You're on the latest version ({version}).",
+    "check_again": "Check again",
+    "checking": "Checking…",
+    "update_now": "Update now",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm_intro": "This will download {version} and restart Panoptica365. The update is verified and automatically rolled back if the new version doesn't come up healthy.",
+    "mandatory_note": "This is a required update.",
+    "min_supported_note": "Your version is older than the minimum supported — upgrading is strongly recommended.",
+    "progress_title": "Updating Panoptica365",
+    "phase_queued": "Preparing…",
+    "phase_snapshotting": "Backing up the database…",
+    "phase_pulling": "Downloading the new version…",
+    "phase_restarting": "Restarting…",
+    "phase_health_check": "Checking it's healthy…",
+    "phase_reconnecting": "Reconnecting…",
+    "result_success": "Update complete. Reloading…",
+    "result_rolled_back": "Update to {version} failed its health check and was automatically rolled back. You are safely on {previous}.",
+    "result_failed": "The update did not complete. Your previous version is still running. Please contact support.",
+    "copy_details": "Copy details",
+    "copied": "Copied",
+    "error_no_update": "No update is available right now.",
+    "error_in_progress": "An update is already in progress.",
+    "trigger_failed": "Could not start the update. Please try again."
   }
 }

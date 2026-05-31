@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.31 — 2026-05-31
+
+### One-click software updates with automatic rollback
+
+Panoptica365 can now update itself. When a newer version is published, every operator sees a calm banner letting them know it's available, and an administrator can apply it with a single click from the account menu — no terminal, no `docker` commands, no shell access required.
+
+When you click **Update now**, Panoptica365 takes a safety snapshot of its database, downloads the new version, swaps it in, and confirms the new version comes up healthy before declaring success. If the new version does **not** come up healthy, it is **automatically rolled back** to the version you were running, and you are told clearly what happened — your instance is never left in a broken state. The database is never automatically restored; the snapshot is kept purely as insurance.
+
+The update banner is shown to everyone, but only administrators see the **Update** action. A required update is flagged with firmer wording, but applying it is always a deliberate administrator choice. Every update attempt — success, rollback, or failure — is recorded in the audit log.
+
+---
+
 ## Version 0.1.30 — 2026-05-31
 
 ### Fixed: fresh-install setup now sticks — and finishes on its own

@@ -8,8 +8,8 @@
 #   panoptica-db     — MySQL 8.4 (official upstream image)
 #   panoptica-proxy  — Caddy 2 (official upstream image, auto-TLS)
 #
-# The Stage 5 panoptica-updater container is intentionally NOT in this
-# file. It ships when Stage 5 lands.
+# The panoptica-updater container (Stage 5 self-update) is defined below.
+# It is the ONLY container with the Docker socket; see scripts/updater.sh.
 #
 # Volumes are bind-mounted under ./data/ + ./certs/ on the host (NOT
 # Docker named volumes) so the MSP can back them up with their existing
@@ -181,6 +181,48 @@ services:
         condition: service_healthy
     networks:
       - panoptica-net
+
+  # ─── Self-update sidecar (Stage 5 / C2) ─────────────────────────
+  # A tiny, fixed-purpose watcher — the ONLY container that mounts the
+  # Docker socket. It performs admin-triggered image swaps with automatic
+  # rollback (scripts/updater.sh holds the full safety contract). No custom
+  # image is built or published: it runs stock docker:27-cli (which bundles
+  # the compose v2 plugin + BusyBox wget) with the script mounted in. Update
+  # the script via an installer re-run, never through the in-app flow (§7.6).
+  panoptica-updater:
+    image: docker:27-cli
+    container_name: panoptica-updater
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/project/scripts/updater.sh"]
+    environment:
+      # Pin the compose project so `docker compose` from inside the container
+      # targets the SAME stack the host started. MUST match the host project
+      # name — the installer sets COMPOSE_PROJECT_NAME identically in .env.
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-panoptica365}
+      PROJECT_DIR: /project
+      STATE_DIR: /project/data/state
+      APP_SERVICE: panoptica-app
+      DB_SERVICE: panoptica-db
+      APP_IMAGE_REPO: ghcr.io/panoptica365/app
+      HEALTH_URL: http://panoptica-app:3000/healthz/ready
+      HEALTH_TIMEOUT: ${HEALTH_TIMEOUT:-120}
+      UPDATE_MANIFEST_URL: ${UPDATE_MANIFEST_URL:-https://updates.panoptica365.com/latest.json}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Root-equivalent on the host — exactly why ONLY this tiny, no-inbound
+      # container gets it, never the internet-facing app (§7.1).
+      - /var/run/docker.sock:/var/run/docker.sock
+      # The install dir: reads docker-compose.yml + writes ONLY its own
+      # docker-compose.override.yml pin file (§7.3). data/state (the request/
+      # status channel) lives under here too.
+      - .:/project
+      # Pre-update mysqldumps (written into panoptica-db, read-side parity).
+      - ./data/snapshots:/snapshots
+    networks:
+      - panoptica-net
+    # No `ports:` — no inbound network surface at all (§7.1).
+    depends_on:
+      - panoptica-app
 
 networks:
   panoptica-net:

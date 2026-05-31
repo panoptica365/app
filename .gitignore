@@ -128,3 +128,6 @@ desktop.ini
 
 # License server public key (safe to commit — public half of Ed25519 pair)
 !keys/license-server-public-key.pem
+
+# Updater-managed image pin (written at runtime by panoptica-updater; never commit)
+docker-compose.override.yml
