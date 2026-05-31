@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.29 — 2026-05-31
+
+### Nouveauté : personnalisez vos rapports avec votre nom et votre logo
+
+Les rapports Panoptica365 peuvent désormais porter votre image de marque plutôt que la nôtre. Une nouvelle carte **Image de marque des rapports**, sous **Paramètres**, vous permet d'inscrire le nom de votre entreprise et de téléverser un logo. Un PNG transparent donne le meilleur résultat — il s'intègre proprement à la page couverture, sans boîte blanche derrière lui.
+
+Votre logo apparaît maintenant sur la page couverture de chaque rapport — Posture de sécurité, Documentation de configuration et Évaluation rapide — dans le coin supérieur gauche, avec le titre, le nom du client et la date alignés à gauche en dessous. La ligne « Préparé par » de la couverture affiche le nom de la personne qui a généré le rapport plutôt qu'un nom d'entreprise générique : un représentant peut ainsi remettre à un client un rapport portant son propre nom. Le nom de votre entreprise demeure dans le pied de page confidentiel de chaque page.
+
+Si vous ne téléversez rien, les rapports conservent la page couverture Panoptica365 par défaut.
+
+---
+
 ## Version 0.1.28 — 2026-05-31
 
 ### Nouveauté : chronologie de l'identité — un clic depuis une alerte vers toute l'histoire

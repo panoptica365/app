@@ -13,6 +13,7 @@
     document.getElementById('card-briefing')?.addEventListener('click', () => showView('briefing'));
     document.getElementById('card-message-center')?.addEventListener('click', () => showView('message_center'));
     document.getElementById('card-access')?.addEventListener('click', () => showView('access'));
+    document.getElementById('card-branding')?.addEventListener('click', () => showView('branding'));
 
     // Back buttons
     document.getElementById('smtp-back')?.addEventListener('click', () => showView('cards'));
@@ -21,6 +22,7 @@
     document.getElementById('briefing-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('message-center-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('access-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('branding-back')?.addEventListener('click', () => showView('cards'));
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -40,6 +42,11 @@
     document.getElementById('anthropic-test')?.addEventListener('click', testAnthropicKey);
     document.getElementById('anthropic-save')?.addEventListener('click', saveAnthropicKey);
     document.getElementById('anthropic-reveal')?.addEventListener('click', toggleAnthropicReveal);
+
+    // Branding handlers
+    document.getElementById('branding-save')?.addEventListener('click', saveBranding);
+    document.getElementById('branding-logo-file')?.addEventListener('change', onBrandingLogoPicked);
+    document.getElementById('branding-logo-remove')?.addEventListener('click', removeBrandingLogo);
 
     // Access Control handlers
     document.getElementById('access-save')?.addEventListener('click', saveAccessControl);
@@ -73,6 +80,7 @@
       briefing:  document.getElementById('settings-briefing-view'),
       message_center: document.getElementById('settings-message-center-view'),
       access:    document.getElementById('settings-access-view'),
+      branding:  document.getElementById('settings-branding-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -83,6 +91,7 @@
     if (view === 'briefing')  loadBriefing();
     if (view === 'message_center') loadMessageCenter();
     if (view === 'access')    loadAccessControl();
+    if (view === 'branding')  loadBranding();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───
@@ -436,6 +445,101 @@
       statusEl.textContent = window.t('settings.status.saved');
       statusEl.style.color = '#27ae60';
       Panoptica.showToast(window.t('settings.toast_access_saved'), 'success');
+    } catch (err) {
+      statusEl.textContent = window.t('settings.status.error');
+      statusEl.style.color = '#e74c3c';
+      Panoptica.showToast(window.t('settings.toast_save_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // ─── Report Branding ───
+
+  // Pending logo state, set by the file picker / remove button and consumed by
+  // saveBranding(). null data-url = no new upload this session.
+  let brandingPendingLogo = null;   // data URL string when a new PNG is staged
+  let brandingRemoveLogo = false;   // true when the operator clicked Remove
+  const BRANDING_MAX_BYTES = 2 * 1024 * 1024;
+
+  async function loadBranding() {
+    brandingPendingLogo = null;
+    brandingRemoveLogo = false;
+    const fileEl = document.getElementById('branding-logo-file');
+    if (fileEl) fileEl.value = '';
+    try {
+      const data = await Panoptica.api('/api/settings/branding');
+      document.getElementById('branding-company-name').value = data.company_name || '';
+      setBrandingPreview(data.logo_url || null);
+    } catch (err) {
+      Panoptica.showToast(window.t('settings.branding.toast_load_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // src = a URL/data-URL to show, or null to show the "no logo" placeholder.
+  function setBrandingPreview(src) {
+    const img = document.getElementById('branding-logo-preview');
+    const empty = document.getElementById('branding-logo-empty');
+    if (!img || !empty) return;
+    if (src) {
+      img.src = src;
+      img.style.display = '';
+      empty.style.display = 'none';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      empty.style.display = '';
+    }
+  }
+
+  function onBrandingLogoPicked(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById('branding-status');
+    if (file.type !== 'image/png') {
+      if (statusEl) { statusEl.textContent = window.t('settings.branding.err_not_png'); statusEl.style.color = '#e67e22'; }
+      e.target.value = '';
+      return;
+    }
+    if (file.size > BRANDING_MAX_BYTES) {
+      if (statusEl) { statusEl.textContent = window.t('settings.branding.err_too_large'); statusEl.style.color = '#e67e22'; }
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      brandingPendingLogo = reader.result; // data:image/png;base64,...
+      brandingRemoveLogo = false;
+      setBrandingPreview(brandingPendingLogo);
+      if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; }
+    };
+    reader.onerror = () => {
+      if (statusEl) { statusEl.textContent = window.t('settings.branding.err_read'); statusEl.style.color = '#e74c3c'; }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeBrandingLogo() {
+    brandingPendingLogo = null;
+    brandingRemoveLogo = true;
+    const fileEl = document.getElementById('branding-logo-file');
+    if (fileEl) fileEl.value = '';
+    setBrandingPreview(null);
+  }
+
+  async function saveBranding() {
+    const statusEl = document.getElementById('branding-status');
+    statusEl.textContent = window.t('settings.status.saving');
+    statusEl.style.color = 'var(--p-text-muted)';
+    const payload = {
+      company_name: document.getElementById('branding-company-name').value.trim(),
+    };
+    if (brandingPendingLogo) payload.logo = brandingPendingLogo;
+    else if (brandingRemoveLogo) payload.remove_logo = true;
+    try {
+      await Panoptica.api('/api/settings/branding', { method: 'PUT', body: JSON.stringify(payload) });
+      statusEl.textContent = window.t('settings.status.saved');
+      statusEl.style.color = '#27ae60';
+      Panoptica.showToast(window.t('settings.branding.toast_saved'), 'success');
+      setTimeout(loadBranding, 500);
     } catch (err) {
       statusEl.textContent = window.t('settings.status.error');
       statusEl.style.color = '#e74c3c';

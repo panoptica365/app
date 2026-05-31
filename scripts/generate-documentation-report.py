@@ -21,6 +21,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, white, black
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import (
@@ -53,6 +54,7 @@ STRINGS = {
         'report_title': 'Configuration Documentation',
         'cover_subtitle': 'Tenant Configuration Snapshot',
         'generated': 'Generated',
+        'cover_prepared_by': 'Prepared by {msp}',
         'tenant_identity': 'Tenant Identity',
         'tenant_display_name': 'Display name',
         'tenant_azure_id': 'Azure tenant ID',
@@ -204,6 +206,7 @@ STRINGS = {
         'report_title': 'Rapport de configuration',
         'cover_subtitle': '',
         'generated': 'Généré le',
+        'cover_prepared_by': 'Préparé par {msp}',
         'tenant_identity': 'Identité du locataire',
         'tenant_display_name': 'Nom d\'affichage',
         'tenant_azure_id': 'ID Azure du locataire',
@@ -355,6 +358,7 @@ STRINGS = {
         'report_title': 'Documentación de Configuración',
         'cover_subtitle': 'Instantánea de configuración del inquilino',
         'generated': 'Generado',
+        'cover_prepared_by': 'Preparado por {msp}',
         'tenant_identity': 'Identidad del inquilino',
         'tenant_display_name': 'Nombre',
         'tenant_azure_id': 'ID Azure del inquilino',
@@ -1854,16 +1858,25 @@ def build_pdf(data, output_path):
 
     # Footer config
     rc = data.get('reportConfig') or {}
-    msp_name = rc.get('mspName', 'Trilogiam')
+    msp_name = rc.get('mspName') or 'Panoptica365'
     platform_attr = rc.get('platformAttribution', True)
     footer_template = s['footer_confidential_with_platform'] if platform_attr else s['footer_confidential_no_platform']
     footer_text = footer_template.format(msp=msp_name)
+    # Cover "Prepared by" line: the logged-in operator's name when supplied,
+    # falling back to the MSP name for unattended/scheduled runs.
+    prepared_by = rc.get('preparedBy') or msp_name
 
     # Cover image
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     cover_canonical = os.path.join(project_root, 'public', 'img', 'report-cover.png')
     cover_image_path = cover_canonical if os.path.exists(cover_canonical) else None
+
+    # Optional MSP branding logo (transparent PNG uploaded via Settings →
+    # Report Branding). Drawn top-left on the cover when present.
+    msp_logo_path = os.path.join(project_root, 'data', 'branding', 'logo.png')
+    if not os.path.exists(msp_logo_path):
+        msp_logo_path = None
 
     template = DocPageTemplate(tenant_name, s, footer_text)
 
@@ -1960,21 +1973,48 @@ def build_pdf(data, output_path):
         if cover_image_path and os.path.exists(cover_image_path):
             canvas_obj.drawImage(cover_image_path, 0, 0, width=w, height=h,
                                  preserveAspectRatio=True, anchor='c')
-        canvas_obj.setFont('Helvetica-Bold', 28)
-        canvas_obj.setFillColor(HexColor('#1A2A3A'))
-        canvas_obj.drawCentredString(w / 2, h * 0.78, s['report_title'])
-        # Cover subtitle is optional — empty string means skip the line and
-        # collapse the gap to the tenant-name line below.
-        if s.get('cover_subtitle'):
-            canvas_obj.setFont('Helvetica', 14)
-            canvas_obj.setFillColor(HexColor('#2C3E50'))
-            canvas_obj.drawCentredString(w / 2, h * 0.74, s['cover_subtitle'])
-            tenant_y = h * 0.69
+
+        # Shared cover layout (matches the Security Posture report): optional MSP
+        # logo top-left in the whitest area, then a left-aligned title stack.
+        left_x = 0.6 * inch
+        logo_top = h * 0.70
+        logo_max_w = 2.6 * inch
+        logo_max_h = 1.15 * inch
+
+        if msp_logo_path:
+            try:
+                ir = ImageReader(msp_logo_path)
+                iw, ih = ir.getSize()
+                scale = min(logo_max_w / iw, logo_max_h / ih)
+                dw, dh = iw * scale, ih * scale
+                canvas_obj.drawImage(ir, left_x, logo_top - dh, width=dw, height=dh,
+                                     mask='auto')
+                cursor_y = logo_top - dh - 30
+            except Exception:
+                cursor_y = logo_top
         else:
-            tenant_y = h * 0.72
-        canvas_obj.setFont('Helvetica', 18)
+            cursor_y = h * 0.64
+
+        # Report title
+        canvas_obj.setFont('Helvetica-Bold', 26)
+        canvas_obj.setFillColor(HexColor('#1A2A3A'))
+        canvas_obj.drawString(left_x, cursor_y, s['report_title'])
+
+        # Tenant (client) name
+        cursor_y -= 26
+        canvas_obj.setFont('Helvetica', 16)
         canvas_obj.setFillColor(HexColor('#2C3E50'))
-        canvas_obj.drawCentredString(w / 2, tenant_y, tenant_name)
+        canvas_obj.drawString(left_x, cursor_y, tenant_name)
+
+        # Optional subtitle (skipped when empty, e.g. fr)
+        if s.get('cover_subtitle'):
+            cursor_y -= 22
+            canvas_obj.setFont('Helvetica', 12)
+            canvas_obj.setFillColor(HexColor('#4A5568'))
+            canvas_obj.drawString(left_x, cursor_y, s['cover_subtitle'])
+
+        # Generated timestamp
+        cursor_y -= 18
         canvas_obj.setFont('Helvetica', 10)
         canvas_obj.setFillColor(HexColor('#666666'))
         if lang == 'fr':
@@ -1983,7 +2023,13 @@ def build_pdf(data, output_path):
             date_str = f"{s['generated']} {datetime.now().strftime('%d %B %Y, %H:%M')}"
         else:
             date_str = f"{s['generated']} {datetime.now().strftime('%B %d, %Y at %H:%M')}"
-        canvas_obj.drawCentredString(w / 2, h * 0.65, date_str)
+        canvas_obj.drawString(left_x, cursor_y, date_str)
+
+        # Prepared by (operator, falling back to MSP)
+        cursor_y -= 22
+        canvas_obj.setFont('Helvetica-Oblique', 10)
+        canvas_obj.setFillColor(HexColor('#666666'))
+        canvas_obj.drawString(left_x, cursor_y, s['cover_prepared_by'].format(msp=prepared_by))
         canvas_obj.restoreState()
 
     def on_later_pages(canvas_obj, doc):

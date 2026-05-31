@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.29 — 2026-05-31
+
+### New: brand your reports with your own name and logo
+
+Panoptica365 reports can now carry your branding instead of ours. A new **Report Branding** card under **Settings** lets you set your company name and upload a logo. A transparent PNG works best — it sits cleanly on the report cover with no white box behind it.
+
+Your logo now appears on the cover of every report — Security Posture, Configuration Documentation, and Quick Assessment — in the upper-left, with the title, client name, and date neatly left-aligned beneath it. The cover's "Prepared by" line shows the name of whoever generated the report rather than a generic company name, so a salesperson can hand a customer a report with their own name on it. Your company name still anchors the confidential footer on every page.
+
+If you don't upload anything, reports keep the default Panoptica365 cover.
+
+---
+
 ## Version 0.1.28 — 2026-05-31
 
 ### New: Identity timeline — one click from an alert to the whole story

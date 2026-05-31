@@ -91,6 +91,12 @@ const io = new SocketIOServer(server);
 // Trust Nginx reverse proxy (needed for secure cookies behind TLS termination)
 app.set('trust proxy', 1);
 
+// Report-branding logo uploads arrive as a base64 PNG in the JSON body, which
+// blows past the default ~100kb cap. Give just that path a larger limit; the
+// first express.json() to parse a request wins, so the global parser below is
+// a no-op for it and stays at the default for every other route. (The route
+// handler still enforces a 2 MB decoded ceiling.)
+app.use('/api/settings/branding', express.json({ limit: '6mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1022,6 +1022,10 @@ router.post('/security-posture', auth.requireMemberOrAdmin, async (req, res) => 
         // label for any deployment without an explicit MSP_NAME set.
         mspName: reportCfg.mspName || '',
         platformAttribution: reportCfg.platformAttribution !== false,
+        // Cover "Prepared by" — the logged-in operator's display name (UPN
+        // fallback). A salesperson printing for a customer wants their own
+        // name on the cover; empty falls back to the MSP name in the PDF script.
+        preparedBy: req.session?.user?.name || req.session?.user?.email || '',
       },
     };
 
@@ -1715,6 +1719,7 @@ router.post('/documentation', auth.requireMemberOrAdmin, async (req, res) => {
         // fallback handles brand-neutral default.
         mspName: (config.report && config.report.mspName) || '',
         platformAttribution: (config.report && config.report.platformAttribution) !== false,
+        preparedBy: req.session?.user?.name || req.session?.user?.email || '',
       },
     };
 
@@ -2227,6 +2232,7 @@ router.post('/quick-assessment', auth.requireMemberOrAdmin, async (req, res) => 
       reportConfig: {
         mspName: (config.report && config.report.mspName) || '',
         platformAttribution: (config.report && config.report.platformAttribution) !== false,
+        preparedBy: req.session?.user?.name || req.session?.user?.email || '',
       },
     };
 

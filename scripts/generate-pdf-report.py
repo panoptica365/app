@@ -21,6 +21,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, white, black, Color
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import (
@@ -236,6 +237,7 @@ STRINGS = {
         'footer_generated': 'Generated',
         'footer_confidential_with_platform': 'Confidential — Prepared by {msp} via Panoptica365 for authorized recipients only',
         'footer_confidential_no_platform': 'Confidential — Prepared by {msp} for authorized recipients only',
+        'cover_prepared_by': 'Prepared by {msp}',
         'ca_policies_title': 'Conditional Access Policies',
         'ca_policies_intro': 'The following Conditional Access policies are currently configured in this tenant:',
         'ca_cross_analysis': 'Cross-Policy Analysis',
@@ -294,6 +296,7 @@ STRINGS = {
         'footer_generated': 'Généré le',
         'footer_confidential_with_platform': 'Confidentiel — Préparé par {msp} via Panoptica365 pour les destinataires autorisés uniquement',
         'footer_confidential_no_platform': 'Confidentiel — Préparé par {msp} pour les destinataires autorisés uniquement',
+        'cover_prepared_by': 'Préparé par {msp}',
         'ca_policies_title': 'Politiques d\'accès conditionnel',
         'ca_policies_intro': 'Les politiques d\'accès conditionnel suivantes sont actuellement configurées dans ce locataire :',
         'ca_cross_analysis': 'Analyse croisée des politiques',
@@ -352,6 +355,7 @@ STRINGS = {
         'footer_generated': 'Generado',
         'footer_confidential_with_platform': 'Confidencial — Preparado por {msp} mediante Panoptica365 únicamente para destinatarios autorizados',
         'footer_confidential_no_platform': 'Confidencial — Preparado por {msp} únicamente para destinatarios autorizados',
+        'cover_prepared_by': 'Preparado por {msp}',
         'ca_policies_title': 'Políticas de Acceso Condicional',
         'ca_policies_intro': 'Las siguientes políticas de Acceso Condicional están configuradas actualmente en este inquilino:',
         'ca_cross_analysis': 'Análisis Cruzado de Políticas',
@@ -791,6 +795,10 @@ def build_pdf(data, output_path):
     rc = data.get('reportConfig', {}) or {}
     msp_name = rc.get('mspName') or 'Panoptica365'
     platform_attr = rc.get('platformAttribution', True)
+    # Cover "Prepared by" line: the logged-in operator's name when the report
+    # route supplies it (a salesperson wants their own name on a customer
+    # printout), falling back to the MSP name for unattended/scheduled runs.
+    prepared_by = rc.get('preparedBy') or msp_name
     footer_template = s['footer_confidential_with_platform'] if platform_attr else s['footer_confidential_no_platform']
     footer_text = footer_template.format(msp=msp_name)
 
@@ -806,6 +814,13 @@ def build_pdf(data, output_path):
         cover_image_path = cover_v2_legacy
     else:
         cover_image_path = cover_v1_legacy
+
+    # Optional MSP branding logo. Uploaded via Settings → Report Branding and
+    # stored at data/branding/logo.png (a transparent PNG). Drawn top-left on
+    # the cover when present; absent = no logo, text block shifts up.
+    msp_logo_path = os.path.join(project_root, 'data', 'branding', 'logo.png')
+    if not os.path.exists(msp_logo_path):
+        msp_logo_path = None
 
     template = ReportPageTemplate(tenant_name, range_label, s, footer_text)
 
@@ -1302,19 +1317,49 @@ def build_pdf(data, output_path):
             canvas_obj.drawImage(cover_image_path, 0, 0, width=w, height=h,
                                  preserveAspectRatio=True, anchor='c')
 
-        # Text in the top half — dark colors for the lighter cover background
-        canvas_obj.setFont('Helvetica-Bold', 28)
+        # The cover's whitest area is the upper-left. The optional MSP logo sits
+        # there, and the title/details stack is left-aligned directly beneath it.
+        left_x = 0.6 * inch          # left margin for the whole block
+        logo_top = h * 0.70          # top edge of the logo / top of the block
+        logo_max_w = 2.6 * inch
+        logo_max_h = 1.15 * inch
+
+        if msp_logo_path:
+            try:
+                ir = ImageReader(msp_logo_path)
+                iw, ih = ir.getSize()
+                scale = min(logo_max_w / iw, logo_max_h / ih)
+                dw, dh = iw * scale, ih * scale
+                # drawImage anchors at bottom-left, so subtract the drawn height
+                # to pin the logo's TOP at logo_top. mask='auto' keeps PNG alpha.
+                canvas_obj.drawImage(ir, left_x, logo_top - dh, width=dw, height=dh,
+                                     mask='auto')
+                cursor_y = logo_top - dh - 30  # gap below the logo
+            except Exception:
+                cursor_y = logo_top  # logo unreadable — start text at the top
+        else:
+            # No logo: nudge the block down so it doesn't float at the very top.
+            cursor_y = h * 0.64
+
+        # Report title
+        canvas_obj.setFont('Helvetica-Bold', 26)
         canvas_obj.setFillColor(HexColor('#1A2A3A'))
-        canvas_obj.drawCentredString(w / 2, h * 0.78, s['report_title'])
+        canvas_obj.drawString(left_x, cursor_y, s['report_title'])
 
-        canvas_obj.setFont('Helvetica', 18)
+        # Tenant (client) name
+        cursor_y -= 26
+        canvas_obj.setFont('Helvetica', 16)
         canvas_obj.setFillColor(HexColor('#2C3E50'))
-        canvas_obj.drawCentredString(w / 2, h * 0.73, tenant_name)
+        canvas_obj.drawString(left_x, cursor_y, tenant_name)
 
-        canvas_obj.setFont('Helvetica', 13)
+        # Reporting period
+        cursor_y -= 22
+        canvas_obj.setFont('Helvetica', 12)
         canvas_obj.setFillColor(HexColor('#4A5568'))
-        canvas_obj.drawCentredString(w / 2, h * 0.69, range_label)
+        canvas_obj.drawString(left_x, cursor_y, range_label)
 
+        # Generated timestamp
+        cursor_y -= 18
         canvas_obj.setFont('Helvetica', 10)
         canvas_obj.setFillColor(HexColor('#666666'))
         if lang == 'fr':
@@ -1323,7 +1368,13 @@ def build_pdf(data, output_path):
             date_str = f"{s['generated']} {datetime.now().strftime('%d %B %Y, %H:%M')}"
         else:
             date_str = f"{s['generated']} {datetime.now().strftime('%B %d, %Y at %H:%M')}"
-        canvas_obj.drawCentredString(w / 2, h * 0.65, date_str)
+        canvas_obj.drawString(left_x, cursor_y, date_str)
+
+        # Prepared by (MSP)
+        cursor_y -= 22
+        canvas_obj.setFont('Helvetica-Oblique', 10)
+        canvas_obj.setFillColor(HexColor('#666666'))
+        canvas_obj.drawString(left_x, cursor_y, s['cover_prepared_by'].format(msp=prepared_by))
 
         canvas_obj.restoreState()
 

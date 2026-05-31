@@ -745,4 +745,139 @@ router.put('/anthropic-key', (req, res) => {
 // Initialize access-control config on module load
 reloadAccessControlConfig();
 
+// ─── Report Branding ───
+//
+// Two pieces of MSP-facing branding that appear on customer report PDFs:
+//   1. Company name — drives the "Prepared by ___" footer line (see
+//      scripts/generate-pdf-report.py and config.report.mspName). Stored as
+//      MSP_NAME in .env and mirrored into config.report.mspName so the next
+//      report picks it up with no process restart.
+//   2. Logo — a transparent PNG written to data/branding/logo.png. Lives on
+//      disk (not .env) because it's binary; the report generator reads it from
+//      that fixed path. The cover-page rendering is a separate, later task —
+//      this card only stores the asset.
+//
+// The logo arrives as a base64 data URL in the JSON body (keeps us off a
+// multer dependency). server.js mounts a higher-limit express.json() for this
+// path so the encoded PNG clears the default ~100kb body cap.
+
+const BRANDING_DIR = path.join(__dirname, '..', '..', 'data', 'branding');
+const LOGO_PATH = path.join(BRANDING_DIR, 'logo.png');
+const MAX_LOGO_BYTES = 2 * 1024 * 1024; // 2 MB decoded
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+function reloadReportConfig() {
+  config.report = config.report || {};
+  config.report.mspName = process.env.MSP_NAME || '';
+}
+
+router.get('/branding', (req, res) => {
+  reloadReportConfig();
+  let logoSet = false;
+  let logoMtime = 0;
+  try {
+    const st = fs.statSync(LOGO_PATH);
+    logoSet = st.isFile() && st.size > 0;
+    logoMtime = Math.floor(st.mtimeMs);
+  } catch { /* no logo yet */ }
+  res.json({
+    company_name: config.report.mspName || '',
+    logo_set: logoSet,
+    // Cache-busted by mtime so the <img> preview refreshes after a re-upload.
+    logo_url: logoSet ? `/api/settings/branding/logo?v=${logoMtime}` : null,
+  });
+});
+
+// Stream the stored logo back for the Settings preview. Admin-only like the
+// whole /api/settings surface (requireAuth + requireAdmin above).
+router.get('/branding/logo', (req, res) => {
+  fs.stat(LOGO_PATH, (err, st) => {
+    if (err || !st.isFile() || st.size === 0) {
+      return res.status(404).json({ error: 'No logo uploaded' });
+    }
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'no-store');
+    fs.createReadStream(LOGO_PATH).pipe(res);
+  });
+});
+
+router.put('/branding', (req, res) => {
+  try {
+    const { company_name, logo, remove_logo } = req.body || {};
+    const changed = [];
+
+    // ── Company name → MSP_NAME ──
+    if (company_name !== undefined) {
+      reloadReportConfig();
+      const next = String(company_name).trim();
+      if (next !== (config.report.mspName || '')) {
+        updateEnvVars({ MSP_NAME: next });
+        reloadReportConfig();
+        changed.push('company_name');
+      }
+    }
+
+    // ── Logo ── (remove takes precedence over upload)
+    if (remove_logo === true) {
+      try {
+        fs.unlinkSync(LOGO_PATH);
+        changed.push('logo_removed');
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e; // already absent is fine
+      }
+    } else if (logo !== undefined && logo !== null && logo !== '') {
+      // Accept a data URL (data:image/png;base64,...) or bare base64.
+      const m = String(logo).match(/^data:([^;]+);base64,(.*)$/s);
+      const declaredType = m ? m[1] : null;
+      const b64 = m ? m[2] : String(logo);
+      if (declaredType && declaredType !== 'image/png') {
+        return res.status(400).json({ error: 'Logo must be a PNG' });
+      }
+      const buf = Buffer.from(b64, 'base64');
+      if (!buf || buf.length === 0) {
+        return res.status(400).json({ error: 'Logo is empty or not valid base64' });
+      }
+      if (buf.length > MAX_LOGO_BYTES) {
+        return res.status(400).json({ error: 'Logo exceeds the 2 MB limit' });
+      }
+      // Validate the PNG magic number — don't trust the declared type alone.
+      if (buf.length < 8 || !buf.subarray(0, 8).equals(PNG_SIGNATURE)) {
+        return res.status(400).json({ error: 'Logo must be a PNG' });
+      }
+      fs.mkdirSync(BRANDING_DIR, { recursive: true });
+      fs.writeFileSync(LOGO_PATH, buf);
+      changed.push('logo');
+    }
+
+    if (changed.length === 0) {
+      return res.json({ success: true, no_changes: true });
+    }
+
+    console.log(`[Settings] Branding updated by ${req.session.user.email} (${changed.join(', ')})`);
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.SETTINGS_CHANGE,
+      action: 'settings.branding.update',
+      description: `Report branding changed (${changed.join(', ')})`,
+      templateKey: 'settings.branding.update',
+      templateParams: { fields: changed.join(', ') },
+      targetType: 'setting',
+      targetId: 'branding',
+      targetName: 'Report Branding',
+      metadata: {
+        fields_changed: changed,
+        company_name: config.report.mspName || null,
+      },
+      req,
+    }).catch(() => {});
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Settings] Branding save failed:', err.message);
+    res.status(500).json({ error: 'Failed to save branding settings' });
+  }
+});
+
+// Initialize report config on module load
+reloadReportConfig();
+
 module.exports = router;

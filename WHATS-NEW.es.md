@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.29 — 2026-05-31
+
+### Novedad: personalice sus informes con su nombre y su logotipo
+
+Los informes de Panoptica365 ahora pueden llevar su marca en lugar de la nuestra. Una nueva tarjeta **Marca de los informes**, en **Configuración**, le permite establecer el nombre de su empresa y subir un logotipo. Un PNG transparente da el mejor resultado — se integra limpiamente en la portada, sin un recuadro blanco detrás.
+
+Su logotipo ahora aparece en la portada de cada informe — Postura de Seguridad, Documentación de Configuración y Evaluación Rápida — en la esquina superior izquierda, con el título, el nombre del cliente y la fecha alineados a la izquierda debajo. La línea «Preparado por» de la portada muestra el nombre de quien generó el informe en lugar de un nombre de empresa genérico: así, un comercial puede entregar a un cliente un informe con su propio nombre. El nombre de su empresa sigue figurando en el pie de página confidencial de cada página.
+
+Si no sube nada, los informes conservan la portada predeterminada de Panoptica365.
+
+---
+
 ## Versión 0.1.28 — 2026-05-31
 
 ### Novedad: cronología de identidad — un clic desde una alerta hacia toda la historia

@@ -23,6 +23,7 @@ from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.colors import HexColor, white
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.platypus import (
@@ -55,6 +56,7 @@ STRINGS = {
     'en': {
         'title': 'Quick Assessment',
         'subtitle': 'Microsoft 365 Security — Point-in-Time Assessment',
+        'cover_prepared_by': 'Prepared by {msp}',
         'tenant': 'Tenant',
         'generated': 'Generated',
         'captured': 'Configuration captured',
@@ -85,6 +87,7 @@ STRINGS = {
     'fr': {
         'title': 'Évaluation rapide',
         'subtitle': 'Sécurité Microsoft 365 — Évaluation ponctuelle',
+        'cover_prepared_by': 'Préparé par {msp}',
         'tenant': 'Locataire',
         'generated': 'Généré le',
         'captured': 'Configuration relevée le',
@@ -115,6 +118,7 @@ STRINGS = {
     'es': {
         'title': 'Evaluación rápida',
         'subtitle': 'Seguridad de Microsoft 365 — Evaluación puntual',
+        'cover_prepared_by': 'Preparado por {msp}',
         'tenant': 'Inquilino',
         'generated': 'Generado el',
         'captured': 'Configuración capturada el',
@@ -391,27 +395,66 @@ def count_findings_by_priority(analysis):
     return counts
 
 
-def make_cover(S, tenant_name, generated_iso, cover_path):
-    """First-page callback — full-bleed cover image + title text."""
+def make_cover(S, tenant_name, generated_iso, cover_path, prepared_by, logo_path):
+    """First-page callback — full-bleed cover image + left-aligned title block.
+
+    Matches the Security Posture report cover: optional MSP logo top-left in the
+    whitest area, then a left-aligned stack (title, tenant, subtitle, generated,
+    prepared-by)."""
     def _cover(canvas, doc):
         canvas.saveState()
         w, h = letter
         if cover_path:
             canvas.drawImage(cover_path, 0, 0, width=w, height=h,
                              preserveAspectRatio=True, anchor='c')
-        canvas.setFont('Helvetica-Bold', 30)
+
+        left_x = 0.6 * inch
+        logo_top = h * 0.70
+        logo_max_w = 2.6 * inch
+        logo_max_h = 1.15 * inch
+
+        if logo_path:
+            try:
+                ir = ImageReader(logo_path)
+                iw, ih = ir.getSize()
+                scale = min(logo_max_w / iw, logo_max_h / ih)
+                dw, dh = iw * scale, ih * scale
+                canvas.drawImage(ir, left_x, logo_top - dh, width=dw, height=dh,
+                                 mask='auto')
+                cursor_y = logo_top - dh - 30
+            except Exception:
+                cursor_y = logo_top
+        else:
+            cursor_y = h * 0.64
+
+        # Report title
+        canvas.setFont('Helvetica-Bold', 26)
         canvas.setFillColor(HexColor('#1A2A3A'))
-        canvas.drawCentredString(w / 2, h * 0.79, S['title'])
-        canvas.setFont('Helvetica', 13)
+        canvas.drawString(left_x, cursor_y, S['title'])
+
+        # Tenant (client) name
+        cursor_y -= 26
+        canvas.setFont('Helvetica', 16)
+        canvas.setFillColor(HexColor('#2C3E50'))
+        canvas.drawString(left_x, cursor_y, tenant_name or '—')
+
+        # Subtitle
+        cursor_y -= 22
+        canvas.setFont('Helvetica', 12)
         canvas.setFillColor(HexColor('#4A5568'))
-        canvas.drawCentredString(w / 2, h * 0.745, S['subtitle'])
-        canvas.setFont('Helvetica-Bold', 17)
-        canvas.setFillColor(HexColor(COLORS['primary']))
-        canvas.drawCentredString(w / 2, h * 0.69, tenant_name or '—')
+        canvas.drawString(left_x, cursor_y, S['subtitle'])
+
+        # Generated timestamp
+        cursor_y -= 18
         canvas.setFont('Helvetica', 10)
         canvas.setFillColor(HexColor('#666666'))
-        canvas.drawCentredString(w / 2, h * 0.655,
-                                 f"{S['generated']}: {fmt_dt(generated_iso)}")
+        canvas.drawString(left_x, cursor_y, f"{S['generated']}: {fmt_dt(generated_iso)}")
+
+        # Prepared by (operator, falling back to MSP)
+        cursor_y -= 22
+        canvas.setFont('Helvetica-Oblique', 10)
+        canvas.setFillColor(HexColor('#666666'))
+        canvas.drawString(left_x, cursor_y, S['cover_prepared_by'].format(msp=prepared_by))
         canvas.restoreState()
     return _cover
 
@@ -451,6 +494,13 @@ def main():
     report_config = data.get('reportConfig') or {}
     msp_name = report_config.get('mspName') or ''
     attribution_on = report_config.get('platformAttribution', True)
+    # Cover "Prepared by" — logged-in operator's name, falling back to the MSP
+    # name (or the platform name when neither is set).
+    prepared_by = report_config.get('preparedBy') or msp_name or 'Panoptica365'
+    # Optional MSP branding logo, drawn top-left on the cover when present.
+    msp_logo_path = os.path.join(PROJECT_ROOT, 'data', 'branding', 'logo.png')
+    if not os.path.exists(msp_logo_path):
+        msp_logo_path = None
     width = letter[0] - 1.5 * inch  # matches the 0.75" left/right margins
 
     story = []
@@ -568,7 +618,8 @@ def main():
         topMargin=0.7 * inch, bottomMargin=0.8 * inch,
         title=f"{S['title']} — {tenant.get('display_name', '')}",
     )
-    cover = make_cover(S, tenant.get('display_name', ''), data.get('generatedAt'), find_cover_image())
+    cover = make_cover(S, tenant.get('display_name', ''), data.get('generatedAt'),
+                       find_cover_image(), prepared_by, msp_logo_path)
     footer = make_footer(S, msp_name, attribution_on)
     doc.build([Spacer(1, 1), PageBreak()] + story,
               onFirstPage=cover, onLaterPages=footer)
