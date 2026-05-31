@@ -50,8 +50,11 @@ Links to consoles.txt
 claude api usage/
 dev/Panoptica/
 Documentation/
-# Internal ship runbook — guidance for Claude sessions, not shipped to MSPs.
+# Internal-only root-level docs — guidance/notes for Claude sessions and ops,
+# not shipped to MSPs. (README.md stays tracked — it IS public-facing.)
 RELEASING.md
+DR-RESTORE.md
+i18n-snapshot-log.md
 
 # ─── Node.js ───
 node_modules/
