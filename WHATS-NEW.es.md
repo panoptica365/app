@@ -5,6 +5,23 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.30 — 2026-05-31
+
+### Corregido: la configuración de una instalación nueva ahora se conserva, y se completa sola
+
+Lo primero que se hace en un servidor Panoptica365 nuevo es ejecutar el asistente de configuración. Hasta ahora, en una instalación nueva en contenedor, el asistente podía parecer que se completaba mientras las credenciales que recopilaba —el registro de aplicación de Entra, la clave de licencia y lo demás— no se conservaban, dejando la aplicación incapaz de iniciar su sesión. La configuración ahora es totalmente sólida: todo lo que el asistente recopila se guarda en el host y sobrevive a los reinicios de contenedor y a las actualizaciones de imagen.
+
+El último paso también se completa por sí solo. Cuando termina el asistente, Panoptica365 se reinicia una vez para aplicar su configuración, muestra brevemente una pantalla **«Finalizando la configuración: reconectando…»** y luego lo lleva directamente al inicio de sesión (o al consentimiento de administrador) en cuanto vuelve a estar disponible, sin comandos en la terminal ni reinicios manuales.
+
+Esta es la corrección principal para las primeras instalaciones. Si configuró una instalación anterior de forma manual, nada cambia para usted.
+
+### También en esta versión
+
+- Los estados vacíos de primera ejecución de la consola principal —«no hay inquilinos» y «aún no hay resumen diario»— ahora aparecen en el idioma de su interfaz (español, inglés o francés) en lugar de siempre en inglés.
+- Se reforzó una migración interna de base de datos para que una instalación nueva ya no registre advertencias transitorias mientras arranca.
+
+---
+
 ## Versión 0.1.29 — 2026-05-31
 
 ### Novedad: personalice sus informes con su nombre y su logotipo

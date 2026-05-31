@@ -215,11 +215,13 @@
   function renderEmptyTenantBody(isFiltering) {
     const body = document.getElementById('tenant-list-body');
     if (!body) return;
-    if (isFiltering) {
-      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants match your filter.</div>';
-    } else {
-      body.innerHTML = '<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">No tenants configured. Go to Tenant Management to add your first tenant.</div>';
-    }
+    // Localized inline (dynamic innerHTML doesn't auto-translate). These are
+    // the first-run empty states a fresh-install MSP sees, so they must honor
+    // the active locale.
+    const msg = isFiltering
+      ? window.t('main_console.no_tenants_filter')
+      : window.t('main_console.no_tenants_configured');
+    body.innerHTML = `<div style="color:var(--p-text-muted); padding:20px; font-family:Inter,sans-serif;">${escHtml(msg)}</div>`;
   }
 
   function wireTenantRowClicks(body) {
@@ -343,7 +345,10 @@
       const data = await Panoptica.api('/api/ai/briefing?lang=' + encodeURIComponent(lang));
 
       if (!data.available) {
-        contentEl.innerHTML = `<div class="briefing-placeholder">${escHtml(data.message)}</div>`;
+        // Ignore the backend's English `message` — render a localized empty
+        // state instead (operator-facing copy lives in the locale layer, not
+        // the backend). available:false is the only signal we need.
+        contentEl.innerHTML = `<div class="briefing-placeholder">${escHtml(window.t('main_console.briefing_none_yet'))}</div>`;
         return;
       }
 

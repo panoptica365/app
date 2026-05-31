@@ -14,14 +14,23 @@ const SLOW_POLL_INTERVAL = 10; // Run slow-tier fetchers every 10th poll
 let pollingJob = null;
 let io = null;
 
+// Resolves once the poll_count migration has settled. Every poll cycle queries
+// poll_count, so the cycle must wait on this — otherwise a fresh install's
+// first cycle races the runtime ALTER and emits transient
+// "Unknown column 'poll_count'" errors during warm-up.
+let migrationsReady = Promise.resolve();
+
 /**
  * Start the polling engine.
  */
 function start(socketIO) {
   io = socketIO;
 
-  // Ensure schema columns exist (safe migrations)
-  ensurePollCountColumn().catch(err =>
+  // Ensure schema columns exist (safe migrations). poll_count is now part of
+  // the base schema.sql tenants definition, so on a fresh install this is a
+  // no-op safety net; on older DBs it adds the column. Gate the poll cycle on
+  // it so no query touches poll_count before it exists.
+  migrationsReady = ensurePollCountColumn().catch(err =>
     console.error('[Polling] Failed to add poll_count column:', err.message)
   );
   ensureLatestSnapshotsTable().catch(err =>
@@ -34,6 +43,7 @@ function start(socketIO) {
   // Check every minute for due tenants
   pollingJob = cron.schedule('* * * * *', async () => {
     try {
+      await migrationsReady;
       await pollDueTenants();
     } catch (err) {
       console.error('[Polling] Cycle error:', err.message);
@@ -42,9 +52,12 @@ function start(socketIO) {
 
   console.log('[Polling] Engine started (checking every minute)');
 
-  // Run immediately on startup
+  // Run immediately on startup — but only after the poll_count migration has
+  // settled.
   setTimeout(() => {
-    pollDueTenants().catch(err => console.error('[Polling] Initial poll error:', err.message));
+    migrationsReady
+      .then(() => pollDueTenants())
+      .catch(err => console.error('[Polling] Initial poll error:', err.message));
   }, 5000);
 }
 
@@ -58,18 +71,38 @@ function stop() {
 
 /**
  * Ensure poll_count column exists on tenants table.
+ *
+ * Idempotent and concurrency-tolerant: the column-existence check short-
+ * circuits when it's already present, a duplicate-column error from a racing
+ * adder is treated as success, and a deadlock / metadata lock-wait timeout
+ * (two ALTERs racing — e.g. an overlapping container recreate) is retried
+ * once, by which time the other writer has finished and the existence check
+ * wins. Never throws — best-effort, same contract as the original.
  */
 async function ensurePollCountColumn() {
-  try {
-    const cols = await db.queryRows(
-      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'poll_count'"
-    );
-    if (cols.length === 0) {
+  const MAX_ATTEMPTS = 2;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const cols = await db.queryRows(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'poll_count'"
+      );
+      if (cols.length > 0) return;  // already present — nothing to do
       await db.execute("ALTER TABLE tenants ADD COLUMN poll_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER last_polled_at");
       console.log('[Polling] Added poll_count column to tenants table');
+      return;
+    } catch (e) {
+      // A concurrent writer (or schema.sql) already added it — success.
+      if (e.code === 'ER_DUP_FIELDNAME' || /duplicate column/i.test(e.message)) return;
+      // Two concurrent ALTERs can deadlock or hit a metadata lock-wait
+      // timeout. Retry once; the existence check will then short-circuit.
+      const retryable = e.code === 'ER_LOCK_DEADLOCK' || e.code === 'ER_LOCK_WAIT_TIMEOUT';
+      if (retryable && attempt < MAX_ATTEMPTS) {
+        console.warn(`[Polling] ensurePollCountColumn ${e.code} — retrying once`);
+        continue;
+      }
+      console.error('[Polling] ensurePollCountColumn error:', e.message);
+      return;
     }
-  } catch (e) {
-    console.error('[Polling] ensurePollCountColumn error:', e.message);
   }
 }
 

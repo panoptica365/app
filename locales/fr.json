@@ -171,6 +171,9 @@
     "no_briefing": "Aucun résumé disponible pour le moment.",
     "briefing_placeholder": "Le résumé quotidien de Claude AI apparaîtra ici lorsque la phase 4 sera terminée.",
     "briefing_unavailable": "Résumé quotidien indisponible. Il sera généré à 6 h 00.",
+    "no_tenants_configured": "Aucun locataire configuré. Accédez à Gestion des locataires pour ajouter votre premier locataire.",
+    "no_tenants_filter": "Aucun locataire ne correspond à votre filtre.",
+    "briefing_none_yet": "Aucun résumé quotidien pour l’instant. Le premier sera généré à 6 h 00.",
     "ask_claude": "Demander à Claude",
     "ask_claude_placeholder": "Posez une question sur vos locataires...",
     "briefing_title": "Résumé quotidien de Claude",
@@ -3328,11 +3331,19 @@
     },
     "error": {
       "required_fields": "Veuillez remplir tous les champs obligatoires.",
-      "boot": "Échec du chargement de la configuration : {detail}"
+      "boot": "Échec du chargement de la configuration : {detail}",
+      "complete": "Impossible de terminer la configuration : {message}"
     },
     "toast": {
       "setup_complete": "Configuration terminée. Redirection vers le consentement d’administrateur…",
       "setup_complete_redirect": "Configuration terminée. Redirection vers le tableau de bord…"
+    },
+    "reconnect": {
+      "title": "Finalisation de la configuration — reconnexion…",
+      "body": "Panoptica365 redémarre pour appliquer votre configuration. Cela prend quelques secondes. Vous serez redirigé automatiquement vers l’écran suivant.",
+      "timeout_title": "Configuration toujours en cours…",
+      "timeout_body": "L’application met plus de temps que prévu à revenir en ligne. Cela devrait se terminer sous peu — patientez un moment et réessayez, ou rechargez cette page dans une minute.",
+      "retry": "Vérifier de nouveau"
     },
     "welcome": {
       "title": "Bienvenue dans Panoptica365",

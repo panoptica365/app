@@ -550,20 +550,51 @@ router.post('/skip/:step', (req, res) => {
 });
 
 // ─── POST /api/setup/complete ──────────────────────────────────────────
+// Finalizes setup, then EXITS THE PROCESS so the container restart policy
+// (restart: unless-stopped) revives it. That restart is what makes the
+// wizard-collected credentials go live: env_file is gone (Option A, see
+// docker-compose.yml), so the only thing that loads the now-populated,
+// bind-mounted /app/.env into process.env is a fresh process start, whose
+// dotenv (server.js line 6) runs before config is required. A plain
+// restart-policy revive — not an in-place reload — is the robust,
+// sidecar-free mechanism (a container cannot cleanly `compose up` itself).
+//
+// The wizard frontend does NOT redirect immediately after this returns; it
+// shows a "Finishing setup — reconnecting…" screen that polls
+// /api/boot-status until the restarted process reports entra_configured,
+// then advances to sign-in / admin consent.
 router.post('/complete', (req, res) => {
+  let state;
   try {
-    const state = setupState.markSetupComplete();
+    state = setupState.markSetupComplete();
     // Invalidate the setup middleware's 5s cache so the very next request
     // hits the new state (setup complete = pass-through everywhere).
     setupMiddleware.invalidateSetupModeCache();
-    res.json({
-      ok: true,
-      completed_at: state.completed_at,
-      next_url: '/',
-    });
   } catch (e) {
-    res.status(400).json({ error: 'cannot_complete', detail: e.message });
+    return res.status(400).json({ error: 'cannot_complete', detail: e.message });
   }
+
+  // Schedule the controlled exit only AFTER the response has been flushed to
+  // the browser, so the wizard reliably gets its 200 before the socket drops.
+  res.on('finish', () => {
+    console.log(
+      '[Setup] First-boot wizard complete — exiting so the container restart ' +
+      'policy revives the process and dotenv loads the wizard-collected ' +
+      'credentials from the bind-mounted .env. The wizard is polling ' +
+      '/api/boot-status and will advance once the restarted process is up.',
+    );
+    // Small delay as a backstop so any trailing fs flush (setup.json /
+    // completion flag chmod) settles and the kernel finishes sending the
+    // response body before the process tears down.
+    setTimeout(() => process.exit(0), 750);
+  });
+
+  res.json({
+    ok: true,
+    completed_at: state.completed_at,
+    next_url: '/',
+    restarting: true,
+  });
 });
 
 module.exports = router;

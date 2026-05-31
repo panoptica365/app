@@ -108,6 +108,35 @@ app.use(express.urlencoded({ extended: true }));
 // /api/health, which IS session-gated and DB-backed.
 app.get('/healthz', (req, res) => res.type('text/plain').send('ok'));
 
+// Boot-status probe for the setup wizard's "reconnecting…" screen.
+//
+// When the wizard's final step (/api/setup/complete) finishes, the app
+// process exits cleanly (process.exit(0)) so the container restart policy
+// revives it — that restart is what makes the dotenv-loaded, wizard-collected
+// Entra credentials go live (see api-setup.js /complete + docker-compose.yml).
+// The wizard polls THIS endpoint to know when the *restarted* process is back.
+//
+// `entra_configured` reads config.entra.clientId — the value snapshotted at
+// THIS process's boot (config/default.js reads process.env at require time).
+// The pre-restart process booted with a blank ENTRA_CLIENT_ID, so it reports
+// false even in the brief window before it exits; only the restarted process
+// (which read the populated .env) reports true. That makes the probe a
+// deterministic "the new process with live creds is up" signal and eliminates
+// the race where the wizard could see a stale "ok" from the dying process.
+//
+// Ungated (mounted before session/setup/auth middleware): the operator isn't
+// logged in during setup, and there are no secrets in the response.
+app.get('/api/boot-status', (req, res) => {
+  let setupComplete;
+  try { setupComplete = !setupState.isInSetupMode(); }
+  catch { setupComplete = false; }
+  res.json({
+    ok: true,
+    entra_configured: !!config.entra.clientId,
+    setup_complete: setupComplete,
+  });
+});
+
 // Session store — MySQL-backed (A5). Replaces the default MemoryStore so:
 //   1. The "MemoryStore is not designed for a production environment" warning
 //      no longer fires on boot.

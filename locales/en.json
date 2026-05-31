@@ -171,6 +171,9 @@
     "no_briefing": "No summary available yet.",
     "briefing_placeholder": "Claude AI Daily Summary will appear here when Phase 4 is complete.",
     "briefing_unavailable": "Daily summary unavailable. It will be generated at 6:00 AM.",
+    "no_tenants_configured": "No tenants configured. Go to Tenant Management to add your first tenant.",
+    "no_tenants_filter": "No tenants match your filter.",
+    "briefing_none_yet": "No daily summary yet. The first one will be generated at 6:00 AM.",
     "ask_claude": "Ask Claude",
     "ask_claude_placeholder": "Ask a question about your tenants...",
     "briefing_title": "Claude Daily Summary",
@@ -3328,11 +3331,19 @@
     },
     "error": {
       "required_fields": "Please fill in all required fields.",
-      "boot": "Setup failed to load: {detail}"
+      "boot": "Setup failed to load: {detail}",
+      "complete": "Could not finish setup: {message}"
     },
     "toast": {
       "setup_complete": "Setup complete. Redirecting to admin consent…",
       "setup_complete_redirect": "Setup complete. Redirecting to dashboard…"
+    },
+    "reconnect": {
+      "title": "Finishing setup — reconnecting…",
+      "body": "Panoptica365 is restarting to apply your configuration. This takes a few seconds. You'll be taken to the next screen automatically.",
+      "timeout_title": "Still finishing setup…",
+      "timeout_body": "The app is taking longer than expected to come back online. It should finish shortly — wait a moment and check again, or reload this page in a minute.",
+      "retry": "Check again"
     },
     "welcome": {
       "title": "Welcome to Panoptica365",

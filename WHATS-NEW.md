@@ -5,6 +5,23 @@ that release, newest first.
 
 ---
 
+## Version 0.1.30 — 2026-05-31
+
+### Fixed: fresh-install setup now sticks — and finishes on its own
+
+The first thing you do on a brand-new Panoptica365 server is run the setup wizard. Until now, on a fresh containerized install the wizard could appear to succeed while the credentials it collected — your Entra app registration, your license key, and the rest — silently failed to persist, leaving the app unable to sign you in. Setup is now rock-solid: everything the wizard collects is saved on the host and survives container restarts and image upgrades.
+
+The final step also finishes by itself. When you complete the wizard, Panoptica365 restarts once to apply your configuration, shows a brief **"Finishing setup — reconnecting…"** screen, and then takes you straight to sign-in (or admin consent) the moment it's back — no terminal commands, no manual restart.
+
+This is the headline fix for first-time installs. If you configured an earlier install by hand, nothing changes for you.
+
+### Also in this release
+
+- The main console's first-run empty states — "no tenants yet" and "no daily summary yet" — now appear in your interface language (English, French, or Spanish) instead of always in English.
+- Hardened an internal database migration so a fresh install no longer logs transient warnings while it warms up.
+
+---
+
 ## Version 0.1.29 — 2026-05-31
 
 ### New: brand your reports with your own name and logo

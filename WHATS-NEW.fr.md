@@ -5,6 +5,23 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.30 — 2026-05-31
+
+### Correction : la configuration d'une nouvelle installation tient enfin — et se termine d'elle-même
+
+La première chose à faire sur un nouveau serveur Panoptica365 est d'exécuter l'assistant de configuration. Jusqu'à maintenant, sur une nouvelle installation conteneurisée, l'assistant pouvait sembler réussir alors que les identifiants saisis — votre inscription d'application Entra, votre clé de licence et le reste — n'étaient pas conservés, laissant l'application incapable de vous connecter. La configuration est désormais d'une fiabilité à toute épreuve : tout ce que l'assistant recueille est enregistré sur l'hôte et survit aux redémarrages de conteneur et aux mises à niveau d'image.
+
+La dernière étape se termine aussi toute seule. Lorsque vous terminez l'assistant, Panoptica365 redémarre une fois pour appliquer votre configuration, affiche brièvement un écran **« Finalisation de la configuration — reconnexion… »**, puis vous amène directement à l'écran de connexion (ou au consentement d'administrateur) dès qu'il est de retour — aucune commande au terminal, aucun redémarrage manuel.
+
+C'est la correction principale pour les premières installations. Si vous avez configuré une installation antérieure à la main, rien ne change pour vous.
+
+### Également dans cette version
+
+- Les états vides de premier affichage de la console principale — « aucun locataire » et « aucun résumé quotidien » — apparaissent maintenant dans la langue de votre interface (français, anglais ou espagnol) au lieu de toujours en anglais.
+- Renforcement d'une migration interne de base de données afin qu'une nouvelle installation ne consigne plus d'avertissements transitoires pendant son démarrage.
+
+---
+
 ## Version 0.1.29 — 2026-05-31
 
 ### Nouveauté : personnalisez vos rapports avec votre nom et votre logo

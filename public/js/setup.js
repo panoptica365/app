@@ -494,6 +494,81 @@
     return res.json();
   }
 
+  // ─── Setup completion + restart-reconnect ──────────────────────────
+  // POSTing /api/setup/complete makes the server exit cleanly so the
+  // container restart policy revives it with the wizard-collected creds now
+  // live (api-setup.js /complete + docker-compose.yml Option A — env_file is
+  // dropped, so only a fresh process start loads the populated bind-mounted
+  // .env). We therefore must NOT redirect immediately: both targets
+  // (/auth/adminconsent and /) need the restarted process. Show a reconnect
+  // screen and poll /api/boot-status until the RESTARTED process reports
+  // entra_configured — that flag is false in the pre-restart process (its
+  // config snapshot had blank Entra creds), so it's a deterministic "the new
+  // process with live creds is up" signal, immune to the brief window where
+  // the dying process still answers.
+
+  const RECONNECT_TIMEOUT_MS = 90000;  // restart is usually seconds; be patient
+  const RECONNECT_POLL_MS = 1500;
+
+  async function completeAndReconnect(redirectTo) {
+    try {
+      await apiPost('/api/setup/complete', {});
+    } catch (e) {
+      // 403 = setup already complete (double-submit / a resumed wizard whose
+      // first submit already kicked the restart). Treat as success and poll
+      // anyway. Anything else is a genuine failure — surface it loudly.
+      if (e.status !== 403) {
+        showToast(t('setup.error.complete') || `Could not finish setup: ${e.message}`, 'error');
+        return;
+      }
+    }
+    renderReconnecting(redirectTo, false);
+    pollBootStatus(redirectTo, Date.now() + RECONNECT_TIMEOUT_MS);
+  }
+
+  function renderReconnecting(redirectTo, failed) {
+    const container = $('#setup-content');
+    if (!container) return;
+    container.innerHTML = failed
+      ? `
+        <div class="setup-reconnect">
+          <h2 class="setup-step-title" data-i18n="setup.reconnect.timeout_title">Still finishing setup…</h2>
+          <p class="setup-step-subtitle" data-i18n="setup.reconnect.timeout_body">The app is taking longer than expected to come back online. It should finish shortly — wait a moment and check again, or reload this page in a minute.</p>
+          <button type="button" class="setup-btn setup-btn-primary" data-action="retry" data-i18n="setup.reconnect.retry">Check again</button>
+        </div>`
+      : `
+        <div class="setup-reconnect">
+          <div class="setup-spinner" aria-hidden="true"></div>
+          <h2 class="setup-step-title" data-i18n="setup.reconnect.title">Finishing setup — reconnecting…</h2>
+          <p class="setup-step-subtitle" data-i18n="setup.reconnect.body">Panoptica365 is restarting to apply your configuration. This takes a few seconds. You'll be taken to the next screen automatically.</p>
+        </div>`;
+    applyI18n(container);
+    if (failed) {
+      const retry = container.querySelector('[data-action="retry"]');
+      if (retry) retry.addEventListener('click', () => {
+        renderReconnecting(redirectTo, false);
+        pollBootStatus(redirectTo, Date.now() + RECONNECT_TIMEOUT_MS);
+      });
+    }
+  }
+
+  async function pollBootStatus(redirectTo, deadline) {
+    if (Date.now() > deadline) {
+      renderReconnecting(redirectTo, true);
+      return;
+    }
+    try {
+      const status = await apiGet('/api/boot-status');
+      if (status && status.entra_configured) {
+        window.location.href = redirectTo;
+        return;
+      }
+    } catch {
+      // App is mid-restart (proxy 502 / connection refused) — expected. Keep polling.
+    }
+    setTimeout(() => pollBootStatus(redirectTo, deadline), RECONNECT_POLL_MS);
+  }
+
   // ─── Language picker ───────────────────────────────────────────────
 
   const SUPPORTED_LANGS = ['en', 'fr', 'es'];
@@ -1081,16 +1156,14 @@
     `;
     wireFooter(container, {
       primaryAction: async () => {
-        // Mark setup complete server-side, then redirect to admin consent flow.
-        await apiPost('/api/setup/complete', {});
-        showToast(t('setup.toast.setup_complete') || 'Setup complete. Redirecting to admin consent…', 'success');
-        setTimeout(() => { window.location.href = '/auth/adminconsent'; }, 800);
+        // Mark setup complete → the server exits & the restart policy revives
+        // it with live creds. Show the reconnect screen, then redirect to the
+        // admin-consent flow once the restarted process is up.
+        await completeAndReconnect('/auth/adminconsent');
       },
       skipAction: async () => {
         await apiPost('/api/setup/skip/first_tenant', {});
-        await apiPost('/api/setup/complete', {});
-        showToast(t('setup.toast.setup_complete_redirect') || 'Setup complete. Redirecting to dashboard…', 'success');
-        setTimeout(() => { window.location.href = '/'; }, 800);
+        await completeAndReconnect('/');
       },
     });
   }

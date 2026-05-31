@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS tenants (
   enabled         BOOLEAN NOT NULL DEFAULT TRUE,
   consented_at    DATETIME DEFAULT NULL COMMENT 'When admin consent was granted',
   last_polled_at  DATETIME DEFAULT NULL,
+  poll_count      INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Cumulative poll cycles (drives slow-tier scheduling). Runtime ensurePollCountColumn() is now a no-op safety net for pre-existing DBs.',
   created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_tenants_enabled (enabled)

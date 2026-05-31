@@ -44,8 +44,17 @@ services:
       dockerfile: Dockerfile
     container_name: panoptica-app
     restart: unless-stopped
-    env_file:
-      - .env
+    # NOTE: deliberately NO `env_file: - .env`. The host .env is bind-mounted
+    # at /app/.env (first volume below) and loaded by the app's own dotenv
+    # (server.js + init-schema.js). Using env_file would inject the
+    # installer's BLANK wizard placeholders (ENTRA_CLIENT_ID= etc.) at
+    # container-create time, and dotenv won't override an already-set key —
+    # so wizard-collected creds would never go live on a plain restart.
+    # dotenv-as-single-source means a restart re-reads the populated .env and
+    # the creds take effect. The DB_HOST override below still wins (dotenv
+    # won't clobber an already-set env var). Compose's own ${VAR}
+    # interpolation for db/proxy reads the project .env independently of
+    # env_file, so it is unaffected.
     environment:
       # Override DB_HOST inside the container — point at the compose
       # service name regardless of what's in .env (which is typically
@@ -56,6 +65,11 @@ services:
       # formatting). TZ env var is honored by tzdata in Debian.
       TZ: ${TZ:-America/Toronto}
     volumes:
+      # Host .env bind-mounted so wizard-collected credentials persist on
+      # the host and survive container recreates. Single-file bind mount is
+      # safe: updateEnvVars writes in place (writeFileSync, no atomic rename)
+      # so the inode is preserved.
+      - ./.env:/app/.env
       # Cert bundle (read-only — operator places the Graph PFX here
       # before first boot; updates are infrequent).
       - ./certs:/app/certs:ro
