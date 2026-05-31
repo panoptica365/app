@@ -5,6 +5,24 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.26 — 2026-05-30
+
+### Nouveauté : onglet Applications — connaissez chaque application d'un locataire, et repérez celles qui changent
+
+Chaque locataire Microsoft 365 accumule des applications consenties — des outils tiers auxquels quelqu'un a cliqué « accepter », plus des inscriptions d'applications créées pour des scripts et des intégrations. Avec le temps, plus personne ne se souvient de la moitié d'entre elles, et n'importe laquelle peut détenir un accès permanent au courrier, aux fichiers ou à l'annuaire. Le nouvel onglet **Applications**, dans le tableau de bord de chaque locataire entre Alertes et Stratégies AC, les répertorie toutes au même endroit, montre exactement ce que chacune peut faire, et vous permet de marquer celles que vous reconnaissez comme **Approuvées**.
+
+Approuver une application enregistre ses permissions actuelles comme base de référence. À partir de là, Panoptica365 surveille cette application et ne vous avertit que si elle **gagne** par la suite des permissions au-delà de ce que vous avez approuvé — le même modèle d'acceptation de la dérive que vous utilisez déjà pour l'accès conditionnel. Le retrait de permissions ne déclenche jamais d'alerte; seule la croissance au-delà de votre base le fait, car c'est la direction qui ajoute du risque. Une application qui dérive déclenche une seule alerte **Dérive d'application approuvée**, accompagnée d'une fiche explicative complète en langage clair.
+
+Les applications que vous n'avez pas révisées reçoivent une évaluation de triage ponctuelle de Claude (Sonnet) : une pastille verte, jaune ou rouge qui vous indique par où commencer. Dépliez une application pour lire le raisonnement complet de Claude, ses permissions regroupées par type, et son historique. La pastille est un triage, jamais un verdict de « sûre » — seule l'approbation d'une application enregistre une base de référence protégée.
+
+Lorsque vous approuvez une application, toute alerte de consentement OAuth ouverte à son sujet se résout automatiquement, et cette alerte pointe désormais directement vers la ligne de l'application. Panoptica365 ne modifie toujours jamais un locataire lui-même : pour retirer une application morte, chaque ligne comporte un lien **Supprimer** qui ouvre cette application précise dans le centre d'administration Entra, où vous confirmez la suppression (Microsoft la garde récupérable pendant 30 jours).
+
+### Correctif : les listes d'applications de la Vue d'ensemble affichent maintenant toutes les applications
+
+Dans la Vue d'ensemble du locataire, les panneaux **Applications d'entreprise** et **Inscriptions d'applications** n'affichaient que les 30 premières lignes avec un « +N de plus » silencieux — une liste de sécurité incomplète qui avait l'air complète. Elles affichent maintenant toutes les applications dans une liste défilante, et le décompte des applications d'entreprise correspond à ce que vous voyez dans le portail Entra.
+
+---
+
 ## Version 0.1.25 — 2026-05-30
 
 ### Nouveauté : Fil de messages Microsoft — soyez prévenu quand Microsoft déplace le plancher

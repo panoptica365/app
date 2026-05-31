@@ -17,6 +17,7 @@
   let chatSessionId = null;
   let pollWatchdog = null;       // safety-net timer for a missed poll-complete event
   let pollSocketHandlers = null; // { socket, updated, failed } — kept for destroy() cleanup
+  let appsInventory = null;      // Feature 8.9 — cached Applications inventory for the current tenant
 
   // ─── Lifecycle ───
 
@@ -159,6 +160,9 @@
     const changelogView = el('td-changelog-view');
     if (changelogView) changelogView.style.display = 'none';
 
+    const appsView = el('td-applications-view');
+    if (appsView) appsView.style.display = 'none';
+
     if (currentView === 'overview') {
       grid.style.display = '';
       if (digestCard) digestCard.style.display = '';
@@ -173,12 +177,259 @@
     } else if (currentView === 'intune-policies') {
       if (intuneView) intuneView.style.display = 'block';
       loadIntuneDeployments();
+    } else if (currentView === 'applications') {
+      if (appsView) appsView.style.display = 'block';
+      loadApplications();
     } else if (currentView === 'change-log') {
       if (changelogView) changelogView.style.display = 'block';
       ChangeLog.show();
     }
   }
 
+  // ─── Applications tab (Feature 8.9 — known-good / drift inventory) ───
+
+  async function loadApplications() {
+    const list = el('td-apps-list');
+    const link = el('td-apps-entra-link');
+    if (link && tenantInfo && tenantInfo.tenant_id) {
+      link.href = `https://entra.microsoft.com/${tenantInfo.tenant_id}/#view/Microsoft_AAD_IAM/StartboardApplicationsMenuBlade/~/AppAppsPreview`;
+    }
+    // onclick assignment is idempotent across re-mounts (the partial is re-injected
+    // on each navigation, so these are fresh elements anyway).
+    const refBtn = el('td-apps-refresh-btn');
+    const saveBtn = el('td-apps-save-btn');
+    if (refBtn) refBtn.onclick = refreshApplications;
+    if (saveBtn) saveBtn.onclick = saveApplications;
+    try {
+      const data = await Panoptica.api(`/api/applications?tenant_id=${tenantId}`);
+      appsInventory = data.inventory;
+      renderApplications();
+    } catch (e) {
+      list.innerHTML = `<div class="panel-error">${esc(window.t('tenant_dashboard.applications.load_failed'))}</div>`;
+    }
+  }
+
+  // Show/clear the persistent progress+result banner above the app list.
+  // Persists across tab switches (it's a sibling of #td-apps-list, untouched by
+  // renderApplications) so a Save result is still visible when the operator
+  // tabs away and comes back.
+  function setAppsProgress(html, isError) {
+    const p = el('td-apps-progress');
+    if (!p) return;
+    if (!html) { p.style.display = 'none'; p.innerHTML = ''; return; }
+    p.className = 'td-apps-progress' + (isError ? ' is-error' : '');
+    p.style.display = 'flex';
+    p.innerHTML = html;
+  }
+
+  // Per-app deep-link straight to the app's blade in Entra, where the Delete
+  // button lives — operator clicks Delete → Yes without hunting the app list.
+  // Read-only: Panoptica never deletes anything itself.
+  function entraDeleteLink(a) {
+    const tid = (tenantInfo && tenantInfo.tenant_id) ? tenantInfo.tenant_id + '/' : '';
+    const base = 'https://entra.microsoft.com/' + tid + '#view/';
+    if (a.kind === 'registration') {
+      return base + 'Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/' + encodeURIComponent(a.appId);
+    }
+    return base + 'Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Properties/objectId/'
+      + encodeURIComponent(a.objectId || '') + '/appId/' + encodeURIComponent(a.appId);
+  }
+
+  function appsTimeNow() {
+    const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+    const loc = lang === 'fr' ? 'fr-CA' : (lang === 'es' ? 'es' : 'en-CA');
+    return new Date().toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function refreshApplications() {
+    const saveBtn = el('td-apps-save-btn');
+    const refBtn = el('td-apps-refresh-btn');
+    if (refBtn) refBtn.disabled = true;
+    if (saveBtn) saveBtn.disabled = true;
+    setAppsProgress(`<div class="loading-spinner"></div><span>${esc(window.t('tenant_dashboard.applications.refreshing'))}</span>`, false);
+    try {
+      const res = await Panoptica.api(`/api/applications/refresh?tenant_id=${tenantId}`, { method: 'POST' });
+      appsInventory = res.inventory;
+      renderApplications();
+      setAppsProgress(null);
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(window.t('tenant_dashboard.applications.refresh_done'), 'success');
+    } catch (e) {
+      setAppsProgress(esc(window.t('tenant_dashboard.applications.refresh_failed', { message: e.message })), true);
+    } finally {
+      if (refBtn) refBtn.disabled = false;
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  async function saveApplications() {
+    const saveBtn = el('td-apps-save-btn');
+    const refBtn = el('td-apps-refresh-btn');
+    const checked = Array.from(document.querySelectorAll('#td-apps-list .app-kg-check:checked'))
+      .map(cb => ({ appId: cb.dataset.appid, kind: cb.dataset.kind }));
+    const checkedKeys = new Set(checked.map(c => `${c.kind}:${c.appId}`));
+    const apps = (appsInventory && appsInventory.apps) || [];
+    // Apps that will be sent to Sonnet: not being sanctioned now, not already
+    // known-good, and not already carrying a verdict.
+    const toEval = apps.filter(a =>
+      !checkedKeys.has(`${a.kind}:${a.appId}`) && !a.blessed && !(a.sonnet && a.sonnet.verdict)).length;
+
+    if (checked.length === 0 && toEval === 0) {
+      setAppsProgress(esc(window.t('tenant_dashboard.applications.save_nothing')), true);
+      return;
+    }
+
+    if (saveBtn) saveBtn.disabled = true;
+    if (refBtn) refBtn.disabled = true;
+    // Immediate feedback — names the work (N sanctioned, M to Sonnet) and warns
+    // the Sonnet pass can take a moment, so a slow Save never looks like a no-op.
+    setAppsProgress(`<div class="loading-spinner"></div><span>${esc(window.t('tenant_dashboard.applications.saving', { blessed: checked.length, evaluated: toEval }))}</span>`, false);
+
+    try {
+      const res = await Panoptica.api('/api/applications/save', {
+        method: 'POST',
+        body: JSON.stringify({ tenant_id: tenantId, blessed: checked }),
+      });
+      appsInventory = res.inventory;
+      renderApplications();
+      setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_result', { when: appsTimeNow(), blessed: res.blessed, evaluated: res.evaluated }))}</span>`, false);
+      if (window.Panoptica && Panoptica.showToast) {
+        Panoptica.showToast(window.t('tenant_dashboard.applications.save_done', { blessed: res.blessed, evaluated: res.evaluated }), 'success');
+      }
+    } catch (e) {
+      setAppsProgress(esc(window.t('tenant_dashboard.applications.save_failed', { message: e.message })), true);
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(window.t('tenant_dashboard.applications.save_failed', { message: e.message }), 'error');
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+      if (refBtn) refBtn.disabled = false;
+    }
+  }
+
+  function appsSortRank(x) {
+    if (x.blessed && x.drift_state === 'drifted') return 0;
+    if (x.sonnet && x.sonnet.verdict === 'red') return 1;
+    if (x.sonnet && x.sonnet.verdict === 'yellow') return 2;
+    if (x.blessed) return 4;
+    return 3;
+  }
+
+  // Sonnet triage assessment, shown at the TOP of the expanded row so the
+  // verdict's reasoning is visible (the dot's tooltip was undiscoverable).
+  // Framed as triage, never absolution (spec §7): a green dot is "nothing
+  // alarming", not "safe" — only sanctioning stores a protected baseline.
+  function appAssessmentHtml(app, lang) {
+    const s = app.sonnet;
+    if (!s || !s.verdict) {
+      return `<div class="app-assess app-assess-none">
+        <div class="app-assess-title">${esc(window.t('tenant_dashboard.applications.assessment_title'))}</div>
+        <div class="app-perm-res">${esc(window.t('tenant_dashboard.applications.assessment_none'))}</div>
+      </div>`;
+    }
+    const reason = (s.reasons && (s.reasons[lang] || s.reasons.en)) || '';
+    const vlabel = window.t('tenant_dashboard.applications.assessment_' + s.verdict);
+    const when = s.evaluated_at ? window.t('tenant_dashboard.applications.assessment_on', { when: String(s.evaluated_at).slice(0, 16) }) : '';
+    return `<div class="app-assess app-assess-${esc(s.verdict)}">
+      <div class="app-assess-head">
+        <span class="app-dot app-dot-${esc(s.verdict)}"></span>
+        <span class="app-assess-verdict">${esc(vlabel)}</span>
+        <span class="app-assess-title">${esc(window.t('tenant_dashboard.applications.assessment_title'))}</span>
+        ${when ? `<span class="app-assess-when">${esc(when)}</span>` : ''}
+      </div>
+      ${reason ? `<div class="app-assess-reason">${esc(reason)}</div>` : ''}
+      <div class="app-assess-note">${esc(window.t('tenant_dashboard.applications.assessment_disclaimer'))}</div>
+    </div>`;
+  }
+
+  function appPermsHtml(app) {
+    function group(title, items, fmt) {
+      if (!items || !items.length) return '';
+      return `<div class="app-perm-group"><div class="app-perm-title">${esc(title)}</div>${items.map(fmt).join('')}</div>`;
+    }
+    let html = '';
+    html += group(window.t('tenant_dashboard.applications.perm_delegated'), app.delegatedPermissions,
+      p => `<div class="app-perm">${esc(p.scope)} <span class="app-perm-res">— ${esc(p.resource || '')}${p.consentType === 'AllPrincipals' ? ' (' + esc(window.t('tenant_dashboard.applications.tenant_wide')) + ')' : ''}</span></div>`);
+    html += group(window.t('tenant_dashboard.applications.perm_application'), app.applicationPermissions,
+      p => `<div class="app-perm app-perm-high">${esc(p.role)} <span class="app-perm-res">— ${esc(p.resource || '')}</span></div>`);
+    html += group(window.t('tenant_dashboard.applications.perm_requested'), app.requiredResourceAccess,
+      p => `<div class="app-perm">${esc(p.value)} <span class="app-perm-res">— ${esc(p.resource || '')} (${esc(p.permType || '')})</span></div>`);
+    html += group(window.t('tenant_dashboard.applications.perm_credentials'), app.credentials,
+      c => `<div class="app-perm">${esc(c.type)} ${esc(c.displayName || c.keyId || '')} <span class="app-perm-res">${c.endDateTime ? '— exp ' + esc(String(c.endDateTime).slice(0, 10)) : ''}</span></div>`);
+    html += group(window.t('tenant_dashboard.applications.perm_redirects'), app.redirectUris,
+      u => `<div class="app-perm">${esc(u)}</div>`);
+    if (!html) html = `<div class="app-perm-res" style="padding:6px;">${esc(window.t('tenant_dashboard.applications.no_perms'))}</div>`;
+    return html;
+  }
+
+  function appRowHtml(a, lang) {
+    const v = a.sonnet && a.sonnet.verdict;
+    const reason = (a.sonnet && a.sonnet.reasons && (a.sonnet.reasons[lang] || a.sonnet.reasons.en)) || '';
+    const dot = v
+      ? `<span class="app-dot app-dot-${esc(v)}" title="${esc(reason)}"></span>`
+      : `<span class="app-dot app-dot-none" title="${esc(window.t('tenant_dashboard.applications.not_evaluated'))}"></span>`;
+    const kindBadge = `<span class="app-kind app-kind-${esc(a.kind)}">${esc(window.t('tenant_dashboard.applications.kind_' + a.kind))}</span>`;
+    let status = '';
+    if (a.blessed && a.drift_state === 'drifted') {
+      status = `<span class="app-status app-status-drift">${esc(window.t('tenant_dashboard.applications.status_drift'))}</span>`;
+    } else if (a.blessed) {
+      const when = a.approved_at ? ' · ' + esc(String(a.approved_at).slice(0, 10)) : '';
+      status = `<span class="app-status app-status-good">${esc(window.t('tenant_dashboard.applications.status_known_good'))}${when}</span>`;
+    }
+    const verified = a.verifiedPublisher
+      ? ` <span class="app-verified" title="${esc(window.t('tenant_dashboard.applications.verified'))}">✓</span>` : '';
+    return `<tr class="app-row">
+        <td>${dot}</td>
+        <td><button type="button" class="app-name-btn">${esc(a.displayName || a.appId)}</button> ${kindBadge}</td>
+        <td class="app-perm-res" style="font-size:0.78rem;">${esc(a.publisher || '—')}${verified}</td>
+        <td>${status}</td>
+        <td style="text-align:center;"><input type="checkbox" class="app-kg-check" data-appid="${esc(a.appId)}" data-kind="${esc(a.kind)}" ${a.blessed ? 'checked' : ''}></td>
+        <td style="text-align:center;"><a class="app-del-link" href="${esc(entraDeleteLink(a))}" target="_blank" rel="noopener" title="${esc(window.t('tenant_dashboard.applications.delete_title'))}">${esc(window.t('tenant_dashboard.applications.delete_link'))}</a></td>
+      </tr>
+      <tr class="app-detail-row" style="display:none;"><td></td><td colspan="5">${appAssessmentHtml(a, lang)}${appPermsHtml(a)}</td></tr>`;
+  }
+
+  function setAppsStatus(inv) {
+    const s = el('td-apps-status');
+    if (!s) return;
+    if (!inv || !inv.apps) { s.textContent = ''; return; }
+    const total = inv.apps.length;
+    const blessed = inv.apps.filter(a => a.blessed).length;
+    const drifted = inv.apps.filter(a => a.drift_state === 'drifted').length;
+    let txt = window.t('tenant_dashboard.applications.summary', { total, blessed, drifted });
+    if (inv.generated_at) txt += ' · ' + window.t('tenant_dashboard.applications.refreshed', { when: String(inv.generated_at).slice(0, 16) });
+    s.textContent = txt;
+  }
+
+  function renderApplications() {
+    const list = el('td-apps-list');
+    const inv = appsInventory;
+    if (!inv || !Array.isArray(inv.apps) || inv.apps.length === 0) {
+      list.innerHTML = `<div class="ca-empty-state" style="text-align:center; padding:48px 20px; color:var(--p-text-muted);">
+        <div style="font-size:2.5rem; margin-bottom:12px;">🧩</div>
+        <div>${esc(window.t('tenant_dashboard.applications.empty'))}</div></div>`;
+      setAppsStatus(inv);
+      return;
+    }
+    const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+    const apps = inv.apps.slice().sort((a, b) => {
+      const ra = appsSortRank(a), rb = appsSortRank(b);
+      if (ra !== rb) return ra - rb;
+      return String(a.displayName || '').localeCompare(String(b.displayName || ''));
+    });
+    list.innerHTML = `<div class="td-intune-scroll"><table class="td-list-table app-table"><thead><tr>
+        <th style="width:34px;"></th>
+        <th>${esc(window.t('tenant_dashboard.applications.col_app'))}</th>
+        <th>${esc(window.t('tenant_dashboard.applications.col_publisher'))}</th>
+        <th>${esc(window.t('tenant_dashboard.applications.col_status'))}</th>
+        <th style="width:110px; text-align:center;">${esc(window.t('tenant_dashboard.applications.col_known_good'))}</th>
+        <th style="width:80px; text-align:center;">${esc(window.t('tenant_dashboard.applications.col_remove'))}</th>
+      </tr></thead><tbody>${apps.map(a => appRowHtml(a, lang)).join('')}</tbody></table></div>`;
+    list.querySelectorAll('.app-name-btn').forEach(b => b.addEventListener('click', () => {
+      const detail = b.closest('tr').nextElementSibling;
+      if (detail && detail.classList.contains('app-detail-row')) {
+        detail.style.display = detail.style.display === 'none' ? '' : 'none';
+      }
+    }));
+    setAppsStatus(inv);
+  }
   // Alerts tab: mount the shared filter bar once, then hand off to the table
   // reloader. toggleView() calls this every time the tab is shown; the
   // mount-once guard lets users preserve their filter selection when they
@@ -977,30 +1228,33 @@
     if (regApps && regApps.length > 0) {
       panels += listSection(window.t('tenant_dashboard.section.applications'));
       panels += collapsePanel(window.t('tenant_dashboard.panel.registered_applications'), regApps.length, () => {
-        let t = `<table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.name')}</th><th>${window.t('tenant_dashboard.col.audience')}</th><th>${window.t('tenant_dashboard.col.created')}</th></tr></thead><tbody>`;
+        // Render ALL rows inside a height-capped scroll wrapper (Feature 8.9
+        // Part A) — a truncated inventory that looks complete is worse than
+        // none. Matches the Intune managed-devices panel pattern.
+        let t = `<div class="td-intune-scroll"><table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.name')}</th><th>${window.t('tenant_dashboard.col.audience')}</th><th>${window.t('tenant_dashboard.col.created')}</th></tr></thead><tbody>`;
         const _lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
         const _dateLocale = _lang === 'fr' ? 'fr-CA' : (_lang === 'es' ? 'es' : 'en-CA');
-        regApps.slice(0, 30).forEach(a => {
+        regApps.forEach(a => {
           const created = a.created ? new Date(a.created).toLocaleDateString(_dateLocale) : '—';
           t += `<tr><td>${esc(a.displayName)}</td><td style="font-size:0.75rem;">${esc(a.signInAudience || '—')}</td><td>${created}</td></tr>`;
         });
-        if (regApps.length > 30) t += `<tr><td colspan="3" style="text-align:center; color:var(--p-text-muted);">${window.t('tenant_dashboard.more_rows', { count: regApps.length - 30 })}</td></tr>`;
-        return t + '</tbody></table>';
+        return t + '</tbody></table></div>';
       });
     }
 
     // Enterprise Apps
     if (entApps && entApps.length > 0) {
       panels += collapsePanel(window.t('tenant_dashboard.panel.enterprise_apps_third_party'), entApps.length, () => {
-        let t = `<table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.name')}</th><th>${window.t('tenant_dashboard.col.publisher')}</th><th>${window.t('tenant_dashboard.col.enabled')}</th><th>${window.t('tenant_dashboard.col.created')}</th></tr></thead><tbody>`;
+        // Render ALL rows inside a height-capped scroll wrapper (Feature 8.9
+        // Part A) — no silent 30-row truncation on a security inventory.
+        let t = `<div class="td-intune-scroll"><table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.name')}</th><th>${window.t('tenant_dashboard.col.publisher')}</th><th>${window.t('tenant_dashboard.col.enabled')}</th><th>${window.t('tenant_dashboard.col.created')}</th></tr></thead><tbody>`;
         const _lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
         const _dateLocale = _lang === 'fr' ? 'fr-CA' : (_lang === 'es' ? 'es' : 'en-CA');
-        entApps.slice(0, 30).forEach(a => {
+        entApps.forEach(a => {
           const created = a.created ? new Date(a.created).toLocaleDateString(_dateLocale) : '—';
           t += `<tr><td>${esc(a.displayName)}</td><td style="font-size:0.75rem;">${esc(a.publisher || '—')}</td><td>${a.enabled ? '✓' : '✗'}</td><td>${created}</td></tr>`;
         });
-        if (entApps.length > 30) t += `<tr><td colspan="4" style="text-align:center; color:var(--p-text-muted);">${window.t('tenant_dashboard.more_rows', { count: entApps.length - 30 })}</td></tr>`;
-        return t + '</tbody></table>';
+        return t + '</tbody></table></div>';
       });
     }
 

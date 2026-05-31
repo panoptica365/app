@@ -39,6 +39,7 @@ const metaApiRoutes = require('./routes/api-meta');
 const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
 const learnApiRoutes = require('./routes/api-learn');
+const applicationsApiRoutes = require('./routes/api-applications');
 const partialRoutes = require('./routes/partials');
 
 // MSP audit service (for boot-time table migration)
@@ -75,6 +76,8 @@ const morningBriefing = require('./morning-briefing');
 const auditExpiryScheduler = require('./audit-expiry-scheduler');
 const ualWorker = require('./ual-worker');
 const messageCenterWorker = require('./message-center-worker');
+const knownGoodWorker = require('./known-good-worker');
+const knownGoodStore = require('./lib/known-good-store');
 const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 
@@ -235,6 +238,7 @@ app.use('/api/security', securityApiRoutes);
 app.use('/api/heatmap', heatmapApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
 app.use('/api/learn', learnApiRoutes);
+app.use('/api/applications', applicationsApiRoutes);
 app.use('/api/meta', metaApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings
@@ -364,6 +368,13 @@ async function start() {
       console.error('[Server] message-center schema ensure failed at boot:', err.message)
     );
 
+    // Feature 8.9 — eager-create known_good_apps + the drift alert policy at
+    // boot so the Applications tab + drift worker have their schema regardless
+    // of whether anything has triggered them yet. Fire-and-forget.
+    knownGoodStore.ensureSchema().catch(err =>
+      console.error('[Server] known-good schema ensure failed at boot:', err.message)
+    );
+
     // Start CA drift scheduler (60-minute cycle). Also passes
     // expireExemptions so overdue exemption grants are auto-revoked at the
     // top of each cycle — part of the exemption-aware alert suppression
@@ -393,6 +404,10 @@ async function start() {
     // source tenant in Settings → Microsoft message feed. Surfaces
     // Microsoft-caused configuration drift as MSP-level alerts.
     messageCenterWorker.start();
+
+    // Feature 8.9 — known-good apps drift loop (daily, ~24h per managed tenant;
+    // never in the 15-min poll). Backstop for permission drift on blessed apps.
+    knownGoodWorker.start();
 
     // Async-Apply infrastructure (May 6, 2026).
     // Stranded-job recovery FIRST — any apply jobs in 'running' state from
@@ -427,6 +442,7 @@ process.on('SIGINT', async () => {
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
   messageCenterWorker.stop();
+  knownGoodWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
   await db.close();
@@ -442,6 +458,7 @@ process.on('SIGTERM', async () => {
   auditExpiryScheduler.stop();
   ualWorker.stopLoop();
   messageCenterWorker.stop();
+  knownGoodWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
   await db.close();

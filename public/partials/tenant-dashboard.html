@@ -12,6 +12,7 @@
   <div class="td-view-toggle" id="td-view-toggle" style="margin-left:auto;">
     <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
     <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
+    <button class="td-view-btn" data-view="applications" data-i18n="tenant_dashboard.view_applications">Applications</button>
     <button class="td-view-btn" data-view="ca-policies" data-i18n="tenant_dashboard.view_ca_policies">CA Policies</button>
     <button class="td-view-btn" data-view="intune-policies" data-i18n="tenant_dashboard.view_intune_policies">Intune Policies</button>
     <button class="td-view-btn" data-view="change-log" data-i18n="tenant_dashboard.view_change_log">Change Log</button>
@@ -97,6 +98,30 @@
 
 <!-- Per-Tenant Alerts View (hidden by default) -->
 <div id="td-alerts-view" style="display:none;"></div>
+
+<!-- ═══ Per-Tenant Applications View (Feature 8.9, hidden by default) ═══ -->
+<!--
+  Known-good / drift inventory of consented enterprise apps + app registrations.
+  Read-only toward the tenant: no revoke button — the Entra deep-link sends the
+  operator to the Enterprise Applications blade to remove a dead app there.
+-->
+<div id="td-applications-view" style="display:none;">
+  <div class="td-apps-actions">
+    <button class="btn-primary" id="td-apps-save-btn" data-role-required="member" data-i18n="tenant_dashboard.applications.save_btn">Save</button>
+    <button class="btn-secondary" id="td-apps-refresh-btn" data-role-required="member" data-i18n="tenant_dashboard.applications.refresh_btn">Refresh</button>
+    <a class="btn-secondary" id="td-apps-entra-link" href="https://entra.microsoft.com/" target="_blank" rel="noopener" data-i18n="tenant_dashboard.applications.entra_link">Open in Entra ↗</a>
+    <span id="td-apps-status" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div style="font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:10px;" data-i18n="tenant_dashboard.applications.help_text">
+    Review each app's permissions, tick "Known good", then Save. Known-good apps are watched for permission drift; the rest get a Sonnet triage dot (green/yellow/red — triage, not a guarantee). Panoptica never changes the tenant.
+  </div>
+  <!-- Save/Refresh progress + result banner (Feature 8.9) — persists so it's
+       still visible if the operator tabs away and comes back. -->
+  <div id="td-apps-progress" class="td-apps-progress" style="display:none;"></div>
+  <div id="td-apps-list">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.applications.loading">Loading applications…</span></div>
+  </div>
+</div>
 
 <!-- Per-Tenant CA Policies View (hidden by default) -->
 <div id="td-ca-view" style="display:none;">

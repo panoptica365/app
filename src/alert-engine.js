@@ -72,6 +72,7 @@ const notifier = require('./notifier');
 const aiAnalysis = require('./ai-analysis');
 const exemptionResolver = require('./lib/exemption-resolver');
 const alertExemptionMatcher = require('./lib/alert-exemption-matcher');
+const knownGoodStore = require('./lib/known-good-store');
 const { classifyCaPolicy } = require('./lib/ca-policy-classifier');
 const namedLocationResolver = require('./lib/named-location-resolver');
 const tenantMode = require('./lib/tenant-mode');
@@ -158,7 +159,7 @@ async function ensureAlertColumns() {
     // file was the only source-of-truth for these two columns; on
     // production it was applied manually back on Apr 30 (Phase 11 exemption
     // system). Container deployments need them in code.
-    { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | etc.' AFTER status" },
+    { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | known_good_app | etc.' AFTER status" },
     { name: 'resolution_rule_id', sql: "ALTER TABLE alerts ADD COLUMN resolution_rule_id INT UNSIGNED DEFAULT NULL COMMENT 'FK alert_exemption_rules.id when resolution_reason = exemption_rule' AFTER resolution_reason" },
     // Feature 8.8 (2026-05-30) — alert scope. Existing alerts are all single-
     // tenant. Message Center alerts are MSP-level: tenant_id holds the
@@ -2886,6 +2887,25 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
     matchedRule = null;
   }
 
+  // Feature 8.9 §10.2 — Known-good app auto-resolve. For UAL OAuth-consent
+  // alerts whose app the operator has already blessed (a CLEAN known_good_apps
+  // baseline exists for this tenant + appId), insert the alert pre-resolved so
+  // a re-grant within baseline arrives silently. A grant that EXCEEDS the
+  // baseline still surfaces via the known_good_app_drift path. Kept as a
+  // separate, app-keyed check because alert-exemption-matcher is UPN-keyed and
+  // has no app dimension. resolution_reason='known_good_app' (no rule id).
+  let knownGoodResolved = false;
+  if (!matchedRule && typeof dedupKey === 'string' && dedupKey.startsWith('ual_oauth_consent:')) {
+    try {
+      const appId = alertData.raw_data && alertData.raw_data.appId;
+      if (appId && await knownGoodStore.hasCleanBaselineForAppId(tenant.id, appId)) {
+        knownGoodResolved = true;
+      }
+    } catch (e) {
+      console.warn(`[AlertEngine] known-good check failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
+    }
+  }
+
   // Create new alert. Branch on matchedRule: auto-resolved alerts are
   // inserted with status='resolved' + resolution_reason + resolution_rule_id
   // so the dashboard can filter them in/out and the audit trail links
@@ -2914,6 +2934,24 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
     // Bump rule telemetry — fire-and-forget
     alertExemptionMatcher.recordRuleMatch(matchedRule.id).catch(() => {});
     console.log(`[AlertEngine] Alert ${id} auto-resolved by exemption rule ${matchedRule.id} (tenant=${tenant.display_name}, policy="${policy.name}")`);
+  } else if (knownGoodResolved) {
+    id = await db.insert(
+      `INSERT INTO alerts (tenant_id, policy_id, severity, message, raw_data, dedup_key,
+                           recurrence_count, last_seen_at, triggered_at,
+                           status, resolution_reason, closed_at, notes)
+       VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW(),
+               'resolved', 'known_good_app', NOW(), ?)`,
+      [
+        tenant.id,
+        policy.id,
+        effectiveSeverity,
+        alertData.message,
+        JSON.stringify(alertData.raw_data),
+        dedupKey,
+        'Auto-resolved: app is on the known-good baseline for this tenant (Feature 8.9)',
+      ]
+    );
+    console.log(`[AlertEngine] Alert ${id} auto-resolved as known-good app (tenant=${tenant.display_name}, policy="${policy.name}")`);
   } else {
     id = await db.insert(
       `INSERT INTO alerts (tenant_id, policy_id, severity, message, raw_data, dedup_key, recurrence_count, last_seen_at, triggered_at)
@@ -2934,7 +2972,7 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
     isNew: true,
     // Apr 30, 2026 — short-circuit downstream pipeline for auto-resolved
     // alerts (skip AI analysis + email + severity adjustment).
-    isAutoResolved: !!matchedRule,
+    isAutoResolved: !!matchedRule || knownGoodResolved,
     autoResolvedRuleId: matchedRule ? matchedRule.id : null,
     tenant_id: tenant.id,
     policy_id: policy.id,

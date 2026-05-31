@@ -5,6 +5,24 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.26 — 2026-05-30
+
+### Novedad: pestaña Aplicaciones — conozca cada aplicación de un inquilino y detecte las que cambian
+
+Cada inquilino de Microsoft 365 acumula aplicaciones con consentimiento: herramientas de terceros a las que alguien hizo clic en «aceptar», además de registros de aplicaciones creados para scripts e integraciones. Con el tiempo nadie recuerda qué son la mitad de ellas, y cualquiera puede tener acceso permanente al correo, los archivos o el directorio. La nueva pestaña **Aplicaciones**, en el panel de cada inquilino entre Alertas y Directivas de CA, las enumera todas en un solo lugar, muestra exactamente qué puede hacer cada una y le permite marcar las que reconoce como **De confianza**.
+
+Marcar una aplicación como de confianza guarda sus permisos actuales como base de referencia. A partir de entonces, Panoptica365 vigila esa aplicación y solo le avisa si más tarde **obtiene** permisos más allá de lo que usted aprobó: el mismo modelo de aceptar la desviación que ya usa para el acceso condicional. Quitar permisos nunca genera una alerta; solo el crecimiento más allá de su base, porque es la dirección que añade riesgo. Una aplicación que se desvía genera una sola alerta **Cambios en aplicación de confianza**, acompañada de una ficha explicativa completa en lenguaje claro.
+
+Las aplicaciones que no ha revisado reciben una evaluación de triaje única de Claude (Sonnet): un punto verde, amarillo o rojo que le indica por dónde empezar. Despliegue cualquier aplicación para leer el razonamiento completo de Claude, sus permisos agrupados por tipo y su historial. El punto es un triaje, nunca un veredicto de «segura»: solo marcar una aplicación como de confianza guarda una base de referencia protegida.
+
+Cuando marca una aplicación como de confianza, cualquier alerta de consentimiento OAuth abierta sobre ella se resuelve automáticamente, y esa alerta ahora enlaza directamente con la fila de la aplicación. Panoptica365 sigue sin modificar nunca un inquilino: cuando quiera quitar una aplicación obsoleta, cada fila tiene un enlace **Eliminar** que abre esa aplicación exacta en el centro de administración de Entra, donde usted confirma la eliminación (Microsoft la mantiene recuperable durante 30 días).
+
+### Corrección: las listas de aplicaciones del Resumen ahora muestran todas las aplicaciones
+
+En el Resumen del inquilino, los paneles **Aplicaciones empresariales** y **Registros de aplicaciones** mostraban solo las primeras 30 filas con un «+N más» silencioso: una lista de seguridad incompleta que parecía completa. Ahora muestran todas las aplicaciones en una lista desplazable, y el recuento de aplicaciones empresariales coincide con lo que ve en el portal de Entra.
+
+---
+
 ## Versión 0.1.25 — 2026-05-30
 
 ### Novedad: Feed de mensajes de Microsoft — avísese cuando Microsoft mueve el piso

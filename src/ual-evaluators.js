@@ -1439,15 +1439,22 @@ async function evaluateOauthConsent(tenant, sinceTime, untilTime) {
         highRiskScopes: parsed.highRiskScopes,
         client_ip: parsed.clientIp,
         upn: parsed.operator,
+        // Feature 8.9 §10.1 — deep-link this alert to the app's row in the
+        // Applications tab, so marking it known-good (which auto-resolves this
+        // alert) is one click for the operator.
+        deepLink: { view: 'tenant-dashboard', tenantId: tenant.id, tab: 'applications', appId: parsed.appId },
       },
     };
 
     try {
       const result = await alertEngine.createOrUpdateAlert(tenant, policy, alertData);
-      if (result?.isNew) fired += 1; else skipped += 1;
+      // Feature 8.9 §10.2 — a consent alert for a blessed (known-good) app is
+      // inserted pre-resolved by createOrUpdateAlert (isAutoResolved). Don't run
+      // the notify/AI pipeline on it — the operator already vouched for the app.
+      if (result?.isNew && !result.isAutoResolved) fired += 1; else skipped += 1;
       // Fire-and-forget AI analysis + email/Teams notification + AI sev-
       // adjust pipeline (May 12, 2026 extract — see alert-engine.processNewAlert).
-      if (result?.isNew) {
+      if (result?.isNew && !result.isAutoResolved) {
         alertEngine.processNewAlert(result, tenant).catch((e) => {
           console.error(`[UalEvaluators] processNewAlert failed for alert ${result.id}: ${e.message}`);
         });

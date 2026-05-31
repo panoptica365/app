@@ -3040,9 +3040,13 @@ body.role-viewer [data-role-readonly="member"] {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 4px 14px;
+  padding: 4px 11px;
   cursor: pointer;
   transition: all 0.2s;
+  /* Keep every tab label on a single line so the bar is the same HEIGHT in all
+     languages — without this the longer French/Spanish labels wrapped to two
+     lines and made the toolbar taller than the English one. */
+  white-space: nowrap;
 }
 
 .td-view-btn.active {
@@ -3054,6 +3058,55 @@ body.role-viewer [data-role-readonly="member"] {
   background: rgba(68, 136, 255, 0.1);
   color: var(--p-text-secondary);
 }
+
+/* ─── Applications tab (Feature 8.9 — known-good / drift inventory) ─── */
+/* Action bar: margin clears the header/info-bar above (the taller primary Save
+   button was butting against the toolbar outline). Anchors styled as buttons get
+   inline-flex so the Entra link sits level with the real <button> elements. */
+.td-apps-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0; }
+.td-apps-actions a.btn-secondary,
+.td-apps-actions a.btn-primary { display: inline-flex; align-items: center; text-decoration: none; }
+/* Persistent Save/Refresh progress + result banner (survives tab switches). */
+.td-apps-progress { margin: 0 0 12px; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--p-border); background: var(--p-surface-alt, rgba(68,136,255,0.06)); font-size: 0.86rem; display: flex; align-items: center; gap: 10px; color: var(--p-text-secondary); }
+.td-apps-progress.is-error { border-color: var(--status-broken, #f85149); color: var(--status-broken, #f85149); }
+.td-apps-progress .loading-spinner { width: 16px; height: 16px; }
+.app-table td { vertical-align: middle; }
+.app-name-btn { background: none; border: none; color: var(--p-text); font: inherit; cursor: pointer; padding: 0; text-align: left; text-decoration: underline dotted; }
+.app-name-btn:hover { color: var(--p-accent); }
+.app-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.app-dot-green { background: var(--status-healthy, #3fb950); }
+.app-dot-yellow { background: var(--status-degraded, #d29922); }
+.app-dot-red { background: var(--status-broken, #f85149); }
+.app-dot-none { background: transparent; border: 1px solid var(--p-border, #334); }
+.app-kind { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--p-border); color: var(--p-text-muted); margin-left: 4px; }
+.app-kind-registration { color: var(--p-accent); border-color: var(--p-accent); }
+.app-verified { color: var(--status-healthy, #3fb950); font-weight: 700; }
+.app-status { font-size: 0.74rem; }
+.app-status-good { color: var(--status-healthy, #3fb950); }
+.app-status-drift { color: var(--status-broken, #f85149); font-weight: 600; }
+.app-detail-row td { background: rgba(68, 136, 255, 0.04); }
+/* Sonnet assessment card at the top of the expanded row. Left border tinted by
+   verdict so the reasoning reads at a glance; the dot + label repeat the dot's
+   colour for continuity with the row. */
+.app-assess { margin: 2px 0 12px; padding: 10px 12px; border-radius: 6px; background: var(--p-surface-alt, rgba(68,136,255,0.05)); border-left: 3px solid var(--p-border); }
+.app-assess-green  { border-left-color: var(--status-healthy, #3fb950); }
+.app-assess-yellow { border-left-color: var(--status-degraded, #d29922); }
+.app-assess-red    { border-left-color: var(--status-broken, #f85149); }
+.app-assess-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-assess-verdict { font-weight: 600; font-size: 0.82rem; }
+.app-assess-title { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--p-text-muted); }
+.app-assess-when { font-size: 0.72rem; color: var(--p-text-muted); margin-left: auto; }
+.app-assess-reason { margin-top: 6px; font-size: 0.86rem; line-height: 1.5; color: var(--p-text); }
+.app-assess-note { margin-top: 6px; font-size: 0.72rem; font-style: italic; color: var(--p-text-muted); }
+.app-perm-group { margin: 4px 0 8px; }
+.app-perm-title { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--p-text-muted); margin-bottom: 2px; }
+.app-perm { font-size: 0.8rem; padding: 1px 0; }
+.app-perm-high { color: var(--status-degraded, #d29922); }
+.app-perm-res { color: var(--p-text-muted); }
+/* Per-row delete deep-link — opens the app's blade in Entra (read-only; the
+   operator does the actual delete there). Subtle until hover. */
+.app-del-link { color: var(--p-text-muted); font-size: 0.78rem; text-decoration: none; white-space: nowrap; }
+.app-del-link:hover { color: var(--status-broken, #f85149); text-decoration: underline; }
 
 /* ─── Tenant Dashboard — header tenant switcher ─── */
 .td-tenant-switcher {

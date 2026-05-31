@@ -17,6 +17,10 @@
 const graph = require('./graph');
 const https = require('https');
 const crypto = require('crypto');
+// Single source of truth for the Microsoft-owned tenant exclusion, shared with
+// the Feature 8.9 Applications collector so the Overview "Enterprise apps" count
+// matches the Applications tab (and the Entra portal). See enterprise-apps-graph.js.
+const { MICROSOFT_TENANT_IDS } = require('./lib/enterprise-apps-graph');
 const { runExoCmdlet } = require('./lib/security-settings/pwsh-runner');
 
 /**
@@ -992,12 +996,14 @@ async function fetchApplications(tenantId) {
 // ─── Enterprise Applications ───
 async function fetchEnterpriseApps(tenantId) {
   try {
-    const MICROSOFT_TENANT_ID = 'f8cdef31-a31e-4b4a-93e4-5f571e91255a';
     const sps = await graph.callGraphPaged(tenantId,
       '/servicePrincipals?$select=displayName,appId,servicePrincipalType,accountEnabled,createdDateTime,appOwnerOrganizationId,publisherName&$top=999');
 
     const filtered = (sps || []).filter(sp => {
-      if (sp.appOwnerOrganizationId === MICROSOFT_TENANT_ID) return false;
+      // Exclude BOTH Microsoft-owned tenants (corp + Microsoft Services) to match
+      // the portal's "Enterprise Applications" filter — previously only the corp
+      // tenant was excluded, which over-counted vs the Applications tab.
+      if (MICROSOFT_TENANT_IDS.has(sp.appOwnerOrganizationId)) return false;
       if (sp.servicePrincipalType === 'ManagedIdentity') return false;
       return true;
     });

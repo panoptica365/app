@@ -5,6 +5,24 @@ that release, newest first.
 
 ---
 
+## Version 0.1.26 — 2026-05-30
+
+### New: Applications tab — know every app in a tenant, and catch the ones that change
+
+Every Microsoft 365 tenant accumulates consented applications — third-party tools someone clicked "accept" on, plus app registrations created for scripts and integrations. Over time nobody remembers what half of them are, and any one of them can be holding standing access to mail, files, or the directory. The new **Applications** tab, in each tenant's dashboard between Alerts and CA Policies, lists them all in one place, shows exactly what each one can do, and lets you mark the ones you recognise as **Known good**.
+
+Marking an app Known good snapshots its current permissions as a baseline. From then on Panoptica365 watches that app and warns you only if it later **gains** permissions beyond what you approved — the same accept-the-drift model you already use for Conditional Access. Removing permissions never alerts; only growth past your baseline does, because growth is the direction that adds risk. A drifted app raises a single **Known-good app drift** alert with a full plain-language explainer.
+
+The apps you haven't reviewed get a one-time triage assessment from Claude (Sonnet): a green, yellow, or red dot telling you where to start. Expand any app to read Claude's full reasoning, its permissions grouped by type, and its history. The dot is triage, never a verdict of "safe" — only marking an app Known good stores a protected baseline.
+
+When you mark an app Known good, any open OAuth-consent alert for it resolves automatically, and that alert now links straight to the app's row. Panoptica365 still never changes a tenant itself: when you want to remove a dead app, each row has a **Delete** link that opens that exact app in the Entra admin centre, where you confirm the deletion (Microsoft keeps it restorable for 30 days).
+
+### Fixed: the Overview app lists now show every app
+
+On the tenant Overview, the **Enterprise applications** and **Registered applications** panels used to show only the first 30 rows with a silent "+N more" — an incomplete security list that looked complete. They now show every app in a scrolling list, and the enterprise-app count matches what you see in the Entra portal.
+
+---
+
 ## Version 0.1.25 — 2026-05-30
 
 ### New: Microsoft message feed — get warned when Microsoft moves the floor
