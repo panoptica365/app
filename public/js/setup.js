@@ -234,6 +234,40 @@
 
     // Scroll body to top in case it was previously scrolled
     bodyEl.scrollTop = 0;
+
+    // Generate (idempotent) the monitoring cert and fill the step-4 block.
+    provisionCertSection();
+  }
+
+  // Kick off server-side cert generation (idempotent) and populate the
+  // "Upload the Monitoring Certificate" block with the thumbprint + expiry.
+  // Generation is idempotent server-side, so calling this every time the
+  // modal opens is safe — it returns the same cert and never orphans an
+  // already-uploaded .cer.
+  async function provisionCertSection() {
+    const statusEl = $('#setup-cert-status');
+    const thumbEl = $('#setup-cert-thumbprint');
+    const copyEl = $('#setup-cert-copy');
+    const expiryEl = $('#setup-cert-expiry');
+    if (!thumbEl) return;
+    try {
+      const r = await apiPost('/api/setup/cert/generate', {});
+      thumbEl.textContent = r.thumbprint || '—';
+      if (copyEl && r.thumbprint) copyEl.setAttribute('data-copy', r.thumbprint);
+      if (expiryEl) {
+        expiryEl.textContent = r.notAfter
+          ? new Date(r.notAfter).toLocaleDateString()
+          : '—';
+      }
+      if (statusEl) {
+        statusEl.textContent = t('setup.app_reg.cert_generated_ok') || 'Ready to download and upload.';
+      }
+    } catch (e) {
+      if (statusEl) {
+        statusEl.textContent = (t('setup.app_reg.cert_gen_failed') || 'Certificate generation failed') + ': ' + e.message;
+      }
+      if (thumbEl) thumbEl.textContent = '—';
+    }
   }
 
   function closeAppRegModal() {
@@ -342,8 +376,48 @@
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_value_vs_id"><strong>Copy the VALUE, not the Secret ID.</strong> The "Value" column shows the actual secret <em>only once</em> at creation time — if you leave the page without copying it, you'll have to delete and re-create the secret. The "Secret ID" is a different field that looks similar but will NOT work.</div>
     </div>`;
 
-    // ─── Step 4: API permissions ───────────────────────────────────
-    html += `<h3>4. <span data-i18n="setup.app_reg.h_perms">Add API Permissions</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(58 total)</span></h3>`;
+    // ─── Step 4: Upload the monitoring certificate ─────────────────
+    // The operator is still on the "Certificates & secrets" blade from
+    // step 3 (client secret), so the cert upload sits naturally here.
+    // Panoptica generates the keypair server-side; the operator only
+    // downloads the public .cer and uploads it — no openssl, no thumbprint
+    // typing. The thumbprint/expiry below are filled in by
+    // provisionCertSection() once /cert/generate returns.
+    html += `<h3>4. <span data-i18n="setup.app_reg.h_cert">Upload the Monitoring Certificate</span></h3>`;
+    html += `<p data-i18n-html="setup.app_reg.cert_intro">Exchange Online PowerShell — which Panoptica365 uses to read ~24 of your security settings — requires a <strong>certificate</strong> (a client secret alone won't work for Exchange). Panoptica365 has generated one for you automatically. You just need to download its public half and upload it to this same <strong>Certificates &amp; secrets</strong> page.</p>`;
+
+    html += `<div class="setup-callout">
+      <span class="setup-callout-icon">📜</span>
+      <div class="setup-callout-body">
+        <p data-i18n="setup.app_reg.cert_generated_label" style="margin: 0 0 6px;">Your certificate (generated automatically):</p>
+        <p id="setup-cert-status" style="margin: 0 0 8px; font-size: 0.9em;">
+          <span data-i18n="setup.app_reg.cert_generating">Generating certificate…</span>
+        </p>
+        <p style="margin: 0 0 6px; font-size: 0.9em;">
+          <span data-i18n="setup.app_reg.cert_thumbprint_label">Thumbprint:</span>
+          <button type="button" class="setup-copy" id="setup-cert-copy" data-copy="" title="${esc(t('setup.app_reg.copy_tooltip') || 'Copy to clipboard')}"><span class="setup-copy-text" id="setup-cert-thumbprint">…</span> <span class="setup-copy-icon" aria-hidden="true">⧉</span></button>
+        </p>
+        <p style="margin: 0 0 10px; font-size: 0.9em;">
+          <span data-i18n="setup.app_reg.cert_expiry_label">Expires:</span> <span id="setup-cert-expiry">…</span>
+        </p>
+        <a id="setup-cert-download" class="setup-btn setup-btn-primary" href="/api/setup/cert/download" download="panoptica365.cer" data-i18n="setup.app_reg.cert_download_btn">Download certificate (.cer)</a>
+      </div>
+    </div>`;
+
+    html += `<ol>
+      <li data-i18n-html="setup.app_reg.cert_upload_1">Click <strong>Download certificate (.cer)</strong> above and save the file.</li>
+      <li data-i18n-html="setup.app_reg.cert_upload_2">In your app registration, go to <strong>Certificates &amp; secrets</strong> → <strong>Certificates</strong> tab → <strong>Upload certificate</strong>.</li>
+      <li data-i18n-html="setup.app_reg.cert_upload_3">Choose the <code>panoptica365.cer</code> file you just downloaded, then click <strong>Add</strong>.</li>
+      <li data-i18n-html="setup.app_reg.cert_upload_4">After upload, the thumbprint Entra shows should match the one above.</li>
+    </ol>`;
+
+    html += `<div class="setup-callout warn">
+      <span class="setup-callout-icon">⚠</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.cert_warn_required">Don't skip this — without the uploaded certificate, all the Exchange Online security readers stay stuck at "Awaiting Infra." The Test Connection button on the next wizard step checks that this certificate is present and will tell you if it's missing.</div>
+    </div>`;
+
+    // ─── Step 5: API permissions ───────────────────────────────────
+    html += `<h3>5. <span data-i18n="setup.app_reg.h_perms">Add API Permissions</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(58 total)</span></h3>`;
     html += `<p data-i18n-html="setup.app_reg.perms_intro">In your app's left sidebar, click <strong>API permissions</strong> → <strong>Add a permission</strong>. You'll add permissions from <strong>four different APIs</strong>. Within each API, Entra groups permissions alphabetically by category — the lists below follow that order so you can scroll down without searching.</p>`;
 
     html += `<div class="setup-callout warn">
@@ -379,7 +453,7 @@
     }
 
     // ─── Step 5: Grant admin consent ───────────────────────────────
-    html += `<h3>5. <span data-i18n="setup.app_reg.h_consent">Grant Admin Consent</span></h3>`;
+    html += `<h3>6. <span data-i18n="setup.app_reg.h_consent">Grant Admin Consent</span></h3>`;
     html += `<ol>
       <li data-i18n-html="setup.app_reg.consent_1">After adding all 58 permissions, click the <strong>Grant admin consent for &lt;your tenant&gt;</strong> button at the top of the API permissions table.</li>
       <li data-i18n="setup.app_reg.consent_2">Confirm in the popup. Wait a few seconds for Microsoft to process.</li>
@@ -391,8 +465,8 @@
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.ok_consent_check">When done, ALL 58 permissions should show <strong style="color: var(--p-ok);">green checkmarks</strong>. If any are missing, the Test Connection button on the next wizard step will tell you exactly which ones.</div>
     </div>`;
 
-    // ─── Step 6: RBAC roles ────────────────────────────────────────
-    html += `<h3>6. <span data-i18n="setup.app_reg.h_roles">Assign Entra Roles to the App's Service Principal</span></h3>`;
+    // ─── Step 7: RBAC roles ────────────────────────────────────────
+    html += `<h3>7. <span data-i18n="setup.app_reg.h_roles">Assign Entra Roles to the App's Service Principal</span></h3>`;
     html += `<p data-i18n-html="setup.app_reg.roles_intro">Panoptica365 uses PowerShell modules (Exchange Online + Compliance Center) for several security settings. These modules require Entra <strong>directory roles</strong> on top of the Graph permissions.</p>`;
     html += `<ol>
       <li data-i18n-html="setup.app_reg.roles_1">In the Entra portal sidebar, go to <strong>Identity</strong> → <strong>Roles &amp; admins</strong> → <strong>Roles &amp; administrators</strong>.</li>
@@ -406,8 +480,8 @@
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_role_names"><strong>Pick the EXACT role names</strong> — there are similar-sounding roles that will NOT work: <em>Exchange Recipient Administrator</em> (lesser scope), <em>Compliance Data Administrator</em> (lesser scope). Verify the name matches exactly <strong>Exchange Administrator</strong> and <strong>Compliance Administrator</strong>.</div>
     </div>`;
 
-    // ─── Step 7: Three RBAC groups ─────────────────────────────────
-    html += `<h3>7. <span data-i18n="setup.app_reg.h_groups">Create the Three RBAC Groups</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(optional but recommended)</span></h3>`;
+    // ─── Step 8: Three RBAC groups ─────────────────────────────────
+    html += `<h3>8. <span data-i18n="setup.app_reg.h_groups">Create the Three RBAC Groups</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(optional but recommended)</span></h3>`;
     html += `<p data-i18n-html="setup.app_reg.groups_intro">Panoptica365 has three operator roles (admin / operator / viewer). Map each role to an Entra security group. Members of those groups get the corresponding role inside Panoptica365.</p>`;
     html += `<ol>
       <li data-i18n-html="setup.app_reg.groups_1">In the Entra portal sidebar, go to <strong>Identity</strong> → <strong>Groups</strong> → <strong>All groups</strong> → <strong>New group</strong>.</li>
@@ -429,8 +503,8 @@
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_skip_groups">If you skip group creation entirely and leave all three Object ID fields blank in the next step, <strong>any</strong> authenticated user from your MSP tenant gets full Admin access in Panoptica365. That's fine for single-operator installs — risky for multi-person MSPs.</div>
     </div>`;
 
-    // ─── Step 8: Recap ─────────────────────────────────────────────
-    html += `<h3>8. <span data-i18n="setup.app_reg.h_recap">Recap — What You Should Have</span></h3>`;
+    // ─── Step 9: Recap ─────────────────────────────────────────────
+    html += `<h3>9. <span data-i18n="setup.app_reg.h_recap">Recap — What You Should Have</span></h3>`;
     html += `<p data-i18n="setup.app_reg.recap_intro">Before closing this modal and continuing the wizard, make sure you have all of these:</p>`;
     html += `<ul>
       <li data-i18n-html="setup.app_reg.recap_1"><strong>Directory (tenant) ID</strong> — GUID from the app's Overview page</li>
@@ -938,6 +1012,15 @@
             const res = await apiPost('/api/setup/entra/test', {});
             if (res.ok) {
               status.innerHTML = `<div class="setup-status-line success">✅ ${esc(res.message || t('setup.entra.test_ok') || 'All permissions OK.')}</div>`;
+            } else if ((res.checks_failed || 0) === 0 && res.cert_present === false) {
+              // Permissions all passed, but the monitoring cert wasn't found
+              // on the app registration — the operator skipped the upload.
+              status.innerHTML = `<div class="setup-status-line error">
+                <div>
+                  <strong>${esc(t('setup.entra.test_cert_missing') || 'Certificate not uploaded')}</strong>
+                  <p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(res.hint || '')}</p>
+                </div>
+              </div>`;
             } else {
               const list = (res.failed_permissions || []).map(p => `<li><code>${esc(p)}</code></li>`).join('');
               status.innerHTML = `<div class="setup-status-line error">

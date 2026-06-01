@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.32 — 2026-06-01
+
+### Guided certificate setup for Exchange Online monitoring
+
+New installs now provision the certificate that Exchange Online monitoring requires, right inside the setup wizard. Previously a fresh install could read most of your tenants' security posture through Microsoft Graph, but the two dozen settings that depend on Exchange Online PowerShell stayed greyed out as "Awaiting Infra" — because Exchange, unlike Graph, refuses a client secret and insists on a certificate, and nothing created one for you.
+
+The App Registration step of the wizard now has a new **Upload the Monitoring Certificate** section. Panoptica365 generates the certificate for you automatically; you simply click **Download certificate (.cer)**, upload that one file to your app registration's **Certificates & secrets** page in the Microsoft portal, and continue. No `openssl`, no thumbprint typing, no shell access. The **Test Connection** button on the next step now also confirms the certificate was uploaded correctly and tells you plainly if it is missing.
+
+This affects new installs only — existing installs already set their certificate up during onboarding and are unchanged.
+
+---
+
 ## Version 0.1.31 — 2026-05-31
 
 ### One-click software updates with automatic rollback

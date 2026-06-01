@@ -50,26 +50,44 @@ const config = require('../../../config/default');
 const graph = require('../../graph');
 
 // ──────────────────────────────────────────────────────────────
-// Config validation — runs once on require()
+// Live pwsh env — read fresh per invocation, NOT cached at module load
+// ──────────────────────────────────────────────────────────────
+// The wizard's cert-provisioner writes GRAPH_CERT_PATH/THUMBPRINT into both
+// .env AND process.env at provisioning time. If we snapshot these at require()
+// (as config.pwsh.* does at config-module load), a process that was already
+// running keeps reporting "not configured" after the wizard provisions the
+// cert — reproducing the exact "Awaiting Infra" symptom the operator just
+// fixed. Reading process.env per call lets the runner self-correct without a
+// manual restart (it's a few cheap string reads + fs.existsSync — no real cost).
+function pwshEnv() {
+  return {
+    binary:         process.env.PWSH_BINARY || '/usr/bin/pwsh',
+    certPath:       process.env.GRAPH_CERT_PATH || '',
+    certThumbprint: process.env.GRAPH_CERT_THUMBPRINT || '',
+    appId:          process.env.ENTRA_CLIENT_ID || '',
+  };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Config validation — evaluated per invocation (see pwshEnv above)
 // ──────────────────────────────────────────────────────────────
 function checkConfig() {
+  const env = pwshEnv();
   const missing = [];
-  if (!config.pwsh.certPath)        missing.push('GRAPH_CERT_PATH');
-  if (!config.pwsh.certThumbprint)  missing.push('GRAPH_CERT_THUMBPRINT');
-  if (!config.pwsh.appId)           missing.push('ENTRA_CLIENT_ID');
+  if (!env.certPath)        missing.push('GRAPH_CERT_PATH');
+  if (!env.certThumbprint)  missing.push('GRAPH_CERT_THUMBPRINT');
+  if (!env.appId)           missing.push('ENTRA_CLIENT_ID');
   if (missing.length > 0) {
     return { configured: false, reason: `Missing env vars: ${missing.join(', ')}` };
   }
-  if (!fs.existsSync(config.pwsh.certPath)) {
-    return { configured: false, reason: `Certificate file not readable at ${config.pwsh.certPath}` };
+  if (!fs.existsSync(env.certPath)) {
+    return { configured: false, reason: `Certificate file not readable at ${env.certPath}` };
   }
-  if (!fs.existsSync(config.pwsh.binary)) {
-    return { configured: false, reason: `pwsh binary not found at ${config.pwsh.binary} — run sudo ./ps-setup.sh` };
+  if (!fs.existsSync(env.binary)) {
+    return { configured: false, reason: `pwsh binary not found at ${env.binary} — run sudo ./ps-setup.sh` };
   }
   return { configured: true };
 }
-
-const CONFIG_STATUS = checkConfig();
 
 // ──────────────────────────────────────────────────────────────
 // PwshError — structured error type
@@ -124,8 +142,9 @@ function classifyPwshError(rawMessage) {
  */
 function runPwsh(scriptText, options = {}) {
   return new Promise((resolve, reject) => {
-    if (!CONFIG_STATUS.configured) {
-      return reject(new PwshError('PWSH_NOT_CONFIGURED', CONFIG_STATUS.reason));
+    const configStatus = checkConfig();
+    if (!configStatus.configured) {
+      return reject(new PwshError('PWSH_NOT_CONFIGURED', configStatus.reason));
     }
     const timeoutMs = options.timeoutMs || config.pwsh.invocationTimeoutMs;
     // May 6, 2026 — onProgress callback support for async-Apply.
@@ -187,7 +206,7 @@ try {
       console.log(`[PWSH SCRIPT] (${scriptText.length} chars):\n${scriptText.slice(0, 5000)}${scriptText.length > 5000 ? '\n... [truncated]' : ''}`);
     }
 
-    const child = spawn(config.pwsh.binary, [
+    const child = spawn(pwshEnv().binary, [
       '-NoProfile',
       '-NonInteractive',
       '-Command', wrapped,
@@ -411,12 +430,12 @@ async function runExoCmdlet(tenantAzureId, cmdletExpression, options = {}) {
   // its own auth error if the cert is rejected, but having both a path
   // load AND a thumbprint match catches "wrong cert at path" cases.
   const script = `
-$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${config.pwsh.certPath}', '')
-if ($cert.Thumbprint -ne '${config.pwsh.certThumbprint}') {
-  throw "Cert thumbprint mismatch: expected ${config.pwsh.certThumbprint}, got $($cert.Thumbprint)"
+$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${pwshEnv().certPath}', '')
+if ($cert.Thumbprint -ne '${pwshEnv().certThumbprint}') {
+  throw "Cert thumbprint mismatch: expected ${pwshEnv().certThumbprint}, got $($cert.Thumbprint)"
 }
 Import-Module ExchangeOnlineManagement -ErrorAction Stop
-Connect-ExchangeOnline -AppId '${config.pwsh.appId}' -Certificate $cert -Organization '${tenantDomain}' -ShowBanner:$false -ErrorAction Stop
+Connect-ExchangeOnline -AppId '${pwshEnv().appId}' -Certificate $cert -Organization '${tenantDomain}' -ShowBanner:$false -ErrorAction Stop
 try {
   ${cmdletExpression}
 } finally {
@@ -500,12 +519,12 @@ async function runIppsCmdlet(tenantAzureId, cmdletExpression, options = {}) {
   const cmdletList = cmdlets.map(c => `'${c}'`).join(',');
 
   const script = `
-$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${config.pwsh.certPath}', '')
-if ($cert.Thumbprint -ne '${config.pwsh.certThumbprint}') {
-  throw "Cert thumbprint mismatch: expected ${config.pwsh.certThumbprint}, got $($cert.Thumbprint)"
+$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${pwshEnv().certPath}', '')
+if ($cert.Thumbprint -ne '${pwshEnv().certThumbprint}') {
+  throw "Cert thumbprint mismatch: expected ${pwshEnv().certThumbprint}, got $($cert.Thumbprint)"
 }
 Import-Module ExchangeOnlineManagement -ErrorAction Stop
-Connect-IPPSSession -AppId '${config.pwsh.appId}' -Certificate $cert -Organization '${tenantDomain}' ${connectionUriArg} -CommandName ${cmdletList} -ShowBanner:$false -ErrorAction Stop
+Connect-IPPSSession -AppId '${pwshEnv().appId}' -Certificate $cert -Organization '${tenantDomain}' ${connectionUriArg} -CommandName ${cmdletList} -ShowBanner:$false -ErrorAction Stop
 try {
   ${cmdletExpression}
 } finally {
@@ -544,12 +563,12 @@ async function runTeamsCmdlet(tenantAzureId, cmdletExpression, options = {}) {
   }
 
   const script = `
-$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${config.pwsh.certPath}', '')
-if ($cert.Thumbprint -ne '${config.pwsh.certThumbprint}') {
-  throw "Cert thumbprint mismatch: expected ${config.pwsh.certThumbprint}, got $($cert.Thumbprint)"
+$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::new('${pwshEnv().certPath}', '')
+if ($cert.Thumbprint -ne '${pwshEnv().certThumbprint}') {
+  throw "Cert thumbprint mismatch: expected ${pwshEnv().certThumbprint}, got $($cert.Thumbprint)"
 }
 Import-Module MicrosoftTeams -ErrorAction Stop
-Connect-MicrosoftTeams -TenantId '${tenantAzureId}' -Certificate $cert -ApplicationId '${config.pwsh.appId}' -ErrorAction Stop | Out-Null
+Connect-MicrosoftTeams -TenantId '${tenantAzureId}' -Certificate $cert -ApplicationId '${pwshEnv().appId}' -ErrorAction Stop | Out-Null
 try {
   ${cmdletExpression}
 } finally {
@@ -640,7 +659,7 @@ module.exports = {
   PwshError,
   // Exported for status-page diagnostics — surfaces "PowerShell runner not
   // configured" reasons so the operator can fix .env without reading logs.
-  getConfigStatus: () => ({ ...CONFIG_STATUS }),
+  getConfigStatus: () => checkConfig(),
   // Exported for unit testing / cache invalidation in long-running tests
   _tenantDomainCache: tenantDomainCache,
 };

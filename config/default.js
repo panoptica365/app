@@ -83,6 +83,16 @@ module.exports = {
     certPath:         process.env.GRAPH_CERT_PATH || '',
     certThumbprint:   process.env.GRAPH_CERT_THUMBPRINT || '',
     appId:            process.env.ENTRA_CLIENT_ID || '',  // reuses Panoptica's existing app reg
+    // Wizard-driven cert provisioning (cert-provisioner.js). certDir is the
+    // writable mounted directory the wizard generates the keypair into; it
+    // defaults to the dirname of GRAPH_CERT_PATH so the .key/.crt/.cer/
+    // .thumbprint siblings land next to the .pfx the runner loads. certDays
+    // is the self-signed lifetime — long by design (5y) to minimize MSP
+    // rotation friction; rotation is a deferred cert-management card.
+    certDir:          process.env.GRAPH_CERT_PATH
+                        ? require('path').dirname(process.env.GRAPH_CERT_PATH)
+                        : '/app/certs',
+    certDays:         parseInt(process.env.PANOPTICA_CERT_DAYS, 10) || 1825,
     invocationTimeoutMs: parseInt(process.env.PWSH_TIMEOUT_MS, 10) || 30000,
     // IPPSSession (Security & Compliance) connection URI. Worldwide tenants
     // use the default below. Sovereign-cloud / GCC tenants need a different

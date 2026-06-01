@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.32 — 2026-06-01
+
+### Configuration guidée du certificat pour la surveillance d'Exchange Online
+
+Les nouvelles installations provisionnent désormais le certificat requis par la surveillance d'Exchange Online, directement dans l'assistant de configuration. Auparavant, une nouvelle installation pouvait lire l'essentiel de la posture de sécurité de vos clients via Microsoft Graph, mais la vingtaine de paramètres qui dépendent d'Exchange Online PowerShell restaient grisés à « En attente d'infrastructure » — parce qu'Exchange, contrairement à Graph, refuse un secret client et exige un certificat, et que rien n'en créait un pour vous.
+
+L'étape Inscription d'application de l'assistant comporte maintenant une nouvelle section **Téléverser le certificat de surveillance**. Panoptica365 génère le certificat pour vous automatiquement ; il vous suffit de cliquer sur **Télécharger le certificat (.cer)**, de téléverser ce seul fichier sur la page **Certificats &amp; secrets** de votre inscription d'application dans le portail Microsoft, puis de continuer. Pas d'`openssl`, pas d'empreinte à saisir, pas d'accès à l'interpréteur de commandes. Le bouton **Tester la connexion** à l'étape suivante confirme désormais aussi que le certificat a bien été téléversé et vous indique clairement s'il manque.
+
+Cela ne concerne que les nouvelles installations — les installations existantes ont déjà configuré leur certificat lors de l'intégration et restent inchangées.
+
+---
+
 ## Version 0.1.31 — 2026-05-31
 
 ### Mises à jour logicielles en un clic, avec retour arrière automatique

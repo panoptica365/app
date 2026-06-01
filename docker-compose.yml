@@ -70,9 +70,11 @@ services:
       # safe: updateEnvVars writes in place (writeFileSync, no atomic rename)
       # so the inode is preserved.
       - ./.env:/app/.env
-      # Cert bundle (read-only — operator places the Graph PFX here
-      # before first boot; updates are infrequent).
-      - ./certs:/app/certs:ro
+      # Cert bundle — read-WRITE: the first-boot wizard's cert-provisioner
+      # generates the app-only monitoring keypair into /app/certs at setup
+      # time (the operator then uploads the public .cer to their app reg).
+      # Must NOT be :ro or generation fails at write time.
+      - ./certs:/app/certs
       # Future-use bind mounts (no current code writes to /app/uploads
       # or /app/logs, but Master Plan §7 reserves them).
       - ./data/uploads:/app/uploads

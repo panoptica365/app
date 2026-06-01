@@ -47,6 +47,7 @@ const setupState = require('../lib/setup/state');
 const setupMiddleware = require('../lib/setup/middleware');
 const licenseValidator = require('../lib/license/validator');
 const licenseStore = require('../lib/license/store');
+const certProvisioner = require('../lib/setup/cert-provisioner');
 
 const router = express.Router();
 router.use(express.json());
@@ -214,6 +215,52 @@ router.post('/app-reg', (req, res) => {
   res.json({ ok: true });
 });
 
+// ─── POST /api/setup/cert/generate ─────────────────────────────────────
+// Generate (once, idempotent) the app-only monitoring certificate. The
+// private .pfx stays on the server and is wired into .env; the operator
+// downloads the public .cer (next endpoint) and uploads it to their app
+// registration's Certificates & secrets blade. Called by the frontend when
+// the operator reaches the cert sub-step of the app-reg modal.
+//
+// Passing { regenerate: true } mints a fresh keypair (deliberate rotation) —
+// not used by the wizard, reserved for the future cert-management card.
+router.post('/cert/generate', async (req, res) => {
+  try {
+    const regenerate = req.body && req.body.regenerate === true;
+    const result = await certProvisioner.ensureCert({ regenerate });
+    res.json({
+      ok: true,
+      thumbprint: result.thumbprint,
+      notAfter: result.notAfter,
+      regenerated: result.regenerated,
+    });
+  } catch (e) {
+    res.status(500).json({
+      error: 'cert_generation_failed',
+      detail: `Could not generate the certificate: ${e.message}. ` +
+        `Verify the certs directory is writable (the container mounts ` +
+        `./certs read-write) and that openssl is available in the image.`,
+    });
+  }
+});
+
+// ─── GET /api/setup/cert/download ──────────────────────────────────────
+// Stream the public .cer as a file attachment for the operator to upload to
+// Entra. 404 if generation hasn't run yet (the frontend always generates
+// first, so this is the belt-and-suspenders case).
+router.get('/cert/download', (req, res) => {
+  const cer = certProvisioner.cerPath();
+  if (!cer) {
+    return res.status(404).json({
+      error: 'cert_not_generated',
+      detail: 'The certificate has not been generated yet. Open the App Registration instructions to generate it first.',
+    });
+  }
+  res.setHeader('Content-Type', 'application/x-x509-ca-cert');
+  res.setHeader('Content-Disposition', 'attachment; filename="panoptica365.cer"');
+  res.sendFile(cer);
+});
+
 // ─── POST /api/setup/entra/test ────────────────────────────────────────
 // Multi-permission spot-check. Acquires an app-only access token using
 // the just-saved ENTRA_TENANT_ID/CLIENT_ID/CLIENT_SECRET, then fires ~9
@@ -238,6 +285,52 @@ const ENTRA_TEST_CHECKS = [
   { perm: 'AuditLog.Read.All',        url: '/auditLogs/signIns?$top=1' },
   { perm: 'ServiceMessage.Read.All',  url: '/admin/serviceAnnouncement/messages?$top=1' },
 ];
+
+// Verify the operator actually uploaded our generated .cer to the app
+// registration's Certificates & secrets. We can't do a full
+// Connect-ExchangeOnline at install time (no customer tenant onboarded, no
+// Exchange Admin role yet), so we confirm the public half is on the app reg
+// via Graph instead. The real EXO smoke test happens on first tenant onboard.
+//
+// ENCODING GOTCHA: Graph returns keyCredentials[].customKeyIdentifier as
+// base64 of the SHA-1 thumbprint BYTES, not the hex string. We store the
+// thumbprint as uppercase hex, so we convert hex → bytes → base64 before
+// comparing. A naive hex-vs-base64 string compare always fails.
+async function verifyCertOnAppReg(token, clientId) {
+  const thumbHex = (process.env.GRAPH_CERT_THUMBPRINT || '').trim();
+  if (!thumbHex) {
+    return { checked: false, present: false, reason: 'cert_not_generated' };
+  }
+  let expectedB64;
+  try {
+    expectedB64 = Buffer.from(thumbHex, 'hex').toString('base64');
+  } catch {
+    return { checked: false, present: false, reason: 'bad_thumbprint' };
+  }
+  try {
+    const url = `https://graph.microsoft.com/v1.0/applications?$filter=appId eq '${encodeURIComponent(clientId)}'&$select=appId,keyCredentials`;
+    const r = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+    });
+    if (!r.ok) {
+      return { checked: false, present: false, reason: `graph_${r.status}` };
+    }
+    const body = await r.json();
+    const app = (body.value || [])[0];
+    const creds = (app && app.keyCredentials) || [];
+    const present = creds.some((c) => {
+      const ck = (c.customKeyIdentifier || '').replace(/\s/g, '');
+      // Primary: base64-of-bytes match. Fallbacks: some Graph reads expose a
+      // hex `thumbprint`/`customKeyIdentifier`; compare case-insensitively.
+      return ck === expectedB64
+        || ck.toUpperCase() === thumbHex
+        || (c.thumbprint || '').replace(/:/g, '').toUpperCase() === thumbHex;
+    });
+    return { checked: true, present };
+  } catch (e) {
+    return { checked: false, present: false, reason: `network:${e.message}` };
+  }
+}
 
 router.post('/entra/test', async (req, res) => {
   const tenantId = process.env.ENTRA_TENANT_ID;
@@ -309,25 +402,41 @@ router.post('/entra/test', async (req, res) => {
 
   const failed = results.filter(r => !r.ok);
 
-  // Mark entra step's `tested` flag if everything passed.
-  if (failed.length === 0) {
+  // ─── Step 3: Verify our cert is uploaded to the app registration ───
+  const cert = await verifyCertOnAppReg(token, clientId);
+
+  // Both gates must pass for the entra step to count as tested: permissions
+  // granted AND the monitoring cert present on the app reg. This stops an
+  // operator finishing setup with a missing/wrong cert (which would leave
+  // every PowerShell reader stuck at "Awaiting Infra").
+  if (failed.length === 0 && cert.present) {
     const state = setupState.readSetupState();
     const prev = state.steps.entra || { complete: true, at: new Date().toISOString() };
     setupState.markStepComplete('entra', { ...prev, tested: true });
     return res.json({
       ok: true,
       checks_performed: results.length,
-      message: 'All representative permissions are granted. Credentials look correct.',
+      cert_present: true,
+      message: 'All representative permissions are granted and the monitoring certificate is uploaded. Credentials look correct.',
     });
   }
 
-  // Some permissions failed — report what's missing.
+  // Distinguish the two failure modes so the operator gets an actionable
+  // message instead of a generic "permissions" error when the real problem
+  // is the skipped cert upload.
+  const certFail = !cert.present;
   return res.json({
     ok: false,
     checks_performed: results.length,
     checks_failed: failed.length,
     failed_permissions: failed.map(f => f.perm),
-    hint: 'Token acquired successfully, but Graph calls were rejected. Most likely: admin consent was not granted for one or more permissions. Re-open the App Registration instructions and verify the "Grant admin consent" step was completed and shows green checkmarks for every permission.',
+    cert_present: cert.present,
+    cert_not_generated: cert.reason === 'cert_not_generated',
+    hint: failed.length > 0
+      ? 'Token acquired successfully, but Graph calls were rejected. Most likely: admin consent was not granted for one or more permissions. Re-open the App Registration instructions and verify the "Grant admin consent" step was completed and shows green checkmarks for every permission.'
+      : (certFail
+        ? 'Permissions look good, but the monitoring certificate was not found on the app registration. Did you complete the "Certificates & secrets" upload step? Re-open the App Registration instructions, download the certificate, and upload it under Certificates & secrets → Certificates.'
+        : null),
   });
 });
 

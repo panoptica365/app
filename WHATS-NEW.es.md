@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.32 — 2026-06-01
+
+### Configuración guiada del certificado para la supervisión de Exchange Online
+
+Las instalaciones nuevas ahora aprovisionan el certificado que requiere la supervisión de Exchange Online, directamente en el asistente de configuración. Antes, una instalación nueva podía leer la mayor parte de la postura de seguridad de sus inquilinos a través de Microsoft Graph, pero las dos docenas de parámetros que dependen de Exchange Online PowerShell quedaban atenuados como «Esperando infraestructura», porque Exchange, a diferencia de Graph, rechaza un secreto de cliente y exige un certificado, y nada creaba uno por usted.
+
+El paso de Registro de aplicación del asistente ahora tiene una nueva sección **Cargar el certificado de supervisión**. Panoptica365 genera el certificado por usted automáticamente; solo tiene que hacer clic en **Descargar certificado (.cer)**, cargar ese único archivo en la página **Certificados y secretos** de su registro de aplicación en el portal de Microsoft y continuar. Sin `openssl`, sin escribir la huella digital, sin acceso al intérprete de comandos. El botón **Probar conexión** del siguiente paso ahora también confirma que el certificado se cargó correctamente y le indica claramente si falta.
+
+Esto afecta solo a las instalaciones nuevas — las instalaciones existentes ya configuraron su certificado durante la incorporación y no sufren cambios.
+
+---
+
 ## Versión 0.1.31 — 2026-05-31
 
 ### Actualizaciones de software con un clic y reversión automática

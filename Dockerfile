@@ -48,6 +48,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         jq \
         unzip \
         git \
+        openssl \
         netcat-openbsd \
         python3 \
         python3-venv \
