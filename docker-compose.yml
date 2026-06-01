@@ -195,14 +195,18 @@ services:
     image: docker:27-cli
     container_name: panoptica-updater
     restart: unless-stopped
-    entrypoint: ["/bin/sh", "/project/scripts/updater.sh"]
+    # The install dir is mounted at its REAL host path (below) and the script
+    # runs from there, so `docker compose` resolves the app's relative bind
+    # mounts (./.env, ./certs, …) to valid host paths.
+    working_dir: ${INSTALL_DIR:-/opt/panoptica365}
+    entrypoint: ["/bin/sh", "${INSTALL_DIR:-/opt/panoptica365}/scripts/updater.sh"]
     environment:
       # Pin the compose project so `docker compose` from inside the container
       # targets the SAME stack the host started. MUST match the host project
       # name — the installer sets COMPOSE_PROJECT_NAME identically in .env.
       COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-panoptica365}
-      PROJECT_DIR: /project
-      STATE_DIR: /project/data/state
+      PROJECT_DIR: ${INSTALL_DIR:-/opt/panoptica365}
+      STATE_DIR: ${INSTALL_DIR:-/opt/panoptica365}/data/state
       APP_SERVICE: panoptica-app
       DB_SERVICE: panoptica-db
       APP_IMAGE_REPO: ghcr.io/panoptica365/app
@@ -214,12 +218,15 @@ services:
       # Root-equivalent on the host — exactly why ONLY this tiny, no-inbound
       # container gets it, never the internet-facing app (§7.1).
       - /var/run/docker.sock:/var/run/docker.sock
-      # The install dir: reads docker-compose.yml + writes ONLY its own
-      # docker-compose.override.yml pin file (§7.3). data/state (the request/
-      # status channel) lives under here too.
-      - .:/project
-      # Pre-update mysqldumps (written into panoptica-db, read-side parity).
-      - ./data/snapshots:/snapshots
+      # CRITICAL: mount the install dir at the SAME absolute path it has on the
+      # host. `docker compose` run from inside this container resolves the app
+      # service's relative bind mounts (./.env, ./certs, ./data/...) against the
+      # project directory and hands the resulting paths to the HOST daemon — so
+      # they must be real host paths. Mounting at a different path (e.g.
+      # /project) made compose pass /project/.env to the host, which silently
+      # created an EMPTY .env and the app booted with no DB credentials.
+      # (Fixed v1.2.1 after the P365-Test rollback incident 2026-06-01.)
+      - ${INSTALL_DIR:-/opt/panoptica365}:${INSTALL_DIR:-/opt/panoptica365}
     networks:
       - panoptica-net
     # No `ports:` — no inbound network surface at all (§7.1).
