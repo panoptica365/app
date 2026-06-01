@@ -48,9 +48,16 @@ const CERT_KEY_BITS = 2048;
 // The runner loads GRAPH_CERT_PATH (…/panoptica-graph.pfx). We derive the
 // sibling .key/.crt/.cer/.thumbprint from that same basename + dir so all
 // five artifacts live together and match ps-setup.sh's naming.
-function certPaths() {
-  const pfxPath = process.env.GRAPH_CERT_PATH
-    || path.join(config.pwsh.certDir, 'panoptica-graph.pfx');
+const CERT_BASENAME = 'panoptica-graph';
+
+// data/state is already a writable, host-persisted bind mount (the wizard
+// writes setup.json there). It is our guaranteed-writable fallback when the
+// preferred certs dir is read-only or root-owned — see ensureCert. Using it
+// means cert generation works even before the ./certs rw mount change is
+// deployed, and survives container recreates either way.
+const FALLBACK_CERT_DIR = path.join(PROJECT_ROOT, 'data', 'state', 'certs');
+
+function pathsFor(pfxPath) {
   const dir = path.dirname(pfxPath);
   const base = path.basename(pfxPath, path.extname(pfxPath)); // panoptica-graph
   return {
@@ -61,6 +68,28 @@ function certPaths() {
     cer:   path.join(dir, `${base}.cer`),
     thumb: path.join(dir, `${base}.thumbprint`),
   };
+}
+
+// Where the cert lives. Once generated, GRAPH_CERT_PATH points at the actual
+// file (preferred dir OR the fallback), so this stays consistent across calls
+// (e.g. the download endpoint resolving the .cer after generation).
+function certPaths() {
+  const pfxPath = process.env.GRAPH_CERT_PATH
+    || path.join(config.pwsh.certDir, `${CERT_BASENAME}.pfx`);
+  return pathsFor(pfxPath);
+}
+
+// A directory is usable if we can create it (idempotent) AND write to it.
+// Catches both the read-only bind mount (EROFS) and the root-owned empty
+// dir the container user can't write (EACCES) — the two sharp edges.
+function isWritableDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -87,6 +116,24 @@ function writeEnvVars(updates) {
     process.env[key] = safeVal;
   }
   fs.writeFileSync(ENV_PATH, lines.join('\n'), 'utf8');
+}
+
+// Run openssl, surfacing a CLEAN error on failure. openssl writes RSA
+// key-generation progress (".+.+...+++++") to stderr; on a real failure
+// execFile's message would otherwise be those dots followed by the actual
+// error. Strip the noise so the UI shows just the meaningful message.
+async function openssl(args) {
+  try {
+    return await execFileP('openssl', args);
+  } catch (e) {
+    // Strip only the long runs of progress dots/pluses (".+.+...+++++"),
+    // not single dots in file paths, then collapse whitespace.
+    const clean = String(e.stderr || e.message || '')
+      .replace(/[.+]{3,}/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    throw new Error(`openssl ${args[0]} failed: ${clean || e.message}`);
+  }
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -117,7 +164,7 @@ async function readNotAfter(crtPath) {
  *                     regenerated:boolean}>}
  */
 async function ensureCert({ regenerate = false } = {}) {
-  const p = certPaths();
+  let p = certPaths();
 
   // Idempotency: a valid .pfx + .thumbprint already on disk → serve as-is.
   if (!regenerate && fs.existsSync(p.pfx) && fs.existsSync(p.thumb)) {
@@ -137,13 +184,25 @@ async function ensureCert({ regenerate = false } = {}) {
     }
   }
 
-  // Generate. mkdir -p the (writable) cert dir first — the bind mount may be
-  // an empty host dir.
-  fs.mkdirSync(p.dir, { recursive: true });
+  // Resolve a WRITABLE cert dir before generating. Prefer the configured
+  // certs dir (matches ps-setup.sh convention); if it's read-only or
+  // root-owned (sharp edge #1 — the ./certs:ro mount, or a root-owned empty
+  // bind dir), fall back to the always-writable persisted data/state mount.
+  if (!isWritableDir(p.dir)) {
+    if (!isWritableDir(FALLBACK_CERT_DIR)) {
+      throw new Error(
+        `No writable certificate directory. Tried "${p.dir}" (read-only or ` +
+        `not owned by the app user) and "${FALLBACK_CERT_DIR}". Mount ./certs ` +
+        `read-write, or ensure data/state is writable.`
+      );
+    }
+    // Switch all artifact paths to the fallback dir.
+    p = pathsFor(path.join(FALLBACK_CERT_DIR, `${CERT_BASENAME}.pfx`));
+  }
 
   // 1. RSA key + self-signed cert in one shot (no passphrase: file perms are
   //    the protection; a passphrase would have to live in .env).
-  await execFileP('openssl', [
+  await openssl([
     'req', '-x509', '-nodes',
     '-days', String(config.pwsh.certDays),
     '-newkey', `rsa:${CERT_KEY_BITS}`,
@@ -154,7 +213,7 @@ async function ensureCert({ regenerate = false } = {}) {
   ]);
 
   // 2. Bundle into a PASSWORDLESS PFX — the runner loads it with empty pwd.
-  await execFileP('openssl', [
+  await openssl([
     'pkcs12', '-export',
     '-out', p.pfx,
     '-inkey', p.key,
@@ -164,12 +223,12 @@ async function ensureCert({ regenerate = false } = {}) {
   ]);
 
   // 3. DER-encoded public half — what the operator uploads to Entra.
-  await execFileP('openssl', [
+  await openssl([
     'x509', '-in', p.crt, '-outform', 'DER', '-out', p.cer,
   ]);
 
   // 4. SHA-1 thumbprint — uppercase hex, no colons (Entra/pwsh identity key).
-  const { stdout: fp } = await execFileP('openssl',
+  const { stdout: fp } = await openssl(
     ['x509', '-in', p.crt, '-noout', '-fingerprint', '-sha1']);
   const thumbprint = (fp.split('=')[1] || '').replace(/:/g, '').trim().toUpperCase();
   fs.writeFileSync(p.thumb, thumbprint, 'utf8');

@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.33 — 2026-06-01
+
+### Corrección de fiabilidad en la configuración del certificado
+
+Seguimiento de la configuración guiada del certificado introducida en la versión 0.1.32. En algunas instalaciones nuevas, el certificado no podía generarse porque la carpeta de destino no permitía escritura, y la etiqueta del botón **Descargar certificado** era difícil de leer. Ambos problemas están corregidos: Panoptica365 ahora siempre escribe el certificado en una ubicación con permisos de escritura, y el botón es legible. No se requiere ninguna acción más allá de instalar esta actualización.
+
+---
+
 ## Versión 0.1.32 — 2026-06-01
 
 ### Configuración guiada del certificado para la supervisión de Exchange Online

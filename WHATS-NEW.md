@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.1.33 — 2026-06-01
+
+### Certificate setup reliability fix
+
+A follow-up to the guided certificate setup introduced in 0.1.32. On some fresh installs the certificate could not be generated because the folder it was being written to was not writable, and the **Download certificate** button's label was hard to read. Both are fixed: Panoptica365 now always writes the certificate to a writable location, and the button is legible. No action is needed beyond installing this update.
+
+---
+
 ## Version 0.1.32 — 2026-06-01
 
 ### Guided certificate setup for Exchange Online monitoring

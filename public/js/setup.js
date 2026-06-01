@@ -400,7 +400,7 @@
         <p style="margin: 0 0 10px; font-size: 0.9em;">
           <span data-i18n="setup.app_reg.cert_expiry_label">Expires:</span> <span id="setup-cert-expiry">…</span>
         </p>
-        <a id="setup-cert-download" class="setup-btn setup-btn-primary" href="/api/setup/cert/download" download="panoptica365.cer" data-i18n="setup.app_reg.cert_download_btn">Download certificate (.cer)</a>
+        <a id="setup-cert-download" class="setup-btn setup-btn-primary" style="color: var(--p-bg); text-decoration: none; display: inline-block;" href="/api/setup/cert/download" download="panoptica365.cer" data-i18n="setup.app_reg.cert_download_btn">Download certificate (.cer)</a>
       </div>
     </div>`;
 

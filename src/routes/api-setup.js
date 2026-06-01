@@ -237,9 +237,7 @@ router.post('/cert/generate', async (req, res) => {
   } catch (e) {
     res.status(500).json({
       error: 'cert_generation_failed',
-      detail: `Could not generate the certificate: ${e.message}. ` +
-        `Verify the certs directory is writable (the container mounts ` +
-        `./certs read-write) and that openssl is available in the image.`,
+      detail: `Could not generate the certificate: ${e.message}`,
     });
   }
 });

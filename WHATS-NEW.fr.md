@@ -5,6 +5,14 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.33 — 2026-06-01
+
+### Correctif de fiabilité pour la configuration du certificat
+
+Suivi de la configuration guidée du certificat introduite dans la version 0.1.32. Sur certaines nouvelles installations, le certificat ne pouvait pas être généré parce que le dossier de destination n'était pas accessible en écriture, et l'étiquette du bouton **Télécharger le certificat** était difficile à lire. Les deux problèmes sont corrigés : Panoptica365 écrit désormais toujours le certificat dans un emplacement accessible en écriture, et le bouton est lisible. Aucune action n'est requise au-delà de l'installation de cette mise à jour.
+
+---
+
 ## Version 0.1.32 — 2026-06-01
 
 ### Configuration guidée du certificat pour la surveillance d'Exchange Online

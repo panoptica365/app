@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.32",
-    "image_tag": "v0.1.32",
+    "version": "0.1.33",
+    "image_tag": "v0.1.33",
     "released_at": "2026-06-01",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Fresh installs now provision the Exchange Online monitoring certificate through a single guided upload in the setup wizard.",
-      "fr": "Les nouvelles installations provisionnent désormais le certificat de surveillance Exchange Online via un seul téléversement guidé dans l'assistant de configuration.",
-      "es": "Las instalaciones nuevas ahora aprovisionan el certificado de supervisión de Exchange Online mediante una sola carga guiada en el asistente de configuración."
+      "en": "Reliability fix for the 0.1.32 certificate setup: the certificate is now always written to a writable location and the download button is legible.",
+      "fr": "Correctif de fiabilité pour la configuration du certificat de la version 0.1.32 : le certificat est désormais toujours écrit dans un emplacement accessible en écriture et le bouton de téléchargement est lisible.",
+      "es": "Corrección de fiabilidad para la configuración del certificado de la versión 0.1.32: el certificado ahora siempre se escribe en una ubicación con permisos de escritura y el botón de descarga es legible."
     }
   },
   "yanked": []
