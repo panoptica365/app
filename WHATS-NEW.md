@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.35 — 2026-06-01
+
+### Fixed: software update progress sometimes reported a false failure
+
+When applying an in-app update, the progress dialog could briefly show "the update did not complete" even though the update was actually succeeding in the background. This happened when a status record from a previous update attempt was still on disk — the dialog read that older record for a moment before the new update overwrote it.
+
+The progress dialog now tracks the specific update it started and ignores any leftover status from an earlier attempt, so it always reports the outcome of the update you actually triggered.
+
+---
+
 ## Version 0.1.34 — 2026-06-01
 
 ### Clearer Entra app registration setup instructions

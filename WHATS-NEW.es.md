@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.35 — 2026-06-01
+
+### Corregido: el progreso de la actualización a veces informaba un fallo falso
+
+Al aplicar una actualización desde la aplicación, el cuadro de progreso podía mostrar brevemente «la actualización no se completó» aunque la actualización en realidad estaba teniendo éxito en segundo plano. Esto ocurría cuando un registro de estado de un intento de actualización anterior seguía en el disco: el cuadro leía ese registro más antiguo por un momento antes de que la nueva actualización lo sobrescribiera.
+
+El cuadro de progreso ahora hace seguimiento de la actualización específica que inició e ignora cualquier estado sobrante de un intento anterior, de modo que siempre informa el resultado de la actualización que usted realmente activó.
+
+---
+
 ## Versión 0.1.34 — 2026-06-01
 
 ### Instrucciones más claras para el registro de la aplicación de Entra

@@ -169,6 +169,7 @@
   let updateBannerDismissed = false;
   let updatePollTimer = null;
   let updateStartedByUser = false;
+  let activeUpdateRequestId = null;
 
   function ut(key, params) {
     return (window.t && window.t('update.' + key, params)) || key;
@@ -301,6 +302,16 @@
       if (!s) { setProgress('phase_reconnecting'); return; }
       const prog = s.progress;
       if (!prog) { setProgress('phase_reconnecting'); return; }
+      // Ignore a status file left over from a PREVIOUS run. Until the updater
+      // picks up OUR request and overwrites the file, prog.request_id still
+      // belongs to the prior attempt — acting on its terminal result here
+      // produced a false "update failed" while the real update succeeded
+      // underneath (P365-Test 2026-06-01). Treat a mismatch as "not started
+      // yet" and keep polling.
+      if (activeUpdateRequestId && prog.request_id && prog.request_id !== activeUpdateRequestId) {
+        setProgress('phase_queued');
+        return;
+      }
       const result = prog.result || prog.phase;
       if (result === 'success' || result === 'rolled_back' || result === 'failed') {
         showUpdateResult(result, prog);
@@ -334,6 +345,7 @@
         return;
       }
       updateStartedByUser = true;
+      activeUpdateRequestId = data.request_id || null;
       enterProgressView();
     } catch (e) {
       if (typeof showToast === 'function') showToast(ut('trigger_failed'), 'error');
@@ -348,6 +360,9 @@
     // If an update is already running (e.g. another admin started it), jump
     // straight into the progress view.
     if (data && data.in_progress) {
+      // Adopt the in-flight run's id so the poll guard tracks IT (not a stale
+      // prior status, and without blocking on an id mismatch).
+      activeUpdateRequestId = (data.progress && data.progress.request_id) || null;
       enterProgressView();
       return;
     }

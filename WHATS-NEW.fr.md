@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.35 — 2026-06-01
+
+### Correction : la progression de la mise à jour signalait parfois un faux échec
+
+Lors de l'application d'une mise à jour dans l'application, la fenêtre de progression pouvait afficher brièvement « la mise à jour ne s'est pas terminée » alors que la mise à jour réussissait en réalité en arrière-plan. Cela se produisait lorsqu'un enregistrement d'état provenant d'une tentative de mise à jour précédente se trouvait encore sur le disque — la fenêtre lisait cet ancien enregistrement un instant avant que la nouvelle mise à jour ne le remplace.
+
+La fenêtre de progression suit désormais la mise à jour précise qu'elle a lancée et ignore tout état résiduel d'une tentative antérieure, de sorte qu'elle indique toujours le résultat de la mise à jour que vous avez réellement déclenchée.
+
+---
+
 ## Version 0.1.34 — 2026-06-01
 
 ### Instructions d'inscription d'application Entra plus claires
