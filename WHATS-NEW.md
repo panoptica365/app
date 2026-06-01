@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.34 — 2026-06-01
+
+### Clearer Entra app registration setup instructions
+
+The in-wizard Entra app registration guide now lists all three redirect URIs your app needs — not just the sign-in one. Earlier installs registered only the sign-in URL, which worked for logging in but caused Microsoft to reject the very first customer-tenant onboarding with an "AADSTS50011: redirect URI does not match" error. The setup page now shows the two additional URLs — one for onboarding customer tenants, one for the Microsoft Teams configuration features — each with a copy button and the exact place to add them.
+
+The API permissions step is also far clearer about where each permission lives. Microsoft Graph permissions sit on one tab, but the Exchange Online, Office 365 Management, and Microsoft Teams permissions are on a different one (`APIs my organization uses`) and have to be searched by name. The wizard now spells out which tab to use for each API, gives the exact name and Application ID to search for, points out that the Teams `user_impersonation` permission hides inside a collapsed `Other permissions` group, and explains what to do if an API doesn't appear at all on a brand-new tenant.
+
+---
+
 ## Version 0.1.33 — 2026-06-01
 
 ### Certificate setup reliability fix

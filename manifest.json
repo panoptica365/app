@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.33",
-    "image_tag": "v0.1.33",
+    "version": "0.1.34",
+    "image_tag": "v0.1.34",
     "released_at": "2026-06-01",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Reliability fix for the 0.1.32 certificate setup: the certificate is now always written to a writable location and the download button is legible.",
-      "fr": "Correctif de fiabilité pour la configuration du certificat de la version 0.1.32 : le certificat est désormais toujours écrit dans un emplacement accessible en écriture et le bouton de téléchargement est lisible.",
-      "es": "Corrección de fiabilidad para la configuración del certificado de la versión 0.1.32: el certificado ahora siempre se escribe en una ubicación con permisos de escritura y el botón de descarga es legible."
+      "en": "Clearer Entra app registration setup instructions: the wizard now lists all three required redirect URIs (fixing the AADSTS50011 onboarding error) and spells out exactly where to find each API permission.",
+      "fr": "Instructions d'inscription d'application Entra plus claires : l'assistant liste maintenant les trois URI de redirection requis (corrigeant l'erreur d'intégration AADSTS50011) et indique précisément où trouver chaque autorisation d'API.",
+      "es": "Instrucciones más claras para el registro de la aplicación de Entra: el asistente ahora enumera los tres URI de redirección necesarios (corrigiendo el error de incorporación AADSTS50011) e indica con precisión dónde encontrar cada permiso de API."
     }
   },
   "yanked": []

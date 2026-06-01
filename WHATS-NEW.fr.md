@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.34 — 2026-06-01
+
+### Instructions d'inscription d'application Entra plus claires
+
+Le guide d'inscription d'application Entra intégré à l'assistant affiche maintenant les trois URI de redirection dont votre application a besoin — pas seulement celui de la connexion. Les installations précédentes n'enregistraient que l'URL de connexion, ce qui fonctionnait pour se connecter mais faisait rejeter par Microsoft la toute première intégration d'un locataire client, avec l'erreur « AADSTS50011 : l'URI de redirection ne correspond pas ». La page de configuration affiche désormais les deux URL supplémentaires — une pour l'intégration des locataires clients, une pour les fonctions de configuration de Microsoft Teams — chacune avec un bouton de copie et l'endroit exact où l'ajouter.
+
+L'étape des autorisations d'API est aussi beaucoup plus claire sur l'emplacement de chaque autorisation. Les autorisations Microsoft Graph se trouvent sous un onglet, mais celles d'Exchange Online, des API de gestion Office 365 et de Microsoft Teams sont sous un autre (`API utilisées par mon organisation`) et doivent être recherchées par nom. L'assistant indique maintenant quel onglet utiliser pour chaque API, donne le nom et l'ID d'application exacts à rechercher, signale que l'autorisation Teams `user_impersonation` est masquée dans un groupe replié `Autres autorisations`, et explique quoi faire si une API n'apparaît pas du tout sur un locataire tout neuf.
+
+---
+
 ## Version 0.1.33 — 2026-06-01
 
 ### Correctif de fiabilité pour la configuration du certificat

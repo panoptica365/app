@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.34 — 2026-06-01
+
+### Instrucciones más claras para el registro de la aplicación de Entra
+
+La guía de registro de la aplicación de Entra integrada en el asistente ahora muestra los tres URI de redirección que necesita su aplicación, no solo el de inicio de sesión. Las instalaciones anteriores registraban únicamente la URL de inicio de sesión, lo que servía para iniciar sesión pero hacía que Microsoft rechazara la primera incorporación de un inquilino de cliente con el error «AADSTS50011: el URI de redirección no coincide». La página de configuración ahora muestra las dos URL adicionales —una para incorporar inquilinos de clientes y otra para las funciones de configuración de Microsoft Teams—, cada una con un botón de copia y el lugar exacto donde añadirla.
+
+El paso de permisos de API también es mucho más claro sobre dónde se encuentra cada permiso. Los permisos de Microsoft Graph están en una pestaña, pero los de Exchange Online, las API de administración de Office 365 y Microsoft Teams están en otra (`API que usa mi organización`) y hay que buscarlos por nombre. El asistente ahora indica qué pestaña usar para cada API, proporciona el nombre y el Id. de aplicación exactos que buscar, advierte que el permiso de Teams `user_impersonation` está oculto en un grupo contraído `Otros permisos` y explica qué hacer si una API no aparece en un inquilino recién creado.
+
+---
+
 ## Versión 0.1.33 — 2026-06-01
 
 ### Corrección de fiabilidad en la configuración del certificado

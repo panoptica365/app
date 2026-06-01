@@ -112,18 +112,22 @@
     },
     {
       api: 'Office 365 Exchange Online',
+      appId: '00000002-0000-0ff1-ce00-000000000000',
       application: ['Exchange.ManageAsApp'],
       delegated: [],
     },
     {
       api: 'Office 365 Management APIs',
+      appId: 'c5393580-f805-4401-95e8-94b7a6ef2fc2',
       application: ['ActivityFeed.Read', 'ActivityFeed.ReadDlp'],
       delegated: [],
     },
     {
       api: 'Skype and Teams Tenant Admin API',
+      appId: '48ac35b8-9aa8-4d74-927d-1f4a14a0b239',
       application: ['application_access'],
       delegated: ['user_impersonation'],
+      delegatedNoteKey: 'setup.app_reg.perms_teams_other_group',
     },
   ];
 
@@ -225,8 +229,10 @@
     // Read hostname from cache so the redirect URI is concrete
     const hostname = valueFor('hostname', 'hostname') || '<your-hostname>';
     const redirectUri = `https://${hostname}/auth/callback`;
+    const consentRedirectUri = `https://${hostname}/auth/adminconsent/callback`;
+    const teamsRedirectUri = `https://${hostname}/auth/teams-delegated/callback`;
 
-    bodyEl.innerHTML = renderAppRegModalBody(redirectUri);
+    bodyEl.innerHTML = renderAppRegModalBody(redirectUri, consentRedirectUri, teamsRedirectUri);
     applyI18n(bodyEl);
     wireCopyButtons(bodyEl);
     overlay.classList.add('open');
@@ -329,7 +335,7 @@
   // Build the modal body HTML. All copy is via t() so it's localized;
   // structural markup stays in JS so we don't have to maintain an HTML
   // template + a translation map. Tradeoff: longer JS file, simpler i18n.
-  function renderAppRegModalBody(redirectUri) {
+  function renderAppRegModalBody(redirectUri, consentRedirectUri, teamsRedirectUri) {
     let html = '';
 
     // ─── Intro ─────────────────────────────────────────────────────
@@ -353,6 +359,18 @@
     html += `<div class="setup-callout danger">
       <span class="setup-callout-icon">🛑</span>
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.danger_single_tenant"><strong>Do NOT pick single-tenant.</strong> A single-tenant app reg cannot accept admin consent from customer tenants. If you picked the wrong type, delete the app reg and start over.</div>
+    </div>`;
+
+    // The "New registration" page only takes ONE redirect URI. The other
+    // two Web redirect URIs are added afterward under Authentication.
+    // /auth/adminconsent/callback is REQUIRED for tenant onboarding (admin
+    // consent fails with AADSTS50011 without it); /auth/teams-delegated/callback
+    // is REQUIRED for the Teams write features. Listing them here so the
+    // operator registers all three, not just the sign-in one.
+    html += `<p data-i18n-html="setup.app_reg.create_redirects_extra">After clicking <strong>Register</strong>, open <strong>Authentication</strong> in the app's left sidebar and add these <strong>two more</strong> Web redirect URIs (use <strong>Add a platform → Web</strong> if there is no Web section yet, otherwise <strong>Add URI</strong>). All three are required — the first signs you in to Panoptica365, the second lets you onboard customer tenants, and the third enables the Microsoft Teams configuration features:</p>`;
+    html += `<div class="setup-perm-list">
+      <div class="setup-perm-row"><span class="setup-perm-name">${esc(consentRedirectUri)}</span> ${copyIconBtn(consentRedirectUri)}</div>
+      <div class="setup-perm-row"><span class="setup-perm-name">${esc(teamsRedirectUri)}</span> ${copyIconBtn(teamsRedirectUri)}</div>
     </div>`;
 
     // ─── Step 2: Grab IDs ──────────────────────────────────────────
@@ -425,9 +443,30 @@
       <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_app_vs_delegated">For each API, you'll switch between the <strong>Application permissions</strong> tab and the <strong>Delegated permissions</strong> tab. Don't mix them up — the wrong tab gives you a perm with the same name but different semantics.</div>
     </div>`;
 
-    // Render each API's permission lists
+    // Render each API's permission lists. Microsoft Graph lives on the
+    // "Microsoft APIs" tab; the other three are on "APIs my organization
+    // uses" and must be searched by name (or App ID). Emit a tab-switch
+    // callout before the first non-Graph API and a per-API "where to find
+    // it" hint under each heading — operators kept getting lost here.
+    let emittedOrgTabIntro = false;
     for (const apiBlock of PERMISSION_CATALOG) {
+      const isGraph = apiBlock.api === 'Microsoft Graph';
+
+      if (!isGraph && !emittedOrgTabIntro) {
+        emittedOrgTabIntro = true;
+        html += `<div class="setup-callout warn">
+          <span class="setup-callout-icon">↩</span>
+          <div class="setup-callout-body" data-i18n-html="setup.app_reg.perms_org_tab_intro">You've finished Microsoft Graph. For each of the next three APIs, click <strong>Add a permission</strong> again — but this time open the <strong>APIs my organization uses</strong> tab (NOT "Microsoft APIs" — these are not Graph permissions) and search for the API by name.</div>
+        </div>`;
+      }
+
       html += `<h4>${esc(apiBlock.api)}</h4>`;
+
+      if (isGraph) {
+        html += `<p style="margin: 4px 0 8px; font-size: 0.92em; color: var(--p-text-muted);" data-i18n-html="setup.app_reg.perms_graph_location">Open <strong>Add a permission</strong> → the <strong>Microsoft APIs</strong> tab → click the <strong>Microsoft Graph</strong> tile (the large one at the top).</p>`;
+      } else {
+        html += `<p style="margin: 4px 0 8px; font-size: 0.92em; color: var(--p-text-muted);">${t('setup.app_reg.perms_find_by_name', { api: apiBlock.api, appId: apiBlock.appId || '' })}</p>`;
+      }
 
       if (apiBlock.application && apiBlock.application.length > 0) {
         const all = apiBlock.application.join(', ');
@@ -450,7 +489,16 @@
         }
         html += `</div>`;
       }
+
+      if (apiBlock.delegatedNoteKey) {
+        html += `<p style="margin: 4px 0 8px; font-size: 0.92em; color: var(--p-text-muted);" data-i18n-html="${esc(apiBlock.delegatedNoteKey)}"></p>`;
+      }
     }
+
+    html += `<div class="setup-callout warn">
+      <span class="setup-callout-icon">⚠</span>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.perms_sp_missing">If one of the last three APIs doesn't appear even after pasting its App ID, its service principal isn't present in your tenant yet. Open <strong>Azure Cloud Shell</strong> (the <code>&gt;_</code> icon in the portal), run <code>az ad sp create --id &lt;App ID&gt;</code> for the missing API, then reopen <strong>Add a permission → APIs my organization uses</strong> and it will be there.</div>
+    </div>`;
 
     // ─── Step 5: Grant admin consent ───────────────────────────────
     html += `<h3>6. <span data-i18n="setup.app_reg.h_consent">Grant Admin Consent</span></h3>`;
