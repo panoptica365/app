@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.36 — 2026-06-01
+
+### New: delete a tenant and all its data
+
+You can now remove a tenant from Panoptica365. This is useful when an MSP loses a customer, or when you want to remove and re-add a tenant to re-run onboarding.
+
+In the **Tenants** section, click **Edit** on a tenant and you'll find a red **Delete Tenant** button (visible to administrators only). It opens a confirmation that spells out exactly what will be removed — alerts, snapshots, security settings, Conditional Access assignments, audits, and change history. Click **No, keep it** to back out, or **Yes, delete everything** to permanently remove the tenant and all data related to it. The deletion is recorded in the audit log.
+
+This action cannot be undone.
+
+---
+
 ## Version 0.1.35 — 2026-06-01
 
 ### Fixed: software update progress sometimes reported a false failure

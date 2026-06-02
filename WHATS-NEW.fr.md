@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.36 — 2026-06-01
+
+### Nouveau : supprimer un client et toutes ses données
+
+Vous pouvez maintenant retirer un client de Panoptica365. C'est utile lorsqu'un MSP perd un client, ou lorsque vous souhaitez retirer puis rajouter un client pour relancer l'intégration.
+
+Dans la section **Clients**, cliquez sur **Modifier** pour un client : vous y trouverez un bouton rouge **Supprimer le client** (visible uniquement par les administrateurs). Il ouvre une confirmation qui précise exactement ce qui sera retiré — alertes, instantanés, paramètres de sécurité, attributions d'accès conditionnel, audits et historique des modifications. Cliquez sur **Non, conserver** pour annuler, ou sur **Oui, tout supprimer** pour retirer définitivement le client et toutes les données qui s'y rapportent. La suppression est consignée dans le journal d'audit.
+
+Cette action est irréversible.
+
+---
+
 ## Version 0.1.35 — 2026-06-01
 
 ### Correction : la progression de la mise à jour signalait parfois un faux échec

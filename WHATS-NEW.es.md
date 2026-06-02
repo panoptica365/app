@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.36 — 2026-06-01
+
+### Nuevo: eliminar un inquilino y todos sus datos
+
+Ahora puede quitar un inquilino de Panoptica365. Resulta útil cuando un MSP pierde un cliente, o cuando desea quitar y volver a agregar un inquilino para repetir la incorporación.
+
+En la sección **Inquilinos**, haga clic en **Editar** en un inquilino y encontrará un botón rojo **Eliminar inquilino** (visible solo para administradores). Abre una confirmación que detalla exactamente lo que se quitará: alertas, instantáneas, configuración de seguridad, asignaciones de acceso condicional, auditorías e historial de cambios. Haga clic en **No, conservarlo** para cancelar, o en **Sí, eliminar todo** para quitar permanentemente el inquilino y todos los datos relacionados. La eliminación queda registrada en el registro de auditoría.
+
+Esta acción no se puede deshacer.
+
+---
+
 ## Versión 0.1.35 — 2026-06-01
 
 ### Corregido: el progreso de la actualización a veces informaba un fallo falso

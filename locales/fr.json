@@ -1196,7 +1196,16 @@
     "modal_mode_helper_html": "<strong>Géré</strong> : ensemble complet des fonctionnalités Panoptica365 (alertes, dérive, envoi vers le locataire). <strong>Audit seulement</strong> : collecte d’instantanés en lecture seule pour exportation. Aucune alerte, aucune dérive, aucune écriture vers le locataire client. Suppression automatique 14 jours après création + période de grâce de 7 jours.",
     "modal_audit_to_managed_note": "Audit seulement → Géré est une conversion à sens unique (p. ex. quand un prospect signe). Une fois converti, le locataire ne peut pas revenir en audit seulement.",
     "modal_audit_expires_warning": "Actuellement prévu pour expirer le {date}. La suppression définitive se déclenche 7 jours après.",
-    "modal_label_tenant_id": "ID du locataire (Azure)"
+    "modal_label_tenant_id": "ID du locataire (Azure)",
+    "modal_delete_button": "Supprimer le client",
+    "modal_delete_title": "Supprimer le client",
+    "modal_delete_warning": "Cette action supprimera définitivement « {name} » et TOUTES les données associées — alertes, instantanés, paramètres de sécurité, attributions d’accès conditionnel, audits et historique des modifications.",
+    "modal_delete_irreversible": "Cette action est irréversible. Êtes-vous certain?",
+    "modal_delete_no": "Non, conserver",
+    "modal_delete_yes": "Oui, tout supprimer",
+    "modal_delete_deleting": "Suppression…",
+    "toast_tenant_deleted": "Le client « {name} » et toutes ses données ont été supprimés.",
+    "toast_tenant_delete_failed": "Impossible de supprimer le client. Veuillez réessayer."
   },
   "alerts_filter": {
     "all_tenants": "Tous les locataires",
@@ -1266,7 +1275,8 @@
       "update.requested": "Mise à jour demandée : {from} → {to}",
       "update.succeeded": "Mise à jour réussie : {from} → {to}",
       "update.rolled_back": "La mise à jour vers {to} a échoué à la vérification — retour à {from}",
-      "update.failed": "La mise à jour vers {to} a échoué"
+      "update.failed": "La mise à jour vers {to} a échoué",
+      "tenant.deleted": "Client « {name} » supprimé avec toutes ses données ({rows} lignes)"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",

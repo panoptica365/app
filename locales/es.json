@@ -1196,7 +1196,16 @@
     "modal_mode_helper_html": "<strong>Gestionado</strong>: conjunto completo de funciones de Panoptica365 (alertas, deriva, envío al inquilino). <strong>Solo auditoría</strong>: recopilación de instantáneas de solo lectura para exportación. Sin alertas, sin deriva y sin escrituras en el inquilino del cliente. Se elimina automáticamente 14 días después de la creación + periodo de gracia de 7 días.",
     "modal_audit_to_managed_note": "Solo auditoría → Gestionado es una conversión unidireccional (p. ej. el prospecto contrata). Una vez convertido, el inquilino no puede volver a solo auditoría.",
     "modal_audit_expires_warning": "Actualmente programado para caducar el {date}. La eliminación definitiva se ejecuta 7 días después.",
-    "modal_label_tenant_id": "ID de inquilino (Azure)"
+    "modal_label_tenant_id": "ID de inquilino (Azure)",
+    "modal_delete_button": "Eliminar inquilino",
+    "modal_delete_title": "Eliminar inquilino",
+    "modal_delete_warning": "Esto eliminará permanentemente «{name}» y TODOS los datos relacionados: alertas, instantáneas, configuración de seguridad, asignaciones de acceso condicional, auditorías e historial de cambios.",
+    "modal_delete_irreversible": "Esta acción no se puede deshacer. ¿Está seguro?",
+    "modal_delete_no": "No, conservarlo",
+    "modal_delete_yes": "Sí, eliminar todo",
+    "modal_delete_deleting": "Eliminando…",
+    "toast_tenant_deleted": "El inquilino «{name}» y todos sus datos se eliminaron.",
+    "toast_tenant_delete_failed": "No se pudo eliminar el inquilino. Inténtelo de nuevo."
   },
   "alerts_filter": {
     "all_tenants": "Todos los inquilinos",
@@ -1266,7 +1275,8 @@
       "update.requested": "Actualización solicitada: {from} → {to}",
       "update.succeeded": "Actualización correcta: {from} → {to}",
       "update.rolled_back": "La actualización a {to} falló la comprobación — se revirtió a {from}",
-      "update.failed": "La actualización a {to} falló"
+      "update.failed": "La actualización a {to} falló",
+      "tenant.deleted": "Inquilino «{name}» eliminado con todos sus datos ({rows} filas)"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",

@@ -250,15 +250,51 @@
     `;
 
     const footerHtml = `
+      <button class="btn-danger" id="btn-delete-tenant" data-role-required="admin" data-id="${t.id}" style="margin-right:auto;">${escHtml(window.t('tenants.modal_delete_button'))}</button>
       <button class="btn-secondary" onclick="Panoptica.closeModal()">${escHtml(window.t('modals.cancel'))}</button>
       <button class="btn-primary" id="btn-save-tenant" data-role-required="member" data-id="${t.id}">${escHtml(window.t('modals.save'))}</button>
     `;
 
     Panoptica.openModal(window.t('tenants.modal_edit_title'), bodyHtml, footerHtml);
+    if (window.PanopticaI18n) window.PanopticaI18n.applyTo(document.getElementById('modal-overlay'));
 
     // Wire save
     document.getElementById('btn-save-tenant')?.addEventListener('click', async () => {
       await saveTenant(t.id);
+    });
+    // Wire delete (admin-only) — opens an irreversible-confirm modal.
+    document.getElementById('btn-delete-tenant')?.addEventListener('click', () => {
+      openDeleteConfirm(t);
+    });
+  }
+
+  // Irreversible delete confirmation. "No" returns to the edit modal; "Yes"
+  // cascade-deletes the tenant and all related data via DELETE /api/tenants/:id.
+  function openDeleteConfirm(t) {
+    const bodyHtml = `
+      <div class="form-group">
+        <p style="margin:0 0 10px;">${escHtml(window.t('tenants.modal_delete_warning', { name: t.display_name }))}</p>
+        <p style="margin:0; color:var(--p-danger); font-weight:600;">${escHtml(window.t('tenants.modal_delete_irreversible'))}</p>
+      </div>
+    `;
+    const footerHtml = `
+      <button class="btn-secondary" id="btn-delete-no">${escHtml(window.t('tenants.modal_delete_no'))}</button>
+      <button class="btn-danger" id="btn-delete-yes" data-id="${t.id}">${escHtml(window.t('tenants.modal_delete_yes'))}</button>
+    `;
+    Panoptica.openModal(window.t('tenants.modal_delete_title'), bodyHtml, footerHtml);
+    document.getElementById('btn-delete-no')?.addEventListener('click', () => openEditModal(t.id));
+    document.getElementById('btn-delete-yes')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-delete-yes');
+      if (btn) { btn.setAttribute('disabled', 'disabled'); btn.textContent = window.t('tenants.modal_delete_deleting'); }
+      try {
+        await Panoptica.api(`/api/tenants/${t.id}`, { method: 'DELETE' });
+        Panoptica.closeModal();
+        Panoptica.showToast(window.t('tenants.toast_tenant_deleted', { name: t.display_name }), 'success');
+        await loadTenants();
+      } catch (err) {
+        Panoptica.showToast((err && err.message) || window.t('tenants.toast_tenant_delete_failed'), 'error');
+        if (btn) { btn.removeAttribute('disabled'); btn.textContent = window.t('tenants.modal_delete_yes'); }
+      }
     });
   }
 

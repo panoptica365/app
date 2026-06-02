@@ -1196,7 +1196,16 @@
     "modal_mode_helper_html": "<strong>Managed</strong>: full Panoptica365 feature set (alerts, drift, push to tenant). <strong>Audit-only</strong>: read-only snapshot collection for export. No alerts, no drift, no writes to the customer tenant. Auto-deletes 14 days after creation + 7-day grace period.",
     "modal_audit_to_managed_note": "Audit-only → Managed is a one-way conversion (e.g., prospect signs up). Once converted, the tenant cannot return to audit-only.",
     "modal_audit_expires_warning": "Currently scheduled to expire on {date}. Hard-delete fires 7 days after that.",
-    "modal_label_tenant_id": "Tenant ID (Azure)"
+    "modal_label_tenant_id": "Tenant ID (Azure)",
+    "modal_delete_button": "Delete Tenant",
+    "modal_delete_title": "Delete Tenant",
+    "modal_delete_warning": "This will permanently remove \"{name}\" and ALL data related to it — alerts, snapshots, security settings, Conditional Access assignments, audits, and change history.",
+    "modal_delete_irreversible": "This cannot be undone. Are you sure?",
+    "modal_delete_no": "No, keep it",
+    "modal_delete_yes": "Yes, delete everything",
+    "modal_delete_deleting": "Deleting…",
+    "toast_tenant_deleted": "Tenant \"{name}\" and all its data were deleted.",
+    "toast_tenant_delete_failed": "Could not delete the tenant. Please try again."
   },
   "alerts_filter": {
     "all_tenants": "All Tenants",
@@ -1266,7 +1275,8 @@
       "update.requested": "Update requested: {from} → {to}",
       "update.succeeded": "Update succeeded: {from} → {to}",
       "update.rolled_back": "Update to {to} failed health check — rolled back to {from}",
-      "update.failed": "Update to {to} failed"
+      "update.failed": "Update to {to} failed",
+      "tenant.deleted": "Deleted tenant \"{name}\" and all related data ({rows} rows)"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",

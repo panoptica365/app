@@ -549,6 +549,46 @@ router.get('/:id/cascade-delete-dryrun', auth.requireAdmin, async (req, res) => 
   }
 });
 
+// Hard delete a tenant and ALL of its data (cascade). Admin-only, irreversible.
+// The actual multi-table delete lives in lib/tenant-cascade-delete.js (already
+// used by the audit-expiry scheduler); here we wrap it with an audit trail.
+// Identity is captured from the result (the lib snapshots it before deleting
+// the tenants row) so the audit entry is meaningful after the row is gone.
+router.delete('/:id', auth.requireAdmin, async (req, res) => {
+  const cascadeDelete = require('../lib/tenant-cascade-delete');
+  const mspAudit = require('../msp-audit');
+  try {
+    const result = await cascadeDelete.cascadeDeleteTenant(req.params.id, {
+      dryRun: false,
+      reason: 'admin_delete',
+    });
+
+    if (result.tenantNotFound) {
+      return res.status(404).json({ error: 'Tenant not found' });
+    }
+
+    try {
+      await mspAudit.logMspAudit({
+        category: mspAudit.CATEGORY.TENANT_LIFECYCLE_MSP,
+        action: 'tenant.delete',
+        description: `Deleted tenant "${result.tenantName}" and all related data (${result.totalRowsDeleted} rows)`,
+        templateKey: 'tenant.deleted',
+        templateParams: { name: result.tenantName, rows: result.totalRowsDeleted },
+        targetType: 'tenant',
+        targetId: String(result.tenantId),
+        targetName: result.tenantName,
+        metadata: { tenant_guid: result.tenantGuid, total_rows_deleted: result.totalRowsDeleted, per_table: result.perTable },
+        req,
+      });
+    } catch (e) { /* audit must never block the operation */ }
+
+    res.json({ ok: true, deleted: true, tenantName: result.tenantName, totalRowsDeleted: result.totalRowsDeleted });
+  } catch (err) {
+    console.error('[API] tenant delete failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── DEBUG: Check snapshot counts per service ───
 router.get('/:id/debug-snapshots', auth.requireAdmin, async (req, res) => {
   try {
