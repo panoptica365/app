@@ -5369,3 +5369,33 @@ td.monospace {
   margin: 0;
   min-height: 16px;
 }
+
+
+/* ─── Settings: Licensing stat table (v0.1.39) ────────────────────── */
+.settings-stat-table {
+  border-collapse: collapse;
+  margin: 4px 0 4px;
+  width: auto;
+  max-width: 520px;
+}
+.settings-stat-table th,
+.settings-stat-table td {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--p-border-subtle, var(--p-border));
+  vertical-align: baseline;
+}
+.settings-stat-table th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--p-text-muted, var(--p-text-secondary));
+  font-size: 0.9rem;
+  padding-right: 48px;        /* gap between label and value, kept tight */
+  white-space: nowrap;
+}
+.settings-stat-table td {
+  text-align: left;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--p-text, var(--p-text-bright));
+  font-variant-numeric: tabular-nums;
+}

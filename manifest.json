@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.38",
-    "image_tag": "v0.1.38",
+    "version": "0.1.39",
+    "image_tag": "v0.1.39",
     "released_at": "2026-06-02",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Smoother recovery from AADSTS650051 when adding a tenant (retry-first, with cleanup fallback) + daily summary now works on fresh installs.",
-      "fr": "Récupération simplifiée de l’erreur AADSTS650051 lors de l’ajout d’un client (réessai d’abord, nettoyage en option) + le résumé quotidien fonctionne sur les nouvelles installations.",
-      "es": "Recuperación más sencilla del error AADSTS650051 al agregar un inquilino (reintentar primero, con limpieza opcional) + el resumen diario funciona en instalaciones nuevas."
+      "en": "Adds a Licensing card in Settings (admin) showing licensed seats vs current seat usage.",
+      "fr": "Ajoute une carte Licences dans les Paramètres (admin) indiquant les sièges sous licence et l’utilisation actuelle.",
+      "es": "Agrega una tarjeta de Licencias en Configuración (admin) que muestra los asientos con licencia y el uso actual."
     }
   },
   "yanked": []

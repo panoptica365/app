@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.39 — 2026-06-02
+
+### Nuevo: tarjeta de Licencias en Configuración
+
+Configuración ahora tiene una tarjeta de **Licencias** (solo administradores). Muestra el total de asientos con licencia, el recuento actual de asientos en todos los inquilinos que supervisa, a quién está emitida la licencia, su nivel y la fecha de vencimiento. Un botón **Actualizar ahora** informa de inmediato el recuento actual de asientos al servidor de licencias, sin esperar a la actualización semanal.
+
+Si el recuento actual supera su total con licencia, la tarjeta indica por cuántos asientos se ha excedido para que pueda gestionar más con su proveedor.
+
+---
+
 ## Versión 0.1.38 — 2026-06-02
 
 ### Recuperación más sencilla cuando agregar un inquilino encuentra un problema de consentimiento

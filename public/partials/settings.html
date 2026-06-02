@@ -56,6 +56,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_branding_desc">Your company name and logo, shown on the report cover and footers.</div>
   </div>
 
+  <!-- Licensing Card -->
+  <div class="settings-card" id="card-licensing" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="badge-check"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_licensing_title">Licensing</div>
+    <div class="settings-card-desc" data-i18n="settings.card_licensing_desc">Your licensed seat count and how many seats your tenants currently use.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -383,5 +390,42 @@
       <button class="btn-primary" id="branding-save" data-i18n="settings.branding.save_btn">Save Branding</button>
       <span id="branding-status" style="font-size:0.85rem;"></span>
     </div>
+  </div>
+</div>
+
+
+<!-- ─── Licensing Sub-View ─── -->
+<div id="settings-licensing-view" style="display:none;">
+  <button class="btn-secondary" id="licensing-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.licensing.section_title">Licensing</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.licensing.intro">
+      Your Panoptica365 license covers a number of user seats. The current count is the total number of users across the tenants you monitor, reported to the license server on each weekly refresh.
+    </div>
+
+    <div id="licensing-loading" class="form-hint" data-i18n="settings.licensing.loading">Loading licensing details…</div>
+
+    <div id="licensing-body" style="display:none;">
+      <table class="settings-stat-table">
+        <tbody>
+          <tr><th data-i18n="settings.licensing.label_max_seats">Total license seats</th><td id="licensing-max-seats">—</td></tr>
+          <tr><th data-i18n="settings.licensing.label_current_seats">Current seat count</th><td id="licensing-current-seats">—</td></tr>
+          <tr><th data-i18n="settings.licensing.label_msp">Licensed to</th><td id="licensing-msp">—</td></tr>
+          <tr><th data-i18n="settings.licensing.label_tier">Tier</th><td id="licensing-tier">—</td></tr>
+          <tr><th data-i18n="settings.licensing.label_expires">Expires</th><td id="licensing-expires">—</td></tr>
+        </tbody>
+      </table>
+
+      <div class="form-hint" id="licensing-seats-note" style="margin-top:14px;"></div>
+
+      <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+        <button class="btn-secondary" id="licensing-refresh" data-i18n="settings.licensing.refresh_btn">Refresh now</button>
+        <span id="licensing-status" style="font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <div id="licensing-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
   </div>
 </div>

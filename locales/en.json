@@ -2403,6 +2403,26 @@
       "verify_ok": "✓ {name}",
       "verify_failed": "✗ {message}",
       "verify_failed_default": "Verification failed"
+    },
+    "card_licensing_title": "Licensing",
+    "card_licensing_desc": "Your licensed seat count and how many seats your tenants currently use.",
+    "licensing": {
+      "section_title": "Licensing",
+      "intro": "Your Panoptica365 license covers a number of user seats. The current count is the total number of users across the tenants you monitor, reported to the license server on each weekly refresh.",
+      "loading": "Loading licensing details…",
+      "label_max_seats": "Total license seats",
+      "label_current_seats": "Current seat count",
+      "label_msp": "Licensed to",
+      "label_tier": "Tier",
+      "label_expires": "Expires",
+      "seats_pending": "Not yet reported",
+      "seats_pending_note": "The current seat count is reported on the next license refresh. Click “Refresh now” to report it immediately.",
+      "over_seats": "You are {over} seat(s) over your licensed total. Contact your provider to add seats.",
+      "refresh_btn": "Refresh now",
+      "refreshing": "Refreshing…",
+      "refresh_done": "Refreshed.",
+      "refresh_failed": "Refresh failed. Please try again.",
+      "load_failed": "Could not load licensing details."
     }
   },
   "tenant_dashboard": {

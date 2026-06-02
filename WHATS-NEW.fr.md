@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.39 — 2026-06-02
+
+### Nouveau : carte Licences dans les Paramètres
+
+Les Paramètres comportent désormais une carte **Licences** (administrateurs seulement). Elle affiche votre nombre total de sièges sous licence, le nombre de sièges actuellement utilisés dans l’ensemble des clients que vous surveillez, le titulaire de la licence, votre palier et la date d’expiration. Un bouton **Actualiser maintenant** transmet immédiatement le nombre de sièges actuel au serveur de licences, sans attendre l’actualisation hebdomadaire.
+
+Si le nombre actuel dépasse votre total sous licence, la carte indique de combien de sièges vous êtes en dépassement afin que vous puissiez en ajouter auprès de votre fournisseur.
+
+---
+
 ## Version 0.1.38 — 2026-06-02
 
 ### Récupération simplifiée lorsqu’un ajout de client rencontre un incident de consentement

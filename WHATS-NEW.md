@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.39 — 2026-06-02
+
+### New: Licensing card in Settings
+
+Settings now has a **Licensing** card (administrators only). It shows your total licensed seats, the current seat count across all the tenants you monitor, who the license is issued to, your tier, and the expiry date. A **Refresh now** button reports the current seat count to the license server immediately, rather than waiting for the weekly refresh.
+
+If the current count is ever higher than your licensed total, the card flags how many seats you're over so you can arrange more with your provider.
+
+---
+
 ## Version 0.1.38 — 2026-06-02
 
 ### Smoother recovery when adding a tenant hits a consent hiccup

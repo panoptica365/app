@@ -2403,6 +2403,26 @@
       "verify_ok": "✓ {name}",
       "verify_failed": "✗ {message}",
       "verify_failed_default": "Verificación fallida"
+    },
+    "card_licensing_title": "Licencias",
+    "card_licensing_desc": "Su número de asientos con licencia y cuántos asientos usan actualmente sus inquilinos.",
+    "licensing": {
+      "section_title": "Licencias",
+      "intro": "Su licencia de Panoptica365 cubre una cantidad de asientos de usuario. El recuento actual es el total de usuarios en los inquilinos que supervisa, informado al servidor de licencias en cada actualización semanal.",
+      "loading": "Cargando detalles de licencia…",
+      "label_max_seats": "Asientos con licencia",
+      "label_current_seats": "Recuento actual de asientos",
+      "label_msp": "Con licencia para",
+      "label_tier": "Nivel",
+      "label_expires": "Vence",
+      "seats_pending": "Aún no informado",
+      "seats_pending_note": "El recuento actual de asientos se informa en la próxima actualización de licencia. Haga clic en «Actualizar ahora» para informarlo de inmediato.",
+      "over_seats": "Supera su total con licencia por {over} asiento(s). Comuníquese con su proveedor para agregar asientos.",
+      "refresh_btn": "Actualizar ahora",
+      "refreshing": "Actualizando…",
+      "refresh_done": "Actualizado.",
+      "refresh_failed": "La actualización falló. Inténtelo de nuevo.",
+      "load_failed": "No se pudieron cargar los detalles de licencia."
     }
   },
   "tenant_dashboard": {

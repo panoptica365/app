@@ -14,6 +14,7 @@
     document.getElementById('card-message-center')?.addEventListener('click', () => showView('message_center'));
     document.getElementById('card-access')?.addEventListener('click', () => showView('access'));
     document.getElementById('card-branding')?.addEventListener('click', () => showView('branding'));
+    document.getElementById('card-licensing')?.addEventListener('click', () => showView('licensing'));
 
     // Back buttons
     document.getElementById('smtp-back')?.addEventListener('click', () => showView('cards'));
@@ -23,6 +24,8 @@
     document.getElementById('message-center-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('access-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('branding-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('licensing-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('licensing-refresh')?.addEventListener('click', refreshLicensing);
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -69,6 +72,84 @@
     });
   }
 
+  // ─── Licensing (v0.1.39) — read-only view of seat usage ───
+  function fmtNum(n) {
+    return (typeof n === 'number' && isFinite(n)) ? n.toLocaleString() : '—';
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+    const loc = lang === 'fr' ? 'fr-CA' : (lang === 'es' ? 'es' : 'en-CA');
+    try { return new Date(iso).toLocaleDateString(loc, { year: 'numeric', month: 'short', day: 'numeric' }); }
+    catch (e) { return iso; }
+  }
+
+  function renderLicensing(data) {
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('licensing-max-seats', fmtNum(data.max_seats));
+    setText('licensing-current-seats',
+      (data.current_seats_reported === null || data.current_seats_reported === undefined)
+        ? window.t('settings.licensing.seats_pending')
+        : fmtNum(data.current_seats_reported));
+    setText('licensing-msp', data.msp_name || '—');
+    setText('licensing-tier', data.tier || '—');
+    setText('licensing-expires', fmtDate(data.expires_at));
+
+    // Over-seat note: only when we have both numbers and current exceeds max.
+    const note = document.getElementById('licensing-seats-note');
+    if (note) {
+      const max = data.max_seats, cur = data.current_seats_reported;
+      if (typeof max === 'number' && typeof cur === 'number' && cur > max) {
+        note.textContent = window.t('settings.licensing.over_seats', { over: (cur - max) });
+        note.style.color = 'var(--p-warn)';
+        note.style.display = '';
+      } else if (cur === null || cur === undefined) {
+        note.textContent = window.t('settings.licensing.seats_pending_note');
+        note.style.color = '';
+        note.style.display = '';
+      } else {
+        note.style.display = 'none';
+      }
+    }
+  }
+
+  async function loadLicensing() {
+    const loading = document.getElementById('licensing-loading');
+    const body    = document.getElementById('licensing-body');
+    const errEl   = document.getElementById('licensing-error');
+    if (loading) loading.style.display = '';
+    if (body) body.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
+    try {
+      const data = await Panoptica.api('/api/license/status');
+      renderLicensing(data);
+      if (loading) loading.style.display = 'none';
+      if (body) body.style.display = '';
+    } catch (err) {
+      if (loading) loading.style.display = 'none';
+      if (errEl) {
+        errEl.textContent = (err && err.message) || window.t('settings.licensing.load_failed');
+        errEl.style.display = '';
+      }
+    }
+  }
+
+  async function refreshLicensing() {
+    const btn = document.getElementById('licensing-refresh');
+    const status = document.getElementById('licensing-status');
+    if (btn) btn.setAttribute('disabled', 'disabled');
+    if (status) status.textContent = window.t('settings.licensing.refreshing');
+    try {
+      await Panoptica.api('/api/license/refresh-now', { method: 'POST' });
+      await loadLicensing();
+      if (status) status.textContent = window.t('settings.licensing.refresh_done');
+    } catch (err) {
+      if (status) status.textContent = (err && err.message) || window.t('settings.licensing.refresh_failed');
+    } finally {
+      if (btn) btn.removeAttribute('disabled');
+    }
+  }
+
   function destroy() {}
 
   function showView(view) {
@@ -81,6 +162,7 @@
       message_center: document.getElementById('settings-message-center-view'),
       access:    document.getElementById('settings-access-view'),
       branding:  document.getElementById('settings-branding-view'),
+      licensing: document.getElementById('settings-licensing-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -92,6 +174,7 @@
     if (view === 'message_center') loadMessageCenter();
     if (view === 'access')    loadAccessControl();
     if (view === 'branding')  loadBranding();
+    if (view === 'licensing') loadLicensing();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───
