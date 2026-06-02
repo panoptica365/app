@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.1.38 — 2026-06-02
+
+### Smoother recovery when adding a tenant hits a consent hiccup
+
+Occasionally, finishing the admin consent for a new tenant fails with Microsoft error **AADSTS650051**. This is usually a temporary issue on Microsoft's first consent attempt — trying again succeeds. Instead of showing a cryptic error, Panoptica365 now explains what happened and offers a **Try again** button that re-runs the consent (which resolves it in most cases). For the rarer case where it keeps failing — a leftover app registration from a previous connection lingering in the customer tenant — the dialog includes a "Show cleanup steps" section with a ready-to-run PowerShell script, pre-filled with the tenant and app IDs, that fully clears the leftover so you can add the tenant cleanly.
+
+Tip: when you remove a tenant from Panoptica365, you don't need to delete the enterprise application in the customer tenant — re-adding simply re-uses it, which avoids this situation entirely.
+
+### Fixed: daily summary now works on fresh installs
+
+On a brand-new installation, an internal mismatch in the database setup left the daily summary (morning briefing) unable to save or load — so the feature silently never produced a summary. The database layout is now reconciled automatically on startup, including self-healing any install that was already affected. New installs get the correct layout from the start, and existing ones repair themselves on the next restart.
+
+---
+
 ## Version 0.1.37 — 2026-06-01
 
 ### Fixed: Exchange Online & Compliance monitoring now sets itself up during onboarding

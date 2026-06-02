@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.38 — 2026-06-02
+
+### Récupération simplifiée lorsqu’un ajout de client rencontre un incident de consentement
+
+À l’occasion, la finalisation du consentement administrateur d’un nouveau client échoue avec l’erreur Microsoft **AADSTS650051**. Il s’agit généralement d’un problème temporaire lors de la première tentative de consentement de Microsoft — réessayer fonctionne. Au lieu d’afficher une erreur obscure, Panoptica365 explique désormais ce qui s’est passé et propose un bouton **Réessayer** qui relance le consentement (ce qui règle le problème dans la plupart des cas). Pour le cas plus rare où l’échec persiste — une inscription d’application résiduelle d’une connexion précédente subsistant dans le client — la fenêtre inclut une section « Afficher les étapes de nettoyage » avec un script PowerShell prêt à exécuter, pré-rempli avec les identifiants du client et de l’application, qui supprime complètement le résidu afin d’ajouter le client proprement.
+
+Astuce : lorsque vous retirez un client de Panoptica365, vous n’avez pas besoin de supprimer l’application d’entreprise dans le client — le rajout la réutilise simplement, ce qui évite complètement cette situation.
+
+### Correction : le résumé quotidien fonctionne désormais sur les nouvelles installations
+
+Sur une toute nouvelle installation, une incohérence interne dans la configuration de la base de données empêchait le résumé quotidien (briefing du matin) d’être enregistré ou chargé — la fonction ne produisait donc jamais de résumé, sans erreur visible. La structure de la base de données est maintenant réconciliée automatiquement au démarrage, y compris l’autoréparation de toute installation déjà touchée. Les nouvelles installations obtiennent la bonne structure dès le départ, et les installations existantes se réparent au prochain redémarrage.
+
+---
+
 ## Version 0.1.37 — 2026-06-01
 
 ### Correction : la surveillance d'Exchange Online et de la Conformité se configure maintenant pendant l'intégration

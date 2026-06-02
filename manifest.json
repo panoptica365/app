@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.37",
-    "image_tag": "v0.1.37",
-    "released_at": "2026-06-01",
+    "version": "0.1.38",
+    "image_tag": "v0.1.38",
+    "released_at": "2026-06-02",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Auto-assigns Exchange & Compliance roles in each tenant at onboarding (fixes EXO/Purview readers stuck at Awaiting Infra).",
-      "fr": "Attribue automatiquement les rôles Exchange et Conformité dans chaque client lors de l'intégration (corrige les lecteurs EXO/Purview bloqués).",
-      "es": "Asigna automáticamente los roles de Exchange y Cumplimiento en cada inquilino durante la incorporación (corrige los lectores EXO/Purview detenidos)."
+      "en": "Smoother recovery from AADSTS650051 when adding a tenant (retry-first, with cleanup fallback) + daily summary now works on fresh installs.",
+      "fr": "Récupération simplifiée de l’erreur AADSTS650051 lors de l’ajout d’un client (réessai d’abord, nettoyage en option) + le résumé quotidien fonctionne sur les nouvelles installations.",
+      "es": "Recuperación más sencilla del error AADSTS650051 al agregar un inquilino (reintentar primero, con limpieza opcional) + el resumen diario funciona en instalaciones nuevas."
     }
   },
   "yanked": []

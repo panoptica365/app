@@ -128,15 +128,21 @@ CREATE TABLE IF NOT EXISTS api_health (
 
 -- ─── Morning Briefings ───
 -- Cached Sonnet-generated daily briefings
+-- MSP-wide AI daily briefing, multi-locale (Phase 8, May 2026). The app's
+-- ensureBriefingTable() in src/morning-briefing.js is the authoritative
+-- definition and migrates older shapes on boot; this mirrors it so a fresh
+-- install starts with the correct columns. (Earlier this block defined a
+-- `content`/`briefing_date`/`tenant_id` shape that diverged from the app and
+-- silently broke daily summaries on fresh Docker installs — fixed v0.1.38.)
 CREATE TABLE IF NOT EXISTS morning_briefings (
-  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  tenant_id     INT UNSIGNED DEFAULT NULL COMMENT 'NULL = executive summary across all tenants',
-  briefing_date DATE NOT NULL,
-  content       TEXT NOT NULL,
-  generated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_briefing_tenant_date (tenant_id, briefing_date)
-) ENGINE=InnoDB;
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  summary_en    TEXT NOT NULL,
+  summary_fr    TEXT NULL,
+  summary_es    TEXT NULL,
+  data_snapshot JSON NULL,
+  generated_at  DATETIME NOT NULL,
+  INDEX idx_generated (generated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- Panoptica365 — SharePoint audit tables (Phase: SharePoint port from Tabula Accessus)
 -- Stores audit snapshots of SharePoint document library permissions.
 

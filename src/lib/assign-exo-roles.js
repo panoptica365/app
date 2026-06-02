@@ -80,10 +80,19 @@ async function ensureRoleActivated(tenantId, role) {
     });
     log(`activated role "${role.name}" in ${tenantId}`);
   } catch (e) {
-    // 409 = already activated → expected and fine. Anything else: log + carry on
-    // (the assignment attempt below may still succeed if the role exists).
-    if (e.statusCode && e.statusCode !== 409) {
-      warn(`activate "${role.name}" returned ${e.statusCode} in ${tenantId}: ${e.message}`);
+    // Already-activated is the COMMON, expected case and must not look alarming:
+    //   - 409 Conflict, or
+    //   - 400 with code "ConflictingObjects" ("a conflicting object ... is
+    //     present in the directory") — Graph returns this when the built-in
+    //     role is already active in the tenant.
+    // Either way the role exists and the assignment below proceeds normally.
+    const msg = e && e.message ? e.message : "";
+    const alreadyActive = e.statusCode === 409 ||
+      (e.statusCode === 400 && /ConflictingObjects|conflicting object/i.test(msg));
+    if (alreadyActive) {
+      log(`role "${role.name}" already active in ${tenantId}`);
+    } else if (e.statusCode) {
+      warn(`activate "${role.name}" returned ${e.statusCode} in ${tenantId}: ${msg}`);
     }
   }
   return role.templateId;

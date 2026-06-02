@@ -593,6 +593,15 @@ async function ensureBriefingTable() {
     );
     const colNames = new Set(cols.map(c => c.COLUMN_NAME));
 
+    // Heal installs created from the stale schema.sql shape (columns:
+    // content, briefing_date, tenant_id) — the daily-summary feature expects
+    // summary_en/fr/es and otherwise fails on every store/load. Rename
+    // content → summary_en; the leftover tenant_id/briefing_date columns are
+    // harmless (NULLable / unused) so we leave them to avoid a destructive drop.
+    if (colNames.has('content') && !colNames.has('summary_en')) {
+      console.log('[Briefing] Migrating legacy content → summary_en');
+      await db.execute(`ALTER TABLE morning_briefings CHANGE content summary_en TEXT NOT NULL`);
+    }
     if (colNames.has('summary') && !colNames.has('summary_en')) {
       console.log('[Briefing] Migrating summary → summary_en');
       await db.execute(`ALTER TABLE morning_briefings CHANGE summary summary_en TEXT NOT NULL`);
@@ -604,6 +613,26 @@ async function ensureBriefingTable() {
     if (!colNames.has('summary_es')) {
       console.log('[Briefing] Adding summary_es column');
       await db.execute(`ALTER TABLE morning_briefings ADD COLUMN summary_es TEXT NULL AFTER summary_fr`);
+    }
+    // The stale schema.sql shape also lacks data_snapshot and carries
+    // NOT-NULL columns (briefing_date, tenant_id) that our INSERT never
+    // supplies — both would fail the insert. Add the missing column and
+    // relax the legacy NOT-NULL constraints so stores/loads succeed.
+    if (!colNames.has('data_snapshot')) {
+      console.log('[Briefing] Adding data_snapshot column');
+      await db.execute(`ALTER TABLE morning_briefings ADD COLUMN data_snapshot JSON NULL AFTER summary_es`);
+    }
+    if (colNames.has('briefing_date')) {
+      console.log('[Briefing] Relaxing legacy briefing_date NOT NULL');
+      // Drop the unique key that references it first (ignore if absent), then
+      // make the column nullable so inserts that omit it succeed.
+      try { await db.execute(`ALTER TABLE morning_briefings DROP INDEX uq_briefing_tenant_date`); } catch (e) { /* index may not exist */ }
+      try { await db.execute(`ALTER TABLE morning_briefings MODIFY briefing_date DATE NULL`); } catch (e) { /* best effort */ }
+    }
+    if (colNames.has('tenant_id')) {
+      // Legacy FK column the new MSP-wide briefing never sets. Drop the FK +
+      // make nullable so it can't block inserts. Best-effort, idempotent.
+      try { await db.execute(`ALTER TABLE morning_briefings MODIFY tenant_id INT UNSIGNED NULL`); } catch (e) { /* best effort */ }
     }
   } catch (err) {
     // Table might already exist — ignore

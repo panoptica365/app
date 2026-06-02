@@ -1209,7 +1209,16 @@
     "modal_assign_roles_button": "Re-assign Exchange roles",
     "toast_roles_assigned": "Exchange & Compliance roles assigned for \"{name}\".",
     "toast_roles_partial": "Role assignment incomplete for \"{name}\". The service principal may still be propagating — try again in a minute.",
-    "toast_roles_failed": "Could not assign Exchange roles. Please try again shortly."
+    "toast_roles_failed": "Could not assign Exchange roles. Please try again shortly.",
+    "leftover_sp_title": "Consent didn’t complete — try once more",
+    "leftover_sp_intro": "Microsoft reported error AADSTS650051 while finishing the admin consent for this tenant. This is most often a temporary hiccup on Microsoft’s first consent attempt — the connection usually completes on a second try.",
+    "leftover_sp_explain": "This usually happens after a tenant was removed and re-added. Run the script below in PowerShell as an administrator of the customer tenant to fully purge the leftover registration (both active and recently-deleted copies), then add the tenant again.",
+    "leftover_sp_retry_hint": "After the script reports 0 active and 0 soft-deleted, click Add Tenant again. (Microsoft can take a few minutes to propagate the removal — if it still fails, wait and retry.)",
+    "leftover_sp_copy": "Copy script",
+    "leftover_sp_copied": "Copied",
+    "leftover_sp_retry_first": "Click “Try again” below to re-run the consent. In most cases it succeeds the second time and the tenant is added.",
+    "leftover_sp_still_failing": "Still failing after a few tries? Show cleanup steps",
+    "leftover_sp_try_again": "Try again"
   },
   "alerts_filter": {
     "all_tenants": "All Tenants",

@@ -8,6 +8,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const auth = require('../auth');
 const db = require('../db/database');
+const config = require('../../config/default');
 const mspAudit = require('../msp-audit');
 const usersStore = require('../users-store');
 const versionInfo = require('../version');
@@ -255,6 +256,21 @@ async function handleGraphConsentCallback(req, res) {
     // happen. Log it and surface it; the operator simply retries.
     if (error) {
       console.error(`[Auth] Graph admin consent error: ${error} — ${error_description || ''}`);
+      // AADSTS650051 = a leftover (active or soft-deleted) service principal for
+      // our app still exists in the customer tenant, blocking the fresh consent
+      // from creating its SP. This happens after a tenant is removed + re-added.
+      // Surface it as a STRUCTURED code so the frontend can show actionable
+      // cleanup guidance (a pre-filled purge script) instead of a raw AADSTS dump.
+      const blob = `${error} ${error_description || ''}`;
+      if (/650051/.test(blob)) {
+        const params = new URLSearchParams({
+          page: 'tenants',
+          consent_error_code: '650051',
+          consent_error_tenant: req.query.tenant || '',
+          consent_error_appid: (config.entra && config.entra.clientId) || '',
+        });
+        return res.redirect('/?' + params.toString());
+      }
       return res.redirect('/?page=tenants&consent_error=' + encodeURIComponent(error_description || error));
     }
 

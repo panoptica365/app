@@ -1209,7 +1209,16 @@
     "modal_assign_roles_button": "Reasignar roles de Exchange",
     "toast_roles_assigned": "Roles de Exchange y Cumplimiento asignados para «{name}».",
     "toast_roles_partial": "La asignación de roles quedó incompleta para «{name}». Es posible que el principal de servicio aún se esté propagando: inténtelo de nuevo en un minuto.",
-    "toast_roles_failed": "No se pudieron asignar los roles de Exchange. Inténtelo de nuevo en breve."
+    "toast_roles_failed": "No se pudieron asignar los roles de Exchange. Inténtelo de nuevo en breve.",
+    "leftover_sp_title": "El consentimiento no se completó: vuelva a intentarlo",
+    "leftover_sp_intro": "Microsoft informó el error AADSTS650051 al finalizar el consentimiento de administrador para este inquilino. Suele ser un problema temporal en el primer intento de consentimiento de Microsoft; la conexión normalmente se completa en un segundo intento.",
+    "leftover_sp_explain": "Esto suele ocurrir después de quitar y volver a agregar un inquilino. Ejecute el siguiente script en PowerShell como administrador del inquilino para purgar por completo el registro sobrante (las copias activas y las eliminadas recientemente) y luego agregue el inquilino de nuevo.",
+    "leftover_sp_retry_hint": "Cuando el script indique 0 activos y 0 eliminados, haga clic de nuevo en Agregar inquilino. (Microsoft puede tardar unos minutos en propagar la eliminación; si sigue fallando, espere y reinténtelo.)",
+    "leftover_sp_copy": "Copiar script",
+    "leftover_sp_copied": "Copiado",
+    "leftover_sp_retry_first": "Haga clic en «Volver a intentar» a continuación para repetir el consentimiento. En la mayoría de los casos funciona la segunda vez y el inquilino se agrega.",
+    "leftover_sp_still_failing": "¿Sigue fallando tras varios intentos? Mostrar pasos de limpieza",
+    "leftover_sp_try_again": "Volver a intentar"
   },
   "alerts_filter": {
     "all_tenants": "Todos los inquilinos",

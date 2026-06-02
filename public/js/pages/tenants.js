@@ -20,6 +20,12 @@
     const consentError = params.consent_error || null;
     if (consentSuccess) showConsentMessage(window.t('tenants.consent_success'), 'success');
     if (consentError) showConsentMessage(window.t('tenants.consent_failed_with_msg', { message: consentError }), 'error');
+    // AADSTS650051 — a leftover service principal blocks the fresh consent.
+    // Show an actionable cleanup modal with a pre-filled PowerShell purge script
+    // instead of a raw error (operator hit this after remove + re-add).
+    if (params.consent_error_code === '650051') {
+      openLeftoverSpModal(params.consent_error_tenant || '', params.consent_error_appid || '');
+    }
 
     // Wire up Add Tenant button
     document.getElementById('btn-add-tenant')?.addEventListener('click', startAdminConsent);
@@ -193,6 +199,80 @@
       const mode = document.querySelector('input[name="add-tenant-mode"]:checked')?.value || 'managed';
       window.location.href = '/auth/adminconsent?mode=' + encodeURIComponent(mode);
     });
+  }
+
+  // AADSTS650051 cleanup helper. A previous connection left a service principal
+  // (active and/or soft-deleted) for our app in the customer tenant, which
+  // blocks a fresh admin consent from creating its SP. We can't purge it from
+  // here (no creds into the customer tenant for directory writes), so we hand
+  // the operator a ready-to-run PowerShell script, pre-filled with the real
+  // tenant id + app id, that fully clears it. Mirrors the proven manual fix.
+  function buildLeftoverSpScript(tenantGuid, appId) {
+    const t = tenantGuid || '<customer-tenant-id>';
+    const a = appId || '<application-client-id>';
+    return [
+      '# Run in PowerShell as an admin of the CUSTOMER tenant.',
+      '# Requires the Microsoft.Graph PowerShell SDK (Install-Module Microsoft.Graph).',
+      '',
+      'Connect-MgGraph -Scopes "Application.ReadWrite.All" -TenantId "' + t + '"',
+      '',
+      '$appId = "' + a + '"',
+      '',
+      '# 1. Delete any ACTIVE service principal for the app (this soft-deletes it).',
+      '$active = (Invoke-MgGraphRequest -Method GET `',
+      '  -Uri "https://graph.microsoft.com/v1.0/servicePrincipals?`$filter=appId eq ' + "'" + '$appId' + "'" + '").value',
+      'foreach ($sp in $active) {',
+      '  Invoke-MgGraphRequest -Method DELETE -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.id)"',
+      '  Write-Host "Deleted active SP $($sp.id)"',
+      '}',
+      '',
+      '# 2. Purge ALL soft-deleted service principals for the app.',
+      'Start-Sleep -Seconds 10',
+      '$deleted = (Invoke-MgGraphRequest -Method GET `',
+      '  -Uri "https://graph.microsoft.com/v1.0/directory/deletedItems/microsoft.graph.servicePrincipal?`$filter=appId eq ' + "'" + '$appId' + "'" + '").value',
+      'foreach ($sp in $deleted) {',
+      '  Invoke-MgGraphRequest -Method DELETE -Uri "https://graph.microsoft.com/v1.0/directory/deletedItems/$($sp.id)"',
+      '  Write-Host "Purged soft-deleted SP $($sp.id)"',
+      '}',
+      '',
+      '# 3. Verify BOTH counts are 0, then re-add the tenant in Panoptica365.',
+      'Write-Host "Active:" (Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/servicePrincipals?`$filter=appId eq ' + "'" + '$appId' + "'" + '").value.Count',
+      'Write-Host "Soft-deleted:" (Invoke-MgGraphRequest -Method GET -Uri "https://graph.microsoft.com/v1.0/directory/deletedItems/microsoft.graph.servicePrincipal?`$filter=appId eq ' + "'" + '$appId' + "'" + '").value.Count',
+    ].join('\n');
+  }
+
+  function openLeftoverSpModal(tenantGuid, appId) {
+    const script = buildLeftoverSpScript(tenantGuid, appId);
+    // Retry-first: AADSTS650051 is MOST OFTEN a transient first-attempt quirk
+    // of Microsoft's /common/adminconsent (it creates the SP but reports the
+    // error anyway) — a second consent attempt usually just works. So we lead
+    // with "Try again" and tuck the full cleanup script behind a details
+    // disclosure for the rarer case of a genuinely stuck leftover registration.
+    const bodyHtml =
+      '<div class="form-group">' +
+        '<p style="margin:0 0 10px;">' + escHtml(window.t('tenants.leftover_sp_intro')) + '</p>' +
+        '<p style="margin:0 0 12px;">' + escHtml(window.t('tenants.leftover_sp_retry_first')) + '</p>' +
+        '<details style="margin-top:6px;">' +
+          '<summary style="cursor:pointer; color:var(--p-text-muted); font-size:0.88rem;">' + escHtml(window.t('tenants.leftover_sp_still_failing')) + '</summary>' +
+          '<p style="margin:10px 0; color:var(--p-text-muted); font-size:0.88rem;">' + escHtml(window.t('tenants.leftover_sp_explain')) + '</p>' +
+          '<pre id="leftover-sp-script" style="background:var(--p-surface-sunken, #0d1b2a); color:var(--p-text, #e6edf3); padding:12px; border-radius:6px; font-size:0.78rem; line-height:1.45; overflow:auto; max-height:260px; white-space:pre; margin:0;">' + escHtml(script) + '</pre>' +
+          '<button class="btn-secondary" id="btn-leftover-copy" style="margin-top:10px;">' + escHtml(window.t('tenants.leftover_sp_copy')) + '</button>' +
+        '</details>' +
+      '</div>';
+    const footerHtml =
+      '<button class="btn-secondary" id="btn-leftover-close">' + escHtml(window.t('modals.close')) + '</button>' +
+      '<button class="btn-primary" id="btn-leftover-retry">' + escHtml(window.t('tenants.leftover_sp_try_again')) + '</button>';
+    Panoptica.openModal(window.t('tenants.leftover_sp_title'), bodyHtml, footerHtml);
+    document.getElementById('btn-leftover-retry')?.addEventListener('click', () => { Panoptica.closeModal(); startAdminConsent(); });
+    document.getElementById('btn-leftover-copy')?.addEventListener('click', () => {
+      const b = document.getElementById('btn-leftover-copy');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(script).then(() => {
+          if (b) b.textContent = window.t('tenants.leftover_sp_copied');
+        }).catch(() => {});
+      }
+    });
+    document.getElementById('btn-leftover-close')?.addEventListener('click', () => Panoptica.closeModal());
   }
 
   function openEditModal(tenantId) {

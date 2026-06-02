@@ -1209,7 +1209,16 @@
     "modal_assign_roles_button": "Réattribuer les rôles Exchange",
     "toast_roles_assigned": "Rôles Exchange et Conformité attribués pour « {name} ».",
     "toast_roles_partial": "Attribution des rôles incomplète pour « {name} ». Le principal de service est peut-être en cours de propagation — réessayez dans une minute.",
-    "toast_roles_failed": "Impossible d’attribuer les rôles Exchange. Veuillez réessayer sous peu."
+    "toast_roles_failed": "Impossible d’attribuer les rôles Exchange. Veuillez réessayer sous peu.",
+    "leftover_sp_title": "Le consentement ne s’est pas terminé — réessayez",
+    "leftover_sp_intro": "Microsoft a signalé l’erreur AADSTS650051 en terminant le consentement administrateur pour ce client. Il s’agit le plus souvent d’un incident temporaire lors de la première tentative de consentement de Microsoft — la connexion aboutit généralement à la deuxième tentative.",
+    "leftover_sp_explain": "Cela se produit généralement après le retrait puis le rajout d’un client. Exécutez le script ci-dessous dans PowerShell en tant qu’administrateur du client pour purger complètement l’inscription résiduelle (les copies actives et récemment supprimées), puis ajoutez de nouveau le client.",
+    "leftover_sp_retry_hint": "Lorsque le script affiche 0 actif et 0 supprimé, cliquez de nouveau sur Ajouter un client. (Microsoft peut prendre quelques minutes pour propager la suppression — si l’erreur persiste, patientez et réessayez.)",
+    "leftover_sp_copy": "Copier le script",
+    "leftover_sp_copied": "Copié",
+    "leftover_sp_retry_first": "Cliquez sur « Réessayer » ci-dessous pour relancer le consentement. Dans la plupart des cas, il réussit la deuxième fois et le client est ajouté.",
+    "leftover_sp_still_failing": "Toujours en échec après quelques tentatives? Afficher les étapes de nettoyage",
+    "leftover_sp_try_again": "Réessayer"
   },
   "alerts_filter": {
     "all_tenants": "Tous les locataires",

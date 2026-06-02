@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.38 — 2026-06-02
+
+### Recuperación más sencilla cuando agregar un inquilino encuentra un problema de consentimiento
+
+A veces, finalizar el consentimiento de administrador de un nuevo inquilino falla con el error de Microsoft **AADSTS650051**. Suele ser un problema temporal en el primer intento de consentimiento de Microsoft; volver a intentarlo funciona. En lugar de mostrar un error críptico, Panoptica365 ahora explica lo ocurrido y ofrece un botón **Volver a intentar** que repite el consentimiento (lo que lo resuelve en la mayoría de los casos). Para el caso más raro en que sigue fallando — un registro de aplicación sobrante de una conexión anterior que permanece en el inquilino — el cuadro incluye una sección «Mostrar pasos de limpieza» con un script de PowerShell listo para ejecutar, rellenado con los identificadores del inquilino y de la aplicación, que elimina por completo el sobrante para que pueda agregar el inquilino sin problemas.
+
+Consejo: cuando quite un inquilino de Panoptica365, no necesita eliminar la aplicación empresarial en el inquilino; al volver a agregarlo, simplemente se reutiliza, lo que evita por completo esta situación.
+
+### Corregido: el resumen diario ahora funciona en instalaciones nuevas
+
+En una instalación totalmente nueva, una discrepancia interna en la configuración de la base de datos impedía que el resumen diario (informe matutino) se guardara o cargara, por lo que la función nunca producía un resumen, sin error visible. La estructura de la base de datos ahora se reconcilia automáticamente al iniciar, incluida la autorreparación de cualquier instalación ya afectada. Las instalaciones nuevas obtienen la estructura correcta desde el principio y las existentes se reparan en el próximo reinicio.
+
+---
+
 ## Versión 0.1.37 — 2026-06-01
 
 ### Corregido: la supervisión de Exchange Online y Cumplimiento ahora se configura durante la incorporación
