@@ -12,6 +12,7 @@ const mspAudit = require('../msp-audit');
 const usersStore = require('../users-store');
 const versionInfo = require('../version');
 const updateChecker = require('../lib/update/update-checker');
+const assignExoRoles = require('../lib/assign-exo-roles');
 
 const router = express.Router();
 
@@ -337,6 +338,21 @@ async function handleGraphConsentCallback(req, res) {
         req,
       }).catch(() => {});
     }
+
+    // ─── Assign EXO/Compliance directory roles in the customer tenant ───
+    // Admin consent grants API permissions but NOT directory roles; the EXO +
+    // Purview PowerShell readers need Exchange Administrator + Compliance
+    // Administrator assigned to our SP in THIS tenant (Microsoft: assign in each
+    // customer tenant). We hold consented RoleManagement.ReadWrite.Directory, so
+    // do it automatically. Best-effort + delayed a few seconds so the freshly
+    // consented service principal has time to propagate before we look it up.
+    // If it fails, the tenant still functions (Graph monitoring works) and the
+    // manual wizard step remains a fallback — so never block onboarding on it.
+    setTimeout(() => {
+      assignExoRoles.assignExoRoles(tenant).catch((e) => {
+        console.warn(`[Auth] EXO role assignment for ${tenant} errored: ${e.message}`);
+      });
+    }, 8000);
 
     // ─── Graph consent done, tenant onboarded — kick off pass 2 ───
     // Consent the Skype-Teams resource so the cert-based Teams readers

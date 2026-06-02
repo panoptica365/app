@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.37 — 2026-06-01
+
+### Corregido: la supervisión de Exchange Online y Cumplimiento ahora se configura durante la incorporación
+
+Varios lectores de seguridad de Panoptica365 usan Exchange Online y Microsoft Purview, que requieren asignar dos roles de directorio de Entra — **Administrador de Exchange** y **Administrador de cumplimiento** — a la aplicación en cada inquilino. Otorgar el consentimiento de administrador crea la aplicación y sus permisos, pero **no** asigna estos roles, así que antes había que agregarlos a mano en cada inquilino, y si se omitían, los lectores de Exchange/Purview quedaban detenidos en «Esperando infraestructura».
+
+Panoptica365 ahora asigna estos dos roles automáticamente justo después de que un inquilino otorga el consentimiento de administrador, usando un permiso que ya posee. Sin pasos manuales en el portal por cada inquilino.
+
+Si la asignación automática no se completa la primera vez — por ejemplo, cuando el principal de servicio de la aplicación todavía se está propagando en un inquilino recién creado — puede reintentarlo desde **Inquilinos → Editar → Reasignar roles de Exchange** (solo administradores). La acción se puede ejecutar varias veces sin problema.
+
+---
+
 ## Versión 0.1.36 — 2026-06-01
 
 ### Nuevo: eliminar un inquilino y todos sus datos

@@ -251,6 +251,7 @@
 
     const footerHtml = `
       <button class="btn-danger" id="btn-delete-tenant" data-role-required="admin" data-id="${t.id}" style="margin-right:auto;">${escHtml(window.t('tenants.modal_delete_button'))}</button>
+      <button class="btn-secondary" id="btn-assign-roles" data-role-required="admin" data-id="${t.id}">${escHtml(window.t('tenants.modal_assign_roles_button'))}</button>
       <button class="btn-secondary" onclick="Panoptica.closeModal()">${escHtml(window.t('modals.cancel'))}</button>
       <button class="btn-primary" id="btn-save-tenant" data-role-required="member" data-id="${t.id}">${escHtml(window.t('modals.save'))}</button>
     `;
@@ -265,6 +266,24 @@
     // Wire delete (admin-only) — opens an irreversible-confirm modal.
     document.getElementById('btn-delete-tenant')?.addEventListener('click', () => {
       openDeleteConfirm(t);
+    });
+    // Re-run EXO/Compliance role assignment (admin-only). Idempotent — safe to
+    // click if the automatic onboarding assignment missed (SP propagation lag).
+    document.getElementById('btn-assign-roles')?.addEventListener('click', async () => {
+      const b = document.getElementById('btn-assign-roles');
+      if (b) { b.setAttribute('disabled','disabled'); b.textContent = window.t('tenants.modal_delete_deleting'); }
+      try {
+        const r = await Panoptica.api(`/api/tenants/${t.id}/assign-exo-roles`, { method: 'POST' });
+        if (r && r.ok) {
+          Panoptica.showToast(window.t('tenants.toast_roles_assigned', { name: t.display_name }), 'success');
+        } else {
+          Panoptica.showToast(window.t('tenants.toast_roles_partial', { name: t.display_name }), 'warning');
+        }
+      } catch (err) {
+        Panoptica.showToast((err && err.message) || window.t('tenants.toast_roles_failed'), 'error');
+      } finally {
+        if (b) { b.removeAttribute('disabled'); b.textContent = window.t('tenants.modal_assign_roles_button'); }
+      }
     });
   }
 

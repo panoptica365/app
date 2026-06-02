@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.37 — 2026-06-01
+
+### Correction : la surveillance d'Exchange Online et de la Conformité se configure maintenant pendant l'intégration
+
+Plusieurs lecteurs de sécurité de Panoptica365 utilisent Exchange Online et Microsoft Purview, qui exigent l'attribution de deux rôles d'annuaire Entra — **Administrateur Exchange** et **Administrateur de conformité** — à l'application dans chaque client. L'octroi du consentement administrateur crée l'application et ses autorisations, mais n'attribue **pas** ces rôles; ils devaient donc auparavant être ajoutés manuellement dans chaque client — et s'ils étaient oubliés, les lecteurs Exchange/Purview restaient bloqués à « En attente d'infrastructure ».
+
+Panoptica365 attribue désormais ces deux rôles automatiquement juste après qu'un client a accordé le consentement administrateur, à l'aide d'une autorisation qu'il détient déjà. Plus aucune étape manuelle dans le portail par client.
+
+Si l'attribution automatique n'aboutit pas du premier coup — par exemple lorsque le principal de service de l'application est encore en cours de propagation dans un tout nouveau client — vous pouvez réessayer à partir de **Clients → Modifier → Réattribuer les rôles Exchange** (administrateurs seulement). L'action peut être exécutée plusieurs fois sans risque.
+
+---
+
 ## Version 0.1.36 — 2026-06-01
 
 ### Nouveau : supprimer un client et toutes ses données

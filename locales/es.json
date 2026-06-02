@@ -1205,7 +1205,11 @@
     "modal_delete_yes": "Sí, eliminar todo",
     "modal_delete_deleting": "Eliminando…",
     "toast_tenant_deleted": "El inquilino «{name}» y todos sus datos se eliminaron.",
-    "toast_tenant_delete_failed": "No se pudo eliminar el inquilino. Inténtelo de nuevo."
+    "toast_tenant_delete_failed": "No se pudo eliminar el inquilino. Inténtelo de nuevo.",
+    "modal_assign_roles_button": "Reasignar roles de Exchange",
+    "toast_roles_assigned": "Roles de Exchange y Cumplimiento asignados para «{name}».",
+    "toast_roles_partial": "La asignación de roles quedó incompleta para «{name}». Es posible que el principal de servicio aún se esté propagando: inténtelo de nuevo en un minuto.",
+    "toast_roles_failed": "No se pudieron asignar los roles de Exchange. Inténtelo de nuevo en breve."
   },
   "alerts_filter": {
     "all_tenants": "Todos los inquilinos",
@@ -1276,7 +1280,8 @@
       "update.succeeded": "Actualización correcta: {from} → {to}",
       "update.rolled_back": "La actualización a {to} falló la comprobación — se revirtió a {from}",
       "update.failed": "La actualización a {to} falló",
-      "tenant.deleted": "Inquilino «{name}» eliminado con todos sus datos ({rows} filas)"
+      "tenant.deleted": "Inquilino «{name}» eliminado con todos sus datos ({rows} filas)",
+      "tenant.assign_exo_roles": "Roles de directorio Exchange/Cumplimiento asignados para el inquilino «{name}»"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",

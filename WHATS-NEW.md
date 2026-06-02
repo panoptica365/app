@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.37 — 2026-06-01
+
+### Fixed: Exchange Online & Compliance monitoring now sets itself up during onboarding
+
+Several of Panoptica365's security readers use Exchange Online and Microsoft Purview, which require two Entra directory roles — **Exchange Administrator** and **Compliance Administrator** — to be assigned to the app in each customer tenant. Granting admin consent creates the app and its permissions but does **not** assign these roles, so previously they had to be added by hand in every tenant — and if they were missed, the Exchange/Purview readers stayed stuck at "Awaiting Infra."
+
+Panoptica365 now assigns these two roles automatically right after a tenant grants admin consent, using a permission it already holds. No manual portal step per customer.
+
+If the automatic assignment doesn't take the first time — for example, when the app's service principal is still propagating in a brand-new tenant — you can retry from **Tenants → Edit → Re-assign Exchange roles** (administrators only). The action is safe to run more than once.
+
+---
+
 ## Version 0.1.36 — 2026-06-01
 
 ### New: delete a tenant and all its data

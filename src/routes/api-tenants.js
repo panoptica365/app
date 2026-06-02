@@ -549,6 +549,40 @@ router.get('/:id/cascade-delete-dryrun', auth.requireAdmin, async (req, res) => 
   }
 });
 
+// Re-run the EXO/Compliance directory-role assignment for a tenant. Admin-only.
+// Same operation that runs automatically at onboarding (lib/assign-exo-roles) —
+// exposed so an operator can retry if the first attempt missed (e.g. service
+// principal still propagating right after consent). Idempotent + best-effort.
+router.post('/:id/assign-exo-roles', auth.requireAdmin, async (req, res) => {
+  try {
+    const row = await db.queryOne('SELECT id, tenant_id, display_name FROM tenants WHERE id = ?', [req.params.id]);
+    if (!row) return res.status(404).json({ error: 'Tenant not found' });
+    const assignExoRoles = require('../lib/assign-exo-roles');
+    const result = await assignExoRoles.assignExoRoles(row.tenant_id);
+
+    try {
+      const mspAudit = require('../msp-audit');
+      await mspAudit.logMspAudit({
+        category: mspAudit.CATEGORY.TENANT_LIFECYCLE_MSP,
+        action: 'tenant.assign_exo_roles',
+        description: `Assigned Exchange/Compliance roles for tenant "${row.display_name}" (spFound=${result.spFound}, allOk=${result.allOk})`,
+        templateKey: 'tenant.assign_exo_roles',
+        templateParams: { name: row.display_name },
+        targetType: 'tenant',
+        targetId: String(row.id),
+        targetName: row.display_name,
+        metadata: { results: result.results, sp_found: result.spFound },
+        req,
+      });
+    } catch (e) { /* audit must not block */ }
+
+    res.json({ ok: result.allOk, spFound: result.spFound, results: result.results });
+  } catch (err) {
+    console.error('[API] assign-exo-roles failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Hard delete a tenant and ALL of its data (cascade). Admin-only, irreversible.
 // The actual multi-table delete lives in lib/tenant-cascade-delete.js (already
 // used by the audit-expiry scheduler); here we wrap it with an audit trail.

@@ -1205,7 +1205,11 @@
     "modal_delete_yes": "Oui, tout supprimer",
     "modal_delete_deleting": "Suppression…",
     "toast_tenant_deleted": "Le client « {name} » et toutes ses données ont été supprimés.",
-    "toast_tenant_delete_failed": "Impossible de supprimer le client. Veuillez réessayer."
+    "toast_tenant_delete_failed": "Impossible de supprimer le client. Veuillez réessayer.",
+    "modal_assign_roles_button": "Réattribuer les rôles Exchange",
+    "toast_roles_assigned": "Rôles Exchange et Conformité attribués pour « {name} ».",
+    "toast_roles_partial": "Attribution des rôles incomplète pour « {name} ». Le principal de service est peut-être en cours de propagation — réessayez dans une minute.",
+    "toast_roles_failed": "Impossible d’attribuer les rôles Exchange. Veuillez réessayer sous peu."
   },
   "alerts_filter": {
     "all_tenants": "Tous les locataires",
@@ -1276,7 +1280,8 @@
       "update.succeeded": "Mise à jour réussie : {from} → {to}",
       "update.rolled_back": "La mise à jour vers {to} a échoué à la vérification — retour à {from}",
       "update.failed": "La mise à jour vers {to} a échoué",
-      "tenant.deleted": "Client « {name} » supprimé avec toutes ses données ({rows} lignes)"
+      "tenant.deleted": "Client « {name} » supprimé avec toutes ses données ({rows} lignes)",
+      "tenant.assign_exo_roles": "Rôles d’annuaire Exchange/Conformité attribués pour le client « {name} »"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",

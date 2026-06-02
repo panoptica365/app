@@ -1205,7 +1205,11 @@
     "modal_delete_yes": "Yes, delete everything",
     "modal_delete_deleting": "Deleting…",
     "toast_tenant_deleted": "Tenant \"{name}\" and all its data were deleted.",
-    "toast_tenant_delete_failed": "Could not delete the tenant. Please try again."
+    "toast_tenant_delete_failed": "Could not delete the tenant. Please try again.",
+    "modal_assign_roles_button": "Re-assign Exchange roles",
+    "toast_roles_assigned": "Exchange & Compliance roles assigned for \"{name}\".",
+    "toast_roles_partial": "Role assignment incomplete for \"{name}\". The service principal may still be propagating — try again in a minute.",
+    "toast_roles_failed": "Could not assign Exchange roles. Please try again shortly."
   },
   "alerts_filter": {
     "all_tenants": "All Tenants",
@@ -1276,7 +1280,8 @@
       "update.succeeded": "Update succeeded: {from} → {to}",
       "update.rolled_back": "Update to {to} failed health check — rolled back to {from}",
       "update.failed": "Update to {to} failed",
-      "tenant.deleted": "Deleted tenant \"{name}\" and all related data ({rows} rows)"
+      "tenant.deleted": "Deleted tenant \"{name}\" and all related data ({rows} rows)",
+      "tenant.assign_exo_roles": "Assigned Exchange/Compliance directory roles for tenant \"{name}\""
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
