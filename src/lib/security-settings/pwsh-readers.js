@@ -245,7 +245,7 @@ async function readOutboundSpamPolicy(tenantAzureId) {
     const expression = `
 Get-HostedOutboundSpamFilterPolicy | Where-Object { $_.Name -eq 'Default' } |
   Select-Object Name, ActionWhenThresholdReached, NotifyOutboundSpam,
-                @{Name='NotifyRecipients'; Expression={ @($_.NotifyOutboundSpamRecipients | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object) }} |
+                @{Name='NotifyRecipients'; Expression={ @($_.NotifyOutboundSpamRecipients | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object) }} |
   ConvertTo-Json -Depth 4 -Compress
 `;
     const result = await runExoCmdlet(tenantAzureId, expression);
@@ -393,38 +393,75 @@ async function readPresetSecurityPolicy(tenantAzureId) {
     // Apr 26, 2026 v2: also pull the impersonation lists from the underlying
     // anti-phish policies. Get-AntiPhishPolicy returns the full policy object
     // for the named preset; we only need the targeted user/domain lists for
-    // drift detection. The policies always exist on Defender for O365 P1+
-    // tenants — Microsoft creates them as built-in. Operator may or may not
-    // have populated the lists via the portal.
+    // drift detection.
+    //
+    // Jun 3, 2026 correction: the "Standard/Strict Preset Security Policy"
+    // individual policies do NOT exist by default — contrary to the earlier
+    // note here. Microsoft creates them (and the EOP/ATP rules) only the FIRST
+    // time the preset is turned on in the Defender portal wizard, and there is
+    // no supported API/cmdlet to create them from scratch
+    // (New-EOPProtectionPolicyRule/New-ATPProtectionPolicyRule require the
+    // individual policies to already exist). So a freshly-onboarded tenant that
+    // never turned the preset on returns $null for both $apStd/$apStrict AND
+    // zero EOP/ATP rules. We surface that as `never_initialized` so the UI can
+    // guide the operator to the one-time portal turn-on instead of offering a
+    // Restore/Accept that cannot work. See EXO-06 guided modal.
     //
     // List values are normalised: trimmed, lowercased (case-insensitive
     // comparison for emails/domains), sorted. This makes canonical comparison
     // straightforward in writer.matches().
+    // Jun 3, 2026 — detect MDO via try/catch around the actual ATP cmdlet, NOT
+    // Get-Command. On tenants WITHOUT Defender for Office 365 (e.g. Business
+    // Standard) Get-ATPProtectionPolicyRule doesn't exist; calling it directly
+    // fails INSTANTLY with CommandNotFound (a terminating error that try/catch
+    // DOES catch — unlike -ErrorAction, which can't, since the command never
+    // binds). The earlier Get-Command approach was the wrong tool: in the EXO V3
+    // module Get-Command for an absent cmdlet triggers a slow command-discovery
+    // round-trip that hung the whole invocation to the 60s timeout. The EOP half
+    // of the preset still applies on these tenants, so $mdoAvailable=$false just
+    // tells the UI to show the shorter EOP-only walkthrough — NOT unavailable.
+    // Also collapse Get-AntiPhishPolicy to a single call (was two enumerations).
     const expression = `
+$mdoAvailable = $true
 $eop = @(Get-EOPProtectionPolicyRule -ErrorAction SilentlyContinue) | Select-Object Name, State, Priority
-$atp = @(Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue) | Select-Object Name, State, Priority
-$apStd = Get-AntiPhishPolicy -ErrorAction SilentlyContinue | Where-Object { $_.RecommendedPolicyType -eq 'Standard' } | Select-Object -First 1
-$apStrict = Get-AntiPhishPolicy -ErrorAction SilentlyContinue | Where-Object { $_.RecommendedPolicyType -eq 'Strict' } | Select-Object -First 1
+$atp = @()
+try { $atp = @(Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue) | Select-Object Name, State, Priority } catch { $mdoAvailable = $false }
+$ap = @(Get-AntiPhishPolicy -ErrorAction SilentlyContinue)
+$apStd = $ap | Where-Object { $_.RecommendedPolicyType -eq 'Standard' } | Select-Object -First 1
+$apStrict = $ap | Where-Object { $_.RecommendedPolicyType -eq 'Strict' } | Select-Object -First 1
 @{
+  mdo_available = $mdoAvailable
   eop_rules = @($eop)
   atp_rules = @($atp)
   ap_standard = if ($apStd) {
     @{
-      targeted_users    = @($apStd.TargetedUsersToProtect    | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
-      targeted_domains  = @($apStd.TargetedDomainsToProtect  | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
-      excluded_domains  = @($apStd.ExcludedDomains           | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      targeted_users    = @($apStd.TargetedUsersToProtect    | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      targeted_domains  = @($apStd.TargetedDomainsToProtect  | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      excluded_domains  = @($apStd.ExcludedDomains           | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
     }
   } else { $null }
   ap_strict = if ($apStrict) {
     @{
-      targeted_users    = @($apStrict.TargetedUsersToProtect    | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
-      targeted_domains  = @($apStrict.TargetedDomainsToProtect  | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
-      excluded_domains  = @($apStrict.ExcludedDomains           | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      targeted_users    = @($apStrict.TargetedUsersToProtect    | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      targeted_domains  = @($apStrict.TargetedDomainsToProtect  | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
+      excluded_domains  = @($apStrict.ExcludedDomains           | Where-Object { $_ } | ForEach-Object { ($_ -as [string]).ToLowerInvariant() } | Sort-Object)
     }
   } else { $null }
 } | ConvertTo-Json -Depth 5 -Compress
 `;
     const result = await runExoCmdlet(tenantAzureId, expression);
+
+    // Jun 3, 2026 — MDO licence detection (NOT a gate). On tenants without
+    // Defender for Office 365 P1 (e.g. Business Standard), the ATP cmdlets don't
+    // exist (handled by the Get-Command guard in the expression above, so the
+    // poll no longer errors). The EOP half of the Standard preset STILL applies
+    // and SHOULD be turned on — Microsoft's wizard just skips the Defender-for-
+    // O365 and impersonation pages on these tenants. So we do NOT mark the
+    // control unavailable; we carry `mdo_available` so the guided turn-on modal
+    // can show the shorter EOP-only walkthrough (no Safe Links/Attachments, no
+    // impersonation). Default true for back-compat with snapshots predating this.
+    const mdoAvailable = result?.mdo_available !== false;
+
     const eopRules = Array.isArray(result?.eop_rules) ? result.eop_rules : [];
     const atpRules = Array.isArray(result?.atp_rules) ? result.atp_rules : [];
 
@@ -458,6 +495,15 @@ $apStrict = Get-AntiPhishPolicy -ErrorAction SilentlyContinue | Where-Object { $
     const apStd    = result?.ap_standard || null;
     const apStrict = result?.ap_strict   || null;
 
+    // Jun 3, 2026 — "never initialized" detector. True when the tenant has
+    // neither preset rules NOR the underlying individual preset policies, i.e.
+    // the preset has never been turned on in the Defender portal. This is the
+    // only state Panoptica cannot remediate programmatically (Microsoft has no
+    // API to bootstrap the preset), so the UI shows a one-time guided walkthrough
+    // instead of Restore/Accept. Distinct from "rules present but DISABLED",
+    // which Enable-*ProtectionPolicyRule can fix.
+    const neverInitialized = !apStd && !apStrict && eopRules.length === 0 && atpRules.length === 0;
+
     let interpreted;
     if (strictEnabled && standardEnabled) {
       interpreted = 'Both Standard + Strict presets enabled';
@@ -480,6 +526,8 @@ $apStrict = Get-AntiPhishPolicy -ErrorAction SilentlyContinue | Where-Object { $
         atp_strict_enabled:   !!(atpStrict && isEnabled(atpStrict)),
         eop_rule_count: eopRules.length,
         atp_rule_count: atpRules.length,
+        never_initialized: neverInitialized,
+        mdo_available: mdoAvailable,
         // Apr 26 v2: impersonation lists per tier (sorted, lowercased)
         standard_targeted_users:    toArr(apStd?.targeted_users),
         standard_targeted_domains:  toArr(apStd?.targeted_domains),

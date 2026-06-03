@@ -4617,6 +4617,17 @@ td.monospace {
   font-size: 0.92rem;
 }
 
+/* EXO-06 preset first-time-setup guide — step headings */
+.sec-guide-step {
+  margin: 18px 0 6px 0; font-size: 0.95rem; font-weight: 600;
+  color: var(--p-text);
+}
+.sec-guide-step:first-of-type { margin-top: 10px; }
+#sec-preset-guide-overlay code {
+  background: var(--p-panel-alt, rgba(127,127,127,0.12));
+  padding: 1px 5px; border-radius: 3px; font-size: 0.85em;
+}
+
 /* Phase B — modal tab strip */
 .sec-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--p-border); }
 .sec-tab {

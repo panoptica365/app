@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.40 — 2026-06-03
+
+### New: guided first-time turn-on for the Standard preset security policy (MDO)
+
+Microsoft only creates a tenant's Standard/Strict preset email-security policies the **first time** they're turned on in the Defender portal — there is no API or PowerShell command that can create them from scratch. Until that happens, applying the setting in Panoptica had nothing to act on, so it could look like the policy "wouldn't stick".
+
+Panoptica now **detects when a tenant has never had the preset turned on** and, on the setting's Remediate tab, replaces the Restore/Accept buttons with a **step-by-step walkthrough**. It guides you through the Defender wizard — Exchange Online Protection and Defender for Office 365 for all recipients, who to add as impersonation-protected people (executives, finance, HR), adding the customer's own domain, and turning the policy on — then explains how to hand monitoring back to Panoptica. After you've turned it on, click **Refresh**, then **Accept This Change** to adopt the live Microsoft preset as your baseline. From then on, Panoptica monitors it for drift like any other setting.
+
+On tenants that don't have Defender for Office 365 yet (for example, Business Standard), the walkthrough automatically switches to a shorter **EOP-only** version. The Standard preset's Exchange Online Protection (anti-spam, anti-malware, anti-phishing) still applies and should be turned on there — Microsoft's wizard just skips the Safe Links/Attachments and impersonation steps. Panoptica now turns those on correctly and no longer reports the confusing poll error it used to on these tenants.
+
+---
+
 ## Version 0.1.39 — 2026-06-02
 
 ### New: Licensing card in Settings

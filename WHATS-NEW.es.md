@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.40 — 2026-06-03
+
+### Nuevo: activación guiada de la primera puesta en marcha de la directiva de seguridad preconfigurada Standard (MDO)
+
+Microsoft solo crea las directivas de seguridad de correo preconfiguradas Standard/Strict de un inquilino la **primera vez** que se activan en el portal de Defender — no existe ninguna API ni comando de PowerShell que pueda crearlas desde cero. Hasta entonces, aplicar la opción en Panoptica no tenía nada sobre lo que actuar, por lo que podía parecer que la directiva «no se mantenía».
+
+Panoptica ahora **detecta cuándo un inquilino nunca ha activado el préréglage** y, en la pestaña Remediar de la opción, reemplaza los botones Restaurar/Aceptar por un **recorrido paso a paso**. Le guía por el asistente de Defender — Exchange Online Protection y Defender para Office 365 para todos los destinatarios, a quién agregar como personas protegidas contra suplantación (ejecutivos, finanzas, RR. HH.), agregar el dominio del cliente y activar la directiva — y luego explica cómo devolver la supervisión a Panoptica. Tras activarla, haga clic en **Actualizar** y después en **Aceptar este cambio** para adoptar el préréglage de Microsoft en vivo como su línea base. A partir de entonces, Panoptica supervisa sus desviaciones como cualquier otra opción.
+
+En inquilinos que aún no tienen Defender para Office 365 (por ejemplo, Business Standard), el recorrido cambia automáticamente a una versión más corta **solo EOP**. La Exchange Online Protection del préréglage Standard (antispam, antimalware, antiphishing) igual se aplica y debería activarse allí — el asistente de Microsoft solo omite los pasos de Vínculos seguros/Datos adjuntos seguros y suplantación. Panoptica ahora los activa correctamente y ya no informa el confuso error de sondeo que producía antes en estos inquilinos.
+
+---
+
 ## Versión 0.1.39 — 2026-06-02
 
 ### Nuevo: tarjeta de Licencias en Configuración

@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.40 — 2026-06-03
+
+### Nouveau : activation guidée de la première mise en service de la stratégie de sécurité préconfigurée Standard (MDO)
+
+Microsoft ne crée les stratégies de sécurité de courrier préconfigurées Standard/Strict d’un client que la **première fois** qu’elles sont activées dans le portail Defender — aucune API ni commande PowerShell ne peut les créer de toutes pièces. Jusque-là, appliquer le paramètre dans Panoptica n’avait rien sur quoi agir, ce qui pouvait donner l’impression que la stratégie « ne tenait pas ».
+
+Panoptica **détecte désormais lorsqu’un client n’a jamais activé le préréglage** et, dans l’onglet Remédier du paramètre, remplace les boutons Restaurer/Accepter par un **guide étape par étape**. Il vous accompagne dans l’assistant Defender — Exchange Online Protection et Defender pour Office 365 pour tous les destinataires, qui ajouter comme personnes protégées contre l’usurpation (cadres, finances, RH), l’ajout du domaine du client et l’activation de la stratégie — puis explique comment redonner la surveillance à Panoptica. Une fois activé, cliquez sur **Actualiser**, puis sur **Accepter ce changement** pour adopter le préréglage Microsoft en direct comme base de référence. À partir de là, Panoptica en surveille les dérives comme tout autre paramètre.
+
+Sur les clients qui n’ont pas encore Defender pour Office 365 (par exemple Business Standard), le guide bascule automatiquement vers une version plus courte **EOP seulement**. L’Exchange Online Protection du préréglage Standard (anti-pourriel, anti-programme malveillant, anti-hameçonnage) s’applique tout de même et doit y être activée — l’assistant Microsoft saute simplement les étapes Liens fiables/Pièces jointes fiables et usurpation. Panoptica les active désormais correctement et ne signale plus l’erreur d’interrogation déroutante qu’il produisait auparavant sur ces clients.
+
+---
+
 ## Version 0.1.39 — 2026-06-02
 
 ### Nouveau : carte Licences dans les Paramètres

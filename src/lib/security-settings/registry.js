@@ -578,9 +578,26 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
         const STD_NAME       = `'Standard Preset Security Policy'`;
         const STRICT_NAME    = `'Strict Preset Security Policy'`;
 
-        // Preamble: resolve tenant default verified domain (used as default
-        // scope for any rules we create).
+        // Jun 3, 2026 — MDO licence DETECTION (not a gate). On tenants without
+        // Defender for Office 365 (e.g. Business Standard), the ATP/Safe
+        // Attachment cmdlets below don't exist. The EOP half of the preset STILL
+        // applies and should be turned on there — Microsoft just omits the
+        // Defender-for-O365 pieces. So we set $mdoAvailable up front and wrap
+        // every ATP/SafeAttachment cmdlet call in `if ($mdoAvailable)`, letting
+        // the EOP enable/disable run on any tenant.
+        //
+        // Detection is via try/catch on the actual cmdlet, NOT Get-Command:
+        // calling an absent cmdlet fails instantly with CommandNotFound (caught
+        // by try/catch), whereas Get-Command for an absent EXO V3 cmdlet triggers
+        // a slow command-discovery round-trip that hung Apply to the 60s timeout.
+        // Prepended to every chosen-path script.
+        const mdoDetect =
+          `$mdoAvailable = $true; try { $null = Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue } catch { $mdoAvailable = $false }`;
+
+        // Preamble: detect MDO, then resolve tenant default verified domain
+        // (used as default scope for any rules we create).
         const preamble = [
+          mdoDetect,
           `$tenantDomain = (Get-AcceptedDomain | Where-Object { $_.Default -eq $true } | Select-Object -First 1).DomainName`,
           `if (-not $tenantDomain) { throw 'Could not resolve tenant default verified domain via Get-AcceptedDomain — cannot create preset rules without a scope.' }`,
         ];
@@ -620,11 +637,14 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
           `if ($eop${varSuffix} -and $eop${varSuffix}.State -ne 'Enabled') { Enable-EOPProtectionPolicyRule -Identity $eop${varSuffix}.Name -Confirm:$false | Out-Null } ` +
           `elseif (-not $eop${varSuffix}) { Write-Host ('${tierLabel} EOP preset rule not found via name pattern. Microsoft may manage it via the Defender portal wizard. If this is a fresh tenant, run the Preset Security Policy wizard once.') }`;
 
-        // Helper for the ATP rule. Same already-enabled guard.
+        // Helper for the ATP rule. Same already-enabled guard. Wrapped in
+        // `if ($mdoAvailable)` — on EOP-only tenants (Business Standard) the ATP
+        // cmdlets don't exist, so we skip them entirely and just configure EOP.
         const ensureAtpRule = (varSuffix, namePattern, ruleName, tierType, tierLabel) =>
+          `if ($mdoAvailable) { ` +
           `$atp${varSuffix} = Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue | Where-Object { $_.Name -like ${namePattern} } | Select-Object -First 1; ` +
           `if ($atp${varSuffix} -and $atp${varSuffix}.State -ne 'Enabled') { Enable-ATPProtectionPolicyRule -Identity $atp${varSuffix}.Name -Confirm:$false | Out-Null } ` +
-          `elseif (-not $atp${varSuffix}) { Write-Host ('${tierLabel} ATP preset rule not found via name pattern.') }`;
+          `elseif (-not $atp${varSuffix}) { Write-Host ('${tierLabel} ATP preset rule not found via name pattern.') } }`;
 
         const ensureEnabledTier = (varSuffix, namePattern, ruleName, tierType, tierLabel) => [
           ensureEopRule(varSuffix, namePattern, ruleName, tierType, tierLabel),
@@ -637,13 +657,16 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
         // admin (or named in a non-English Microsoft tenant variant) would be
         // missed → silent no-op → drift on next refresh because the rule we
         // wanted disabled is still enabled.
+        // ATP/SafeAttachment lookups are wrapped in `if ($mdoAvailable)` so that
+        // on EOP-only tenants (Business Standard) the disable path still turns
+        // off the EOP rule and simply skips the (non-existent) ATP cmdlets.
         const ensureDisabled = (varSuffix, namePattern, tierType) => [
           `$hcf${varSuffix}Off = Get-HostedContentFilterPolicy -ErrorAction SilentlyContinue | Where-Object { $_.RecommendedPolicyType -eq '${tierType}' } | Select-Object -First 1`,
-          `$sa${varSuffix}Off = Get-SafeAttachmentPolicy -ErrorAction SilentlyContinue | Where-Object { $_.RecommendedPolicyType -eq '${tierType}' } | Select-Object -First 1`,
+          `if ($mdoAvailable) { $sa${varSuffix}Off = Get-SafeAttachmentPolicy -ErrorAction SilentlyContinue | Where-Object { $_.RecommendedPolicyType -eq '${tierType}' } | Select-Object -First 1 }`,
           `$eop${varSuffix}Off = Get-EOPProtectionPolicyRule -ErrorAction SilentlyContinue | Where-Object { ($_.Name -like ${namePattern} -or ($hcf${varSuffix}Off -and ($_.HostedContentFilterPolicy -eq $hcf${varSuffix}Off.Name -or $_.HostedContentFilterPolicy -eq $hcf${varSuffix}Off.Identity))) -and $_.State -eq 'Enabled' } | Select-Object -First 1`,
-          `$atp${varSuffix}Off = Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue | Where-Object { ($_.Name -like ${namePattern} -or ($sa${varSuffix}Off -and ($_.SafeAttachmentPolicy -eq $sa${varSuffix}Off.Name -or $_.SafeAttachmentPolicy -eq $sa${varSuffix}Off.Identity))) -and $_.State -eq 'Enabled' } | Select-Object -First 1`,
+          `if ($mdoAvailable) { $atp${varSuffix}Off = Get-ATPProtectionPolicyRule -ErrorAction SilentlyContinue | Where-Object { ($_.Name -like ${namePattern} -or ($sa${varSuffix}Off -and ($_.SafeAttachmentPolicy -eq $sa${varSuffix}Off.Name -or $_.SafeAttachmentPolicy -eq $sa${varSuffix}Off.Identity))) -and $_.State -eq 'Enabled' } | Select-Object -First 1 }`,
           `if ($eop${varSuffix}Off) { Disable-EOPProtectionPolicyRule -Identity $eop${varSuffix}Off.Name -Confirm:$false | Out-Null }`,
-          `if ($atp${varSuffix}Off) { Disable-ATPProtectionPolicyRule -Identity $atp${varSuffix}Off.Name -Confirm:$false | Out-Null }`,
+          `if ($mdoAvailable -and $atp${varSuffix}Off) { Disable-ATPProtectionPolicyRule -Identity $atp${varSuffix}Off.Name -Confirm:$false | Out-Null }`,
         ];
 
         if (chosen === 'standard') {
@@ -661,7 +684,7 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
           ].join('; ');
         }
         // chosen === 'disabled' — turn off both presets if either is on
-        return [...ensureDisabled('Std', STD_PATTERN, 'Standard'), ...ensureDisabled('Strict', STRICT_PATTERN, 'Strict')].join('; ');
+        return [mdoDetect, ...ensureDisabled('Std', STD_PATTERN, 'Standard'), ...ensureDisabled('Strict', STRICT_PATTERN, 'Strict')].join('; ');
       },
       // captureBaseline (Apr 26, 2026 v2): when Apply/Match/Accept fires,
       // record both the chosen tier AND a snapshot of the impersonation lists
@@ -721,18 +744,31 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
         const atpStd    = !!current.atp_standard_enabled;
         const eopStrict = !!current.eop_strict_enabled;
         const atpStrict = !!current.atp_strict_enabled;
+        // Jun 3, 2026 — on EOP-only tenants (no Defender for Office 365, e.g.
+        // Business Standard) the ATP rules structurally don't exist, so the
+        // atp_* flags are always false even when the preset is fully applied.
+        // Only require the ATP half when MDO is actually present, otherwise the
+        // preset reads as perpetual drift on these tenants (eopStd && atpStd
+        // could never both be true). mdo_available defaults true for back-compat.
+        const mdoAvailable = current.mdo_available !== false;
         let stateOk;
-        if (tier === 'standard_strict')   stateOk = eopStd && atpStd && eopStrict && atpStrict;
-        else if (tier === 'standard')      stateOk = eopStd && atpStd && !eopStrict && !atpStrict;
-        else if (tier === 'disabled')      stateOk = !eopStd && !atpStd && !eopStrict && !atpStrict;
+        if (tier === 'standard_strict')   stateOk = eopStd && eopStrict && (mdoAvailable ? (atpStd && atpStrict) : true);
+        else if (tier === 'standard')      stateOk = eopStd && !eopStrict && (mdoAvailable ? (atpStd && !atpStrict) : true);
+        else if (tier === 'disabled')      stateOk = !eopStd && !eopStrict && (mdoAvailable ? (!atpStd && !atpStrict) : true);
         else return false;
         if (!stateOk) return false;
 
         // Snapshot check — only for rich applied with a captured baseline
         if (!isRich) return true;
+        // Normalise out empty/blank entries before comparing. On EOP-only
+        // tenants the anti-phish policy's impersonation properties are $null,
+        // which the reader can serialise as [""] (a single empty string) rather
+        // than []. Filtering blanks makes [""] and [] compare equal, so a clean
+        // reader emitting [] never drifts against a legacy [""] baseline.
         const arrEq = (a, b) => {
-          const arrA = Array.isArray(a) ? a : [];
-          const arrB = Array.isArray(b) ? b : [];
+          const norm = v => (Array.isArray(v) ? v : []).filter(x => x != null && String(x).trim() !== '');
+          const arrA = norm(a);
+          const arrB = norm(b);
           if (arrA.length !== arrB.length) return false;
           for (let i = 0; i < arrA.length; i++) if (arrA[i] !== arrB[i]) return false;
           return true;

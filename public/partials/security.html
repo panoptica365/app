@@ -229,18 +229,34 @@
 
       <!-- Remediate tab -->
       <div class="sec-tab-panel" id="sec-panel-remediate" style="display:none;">
-        <div style="padding:14px; border:1px solid #ef4444; border-radius:4px; background:rgba(239, 68, 68, 0.06); margin-bottom:14px;">
-          <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.drift_detected">Drift detected</div>
-          <div id="sec-rem-summary" style="font-size:0.9rem;"></div>
+
+        <!-- "Never initialized" guidance (EXO-06 preset never turned on).
+             Shown instead of Restore/Accept when current_value.never_initialized
+             is true — Panoptica cannot create the preset programmatically, so we
+             guide the operator to the one-time Defender portal turn-on. -->
+        <div id="sec-rem-noinit" style="display:none;">
+          <div style="padding:14px; border:1px solid var(--p-warm, #f59e0b); border-radius:4px; background:rgba(245, 158, 11, 0.06); margin-bottom:14px;">
+            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.preset_guide.noinit_title">This must be turned on once in Microsoft Defender</div>
+            <div style="font-size:0.9rem;" data-i18n="security_page.preset_guide.noinit_body">Microsoft creates this preset only the first time it's turned on in the Defender portal — there is no API or PowerShell command that can create it from scratch. After this one-time step, Panoptica monitors it automatically.</div>
+          </div>
+          <button class="btn-primary" id="sec-rem-guide-btn" data-role-required="member" data-i18n="security_page.preset_guide.open_btn">Show me how to turn it on →</button>
         </div>
-        <div id="sec-rem-actions" style="display:flex; gap:10px;">
-          <button class="btn-primary" id="sec-rem-restore-btn" data-role-required="member" data-i18n="security_page.btn_restore">Restore to Applied Value</button>
-          <button class="btn-secondary" id="sec-rem-accept-btn" data-role-required="member" data-i18n="security_page.btn_accept">Accept This Change</button>
-          <span id="sec-rem-status" style="color:var(--p-text-muted); font-size:0.85rem; align-self:center;"></span>
+
+        <!-- Standard drift UI (Restore / Accept) -->
+        <div id="sec-rem-drift-wrap">
+          <div style="padding:14px; border:1px solid #ef4444; border-radius:4px; background:rgba(239, 68, 68, 0.06); margin-bottom:14px;">
+            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.drift_detected">Drift detected</div>
+            <div id="sec-rem-summary" style="font-size:0.9rem;"></div>
+          </div>
+          <div id="sec-rem-actions" style="display:flex; gap:10px;">
+            <button class="btn-primary" id="sec-rem-restore-btn" data-role-required="member" data-i18n="security_page.btn_restore">Restore to Applied Value</button>
+            <button class="btn-secondary" id="sec-rem-accept-btn" data-role-required="member" data-i18n="security_page.btn_accept">Accept This Change</button>
+            <span id="sec-rem-status" style="color:var(--p-text-muted); font-size:0.85rem; align-self:center;"></span>
+          </div>
+          <p style="margin-top:12px; color:var(--p-text-muted); font-size:0.8rem;" data-i18n="security_page.remediate_help">
+            Restore re-applies the original baseline value. Accept makes the current (drifted) value the new baseline.
+          </p>
         </div>
-        <p style="margin-top:12px; color:var(--p-text-muted); font-size:0.8rem;" data-i18n="security_page.remediate_help">
-          Restore re-applies the original baseline value. Accept makes the current (drifted) value the new baseline.
-        </p>
 
         <!-- In-flight busy panel for Remediate Restore/Accept -->
         <div id="sec-rem-busy" style="display:none; margin-top:18px; padding:18px; border:1px solid var(--p-border); border-radius:4px; background:var(--p-panel-alt, var(--p-panel)); text-align:center;">
@@ -252,6 +268,100 @@
     </div>
     <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
       <button class="btn-secondary" id="sec-detail-close-btn" data-i18n="security_page.btn_close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRESET SECURITY POLICY — FIRST-TIME TURN-ON GUIDE (EXO-06) ═══ -->
+<!-- Shown when a tenant has never had the Standard preset turned on
+     (current_value.never_initialized). Walks the operator through the
+     one-time Defender portal wizard, then hands monitoring back to Panoptica.
+     Opened from the Remediate tab's "Show me how" button. -->
+<div class="modal-overlay" id="sec-preset-guide-overlay" style="display:none;">
+  <div class="modal" style="width:760px; max-width:94vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="security_page.preset_guide.title">Turn on Standard protection in Microsoft Defender</span>
+    </div>
+    <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+
+      <!-- ── MDO variant (tenant HAS Defender for Office 365 P1 / Business Premium) ── -->
+      <div id="sec-guide-body-mdo">
+      <!-- Why this is manual -->
+      <p class="sec-explainer" data-i18n="security_page.preset_guide.why_p1">This tenant has never had Microsoft's Standard preset security policy turned on. Microsoft creates the underlying policies only the first time the preset is enabled in the Defender portal — there is no API or PowerShell command that can create them from scratch. So this first activation is a one-time manual step. Once it's done, Panoptica takes over and monitors it for drift automatically — you'll never have to do this again for this tenant.</p>
+      <div style="padding:12px 14px; border-left:3px solid var(--p-warm, #f59e0b); background:rgba(245,158,11,0.06); border-radius:4px; margin:12px 0 4px 0; font-size:0.88rem;" data-i18n="security_page.preset_guide.why_callout">Keep the Standard preset rather than building custom policies: Microsoft re-tunes these policies daily from billions of threat signals, so the customer's protection keeps improving on its own.</div>
+
+      <!-- Step 1 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step1_title">Step 1 — Open the preset policies</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step1_body">Go to <strong>security.microsoft.com</strong> and sign in to the customer's tenant. In the left nav: <strong>Email &amp; collaboration → Policies &amp; rules → Threat policies</strong>. Under <strong>Templated policies</strong>, open <strong>Preset Security Policies</strong>. On the <strong>Standard protection</strong> card, click <strong>Manage protection settings</strong> to launch the “Apply standard protection” wizard.</p>
+
+      <!-- Step 2 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step2_title">Step 2 — Exchange Online Protection</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step2_body">Anti-spam, anti-malware and anti-phishing for inbound mail. Set <strong>Apply protection to → All recipients</strong> and leave <strong>Exclude these recipients</strong> unchecked. Protect the whole organization, not a subset. Click <strong>Next</strong>.</p>
+
+      <!-- Step 3 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step3_title">Step 3 — Defender for Office 365 protection</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step3_body">Safe Attachments and Safe Links (included with Business Premium). Again set <strong>Apply protection to → All recipients</strong> and leave the exclusions unchecked. Click <strong>Next</strong>.</p>
+
+      <!-- Step 4 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step4_title">Step 4 — Impersonation protection: people</h4>
+      <p class="sec-explainer" data-i18n="security_page.preset_guide.step4_body">Add the high-value people most likely to be spoofed in phishing / business-email-compromise attacks — not everyone. Good candidates:</p>
+      <ul class="sec-explainer" style="margin:6px 0 6px 0; padding-left:22px;">
+        <li data-i18n="security_page.preset_guide.step4_li1">CEO, owner or managing director</li>
+        <li data-i18n="security_page.preset_guide.step4_li2">CFO or finance director, and anyone who can authorize payments</li>
+        <li data-i18n="security_page.preset_guide.step4_li3">HR director (payroll and direct-deposit targets)</li>
+        <li data-i18n="security_page.preset_guide.step4_li4">Any other executive or signatory with payment or data authority</li>
+      </ul>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step4_note">For each person, enter their display name and primary email, then <strong>Add</strong> (for example, <code>John Smith — john.smith@domain.com</code>). Adding low-risk staff just inflates false positives, so keep this list to the handful of high-value targets. Click <strong>Next</strong>.</p>
+
+      <!-- Step 5 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step5_title">Step 5 — Impersonation protection: domains</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step5_body">Add the customer's own email domain(s) here — for example <code>domain.com</code>, plus any other domains they send mail from. This flags external senders trying to impersonate the customer's own domain. Click <strong>Next</strong>.</p>
+
+      <!-- Step 6 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step6_title">Step 6 — Trusted senders and domains</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step6_body">Leave this empty for now. This is the allow-list of senders/domains you never want flagged as impersonation — start clean. If a legitimate partner later gets caught, come back and add them here. Click <strong>Next</strong>.</p>
+
+      <!-- Step 7 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step7_title">Step 7 — Policy mode</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step7_body">Select <strong>Turn on the policy when finished</strong>, then click <strong>Next</strong>.</p>
+
+      <!-- Step 8 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step8_title">Step 8 — Review and confirm</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step8_body">Review the summary and click <strong>Confirm</strong>. Microsoft now creates the Standard preset policies and turns them on for all users.</p>
+
+      <!-- Step 9 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step9_title">Step 9 — Hand it back to Panoptica</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step9_body">Come back here and click <strong>Refresh now</strong> below (or close and use the page's Refresh button). Panoptica will re-read the tenant and detect the now-live preset. Because you added impersonation targets, the live config will differ from the old baseline — open this setting again and click <strong>Accept This Change</strong> to adopt the live Microsoft preset as your monitored baseline. From that point on, Panoptica monitors it for any deviation.</p>
+      </div><!-- /sec-guide-body-mdo -->
+
+      <!-- ── EOP-only variant (tenant has NO Defender for Office 365 — e.g. Business Standard) ──
+           The Standard preset still applies EOP protections and should be turned on; Microsoft's
+           wizard skips the Defender-for-O365 and impersonation pages on these tenants. -->
+      <div id="sec-guide-body-eop" style="display:none;">
+        <p class="sec-explainer" data-i18n="security_page.preset_guide.eop_intro">This tenant is on a licence without Defender for Office 365 (for example, Business Standard). The Standard preset still applies Exchange Online Protection — anti-spam, anti-malware and anti-phishing — and should be turned on. The Defender for Office 365 pieces (Safe Attachments, Safe Links) and impersonation protection aren't available until the tenant moves to Business Premium, so Microsoft's wizard skips those steps. Once it's done, Panoptica monitors it for drift automatically.</p>
+        <div style="padding:12px 14px; border-left:3px solid var(--p-warm, #f59e0b); background:rgba(245,158,11,0.06); border-radius:4px; margin:12px 0 4px 0; font-size:0.88rem;" data-i18n="security_page.preset_guide.why_callout">Keep the Standard preset rather than building custom policies: Microsoft re-tunes these policies daily from billions of threat signals, so the customer's protection keeps improving on its own.</div>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step1_title">Step 1 — Open the preset policies</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step1_body">Go to <strong>security.microsoft.com</strong> and sign in to the customer's tenant. In the left nav: <strong>Email &amp; collaboration → Policies &amp; rules → Threat policies</strong>. Under <strong>Templated policies</strong>, open <strong>Preset Security Policies</strong>. Slide the <strong>Standard protection</strong> toggle to <strong>On</strong>, then click <strong>Manage protection settings</strong> to start the wizard.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step2_title">Step 2 — Exchange Online Protection</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step2_body">This is the only configuration page you'll see on this licence. Set <strong>Apply protection to → All recipients</strong> and leave <strong>Exclude these recipients</strong> unchecked. Protect the whole organization, not a subset. Click <strong>Next</strong>.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step3_title">Step 3 — Straight to Review</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step3_body">On this licence the wizard goes straight to the Review page — there is no Defender for Office 365 step and no impersonation pages (those need Business Premium). That's expected, not a problem.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step4_title">Step 4 — Review and confirm</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step4_body">Make sure the <strong>Standard protection</strong> toggle is <strong>On</strong>, review the summary and click <strong>Confirm</strong>. Microsoft creates the Standard preset's EOP policies and turns them on for all users.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step5_title">Step 5 — Hand it back to Panoptica</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step5_body">Come back here and click <strong>Refresh now</strong> below (or close and use the page's Refresh button). Panoptica will re-read the tenant and detect the now-live preset. If it shows as drift against the old baseline, click <strong>Accept This Change</strong> to adopt the live config as your monitored baseline. From that point on, Panoptica monitors it for any deviation. When the customer later moves to Business Premium, re-run this on the Defender for Office 365 and impersonation steps to complete the hardening.</p>
+      </div><!-- /sec-guide-body-eop -->
+
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-secondary" id="sec-preset-guide-close-btn" data-i18n="security_page.btn_close">Close</button>
+      <button class="btn-primary" id="sec-preset-guide-refresh-btn" data-role-required="member" data-i18n="security_page.preset_guide.refresh_btn">I've turned it on — Refresh now</button>
     </div>
   </div>
 </div>

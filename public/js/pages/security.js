@@ -121,6 +121,19 @@
     document.getElementById('sec-rem-restore-btn').addEventListener('click', onRemediateRestore);
     document.getElementById('sec-rem-accept-btn').addEventListener('click', onRemediateAccept);
 
+    // EXO-06 preset first-time-setup guide modal
+    document.getElementById('sec-rem-guide-btn').addEventListener('click', openPresetGuide);
+    document.getElementById('sec-preset-guide-close-btn').addEventListener('click', closePresetGuide);
+    document.getElementById('sec-preset-guide-refresh-btn').addEventListener('click', () => {
+      closePresetGuide();
+      hideDetailModal();
+      onRefreshClick();
+    });
+    const guideOverlay = document.getElementById('sec-preset-guide-overlay');
+    guideOverlay.addEventListener('click', (e) => {
+      if (e.target.id === 'sec-preset-guide-overlay') closePresetGuide();
+    });
+
     // Deep-link support (Heatmap → Security). When the SPA passes a tenant
     // (and optionally a category/setting), preselect the picker, load that
     // tenant's settings, optionally filter to a category, and open the
@@ -503,15 +516,20 @@
       ? window.t(isAuditOnly ? 'security_page.tab_configure_audit_title' : 'security_page.tab_configure_normal_title')
       : window.t('security_page.tab_configure_disabled_title');
 
-    if (st.status === 'drift') {
+    // Remediate tab shows on drift, OR when the EXO-06 preset has never been
+    // initialized (no baseline drift yet, but we still need to surface the
+    // one-time turn-on guidance there).
+    const neverInit = !!(st.current_value && st.current_value.never_initialized);
+    if (st.status === 'drift' || neverInit) {
       remTab.style.display = '';
     } else {
       remTab.style.display = 'none';
     }
 
-    // Default tab — start on Overview every open. If status=drift, jump to Remediate
-    // so the operator's eye lands on what needs attention.
-    switchTab(st.status === 'drift' ? 'remediate' : 'overview');
+    // Default tab — start on Overview every open. If status=drift or the preset
+    // needs first-time setup, jump to Remediate so the operator's eye lands on
+    // what needs attention.
+    switchTab((st.status === 'drift' || neverInit) ? 'remediate' : 'overview');
 
     // Pre-render the Configure tab even if not selected, so switching is instant.
     renderConfigureTab();
@@ -1549,7 +1567,19 @@
   function renderRemediateTab() {
     const setting = openDetail?.setting;
     const state = openDetail?.state;
-    if (!setting || !state || state.status !== 'drift') return;
+    if (!setting || !state) return;
+
+    // EXO-06 first-time setup: preset never turned on. Panoptica can't create
+    // it programmatically, so show the guided walkthrough instead of the normal
+    // Restore/Accept buttons (which would be no-ops here).
+    const neverInit = !!(state.current_value && state.current_value.never_initialized);
+    const noinitPanel = document.getElementById('sec-rem-noinit');
+    const driftWrap = document.getElementById('sec-rem-drift-wrap');
+    if (noinitPanel) noinitPanel.style.display = neverInit ? '' : 'none';
+    if (driftWrap) driftWrap.style.display = neverInit ? 'none' : '';
+    if (neverInit) return;
+
+    if (state.status !== 'drift') return;
 
     const writer = setting.writer;
     const isAuditOnly = !!(writer && writer.audit_only);
@@ -1629,6 +1659,27 @@
       setBusy('remediate', false);
       status.textContent = `Accept failed: ${e.message}`;
     }
+  }
+
+  // ─── EXO-06 preset first-time-setup guide ────────────────
+  function openPresetGuide() {
+    const overlay = document.getElementById('sec-preset-guide-overlay');
+    if (!overlay) return;
+    // Pick the walkthrough variant by licence. mdo_available === false means the
+    // tenant has no Defender for Office 365 (e.g. Business Standard) → show the
+    // shorter EOP-only flow (no Safe Links/Attachments, no impersonation steps).
+    // Default to the full MDO variant when the flag is absent.
+    const cv = openDetail?.state?.current_value;
+    const eopOnly = !!(cv && cv.mdo_available === false);
+    const mdoBody = document.getElementById('sec-guide-body-mdo');
+    const eopBody = document.getElementById('sec-guide-body-eop');
+    if (mdoBody) mdoBody.style.display = eopOnly ? 'none' : '';
+    if (eopBody) eopBody.style.display = eopOnly ? '' : 'none';
+    overlay.style.display = 'flex';
+  }
+  function closePresetGuide() {
+    const overlay = document.getElementById('sec-preset-guide-overlay');
+    if (overlay) overlay.style.display = 'none';
   }
 
   // ─── History tab ──────────────────────────────────────────
