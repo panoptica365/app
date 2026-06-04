@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.1.41 — 2026-06-03
+
+### New: Diagnostics — capture a support bundle in one click
+
+Settings now has a **Diagnostics** card (administrators only). When something isn't working, click **Capture diagnostics** and Panoptica assembles a single downloadable bundle with everything we need to investigate: application logs, configuration summaries, database health, recent alert and ingestion stats, disk space, and — on Docker installs — the container logs. Email it to support and we can debug remotely, even on servers we have no direct access to.
+
+The bundle is **safe to send**: it contains no secrets, passwords, or credentials. Every value on the secret list is masked, and a redaction pass scrubs tokens and keys from every file before packaging. (Tenant names are included on purpose, so support can point you back at the affected tenant.) If a piece can't be collected — say the database is down — the bundle is still produced with everything else, and a manifest inside notes exactly what was missing. The three most recent bundles are kept for re-download.
+
+### Behind the scenes: durable file logs + a hardened updater
+
+Application logs now also write to rotating daily files (7-day retention), so they survive a container restart and feed the new Diagnostics bundle. And the self-updater now runs a **cryptographically signed payload** that the update component verifies before every use — a defence-in-depth improvement that keeps the most privileged part of the system locked down. No action needed on your part.
+
+---
+
 ## Version 0.1.40 — 2026-06-03
 
 ### New: guided first-time turn-on for the Standard preset security policy (MDO)

@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.41 — 2026-06-03
+
+### Nuevo: Diagnóstico — capture un paquete de soporte con un clic
+
+Configuración ahora incluye una tarjeta de **Diagnóstico** (solo administradores). Cuando algo no funcione, haga clic en **Capturar diagnóstico** y Panoptica ensambla un único paquete descargable con todo lo que necesitamos para investigar: registros de la aplicación, resúmenes de configuración, estado de la base de datos, estadísticas recientes de alertas e ingesta, espacio en disco y — en instalaciones Docker — los registros de los contenedores. Envíelo al soporte y podremos depurar de forma remota, incluso en servidores a los que no tenemos acceso directo.
+
+El paquete se puede **enviar con seguridad**: no contiene ningún secreto, contraseña ni credencial. Cada valor de la lista de secretos se enmascara, y una pasada de depuración elimina los tokens y las claves de cada archivo antes de empaquetarlo. (Los nombres de los inquilinos se incluyen a propósito, para que el soporte pueda indicarle el inquilino afectado.) Si algún elemento no se puede recopilar — por ejemplo, si la base de datos está caída — el paquete se genera igualmente con todo lo demás, y un manifiesto en su interior indica exactamente qué faltaba. Se conservan los tres paquetes más recientes para volver a descargarlos.
+
+### Tras bambalinas: registros en archivo duraderos + un actualizador reforzado
+
+Los registros de la aplicación ahora también se escriben en archivos diarios con rotación (retención de 7 días), de modo que sobreviven al reinicio de un contenedor y alimentan el nuevo paquete de Diagnóstico. Además, el autoactualizador ahora ejecuta una **carga firmada criptográficamente** que el componente de actualización verifica antes de cada uso — una mejora de defensa en profundidad que mantiene bloqueada la parte más privilegiada del sistema. No requiere ninguna acción de su parte.
+
+---
+
 ## Versión 0.1.40 — 2026-06-03
 
 ### Nuevo: activación guiada de la primera puesta en marcha de la directiva de seguridad preconfigurada Standard (MDO)

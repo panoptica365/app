@@ -3,6 +3,12 @@
  * Express + Socket.IO + Session + MSAL
  */
 
+// File logging (Part 2, 2026-06-03). Initialized FIRST — before dotenv and
+// every other require — so the very first boot lines are mirrored into
+// logs/app-YYYY-MM-DD.log. It only patches process.stdout/stderr.write
+// (original write always runs first), so docker/pm2 logs are unaffected.
+require('./file-logger').init();
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const express = require('express');
@@ -37,6 +43,7 @@ const heatmapApiRoutes = require('./routes/api-heatmap');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
 const updateApiRoutes = require('./routes/api-update');
+const diagnosticsApiRoutes = require('./routes/api-diagnostics');
 const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
 const learnApiRoutes = require('./routes/api-learn');
@@ -295,6 +302,7 @@ app.use('/api/applications', applicationsApiRoutes);
 app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
 app.use('/api/update', updateApiRoutes);
+app.use('/api/diagnostics', diagnosticsApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings
 app.get('/api/i18n/:lang?', (req, res) => {
@@ -388,6 +396,16 @@ async function start() {
     await securitySeed.seed();
   } catch (e) {
     console.error('[SecuritySettings] Seed failed:', e.message);
+  }
+
+  // Drop the in-image signed updater payload onto the shared bind mount so the
+  // socket-holding bootstrap wrapper can verify + adopt it (Part 1, spec §1.3).
+  // No-op on the pm2 dev VM (the mount doesn't exist there). Fire-and-forget —
+  // never blocks or crashes boot.
+  try {
+    require('./lib/sidecar/payload-delivery').deliverPayload();
+  } catch (e) {
+    console.error('[sidecar-payload] delivery threw (non-fatal):', e.message);
   }
 
   server.listen(config.server.port, () => {

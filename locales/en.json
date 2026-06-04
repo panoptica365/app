@@ -1290,7 +1290,9 @@
       "update.rolled_back": "Update to {to} failed health check — rolled back to {from}",
       "update.failed": "Update to {to} failed",
       "tenant.deleted": "Deleted tenant \"{name}\" and all related data ({rows} rows)",
-      "tenant.assign_exo_roles": "Assigned Exchange/Compliance directory roles for tenant \"{name}\""
+      "tenant.assign_exo_roles": "Assigned Exchange/Compliance directory roles for tenant \"{name}\"",
+      "diagnostics.captured": "Diagnostics bundle captured ({id})",
+      "diagnostics.downloaded": "Diagnostics bundle downloaded ({id})"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -2466,6 +2468,30 @@
       "refresh_done": "Refreshed.",
       "refresh_failed": "Refresh failed. Please try again.",
       "load_failed": "Could not load licensing details."
+    },
+    "card_diagnostics_title": "Diagnostics",
+    "card_diagnostics_desc": "Capture a support bundle to send us when something isn't working.",
+    "diagnostics": {
+      "section_title": "Diagnostics",
+      "intro": "If something isn't working, capture a diagnostic bundle and email it to support. It gives us what we need to investigate remotely.",
+      "consent": "The diagnostic bundle contains application logs, configuration summaries, and database health data. It contains <strong>no secrets, passwords, or credentials</strong>.",
+      "capture_btn": "Capture diagnostics",
+      "bundles_title": "Recent bundles",
+      "no_bundles": "No bundles captured yet.",
+      "col_created": "Captured",
+      "col_size": "Size",
+      "download_btn": "Download",
+      "phase_queued": "Starting…",
+      "phase_collecting": "Collecting diagnostics… ({step}/{total})",
+      "phase_redacting": "Removing sensitive values…",
+      "phase_zipping": "Packaging bundle…",
+      "phase_done": "Bundle ready.",
+      "phase_done_partial": "Bundle ready (some items could not be collected — details are inside).",
+      "phase_error": "Capture failed.",
+      "capture_failed": "Could not capture diagnostics: {message}",
+      "load_failed": "Could not load diagnostics.",
+      "toast_ready": "Diagnostic bundle ready to download.",
+      "toast_partial": "Diagnostic bundle ready (partial — some items were unavailable)."
     }
   },
   "tenant_dashboard": {

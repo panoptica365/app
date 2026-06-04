@@ -91,6 +91,28 @@ jobs:
           fi
           echo "manifest.json (version $manifest_version, tag $manifest_tag) matches tag ($GITHUB_REF_NAME) ✓"
 
+      # Guardrail (2026-06-03) — the signed updater payload must verify against
+      # the committed public key BEFORE we ship an image. Catches the
+      # "edited updater-payload.sh but forgot to re-sign" mistake (release
+      # checklist §1.8) before a tampered/stale payload reaches GHCR. ubuntu
+      # runners ship OpenSSL 3.x, which does Ed25519 pkeyutl verification —
+      # the SAME verification path the bootstrap wrapper runs on the host.
+      - name: Verify updater payload signature
+        run: |
+          set -e
+          PAYLOAD=scripts/sidecar/updater-payload.sh
+          SIG=scripts/sidecar/updater-payload.sh.sig
+          PUB=scripts/sidecar/panoptica-release.pub
+          for f in "$PAYLOAD" "$SIG" "$PUB"; do
+            if [ ! -f "$f" ]; then echo "::error::missing $f"; exit 1; fi
+          done
+          if openssl pkeyutl -verify -pubin -inkey "$PUB" -rawin -in "$PAYLOAD" -sigfile "$SIG"; then
+            echo "updater payload signature verifies against committed public key ✓"
+          else
+            echo "::error::updater-payload.sh signature does NOT verify — re-sign it (see Self-Update Operator Runbook §1.8) before tagging."
+            exit 1
+          fi
+
       # Buildx is Docker's newer build frontend. Enables the GHA cache
       # backend (`type=gha`) plus multi-platform support if we ever
       # need it later.

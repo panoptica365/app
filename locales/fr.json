@@ -1290,7 +1290,9 @@
       "update.rolled_back": "La mise à jour vers {to} a échoué à la vérification — retour à {from}",
       "update.failed": "La mise à jour vers {to} a échoué",
       "tenant.deleted": "Client « {name} » supprimé avec toutes ses données ({rows} lignes)",
-      "tenant.assign_exo_roles": "Rôles d’annuaire Exchange/Conformité attribués pour le client « {name} »"
+      "tenant.assign_exo_roles": "Rôles d’annuaire Exchange/Conformité attribués pour le client « {name} »",
+      "diagnostics.captured": "Dossier de diagnostic capturé ({id})",
+      "diagnostics.downloaded": "Dossier de diagnostic téléchargé ({id})"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -2466,6 +2468,30 @@
       "refresh_done": "Actualisé.",
       "refresh_failed": "L’actualisation a échoué. Veuillez réessayer.",
       "load_failed": "Impossible de charger les détails de licence."
+    },
+    "card_diagnostics_title": "Diagnostics",
+    "card_diagnostics_desc": "Capturez un dossier de soutien à nous envoyer lorsqu'un problème survient.",
+    "diagnostics": {
+      "section_title": "Diagnostics",
+      "intro": "Si quelque chose ne fonctionne pas, capturez un dossier de diagnostic et envoyez-le au soutien technique. Il nous donne ce qu'il faut pour enquêter à distance.",
+      "consent": "Le dossier de diagnostic contient les journaux de l'application, des résumés de configuration et des données sur l'état de la base de données. Il ne contient <strong>aucun secret, mot de passe ni identifiant</strong>.",
+      "capture_btn": "Capturer les diagnostics",
+      "bundles_title": "Dossiers récents",
+      "no_bundles": "Aucun dossier capturé pour l'instant.",
+      "col_created": "Capturé",
+      "col_size": "Taille",
+      "download_btn": "Télécharger",
+      "phase_queued": "Démarrage…",
+      "phase_collecting": "Collecte des diagnostics… ({step}/{total})",
+      "phase_redacting": "Suppression des valeurs sensibles…",
+      "phase_zipping": "Création du dossier…",
+      "phase_done": "Dossier prêt.",
+      "phase_done_partial": "Dossier prêt (certains éléments n'ont pu être collectés — détails à l'intérieur).",
+      "phase_error": "Échec de la capture.",
+      "capture_failed": "Impossible de capturer les diagnostics : {message}",
+      "load_failed": "Impossible de charger les diagnostics.",
+      "toast_ready": "Le dossier de diagnostic est prêt à télécharger.",
+      "toast_partial": "Dossier de diagnostic prêt (partiel — certains éléments étaient indisponibles)."
     }
   },
   "tenant_dashboard": {

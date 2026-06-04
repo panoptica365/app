@@ -436,43 +436,47 @@ async function checkDatabase(lang) {
  * (nominal|degraded|critical) — different vocabulary because the status bar
  * reads prose-like ("DEGRADED") while individual rows need short LED states.
  */
+/**
+ * Run every health check and roll them up. Extracted so callers other than the
+ * HTTP route — notably the diagnostics collector (Part 3, 2026-06-03) which
+ * imports it directly rather than making an HTTP self-call — get the identical
+ * aggregation. Never throws: a thrown check is caught by the route wrapper.
+ */
+async function runAllChecks(lang = 'en') {
+  // Run all checks in parallel — they each hit different tables.
+  const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database] = await Promise.all([
+    checkAlertPoller(lang),
+    checkGraphEndpoints(lang),
+    checkClaudeApi(lang),
+    checkAiParseHealth(lang),
+    checkDriftSchedulers(lang),
+    checkDatabase(lang),
+  ]);
+
+  const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database];
+  const rolled = overallState(checks);
+  const overall = rolled === 'ok' ? 'nominal' : (rolled === 'warn' ? 'degraded' : 'critical');
+
+  // Build aggregate summary line for the status bar.
+  let summary;
+  if (overall === 'nominal') {
+    summary = t('health.overall_summary.nominal', { lang });
+  } else {
+    // Surface the most important failing check in the summary line.
+    const worst = checks.find(c => c.state === rolled);
+    const tplKey = overall === 'critical'
+      ? 'health.overall_summary.critical'
+      : 'health.overall_summary.degraded';
+    summary = t(tplKey, { lang, worstSummary: worst.summary });
+  }
+
+  return { overall, summary, checked_at: new Date().toISOString(), checks };
+}
+
 router.get('/', async (req, res) => {
   const lang = req.query.lang || 'en';
   try {
-    // Run all checks in parallel — they each hit different tables.
-    const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database] = await Promise.all([
-      checkAlertPoller(lang),
-      checkGraphEndpoints(lang),
-      checkClaudeApi(lang),
-      checkAiParseHealth(lang),
-      checkDriftSchedulers(lang),
-      checkDatabase(lang),
-    ]);
-
-    const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database];
-    const rolled = overallState(checks);
-
-    const overall = rolled === 'ok' ? 'nominal' : (rolled === 'warn' ? 'degraded' : 'critical');
-
-    // Build aggregate summary line for the status bar.
-    let summary;
-    if (overall === 'nominal') {
-      summary = t('health.overall_summary.nominal', { lang });
-    } else {
-      // Surface the most important failing check in the summary line.
-      const worst = checks.find(c => c.state === rolled);
-      const tplKey = overall === 'critical'
-        ? 'health.overall_summary.critical'
-        : 'health.overall_summary.degraded';
-      summary = t(tplKey, { lang, worstSummary: worst.summary });
-    }
-
-    res.json({
-      overall,
-      summary,
-      checked_at: new Date().toISOString(),
-      checks,
-    });
+    res.json(await runAllChecks(lang));
   } catch (err) {
     console.error('[Health] Aggregate check failed:', err.message);
     // If the health endpoint itself throws, return critical — we genuinely
@@ -493,3 +497,4 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.runAllChecks = runAllChecks;

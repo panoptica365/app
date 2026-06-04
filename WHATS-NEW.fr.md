@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.41 — 2026-06-03
+
+### Nouveau : Diagnostics — capturez un dossier de soutien en un clic
+
+Les Paramètres comportent désormais une carte **Diagnostics** (administrateurs seulement). Lorsqu'un problème survient, cliquez sur **Capturer les diagnostics** et Panoptica assemble un dossier unique, téléchargeable, contenant tout ce dont nous avons besoin pour enquêter : journaux de l'application, résumés de configuration, état de la base de données, statistiques récentes d'alertes et d'ingestion, espace disque et — sur les installations Docker — les journaux des conteneurs. Envoyez-le au soutien technique et nous pouvons déboguer à distance, même sur des serveurs auxquels nous n'avons aucun accès direct.
+
+Le dossier peut être **envoyé en toute sécurité** : il ne contient aucun secret, mot de passe ni identifiant. Chaque valeur figurant sur la liste des secrets est masquée, et une passe d'expurgation retire les jetons et les clés de chaque fichier avant l'empaquetage. (Les noms des clients sont inclus volontairement, afin que le soutien puisse vous orienter vers le client concerné.) Si un élément ne peut être collecté — par exemple si la base de données est hors service — le dossier est tout de même produit avec le reste, et un manifeste à l'intérieur indique précisément ce qui manquait. Les trois dossiers les plus récents sont conservés pour un nouveau téléchargement.
+
+### En coulisses : journaux fichiers durables + module de mise à jour renforcé
+
+Les journaux de l'application sont désormais aussi écrits dans des fichiers quotidiens avec rotation (conservation de 7 jours), afin de survivre au redémarrage d'un conteneur et d'alimenter le nouveau dossier de Diagnostics. De plus, le module d'auto-mise à jour exécute maintenant une **charge utile signée cryptographiquement** que le composant de mise à jour vérifie avant chaque utilisation — une amélioration de défense en profondeur qui verrouille la partie la plus privilégiée du système. Aucune action requise de votre part.
+
+---
+
 ## Version 0.1.40 — 2026-06-03
 
 ### Nouveau : activation guidée de la première mise en service de la stratégie de sécurité préconfigurée Standard (MDO)

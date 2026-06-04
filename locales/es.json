@@ -1290,7 +1290,9 @@
       "update.rolled_back": "La actualización a {to} falló la comprobación — se revirtió a {from}",
       "update.failed": "La actualización a {to} falló",
       "tenant.deleted": "Inquilino «{name}» eliminado con todos sus datos ({rows} filas)",
-      "tenant.assign_exo_roles": "Roles de directorio Exchange/Cumplimiento asignados para el inquilino «{name}»"
+      "tenant.assign_exo_roles": "Roles de directorio Exchange/Cumplimiento asignados para el inquilino «{name}»",
+      "diagnostics.captured": "Paquete de diagnóstico capturado ({id})",
+      "diagnostics.downloaded": "Paquete de diagnóstico descargado ({id})"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -2466,6 +2468,30 @@
       "refresh_done": "Actualizado.",
       "refresh_failed": "La actualización falló. Inténtelo de nuevo.",
       "load_failed": "No se pudieron cargar los detalles de licencia."
+    },
+    "card_diagnostics_title": "Diagnóstico",
+    "card_diagnostics_desc": "Capture un paquete de soporte para enviárnoslo cuando algo no funcione.",
+    "diagnostics": {
+      "section_title": "Diagnóstico",
+      "intro": "Si algo no funciona, capture un paquete de diagnóstico y envíelo al soporte. Nos da lo que necesitamos para investigar de forma remota.",
+      "consent": "El paquete de diagnóstico contiene registros de la aplicación, resúmenes de configuración y datos sobre el estado de la base de datos. No contiene <strong>ningún secreto, contraseña ni credencial</strong>.",
+      "capture_btn": "Capturar diagnóstico",
+      "bundles_title": "Paquetes recientes",
+      "no_bundles": "Aún no se ha capturado ningún paquete.",
+      "col_created": "Capturado",
+      "col_size": "Tamaño",
+      "download_btn": "Descargar",
+      "phase_queued": "Iniciando…",
+      "phase_collecting": "Recopilando diagnóstico… ({step}/{total})",
+      "phase_redacting": "Eliminando valores sensibles…",
+      "phase_zipping": "Empaquetando…",
+      "phase_done": "Paquete listo.",
+      "phase_done_partial": "Paquete listo (algunos elementos no se pudieron recopilar — detalles en su interior).",
+      "phase_error": "Error en la captura.",
+      "capture_failed": "No se pudo capturar el diagnóstico: {message}",
+      "load_failed": "No se pudo cargar el diagnóstico.",
+      "toast_ready": "El paquete de diagnóstico está listo para descargar.",
+      "toast_partial": "Paquete de diagnóstico listo (parcial — algunos elementos no estaban disponibles)."
     }
   },
   "tenant_dashboard": {

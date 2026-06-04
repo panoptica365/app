@@ -63,6 +63,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_licensing_desc">Your licensed seat count and how many seats your tenants currently use.</div>
   </div>
 
+  <!-- Diagnostics Card -->
+  <div class="settings-card" id="card-diagnostics" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="stethoscope"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_diagnostics_title">Diagnostics</div>
+    <div class="settings-card-desc" data-i18n="settings.card_diagnostics_desc">Capture a support bundle to send us when something isn't working.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -427,5 +434,46 @@
     </div>
 
     <div id="licensing-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
+  </div>
+</div>
+
+<!-- ─── Diagnostics Sub-View ─── -->
+<div id="settings-diagnostics-view" style="display:none;">
+  <button class="btn-secondary" id="diagnostics-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.diagnostics.section_title">Diagnostics</div>
+
+    <div class="form-hint" style="margin-bottom:14px;" data-i18n="settings.diagnostics.intro">
+      If something isn't working, capture a diagnostic bundle and email it to support. It gives us what we need to investigate remotely.
+    </div>
+
+    <!-- Consent / content line (exact agreed wording) -->
+    <div class="form-hint" style="margin-bottom:18px;" data-i18n-html="settings.diagnostics.consent">
+      The diagnostic bundle contains application logs, configuration summaries, and database health data. It contains <strong>no secrets, passwords, or credentials</strong>.
+    </div>
+
+    <div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+      <button class="btn-primary" id="diagnostics-capture" data-i18n="settings.diagnostics.capture_btn">Capture diagnostics</button>
+      <span id="diagnostics-progress" style="font-size:0.85rem; color:var(--p-text-muted);"></span>
+    </div>
+
+    <div id="diagnostics-error" class="form-hint" style="display:none; color:var(--p-danger); margin-top:8px;"></div>
+
+    <!-- Available bundles -->
+    <div style="margin-top:24px;">
+      <div class="settings-section-title" style="font-size:0.95rem;" data-i18n="settings.diagnostics.bundles_title">Recent bundles</div>
+      <div id="diagnostics-bundles-empty" class="form-hint" data-i18n="settings.diagnostics.no_bundles">No bundles captured yet.</div>
+      <table class="settings-stat-table" id="diagnostics-bundles-table" style="display:none;">
+        <thead>
+          <tr>
+            <th data-i18n="settings.diagnostics.col_created">Captured</th>
+            <th data-i18n="settings.diagnostics.col_size">Size</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="diagnostics-bundles-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>

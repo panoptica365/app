@@ -131,3 +131,8 @@ desktop.ini
 
 # Updater-managed image pin (written at runtime by panoptica-updater; never commit)
 docker-compose.override.yml
+
+# Payload signing PRIVATE key — Ed25519 release key. NEVER commit (already
+# covered by *.key above; named explicitly so nobody adds an exception for it).
+# The PUBLIC half scripts/sidecar/panoptica-release.pub IS committed.
+panoptica-release.key

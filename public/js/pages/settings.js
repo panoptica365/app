@@ -15,6 +15,7 @@
     document.getElementById('card-access')?.addEventListener('click', () => showView('access'));
     document.getElementById('card-branding')?.addEventListener('click', () => showView('branding'));
     document.getElementById('card-licensing')?.addEventListener('click', () => showView('licensing'));
+    document.getElementById('card-diagnostics')?.addEventListener('click', () => showView('diagnostics'));
 
     // Back buttons
     document.getElementById('smtp-back')?.addEventListener('click', () => showView('cards'));
@@ -26,6 +27,10 @@
     document.getElementById('branding-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('licensing-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('licensing-refresh')?.addEventListener('click', refreshLicensing);
+
+    // Diagnostics handlers
+    document.getElementById('diagnostics-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('diagnostics-capture')?.addEventListener('click', startDiagnosticsCapture);
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -150,7 +155,138 @@
     }
   }
 
-  function destroy() {}
+  // ─── Diagnostics (Part 3, 2026-06-03) — capture + download support bundle ───
+  let diagPollTimer = null;
+
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+    const loc = lang === 'fr' ? 'fr-CA' : (lang === 'es' ? 'es' : 'en-CA');
+    try { return new Date(iso).toLocaleString(loc, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    catch (e) { return iso; }
+  }
+
+  function fmtBytes(n) {
+    if (typeof n !== 'number' || !isFinite(n) || n <= 0) return '—';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    return (n / 1024 / 1024).toFixed(1) + ' MB';
+  }
+
+  function diagPhaseLabel(s) {
+    switch (s.phase) {
+      case 'queued':     return window.t('settings.diagnostics.phase_queued');
+      case 'collecting': return window.t('settings.diagnostics.phase_collecting', { step: s.step || 0, total: s.total || 0 });
+      case 'redacting':  return window.t('settings.diagnostics.phase_redacting');
+      case 'zipping':    return window.t('settings.diagnostics.phase_zipping');
+      case 'done':       return s.partial ? window.t('settings.diagnostics.phase_done_partial') : window.t('settings.diagnostics.phase_done');
+      case 'error':      return window.t('settings.diagnostics.phase_error');
+      default:           return '';
+    }
+  }
+
+  function renderDiagnosticsBundles(bundles) {
+    const empty = document.getElementById('diagnostics-bundles-empty');
+    const table = document.getElementById('diagnostics-bundles-table');
+    const body  = document.getElementById('diagnostics-bundles-body');
+    if (!body) return;
+    if (bundles === undefined) return; // status update without a fresh list — leave as-is
+    if (!bundles || !bundles.length) {
+      if (empty) empty.style.display = '';
+      if (table) table.style.display = 'none';
+      body.innerHTML = '';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (table) table.style.display = '';
+    const dlLabel = window.t('settings.diagnostics.download_btn');
+    body.innerHTML = bundles.map(b => `
+      <tr>
+        <td>${escHtml(fmtDateTime(b.created_at))}</td>
+        <td>${escHtml(fmtBytes(b.size_bytes))}</td>
+        <td style="text-align:right;">
+          <a class="btn-secondary" href="/api/diagnostics/download/${encodeURIComponent(b.id)}" download>${escHtml(dlLabel)}</a>
+        </td>
+      </tr>`).join('');
+  }
+
+  function applyDiagnosticsStatus(s) {
+    const btn = document.getElementById('diagnostics-capture');
+    const progress = document.getElementById('diagnostics-progress');
+    const errEl = document.getElementById('diagnostics-error');
+
+    if (btn) {
+      if (s.running) btn.setAttribute('disabled', 'disabled');
+      else btn.removeAttribute('disabled');
+    }
+    if (progress) progress.textContent = s.running || s.phase === 'done' || s.phase === 'error' ? diagPhaseLabel(s) : '';
+    if (errEl) {
+      if (s.phase === 'error' && s.error) {
+        errEl.textContent = window.t('settings.diagnostics.capture_failed', { message: s.error });
+        errEl.style.display = '';
+      } else {
+        errEl.style.display = 'none';
+      }
+    }
+    renderDiagnosticsBundles(s.bundles);
+  }
+
+  function stopDiagnosticsPoll() {
+    if (diagPollTimer) { clearInterval(diagPollTimer); diagPollTimer = null; }
+  }
+
+  async function pollDiagnosticsOnce() {
+    try {
+      const s = await Panoptica.api('/api/diagnostics/status');
+      applyDiagnosticsStatus(s);
+      if (!s.running) {
+        stopDiagnosticsPoll();
+        if (s.phase === 'done' && !s.partial) {
+          Panoptica.showToast(window.t('settings.diagnostics.toast_ready'), 'success');
+        } else if (s.phase === 'done' && s.partial) {
+          Panoptica.showToast(window.t('settings.diagnostics.toast_partial'), 'warning');
+        }
+      }
+    } catch (err) {
+      stopDiagnosticsPoll();
+    }
+  }
+
+  async function loadDiagnostics() {
+    try {
+      const s = await Panoptica.api('/api/diagnostics/status');
+      applyDiagnosticsStatus(s);
+      if (s.running) startDiagnosticsPoll();
+    } catch (err) {
+      const errEl = document.getElementById('diagnostics-error');
+      if (errEl) { errEl.textContent = (err && err.message) || window.t('settings.diagnostics.load_failed'); errEl.style.display = ''; }
+    }
+  }
+
+  function startDiagnosticsPoll() {
+    stopDiagnosticsPoll();
+    diagPollTimer = setInterval(pollDiagnosticsOnce, 2000);
+  }
+
+  async function startDiagnosticsCapture() {
+    const errEl = document.getElementById('diagnostics-error');
+    if (errEl) errEl.style.display = 'none';
+    const btn = document.getElementById('diagnostics-capture');
+    if (btn) btn.setAttribute('disabled', 'disabled');
+    try {
+      await Panoptica.api('/api/diagnostics/capture', { method: 'POST' });
+      applyDiagnosticsStatus({ running: true, phase: 'queued', bundles: undefined });
+      startDiagnosticsPoll();
+    } catch (err) {
+      if (btn) btn.removeAttribute('disabled');
+      if (errEl) {
+        errEl.textContent = (err && err.message) || window.t('settings.diagnostics.capture_failed', { message: '' });
+        errEl.style.display = '';
+      }
+    }
+  }
+
+  function destroy() { stopDiagnosticsPoll(); }
 
   function showView(view) {
     const blocks = {
@@ -163,10 +299,13 @@
       access:    document.getElementById('settings-access-view'),
       branding:  document.getElementById('settings-branding-view'),
       licensing: document.getElementById('settings-licensing-view'),
+      diagnostics: document.getElementById('settings-diagnostics-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
     });
+    // Leaving the diagnostics view stops its progress poll.
+    if (view !== 'diagnostics') stopDiagnosticsPoll();
     if (view === 'smtp')      loadSmtp();
     if (view === 'notif')     loadNotifications();
     if (view === 'anthropic') loadAnthropicKey();
@@ -175,6 +314,7 @@
     if (view === 'access')    loadAccessControl();
     if (view === 'branding')  loadBranding();
     if (view === 'licensing') loadLicensing();
+    if (view === 'diagnostics') loadDiagnostics();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───
