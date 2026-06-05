@@ -106,10 +106,10 @@
         <td class="alert-td-check"><input type="checkbox" class="alert-check" data-id="${a.id}" ${selectedIds.has(a.id) ? 'checked' : ''}></td>
         <td><span class="alert-severity-badge sev-${a.severity}">${esc(window.t('alerts.' + a.severity))}</span></td>
         <td class="alert-td-tenant">${a.alert_scope === 'msp' ? esc(window.t('alerts.msp_wide_scope')) : esc(a.tenant_name)}</td>
-        <td class="alert-td-message">${esc(renderAlertMessage(a))}${attributionChip(a)}</td>
+        <td class="alert-td-message">${esc(renderAlertMessage(a))}${rollupBadge(a)}${attributionChip(a)}</td>
         <td class="alert-td-category">${formatCategory(a.category)}</td>
         <td class="alert-td-time">${formatTime(a.triggered_at)}</td>
-        <td class="alert-td-recurrence">${a.recurrence_count > 1 ? a.recurrence_count + '×' : ''}</td>
+        <td class="alert-td-recurrence">${(!a.is_rollup && a.recurrence_count > 1) ? a.recurrence_count + '×' : ''}</td>
         <td><span class="alert-status-pill status-${a.status}">${esc(window.t('alerts.' + a.status))}</span></td>
       </tr>
     `).join('');
@@ -153,28 +153,50 @@
 
   // ─── Bulk Actions ───
 
+  // The bulk bar is ALWAYS visible (fixed height, no layout shift). This
+  // function never touches bar.style.display — it only updates the count text,
+  // enables/disables the action buttons, and shows/hides the "select all
+  // matching" affordance. (Part B, 2026-06-05.)
   function updateBulkBar() {
-    const bar = el('alert-bulk-bar');
-    if (selectedIds.size > 0) {
-      bar.style.display = 'flex';
-      el('alert-bulk-count').textContent = `${selectedIds.size} selected`;
+    const count = selectedIds.size;
+    const isAllFiltered = selectedIds.has('__ALL_FILTERED__');
+    const allLink = el('alert-bulk-all-link');
 
-      // Show "select all matching" link if header checkbox is checked and there are more alerts
-      const allLink = el('alert-bulk-all-link');
-      if (el('alert-check-all').checked && totalMatching > currentAlerts.length) {
-        allLink.innerHTML = `<a href="#" id="alert-select-all-matching">Select all ${totalMatching} matching alerts</a>`;
-        allLink.style.display = 'inline';
-        el('alert-select-all-matching').addEventListener('click', (e) => {
-          e.preventDefault();
-          selectedIds = new Set(['__ALL_FILTERED__']);
-          el('alert-bulk-count').textContent = `All ${totalMatching} selected`;
-          allLink.style.display = 'none';
-        });
-      } else {
-        allLink.style.display = 'none';
-      }
+    // Count text.
+    if (count === 0) {
+      el('alert-bulk-count').textContent = window.t('alerts.none_selected');
+    } else if (isAllFiltered) {
+      el('alert-bulk-count').textContent = `All ${totalMatching} selected`;
     } else {
-      bar.style.display = 'none';
+      el('alert-bulk-count').textContent = `${count} selected`;
+    }
+
+    // Enable/disable buttons. Merge needs ≥2 EXPLICIT selections (the
+    // __ALL_FILTERED__ sentinel is not supported — merging an unbounded
+    // filtered set is out of scope for v1). The status buttons enable on any
+    // selection (incl. the sentinel). The `disabled` attribute is independent
+    // of role gating (data-role-required uses a `role-hidden` class), so this
+    // never reveals controls to viewers.
+    document.querySelectorAll('.alert-bulk-btn').forEach(btn => {
+      const enabled = btn.dataset.action === 'merge'
+        ? (count >= 2 && !isAllFiltered)
+        : (count >= 1);
+      btn.disabled = !enabled;
+    });
+
+    // "Select all matching" link — only when the header checkbox is ticked and
+    // more rows match than are currently loaded, and we're not already in the
+    // sentinel state.
+    if (count >= 1 && !isAllFiltered && el('alert-check-all').checked && totalMatching > currentAlerts.length) {
+      allLink.innerHTML = `<a href="#" id="alert-select-all-matching">Select all ${totalMatching} matching alerts</a>`;
+      allLink.style.display = 'inline';
+      el('alert-select-all-matching').addEventListener('click', (e) => {
+        e.preventDefault();
+        selectedIds = new Set(['__ALL_FILTERED__']);
+        updateBulkBar();
+      });
+    } else {
+      allLink.style.display = 'none';
     }
   }
 
@@ -232,15 +254,117 @@
       updateBulkBar();
     });
 
-    // Bulk action buttons
+    // Bulk action buttons. Merge opens the roll-up flow; the rest are status
+    // changes. Buttons carry the `disabled` attribute when not actionable
+    // (updateBulkBar), so a click here only fires when the action is valid.
     document.querySelectorAll('.alert-bulk-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.action;
-        if (action && selectedIds.size > 0) bulkAction(action);
+        if (!action || btn.disabled) return;
+        if (action === 'merge') { startMerge(); return; }
+        if (selectedIds.size > 0) bulkAction(action);
       });
     });
 
+    // Roll-up modal controls.
+    el('alert-rollup-cancel')?.addEventListener('click', closeMergeModal);
+    el('alert-rollup-confirm')?.addEventListener('click', submitMerge);
+    el('alert-rollup-multi-ok')?.addEventListener('click', () => {
+      el('alert-rollup-multi-overlay').classList.remove('active');
+    });
+    // Submit on Enter from the title field.
+    el('alert-rollup-title')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submitMerge(); }
+    });
+
     // Slide-out close is wired inside the shared module (Panoptica.AlertSlideout).
+  }
+
+  // ─── Alert Merge (roll-up) ───
+
+  // Open the merge flow: client-side single-tenant pre-check, then the modal
+  // with a localized proposed title. The server re-validates (authoritative).
+  function startMerge() {
+    const ids = [...selectedIds].filter(id => id !== '__ALL_FILTERED__');
+    if (ids.length < 2) return;
+
+    const selected = currentAlerts.filter(a => ids.includes(a.id));
+
+    // Single-tenant pre-check (read tenant from the loaded rows).
+    const tenantIds = new Set(selected.map(a => a.tenant_id));
+    if (tenantIds.size > 1) {
+      el('alert-rollup-multi-overlay').classList.add('active');
+      return;
+    }
+
+    // Proposed title: single-policy → "<policy> — N alerts"; mixed → "N alerts merged".
+    const policyNames = new Set(selected.map(a => a.policy_name));
+    const proposed = policyNames.size === 1
+      ? window.t('alerts.rollup_title_single_policy', {
+          policy: displayPolicyName(selected[0]),
+          count: selected.length,
+        })
+      : window.t('alerts.rollup_title_mixed', { count: selected.length });
+
+    el('alert-rollup-intro').textContent = window.t('alerts.rollup_modal_intro', { count: selected.length });
+    const titleInput = el('alert-rollup-title');
+    titleInput.value = proposed;
+    el('alert-rollup-overlay').classList.add('active');
+    setTimeout(() => { titleInput.focus(); titleInput.select(); }, 50);
+  }
+
+  // Translate a policy name the same way the table/slideout do, so the
+  // proposed roll-up title reads in the operator's locale.
+  function displayPolicyName(a) {
+    if (!a || !a.policy_name) return '';
+    const slug = window.PanopticaI18n.slugify(a.policy_name);
+    return window.PanopticaI18n.tOrFallback('alert_policy_names.' + slug, a.policy_name);
+  }
+
+  function closeMergeModal() {
+    el('alert-rollup-overlay').classList.remove('active');
+  }
+
+  async function submitMerge() {
+    const ids = [...selectedIds].filter(id => id !== '__ALL_FILTERED__');
+    const title = (el('alert-rollup-title').value || '').trim();
+    if (ids.length < 2) { closeMergeModal(); return; }
+    if (!title) {
+      Panoptica.showToast(window.t('alerts.rollup_err_empty_title'), 'error');
+      return;
+    }
+
+    const confirmBtn = el('alert-rollup-confirm');
+    confirmBtn.disabled = true;
+    try {
+      const res = await Panoptica.api('/api/alerts/rollup', {
+        method: 'POST',
+        body: JSON.stringify({ alert_ids: ids, title }),
+      });
+      closeMergeModal();
+      Panoptica.showToast(window.t('alerts.toast_rollup_created'), 'success');
+      selectedIds.clear();
+      // The N children just became resolved → open count drops; refresh badges.
+      Panoptica.refreshAlertSignals?.();
+      await loadAlerts(currentPage);
+      if (res && res.id) openDetail(res.id);
+    } catch (e) {
+      // Map stable server error codes to localized toasts. Panoptica.api
+      // throws `new Error(err.error)`, so the code is the Error message.
+      const code = (e && e.message) || '';
+      const key = {
+        multi_tenant: 'alerts.rollup_err_multi_tenant',
+        not_open: 'alerts.rollup_err_not_open',
+        nested_rollup: 'alerts.rollup_err_nested',
+        not_found: 'alerts.rollup_err_not_found',
+        too_few: 'alerts.rollup_err_too_few',
+        empty_title: 'alerts.rollup_err_empty_title',
+        title_too_long: 'alerts.rollup_err_title_too_long',
+      }[code] || 'alerts.rollup_err_generic';
+      Panoptica.showToast(window.t(key), 'error');
+    } finally {
+      confirmBtn.disabled = false;
+    }
   }
 
   // ─── Helpers ───
@@ -422,6 +546,14 @@
   // when alerts.auto_attributed_change_id was set by the 60-min surface
   // match attributor (server-side, see src/change-log.js::findAttributingChange).
   // Tooltip-only here — full detail + navigation lives in the slideout.
+  // Small "roll-up" chip on the parent's row so operators can tell a manual
+  // roll-up apart from a detected alert at a glance. Border-alpha matches the
+  // existing chip conventions.
+  function rollupBadge(a) {
+    if (!a.is_rollup) return '';
+    return ` <span class="alert-rollup-badge">${esc(window.t('alerts.rollup_badge'))}</span>`;
+  }
+
   function attributionChip(a) {
     if (!a.auto_attributed_change_id) return '';
     const desc = a.attributed_change_description || 'Logged change';

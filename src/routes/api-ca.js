@@ -513,10 +513,20 @@ async function createDriftAlert(assignment, drifts, remediated) {
     };
   }
 
-  // Check for existing open alert with same dedup key
+  // Check for existing open alert with same dedup key. Alert Merge
+  // (2026-06-05) dedup hold: also match a child rolled up into a still-open
+  // roll-up parent, so a re-detected CA drift ticks recurrence on the child
+  // instead of re-firing while the operator investigates the roll-up. Mirrors
+  // alert-engine.js::createOrUpdateAlert so the hold is uniform across every
+  // alert producer, not just the polling engine.
   const existing = await db.queryOne(
-    `SELECT id, recurrence_count FROM alerts
-     WHERE tenant_id = ? AND dedup_key = ? AND status IN ('new', 'investigating') LIMIT 1`,
+    `SELECT a.id, a.recurrence_count FROM alerts a
+     LEFT JOIN alerts p ON p.id = a.rollup_parent_id
+     WHERE a.tenant_id = ? AND a.dedup_key = ?
+       AND ( a.status IN ('new', 'investigating')
+             OR ( a.resolution_reason = 'rolled_up'
+                  AND p.status IN ('new', 'investigating') ) )
+     LIMIT 1`,
     [assignment.tenant_id, dedupKey]
   );
 

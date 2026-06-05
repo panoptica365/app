@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS alerts (
   email_sent          BOOLEAN NOT NULL DEFAULT FALSE,
   dedup_key           VARCHAR(512) DEFAULT NULL COMMENT 'Unique condition key for deduplication',
   recurrence_count    INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Times condition detected consecutively',
+  is_rollup           TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Operator-created roll-up alert; excluded from all counts/reports',
+  rollup_parent_id    BIGINT UNSIGNED DEFAULT NULL COMMENT 'FK alerts.id — set on children merged into a roll-up',
   last_seen_at        DATETIME DEFAULT NULL COMMENT 'Last time condition was detected',
   triggered_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   closed_at           DATETIME DEFAULT NULL,
@@ -107,7 +109,8 @@ CREATE TABLE IF NOT EXISTS alerts (
   INDEX idx_alerts_tenant_status (tenant_id, status),
   INDEX idx_alerts_severity (severity),
   INDEX idx_alerts_triggered (triggered_at),
-  INDEX idx_alerts_dedup (tenant_id, dedup_key, status)
+  INDEX idx_alerts_dedup (tenant_id, dedup_key, status),
+  INDEX idx_alerts_rollup_parent (rollup_parent_id)
 ) ENGINE=InnoDB;
 
 -- ─── API Health ───

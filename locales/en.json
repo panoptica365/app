@@ -1292,7 +1292,8 @@
       "tenant.deleted": "Deleted tenant \"{name}\" and all related data ({rows} rows)",
       "tenant.assign_exo_roles": "Assigned Exchange/Compliance directory roles for tenant \"{name}\"",
       "diagnostics.captured": "Diagnostics bundle captured ({id})",
-      "diagnostics.downloaded": "Diagnostics bundle downloaded ({id})"
+      "diagnostics.downloaded": "Diagnostics bundle downloaded ({id})",
+      "alert_rollup.create": "Merged {count} alerts into roll-up \"{title}\" ({tenantName})"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1598,7 +1599,31 @@
       "progress_correlate": "Correlating events across sources…",
       "progress_analyze": "Asking Claude to correlate the activity…",
       "progress_finish": "Almost there…"
-    }
+    },
+    "merge": "Merge",
+    "none_selected": "None selected",
+    "rollup_modal_title": "Merge alerts into a roll-up",
+    "rollup_modal_intro": "Merging {count} alerts into one roll-up. The originals will be resolved and tracked under this roll-up.",
+    "rollup_title_label": "Roll-up title",
+    "rollup_title_single_policy": "{policy} — {count} alerts",
+    "rollup_title_mixed": "{count} alerts merged",
+    "rollup_multi_tenant_title": "Single tenant only",
+    "rollup_multi_tenant_body": "Roll-ups can only merge alerts from a single tenant.",
+    "rollup_ok": "OK",
+    "rollup_btn_cancel": "Cancel",
+    "rollup_children_header": "Merged alerts ({count})",
+    "rollup_no_ai": "This is a roll-up alert created by an operator; see the original alerts for individual analysis.",
+    "rollup_badge": "Roll-up",
+    "rolled_up_into": "Rolled up into → {title}",
+    "toast_rollup_created": "Roll-up created",
+    "rollup_err_multi_tenant": "Roll-ups can only merge alerts from a single tenant.",
+    "rollup_err_not_open": "Only open alerts can be merged.",
+    "rollup_err_nested": "Roll-up alerts cannot be merged into another roll-up.",
+    "rollup_err_not_found": "One or more selected alerts could not be found.",
+    "rollup_err_too_few": "Select at least two alerts to merge.",
+    "rollup_err_empty_title": "Enter a title for the roll-up.",
+    "rollup_err_title_too_long": "The roll-up title is too long (max 512 characters).",
+    "rollup_err_generic": "Could not merge the selected alerts."
   },
   "reports": {
     "title": "Report Generation",

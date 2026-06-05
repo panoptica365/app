@@ -101,6 +101,34 @@ async function executeWithDeadlockRetry(sql, params = [], maxAttempts = 5) {
 }
 
 /**
+ * Run `fn` inside a single transaction on a dedicated pooled connection.
+ *
+ * `fn` receives the raw mysql2 connection — use `conn.execute(sql, params)`
+ * which returns `[result]` (result.insertId for inserts, result.affectedRows
+ * for updates). Commits if `fn` resolves; rolls back and re-throws if it
+ * rejects. The connection is always released. Use for multi-statement
+ * operations that must be atomic (e.g. the alert roll-up: insert parent +
+ * resolve children must both land or neither). Added 2026-06-05 for the
+ * Alert Merge feature — the codebase previously had no transaction helper
+ * because every prior mutation was a single statement.
+ */
+async function withTransaction(fn) {
+  const p = getPool();
+  const conn = await p.getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await fn(conn);
+    await conn.commit();
+    return result;
+  } catch (err) {
+    try { await conn.rollback(); } catch (_) { /* rollback best-effort */ }
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+/**
  * Health check — ping the database.
  */
 async function ping() {
@@ -129,6 +157,7 @@ module.exports = {
   insert,
   execute,
   executeWithDeadlockRetry,
+  withTransaction,
   ping,
   close,
 };

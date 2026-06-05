@@ -1292,7 +1292,8 @@
       "tenant.deleted": "Client « {name} » supprimé avec toutes ses données ({rows} lignes)",
       "tenant.assign_exo_roles": "Rôles d’annuaire Exchange/Conformité attribués pour le client « {name} »",
       "diagnostics.captured": "Dossier de diagnostic capturé ({id})",
-      "diagnostics.downloaded": "Dossier de diagnostic téléchargé ({id})"
+      "diagnostics.downloaded": "Dossier de diagnostic téléchargé ({id})",
+      "alert_rollup.create": "Fusion de {count} alertes dans le regroupement « {title} » ({tenantName})"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1598,7 +1599,31 @@
       "progress_correlate": "Corrélation des événements entre les sources…",
       "progress_analyze": "Analyse de l’activité par Claude…",
       "progress_finish": "Presque terminé…"
-    }
+    },
+    "merge": "Fusionner",
+    "none_selected": "Aucune sélection",
+    "rollup_modal_title": "Fusionner les alertes en un regroupement",
+    "rollup_modal_intro": "Fusion de {count} alertes en un seul regroupement. Les alertes d'origine seront résolues et suivies dans ce regroupement.",
+    "rollup_title_label": "Titre du regroupement",
+    "rollup_title_single_policy": "{policy} — {count} alertes",
+    "rollup_title_mixed": "{count} alertes fusionnées",
+    "rollup_multi_tenant_title": "Un seul locataire à la fois",
+    "rollup_multi_tenant_body": "Un regroupement ne peut fusionner que des alertes d'un même locataire.",
+    "rollup_ok": "OK",
+    "rollup_btn_cancel": "Annuler",
+    "rollup_children_header": "Alertes fusionnées ({count})",
+    "rollup_no_ai": "Ceci est une alerte de regroupement créée par un opérateur; consultez les alertes d'origine pour l'analyse individuelle.",
+    "rollup_badge": "Regroupement",
+    "rolled_up_into": "Regroupée dans → {title}",
+    "toast_rollup_created": "Regroupement créé",
+    "rollup_err_multi_tenant": "Un regroupement ne peut fusionner que des alertes d'un même locataire.",
+    "rollup_err_not_open": "Seules les alertes ouvertes peuvent être fusionnées.",
+    "rollup_err_nested": "Une alerte de regroupement ne peut pas être fusionnée dans un autre regroupement.",
+    "rollup_err_not_found": "Une ou plusieurs alertes sélectionnées sont introuvables.",
+    "rollup_err_too_few": "Sélectionnez au moins deux alertes à fusionner.",
+    "rollup_err_empty_title": "Saisissez un titre pour le regroupement.",
+    "rollup_err_title_too_long": "Le titre du regroupement est trop long (512 caractères maximum).",
+    "rollup_err_generic": "Impossible de fusionner les alertes sélectionnées."
   },
   "reports": {
     "title": "Génération de rapports",

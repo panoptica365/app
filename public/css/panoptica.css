@@ -2210,6 +2210,86 @@ body.role-viewer [data-role-readonly="member"] {
   color: var(--p-text);
 }
 
+/* Disabled state for the permanent bulk bar (Part B, 2026-06-05). When no
+   selection is active (or Merge's ≥2 rule isn't met) the buttons are present
+   but inert. Reduced opacity + default cursor + no hover lift, matching the
+   theme's disabled-control treatment. */
+.alert-bulk-btn[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.alert-bulk-btn[disabled]:hover {
+  background: var(--p-border);
+  color: var(--p-text-secondary);
+}
+
+/* Roll-up "badge" chip on a parent row (Alert Merge). Border-alpha matches the
+   established chip conventions. */
+.alert-rollup-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-accent-light);
+  background: rgba(68, 136, 255, 0.10);
+  border: 1px solid rgba(68, 136, 255, 0.22);
+  border-radius: 10px;
+  vertical-align: middle;
+}
+
+/* Roll-up detail panel — merged child list + "rolled up into" banner. */
+.alert-rollup-no-ai {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--p-text-muted);
+  margin-bottom: 10px;
+}
+
+.alert-rollup-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.alert-rollup-child:hover {
+  border-color: var(--p-accent-deep);
+  background: rgba(68, 136, 255, 0.06);
+}
+
+.alert-rollup-child-title {
+  flex: 1;
+  color: var(--p-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.alert-rolled-up-banner {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--p-text-secondary);
+  background: rgba(68, 136, 255, 0.08);
+  border: 1px solid rgba(68, 136, 255, 0.22);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.alert-rolled-up-banner a {
+  color: var(--p-accent-light);
+  font-weight: 600;
+}
+
 #alert-bulk-all-link a {
   font-family: var(--font-body);
   font-size: 0.85rem;

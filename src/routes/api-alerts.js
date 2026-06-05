@@ -128,7 +128,7 @@ router.get('/', async (req, res) => {
     // we don't want to ship full raw_data for every row in the list.
     const alerts = await db.queryRows(
       `SELECT a.id, a.tenant_id, a.policy_id, a.severity, a.message, a.status,
-              a.alert_scope,
+              a.alert_scope, a.is_rollup, a.rollup_parent_id,
               a.email_sent, a.recurrence_count, a.last_seen_at, a.triggered_at,
               a.closed_at, a.dedup_key, a.auto_attributed_change_id,
               SUBSTRING(COALESCE(a.ai_analysis_en, ''), 1, 200) AS ai_summary,
@@ -200,16 +200,19 @@ router.get('/stats', async (req, res) => {
       rangeCondition = " AND status NOT IN ('resolved', 'false_positive')";
     }
 
+    // is_rollup = 0 on every count — operator roll-ups are workflow objects,
+    // not countable detections (Alert Merge, 2026-06-05). The merged children
+    // remain the countable truth.
     const bySeverity = await db.queryRows(
-      `SELECT severity, COUNT(*) AS cnt FROM alerts WHERE 1=1${tenantFilter}${rangeCondition} GROUP BY severity`,
+      `SELECT severity, COUNT(*) AS cnt FROM alerts WHERE is_rollup = 0${tenantFilter}${rangeCondition} GROUP BY severity`,
       params
     );
     const byStatus = await db.queryRows(
-      `SELECT status, COUNT(*) AS cnt FROM alerts WHERE 1=1${tenantFilter} GROUP BY status`,
+      `SELECT status, COUNT(*) AS cnt FROM alerts WHERE is_rollup = 0${tenantFilter} GROUP BY status`,
       params
     );
     const recent = await db.queryRows(
-      `SELECT COUNT(*) AS cnt FROM alerts WHERE triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND status <> 'false_positive'${tenantFilter}`,
+      `SELECT COUNT(*) AS cnt FROM alerts WHERE is_rollup = 0 AND triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR) AND status <> 'false_positive'${tenantFilter}`,
       params
     );
 
@@ -374,18 +377,23 @@ router.get('/:id', async (req, res) => {
     const requestedLang = (req.query.lang || 'en').toString().toLowerCase();
     const lang = ['en', 'fr', 'es'].includes(requestedLang) ? requestedLang : 'en';
 
+    // LEFT JOIN the roll-up parent so a merged child can render its
+    // "Rolled up into → <parent title>" banner without a second fetch
+    // (Alert Merge, 2026-06-05). NULL for any non-child alert.
     const alert = await db.queryOne(
       `SELECT a.*, p.name AS policy_name, p.category, p.description AS policy_description,
               t.display_name AS tenant_name,
               tce.description AS attributed_change_description,
               tce.created_by   AS attributed_change_actor,
               tce.started_at   AS attributed_change_started_at,
-              tce.category     AS attributed_change_category
+              tce.category     AS attributed_change_category,
+              par.message      AS rollup_parent_message
        FROM alerts a
        JOIN alert_policies p ON a.policy_id = p.id
        JOIN tenants t ON a.tenant_id = t.id
        LEFT JOIN tenant_change_events tce ON tce.id = a.auto_attributed_change_id
                                           AND tce.deleted_at IS NULL
+       LEFT JOIN alerts par ON par.id = a.rollup_parent_id
        WHERE a.id = ?`,
       [req.params.id]
     );
@@ -782,6 +790,140 @@ router.post('/bulk-status-filtered', auth.requireMemberOrAdmin, async (req, res)
   } catch (err) {
     console.error('[API] Bulk filtered status change failed:', err.message);
     res.status(500).json({ error: 'Failed to update alerts' });
+  }
+});
+
+/**
+ * POST /api/alerts/rollup — Manual roll-up (Alert Merge, 2026-06-05).
+ *
+ * Merges N open alerts for ONE tenant into a single operator-created roll-up
+ * "parent" alert used to track the investigation. The originals become the
+ * roll-up's children: resolved with resolution_reason='rolled_up' and
+ * rollup_parent_id set. The parent is inserted directly (NOT via
+ * alertEngine.processNewAlert), which is what keeps Haiku + the notifier out
+ * of the path — the children already got their analysis and email.
+ *
+ * Body: { alert_ids: [int, …], title: "string" }
+ * Stable 400 error codes (frontend maps to localized toasts):
+ *   too_few | empty_title | title_too_long | not_found | multi_tenant
+ *   | not_open | nested_rollup
+ *
+ * Response: { id: <parent id> }.
+ */
+// A3: operator — merging alerts is an alert-triage action (same tier as
+// bulk-status), matching the data-role-required="member" Merge button.
+router.post('/rollup', auth.requireMemberOrAdmin, async (req, res) => {
+  // Severity ordering for "max severity among children".
+  const SEV_RANK = { info: 0, low: 1, medium: 2, high: 3, severe: 4 };
+  // Throw a tagged error the catch block turns into a stable 400 code.
+  const reject = (code) => { const e = new Error(code); e.rollupCode = code; throw e; };
+
+  try {
+    const { alert_ids, title } = req.body;
+
+    // Validate ids: coerce to positive ints, dedupe, require ≥ 2.
+    const ids = Array.isArray(alert_ids)
+      ? [...new Set(alert_ids.map(n => parseInt(n, 10)).filter(n => Number.isInteger(n) && n > 0))]
+      : [];
+    if (ids.length < 2) return res.status(400).json({ error: 'too_few' });
+
+    // Validate title.
+    const cleanTitle = (typeof title === 'string' ? title : '').trim();
+    if (!cleanTitle) return res.status(400).json({ error: 'empty_title' });
+    if (cleanTitle.length > 512) return res.status(400).json({ error: 'title_too_long' });
+
+    const placeholders = ids.map(() => '?').join(',');
+
+    const result = await db.withTransaction(async (conn) => {
+      // Lock the candidate rows for the duration of the merge so a concurrent
+      // status change / second merge can't race us into an inconsistent state.
+      const [rows] = await conn.execute(
+        `SELECT a.id, a.tenant_id, a.policy_id, a.severity, a.status, a.is_rollup,
+                a.message, t.display_name AS tenant_name
+           FROM alerts a
+           JOIN tenants t ON a.tenant_id = t.id
+          WHERE a.id IN (${placeholders})
+          FOR UPDATE`,
+        ids
+      );
+
+      if (rows.length !== ids.length) reject('not_found');            // some id missing
+      if (new Set(rows.map(r => r.tenant_id)).size > 1) reject('multi_tenant');
+      if (rows.some(r => r.status !== 'new' && r.status !== 'investigating')) reject('not_open');
+      if (rows.some(r => r.is_rollup)) reject('nested_rollup');       // no roll-ups of roll-ups (v1)
+
+      const tenantId = rows[0].tenant_id;
+      const tenantName = rows[0].tenant_name;
+
+      // Highest-severity child wins severity + lends its policy_id (ties → first
+      // selected; we iterate in the order ids arrived). Reusing the dominant
+      // child's policy_id gives the dashboard a correct category chip without a
+      // synthetic alert_policies row (its category is a strict ENUM).
+      let dominant = rows[0];
+      for (const r of rows) {
+        if (SEV_RANK[r.severity] > SEV_RANK[dominant.severity]) dominant = r;
+      }
+
+      const childIds = rows.map(r => r.id);
+      const rawData = JSON.stringify({
+        rollup: true,
+        child_alert_ids: childIds,
+        // Denormalized child titles/severities so the detail panel renders the
+        // child list without N extra fetches.
+        children: rows.map(r => ({ id: r.id, message: r.message, severity: r.severity })),
+      });
+
+      // Parent: direct INSERT. status='new', dedup_key NULL (never dedup-matches),
+      // is_rollup=1, email_sent=1 (defensive — nothing downstream should email it).
+      // ai_analysis_* left NULL — the panel renders the child list instead.
+      // NOW() for triggered_at matches every other alert insert + the closed_at
+      // convention in this file (status/bulk endpoints use NOW()).
+      const [ins] = await conn.execute(
+        `INSERT INTO alerts (tenant_id, policy_id, severity, message, raw_data,
+                             status, dedup_key, is_rollup, email_sent,
+                             recurrence_count, triggered_at)
+         VALUES (?, ?, ?, ?, ?, 'new', NULL, 1, 1, 1, NOW())`,
+        [tenantId, dominant.policy_id, dominant.severity, cleanTitle, rawData]
+      );
+      const parentId = ins.insertId;
+
+      // Children: resolve + cross-link. tenant_id guard is belt-and-suspenders
+      // (already validated single-tenant above).
+      await conn.execute(
+        `UPDATE alerts
+            SET status='resolved', resolution_reason='rolled_up',
+                rollup_parent_id=?, closed_at=NOW()
+          WHERE id IN (${placeholders}) AND tenant_id=?`,
+        [parentId, ...ids, tenantId]
+      );
+
+      return { parentId, count: childIds.length, tenantName, tenantId };
+    });
+
+    console.log(`[API] Alert roll-up #${result.parentId}: merged ${result.count} alerts (tenant=${result.tenantName}) by ${req.session.user.email}`);
+
+    // Audit (non-blocking, Phase 11 pattern). OTHER category — a roll-up is an
+    // operator alert-triage action, not a settings/template/RBAC change.
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.OTHER,
+      action: 'alert_rollup.create',
+      templateKey: 'alert_rollup.create',
+      templateParams: { count: result.count, tenantName: result.tenantName, title: cleanTitle },
+      description: `Merged ${result.count} alerts into roll-up #${result.parentId} "${cleanTitle}" (${result.tenantName})`,
+      targetType: 'alert',
+      targetId: String(result.parentId),
+      targetName: cleanTitle,
+      metadata: { childCount: result.count },
+      req,
+    }).catch(err => console.warn('[API] mspAudit.logMspAudit (alert_rollup.create) failed (non-blocking):', err.message));
+
+    res.json({ id: result.parentId });
+  } catch (err) {
+    if (err && err.rollupCode) {
+      return res.status(400).json({ error: err.rollupCode });
+    }
+    console.error('[API] Alert roll-up failed:', err.message);
+    res.status(500).json({ error: 'Failed to merge alerts' });
   }
 });
 

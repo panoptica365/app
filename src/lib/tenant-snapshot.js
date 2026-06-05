@@ -215,6 +215,7 @@ async function collectTenant(tenantId) {
      FROM alerts a
      JOIN alert_policies p ON a.policy_id = p.id
      WHERE a.tenant_id = ? AND a.triggered_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY)
+       AND a.is_rollup = 0
      ORDER BY a.triggered_at DESC`,
     [id]);
 

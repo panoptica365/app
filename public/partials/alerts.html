@@ -7,13 +7,17 @@
 <!-- Filter Bar (rendered by /js/shared/alert-filter-bar.js) -->
 <div id="alert-filter-bar-container"></div>
 
-<!-- Bulk Action Bar (hidden until selection) -->
-<div class="alert-bulk-bar" id="alert-bulk-bar" style="display:none;">
-  <!-- "0 selected" is overwritten by JS on every selection change — Phase 4 will move that text to t() -->
-  <span id="alert-bulk-count">0 selected</span>
-  <button class="alert-bulk-btn" data-role-required="member" data-action="investigating" data-i18n="alerts.mark_investigating">Mark Investigating</button>
-  <button class="alert-bulk-btn" data-role-required="member" data-action="resolved" data-i18n="alerts.mark_resolved">Mark Resolved</button>
-  <button class="alert-bulk-btn" data-role-required="member" data-action="false_positive" data-i18n="alerts.mark_false_positive">Mark False Positive</button>
+<!-- Bulk Action Bar — always visible, fixed height (no layout shift on first
+     selection). updateBulkBar() never toggles display; it only swaps the count
+     text and enables/disables the buttons. -->
+<div class="alert-bulk-bar" id="alert-bulk-bar">
+  <!-- Count text is overwritten by JS on every selection change; starts at
+       "None selected" (the 0-selected state). -->
+  <span id="alert-bulk-count" data-i18n="alerts.none_selected">None selected</span>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="merge" data-i18n="alerts.merge" disabled>Merge</button>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="investigating" data-i18n="alerts.mark_investigating" disabled>Mark Investigating</button>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="resolved" data-i18n="alerts.mark_resolved" disabled>Mark Resolved</button>
+  <button class="alert-bulk-btn" data-role-required="member" data-action="false_positive" data-i18n="alerts.mark_false_positive" disabled>Mark False Positive</button>
   <span id="alert-bulk-all-link" style="display:none;"></span>
 </div>
 
@@ -44,3 +48,39 @@
   Slide-out detail panel lives in index.html and is shared across pages.
   See /js/shared/alert-slideout.js (Panoptica.AlertSlideout).
 -->
+
+<!-- ═══ Alert Merge (roll-up) modal ═══ -->
+<div id="alert-rollup-overlay" class="modal-overlay">
+  <div class="modal" style="width:520px; max-width:92vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="alerts.rollup_modal_title">Merge alerts into a roll-up</span>
+    </div>
+    <div class="modal-body">
+      <p id="alert-rollup-intro" style="font-size:0.88rem; color:var(--p-text-muted); margin:0 0 12px 0;"></p>
+      <label for="alert-rollup-title" style="display:block; font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:6px;" data-i18n="alerts.rollup_title_label">Roll-up title</label>
+      <input id="alert-rollup-title" type="text" class="form-control" maxlength="512"
+        style="width:100%; box-sizing:border-box;">
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
+        <button id="alert-rollup-cancel" class="btn-secondary" data-i18n="alerts.rollup_btn_cancel">Cancel</button>
+        <button id="alert-rollup-confirm" class="btn-primary" data-i18n="alerts.merge">Merge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Multi-tenant info modal (merge blocked) ═══ -->
+<div id="alert-rollup-multi-overlay" class="modal-overlay">
+  <div class="modal" style="width:460px; max-width:92vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="alerts.rollup_multi_tenant_title">Single tenant only</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.9rem; color:var(--p-text); margin:0 0 16px 0;" data-i18n="alerts.rollup_multi_tenant_body">Roll-ups can only merge alerts from a single tenant.</p>
+      <div style="display:flex; justify-content:flex-end;">
+        <button id="alert-rollup-multi-ok" class="btn-primary" data-i18n="alerts.rollup_ok">OK</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -168,6 +168,15 @@ async function ensureAlertColumns() {
     // alert_scope='msp' rows as an MSP-wide notice listing affected tenants
     // (carried in raw_data). Default 'tenant' keeps every prior row correct.
     { name: 'alert_scope', sql: "ALTER TABLE alerts ADD COLUMN alert_scope ENUM('tenant','msp') NOT NULL DEFAULT 'tenant' COMMENT 'tenant = single-customer (default); msp = MSP-wide notice, do not attribute to tenant_id' AFTER status" },
+    // Alert Merge (2026-06-05) — operator roll-up alerts. is_rollup marks a
+    // parent created by the manual-merge workflow (excluded from every
+    // count/report; only shown in the dashboard list). rollup_parent_id is set
+    // on the children resolved into a parent (resolution_reason='rolled_up').
+    // No FK on rollup_parent_id — matches the plain-column style of
+    // resolution_rule_id / auto_attributed_change_id; tenant cascade-delete
+    // already removes both parent and children (same tenant_id).
+    { name: 'is_rollup', sql: "ALTER TABLE alerts ADD COLUMN is_rollup TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Operator-created roll-up alert; excluded from all counts/reports' AFTER recurrence_count" },
+    { name: 'rollup_parent_id', sql: "ALTER TABLE alerts ADD COLUMN rollup_parent_id BIGINT UNSIGNED DEFAULT NULL COMMENT 'FK alerts.id — set on children merged into a roll-up' AFTER is_rollup" },
   ];
 
   for (const col of columns) {
@@ -206,6 +215,20 @@ async function ensureAlertColumns() {
     if (idxExists.length === 0) {
       await db.execute("ALTER TABLE alerts ADD INDEX idx_alerts_attribution (auto_attributed_change_id)");
       console.log('[AlertEngine] Added index idx_alerts_attribution');
+    }
+  } catch (e) {
+    // Index may already exist
+  }
+
+  // Index for the roll-up dedup-hold self-join (createOrUpdateAlert joins
+  // children → parent on rollup_parent_id) and the child-list/banner lookups.
+  try {
+    const idxExists = await db.queryRows(
+      "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alerts' AND INDEX_NAME = 'idx_alerts_rollup_parent'"
+    );
+    if (idxExists.length === 0) {
+      await db.execute("ALTER TABLE alerts ADD INDEX idx_alerts_rollup_parent (rollup_parent_id)");
+      console.log('[AlertEngine] Added index idx_alerts_rollup_parent');
     }
   } catch (e) {
     // Index may already exist
@@ -2833,9 +2856,22 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
 
   // Check for existing open alert with the same dedup key
   if (dedupKey) {
+    // Alert Merge (2026-06-05) — dedup hold. A normal open alert matches as
+    // before. ADDITIONALLY, a child rolled up into a still-open parent
+    // (resolution_reason='rolled_up' AND parent status new/investigating)
+    // matches too, so a re-detection of the merged condition ticks recurrence
+    // on the child instead of firing a fresh duplicate while the operator is
+    // investigating the roll-up. Once the parent is resolved/false-positive the
+    // child no longer matches and the next detection creates a fresh alert —
+    // the intentional "you thought this was fixed" signal.
     const existing = await db.queryOne(
-      `SELECT id, recurrence_count FROM alerts
-       WHERE tenant_id = ? AND dedup_key = ? AND status IN ('new', 'investigating')
+      `SELECT a.id, a.recurrence_count
+       FROM alerts a
+       LEFT JOIN alerts p ON p.id = a.rollup_parent_id
+       WHERE a.tenant_id = ? AND a.dedup_key = ?
+         AND ( a.status IN ('new', 'investigating')
+               OR ( a.resolution_reason = 'rolled_up'
+                    AND p.status IN ('new', 'investigating') ) )
        LIMIT 1`,
       [tenant.id, dedupKey]
     );

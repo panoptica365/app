@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.43 — 2026-06-05
+
+### Nuevo: combine una avalancha de alertas relacionadas en una agrupación
+
+Cuando un mismo inquilino genera muchas alertas por un mismo problema de fondo —por ejemplo, seis alertas «MFA disabled users» durante una incorporación—, ahora puede ordenarlas en una sola. Seleccione las alertas (el nuevo botón **Combinar** de la barra de acciones se habilita en cuanto marca dos o más), confirme un título y Panoptica crea una única alerta de **agrupación** para dar seguimiento a la investigación. Las alertas originales quedan marcadas como resueltas y enlazadas en ambos sentidos: la agrupación enumera cada alerta que absorbió (cada una a un clic) y cada alerta original muestra un enlace «Agrupada en →» de regreso a la agrupación.
+
+Mientras la agrupación permanece abierta, las detecciones repetidas de las mismas condiciones se acumulan discretamente en las alertas originales en lugar de generar nuevos duplicados, de modo que el ruido se detiene sin ocultar nada. Resuelva la agrupación y, si una condición sigue presente, se generará una alerta totalmente nueva en la siguiente comprobación: su señal de «creía que esto ya estaba resuelto». Una agrupación solo puede combinar alertas de un mismo inquilino y queda deliberadamente fuera de cada estadística, informe y resumen matutino (las alertas originales siguen siendo el registro contabilizado).
+
+### Mejorado: la barra de acciones masivas ya no hace saltar la tabla
+
+La barra de acciones masivas del panel de alertas ahora está siempre visible, con altura fija y sus botones atenuados hasta que selecciona algo. Antes, la barra aparecía solo tras marcar la primera casilla, lo que empujaba la tabla hacia abajo y podía hacer que su clic cayera en la fila equivocada. Ese salto de diseño desapareció.
+
+---
+
 ## Versión 0.1.42 — 2026-06-04
 
 ### Nuevo: monitor de espacio en disco

@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.1.43 — 2026-06-05
+
+### New: merge a flood of related alerts into one roll-up
+
+When a single tenant fires many alerts for the same underlying issue — say six "MFA disabled users" alerts during an onboarding — you can now tidy them into one. Select the alerts (the bulk bar's new **Merge** button lights up once two or more are checked), confirm a title, and Panoptica creates a single **roll-up** alert to track the investigation. The originals are marked resolved and cross-linked: the roll-up lists every alert it absorbed (each a click away), and each original shows a "Rolled up into →" link back to the roll-up.
+
+While the roll-up stays open, repeat detections of the same conditions quietly accumulate on the originals instead of firing fresh duplicates — so the noise stops without hiding anything. Resolve the roll-up and, if a condition is still present, it fires a brand-new alert on the next check — your "I thought this was handled" signal. Roll-ups can only combine alerts from one tenant, and they're deliberately left out of every statistic, report, and morning briefing (the original alerts remain the counted record).
+
+### Improved: the bulk-action bar no longer makes the table jump
+
+The alert dashboard's bulk-action bar is now always visible at a fixed height, with its buttons greyed out until you select something. Previously the bar appeared only after the first checkbox tick, which pushed the table down and could land your click on the wrong row. That layout shift is gone.
+
+---
+
 ## Version 0.1.42 — 2026-06-04
 
 ### New: Disk-space monitor

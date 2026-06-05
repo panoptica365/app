@@ -1292,7 +1292,8 @@
       "tenant.deleted": "Inquilino «{name}» eliminado con todos sus datos ({rows} filas)",
       "tenant.assign_exo_roles": "Roles de directorio Exchange/Cumplimiento asignados para el inquilino «{name}»",
       "diagnostics.captured": "Paquete de diagnóstico capturado ({id})",
-      "diagnostics.downloaded": "Paquete de diagnóstico descargado ({id})"
+      "diagnostics.downloaded": "Paquete de diagnóstico descargado ({id})",
+      "alert_rollup.create": "Se combinaron {count} alertas en la agrupación «{title}» ({tenantName})"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -1598,7 +1599,31 @@
       "progress_correlate": "Correlacionando eventos entre fuentes…",
       "progress_analyze": "Pidiendo a Claude que correlacione la actividad…",
       "progress_finish": "Casi listo…"
-    }
+    },
+    "merge": "Combinar",
+    "none_selected": "Sin selección",
+    "rollup_modal_title": "Combinar alertas en una agrupación",
+    "rollup_modal_intro": "Se combinarán {count} alertas en una sola agrupación. Las alertas originales se resolverán y se les dará seguimiento dentro de esta agrupación.",
+    "rollup_title_label": "Título de la agrupación",
+    "rollup_title_single_policy": "{policy} — {count} alertas",
+    "rollup_title_mixed": "{count} alertas combinadas",
+    "rollup_multi_tenant_title": "Solo un inquilino",
+    "rollup_multi_tenant_body": "Las agrupaciones solo pueden combinar alertas de un mismo inquilino.",
+    "rollup_ok": "Aceptar",
+    "rollup_btn_cancel": "Cancelar",
+    "rollup_children_header": "Alertas combinadas ({count})",
+    "rollup_no_ai": "Esta es una alerta de agrupación creada por un operador; consulte las alertas originales para ver el análisis individual.",
+    "rollup_badge": "Agrupación",
+    "rolled_up_into": "Agrupada en → {title}",
+    "toast_rollup_created": "Agrupación creada",
+    "rollup_err_multi_tenant": "Las agrupaciones solo pueden combinar alertas de un mismo inquilino.",
+    "rollup_err_not_open": "Solo se pueden combinar alertas abiertas.",
+    "rollup_err_nested": "Una alerta de agrupación no puede combinarse dentro de otra agrupación.",
+    "rollup_err_not_found": "No se encontraron una o más de las alertas seleccionadas.",
+    "rollup_err_too_few": "Seleccione al menos dos alertas para combinar.",
+    "rollup_err_empty_title": "Ingrese un título para la agrupación.",
+    "rollup_err_title_too_long": "El título de la agrupación es demasiado largo (máximo 512 caracteres).",
+    "rollup_err_generic": "No se pudieron combinar las alertas seleccionadas."
   },
   "reports": {
     "title": "Generación de informes",

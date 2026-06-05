@@ -428,7 +428,8 @@ async function canSendNotification(alert, tenant) {
     const sentToday = await db.queryOne(
       `SELECT COUNT(*) AS cnt FROM alerts
        WHERE tenant_id = ? AND policy_id = ? AND email_sent = TRUE
-         AND triggered_at >= CURDATE()`,
+         AND triggered_at >= CURDATE()
+         AND is_rollup = 0`,
       [tenant.id, alert.policy_id]
     );
     return (sentToday?.cnt || 0) < limit;

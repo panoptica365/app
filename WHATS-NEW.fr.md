@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.43 — 2026-06-05
+
+### Nouveau : regroupez une avalanche d’alertes liées en un seul regroupement
+
+Lorsqu’un même client déclenche de nombreuses alertes pour un même problème sous-jacent — par exemple six alertes « MFA disabled users » lors d’une intégration — vous pouvez désormais les rassembler en une seule. Sélectionnez les alertes (le nouveau bouton **Fusionner** de la barre d’actions s’active dès que deux alertes ou plus sont cochées), confirmez un titre, et Panoptica crée une seule alerte de **regroupement** pour suivre l’enquête. Les alertes d’origine sont marquées comme résolues et reliées dans les deux sens : le regroupement énumère chaque alerte absorbée (chacune accessible d’un clic), et chaque alerte d’origine affiche un lien « Regroupée dans → » vers le regroupement.
+
+Tant que le regroupement reste ouvert, les détections répétées des mêmes conditions s’accumulent discrètement sur les alertes d’origine au lieu de générer de nouveaux doublons — le bruit cesse sans rien masquer. Résolvez le regroupement et, si une condition est toujours présente, une toute nouvelle alerte se déclenche à la vérification suivante — votre signal « je pensais que c’était réglé ». Un regroupement ne peut combiner que des alertes d’un même locataire, et il est volontairement exclu de chaque statistique, rapport et infolettre matinale (les alertes d’origine demeurent l’enregistrement compté).
+
+### Amélioré : la barre d’actions groupées ne fait plus sauter le tableau
+
+La barre d’actions groupées du tableau de bord des alertes est maintenant toujours visible, à hauteur fixe, ses boutons grisés tant que rien n’est sélectionné. Auparavant, la barre n’apparaissait qu’au premier cochage, ce qui décalait le tableau vers le bas et pouvait faire atterrir votre clic sur la mauvaise ligne. Ce décalage de mise en page a disparu.
+
+---
+
 ## Version 0.1.42 — 2026-06-04
 
 ### Nouveau : moniteur d’espace disque

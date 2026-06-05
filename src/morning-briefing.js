@@ -220,6 +220,7 @@ async function gatherBriefingData() {
      LEFT JOIN alert_policies ap ON a.policy_id = ap.id
      WHERE a.triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
        AND a.status <> 'false_positive'
+       AND a.is_rollup = 0
      ORDER BY a.triggered_at DESC`
   );
 

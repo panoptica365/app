@@ -288,9 +288,16 @@
       }
     }, 0);
 
-    // Body: details + AI + raw/drift + notes + timeline
+    // Body: details + AI/roll-up + raw/drift + notes + timeline
+    //
+    // Alert Merge (2026-06-05): a roll-up parent renders the merged child list
+    // in place of AI analysis (it has no Haiku output), and we suppress the
+    // raw-data JSON dump (the child list already shows the meaningful content).
+    const rollupRaw = (alert.raw_data && typeof alert.raw_data === 'object') ? alert.raw_data : {};
+    const isRollup = !!alert.is_rollup || rollupRaw.rollup === true;
+
     let rawDataHtml = '';
-    if (alert.raw_data) {
+    if (alert.raw_data && !isRollup) {
       // Phase 9b: if this is an Intune drift alert, render the structured drift
       // list instead of dumping raw JSON. Falls back to JSON for everything else.
       let parsed = null;
@@ -355,6 +362,37 @@
           <div class="alert-detail-label">${esc(window.t('alerts.section.ai_analysis'))} <span style="color:var(--p-text-muted);font-size:0.7rem;">${esc(window.t('alerts.section.ai_analysis_provider'))}</span></div>
           <div class="alert-detail-ai">${esc(alert.ai_analysis).replace(/\n/g, '<br>')}</div>
         </div>`;
+    }
+
+    // Roll-up parent: merged child list (replaces the AI section). Each row is
+    // a clickable severity chip + title that opens the original alert.
+    let rollupChildrenHtml = '';
+    if (isRollup) {
+      const children = Array.isArray(rollupRaw.children) ? rollupRaw.children : [];
+      const rows = children.map(c => `
+        <div class="alert-rollup-child" data-child-id="${esc(String(c.id))}" role="button" tabindex="0">
+          <span class="alert-severity-badge sev-${esc(c.severity || 'info')}" style="font-size:0.72rem;">${esc(window.t('alerts.' + (c.severity || 'info')).toUpperCase())}</span>
+          <span class="alert-rollup-child-title">${esc(c.message || ('#' + c.id))}</span>
+        </div>`).join('');
+      rollupChildrenHtml = `
+        <div class="alert-detail-section">
+          <div class="alert-detail-label">${esc(window.t('alerts.rollup_children_header', { count: children.length }))}</div>
+          <div class="alert-rollup-no-ai">${esc(window.t('alerts.rollup_no_ai'))}</div>
+          ${rows}
+        </div>`;
+    }
+
+    // Child of a roll-up: "Rolled up into → <parent title>" banner, parent
+    // title a clickable link back to the parent. We render the localized
+    // sentence escaped, then splice in the (separately escaped) link so the
+    // surrounding copy stays injection-safe regardless of locale.
+    let rolledUpBannerHtml = '';
+    if (alert.rollup_parent_id) {
+      const parentTitle = alert.rollup_parent_message || ('#' + alert.rollup_parent_id);
+      const linkHtml = `<a href="#" id="alert-rollup-parent-link" data-parent-id="${esc(String(alert.rollup_parent_id))}">${esc(parentTitle)}</a>`;
+      const sentence = window.t('alerts.rolled_up_into', { title: '%%TITLE%%' });
+      const inner = esc(sentence).replace('%%TITLE%%', linkHtml);
+      rolledUpBannerHtml = `<div class="alert-detail-section alert-rolled-up-banner">${inner}</div>`;
     }
 
     let timelineHtml = '';
@@ -425,6 +463,7 @@
       : '';
 
     el('alert-slideout-body').innerHTML = `
+      ${rolledUpBannerHtml}
       <div class="alert-detail-section">
         <div class="alert-detail-label">${esc(window.t('alerts.section.details'))}</div>
         <table class="alert-detail-table">
@@ -438,6 +477,7 @@
       </div>
       ${attributionHtml}
       ${aiHtml}
+      ${rollupChildrenHtml}
       ${rawDataHtml}
       <div class="alert-detail-section">
         <div class="alert-detail-label">${esc(window.t('alerts.section.notes'))}</div>
@@ -470,6 +510,33 @@
           }
         });
       });
+    }, 0);
+
+    // Roll-up cross-links (Alert Merge, 2026-06-05). Parent → child rows and
+    // child → parent banner both just re-open the slideout on the target id,
+    // preserving the current callbacks so the page table still refreshes on
+    // any later status change.
+    setTimeout(() => {
+      const body = document.getElementById('alert-slideout-body');
+      if (!body) return;
+      body.querySelectorAll('.alert-rollup-child[data-child-id]').forEach(row => {
+        const go = () => {
+          const childId = parseInt(row.getAttribute('data-child-id'), 10);
+          if (childId) open(childId, callbacks);
+        };
+        row.addEventListener('click', go);
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+        });
+      });
+      const parentLink = document.getElementById('alert-rollup-parent-link');
+      if (parentLink) {
+        parentLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          const parentId = parseInt(parentLink.getAttribute('data-parent-id'), 10);
+          if (parentId) open(parentId, callbacks);
+        });
+      }
     }, 0);
 
     // Wire the attribution "view change" button — closes the slideout,

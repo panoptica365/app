@@ -211,6 +211,7 @@ async function buildTenantDigestContext(tenantId) {
      LEFT JOIN alert_policies ap ON a.policy_id = ap.id
      WHERE a.tenant_id = ?
        AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+       AND a.is_rollup = 0
      ORDER BY a.triggered_at DESC
      LIMIT ${limitInt}`,
     [tenantId]
@@ -654,7 +655,7 @@ async function buildChatContext(tenantId) {
       `SELECT a.severity, a.message, a.status, a.ai_analysis_en AS ai_analysis, a.triggered_at, ap.category
        FROM alerts a
        LEFT JOIN alert_policies ap ON a.policy_id = ap.id
-       WHERE a.tenant_id = ? ORDER BY a.triggered_at DESC LIMIT 25`,
+       WHERE a.tenant_id = ? AND a.is_rollup = 0 ORDER BY a.triggered_at DESC LIMIT 25`,
       [tenantId]
     );
     context.recentAlerts = recentAlerts;
@@ -721,6 +722,7 @@ async function buildChatContext(tenantId) {
        JOIN tenants t ON a.tenant_id = t.id
        LEFT JOIN alert_policies ap ON a.policy_id = ap.id
        WHERE a.triggered_at >= DATE_SUB(NOW(), INTERVAL 48 HOUR)
+         AND a.is_rollup = 0
        ORDER BY a.triggered_at DESC LIMIT 30`
     );
     context.recentAlerts = recentAlerts;
