@@ -5,7 +5,15 @@ that release, newest first.
 
 ---
 
-## Version 0.1.41 — 2026-06-03
+## Version 0.1.42 — 2026-06-04
+
+### New: Disk-space monitor
+
+Settings now has a **Disk space** card showing how much storage your server has used — used, free, total, and a percentage with a usage bar. More importantly, Panoptica now **watches it for you**: a banner appears across the top of the app at **80% used** (and turns red at **90%**) so you have time to free space before anything breaks. The same signal feeds the health indicator in the status bar. This closes a real gap — a full disk can take the whole app down, and now you get a clear warning well ahead of time.
+
+### Reliability: logs can no longer fill your server
+
+We hardened how logging is handled end-to-end so a chatty background process can never consume the disk: the monitoring engine's PowerShell logging is turned down at the source (inside the app image, so every install is protected the same way), and the container logs are capped. Nothing for you to configure — it's built in.
 
 ### New: Diagnostics — capture a support bundle in one click
 

@@ -2492,6 +2492,18 @@
       "load_failed": "No se pudo cargar el diagnóstico.",
       "toast_ready": "El paquete de diagnóstico está listo para descargar.",
       "toast_partial": "Paquete de diagnóstico listo (parcial — algunos elementos no estaban disponibles)."
+    },
+    "card_disk_title": "Espacio en disco",
+    "card_disk_desc": "Cuánto almacenamiento ha usado su servidor. Avisa antes de que se agote.",
+    "disk": {
+      "section_title": "Espacio en disco",
+      "intro": "Almacenamiento usado en el servidor que aloja Panoptica365. Un aviso le advierte al 80 % y de nuevo al 90 % para que pueda liberar espacio antes de que algo falle.",
+      "loading": "Leyendo el uso del disco…",
+      "label_used": "Usado",
+      "label_free": "Libre",
+      "label_total": "Total",
+      "refresh_btn": "Actualizar",
+      "load_failed": "No se pudo leer el uso del disco."
     }
   },
   "tenant_dashboard": {
@@ -3731,6 +3743,21 @@
       "crit_threshold": "Umbral crítico",
       "error": "Error",
       "ms_unit": "{ms} ms"
+    },
+    "disk": {
+      "label": "Espacio en disco",
+      "summary": {
+        "ok": "Disco al {pct} % de uso ({freeGb} GB libres)",
+        "warn": "Disco al {pct} % de uso — espacio bajo ({freeGb} GB libres). Libere espacio antes de que se llene.",
+        "crit": "Disco al {pct} % de uso — espacio crítico ({freeGb} GB libres). Actúe ahora para evitar una interrupción.",
+        "unknown": "No se pudo leer el uso del disco"
+      },
+      "used": "Usado",
+      "free": "Libre",
+      "total": "Total",
+      "warn_threshold": "Umbral de advertencia",
+      "crit_threshold": "Umbral crítico",
+      "error": "Error"
     }
   },
   "_comment_notifier": "Phase 9c (2 de mayo de 2026) — enrutamiento por destinatario del idioma de los correos de alerta. El asunto y el marco del cuerpo se localizan según la columna users.language. Las etiquetas de severidad y los nombres de categoría provienen de las claves alerts.* existentes; las etiquetas propias del correo viven aquí.",
@@ -3783,5 +3810,9 @@
     "error_no_update": "No hay ninguna actualización disponible en este momento.",
     "error_in_progress": "Ya hay una actualización en curso.",
     "trigger_failed": "No se pudo iniciar la actualización. Inténtelo de nuevo."
+  },
+  "disk_banner": {
+    "warn_title": "Poco espacio en disco",
+    "crit_title": "Espacio en disco crítico"
   }
 }

@@ -5,7 +5,15 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
-## Version 0.1.41 — 2026-06-03
+## Version 0.1.42 — 2026-06-04
+
+### Nouveau : moniteur d’espace disque
+
+Les Paramètres comportent désormais une carte **Espace disque** indiquant l’espace de stockage utilisé par votre serveur — utilisé, libre, total, ainsi qu’un pourcentage avec une barre d’utilisation. Surtout, Panoptica le **surveille pour vous** : une bannière apparaît en haut de l’application à **80 % d’utilisation** (et passe au rouge à **90 %**) pour vous laisser le temps de libérer de l’espace avant toute panne. Le même signal alimente l’indicateur d’état dans la barre d’état. Cela comble une lacune réelle — un disque plein peut faire tomber toute l’application, et vous êtes maintenant averti bien à l’avance.
+
+### Fiabilité : les journaux ne peuvent plus remplir votre serveur
+
+Nous avons renforcé la gestion des journaux de bout en bout afin qu’un processus bavard en arrière-plan ne puisse jamais saturer le disque : la journalisation PowerShell du moteur de surveillance est réduite à la source (dans l’image de l’application, donc chaque installation est protégée de la même façon) et les journaux des conteneurs sont plafonnés. Rien à configurer — c’est intégré.
 
 ### Nouveau : Diagnostics — capturez un dossier de soutien en un clic
 

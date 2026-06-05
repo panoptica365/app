@@ -16,6 +16,7 @@
     document.getElementById('card-branding')?.addEventListener('click', () => showView('branding'));
     document.getElementById('card-licensing')?.addEventListener('click', () => showView('licensing'));
     document.getElementById('card-diagnostics')?.addEventListener('click', () => showView('diagnostics'));
+    document.getElementById('card-disk')?.addEventListener('click', () => showView('disk'));
 
     // Back buttons
     document.getElementById('smtp-back')?.addEventListener('click', () => showView('cards'));
@@ -31,6 +32,10 @@
     // Diagnostics handlers
     document.getElementById('diagnostics-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('diagnostics-capture')?.addEventListener('click', startDiagnosticsCapture);
+
+    // Disk space handlers
+    document.getElementById('disk-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('disk-refresh')?.addEventListener('click', loadDisk);
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -286,6 +291,65 @@
     }
   }
 
+  // ─── Disk space (2026-06-04) — storage usage + threshold note ───
+  function diskGb(bytes) {
+    if (typeof bytes !== 'number' || !isFinite(bytes)) return '—';
+    return (bytes / (1024 ** 3)).toFixed(1) + ' GB';
+  }
+
+  function renderDisk(check) {
+    const d = check.detail || {};
+    const usedPct = typeof d.used_pct === 'number' ? d.used_pct : null;
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    const usedBytes = (typeof d.total_bytes === 'number' && typeof d.free_bytes === 'number')
+      ? d.total_bytes - d.free_bytes : null;
+    setText('disk-used', usedPct != null ? `${diskGb(usedBytes)} (${usedPct}%)` : '—');
+    setText('disk-free', diskGb(d.free_bytes));
+    setText('disk-total', diskGb(d.total_bytes));
+
+    // Usage bar width + colour by state.
+    const fill = document.getElementById('disk-usage-fill');
+    if (fill) {
+      fill.style.width = (usedPct != null ? Math.min(100, usedPct) : 0) + '%';
+      fill.style.background = check.state === 'crit' ? 'var(--p-danger,#d9534f)'
+        : check.state === 'warn' ? 'var(--p-warn,#e0a800)'
+        : 'var(--p-ok,#2e9e5b)';
+    }
+
+    // Threshold note — reuse the check's own localized summary (carries numbers).
+    const note = document.getElementById('disk-note');
+    if (note) {
+      note.textContent = check.summary || '';
+      note.style.color = check.state === 'crit' ? 'var(--p-danger)'
+        : check.state === 'warn' ? 'var(--p-warn)' : 'var(--p-text-muted)';
+    }
+  }
+
+  async function loadDisk() {
+    const loading = document.getElementById('disk-loading');
+    const body = document.getElementById('disk-body');
+    const errEl = document.getElementById('disk-error');
+    const status = document.getElementById('disk-status');
+    if (status) status.textContent = '';
+    if (loading) loading.style.display = '';
+    if (body) body.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
+    try {
+      const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+      const check = await Panoptica.api('/api/health/disk?lang=' + lang);
+      renderDisk(check);
+      if (loading) loading.style.display = 'none';
+      if (body) body.style.display = '';
+    } catch (err) {
+      if (loading) loading.style.display = 'none';
+      if (errEl) {
+        errEl.textContent = (err && err.message) || window.t('settings.disk.load_failed');
+        errEl.style.display = '';
+      }
+    }
+  }
+
   function destroy() { stopDiagnosticsPoll(); }
 
   function showView(view) {
@@ -300,6 +364,7 @@
       branding:  document.getElementById('settings-branding-view'),
       licensing: document.getElementById('settings-licensing-view'),
       diagnostics: document.getElementById('settings-diagnostics-view'),
+      disk: document.getElementById('settings-disk-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -315,6 +380,7 @@
     if (view === 'branding')  loadBranding();
     if (view === 'licensing') loadLicensing();
     if (view === 'diagnostics') loadDiagnostics();
+    if (view === 'disk') loadDisk();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───

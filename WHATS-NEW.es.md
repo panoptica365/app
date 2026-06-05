@@ -5,7 +5,15 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
-## Versión 0.1.41 — 2026-06-03
+## Versión 0.1.42 — 2026-06-04
+
+### Nuevo: monitor de espacio en disco
+
+Configuración ahora incluye una tarjeta de **Espacio en disco** que muestra cuánto almacenamiento ha usado su servidor — usado, libre, total y un porcentaje con una barra de uso. Y lo más importante: Panoptica ahora lo **vigila por usted**: un aviso aparece en la parte superior de la aplicación al **80 % de uso** (y se vuelve rojo al **90 %**) para darle tiempo a liberar espacio antes de que algo falle. La misma señal alimenta el indicador de estado en la barra de estado. Esto cubre una carencia real — un disco lleno puede tumbar toda la aplicación, y ahora recibe un aviso con suficiente antelación.
+
+### Fiabilidad: los registros ya no pueden llenar su servidor
+
+Reforzamos el manejo de los registros de principio a fin para que un proceso ruidoso en segundo plano nunca consuma el disco: el registro de PowerShell del motor de monitoreo se reduce en el origen (dentro de la imagen de la aplicación, de modo que todas las instalaciones quedan protegidas igual) y los registros de los contenedores tienen un tope. No hay nada que configurar — viene integrado.
 
 ### Nuevo: Diagnóstico — capture un paquete de soporte con un clic
 

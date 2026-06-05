@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.41",
-    "image_tag": "v0.1.41",
-    "released_at": "2026-06-03",
+    "version": "0.1.42",
+    "image_tag": "v0.1.42",
+    "released_at": "2026-06-04",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Adds a Diagnostics tool in Settings to capture a redacted support bundle, plus rotating file logs. The updater now runs a signed payload the sidecar verifies before every use.",
-      "fr": "Ajoute un outil de Diagnostics dans les Paramètres pour capturer un dossier de soutien expurgé, ainsi que des journaux fichiers avec rotation. Le module de mise à jour exécute désormais une charge utile signée, vérifiée par le composant auxiliaire avant chaque utilisation.",
-      "es": "Añade una herramienta de Diagnóstico en Configuración para capturar un paquete de soporte depurado, además de registros en archivo con rotación. El actualizador ahora ejecuta una carga firmada que el componente auxiliar verifica antes de cada uso."
+      "en": "Diagnostics support bundle + rotating file logs + signed updater payload, plus a disk-space monitor that warns at 80%/90% and reliability hardening so logs can never fill the server.",
+      "fr": "Dossier de soutien Diagnostics + journaux fichiers avec rotation + charge de mise à jour signée, plus un moniteur d’espace disque qui avertit à 80 %/90 % et un renforcement de fiabilité empêchant les journaux de remplir le serveur.",
+      "es": "Paquete de soporte de Diagnóstico + registros en archivo con rotación + carga de actualización firmada, además de un monitor de espacio en disco que avisa al 80 %/90 % y mejoras de fiabilidad para que los registros nunca llenen el servidor."
     }
   },
   "yanked": []

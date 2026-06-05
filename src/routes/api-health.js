@@ -25,6 +25,8 @@
  */
 
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const auth = require('../auth');
 const db = require('../db/database');
 const aiAnalysis = require('../ai-analysis');
@@ -46,6 +48,12 @@ const CLAUDE_CRIT_HOURS = 72;
 // DB ping thresholds.
 const DB_WARN_MS = 50;
 const DB_CRIT_MS = 200;
+// Disk-space sentry (added 2026-06-04 after a full disk wedged Prod). Warn early
+// so there's time to act before anything breaks; crit when it's nearly gone.
+const DISK_WARN_PCT = 80;
+const DISK_CRIT_PCT = 90;
+// The volume that matters is wherever the app + its data/logs/backups live.
+const DISK_PATH = path.join(__dirname, '..', '..');
 // AI parse-health: action threshold per project_ai_analysis_overhaul memory.
 // Below MIN_SAMPLES we report 'collecting baseline' instead of throwing alarms
 // off two bad parses. Above 5% miss-rate is the documented action threshold.
@@ -419,6 +427,54 @@ async function checkDatabase(lang) {
   }
 }
 
+async function checkDisk(lang) {
+  // fs.statfsSync is available on Node 18.15+. Compute "used %" the way `df`
+  // reports it so the number matches what an operator sees on the box.
+  try {
+    const s = fs.statfsSync(DISK_PATH);
+    const total = s.blocks * s.bsize;
+    const availToUser = s.bavail * s.bsize;
+    const free = s.bfree * s.bsize;
+    const used = total - free;
+    // df Use% = used / (used + available-to-user)
+    const usedPct = Math.round((used / (used + availToUser)) * 100);
+    const freeGb = (availToUser / (1024 ** 3));
+
+    let state = 'ok';
+    if (usedPct >= DISK_CRIT_PCT) state = 'crit';
+    else if (usedPct >= DISK_WARN_PCT) state = 'warn';
+
+    const summary = state === 'ok'
+      ? t('health.disk.summary.ok', { lang, pct: usedPct, freeGb: freeGb.toFixed(1) })
+      : (state === 'crit'
+          ? t('health.disk.summary.crit', { lang, pct: usedPct, freeGb: freeGb.toFixed(1) })
+          : t('health.disk.summary.warn', { lang, pct: usedPct, freeGb: freeGb.toFixed(1) }));
+
+    return {
+      id: 'disk',
+      label: t('health.disk.label', { lang }),
+      state,
+      summary,
+      detail: {
+        path: DISK_PATH,
+        used_pct: usedPct,
+        free_bytes: availToUser,
+        total_bytes: total,
+        warn_threshold_pct: DISK_WARN_PCT,
+        crit_threshold_pct: DISK_CRIT_PCT,
+      },
+    };
+  } catch (err) {
+    return {
+      id: 'disk',
+      label: t('health.disk.label', { lang }),
+      state: 'warn',
+      summary: t('health.disk.summary.unknown', { lang }),
+      detail: { path: DISK_PATH, error: err.message || String(err) },
+    };
+  }
+}
+
 // ─── Endpoint ───
 
 /**
@@ -444,16 +500,17 @@ async function checkDatabase(lang) {
  */
 async function runAllChecks(lang = 'en') {
   // Run all checks in parallel — they each hit different tables.
-  const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database] = await Promise.all([
+  const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database, disk] = await Promise.all([
     checkAlertPoller(lang),
     checkGraphEndpoints(lang),
     checkClaudeApi(lang),
     checkAiParseHealth(lang),
     checkDriftSchedulers(lang),
     checkDatabase(lang),
+    checkDisk(lang),
   ]);
 
-  const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database];
+  const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database, disk];
   const rolled = overallState(checks);
   const overall = rolled === 'ok' ? 'nominal' : (rolled === 'warn' ? 'degraded' : 'critical');
 
@@ -494,6 +551,16 @@ router.get('/', async (req, res) => {
       }],
     });
   }
+});
+
+/**
+ * GET /api/health/disk — just the disk check. Lightweight (no DB), for the
+ * Settings → Disk space card and any UI that wants storage without running the
+ * full aggregation. Auth is applied via router.use(requireAuth) above.
+ */
+router.get('/disk', async (req, res) => {
+  const lang = req.query.lang || 'en';
+  res.json(await checkDisk(lang));
 });
 
 module.exports = router;

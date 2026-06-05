@@ -70,6 +70,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_diagnostics_desc">Capture a support bundle to send us when something isn't working.</div>
   </div>
 
+  <!-- Disk Space Card -->
+  <div class="settings-card" id="card-disk" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="hard-drive"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_disk_title">Disk space</div>
+    <div class="settings-card-desc" data-i18n="settings.card_disk_desc">How much storage your server has used. Warns before it runs out.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -475,5 +482,44 @@
         <tbody id="diagnostics-bundles-body"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- ─── Disk Space Sub-View ─── -->
+<div id="settings-disk-view" style="display:none;">
+  <button class="btn-secondary" id="disk-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.disk.section_title">Disk space</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.disk.intro">
+      Storage used on the server hosting Panoptica365. A banner warns you at 80% and again at 90% so you can free space before anything breaks.
+    </div>
+
+    <div id="disk-loading" class="form-hint" data-i18n="settings.disk.loading">Reading disk usage…</div>
+
+    <div id="disk-body" style="display:none;">
+      <!-- usage bar -->
+      <div class="disk-usage-bar" style="height:14px; border-radius:7px; background:var(--p-surface-2,rgba(127,127,127,.18)); overflow:hidden; margin-bottom:14px;">
+        <div id="disk-usage-fill" style="height:100%; width:0%; background:var(--p-ok,#2e9e5b); transition:width .3s, background .3s;"></div>
+      </div>
+
+      <table class="settings-stat-table">
+        <tbody>
+          <tr><th data-i18n="settings.disk.label_used">Used</th><td id="disk-used">—</td></tr>
+          <tr><th data-i18n="settings.disk.label_free">Free</th><td id="disk-free">—</td></tr>
+          <tr><th data-i18n="settings.disk.label_total">Total</th><td id="disk-total">—</td></tr>
+        </tbody>
+      </table>
+
+      <div class="form-hint" id="disk-note" style="margin-top:14px;"></div>
+
+      <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+        <button class="btn-secondary" id="disk-refresh" data-i18n="settings.disk.refresh_btn">Refresh</button>
+        <span id="disk-status" style="font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <div id="disk-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
   </div>
 </div>

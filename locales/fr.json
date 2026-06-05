@@ -2492,6 +2492,18 @@
       "load_failed": "Impossible de charger les diagnostics.",
       "toast_ready": "Le dossier de diagnostic est prêt à télécharger.",
       "toast_partial": "Dossier de diagnostic prêt (partiel — certains éléments étaient indisponibles)."
+    },
+    "card_disk_title": "Espace disque",
+    "card_disk_desc": "L’espace de stockage utilisé sur votre serveur. Vous avertit avant qu’il ne soit plein.",
+    "disk": {
+      "section_title": "Espace disque",
+      "intro": "Espace de stockage utilisé sur le serveur qui héberge Panoptica365. Une bannière vous avertit à 80 % puis à 90 % afin que vous puissiez libérer de l’espace avant toute panne.",
+      "loading": "Lecture de l’utilisation du disque…",
+      "label_used": "Utilisé",
+      "label_free": "Libre",
+      "label_total": "Total",
+      "refresh_btn": "Actualiser",
+      "load_failed": "Impossible de lire l’utilisation du disque."
     }
   },
   "tenant_dashboard": {
@@ -3731,6 +3743,21 @@
       "crit_threshold": "Seuil critique",
       "error": "Erreur",
       "ms_unit": "{ms} ms"
+    },
+    "disk": {
+      "label": "Espace disque",
+      "summary": {
+        "ok": "Disque utilisé à {pct} % ({freeGb} Go libres)",
+        "warn": "Disque utilisé à {pct} % — espace faible ({freeGb} Go libres). Libérez de l’espace avant qu’il ne se remplisse.",
+        "crit": "Disque utilisé à {pct} % — espace critique ({freeGb} Go libres). Agissez maintenant pour éviter une panne.",
+        "unknown": "Impossible de lire l’utilisation du disque"
+      },
+      "used": "Utilisé",
+      "free": "Libre",
+      "total": "Total",
+      "warn_threshold": "Seuil d’avertissement",
+      "crit_threshold": "Seuil critique",
+      "error": "Erreur"
     }
   },
   "_comment_notifier": "Phase 9c (2 mai 2026) — acheminement par destinataire de la langue des courriels d’alerte. Le sujet et l’habillage du corps sont localisés selon la colonne users.language. Les libellés de gravité et les noms de catégorie proviennent des clés alerts.* existantes ; les libellés propres au courriel vivent ici.",
@@ -3783,5 +3810,9 @@
     "error_no_update": "Aucune mise à jour n'est disponible pour le moment.",
     "error_in_progress": "Une mise à jour est déjà en cours.",
     "trigger_failed": "Impossible de démarrer la mise à jour. Veuillez réessayer."
+  },
+  "disk_banner": {
+    "warn_title": "Espace disque faible",
+    "crit_title": "Espace disque critique"
   }
 }

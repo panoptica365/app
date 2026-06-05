@@ -2492,6 +2492,18 @@
       "load_failed": "Could not load diagnostics.",
       "toast_ready": "Diagnostic bundle ready to download.",
       "toast_partial": "Diagnostic bundle ready (partial — some items were unavailable)."
+    },
+    "card_disk_title": "Disk space",
+    "card_disk_desc": "How much storage your server has used. Warns before it runs out.",
+    "disk": {
+      "section_title": "Disk space",
+      "intro": "Storage used on the server hosting Panoptica365. A banner warns you at 80% and again at 90% so you can free space before anything breaks.",
+      "loading": "Reading disk usage…",
+      "label_used": "Used",
+      "label_free": "Free",
+      "label_total": "Total",
+      "refresh_btn": "Refresh",
+      "load_failed": "Could not read disk usage."
     }
   },
   "tenant_dashboard": {
@@ -3731,6 +3743,21 @@
       "crit_threshold": "Crit threshold",
       "error": "Error",
       "ms_unit": "{ms} ms"
+    },
+    "disk": {
+      "label": "Disk space",
+      "summary": {
+        "ok": "Disk {pct}% used ({freeGb} GB free)",
+        "warn": "Disk {pct}% used — running low ({freeGb} GB free). Free space before it fills.",
+        "crit": "Disk {pct}% used — critically low ({freeGb} GB free). Act now to avoid an outage.",
+        "unknown": "Could not read disk usage"
+      },
+      "used": "Used",
+      "free": "Free",
+      "total": "Total",
+      "warn_threshold": "Warn threshold",
+      "crit_threshold": "Critical threshold",
+      "error": "Error"
     }
   },
   "_comment_notifier": "Phase 9c (May 2, 2026) — per-recipient alert email language routing. Subject + body chrome are localized per recipient based on the users.language column. Severity badge labels and category names are read from existing alerts.* keys; the email-only labels live here.",
@@ -3783,5 +3810,9 @@
     "error_no_update": "No update is available right now.",
     "error_in_progress": "An update is already in progress.",
     "trigger_failed": "Could not start the update. Please try again."
+  },
+  "disk_banner": {
+    "warn_title": "Low disk space",
+    "crit_title": "Critically low disk space"
   }
 }

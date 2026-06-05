@@ -75,6 +75,25 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
     && rm -rf /var/lib/apt/lists/* \
     && pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
 
+# ─── 3b. Turn PowerShell's Linux logging DOWN at the source ─────────
+# Every pwsh the EXO/Graph pollers spawn otherwise firehoses its full
+# module SOURCE (ScriptBlock_Compile_Detail) into the host's syslog/journal.
+# On a full-OS host that filled Trilogiam's disk and wedged the app
+# (2026-06-04); on any host it's gigabytes of useless noise. This is the
+# SOURCE fix that ships with the image, so EVERY install is protected by
+# construction — not reliant on the host lacking a syslog sink.
+#   LogLevel=Error            → keep real PowerShell errors (useful for
+#                               diagnostics), drop info/warning noise.
+#   ScriptBlockLogging off    → kill the module-source dumps entirely.
+# Verified on PS 7.6.1: ~1854 journal lines per module import → 1.
+# Written to $PSHOME (resolved at build time, not hard-coded) so it applies
+# to every spawn regardless of where the package lays PowerShell down.
+COPY powershell.config.json /tmp/powershell.config.json
+RUN cp /tmp/powershell.config.json "$(pwsh -NoProfile -Command 'Write-Output $PSHOME')/powershell.config.json" \
+    && rm /tmp/powershell.config.json \
+    && echo "[pwsh] logging config installed at:" \
+    && pwsh -NoProfile -Command 'Join-Path $PSHOME "powershell.config.json"'
+
 # ─── 4. PowerShell modules — installed at build time ────────────────
 # Scope=AllUsers so the modules live under /usr/local/share/powershell
 # and are visible to whatever user the container runs as.

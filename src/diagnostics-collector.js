@@ -60,8 +60,19 @@ function nowStampId() {
 }
 
 function isContainerEnv() {
-  // Same heuristic as payload-delivery (§3.3.3): the bind mount only exists in
-  // the Docker stack, never on the pm2 dev VM.
+  // Are we running inside the Docker image at all? Use the reliable signals,
+  // NOT the sidecar-payload mount — a container running a pre-v1.3.0 compose
+  // (no payload mount yet) is still a container, and mis-labelling it "pm2"
+  // produced a misleading skip reason on P365-Test (2026-06-04). `/.dockerenv`
+  // is written by Docker in every container; the /app WORKDIR is our image's.
+  try { if (fs.existsSync('/.dockerenv')) return true; } catch (_) {}
+  try { if (__dirname.startsWith('/app/')) return true; } catch (_) {}
+  // Last-resort: the payload mount (present on v1.3.0+ Docker installs).
+  try { return fs.statSync(SIDECAR_MOUNT).isDirectory(); } catch (_) { return false; }
+}
+
+// Does the sidecar-payload delivery mount exist? (v1.3.0+ Docker installs only.)
+function hasPayloadMount() {
   try { return fs.statSync(SIDECAR_MOUNT).isDirectory(); } catch (_) { return false; }
 }
 
@@ -248,7 +259,12 @@ async function collectDockerLogs(dockerOutDir, captureId, operator, manifest) {
   manifest.environment = 'container';
 
   if (!stamp.present || stamp.stale) {
-    manifest.skipped.push({ item: 'docker-logs', reason: `sidecar down (stamp ${stamp.present ? 'stale' : 'absent'})` });
+    // Distinguish "container hasn't been upgraded to the signed-payload sidecar
+    // yet" (no mount + no stamp) from "sidecar is installed but down/stale".
+    const reason = (!stamp.present && !hasPayloadMount())
+      ? 'container, but the signed-payload sidecar is not installed yet (pre-v1.3.0 install) — update the installer + app to enable container-log collection'
+      : `sidecar down (stamp ${stamp.present ? 'stale' : 'absent'})`;
+    manifest.skipped.push({ item: 'docker-logs', reason });
     return;
   }
   if (!stamp.capabilities.includes('diag')) {

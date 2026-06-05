@@ -44,6 +44,18 @@
     </div>
   </div>
 
+  <!-- Disk-space sentry banner (shown at ≥80% used). Reuses the license-banner
+       styling; populated by refreshHealth() from /api/health's disk check. -->
+  <div id="disk-banner" class="license-banner" style="display:none;" role="alert">
+    <div class="license-banner-inner">
+      <span class="license-banner-icon" aria-hidden="true">⚠</span>
+      <div class="license-banner-text">
+        <strong id="disk-banner-title"></strong>
+        <span id="disk-banner-body"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ HEADER FRAME — v6 ═══ -->
   <header class="header-frame">
     <div class="header-brand">

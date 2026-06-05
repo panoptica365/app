@@ -1377,6 +1377,9 @@
         bar.classList.remove('state-nominal', 'state-degraded', 'state-critical');
         bar.classList.add(`state-${payload.overall}`);
       }
+
+      // Disk-space sentry banner — driven off the same poll (spec 2026-06-04).
+      renderDiskBanner((payload.checks || []).find(c => c.id === 'disk'));
     } catch (e) {
       // If /api/health itself is unreachable, that IS a critical signal.
       console.warn('[SPA] Health refresh failed:', e.message);
@@ -1388,6 +1391,25 @@
         bar.classList.add('state-critical');
       }
     }
+  }
+
+  // Disk-space sentry banner. Shows app-wide at ≥80% used (amber) / ≥90% (red).
+  // Reuses the license-banner styling via the shared data-phase color rules.
+  // Body text is the disk check's already-localized summary (carries the live
+  // numbers); title is a localized severity headline.
+  function renderDiskBanner(check) {
+    const el = document.getElementById('disk-banner');
+    if (!el) return;
+    if (!check || (check.state !== 'warn' && check.state !== 'crit')) {
+      el.style.display = 'none';
+      return;
+    }
+    const titleEl = document.getElementById('disk-banner-title');
+    const bodyEl = document.getElementById('disk-banner-body');
+    el.dataset.phase = check.state === 'crit' ? 'hard' : 'warning';
+    if (titleEl) titleEl.textContent = window.t(check.state === 'crit' ? 'disk_banner.crit_title' : 'disk_banner.warn_title');
+    if (bodyEl) bodyEl.textContent = check.summary || '';
+    el.style.display = '';
   }
 
   function escHtml(s) {
@@ -1483,6 +1505,20 @@
           [window.t('health.database.crit_threshold'), window.t('health.database.ms_unit', { ms: d.crit_threshold_ms })],
         ];
         if (d.error) rows.push([window.t('health.database.error'), d.error]);
+        return rows.map(([k, v]) =>
+          `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v mono">${escHtml(v)}</span></div>`
+        ).join('');
+      }
+
+      case 'disk': {
+        const gb = (b) => (typeof b === 'number' ? (b / (1024 ** 3)).toFixed(1) + ' GB' : '—');
+        const rows = [];
+        if (d.used_pct != null) rows.push([window.t('health.disk.used'), `${d.used_pct}%`]);
+        if (d.free_bytes != null) rows.push([window.t('health.disk.free'), gb(d.free_bytes)]);
+        if (d.total_bytes != null) rows.push([window.t('health.disk.total'), gb(d.total_bytes)]);
+        if (d.warn_threshold_pct != null) rows.push([window.t('health.disk.warn_threshold'), `${d.warn_threshold_pct}%`]);
+        if (d.crit_threshold_pct != null) rows.push([window.t('health.disk.crit_threshold'), `${d.crit_threshold_pct}%`]);
+        if (d.error) rows.push([window.t('health.disk.error'), d.error]);
         return rows.map(([k, v]) =>
           `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v mono">${escHtml(v)}</span></div>`
         ).join('');
