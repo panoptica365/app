@@ -15,6 +15,10 @@ Settings now has a **Disk space** card showing how much storage your server has 
 
 We hardened how logging is handled end-to-end so a chatty background process can never consume the disk: the monitoring engine's PowerShell logging is turned down at the source (inside the app image, so every install is protected the same way), and the container logs are capped. Nothing for you to configure — it's built in.
 
+---
+
+## Version 0.1.41 — 2026-06-03
+
 ### New: Diagnostics — capture a support bundle in one click
 
 Settings now has a **Diagnostics** card (administrators only). When something isn't working, click **Capture diagnostics** and Panoptica assembles a single downloadable bundle with everything we need to investigate: application logs, configuration summaries, database health, recent alert and ingestion stats, disk space, and — on Docker installs — the container logs. Email it to support and we can debug remotely, even on servers we have no direct access to.

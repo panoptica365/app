@@ -15,6 +15,10 @@ Les Paramètres comportent désormais une carte **Espace disque** indiquant l’
 
 Nous avons renforcé la gestion des journaux de bout en bout afin qu’un processus bavard en arrière-plan ne puisse jamais saturer le disque : la journalisation PowerShell du moteur de surveillance est réduite à la source (dans l’image de l’application, donc chaque installation est protégée de la même façon) et les journaux des conteneurs sont plafonnés. Rien à configurer — c’est intégré.
 
+---
+
+## Version 0.1.41 — 2026-06-03
+
 ### Nouveau : Diagnostics — capturez un dossier de soutien en un clic
 
 Les Paramètres comportent désormais une carte **Diagnostics** (administrateurs seulement). Lorsqu'un problème survient, cliquez sur **Capturer les diagnostics** et Panoptica assemble un dossier unique, téléchargeable, contenant tout ce dont nous avons besoin pour enquêter : journaux de l'application, résumés de configuration, état de la base de données, statistiques récentes d'alertes et d'ingestion, espace disque et — sur les installations Docker — les journaux des conteneurs. Envoyez-le au soutien technique et nous pouvons déboguer à distance, même sur des serveurs auxquels nous n'avons aucun accès direct.

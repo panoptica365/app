@@ -15,6 +15,10 @@ Configuración ahora incluye una tarjeta de **Espacio en disco** que muestra cu�
 
 Reforzamos el manejo de los registros de principio a fin para que un proceso ruidoso en segundo plano nunca consuma el disco: el registro de PowerShell del motor de monitoreo se reduce en el origen (dentro de la imagen de la aplicación, de modo que todas las instalaciones quedan protegidas igual) y los registros de los contenedores tienen un tope. No hay nada que configurar — viene integrado.
 
+---
+
+## Versión 0.1.41 — 2026-06-03
+
 ### Nuevo: Diagnóstico — capture un paquete de soporte con un clic
 
 Configuración ahora incluye una tarjeta de **Diagnóstico** (solo administradores). Cuando algo no funcione, haga clic en **Capturar diagnóstico** y Panoptica ensambla un único paquete descargable con todo lo que necesitamos para investigar: registros de la aplicación, resúmenes de configuración, estado de la base de datos, estadísticas recientes de alertas e ingesta, espacio en disco y — en instalaciones Docker — los registros de los contenedores. Envíelo al soporte y podremos depurar de forma remota, incluso en servidores a los que no tenemos acceso directo.
