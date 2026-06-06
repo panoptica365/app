@@ -1234,8 +1234,26 @@
     "cat_info_governance": "Gobierno de la información"
   },
   "_comment_event_descriptions": "Fase 11 (8 mayo 2026) — plantillas i18n para msp_audit_events.description + tenant_change_events.description. El renderizador del lado del servidor en src/lib/event-description-i18n.js busca event_descriptions.<table>.<key> usando row.template_key, luego interpola row.template_params mediante marcadores {paramName}. Las filas heredadas tienen template_key NULL y recurren a la columna description en inglés. Patrón de slug: verbo de acción cuando aplica (ca_template.create, login.success), o categoría para escrituras de logPanopticaChange.",
+  "legal": {
+    "eula": {
+      "tileTitle": "Contrato de licencia",
+      "tileSubtitle": "Ver el contrato de licencia de usuario final.",
+      "modalTitle": "Contrato de licencia de usuario final",
+      "nameHelper": "Escriba su nombre completo para confirmar que ha leído y acepta este contrato",
+      "namePlaceholder": "Nombre completo",
+      "agreeButton": "Aceptar y continuar",
+      "closeButton": "Cerrar",
+      "acceptedBy": "Aceptado por {name} el {date} — versión {version}",
+      "historyTitle": "Historial de aceptaciones",
+      "notAccepted": "Aún no aceptado",
+      "reacceptNotice": "El contrato de licencia se ha actualizado. Un administrador debe revisarlo y aceptarlo para continuar.",
+      "loadError": "No se pudo cargar el contrato de licencia. Vuelva a intentarlo.",
+      "acceptError": "No se pudo registrar su aceptación. Vuelva a intentarlo."
+    }
+  },
   "event_descriptions": {
     "msp_audit": {
+      "eula_accepted": "{typedName} aceptó el contrato de licencia de usuario final (versión {eulaVersion})",
       "login.success": "{account} inició sesión como {role}",
       "login.failure": "Error de inicio de sesión en Entra — {error}",
       "login.failure_state_mismatch": "Error de inicio de sesión — desajuste del estado OAuth (posible CSRF)",

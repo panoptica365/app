@@ -17,6 +17,14 @@
     document.getElementById('card-licensing')?.addEventListener('click', () => showView('licensing'));
     document.getElementById('card-diagnostics')?.addEventListener('click', () => showView('diagnostics'));
     document.getElementById('card-disk')?.addEventListener('click', () => showView('disk'));
+    // License Agreement — opens the shared EULA modal in read-only mode
+    // (provenance + acceptance history). No sub-view.
+    document.getElementById('card-eula')?.addEventListener('click', () => {
+      const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang && window.PanopticaI18n.currentLang()) || 'en';
+      if (window.Panoptica && window.Panoptica.EulaModal) {
+        window.Panoptica.EulaModal.open({ mode: 'readonly', locale: lang });
+      }
+    });
 
     // Back buttons
     document.getElementById('smtp-back')?.addEventListener('click', () => showView('cards'));

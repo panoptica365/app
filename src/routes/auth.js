@@ -13,6 +13,7 @@ const mspAudit = require('../msp-audit');
 const usersStore = require('../users-store');
 const versionInfo = require('../version');
 const updateChecker = require('../lib/update/update-checker');
+const legal = require('../legal');
 const assignExoRoles = require('../lib/assign-exo-roles');
 
 const router = express.Router();
@@ -418,7 +419,7 @@ function handleTeamsConsentCallback(req, res) {
 
 // ─── Session Status (for frontend) ───
 
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
   if (req.session?.user) {
     // Ensure role is always present in the response. Sessions created before
     // the role-resolution phase shipped will have no .role — report it as
@@ -427,6 +428,12 @@ router.get('/status', (req, res) => {
     // their role on next login.
     const user = { ...req.session.user };
     if (!user.role) user.role = 'viewer';
+    // EULA re-acceptance gate (spec §5.4): true when the manifest's current
+    // version has zero acceptance rows AND setup is complete. Only Admin-tier
+    // sessions act on it (the frontend gates on role); non-admins keep working
+    // so monitoring never stops because legal text changed. isReacceptRequired
+    // fails OPEN (false) on a DB hiccup, so /status never breaks over this.
+    user.eulaReacceptRequired = await legal.isReacceptRequired();
     res.json({ authenticated: true, user, version: versionInfo.asObject(), update: updateChecker.getStatus() });
   } else {
     res.json({ authenticated: false });

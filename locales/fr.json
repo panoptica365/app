@@ -1234,8 +1234,26 @@
     "cat_info_governance": "Gouvernance de l’information"
   },
   "_comment_event_descriptions": "Phase 11 (8 mai 2026) — gabarits i18n pour msp_audit_events.description + tenant_change_events.description. Le moteur de rendu côté serveur dans src/lib/event-description-i18n.js cherche event_descriptions.<table>.<key> via row.template_key, puis interpole row.template_params via les marqueurs {paramName}. Les rangées héritées ont template_key NULL et retombent sur la colonne description anglaise. Patron de slug : verbe d'action quand applicable (ca_template.create, login.success), ou catégorie pour les écritures logPanopticaChange.",
+  "legal": {
+    "eula": {
+      "tileTitle": "Contrat de licence",
+      "tileSubtitle": "Consulter le contrat de licence utilisateur final.",
+      "modalTitle": "Contrat de licence utilisateur final",
+      "nameHelper": "Saisissez votre nom complet pour confirmer que vous avez lu et que vous acceptez ce contrat",
+      "namePlaceholder": "Nom complet",
+      "agreeButton": "Accepter et continuer",
+      "closeButton": "Fermer",
+      "acceptedBy": "Accepté par {name} le {date} — version {version}",
+      "historyTitle": "Historique des acceptations",
+      "notAccepted": "Pas encore accepté",
+      "reacceptNotice": "Le contrat de licence a été mis à jour. Un administrateur doit l'examiner et l'accepter pour continuer.",
+      "loadError": "Impossible de charger le contrat de licence. Veuillez réessayer.",
+      "acceptError": "Impossible d'enregistrer votre acceptation. Veuillez réessayer."
+    }
+  },
   "event_descriptions": {
     "msp_audit": {
+      "eula_accepted": "{typedName} a accepté le contrat de licence utilisateur final (version {eulaVersion})",
       "login.success": "{account} s'est connecté en tant que {role}",
       "login.failure": "Échec de connexion à Entra — {error}",
       "login.failure_state_mismatch": "Échec de connexion — désynchronisation OAuth state (CSRF possible)",

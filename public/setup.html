@@ -86,6 +86,11 @@
     </div>
   </div>
 
+  <!-- EULA gate (welcome step). learn-markdown renders the agreement body;
+       eula-modal is the shared accept/read-only modal. Loaded before setup.js
+       so window.Panoptica.EulaModal exists when the operator clicks. -->
+  <script src="/js/shared/learn-markdown.js"></script>
+  <script src="/js/shared/eula-modal.js"></script>
   <script src="/js/setup.js"></script>
 </body>
 </html>

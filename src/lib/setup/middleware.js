@@ -40,6 +40,7 @@ const setupState = require('./state');
 const SETUP_ALLOWED_PREFIXES = [
   '/setup',         // the wizard HTML page itself
   '/api/setup',     // the wizard's own API endpoints
+  '/api/legal',     // EULA gate — the wizard's welcome step accepts it pre-auth
   '/api/i18n',      // localized strings — wizard needs them
   '/api/meta',      // version info (in case wizard wants to show "Panoptica365 v0.1.10")
   '/healthz',       // container orchestration

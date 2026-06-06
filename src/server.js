@@ -46,6 +46,7 @@ const updateApiRoutes = require('./routes/api-update');
 const diagnosticsApiRoutes = require('./routes/api-diagnostics');
 const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
+const legalApiRoutes = require('./routes/api-legal');
 const learnApiRoutes = require('./routes/api-learn');
 const applicationsApiRoutes = require('./routes/api-applications');
 const identityTimelineApiRoutes = require('./routes/api-identity-timeline');
@@ -255,6 +256,13 @@ app.use('/api/license', licenseApiRoutes);
 // and 403s if setup is already complete — so these are NOT a hole on
 // production installs. See src/routes/api-setup.js for the full design.
 app.use('/api/setup', setupApiRoutes);
+
+// EULA / License Agreement. Mounted BEFORE the degrade middleware (like
+// /api/setup + /api/license) so the agreement gate works during the first-boot
+// wizard (pre-auth, pre-license) and is never blocked by a degraded license.
+// The router itself enforces auth: anonymous only while setup is incomplete,
+// requireAdmin once setup completes.
+app.use('/api/legal', legalApiRoutes);
 
 // First-boot wizard page (HTML shell + JS state machine). Standalone page,
 // NOT served through the main SPA's index.html. Setup middleware's allowlist

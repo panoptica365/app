@@ -1665,6 +1665,24 @@
           appReleasedAt = status.version.releasedAt || null;
           setStatus('version', 'Panoptica365 v' + appVersion);
         }
+        // EULA re-acceptance gate (spec §6.4). When a newer agreement version
+        // ships, every Admin-tier user is blocked by the modal at next load
+        // until one of them re-accepts. Blocking: no dismiss — the gate stays
+        // until the typed-name acceptance is recorded. Operators/viewers are
+        // never prompted (the flag only drives this for admins), so monitoring
+        // never stops because legal text changed. On accept we reload so the
+        // refreshed /auth/status clears the flag for this session.
+        if (userInfo.role === 'admin' && userInfo.eulaReacceptRequired
+            && window.Panoptica && window.Panoptica.EulaModal) {
+          const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang
+            && window.PanopticaI18n.currentLang()) || 'en';
+          window.Panoptica.EulaModal.open({
+            mode: 'accept',
+            blocking: true,
+            locale: lang,
+            onAgree: () => { window.location.reload(); },
+          });
+        }
       }
     } catch (e) {
       console.warn('[SPA] Failed to load user status');

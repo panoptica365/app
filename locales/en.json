@@ -1234,8 +1234,26 @@
     "cat_info_governance": "Info Governance"
   },
   "_comment_event_descriptions": "Phase 11 (May 8, 2026) — i18n templates for msp_audit_events.description + tenant_change_events.description. Server-side renderer in src/lib/event-description-i18n.js looks up event_descriptions.<table>.<key> using row.template_key, then interpolates row.template_params via {paramName} placeholders. Legacy rows have NULL template_key and fall back to the English description column as-stored. Slug pattern: action verb where applicable (ca_template.create, login.success), or category for logPanopticaChange writers (ca_deploy, intune_push, etc.).",
+  "legal": {
+    "eula": {
+      "tileTitle": "License Agreement",
+      "tileSubtitle": "View the end user license agreement.",
+      "modalTitle": "End User License Agreement",
+      "nameHelper": "Type your full name to confirm you have read and agree to this agreement",
+      "namePlaceholder": "Full name",
+      "agreeButton": "Agree and Continue",
+      "closeButton": "Close",
+      "acceptedBy": "Accepted by {name} on {date} — version {version}",
+      "historyTitle": "Acceptance history",
+      "notAccepted": "Not yet accepted",
+      "reacceptNotice": "The license agreement has been updated. An administrator must review and accept it to continue.",
+      "loadError": "Could not load the license agreement. Please try again.",
+      "acceptError": "Could not record your acceptance. Please try again."
+    }
+  },
   "event_descriptions": {
     "msp_audit": {
+      "eula_accepted": "{typedName} accepted the End User License Agreement (version {eulaVersion})",
       "login.success": "{account} logged in as {role}",
       "login.failure": "Login failed at Entra — {error}",
       "login.failure_state_mismatch": "Login failed — OAuth state mismatch (possible CSRF)",

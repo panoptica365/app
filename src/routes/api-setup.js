@@ -45,6 +45,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 const setupState = require('../lib/setup/state');
 const setupMiddleware = require('../lib/setup/middleware');
+const legal = require('../legal');
 const licenseValidator = require('../lib/license/validator');
 const licenseStore = require('../lib/license/store');
 const certProvisioner = require('../lib/setup/cert-provisioner');
@@ -670,7 +671,23 @@ router.post('/skip/:step', (req, res) => {
 // shows a "Finishing setup — reconnecting…" screen that polls
 // /api/boot-status until the restarted process reports entra_configured,
 // then advances to sign-in / admin consent.
-router.post('/complete', (req, res) => {
+router.post('/complete', async (req, res) => {
+  // EULA gate (spec §5.3): refuse to finalize setup unless an acceptance row
+  // exists for the manifest's current version. The wizard UI makes this
+  // unreachable in normal flow; this server-side check makes the gate real
+  // (a hidden modal is not a gate). Fails CLOSED on a DB error — setup must
+  // not complete on an unverified acceptance.
+  try {
+    if (!(await legal.isCompliant())) {
+      return res.status(403).json({
+        error: 'eula_not_accepted',
+        detail: 'Setup cannot complete until the End User License Agreement has been accepted.',
+      });
+    }
+  } catch (e) {
+    return res.status(500).json({ error: 'eula_check_failed', detail: e.message });
+  }
+
   let state;
   try {
     state = setupState.markSetupComplete();

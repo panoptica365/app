@@ -868,8 +868,37 @@
     wireFooter(container, {
       primaryAction: async () => {
         const lang = localStorage.getItem('panoptica365-setup-lang') || 'en';
-        await apiPost('/api/setup/language', { language: lang });
-        advance();
+        // EULA gate (spec §6.2): the wizard must not proceed past the welcome
+        // screen until the agreement has been accepted. Re-check server-side on
+        // every continue attempt (don't cache a "shown once" flag) — a resumed
+        // wizard whose acceptance already landed proceeds straight through.
+        let alreadyAccepted = false;
+        try {
+          const st = await apiGet('/api/legal/eula?lang=' + encodeURIComponent(lang));
+          alreadyAccepted = !!(st && st.accepted);
+        } catch (_) { /* fall through to the modal */ }
+
+        if (alreadyAccepted) {
+          await apiPost('/api/setup/language', { language: lang });
+          advance();
+          return;
+        }
+
+        // Not yet accepted — open the modal. Close returns here (nothing else
+        // happens); Agree records the acceptance, then we save the language and
+        // advance to the next step.
+        if (!(window.Panoptica && window.Panoptica.EulaModal)) {
+          showToast(t('legal.eula.loadError') || 'Could not load the license agreement.', 'error');
+          return;
+        }
+        window.Panoptica.EulaModal.open({
+          mode: 'accept',
+          locale: lang,
+          onAgree: async () => {
+            await apiPost('/api/setup/language', { language: lang });
+            advance();
+          },
+        });
       },
     });
   }
