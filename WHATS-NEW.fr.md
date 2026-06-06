@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.44 — 2026-06-05
+
+### Nouveau : acceptation du contrat de licence
+
+Panoptica365 présente désormais son contrat de licence utilisateur final lors de la configuration initiale. Sur une nouvelle installation, l’assistant de configuration s’arrête à l’étape de bienvenue jusqu’à ce que vous lisiez le contrat, saisissiez votre nom complet et cliquiez sur **Accepter et continuer** — une acceptation délibérée et consignée au nom de votre organisation. L’acceptation (votre nom saisi, la version du contrat, la langue dans laquelle vous l’avez lu et l’heure exacte) est conservée de façon permanente.
+
+Une nouvelle carte **Contrat de licence** dans les Paramètres (réservée aux administrateurs) vous permet de relire le contrat à tout moment et indique qui l’a accepté et quand. Si une mise à jour ultérieure propose un contrat révisé, les administrateurs sont invités à examiner et à accepter la nouvelle version à la prochaine connexion avant de poursuivre — vos techniciens et observateurs continuent de travailler sans interruption, la surveillance ne s’arrête donc jamais.
+
+---
+
 ## Version 0.1.43 — 2026-06-05
 
 ### Nouveau : regroupez une avalanche d’alertes liées en un seul regroupement

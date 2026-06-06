@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.44 — 2026-06-05
+
+### Nuevo: aceptación del contrato de licencia
+
+Panoptica365 ahora presenta su contrato de licencia de usuario final durante la configuración inicial. En una instalación nueva, el asistente de configuración se detiene en el paso de bienvenida hasta que lea el contrato, escriba su nombre completo y haga clic en **Aceptar y continuar**: una aceptación deliberada y registrada en nombre de su organización. La aceptación (su nombre escrito, la versión del contrato, el idioma en que lo leyó y la hora exacta) se conserva de forma permanente.
+
+Una nueva tarjeta **Contrato de licencia** en Configuración (solo para administradores) le permite volver a leer el contrato en cualquier momento y muestra quién lo aceptó y cuándo. Si una actualización futura incluye un contrato revisado, se solicitará a los administradores que revisen y acepten la nueva versión en el siguiente inicio de sesión antes de continuar; sus técnicos y observadores siguen trabajando sin interrupciones, de modo que la supervisión nunca se detiene.
+
+---
+
 ## Versión 0.1.43 — 2026-06-05
 
 ### Nuevo: combine una avalancha de alertas relacionadas en una agrupación

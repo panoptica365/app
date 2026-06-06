@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.44 — 2026-06-05
+
+### New: License agreement acceptance
+
+Panoptica365 now presents its End User License Agreement during first-boot setup. On a fresh install, the setup wizard pauses on the welcome step until you read the agreement, type your full name, and click **Agree and Continue** — a deliberate, recorded acceptance on behalf of your organization. The acceptance (your typed name, the agreement version, the language you read it in, and the exact time) is stored permanently.
+
+A new **License Agreement** card in Settings (admin only) lets you re-read the agreement at any time and shows who accepted it and when. If a future update ships a revised agreement, administrators are asked to review and accept the new version at next sign-in before continuing — your technicians and viewers keep working uninterrupted, so monitoring never stops.
+
+---
+
 ## Version 0.1.43 — 2026-06-05
 
 ### New: merge a flood of related alerts into one roll-up
