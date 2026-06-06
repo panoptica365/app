@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.43",
-    "image_tag": "v0.1.43",
+    "version": "0.1.44",
+    "image_tag": "v0.1.44",
     "released_at": "2026-06-05",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Merge a flood of related alerts from one tenant into a single roll-up to track the investigation — originals are resolved and cross-linked, repeat detections stay quiet while it's open, and roll-ups are kept out of every stat and report. Plus: the bulk-action bar is now always visible, so selecting alerts no longer makes the table jump.",
-      "fr": "Fusionnez une avalanche d’alertes liées d’un même client en un seul regroupement pour suivre l’enquête — les alertes d’origine sont résolues et reliées, les détections répétées restent discrètes tant qu’il est ouvert, et les regroupements sont exclus de chaque statistique et rapport. De plus : la barre d’actions groupées est maintenant toujours visible, donc sélectionner des alertes ne fait plus sauter le tableau.",
-      "es": "Combine una avalancha de alertas relacionadas de un mismo inquilino en una sola agrupación para dar seguimiento a la investigación — las originales se resuelven y se enlazan, las detecciones repetidas permanecen en silencio mientras está abierta, y las agrupaciones quedan fuera de cada estadística e informe. Además: la barra de acciones masivas ahora está siempre visible, así que seleccionar alertas ya no hace saltar la tabla."
+      "en": "Panoptica365 now presents its End User License Agreement during first-boot setup: read it, type your full name, and accept before the wizard proceeds — recorded permanently with the version, the language you read it in, and the timestamp. A new admin-only License Agreement card in Settings lets you re-read it and see who accepted it and when, and administrators are prompted to re-accept whenever a revised agreement ships (technicians and viewers keep working uninterrupted).",
+      "fr": "Panoptica365 présente désormais son contrat de licence utilisateur final lors de la configuration initiale : lisez-le, saisissez votre nom complet et acceptez-le avant que l’assistant ne poursuive — l’acceptation est conservée de façon permanente avec la version, la langue dans laquelle vous l’avez lu et l’horodatage. Une nouvelle carte Contrat de licence (réservée aux administrateurs) dans les Paramètres permet de le relire et de voir qui l’a accepté et quand, et les administrateurs sont invités à l’accepter de nouveau dès qu’un contrat révisé est publié (les techniciens et observateurs continuent de travailler sans interruption).",
+      "es": "Panoptica365 ahora presenta su contrato de licencia de usuario final durante la configuración inicial: léalo, escriba su nombre completo y acéptelo antes de que el asistente continúe — la aceptación se conserva de forma permanente con la versión, el idioma en que lo leyó y la marca de tiempo. Una nueva tarjeta Contrato de licencia (solo para administradores) en Configuración permite volver a leerlo y ver quién lo aceptó y cuándo, y se solicita a los administradores que lo acepten de nuevo cuando se publica un contrato revisado (los técnicos y observadores siguen trabajando sin interrupciones)."
     }
   },
   "yanked": []
