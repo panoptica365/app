@@ -115,6 +115,13 @@
       appId: '00000002-0000-0ff1-ce00-000000000000',
       application: ['Exchange.ManageAsApp'],
       delegated: [],
+      // Exchange.ManageAsApp is exposed by TWO different first-party APIs with
+      // the identical name: "Office 365 Exchange Online" (00000002…, the one
+      // we need — audience https://outlook.office365.com) and "Microsoft
+      // Exchange Online Protection" (00000007…, the WRONG twin). Picking the
+      // EOP twin leaves every EXO/IPPS reader at "UnAuthorized" silently.
+      // appWarnKey renders a 🛑 callout right under this API in the walkthrough.
+      appWarnKey: 'setup.app_reg.perms_exo_twin_warn',
     },
     {
       api: 'Office 365 Management APIs',
@@ -466,6 +473,16 @@
         html += `<p style="margin: 4px 0 8px; font-size: 0.92em; color: var(--p-text-muted);" data-i18n-html="setup.app_reg.perms_graph_location">Open <strong>Add a permission</strong> → the <strong>Microsoft APIs</strong> tab → click the <strong>Microsoft Graph</strong> tile (the large one at the top).</p>`;
       } else {
         html += `<p style="margin: 4px 0 8px; font-size: 0.92em; color: var(--p-text-muted);">${t('setup.app_reg.perms_find_by_name', { api: apiBlock.api, appId: apiBlock.appId || '' })}</p>`;
+      }
+
+      // Per-API "look-alike permission" warning (e.g. the Exchange.ManageAsApp
+      // twin under Microsoft Exchange Online Protection). Rendered before the
+      // permission list so the operator reads it before clicking anything.
+      if (apiBlock.appWarnKey) {
+        html += `<div class="setup-callout danger">
+          <span class="setup-callout-icon">🛑</span>
+          <div class="setup-callout-body" data-i18n-html="${esc(apiBlock.appWarnKey)}"></div>
+        </div>`;
       }
 
       if (apiBlock.application && apiBlock.application.length > 0) {

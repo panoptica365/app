@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.47 — 2026-06-06
+
+### Corregido: orientación más clara para el permiso de Exchange durante la configuración
+
+La guía de registro de aplicaciones le pide que añada el permiso `Exchange.ManageAsApp`. Microsoft expone un permiso con ese mismo nombre en **dos** API diferentes: **Office 365 Exchange Online** (el correcto) y **Microsoft Exchange Online Protection** (el incorrecto). Parecen idénticos y ambos aceptan el consentimiento del administrador, pero solo el primero funciona; elegir el incorrecto deja silenciosamente todos los ajustes de seguridad de Exchange y Cumplimiento bloqueados e ilegibles.
+
+La guía ahora muestra una advertencia destacada en ese paso que indica exactamente qué API elegir (con su Id. de aplicación), además de un consejo: si «Office 365 Exchange Online» no aparece al buscarlo por su nombre, pegue su Id. de aplicación en el cuadro de búsqueda y aparecerá.
+
+### Corregido: el campo del nombre en el contrato de licencia era difícil de leer
+
+En el contrato de licencia del primer arranque, la casilla donde escribe su nombre completo mostraba texto claro sobre fondo blanco con el tema oscuro, por lo que lo que escribía parecía vacío. El campo ahora usa texto oscuro sobre blanco y es claramente legible.
+
+---
+
 ## Versión 0.1.46 — 2026-06-06
 
 ### Corregido: la «Prueba de conexión» de la configuración ya no genera falsas alarmas con permisos limitados por licencia

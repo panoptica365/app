@@ -198,7 +198,12 @@
         width: 100%; box-sizing: border-box;
         padding: 9px 12px; font-size: 0.95rem;
         border: 1px solid var(--p-border, #ccc); border-radius: 6px;
-        background: var(--p-input-bg, #fff); color: var(--p-text, #1a1a1a);
+        /* Fixed light scheme: the EULA name field is a white box, so force
+           dark text. Do NOT use var(--p-text) here — under the dark app theme
+           it resolves to a light colour and renders white-on-white (the field
+           looked empty until you select-all). Self-consistent literals can't
+           flip on any theme. */
+        background: #fff; color: #1a1a1a;
         margin-bottom: 12px;
       }
       .eula-foot-actions {

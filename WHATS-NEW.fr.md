@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.47 — 2026-06-06
+
+### Corrigé : indications plus claires pour l’autorisation Exchange lors de la configuration
+
+Le guide d’inscription d’application vous demande d’ajouter l’autorisation `Exchange.ManageAsApp`. Microsoft expose une autorisation portant ce nom exact sous **deux** API différentes — **Office 365 Exchange Online** (la bonne) et **Microsoft Exchange Online Protection** (la mauvaise). Elles semblent identiques et acceptent toutes deux le consentement de l’administrateur, mais seule la première fonctionne ; choisir la mauvaise laisse silencieusement tous les paramètres de sécurité Exchange et Conformité bloqués et illisibles.
+
+Le guide affiche désormais un avertissement bien visible sous cette étape, précisant exactement quelle API choisir (avec son ID d’application), ainsi qu’une astuce : si « Office 365 Exchange Online » n’apparaît pas lors d’une recherche par nom, collez son ID d’application dans la zone de recherche et elle s’affichera.
+
+### Corrigé : le champ du nom dans le contrat de licence était difficile à lire
+
+Sur le contrat de licence au premier démarrage, la case où vous saisissez votre nom complet affichait un texte clair sur fond blanc avec le thème sombre, de sorte que votre saisie semblait vide. Le champ utilise désormais un texte foncé sur blanc et est parfaitement lisible.
+
+---
+
 ## Version 0.1.46 — 2026-06-06
 
 ### Correction : le « Test de connexion » de la configuration ne signale plus de fausses erreurs sur les autorisations liées aux licences

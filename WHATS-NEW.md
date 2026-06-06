@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.1.47 — 2026-06-06
+
+### Fixed: clearer guidance for the Exchange permission during setup
+
+The App Registration walkthrough asks you to add the `Exchange.ManageAsApp` permission. Microsoft exposes a permission with that exact name under **two** different APIs — **Office 365 Exchange Online** (the correct one) and **Microsoft Exchange Online Protection** (the wrong one). They look identical and both accept admin consent, but only the first one works; choosing the wrong one silently leaves every Exchange and Compliance security setting stuck and unreadable.
+
+The walkthrough now shows a prominent warning under that step spelling out exactly which API to pick (with its App ID), plus a tip: if "Office 365 Exchange Online" doesn't show up when you search by name, paste its App ID into the search box and it will appear.
+
+### Fixed: license-agreement name field was hard to read
+
+On the first-boot license agreement, the box where you type your full name showed light text on a white background under the dark theme, so what you typed looked blank. The field now uses dark text on white and is clearly legible.
+
+---
+
 ## Version 0.1.46 — 2026-06-06
 
 ### Fixed: setup's "Test Connection" no longer false-alarms on license-gated permissions
