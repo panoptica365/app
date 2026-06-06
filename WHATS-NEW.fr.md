@@ -5,7 +5,7 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
-## Version 0.1.45 — 2026-06-06
+## Version 0.1.46 — 2026-06-06
 
 ### Correction : le « Test de connexion » de la configuration ne signale plus de fausses erreurs sur les autorisations liées aux licences
 

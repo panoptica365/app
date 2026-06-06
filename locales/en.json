@@ -1311,7 +1311,16 @@
       "tenant.assign_exo_roles": "Assigned Exchange/Compliance directory roles for tenant \"{name}\"",
       "diagnostics.captured": "Diagnostics bundle captured ({id})",
       "diagnostics.downloaded": "Diagnostics bundle downloaded ({id})",
-      "alert_rollup.create": "Merged {count} alerts into roll-up \"{title}\" ({tenantName})"
+      "alert_rollup.create": "Merged {count} alerts into roll-up \"{title}\" ({tenantName})",
+      "psa.ticket_created": "Autotask ticket {ticket} created for alert #{alertId} ({tenant})",
+      "psa.note_appended": "Alert #{alertId} appended to Autotask ticket {ticket} ({tenant})",
+      "psa.ticket_closed_by_operator": "Autotask ticket {ticket} closed by {operator} (alert #{alertId})",
+      "psa.tenant_mapped": "Tenant “{tenant}” mapped to Autotask company {company}",
+      "psa.alert_autoresolved_ticket_closed": "Alert #{alertId} auto-resolved — Autotask ticket {ticket} {reason}",
+      "psa.auth_failed": "Autotask authentication failing ({reason})",
+      "psa.auth_recovered": "Autotask authentication recovered",
+      "psa.sync_error": "Autotask {op} failed for alert #{alertId}: {error}",
+      "settings.psa.update": "PSA integration settings changed ({fields})"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1338,7 +1347,10 @@
       "tenant_lifecycle.enable": "Tenant re-enabled",
       "manual_cleanup": "Manual cleanup — {summary}",
       "incident_response": "Incident response — {summary}",
-      "migration": "Migration — {summary}"
+      "migration": "Migration — {summary}",
+      "psa.ticket_created": "Autotask ticket {ticket} created for alert #{alertId}",
+      "psa.note_appended": "Alert #{alertId} appended to Autotask ticket {ticket}",
+      "psa.alert_autoresolved_ticket_closed": "Alert #{alertId} auto-resolved — Autotask ticket {ticket} closed"
     }
   },
   "alerts": {
@@ -3637,7 +3649,16 @@
       "test_ok": "All representative permissions are granted. Credentials look correct.",
       "test_partial": "{failed} of {total} permission checks failed",
       "test_cred_fail": "Credential test failed",
-      "test_cert_missing": "Certificate not uploaded"
+      "test_cert_missing": "Certificate not uploaded",
+      "test_consent_missing": "{count} permission(s) still need admin consent",
+      "test_consent_hint": "Re-open the App Registration instructions and complete the \"Grant admin consent\" step — it should show green checkmarks for every permission.",
+      "test_not_applicable_intro": "{count} check(s) don't apply to this tenant's licenses or services — this is expected and safe to continue:",
+      "reason": {
+        "requires_entra_premium": "Requires Microsoft Entra ID P1/P2 (sign-in logs) — not on this tenant",
+        "requires_defender_xdr": "Requires Microsoft Defender XDR — not provisioned on this tenant",
+        "not_available": "Not available on this tenant's current licenses or services",
+        "could_not_verify": "Couldn't be verified right now (temporary) — safe to continue"
+      }
     },
     "smtp": {
       "title": "Email (SMTP)",
@@ -3857,5 +3878,98 @@
   "disk_banner": {
     "warn_title": "Low disk space",
     "crit_title": "Critically low disk space"
+  },
+  "psa": {
+    "ticket": {
+      "severity": "Severity",
+      "category": "Category",
+      "policy": "Policy",
+      "tenant": "Tenant",
+      "affected_tenants": "Affected tenants",
+      "triggered": "Triggered",
+      "ai_analysis": "AI analysis",
+      "view_in_dashboard": "View in Panoptica365",
+      "related_alert": "Related alert #{n}",
+      "note": {
+        "auto_resolved": "Resolved automatically: Autotask ticket {number} was closed.",
+        "auto_resolved_missing": "Resolved automatically: Autotask ticket {number} is no longer available.",
+        "closed_by_operator": "Ticket closed from Panoptica365 by {operator}.",
+        "closed_title": "Closed from Panoptica365",
+        "info_title": "Panoptica365 update",
+        "drift_cleared": "The linked Panoptica365 alert was resolved automatically ({reason}). This ticket was left open for your review.",
+        "resolved_left_open": "The linked Panoptica365 alert (#{alertId}) was resolved by an operator. This ticket was left open."
+      }
+    },
+    "settings": {
+      "title": "PSA Integration",
+      "subtitle": "Create and synchronize tickets in your PSA instead of emailing them.",
+      "provider_label": "Provider",
+      "provider_none": "None (email tickets)",
+      "provider_autotask": "Autotask",
+      "provider_help": "When off, alerts continue to email your PSA exactly as before.",
+      "creds_heading": "API credentials",
+      "creds_help": "All three values come from Autotask’s Admin → Resources → New API User screen.",
+      "username": "API user name",
+      "secret": "API secret",
+      "secret_set": "Saved — leave blank to keep current",
+      "integration_code": "Tracking identifier",
+      "test_connection": "Test connection",
+      "testing": "Testing…",
+      "test_success": "Connected — zone {zone}.",
+      "test_fail": "Connection failed: {error}",
+      "config_heading": "Ticket defaults",
+      "queue": "Queue",
+      "source": "Source",
+      "new_status": "New-ticket status",
+      "close_status": "Status when closed from Panoptica365",
+      "complete_statuses": "Statuses treated as “closed”",
+      "complete_statuses_help": "When a ticket reaches any of these, the linked alert(s) auto-resolve.",
+      "severity_priority": "Priority by severity",
+      "due_offset": "Due-date offset (hours)",
+      "due_offset_help": "Autotask requires a due date on every ticket; Panoptica365 sets it to creation time + this offset.",
+      "default_company": "Default company (MSP-level alerts)",
+      "ticket_language": "Ticket language",
+      "note_type": "Note type",
+      "publish": "Note visibility",
+      "publish_warning": "This controls whether notes are visible to the customer in Autotask. Choose an internal value unless you intend customers to see alert detail.",
+      "mapping_heading": "Tenant → company mapping",
+      "mapping_help": "Map each managed tenant to its Autotask company. Unmapped tenants fall back to email tickets.",
+      "mapping_managed_only": "Audit-only tenants are not shown — they always use email tickets.",
+      "col_tenant": "Tenant",
+      "col_psa_name": "PSA name",
+      "col_company": "Autotask company",
+      "col_status": "Status",
+      "company_none": "None (email fallback)",
+      "suggest_matches": "Suggest matches",
+      "suggested_badge": "suggested",
+      "email_fallback_badge": "email fallback",
+      "unmapped_count": "{count} tenant(s) unmapped — using email fallback",
+      "save_mapping": "Save mapping",
+      "mapping_saved": "Mapping saved.",
+      "health_heading": "Health",
+      "last_poll": "Last poll",
+      "open_tickets": "Open linked tickets",
+      "error_links": "Sync errors",
+      "auth_ok": "Authentication healthy",
+      "auth_fail": "Autotask authentication failing since {since}",
+      "never": "never",
+      "saved": "Saved.",
+      "save_failed": "Save failed: {error}",
+      "save_config": "Save settings",
+      "psa_email_warning": "PSA_EMAIL is not set. It is still needed as a fallback for unmapped tenants and when authentication fails.",
+      "err_close_not_complete": "The status under “Status when closed from Panoptica365” must also be checked under “Statuses treated as closed.” Add it there (or pick a different close status), then save again."
+    },
+    "chip": {
+      "open": "Open",
+      "closed": "Closed",
+      "view_in_autotask": "View in Autotask"
+    },
+    "modal": {
+      "title": "Close the linked Autotask ticket?",
+      "body_single": "This alert is linked to Autotask ticket {ticket}. Also close the ticket?",
+      "body_bulk": "{count} of the selected alerts are linked to open Autotask tickets. Also close those tickets?",
+      "close_btn": "Close ticket in Autotask",
+      "leave_open_btn": "Leave ticket open"
+    }
   }
 }

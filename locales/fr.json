@@ -1311,7 +1311,16 @@
       "tenant.assign_exo_roles": "Rôles d’annuaire Exchange/Conformité attribués pour le client « {name} »",
       "diagnostics.captured": "Dossier de diagnostic capturé ({id})",
       "diagnostics.downloaded": "Dossier de diagnostic téléchargé ({id})",
-      "alert_rollup.create": "Fusion de {count} alertes dans le regroupement « {title} » ({tenantName})"
+      "alert_rollup.create": "Fusion de {count} alertes dans le regroupement « {title} » ({tenantName})",
+      "psa.ticket_created": "Billet Autotask {ticket} créé pour l’alerte nº {alertId} ({tenant})",
+      "psa.note_appended": "Alerte nº {alertId} ajoutée au billet Autotask {ticket} ({tenant})",
+      "psa.ticket_closed_by_operator": "Billet Autotask {ticket} fermé par {operator} (alerte nº {alertId})",
+      "psa.tenant_mapped": "Locataire « {tenant} » associé à l’entreprise Autotask {company}",
+      "psa.alert_autoresolved_ticket_closed": "Alerte nº {alertId} résolue automatiquement — billet Autotask {ticket} {reason}",
+      "psa.auth_failed": "Échec de l’authentification Autotask ({reason})",
+      "psa.auth_recovered": "Authentification Autotask rétablie",
+      "psa.sync_error": "Échec Autotask ({op}) pour l’alerte nº {alertId} : {error}",
+      "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1338,7 +1347,10 @@
       "tenant_lifecycle.enable": "Locataire réactivé",
       "manual_cleanup": "Nettoyage manuel — {summary}",
       "incident_response": "Réponse à incident — {summary}",
-      "migration": "Migration — {summary}"
+      "migration": "Migration — {summary}",
+      "psa.ticket_created": "Billet Autotask {ticket} créé pour l’alerte nº {alertId}",
+      "psa.note_appended": "Alerte nº {alertId} ajoutée au billet Autotask {ticket}",
+      "psa.alert_autoresolved_ticket_closed": "Alerte nº {alertId} résolue automatiquement — billet Autotask {ticket} fermé"
     }
   },
   "alerts": {
@@ -3637,7 +3649,16 @@
       "test_ok": "Toutes les autorisations représentatives sont accordées. Les identifiants semblent corrects.",
       "test_partial": "{failed} des {total} vérifications d’autorisations ont échoué",
       "test_cred_fail": "Le test des identifiants a échoué",
-      "test_cert_missing": "Certificat non téléversé"
+      "test_cert_missing": "Certificat non téléversé",
+      "test_consent_missing": "{count} autorisation(s) nécessitent encore le consentement de l’administrateur",
+      "test_consent_hint": "Rouvrez les instructions d’inscription de l’application et effectuez l’étape « Accorder le consentement de l’administrateur » — chaque autorisation devrait afficher un crochet vert.",
+      "test_not_applicable_intro": "{count} vérification(s) ne s’appliquent pas aux licences ou aux services de ce locataire — c’est normal et vous pouvez continuer en toute sécurité :",
+      "reason": {
+        "requires_entra_premium": "Nécessite Microsoft Entra ID P1/P2 (journaux de connexion) — absent de ce locataire",
+        "requires_defender_xdr": "Nécessite Microsoft Defender XDR — non provisionné sur ce locataire",
+        "not_available": "Non disponible avec les licences ou services actuels de ce locataire",
+        "could_not_verify": "N’a pas pu être vérifié pour l’instant (temporaire) — vous pouvez continuer en toute sécurité"
+      }
     },
     "smtp": {
       "title": "Courriel (SMTP)",
@@ -3857,5 +3878,98 @@
   "disk_banner": {
     "warn_title": "Espace disque faible",
     "crit_title": "Espace disque critique"
+  },
+  "psa": {
+    "ticket": {
+      "severity": "Gravité",
+      "category": "Catégorie",
+      "policy": "Politique",
+      "tenant": "Locataire",
+      "affected_tenants": "Locataires touchés",
+      "triggered": "Déclenché",
+      "ai_analysis": "Analyse IA",
+      "view_in_dashboard": "Voir dans Panoptica365",
+      "related_alert": "Alerte associée nº {n}",
+      "note": {
+        "auto_resolved": "Résolu automatiquement : le billet Autotask {number} a été fermé.",
+        "auto_resolved_missing": "Résolu automatiquement : le billet Autotask {number} n’est plus disponible.",
+        "closed_by_operator": "Billet fermé depuis Panoptica365 par {operator}.",
+        "closed_title": "Fermé depuis Panoptica365",
+        "info_title": "Mise à jour Panoptica365",
+        "drift_cleared": "L’alerte Panoptica365 associée a été résolue automatiquement ({reason}). Ce billet a été laissé ouvert pour votre examen.",
+        "resolved_left_open": "L’alerte Panoptica365 associée (nº {alertId}) a été résolue par un opérateur. Ce billet a été laissé ouvert."
+      }
+    },
+    "settings": {
+      "title": "Intégration PSA",
+      "subtitle": "Créez et synchronisez les billets dans votre PSA au lieu de les envoyer par courriel.",
+      "provider_label": "Fournisseur",
+      "provider_none": "Aucun (billets par courriel)",
+      "provider_autotask": "Autotask",
+      "provider_help": "Désactivée, les alertes continuent d’être envoyées par courriel à votre PSA comme auparavant.",
+      "creds_heading": "Identifiants API",
+      "creds_help": "Les trois valeurs proviennent de l’écran Autotask Admin → Ressources → Nouvel utilisateur API.",
+      "username": "Nom d’utilisateur API",
+      "secret": "Secret API",
+      "secret_set": "Enregistré — laisser vide pour conserver l’actuel",
+      "integration_code": "Identifiant de suivi",
+      "test_connection": "Tester la connexion",
+      "testing": "Test en cours…",
+      "test_success": "Connecté — zone {zone}.",
+      "test_fail": "Échec de la connexion : {error}",
+      "config_heading": "Valeurs par défaut des billets",
+      "queue": "File d’attente",
+      "source": "Source",
+      "new_status": "Statut d’un nouveau billet",
+      "close_status": "Statut lors de la fermeture depuis Panoptica365",
+      "complete_statuses": "Statuts considérés comme « fermés »",
+      "complete_statuses_help": "Lorsqu’un billet atteint l’un de ces statuts, les alertes associées se résolvent automatiquement.",
+      "severity_priority": "Priorité selon la gravité",
+      "due_offset": "Décalage de l’échéance (heures)",
+      "due_offset_help": "Autotask exige une date d’échéance sur chaque billet ; Panoptica365 la fixe à l’heure de création + ce décalage.",
+      "default_company": "Entreprise par défaut (alertes au niveau MSP)",
+      "ticket_language": "Langue des billets",
+      "note_type": "Type de note",
+      "publish": "Visibilité des notes",
+      "publish_warning": "Ceci détermine si les notes sont visibles par le client dans Autotask. Choisissez une valeur interne, sauf si vous souhaitez que les clients voient le détail des alertes.",
+      "mapping_heading": "Correspondance locataire → entreprise",
+      "mapping_help": "Associez chaque locataire géré à son entreprise Autotask. Les locataires non associés utilisent les billets par courriel.",
+      "mapping_managed_only": "Les locataires en audit seul ne sont pas affichés — ils utilisent toujours les billets par courriel.",
+      "col_tenant": "Locataire",
+      "col_psa_name": "Nom PSA",
+      "col_company": "Entreprise Autotask",
+      "col_status": "Statut",
+      "company_none": "Aucune (repli courriel)",
+      "suggest_matches": "Proposer des correspondances",
+      "suggested_badge": "proposé",
+      "email_fallback_badge": "repli courriel",
+      "unmapped_count": "{count} locataire(s) non associé(s) — repli par courriel",
+      "save_mapping": "Enregistrer la correspondance",
+      "mapping_saved": "Correspondance enregistrée.",
+      "health_heading": "État",
+      "last_poll": "Dernière interrogation",
+      "open_tickets": "Billets liés ouverts",
+      "error_links": "Erreurs de synchronisation",
+      "auth_ok": "Authentification saine",
+      "auth_fail": "Échec de l’authentification Autotask depuis {since}",
+      "never": "jamais",
+      "saved": "Enregistré.",
+      "save_failed": "Échec de l’enregistrement : {error}",
+      "save_config": "Enregistrer les réglages",
+      "psa_email_warning": "PSA_EMAIL n’est pas défini. Il reste nécessaire comme repli pour les locataires non associés et en cas d’échec d’authentification.",
+      "err_close_not_complete": "Le statut choisi dans « Statut lors de la fermeture depuis Panoptica365 » doit aussi être coché parmi les « Statuts considérés comme fermés ». Ajoutez-le (ou choisissez un autre statut de fermeture), puis enregistrez de nouveau."
+    },
+    "chip": {
+      "open": "Ouvert",
+      "closed": "Fermé",
+      "view_in_autotask": "Voir dans Autotask"
+    },
+    "modal": {
+      "title": "Fermer le billet Autotask associé ?",
+      "body_single": "Cette alerte est liée au billet Autotask {ticket}. Fermer aussi le billet ?",
+      "body_bulk": "{count} des alertes sélectionnées sont liées à des billets Autotask ouverts. Fermer aussi ces billets ?",
+      "close_btn": "Fermer le billet dans Autotask",
+      "leave_open_btn": "Laisser le billet ouvert"
+    }
   }
 }

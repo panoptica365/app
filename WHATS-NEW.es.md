@@ -5,7 +5,7 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
-## Versión 0.1.45 — 2026-06-06
+## Versión 0.1.46 — 2026-06-06
 
 ### Corregido: la «Prueba de conexión» de la configuración ya no genera falsas alarmas con permisos limitados por licencia
 

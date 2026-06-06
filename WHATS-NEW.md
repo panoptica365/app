@@ -5,7 +5,7 @@ that release, newest first.
 
 ---
 
-## Version 0.1.45 — 2026-06-06
+## Version 0.1.46 — 2026-06-06
 
 ### Fixed: setup's "Test Connection" no longer false-alarms on license-gated permissions
 

@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.1.44",
-    "image_tag": "v0.1.44",
-    "released_at": "2026-06-05",
+    "version": "0.1.46",
+    "image_tag": "v0.1.46",
+    "released_at": "2026-06-06",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Panoptica365 now presents its End User License Agreement during first-boot setup: read it, type your full name, and accept before the wizard proceeds — recorded permanently with the version, the language you read it in, and the timestamp. A new admin-only License Agreement card in Settings lets you re-read it and see who accepted it and when, and administrators are prompted to re-accept whenever a revised agreement ships (technicians and viewers keep working uninterrupted).",
-      "fr": "Panoptica365 présente désormais son contrat de licence utilisateur final lors de la configuration initiale : lisez-le, saisissez votre nom complet et acceptez-le avant que l’assistant ne poursuive — l’acceptation est conservée de façon permanente avec la version, la langue dans laquelle vous l’avez lu et l’horodatage. Une nouvelle carte Contrat de licence (réservée aux administrateurs) dans les Paramètres permet de le relire et de voir qui l’a accepté et quand, et les administrateurs sont invités à l’accepter de nouveau dès qu’un contrat révisé est publié (les techniciens et observateurs continuent de travailler sans interruption).",
-      "es": "Panoptica365 ahora presenta su contrato de licencia de usuario final durante la configuración inicial: léalo, escriba su nombre completo y acéptelo antes de que el asistente continúe — la aceptación se conserva de forma permanente con la versión, el idioma en que lo leyó y la marca de tiempo. Una nueva tarjeta Contrato de licencia (solo para administradores) en Configuración permite volver a leerlo y ver quién lo aceptó y cuándo, y se solicita a los administradores que lo acepten de nuevo cuando se publica un contrato revisado (los técnicos y observadores siguen trabajando sin interrupciones)."
+      "en": "During first-boot setup, the Test Connection check no longer reports false permission failures for sign-in log and security-incident access. Those two Microsoft Graph permissions also require a higher tenant tier (Microsoft Entra ID P1/P2, or Microsoft Defender XDR) and were being refused even when admin consent was correctly granted. Test Connection now flags a permission in red only when admin consent is genuinely missing; permissions unavailable on your tenant's licenses are shown as a calm informational note instead of an error.",
+      "fr": "Lors de la configuration initiale, le Test de connexion ne signale plus de fausses erreurs d’autorisation pour l’accès aux journaux de connexion et aux incidents de sécurité. Ces deux autorisations Microsoft Graph exigent aussi un niveau de locataire supérieur (Microsoft Entra ID P1/P2 ou Microsoft Defender XDR) et étaient refusées même lorsque le consentement de l’administrateur était correctement accordé. Le Test de connexion ne signale désormais une autorisation en rouge que lorsque le consentement de l’administrateur est réellement manquant; les autorisations non disponibles avec les licences de votre locataire s’affichent comme une note informative plutôt que comme une erreur.",
+      "es": "Durante la configuración inicial, la Prueba de conexión ya no informa de falsos errores de permisos para el acceso a los registros de inicio de sesión y a los incidentes de seguridad. Esos dos permisos de Microsoft Graph también requieren un nivel de inquilino superior (Microsoft Entra ID P1/P2 o Microsoft Defender XDR) y se rechazaban incluso cuando el consentimiento del administrador estaba correctamente concedido. La Prueba de conexión ahora marca un permiso en rojo solo cuando falta realmente el consentimiento del administrador; los permisos no disponibles con las licencias de su inquilino se muestran como una nota informativa en lugar de como un error."
     }
   },
   "yanked": []
