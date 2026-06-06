@@ -285,6 +285,45 @@ const ENTRA_TEST_CHECKS = [
   { perm: 'ServiceMessage.Read.All',  url: '/admin/serviceAnnouncement/messages?$top=1' },
 ];
 
+// Classify a FAILED Graph spot-check. The crux: a 403 does NOT imply a missing
+// permission. Several Graph endpoints additionally gate on the *tenant's*
+// license or service provisioning and return 403 EVEN WHEN the app permission
+// is fully consented — verified empirically 2026-06-06 against a Business-
+// Premium test tenant:
+//   - /auditLogs/signIns  → 403 'Authentication_RequestFromNonPremiumTenantOrB2CTenant'
+//                           ("doesn't have premium license")  → needs Entra ID P1/P2
+//   - /security/incidents → 403 'Unauthorized' ("Account is not provisioned") → needs Defender XDR
+// The ONLY Graph signal that means "the app lacks the permission / admin consent
+// was not granted" is 'Authorization_RequestDenied' (a.k.a. "Insufficient
+// privileges to complete the operation"). So we treat ONLY that as a real
+// failure; every other non-200 is a benign tenant-capability gap or a transient
+// glitch. This keys off the one authoritative code rather than enumerating every
+// license code — robust by construction, and it stops the false-alarm red banner
+// that would otherwise scare MSPs whose tenants lack P1/Defender. (Mirrors the
+// project rule: licence_required is documentation, not a per-tenant gate.)
+function classifyGraphCheckFailure(status, code, message) {
+  const c = (code || '').toLowerCase();
+  const m = (message || '').toLowerCase();
+  if (c === 'authorization_requestdenied' || m.includes('insufficient privileges')) {
+    return 'permission_missing';            // genuine — operator must grant admin consent
+  }
+  if (status === 0 || status === 429 || status >= 500) {
+    return 'could_not_verify';              // transient — don't alarm, don't pass-claim
+  }
+  return 'not_applicable';                  // 403 license/provisioning gate, 404, etc. — benign
+}
+
+// Stable reason code (frontend localizes it) explaining WHY a not_applicable /
+// could_not_verify check didn't pass — so the wizard can reassure rather than alarm.
+function graphCheckReasonCode(category, code, message) {
+  if (category === 'could_not_verify') return 'could_not_verify';
+  const c = (code || '').toLowerCase();
+  const m = (message || '').toLowerCase();
+  if (c === 'authentication_requestfromnonpremiumtenantorb2ctenant') return 'requires_entra_premium';
+  if (c === 'unauthorized' || m.includes('not provisioned')) return 'requires_defender_xdr';
+  return 'not_available';
+}
+
 // Verify the operator actually uploaded our generated .cer to the app
 // registration's Certificates & secrets. We can't do a full
 // Connect-ExchangeOnline at install time (no customer tenant onboarded, no
@@ -393,46 +432,57 @@ router.post('/entra/test', async (req, res) => {
       const r = await fetch(`https://graph.microsoft.com/v1.0${c.url}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
       });
-      return { perm: c.perm, status: r.status, ok: r.ok };
+      if (r.ok) return { perm: c.perm, status: r.status, category: 'ok' };
+      let code = null, message = '';
+      try { const b = await r.json(); code = b?.error?.code || null; message = b?.error?.message || ''; }
+      catch { /* non-JSON error body — leave code/message null */ }
+      const category = classifyGraphCheckFailure(r.status, code, message);
+      return {
+        perm: c.perm, status: r.status, category, code,
+        reason_code: category === 'permission_missing' ? null : graphCheckReasonCode(category, code, message),
+      };
     } catch (e) {
-      return { perm: c.perm, status: 0, ok: false, network_error: e.message };
+      return { perm: c.perm, status: 0, category: 'could_not_verify', code: null, reason_code: 'could_not_verify' };
     }
   }));
 
-  const failed = results.filter(r => !r.ok);
+  // Only genuine consent gaps are real failures. License/provisioning gates
+  // (no Entra P1, Defender not onboarded, …) are benign capability notes that
+  // must NOT block setup — see classifyGraphCheckFailure.
+  const permissionFailures = results.filter(r => r.category === 'permission_missing');
+  const notApplicable = results.filter(r => r.category === 'not_applicable' || r.category === 'could_not_verify');
+  const consentOk = permissionFailures.length === 0;
 
   // ─── Step 3: Verify our cert is uploaded to the app registration ───
   const cert = await verifyCertOnAppReg(token, clientId);
 
-  // Both gates must pass for the entra step to count as tested: permissions
-  // granted AND the monitoring cert present on the app reg. This stops an
-  // operator finishing setup with a missing/wrong cert (which would leave
-  // every PowerShell reader stuck at "Awaiting Infra").
-  if (failed.length === 0 && cert.present) {
+  // Both gates must pass for the entra step to count as tested: consent granted
+  // AND the monitoring cert present on the app reg. This stops an operator
+  // finishing setup with a missing/wrong cert (which would leave every
+  // PowerShell reader stuck at "Awaiting Infra").
+  if (consentOk && cert.present) {
     const state = setupState.readSetupState();
     const prev = state.steps.entra || { complete: true, at: new Date().toISOString() };
     setupState.markStepComplete('entra', { ...prev, tested: true });
-    return res.json({
-      ok: true,
-      checks_performed: results.length,
-      cert_present: true,
-      message: 'All representative permissions are granted and the monitoring certificate is uploaded. Credentials look correct.',
-    });
   }
 
-  // Distinguish the two failure modes so the operator gets an actionable
-  // message instead of a generic "permissions" error when the real problem
-  // is the skipped cert upload.
   const certFail = !cert.present;
   return res.json({
-    ok: false,
+    ok: consentOk && cert.present,
     checks_performed: results.length,
-    checks_failed: failed.length,
-    failed_permissions: failed.map(f => f.perm),
     cert_present: cert.present,
     cert_not_generated: cert.reason === 'cert_not_generated',
-    hint: failed.length > 0
-      ? 'Token acquired successfully, but Graph calls were rejected. Most likely: admin consent was not granted for one or more permissions. Re-open the App Registration instructions and verify the "Grant admin consent" step was completed and shows green checkmarks for every permission.'
+    // Genuine consent gaps the operator must fix (grant admin consent):
+    permission_failures: permissionFailures.map(f => ({ perm: f.perm, code: f.code, status: f.status })),
+    // Benign — endpoint gated by the tenant's license/service (or a transient
+    // glitch), NOT by consent. Each carries a reason_code the frontend localizes.
+    not_applicable: notApplicable.map(f => ({ perm: f.perm, code: f.code, status: f.status, reason_code: f.reason_code })),
+    // Legacy fields (older frontends) — REAL failures only, so a stale client
+    // never red-flags a capability gap.
+    checks_failed: permissionFailures.length,
+    failed_permissions: permissionFailures.map(f => f.perm),
+    hint: permissionFailures.length > 0
+      ? 'Token acquired successfully, but Graph calls were rejected for one or more permissions. Most likely: admin consent was not granted. Re-open the App Registration instructions and verify the "Grant admin consent" step shows green checkmarks for every permission.'
       : (certFail
         ? 'Permissions look good, but the monitoring certificate was not found on the app registration. Did you complete the "Certificates & secrets" upload step? Re-open the App Registration instructions, download the certificate, and upload it under Certificates & secrets → Certificates.'
         : null),

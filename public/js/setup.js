@@ -1087,24 +1087,45 @@
           status.innerHTML = `<div class="setup-status-line info">${esc(t('setup.entra.testing') || 'Testing credentials + permissions…')}</div>`;
           try {
             const res = await apiPost('/api/setup/entra/test', {});
+            // Benign capability gaps (endpoint needs a tenant license/service the
+            // tenant doesn't have — e.g. Entra ID P1 for sign-in logs, Defender
+            // XDR for incidents). These are NOT consent problems and must never
+            // read as a failure — render them as a calm informational note.
+            const naItems = res.not_applicable || [];
+            const naBlock = naItems.length ? `
+                  <div style="margin-top: 8px;">
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--p-text-muted);">${esc(t('setup.entra.test_not_applicable_intro', { count: naItems.length }) || `${naItems.length} check(s) don't apply to this tenant's licenses or services — this is expected and safe:`)}</p>
+                    <ul style="margin: 6px 0 0 18px; font-size: 0.85rem; color: var(--p-text-muted);">
+                      ${naItems.map(n => `<li><code>${esc(n.perm)}</code> — ${esc(t('setup.entra.reason.' + (n.reason_code || 'not_available')) || 'Not available on this tenant')}</li>`).join('')}
+                    </ul>
+                  </div>` : '';
+
             if (res.ok) {
-              status.innerHTML = `<div class="setup-status-line success">✅ ${esc(res.message || t('setup.entra.test_ok') || 'All permissions OK.')}</div>`;
+              status.innerHTML = `<div class="setup-status-line success">
+                <div>
+                  <strong>✅ ${esc(t('setup.entra.test_ok') || 'All required permissions are granted. Credentials look correct.')}</strong>
+                  ${naBlock}
+                </div>
+              </div>`;
             } else if ((res.checks_failed || 0) === 0 && res.cert_present === false) {
-              // Permissions all passed, but the monitoring cert wasn't found
-              // on the app registration — the operator skipped the upload.
+              // Consent is fine, but the monitoring cert wasn't found on the app
+              // registration — the operator skipped the upload.
               status.innerHTML = `<div class="setup-status-line error">
                 <div>
                   <strong>${esc(t('setup.entra.test_cert_missing') || 'Certificate not uploaded')}</strong>
                   <p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(res.hint || '')}</p>
+                  ${naBlock}
                 </div>
               </div>`;
             } else {
+              // Genuine consent gap — these permissions need admin consent.
               const list = (res.failed_permissions || []).map(p => `<li><code>${esc(p)}</code></li>`).join('');
               status.innerHTML = `<div class="setup-status-line error">
                 <div>
-                  <strong>${esc(t('setup.entra.test_partial', { failed: res.checks_failed, total: res.checks_performed }) || `${res.checks_failed} of ${res.checks_performed} permission checks failed`)}</strong>
+                  <strong>${esc(t('setup.entra.test_consent_missing', { count: res.checks_failed }) || `${res.checks_failed} permission(s) still need admin consent`)}</strong>
                   <ul style="margin: 8px 0 4px 18px;">${list}</ul>
-                  <p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(res.hint || '')}</p>
+                  <p style="margin: 4px 0 0 0; font-size: 0.85rem;">${esc(t('setup.entra.test_consent_hint') || res.hint || '')}</p>
+                  ${naBlock}
                 </div>
               </div>`;
             }

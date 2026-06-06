@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.45 — 2026-06-06
+
+### Corregido: la «Prueba de conexión» de la configuración ya no genera falsas alarmas con permisos limitados por licencia
+
+El paso **Prueba de conexión** del asistente de configuración comprueba que los permisos de su registro de aplicación de Entra estén concedidos. Marcaba dos permisos —el acceso a los registros de inicio de sesión (`AuditLog.Read.All`) y el acceso a los incidentes de seguridad (`SecurityIncident.Read.All`)— como errores, incluso cuando el consentimiento del administrador estaba correctamente concedido. El motivo: esos dos extremos de Microsoft Graph también requieren que el *inquilino* tenga un nivel superior —Microsoft Entra ID P1/P2 para los registros de inicio de sesión, Microsoft Defender XDR para los incidentes de seguridad— y rechazan la solicitud en los inquilinos que no lo tienen, sin importar cómo se haya concedido el consentimiento. Eso es una capacidad del inquilino, no una configuración incorrecta.
+
+La Prueba de conexión ahora distingue ambos casos. Un permiso solo se marca en rojo cuando falta realmente el consentimiento del administrador; los permisos que simplemente no están disponibles con las licencias actuales de su inquilino se muestran como una nota informativa («no se aplica a este inquilino: puede continuar con seguridad») en lugar de como un error. No más falsas alarmas en una instalación nueva.
+
+---
+
 ## Versión 0.1.44 — 2026-06-05
 
 ### Nuevo: aceptación del contrato de licencia

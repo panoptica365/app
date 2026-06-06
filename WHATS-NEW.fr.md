@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.45 — 2026-06-06
+
+### Correction : le « Test de connexion » de la configuration ne signale plus de fausses erreurs sur les autorisations liées aux licences
+
+L'étape **Test de connexion** de l'assistant de configuration vérifie que les autorisations de votre inscription d'application Entra sont accordées. Elle signalait deux autorisations — l'accès aux journaux de connexion (`AuditLog.Read.All`) et l'accès aux incidents de sécurité (`SecurityIncident.Read.All`) — comme des échecs, même lorsque le consentement de l'administrateur était correctement accordé. La raison : ces deux points de terminaison Microsoft Graph exigent aussi que le *locataire* dispose d'un niveau supérieur — Microsoft Entra ID P1/P2 pour les journaux de connexion, Microsoft Defender XDR pour les incidents de sécurité — et ils refusent la requête sur les locataires qui ne l'ont pas, peu importe le consentement accordé. Il s'agit d'une capacité du locataire, et non d'une mauvaise configuration.
+
+Le Test de connexion fait maintenant la distinction. Une autorisation n'est signalée en rouge que lorsque le consentement de l'administrateur est réellement manquant; les autorisations qui ne sont tout simplement pas disponibles avec les licences actuelles de votre locataire s'affichent sous forme de note informative (« ne s'applique pas à ce locataire — vous pouvez continuer en toute sécurité ») plutôt que comme une erreur. Fini les fausses erreurs alarmantes lors d'une nouvelle installation.
+
+---
+
 ## Version 0.1.44 — 2026-06-05
 
 ### Nouveau : acceptation du contrat de licence

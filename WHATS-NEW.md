@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.45 — 2026-06-06
+
+### Fixed: setup's "Test Connection" no longer false-alarms on license-gated permissions
+
+The setup wizard's **Test Connection** step checks that your Entra app registration's permissions are granted. It was flagging two permissions — sign-in log access (`AuditLog.Read.All`) and security-incident access (`SecurityIncident.Read.All`) — as failures even when admin consent was correctly granted. The reason: those two Microsoft Graph endpoints also require the *tenant* to hold a higher tier — Microsoft Entra ID P1/P2 for sign-in logs, Microsoft Defender XDR for security incidents — and they refuse the request on tenants without it, no matter how the permissions are consented. That's a tenant capability, not a misconfiguration.
+
+Test Connection now tells the two apart. A permission is only flagged red when admin consent is genuinely missing; permissions that simply aren't available on your tenant's current licenses are shown as a calm informational note ("not applicable to this tenant — safe to continue") rather than an error. No more alarming false failures on a fresh install.
+
+---
+
 ## Version 0.1.44 — 2026-06-05
 
 ### New: License agreement acceptance
