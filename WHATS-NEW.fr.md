@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.0 — 2026-06-07
+
+### Les billets PSA se ferment maintenant d’eux-mêmes lorsque la dérive sous-jacente est résolue
+
+Lorsqu’une alerte de dérive de configuration est liée à un billet PSA et que cette dérive est résolue dans Panoptica365 — que vous cliquiez sur **Accepter**, **Corriger** ou **Faire correspondre** sur le paramètre, que vous poussiez un correctif confirmé à la vérification suivante, ou que quelqu’un la corrige simplement dans le portail d’administration Microsoft — Panoptica365 **ferme désormais le billet lié automatiquement** et ajoute une note explicative. Auparavant, l’alerte se résolvait mais le billet restait ouvert, laissant des billets orphelins après une série d’acceptations de dérive.
+
+La seule exception est délibérée : si vous résolvez une alerte depuis le panneau d’alerte et choisissez **« Laisser le billet ouvert »**, le billet reste ouvert pour que votre technicien le termine. Seule une véritable résolution de dérive déclenche la fermeture automatique.
+
+---
+
 ## Version 0.1.54 — 2026-06-07
 
 ### Changer de langue met maintenant à jour la page où vous êtes

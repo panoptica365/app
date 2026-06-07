@@ -3899,7 +3899,8 @@
         "closed_title": "Fermé depuis Panoptica365",
         "info_title": "Mise à jour Panoptica365",
         "drift_cleared": "L’alerte Panoptica365 associée a été résolue automatiquement ({reason}). Ce billet a été laissé ouvert pour votre examen.",
-        "resolved_left_open": "L’alerte Panoptica365 associée (nº {alertId}) a été résolue par un opérateur. Ce billet a été laissé ouvert."
+        "resolved_left_open": "L’alerte Panoptica365 associée (nº {alertId}) a été résolue par un opérateur. Ce billet a été laissé ouvert.",
+        "closed_drift_cleared": "Fermeture automatique : l’alerte Panoptica365 associée a été résolue (la dérive de configuration a été corrigée)."
       }
     },
     "settings": {

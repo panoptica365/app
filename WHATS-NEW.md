@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.0 — 2026-06-07
+
+### PSA tickets now close themselves when the underlying drift is resolved
+
+When a configuration-drift alert is linked to a PSA ticket and that drift is resolved in Panoptica365 — whether you click **Accept**, **Remediate**, or **Match** on the setting, push a fix and let the next check confirm it, or someone simply corrects it in the Microsoft admin portal — Panoptica365 now **closes the linked ticket automatically** and adds a note explaining why. Previously the alert resolved but the ticket was left open, leaving orphaned tickets behind after a round of drift acceptances.
+
+The one exception is deliberate: if you resolve an alert from the alert panel and choose **"Leave ticket open"**, the ticket stays open for your technician to finish. Only an actual drift resolution triggers the automatic close.
+
+---
+
 ## Version 0.1.54 — 2026-06-07
 
 ### Switching language now updates the page you're on

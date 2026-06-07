@@ -3899,7 +3899,8 @@
         "closed_title": "Cerrado desde Panoptica365",
         "info_title": "Actualización de Panoptica365",
         "drift_cleared": "La alerta de Panoptica365 vinculada se resolvió automáticamente ({reason}). Este ticket se dejó abierto para su revisión.",
-        "resolved_left_open": "Un operador resolvió la alerta de Panoptica365 vinculada (n.º {alertId}). Este ticket se dejó abierto."
+        "resolved_left_open": "Un operador resolvió la alerta de Panoptica365 vinculada (n.º {alertId}). Este ticket se dejó abierto.",
+        "closed_drift_cleared": "Cierre automático: la alerta de Panoptica365 vinculada se resolvió (la desviación de configuración se corrigió)."
       }
     },
     "settings": {

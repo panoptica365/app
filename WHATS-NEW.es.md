@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.0 — 2026-06-07
+
+### Los tickets del PSA ahora se cierran solos cuando se resuelve la desviación subyacente
+
+Cuando una alerta de desviación de configuración está vinculada a un ticket del PSA y esa desviación se resuelve en Panoptica365 —ya sea que haga clic en **Aceptar**, **Corregir** o **Coincidir** en el ajuste, que aplique una corrección confirmada en la siguiente comprobación, o que alguien simplemente la corrija en el portal de administración de Microsoft— Panoptica365 **ahora cierra el ticket vinculado automáticamente** y añade una nota que explica el motivo. Antes, la alerta se resolvía pero el ticket quedaba abierto, dejando tickets huérfanos tras una ronda de aceptaciones de desviación.
+
+La única excepción es deliberada: si resuelve una alerta desde el panel de alertas y elige **«Dejar el ticket abierto»**, el ticket permanece abierto para que su técnico lo termine. Solo una resolución real de desviación activa el cierre automático.
+
+---
+
 ## Versión 0.1.54 — 2026-06-07
 
 ### Cambiar de idioma ahora actualiza la página en la que está

@@ -3899,7 +3899,8 @@
         "closed_title": "Closed from Panoptica365",
         "info_title": "Panoptica365 update",
         "drift_cleared": "The linked Panoptica365 alert was resolved automatically ({reason}). This ticket was left open for your review.",
-        "resolved_left_open": "The linked Panoptica365 alert (#{alertId}) was resolved by an operator. This ticket was left open."
+        "resolved_left_open": "The linked Panoptica365 alert (#{alertId}) was resolved by an operator. This ticket was left open.",
+        "closed_drift_cleared": "Closing automatically: the linked Panoptica365 alert was resolved (the configuration drift cleared)."
       }
     },
     "settings": {

@@ -1074,7 +1074,8 @@ router.post('/tenants/:tid/settings/:sid/match', auth.requireMemberOrAdmin, asyn
     await alertEngine.resolveOpenAlerts(
       tenant.id,
       securityDriftDedupKey(settingId),
-      `Auto-resolved — operator clicked Match (${operatorEmail || 'unknown'}) — baseline updated to current state`
+      `Auto-resolved — operator clicked Match (${operatorEmail || 'unknown'}) — baseline updated to current state`,
+      { operatorEmail }
     );
   } catch (e) {
     console.error(`[api-security] resolveOpenAlerts on Match failed: ${e.message}`);
@@ -1207,7 +1208,8 @@ router.post('/tenants/:tid/settings/:sid/remediate', auth.requireMemberOrAdmin, 
       await alertEngine.resolveOpenAlerts(
         tenant.id,
         securityDriftDedupKey(settingId),
-        `Auto-resolved — operator clicked Remediate (${operatorEmail || 'unknown'})`
+        `Auto-resolved — operator clicked Remediate (${operatorEmail || 'unknown'})`,
+        { operatorEmail }
       );
     } catch (e) {
       console.error(`[api-security] resolveOpenAlerts on Remediate failed: ${e.message}`);
@@ -1306,7 +1308,8 @@ router.post('/tenants/:tid/settings/:sid/accept', auth.requireMemberOrAdmin, asy
     await alertEngine.resolveOpenAlerts(
       tenant.id,
       securityDriftDedupKey(settingId),
-      `Auto-resolved — operator clicked Accept Drift (${operatorEmail || 'unknown'})`
+      `Auto-resolved — operator clicked Accept Drift (${operatorEmail || 'unknown'})`,
+      { operatorEmail }
     );
   } catch (e) {
     console.error(`[api-security] resolveOpenAlerts on Accept failed: ${e.message}`);

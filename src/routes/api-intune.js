@@ -2234,6 +2234,17 @@ router.post('/accept-drift/:deploymentId', auth.requireMemberOrAdmin, async (req
         );
         resolvedAlertId = openAlert.id;
         console.log(`[Intune:Drift] Accepted drift on deployment ${deploymentId} by ${actor}; auto-resolved alert ${openAlert.id}`);
+        // PSA (Feature 8.3): the linked Autotask ticket exists only to track this
+        // drift; the operator just accepted it, so close the ticket too rather
+        // than orphan it. Best-effort — never blocks the accept response.
+        try {
+          const psa = require('../psa');
+          if (psa.isConfigured()) {
+            await psa.closeTicketsForResolvedAlerts([openAlert.id], { operatorEmail: actor });
+          }
+        } catch (psaErr) {
+          console.warn(`[Intune:Drift] PSA ticket close on accept failed (non-fatal): ${psaErr.message}`);
+        }
       } else {
         console.log(`[Intune:Drift] Accepted drift on deployment ${deploymentId} by ${actor} (no open alert to resolve)`);
       }

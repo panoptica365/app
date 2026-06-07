@@ -599,6 +599,59 @@ async function noteTicketForAlert(linkRow, i18nKey, params) {
   }
 }
 
+/**
+ * Close the linked OPEN ticket(s) for a set of just-resolved drift alerts
+ * (Feature 8.3, decision-7 refinement 2026-06-06): a linked ticket exists only
+ * to track its drift alert, so when the drift clears — operator Accept /
+ * Remediate / Match, Apply-then-poll, or a passive portal revert — close the
+ * ticket rather than orphan it. (The manual alert-resolve "leave open" choice
+ * is a separate path and is unaffected.) Acts once per distinct ticket.
+ * Best-effort; never throws to the caller. Returns the number of tickets closed.
+ */
+async function closeTicketsForResolvedAlerts(alertIds, opts = {}) {
+  if (!isConfigured()) return 0;
+  let map;
+  try { map = await store.getOpenLinksForAlertIds(alertIds); }
+  catch (err) { console.warn(`[PSA] resolved-alert link lookup failed: ${err.message}`); return 0; }
+  if (map.size === 0) return 0;
+
+  const c = tc();
+  const lang = ticketLang();
+  const operator = opts.operatorEmail || null;
+  const nowSql = toMysqlDatetime(new Date());
+  const done = new Set();
+  let closed = 0;
+
+  for (const [alertId, link] of map) {
+    if (link.state !== 'open' || done.has(link.ticket_id)) continue;
+    done.add(link.ticket_id);
+    try {
+      if (c.closeStatusId != null) await client.patchTicketStatus(link.ticket_id, c.closeStatusId);
+      await client.createTicketNote(link.ticket_id, {
+        title: i18n.t('psa.ticket.note.closed_title', { lang }),
+        description: i18n.t('psa.ticket.note.closed_drift_cleared', { operator: operator || '', lang }),
+        noteType: c.noteTypeId,
+        publish: c.publishId,
+      });
+      const links = await store.getLinksForTicket(link.ticket_id);
+      for (const l of links) {
+        if (l.state === 'open') {
+          await store.updateLink(l.id, { state: 'closed', closed_at: nowSql, last_synced_at: nowSql });
+        }
+      }
+      recoverAuthIfNeeded();
+      await auditTicketClosedByOperator({ id: alertId, tenant_id: link.tenant_id }, link, operator || 'Panoptica365', null);
+      closed += 1;
+    } catch (err) {
+      const statusCode = (err && err.statusCode) || 0;
+      if (statusCode === 401) await flipAuthUnhealthy(err.message);
+      console.warn(`[PSA] auto-close on drift-clear failed for ticket ${link.ticket_id}: ${err.message}`);
+    }
+  }
+  if (closed > 0) console.log(`[PSA] Auto-closed ${closed} ticket(s) — linked drift alert(s) resolved`);
+  return closed;
+}
+
 // ─── Auth health (§7) ───
 
 async function flipAuthUnhealthy(reason) {
@@ -750,6 +803,7 @@ module.exports = {
   // operator-driven
   closeTicketForAlert,
   noteTicketForAlert,
+  closeTicketsForResolvedAlerts,
   // worker
   retryErroredLink,
   pollLinkedTickets,

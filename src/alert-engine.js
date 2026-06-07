@@ -3152,7 +3152,7 @@ async function processNewAlert(alert, tenant) {
  * @param {string} reason     — short note appended to alerts.notes for audit
  * @returns {Promise<number>} — count of alerts resolved
  */
-async function resolveOpenAlerts(tenantId, dedupKey, reason = 'Auto-resolved') {
+async function resolveOpenAlerts(tenantId, dedupKey, reason = 'Auto-resolved', opts = {}) {
   if (!tenantId || !dedupKey) return 0;
   // Append the reason to notes (preserving any existing operator note) so
   // the audit trail captures what actually happened. Quoted as plain text;
@@ -3188,20 +3188,20 @@ async function resolveOpenAlerts(tenantId, dedupKey, reason = 'Auto-resolved') {
   );
   if (affectedRows > 0) {
     console.log(`[AlertEngine] Auto-resolved ${affectedRows} open alert(s) for dedup_key=${dedupKey} — ${reason}`);
-    // PSA note-only pass (Feature 8.3). Lazy require avoids a load-time cycle
-    // (psa → notifier → psa). No-op unless PSA is configured and a link exists.
+    // PSA auto-close pass (Feature 8.3, decision-7 refinement 2026-06-06). Lazy
+    // require avoids a load-time cycle (psa → notifier → psa). A linked ticket
+    // exists only to track this drift alert; now that the drift has cleared —
+    // whether by operator Accept/Remediate/Match (opts.operatorEmail set) or by
+    // a passive external revert observed by the poll (no operator) — close the
+    // ticket rather than orphan it. No-op unless PSA is configured and a link
+    // exists. The manual alert-resolve "leave open" choice is a separate path.
     try {
       const psa = require('./psa');
-      if (psa.isConfigured()) {
-        for (const alertId of resolvingIds) {
-          const link = await psa.store.getLinkForAlert(alertId);
-          if (link && link.state === 'open') {
-            await psa.noteTicketForAlert(link, 'psa.ticket.note.drift_cleared', { reason });
-          }
-        }
+      if (psa.isConfigured() && resolvingIds.length) {
+        await psa.closeTicketsForResolvedAlerts(resolvingIds, { operatorEmail: opts.operatorEmail || null });
       }
     } catch (err) {
-      console.warn(`[AlertEngine] PSA note-on-auto-resolve failed for dedup_key=${dedupKey}: ${err.message}`);
+      console.warn(`[AlertEngine] PSA close-on-auto-resolve failed for dedup_key=${dedupKey}: ${err.message}`);
     }
   }
   return affectedRows || 0;
