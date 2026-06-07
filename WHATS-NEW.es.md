@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.54 — 2026-06-07
+
+### Cambiar de idioma ahora actualiza la página en la que está
+
+Antes, cambiar el idioma de la interfaz en **Configuración** cambiaba de inmediato la barra superior y la barra lateral izquierda al nuevo idioma, pero la página del centro — un panel de inquilino, una guía de Aprender, etc. — permanecía en el idioma anterior. La única forma de verla traducida era recargar el navegador, lo que además lo devolvía a la Consola principal y lo obligaba a navegar de nuevo hasta donde estaba.
+
+Ahora, cuando guarda un nuevo idioma, la página que está viendo se actualiza en el sitio en el nuevo idioma y usted permanece exactamente donde estaba. La barra superior y la barra lateral siguen cambiando al instante, y nada más de su sesión cambia.
+
+---
+
 ## Versión 0.1.53 — 2026-06-07
 
 ### Nuevo en Aprender: la tarjeta Guías de Panoptica365

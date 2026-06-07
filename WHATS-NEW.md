@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.54 — 2026-06-07
+
+### Switching language now updates the page you're on
+
+Previously, changing the interface language in **Settings** flipped the top bar and the left sidebar to the new language right away, but the page in the middle — a tenant dashboard, a Learn guide, and so on — stayed in the old language. The only way to see it translated was to reload your browser, which also sent you back to the Main Console and made you navigate all the way back to where you were.
+
+Now, when you save a new language, the page you're currently looking at refreshes in place in the new language and you stay exactly where you were. The top bar and sidebar continue to switch instantly, and nothing else about your session changes.
+
+---
+
 ## Version 0.1.53 — 2026-06-07
 
 ### New in Learn: the Panoptica365 Guides card

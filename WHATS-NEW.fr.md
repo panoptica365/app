@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.54 — 2026-06-07
+
+### Changer de langue met maintenant à jour la page où vous êtes
+
+Auparavant, changer la langue de l'interface dans les **Paramètres** basculait immédiatement la barre supérieure et la barre latérale gauche dans la nouvelle langue, mais la page au centre — un tableau de bord de locataire, un guide Apprendre, etc. — restait dans l'ancienne langue. La seule façon de la voir traduite était de recharger votre navigateur, ce qui vous renvoyait aussi à la console principale et vous obligeait à refaire toute la navigation jusqu'à l'endroit où vous étiez.
+
+Maintenant, lorsque vous enregistrez une nouvelle langue, la page que vous consultez se rafraîchit sur place dans la nouvelle langue et vous restez exactement où vous étiez. La barre supérieure et la barre latérale continuent de basculer instantanément, et rien d'autre dans votre session ne change.
+
+---
+
 ## Version 0.1.53 — 2026-06-07
 
 ### Nouveau dans Apprendre : la carte Guides Panoptica365

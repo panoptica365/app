@@ -8,6 +8,7 @@
 
   // ─── State ───
   let currentPage = null;
+  let currentParams = {};    // Params the current page was navigated with (for in-place re-render, e.g. on language change)
   let currentModule = null;  // Reference to active page module (for destroy())
   let i18n = {};
   let userInfo = null;
@@ -68,6 +69,7 @@
     const loadingText = window.t ? window.t('common.loading') : 'Loading...';
     content.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div>' + loadingText + '</div>';
     currentPage = pageName;
+    currentParams = params;
 
     try {
       // Fetch HTML partial.
@@ -1145,10 +1147,12 @@
       // 'panoptica:locale-changed'. Also mirror to localStorage so the
       // next page load picks the right language on first paint instead
       // of flashing the previous one before /api/user-prefs returns.
+      let langChanged = false;
       if (window.PanopticaI18n && typeof window.PanopticaI18n.setLang === 'function') {
         try {
           localStorage.setItem('panoptica365-prefs-lang', language);
           if (language !== window.PanopticaI18n.currentLang()) {
+            langChanged = true;
             await window.PanopticaI18n.setLang(language);
           }
         } catch (_) {}
@@ -1183,6 +1187,19 @@
       if (typeof refreshHeaderMuteIndicator === 'function') refreshHeaderMuteIndicator();
       close();
       showToast(window.t('user_prefs.toast_saved'), 'success');
+
+      // Re-render the page the operator is currently looking at so its
+      // JS-built (t()-baked) content swaps to the new language in place.
+      // setLang() already re-walked the static data-i18n markup (header,
+      // sidebar, partial shells), but page modules bake most of their text
+      // via t() at render time — those strings are frozen until the module's
+      // init() runs again. Re-navigating to the same page+params re-runs
+      // init() (content-area only; header/sidebar untouched) so the user
+      // stays exactly where they are instead of having to hard-refresh and
+      // get bounced back to the main console.
+      if (langChanged && currentPage) {
+        try { await navigateTo(currentPage, currentParams); } catch (_) {}
+      }
     });
   }
 
