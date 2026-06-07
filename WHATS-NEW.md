@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.48 — 2026-06-06
+
+### Fixed: health monitor no longer flags license-gated Graph endpoints as failures
+
+The **Graph API endpoints** health check (and the status indicator in the bottom-left) was showing tenants as having failing endpoints when the only thing "wrong" was the tenant's license tier. Several Microsoft Graph endpoints — sign-in logs, risk detections, authentication-method reports, and the security alerts and incidents queues — are only available on higher tiers (Microsoft Entra ID P1/P2, Microsoft Defender XDR). On a tenant without those, Microsoft refuses the request, and Panoptica was counting each refusal as a failure — accumulating thousands of "errors" and painting the health box red, permanently, for tenants that were behaving exactly as licensed.
+
+Panoptica now recognizes these responses for what they are: the capability isn't included in that tenant's licensing (or, for the security queues, Microsoft Defender hasn't finished provisioning yet after a recent license upgrade). Those endpoints are marked **unavailable** rather than failing — they no longer count against the health check, no longer light up the status bar, and stop being retried needlessly. The moment a tenant is upgraded (or Defender finishes provisioning), the endpoint clears itself to healthy on the next poll. Genuine permission problems — a revoked consent or a missing API permission — are still reported as real failures, so nothing actually broken gets hidden.
+
+This complements the v0.1.46 fix, which made the same distinction during first-boot setup; this release applies it to the ongoing health monitoring.
+
+---
+
 ## Version 0.1.47 — 2026-06-06
 
 ### Fixed: clearer guidance for the Exchange permission during setup

@@ -159,7 +159,11 @@ async function checkGraphEndpoints(lang) {
      JOIN tenants t ON t.id = h.tenant_id
      WHERE t.enabled = TRUE
        AND t.mode = 'managed'
-       AND h.status != 'healthy'
+       -- Only real failures count toward the health card. 'unavailable' means
+       -- the tenant's license tier / Defender provisioning doesn't include the
+       -- endpoint (e.g. Business Basic/Standard has no Entra ID P1/P2) — a normal
+       -- state, not a degradation, so it must not light up the bottom-left bar.
+       AND h.status IN ('degraded','broken')
        AND h.last_failure_at >= DATE_SUB(NOW(), INTERVAL ? HOUR)
      ORDER BY h.last_failure_at DESC`,
     [GRAPH_ERROR_WINDOW_HOURS]

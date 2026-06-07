@@ -44,6 +44,7 @@ const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
 const updateApiRoutes = require('./routes/api-update');
 const diagnosticsApiRoutes = require('./routes/api-diagnostics');
+const psaApiRoutes = require('./routes/api-psa');
 const licenseApiRoutes = require('./routes/api-license');
 const setupApiRoutes = require('./routes/api-setup');
 const legalApiRoutes = require('./routes/api-legal');
@@ -91,6 +92,8 @@ const knownGoodWorker = require('./known-good-worker');
 const knownGoodStore = require('./lib/known-good-store');
 const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
+const psaWorker = require('./psa-worker');
+const psaStore = require('./psa/store');
 
 const app = express();
 const server = http.createServer(app);
@@ -311,6 +314,7 @@ app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
 app.use('/api/update', updateApiRoutes);
 app.use('/api/diagnostics', diagnosticsApiRoutes);
+app.use('/api/psa', psaApiRoutes);
 
 // i18n endpoint — frontend fetches locale strings
 app.get('/api/i18n/:lang?', (req, res) => {
@@ -456,6 +460,20 @@ async function start() {
       console.error('[Server] known-good schema ensure failed at boot:', err.message)
     );
 
+    // Feature 8.3 — eager-create psa_tickets + tenants.psa_company_id at boot so
+    // the schema exists regardless of whether PSA is currently configured.
+    // Fire-and-forget (spec §4.1 eager-migration pattern).
+    psaStore.ensureSchema().catch(err =>
+      console.error('[Server] PSA schema ensure failed at boot:', err.message)
+    );
+
+    // Extend api_health.status with 'unavailable' so capability-gated Graph
+    // endpoints (tenant license tier / Defender provisioning, not failures) stop
+    // polluting the API-health card. Idempotent probe; fire-and-forget.
+    require('./graph').ensureSchema().catch(err =>
+      console.error('[Server] api_health schema ensure failed at boot:', err.message)
+    );
+
     // Start CA drift scheduler (60-minute cycle). Also passes
     // expireExemptions so overdue exemption grants are auto-revoked at the
     // top of each cycle — part of the exemption-aware alert suppression
@@ -512,6 +530,11 @@ async function start() {
     licenseRefresh.start();
     updateChecker.start();
     updateChecker.reconcileTerminalStatus().catch(() => {});
+
+    // Feature 8.3 — PSA worker (Autotask poll + retry). Wakes every minute,
+    // acts every PSA_POLL_INTERVAL_MIN, no-ops entirely until an operator
+    // selects a provider + credentials in Settings → PSA Integration.
+    psaWorker.start();
   });
 }
 
@@ -528,6 +551,7 @@ process.on('SIGINT', async () => {
   knownGoodWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
+  psaWorker.stop();
   await db.close();
   server.close(() => process.exit(0));
 });
@@ -544,6 +568,7 @@ process.on('SIGTERM', async () => {
   knownGoodWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
+  psaWorker.stop();
   await db.close();
   server.close(() => process.exit(0));
 });

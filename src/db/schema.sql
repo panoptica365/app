@@ -119,7 +119,14 @@ CREATE TABLE IF NOT EXISTS api_health (
   id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   tenant_id       INT UNSIGNED NOT NULL,
   endpoint        VARCHAR(512) NOT NULL,
-  status          ENUM('healthy', 'degraded', 'broken') NOT NULL DEFAULT 'healthy',
+  -- 'unavailable' = the tenant's license tier / Defender provisioning state
+  -- doesn't include this capability (e.g. Business Basic/Standard has no Entra
+  -- ID P1/P2 for /auditLogs/signIns or /identityProtection/*, and a tenant whose
+  -- Defender XDR backend isn't provisioned yet returns "Account is not
+  -- provisioned" on /security/*). This is a NORMAL, expected state — not a
+  -- failure — so it is excluded from the API-health card and never accrues
+  -- failure_count. See graph.js classifyCapabilityGate().
+  status          ENUM('healthy', 'degraded', 'broken', 'unavailable') NOT NULL DEFAULT 'healthy',
   last_success_at DATETIME DEFAULT NULL,
   last_failure_at DATETIME DEFAULT NULL,
   failure_count   INT UNSIGNED NOT NULL DEFAULT 0,

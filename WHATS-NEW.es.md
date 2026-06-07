@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.48 — 2026-06-06
+
+### Corregido: el monitor de estado ya no marca como fallidos los puntos de conexión de Graph limitados por la licencia
+
+La comprobación de estado de los **puntos de conexión de la API de Graph** (y el indicador en la esquina inferior izquierda) mostraba inquilinos con puntos de conexión fallidos cuando lo único «mal» era el nivel de licencia del inquilino. Varios puntos de conexión de Microsoft Graph — registros de inicio de sesión, detecciones de riesgo, informes de métodos de autenticación y las colas de alertas e incidentes de seguridad — solo están disponibles en niveles superiores (Microsoft Entra ID P1/P2, Microsoft Defender XDR). En un inquilino que no los tiene, Microsoft rechaza la solicitud, y Panoptica contaba cada rechazo como un fallo — acumulando miles de «errores» y dejando la caja de estado en rojo, de forma permanente, para inquilinos que se comportaban exactamente según su licencia.
+
+Ahora Panoptica reconoce estas respuestas por lo que son: la capacidad no está incluida en la licencia de ese inquilino (o, en el caso de las colas de seguridad, Microsoft Defender aún no ha terminado el aprovisionamiento tras una actualización reciente de licencia). Esos puntos de conexión se marcan como **no disponibles** en lugar de fallidos: ya no cuentan para la comprobación de estado, ya no encienden la barra de estado y dejan de reintentarse innecesariamente. En cuanto un inquilino se actualiza (o Defender termina el aprovisionamiento), el punto de conexión vuelve por sí solo a «correcto» en el siguiente sondeo. Los problemas de permisos reales — un consentimiento revocado o un permiso de API que falta — se siguen notificando como fallos reales, de modo que nada realmente roto queda oculto.
+
+Esto complementa la corrección de la versión 0.1.46, que hacía la misma distinción durante la configuración inicial; esta versión la aplica a la supervisión de estado continua.
+
+---
+
 ## Versión 0.1.47 — 2026-06-06
 
 ### Corregido: orientación más clara para el permiso de Exchange durante la configuración

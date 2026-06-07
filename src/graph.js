@@ -53,6 +53,19 @@ async function callGraph(tenantId, endpoint, options = {}) {
         if (silent) {
           throw new GraphError(response.status, errText, endpoint);
         }
+        // Capability gate: a 403 that means "this tenant's license tier /
+        // Defender provisioning doesn't include this endpoint" — a NORMAL state,
+        // not a health failure. Classify as 'unavailable' (excluded from the
+        // health card, no failure_count accrual) and stop retrying — it's
+        // deterministic, so the extra attempts just hammer a known-dead surface.
+        // It is still polled each cycle, so it auto-recovers (flips to 'healthy')
+        // the moment the tenant upgrades or provisioning completes.
+        const gate = response.status === 403 ? classifyCapabilityGate(errText) : null;
+        if (gate) {
+          console.log(`[Graph] ${endpoint.split('?')[0]} unavailable for tenant license/provisioning (${gate.kind})`);
+          await updateApiHealth(tenantId, endpoint, 'unavailable', `Unavailable (${gate.kind}): ${gate.message}`);
+          throw new GraphError(response.status, `Capability unavailable (${gate.kind}): ${gate.message}`, endpoint);
+        }
         if (response.status === 403) {
           console.log(`[Graph] 403 Forbidden on ${endpoint.split('?')[0]}`);
         } else {
@@ -215,7 +228,94 @@ async function getSecureScore(tenantId) {
 // ─── API Health Tracking ───
 
 /**
+ * Classify a Graph 403 response body as a "capability gate" — i.e. the failure
+ * is because the tenant's license tier or Defender provisioning state simply
+ * doesn't include this endpoint, NOT because anything is broken.
+ *
+ * Returns { kind: 'license' | 'provisioning', message } when it's a gate, or
+ * null when the 403 is a genuine authorization problem (revoked consent,
+ * missing scope) that we DO want surfaced as a degraded health failure.
+ *
+ * Signatures observed empirically on Panoptica365-Prod 2026-06-06 across
+ * Innodal (Business Basic/Standard — no Entra ID premium) and Gestion DSS
+ * (mid Defender XDR first-run provisioning after a Business Premium upgrade):
+ *   {"error":{"code":"Authentication_RequestFromNonPremiumTenantOrB2CTenant",
+ *             "message":"Tenant is not a B2C tenant and doesn't have premium license"}}
+ *   {"error":{"code":"Forbidden","message":"Your tenant is not licensed for this feature."}}
+ *   {"error":{"code":"Unauthorized","message":"Unauthorized request - Account is not provisioned."}}
+ *
+ * Match on the stable substrings rather than exact strings — Microsoft varies
+ * the wording. A genuine consent/scope problem returns code
+ * 'Authorization_RequestDenied' / "Insufficient privileges", which falls
+ * through to null here and stays classified 'degraded'.
+ */
+function classifyCapabilityGate(errText) {
+  if (!errText) return null;
+  let code = '';
+  let message = '';
+  try {
+    const parsed = JSON.parse(errText);
+    code = String(parsed?.error?.code || '');
+    message = String(parsed?.error?.message || '');
+  } catch (_) {
+    // Non-JSON body — match against the raw text.
+    message = String(errText);
+  }
+  const lc = `${code} ${message}`.toLowerCase();
+  // Compact, human-readable reason stored in last_error (cap length).
+  const reason = (message || code || 'capability not available').substring(0, 300);
+
+  // Entra ID P1/P2 license gate (signIns, riskDetections, userRegistrationDetails, …)
+  if (
+    code.toLowerCase() === 'authentication_requestfromnonpremiumtenantorb2ctenant' ||
+    lc.includes('not licensed for this feature') ||
+    (lc.includes('premium license') && lc.includes('b2c'))
+  ) {
+    return { kind: 'license', message: reason };
+  }
+  // Microsoft 365 Defender (XDR) backend not provisioned for this tenant
+  // (security/alerts_v2, security/incidents). Covers both "never provisioned"
+  // (no Defender SKU) and "provisioning in progress" (recent BP upgrade) — both
+  // self-recover to 'healthy' on the next successful poll once data lights up.
+  if (lc.includes('not provisioned')) {
+    return { kind: 'provisioning', message: reason };
+  }
+  return null;
+}
+
+/**
+ * Extend api_health.status with the 'unavailable' value on existing databases.
+ * Idempotent: probes INFORMATION_SCHEMA first so a DB already carrying the value
+ * is left untouched. Fresh installs get it straight from schema.sql. Called once
+ * at boot from server.js. Uses the deadlock-retry helper because boot-time
+ * ALTERs can race other migrations on a fresh DB.
+ */
+async function ensureSchema() {
+  try {
+    const col = await db.queryOne(
+      "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'api_health' AND COLUMN_NAME = 'status'"
+    );
+    if (col && col.COLUMN_TYPE && !col.COLUMN_TYPE.includes("'unavailable'")) {
+      await db.executeWithDeadlockRetry(
+        "ALTER TABLE api_health MODIFY COLUMN status ENUM('healthy','degraded','broken','unavailable') NOT NULL DEFAULT 'healthy'"
+      );
+      console.log("[Graph] Extended api_health.status ENUM with 'unavailable'");
+    }
+  } catch (e) {
+    console.warn('[Graph] api_health.status ENUM extension (non-fatal):', e.message);
+  }
+}
+
+/**
  * Update the api_health table for an endpoint.
+ *
+ * Three buckets:
+ *   - 'healthy'                  → reset failure_count, stamp last_success_at
+ *   - 'unavailable'             → capability gate (license/provisioning): NOT a
+ *                                  failure. Reset failure_count to 0 (clears any
+ *                                  historical inflation from before it was
+ *                                  reclassified) and do NOT stamp last_failure_at.
+ *   - 'degraded' / 'broken'      → real failure: increment, stamp last_failure_at
  */
 async function updateApiHealth(tenantDbId, endpoint, status, errorMsg) {
   // tenantId here is the Azure tenant GUID — we resolve to DB id via subquery
@@ -228,15 +328,15 @@ async function updateApiHealth(tenantDbId, endpoint, status, errorMsg) {
         last_success_at, last_failure_at, failure_count)
        SELECT t.id, ?, ?, ?,
         IF(? = 'healthy', NOW(), NULL),
-        IF(? != 'healthy', NOW(), NULL),
-        IF(? != 'healthy', 1, 0)
+        IF(? IN ('degraded','broken'), NOW(), NULL),
+        IF(? IN ('degraded','broken'), 1, 0)
        FROM tenants t WHERE t.tenant_id = ?
        ON DUPLICATE KEY UPDATE
         status = VALUES(status),
-        last_error = IF(VALUES(status) != 'healthy', VALUES(last_error), last_error),
+        last_error = IF(VALUES(status) = 'healthy', last_error, VALUES(last_error)),
         last_success_at = IF(VALUES(status) = 'healthy', NOW(), last_success_at),
-        last_failure_at = IF(VALUES(status) != 'healthy', NOW(), last_failure_at),
-        failure_count = IF(VALUES(status) = 'healthy', 0, failure_count + 1)`,
+        last_failure_at = IF(VALUES(status) IN ('degraded','broken'), NOW(), last_failure_at),
+        failure_count = IF(VALUES(status) IN ('degraded','broken'), failure_count + 1, 0)`,
       [cleanEndpoint, status, errorMsg, status, status, status, tenantDbId]
     );
   } catch (dbErr) {
@@ -264,5 +364,7 @@ module.exports = {
   callGraph,
   callGraphPaged,
   getSecureScore,
+  ensureSchema,
+  classifyCapabilityGate,
   GraphError,
 };

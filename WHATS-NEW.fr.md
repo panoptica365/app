@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.48 — 2026-06-06
+
+### Corrigé : le moniteur d’état ne signale plus comme défaillants les points de terminaison Graph limités par la licence
+
+La vérification d’état des **points de terminaison de l’API Graph** (et l’indicateur en bas à gauche) affichait des locataires comme ayant des points de terminaison défaillants alors que le seul « problème » tenait au niveau de licence du locataire. Plusieurs points de terminaison de Microsoft Graph — journaux de connexion, détections de risque, rapports sur les méthodes d’authentification, ainsi que les files d’alertes et d’incidents de sécurité — ne sont disponibles que sur les niveaux supérieurs (Microsoft Entra ID P1/P2, Microsoft Defender XDR). Sur un locataire qui ne les possède pas, Microsoft refuse la requête, et Panoptica comptait chaque refus comme une défaillance — accumulant des milliers d’« erreurs » et affichant la boîte d’état en rouge, en permanence, pour des locataires qui se comportaient exactement comme leur licence le prévoit.
+
+Panoptica reconnaît désormais ces réponses pour ce qu’elles sont : la fonctionnalité n’est pas incluse dans la licence du locataire (ou, pour les files de sécurité, Microsoft Defender n’a pas terminé son approvisionnement après une mise à niveau récente). Ces points de terminaison sont marqués **non disponibles** plutôt que défaillants — ils ne comptent plus dans la vérification d’état, n’allument plus la barre d’état et ne sont plus réessayés inutilement. Dès qu’un locataire est mis à niveau (ou que Defender termine son approvisionnement), le point de terminaison repasse à « sain » au prochain sondage. Les véritables problèmes d’autorisation — un consentement révoqué ou une autorisation d’API manquante — sont toujours signalés comme de vraies défaillances, de sorte que rien de réellement défectueux n’est masqué.
+
+Ce correctif complète celui de la version 0.1.46, qui faisait la même distinction lors de la configuration initiale ; cette version l’applique à la surveillance d’état continue.
+
+---
+
 ## Version 0.1.47 — 2026-06-06
 
 ### Corrigé : indications plus claires pour l’autorisation Exchange lors de la configuration
