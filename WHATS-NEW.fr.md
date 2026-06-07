@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.53 — 2026-06-07
+
+### Nouveau dans Apprendre : la carte Guides Panoptica365
+
+La section Apprendre s'ouvre désormais sur une nouvelle carte, **Guides Panoptica365** — 18 guides opérateur courts, étape par étape, qui couvrent toute la plateforme dans l'ordre réel d'une nouvelle installation. La séquence commence par **Commencez ici** et **Ajoutez votre premier locataire** (incluant le choix entre géré et audit seulement ainsi que le flux de consentement administrateur), puis parcourt la console principale, le tableau de bord du locataire, la revue des applications, le déploiement des stratégies d'accès conditionnel et Intune, la surveillance des paramètres de sécurité, le traitement et le réglage des alertes, les exemptions, les vues de parc, les rapports, les notifications, l'intégration PSA, les rôles d'utilisateurs et l'administration du système.
+
+Chaque guide est volontairement court et explicite — les noms exacts des boutons, les noms exacts des onglets, quoi cliquer et dans quel ordre — et complète le curriculum existant d'Apprendre, qui couvre les connaissances en sécurité derrière la plateforme. Comme le reste de la section Apprendre, les guides sont offerts en anglais, en français et en espagnol, avec les habituels points « non lu » et insignes MISE À JOUR.
+
+---
+
 ## Version 0.1.52 — 2026-06-07
 
 ### Nouveau : les nouvelles installations incluent la bibliothèque de modèles de départ

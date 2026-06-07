@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.1.53 — 2026-06-07
+
+### New in Learn: the Panoptica365 Guides card
+
+The Learn section now opens with a new card, **Panoptica365 Guides** — 18 short, step-by-step operator guides covering the whole platform, in the order a new install actually unfolds. The sequence starts with **Start here** and **Add your first tenant** (including the managed vs audit-only decision and the admin-consent flow), then walks through the Main Console, the tenant dashboard, reviewing applications, deploying Conditional Access and Intune policies, monitoring security settings, working and tuning alerts, exemptions, fleet views, reports, notifications, the PSA integration, user roles, and system administration.
+
+Each guide is deliberately short and explicit — exact button names, exact tab names, what to click and in what order — and complements the existing Learn curriculum, which covers the security knowledge behind the platform. Like the rest of Learn, the guides are available in English, French and Spanish, with the usual unread dots and UPDATED badges.
+
+---
+
 ## Version 0.1.52 — 2026-06-07
 
 ### New: fresh installs ship with the starter template library

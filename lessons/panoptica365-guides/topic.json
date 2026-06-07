@@ -1,0 +1,35 @@
+{
+  "card_number": 0,
+  "slug": "panoptica365-guides",
+  "icon": "compass",
+  "titles": {
+    "en": "Panoptica365 Guides",
+    "fr": "Guides Panoptica365",
+    "es": "Guías de Panoptica365"
+  },
+  "subtitles": {
+    "en": "Step-by-step operator guides for every part of the platform — from adding your first tenant to running the whole fleet.",
+    "fr": "Guides opérateur étape par étape pour chaque partie de la plateforme — de l'ajout de votre premier locataire à la gestion de toute la flotte.",
+    "es": "Guías paso a paso para el operador sobre cada parte de la plataforma — desde añadir su primer inquilino hasta gestionar toda la flota."
+  },
+  "lessons": [
+    "start-here",
+    "add-your-first-tenant",
+    "managed-vs-audit-only",
+    "the-main-console",
+    "the-tenant-dashboard",
+    "review-applications",
+    "deploy-ca-policies",
+    "deploy-intune-policies",
+    "monitor-security-settings",
+    "work-the-alerts",
+    "tune-alert-policies",
+    "manage-exemptions",
+    "fleet-views",
+    "generate-reports",
+    "configure-notifications",
+    "connect-your-psa",
+    "users-roles-and-access",
+    "system-administration"
+  ]
+}

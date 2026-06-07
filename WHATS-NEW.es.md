@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.53 — 2026-06-07
+
+### Nuevo en Aprender: la tarjeta Guías de Panoptica365
+
+La sección Aprender ahora se abre con una nueva tarjeta, **Guías de Panoptica365** — 18 guías breves para el operador, paso a paso, que cubren toda la plataforma en el orden real de una instalación nueva. La secuencia comienza con **Comience aquí** y **Añada su primer inquilino** (incluida la decisión entre gestionado y solo auditoría y el flujo de consentimiento de administrador), y continúa con la consola principal, el panel del inquilino, la revisión de aplicaciones, el despliegue de directivas de Acceso Condicional e Intune, la supervisión de la configuración de seguridad, el trabajo y el ajuste de las alertas, las exenciones, las vistas de flota, los informes, las notificaciones, la integración con el PSA, los roles de usuario y la administración del sistema.
+
+Cada guía es deliberadamente breve y explícita — nombres exactos de botones, nombres exactos de pestañas, qué pulsar y en qué orden — y complementa el plan de estudios existente de Aprender, que cubre los conocimientos de seguridad detrás de la plataforma. Como el resto de la sección Aprender, las guías están disponibles en inglés, francés y español, con los habituales puntos de no leído e insignias de ACTUALIZADO.
+
+---
+
 ## Versión 0.1.52 — 2026-06-07
 
 ### Novedad: las instalaciones nuevas incluyen la biblioteca de plantillas inicial
