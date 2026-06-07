@@ -1,0 +1,97 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - Block Microsoft Consumer Accounts",
+    "description": "Prevents users from adding personal MSA to Windows. Work/school account authentication via WAM is explicitly permitted. Corrected 2026-05-07 — previous value 3 on BlockMicrosoftAccounts broke WAM for M365 apps.",
+    "category": "none",
+    "policy_type": "configurationPolicies",
+    "platform": "windows10",
+    "template_family": "none",
+    "policy_json": {
+      "name": "Panoptica365 - Block Microsoft Consumer Accounts",
+      "description": "Prevents users from adding personal MSA to Windows. Work/school account authentication via WAM is explicitly permitted. Corrected 2026-05-07 — previous value 3 on BlockMicrosoftAccounts broke WAM for M365 apps.",
+      "platforms": "windows10",
+      "technologies": "mdm",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "templateReference": {
+        "templateId": "",
+        "templateFamily": "none",
+        "templateDisplayName": null,
+        "templateDisplayVersion": null
+      },
+      "settings": [
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_accounts_allowaddingnonmicrosoftaccountsmanually",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_accounts_allowaddingnonmicrosoftaccountsmanually_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_accounts_allowmicrosoftaccountconnection",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_accounts_allowmicrosoftaccountconnection_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_appruntime_allowmicrosoftaccountstobeoptional",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_appruntime_allowmicrosoftaccountstobeoptional_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_admx_msapolicy_microsoftaccount_disableuserauth",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_admx_msapolicy_microsoftaccount_disableuserauth_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_accounts_blockmicrosoftaccounts",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_accounts_blockmicrosoftaccounts_1",
+              "children": []
+            }
+          }
+        }
+      ]
+    },
+    "tags": null,
+    "assignment_target": "all_devices",
+    "alert_routing": "both"
+  }
+}

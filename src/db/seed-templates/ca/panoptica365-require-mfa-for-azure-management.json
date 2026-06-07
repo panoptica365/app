@@ -1,0 +1,63 @@
+{
+  "seedFormat": 1,
+  "kind": "ca",
+  "template": {
+    "name": "Panoptica365 - Require MFA for Azure management",
+    "description": "Azure management requires MFA",
+    "policy_json": {
+      "state": "enabled",
+      "conditions": {
+        "users": {
+          "excludeRoles": [],
+          "excludeUsers": [],
+          "includeRoles": [],
+          "includeUsers": [
+            "All"
+          ],
+          "excludeGroups": [],
+          "includeGroups": []
+        },
+        "applications": {
+          "includeUserActions": [],
+          "excludeApplications": [],
+          "includeApplications": [
+            "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+          ],
+          "includeAuthenticationContextClassReferences": []
+        },
+        "clientAppTypes": [
+          "all"
+        ],
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "servicePrincipalRiskLevels": []
+      },
+      "displayName": "Panoptica365 - Require MFA for Azure management",
+      "grantControls": {
+        "operator": "OR",
+        "termsOfUse": [],
+        "builtInControls": [
+          "mfa"
+        ],
+        "customAuthenticationFactors": []
+      }
+    },
+    "state": "enabled",
+    "grant_controls": "Require MFA (OR)",
+    "target_users": "All users",
+    "target_apps": "1 app(s)",
+    "conditions_summary": "No extra conditions",
+    "monitored_fields": [
+      "state",
+      "grantControls.builtInControls",
+      "conditions.users.includeUsers",
+      "conditions.users.includeGroups",
+      "conditions.applications.includeApplications",
+      "conditions.users.excludeUsers",
+      "conditions.users.excludeGroups"
+    ],
+    "control_dimensions": [
+      "require_mfa"
+    ]
+  }
+}

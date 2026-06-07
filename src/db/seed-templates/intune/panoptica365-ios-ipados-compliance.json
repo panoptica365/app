@@ -1,0 +1,42 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - iOS/iPadOS Compliance",
+    "description": "",
+    "category": "iosCompliancePolicy",
+    "policy_type": "deviceCompliancePolicies",
+    "platform": "windows10",
+    "template_family": null,
+    "policy_json": {
+      "@odata.type": "#microsoft.graph.iosCompliancePolicy",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "description": null,
+      "displayName": "Panoptica365 - iOS/iPadOS Compliance",
+      "passcodeBlockSimple": false,
+      "passcodeExpirationDays": null,
+      "passcodeMinimumLength": 4,
+      "passcodeMinutesOfInactivityBeforeLock": 5,
+      "passcodeMinutesOfInactivityBeforeScreenTimeout": 2,
+      "passcodePreviousPasscodeBlockCount": 24,
+      "passcodeMinimumCharacterSetCount": null,
+      "passcodeRequiredType": "deviceDefault",
+      "passcodeRequired": true,
+      "osMinimumVersion": null,
+      "osMaximumVersion": null,
+      "osMinimumBuildVersion": null,
+      "osMaximumBuildVersion": null,
+      "securityBlockJailbrokenDevices": true,
+      "deviceThreatProtectionEnabled": false,
+      "deviceThreatProtectionRequiredSecurityLevel": "medium",
+      "advancedThreatProtectionRequiredSecurityLevel": "unavailable",
+      "managedEmailProfileRequired": false,
+      "restrictedApps": []
+    },
+    "tags": "",
+    "assignment_target": "all_devices",
+    "alert_routing": "support"
+  }
+}

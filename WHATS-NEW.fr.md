@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.52 — 2026-06-07
+
+### Nouveau : les nouvelles installations incluent la bibliothèque de modèles de départ
+
+Une nouvelle installation de Panoptica365 arrive désormais avec la bibliothèque complète et organisée de modèles d'accès conditionnel et Intune déjà chargée — l'ensemble de départ **« Panoptica365 - … »** — au lieu d'une page Modèles vide. Vous pouvez les examiner et les déployer immédiatement dans vos locataires clients, ou les utiliser comme point de départ aux côtés de vos propres modèles importés.
+
+**Les installations existantes ne sont pas touchées.** L'ensemble de départ ne se charge que lorsque votre bibliothèque de modèles est vide; tout ce que vous avez déjà importé ou personnalisé reste exactement tel quel — rien n'est écrasé ni dupliqué, ni lors de cette mise à jour ni d'une future.
+
+**Conçus pour s'adapter à tout locataire.** Les modèles d'accès conditionnel fournis référencent les emplacements au moyen des espaces réservés portables de Panoptica365 (ainsi un modèle « bloquer les connexions hors du Canada » se résout vers le bon emplacement nommé dans chaque locataire client), sont livrés avec des listes d'exclusion de comptes d'urgence vides à compléter, et ne contiennent aucun identifiant propre à un locataire particulier.
+
+---
+
 ## Version 0.1.51 — 2026-06-07
 
 ### Renforcement de la sécurité avant le déploiement élargi

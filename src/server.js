@@ -416,6 +416,21 @@ async function start() {
     console.error('[SecuritySettings] Seed failed:', e.message);
   }
 
+  // Seed the curated starter-template library (CA + Intune) — FRESH installs
+  // only. Empty-table-gated per table, so existing installs (prod included) are
+  // never touched. Awaits both route modules' schema-ensure promises first so
+  // ca_templates / intune_templates and their late-added columns
+  // (control_dimensions, source_tenant_id) exist before INSERT. Non-fatal: a
+  // failure logs loudly but never blocks boot — worst case the Templates UI
+  // shows its empty state, exactly as it did before this feature shipped.
+  // See src/db/seed-templates.js.
+  try {
+    await Promise.allSettled([intuneApiRoutes.schemaReady, caApiRoutes.schemaReady]);
+    await require('./db/seed-templates').seedStarterTemplates();
+  } catch (e) {
+    console.error('[Seed:Templates] Starter-template seeding failed at boot:', e.message);
+  }
+
   // Drop the in-image signed updater payload onto the shared bind mount so the
   // socket-holding bootstrap wrapper can verify + adopt it (Part 1, spec §1.3).
   // No-op on the pm2 dev VM (the mount doesn't exist there). Fire-and-forget —

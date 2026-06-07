@@ -1,0 +1,26 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - Windows Health Monitoring",
+    "description": "",
+    "category": "windowsHealthMonitoringConfiguration",
+    "policy_type": "deviceConfigurations",
+    "platform": "windows10",
+    "template_family": null,
+    "policy_json": {
+      "@odata.type": "#microsoft.graph.windowsHealthMonitoringConfiguration",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "description": null,
+      "displayName": "Panoptica365 - Windows Health Monitoring",
+      "allowDeviceHealthMonitoring": "enabled",
+      "configDeviceHealthMonitoringScope": "bootPerformance,windowsUpdates",
+      "configDeviceHealthMonitoringCustomScope": null
+    },
+    "tags": "",
+    "assignment_target": "all_devices",
+    "alert_routing": "both"
+  }
+}

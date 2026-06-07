@@ -361,8 +361,11 @@ async function ensureCaAlertSchema() {
   // entirely because they ship with placeholders.
 }
 
-// Run migration on module load
-ensureCaAlertSchema().catch(err =>
+// Run migration on module load. Keep the promise so the boot-time starter-
+// template seeder (src/db/seed-templates.js) can await it via router.schemaReady
+// — guaranteeing ca_templates and its late-added columns (control_dimensions,
+// source_tenant_id) exist before it INSERTs. Mirrors api-intune.js.
+const caSchemaReady = ensureCaAlertSchema().catch(err =>
   console.error('[CA] Alert schema migration failed:', err.message)
 );
 
@@ -3152,4 +3155,5 @@ router.checkDrift = checkDrift;
 router.expireExemptions = expireExemptions;
 router.exportCaPoliciesLive = exportCaPoliciesLive;
 router.exportNamedLocationsLive = exportNamedLocationsLive;
+router.schemaReady = caSchemaReady;
 module.exports = router;

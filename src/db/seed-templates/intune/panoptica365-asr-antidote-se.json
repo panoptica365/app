@@ -1,0 +1,538 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - ASR + Antidote + SE",
+    "description": null,
+    "category": "endpointSecurityAttackSurfaceReduction",
+    "policy_type": "configurationPolicies",
+    "platform": "windows10",
+    "template_family": "endpointSecurityAttackSurfaceReduction",
+    "policy_json": {
+      "name": "Panoptica365 - ASR + Antidote + SE",
+      "description": "",
+      "platforms": "windows10",
+      "technologies": "mdm,microsoftSense",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "templateReference": {
+        "templateId": "e8c053d6-9f95-42b1-a7f1-ebfd71c67a4b_1",
+        "templateFamily": "endpointSecurityAttackSurfaceReduction",
+        "templateDisplayName": "Panoptica365 - ASR + Antidote + SE",
+        "templateDisplayVersion": "Version 1"
+      },
+      "settings": [
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationGroupSettingCollectionInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules",
+            "auditRuleInformation": null,
+            "settingInstanceTemplateReference": {
+              "settingInstanceTemplateId": "19600663-e264-4c02-8f55-f2983216d6d7"
+            },
+            "groupSettingCollectionValue": [
+              {
+                "settingValueTemplateReference": null,
+                "children": [
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutionofpotentiallyobfuscatedscripts",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutionofpotentiallyobfuscatedscripts_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockwin32apicallsfromofficemacros",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockwin32apicallsfromofficemacros_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutablefilesrunningunlesstheymeetprevalenceagetrustedlistcriterion",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutablefilesrunningunlesstheymeetprevalenceagetrustedlistcriterion_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficecommunicationappfromcreatingchildprocesses",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficecommunicationappfromcreatingchildprocesses_block",
+                      "children": [
+                        {
+                          "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingCollectionInstance",
+                          "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficecommunicationappfromcreatingchildprocesses_perruleexclusions",
+                          "settingInstanceTemplateReference": null,
+                          "auditRuleInformation": null,
+                          "simpleSettingCollectionValue": [
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "antidote.exe"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "AssistantTelechargement.exe"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Program Files (x86)\\Druide\\Antidote 9\\Application\\Bin64\\Antidote.exe"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Roaming\\SecureExchanges\\PDFSignForm\\SecureExchanges.ExternalSignPDF.exe"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockallofficeapplicationsfromcreatingchildprocesses",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockallofficeapplicationsfromcreatingchildprocesses_block",
+                      "children": [
+                        {
+                          "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingCollectionInstance",
+                          "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockallofficeapplicationsfromcreatingchildprocesses_perruleexclusions",
+                          "settingInstanceTemplateReference": null,
+                          "auditRuleInformation": null,
+                          "simpleSettingCollectionValue": [
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "antidote.exe"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "AssistantTelechargement.exe"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Program Files (x86)\\Druide\\Antidote 9\\Application\\Bin64\\Antidote.exe"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockjavascriptorvbscriptfromlaunchingdownloadedexecutablecontent",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockjavascriptorvbscriptfromlaunchingdownloadedexecutablecontent_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockwebshellcreationforservers",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockwebshellcreationforservers_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockuntrustedunsignedprocessesthatrunfromusb",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockuntrustedunsignedprocessesthatrunfromusb_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockadobereaderfromcreatingchildprocesses",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockadobereaderfromcreatingchildprocesses_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockcredentialstealingfromwindowslocalsecurityauthoritysubsystem",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockcredentialstealingfromwindowslocalsecurityauthoritysubsystem_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockabuseofexploitedvulnerablesigneddrivers",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockabuseofexploitedvulnerablesigneddrivers_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockpersistencethroughwmieventsubscription",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockpersistencethroughwmieventsubscription_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockuseofcopiedorimpersonatedsystemtools",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockuseofcopiedorimpersonatedsystemtools_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockprocesscreationsfrompsexecandwmicommands",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockprocesscreationsfrompsexecandwmicommands_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficeapplicationsfromcreatingexecutablecontent",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficeapplicationsfromcreatingexecutablecontent_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficeapplicationsfrominjectingcodeintootherprocesses",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockofficeapplicationsfrominjectingcodeintootherprocesses_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockrebootingmachineinsafemode",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockrebootingmachineinsafemode_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_useadvancedprotectionagainstransomware",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_useadvancedprotectionagainstransomware_block",
+                      "children": []
+                    }
+                  },
+                  {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                    "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutablecontentfromemailclientandwebmail",
+                    "settingInstanceTemplateReference": null,
+                    "auditRuleInformation": null,
+                    "choiceSettingValue": {
+                      "settingValueTemplateReference": null,
+                      "value": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutablecontentfromemailclientandwebmail_block",
+                      "children": [
+                        {
+                          "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingCollectionInstance",
+                          "settingDefinitionId": "device_vendor_msft_policy_config_defender_attacksurfacereductionrules_blockexecutablecontentfromemailclientandwebmail_perruleexclusions",
+                          "settingInstanceTemplateReference": null,
+                          "auditRuleInformation": null,
+                          "simpleSettingCollectionValue": [
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\SecureExchangesSDK.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\OSecureExchange.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\*\\OSecureExchange.resources.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\SecureExchangesSDK.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\OSecureExchange.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\OSecureExchange.resources.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.barcodes.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.bouncy-castle-adapter.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.bouncy-castle-connector.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.commons.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.forms.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.io.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.kernel.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.layout.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.pdfa.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.pdfua.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.sign.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.styledxmlparser.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\itext.svg.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.barcodes.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.bouncy-castle-adapter.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.bouncy-castle-connector.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.commons.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.forms.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.io.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.kernel.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.layout.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.pdfa.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.pdfua.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.sign.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.styledxmlparser.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\itext.svg.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\BouncyCastle.Cryptography.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\CsvHelper.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\Newtonsoft.Json.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Temp\\Deployment\\*\\*\\PhoneNumbers.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\BouncyCastle.Cryptography.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\CsvHelper.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\Newtonsoft.Json.dll"
+                            },
+                            {
+                              "@odata.type": "#microsoft.graph.deviceManagementConfigurationStringSettingValue",
+                              "settingValueTemplateReference": null,
+                              "value": "C:\\Users\\*\\AppData\\Local\\Apps\\2.0\\*\\*\\PhoneNumbers.dll"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_defender_enablecontrolledfolderaccess",
+            "auditRuleInformation": null,
+            "settingInstanceTemplateReference": {
+              "settingInstanceTemplateId": "78c83b32-56c0-445a-932a-872d69af6e49"
+            },
+            "choiceSettingValue": {
+              "value": "device_vendor_msft_policy_config_defender_enablecontrolledfolderaccess_2",
+              "settingValueTemplateReference": {
+                "settingValueTemplateId": "e57db701-c3c6-4264-ab50-7896cb90dfd6",
+                "useTemplateDefault": false
+              },
+              "children": []
+            }
+          }
+        }
+      ]
+    },
+    "tags": null,
+    "assignment_target": "all_devices",
+    "alert_routing": "both"
+  }
+}

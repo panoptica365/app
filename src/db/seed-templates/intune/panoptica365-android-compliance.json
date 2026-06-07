@@ -1,0 +1,32 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - Android Compliance",
+    "description": "",
+    "category": "aospDeviceOwnerCompliancePolicy",
+    "policy_type": "deviceCompliancePolicies",
+    "platform": "windows10",
+    "template_family": null,
+    "policy_json": {
+      "@odata.type": "#microsoft.graph.aospDeviceOwnerCompliancePolicy",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "description": null,
+      "displayName": "Panoptica365 - Android Compliance",
+      "osMinimumVersion": null,
+      "osMaximumVersion": null,
+      "minAndroidSecurityPatchLevel": null,
+      "securityBlockJailbrokenDevices": true,
+      "passwordRequired": true,
+      "passwordRequiredType": "deviceDefault",
+      "passwordMinutesOfInactivityBeforeLock": 15,
+      "passwordMinimumLength": null,
+      "storageRequireEncryption": true
+    },
+    "tags": "",
+    "assignment_target": "all_devices",
+    "alert_routing": "support"
+  }
+}

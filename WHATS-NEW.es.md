@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.52 — 2026-06-07
+
+### Novedad: las instalaciones nuevas incluyen la biblioteca de plantillas inicial
+
+Una instalación nueva de Panoptica365 ahora llega con la biblioteca completa y curada de plantillas de Acceso Condicional e Intune ya cargada — el conjunto inicial **«Panoptica365 - …»** — en lugar de una página de Plantillas vacía. Puede revisarlas y desplegarlas de inmediato en los inquilinos de sus clientes, o usarlas como punto de partida junto a sus propias plantillas importadas.
+
+**Las instalaciones existentes no se ven afectadas.** El conjunto inicial solo se carga cuando su biblioteca de plantillas está vacía, de modo que todo lo que ya haya importado o personalizado permanece exactamente igual: nada se sobrescribe ni se duplica, ni en esta actualización ni en ninguna futura.
+
+**Diseñadas para adaptarse a cualquier inquilino.** Las plantillas de Acceso Condicional incluidas referencian las ubicaciones mediante los marcadores de posición portátiles de Panoptica365 (así una plantilla «bloquear inicios de sesión fuera de Canadá» se resuelve a la ubicación con nombre correcta en cada inquilino cliente), se entregan con listas de exclusión de cuentas de emergencia vacías para que usted las complete, y no contienen ningún identificador propio de un inquilino específico.
+
+---
+
 ## Versión 0.1.51 — 2026-06-07
 
 ### Refuerzo de seguridad antes del despliegue ampliado

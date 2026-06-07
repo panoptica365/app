@@ -1,0 +1,44 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - macOS Compliance",
+    "description": "",
+    "category": "macOSCompliancePolicy",
+    "policy_type": "deviceCompliancePolicies",
+    "platform": "windows10",
+    "template_family": null,
+    "policy_json": {
+      "@odata.type": "#microsoft.graph.macOSCompliancePolicy",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "description": null,
+      "displayName": "Panoptica365 - macOS Compliance",
+      "passwordRequired": true,
+      "passwordBlockSimple": false,
+      "passwordExpirationDays": 65535,
+      "passwordMinimumLength": 6,
+      "passwordMinutesOfInactivityBeforeLock": null,
+      "passwordPreviousPasswordBlockCount": null,
+      "passwordMinimumCharacterSetCount": null,
+      "passwordRequiredType": "deviceDefault",
+      "osMinimumVersion": null,
+      "osMaximumVersion": null,
+      "osMinimumBuildVersion": null,
+      "osMaximumBuildVersion": null,
+      "systemIntegrityProtectionEnabled": false,
+      "deviceThreatProtectionEnabled": false,
+      "deviceThreatProtectionRequiredSecurityLevel": "unavailable",
+      "advancedThreatProtectionRequiredSecurityLevel": "unavailable",
+      "storageRequireEncryption": true,
+      "gatekeeperAllowedAppSource": "anywhere",
+      "firewallEnabled": true,
+      "firewallBlockAllIncoming": true,
+      "firewallEnableStealthMode": false
+    },
+    "tags": "",
+    "assignment_target": "all_devices",
+    "alert_routing": "support"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "seedFormat": 1,
+  "kind": "ca",
+  "template": {
+    "name": "Panoptica365 - Only allow access from Canada",
+    "description": "Logins only from Canada or from Compliant devices",
+    "policy_json": {
+      "state": "enabled",
+      "conditions": {
+        "users": {
+          "excludeRoles": [],
+          "excludeUsers": [],
+          "includeRoles": [],
+          "includeUsers": [
+            "All"
+          ],
+          "excludeGroups": [],
+          "includeGroups": [],
+          "excludeGuestsOrExternalUsers": null,
+          "includeGuestsOrExternalUsers": null
+        },
+        "devices": {
+          "deviceFilter": {
+            "mode": "exclude",
+            "rule": "device.isCompliant -eq True"
+          }
+        },
+        "locations": {
+          "excludeLocations": [
+            "__PANOPTICA_LOCATION_CA__"
+          ],
+          "includeLocations": [
+            "All"
+          ]
+        },
+        "platforms": null,
+        "applications": {
+          "applicationFilter": null,
+          "includeUserActions": [],
+          "excludeApplications": [],
+          "includeApplications": [
+            "All"
+          ],
+          "includeAuthenticationContextClassReferences": []
+        },
+        "clientAppTypes": [
+          "browser",
+          "mobileAppsAndDesktopClients"
+        ],
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "insiderRiskLevels": null,
+        "clientApplications": null,
+        "authenticationFlows": null,
+        "servicePrincipalRiskLevels": []
+      },
+      "displayName": "Panoptica365 - Only allow access from Canada",
+      "grantControls": {
+        "operator": "OR",
+        "termsOfUse": [],
+        "builtInControls": [
+          "block"
+        ],
+        "authenticationStrength": null,
+        "customAuthenticationFactors": []
+      },
+      "deletedDateTime": null,
+      "sessionControls": null
+    },
+    "state": "enabled",
+    "grant_controls": "None",
+    "target_users": "All users",
+    "target_apps": "All cloud apps",
+    "conditions_summary": "Locations: 1 location(s)",
+    "monitored_fields": [
+      "state",
+      "grantControls.builtInControls",
+      "conditions.users.includeUsers",
+      "conditions.users.includeGroups",
+      "conditions.applications.includeApplications",
+      "conditions.users.excludeUsers",
+      "conditions.users.excludeGroups"
+    ],
+    "control_dimensions": [
+      "block_geographic_access"
+    ]
+  }
+}

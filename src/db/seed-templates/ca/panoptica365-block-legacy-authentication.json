@@ -1,0 +1,64 @@
+{
+  "seedFormat": 1,
+  "kind": "ca",
+  "template": {
+    "name": "Panoptica365 - Block Legacy Authentication",
+    "description": "Blocks old legacy authentication methods",
+    "policy_json": {
+      "state": "enabled",
+      "conditions": {
+        "users": {
+          "excludeRoles": [],
+          "excludeUsers": [],
+          "includeRoles": [],
+          "includeUsers": [
+            "All"
+          ],
+          "excludeGroups": [],
+          "includeGroups": []
+        },
+        "applications": {
+          "includeUserActions": [],
+          "excludeApplications": [],
+          "includeApplications": [
+            "All"
+          ],
+          "includeAuthenticationContextClassReferences": []
+        },
+        "clientAppTypes": [
+          "exchangeActiveSync",
+          "other"
+        ],
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "servicePrincipalRiskLevels": []
+      },
+      "displayName": "Panoptica365 - Block Legacy Authentication",
+      "grantControls": {
+        "operator": "OR",
+        "termsOfUse": [],
+        "builtInControls": [
+          "block"
+        ],
+        "customAuthenticationFactors": []
+      }
+    },
+    "state": "enabled",
+    "grant_controls": "None",
+    "target_users": "All users",
+    "target_apps": "All cloud apps",
+    "conditions_summary": "No extra conditions",
+    "monitored_fields": [
+      "state",
+      "grantControls.builtInControls",
+      "conditions.users.includeUsers",
+      "conditions.users.includeGroups",
+      "conditions.applications.includeApplications",
+      "conditions.users.excludeUsers",
+      "conditions.users.excludeGroups"
+    ],
+    "control_dimensions": [
+      "block_legacy_auth"
+    ]
+  }
+}

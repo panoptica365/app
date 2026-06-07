@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.1.52 — 2026-06-07
+
+### New: fresh installs ship with the starter template library
+
+A new Panoptica365 install now arrives with the full curated library of Conditional Access and Intune templates already loaded — the **"Panoptica365 - …"** starter set — instead of an empty Templates page. You can review them and deploy them to your customer tenants right away, or use them as a starting point alongside your own imported templates.
+
+**Existing installs are untouched.** The starter set only loads when your template library is empty, so anything you have already imported or customized is left exactly as it is — nothing is overwritten or duplicated, on this upgrade or any future one.
+
+**Built to drop into any tenant.** The bundled Conditional Access templates reference locations through Panoptica365's portable placeholders (so a "block sign-ins outside Canada" template resolves to the right named location in each customer tenant), ship with empty break-glass exclusion lists for you to fill in, and carry no identifiers from any specific tenant.
+
+---
+
 ## Version 0.1.51 — 2026-06-07
 
 ### Security hardening ahead of wider rollout

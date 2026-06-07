@@ -1,0 +1,1296 @@
+{
+  "seedFormat": 1,
+  "kind": "intune",
+  "template": {
+    "name": "Panoptica365 - Security Baseline",
+    "description": "",
+    "category": "none",
+    "policy_type": "configurationPolicies",
+    "platform": "windows10",
+    "template_family": "none",
+    "policy_json": {
+      "name": "Panoptica365 - Security Baseline",
+      "description": "",
+      "platforms": "windows10",
+      "technologies": "mdm",
+      "roleScopeTagIds": [
+        "0"
+      ],
+      "templateReference": {
+        "templateId": "",
+        "templateFamily": "none",
+        "templateDisplayName": null,
+        "templateDisplayVersion": null
+      },
+      "settings": [
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_enablescreensaver",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_enablescreensaver_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_screensaverissecure",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_screensaverissecure_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_screensavertimeout",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_screensavertimeout_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "user_vendor_msft_policy_config_admx_controlpaneldisplay_cpl_personalization_screensavertimeout_screensavertimeoutfreqspin",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 900
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_mssecurityguide_applyuacrestrictionstolocalaccountsonnetworklogon",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_mssecurityguide_applyuacrestrictionstolocalaccountsonnetworklogon_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_mssecurityguide_configuresmbv1clientdriver",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_mssecurityguide_configuresmbv1clientdriver_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_mssecurityguide_configuresmbv1server",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_mssecurityguide_configuresmbv1server_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_mssecurityguide_wdigestauthentication",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_mssecurityguide_wdigestauthentication_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_msslegacy_ipsourceroutingprotectionlevel",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_msslegacy_ipsourceroutingprotectionlevel_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_msslegacy_ipsourceroutingprotectionlevel_disableipsourcerouting",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "device_vendor_msft_policy_config_msslegacy_ipsourceroutingprotectionlevel_disableipsourcerouting_2",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_admx_dnsclient_turn_off_multicast",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_admx_dnsclient_turn_off_multicast_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_connectivity_disabledownloadingofprintdriversoverhttp",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_connectivity_disabledownloadingofprintdriversoverhttp_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_admx_icm_disablewebpnpdownload_1",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_admx_icm_disablewebpnpdownload_1_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_connectivity_disableinternetdownloadforwebpublishingandonlineorderingwizards",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_connectivity_disableinternetdownloadforwebpublishingandonlineorderingwizards_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_admx_icm_shellpreventwpwdownload_1",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_admx_icm_shellpreventwpwdownload_1_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_power_requirepasswordwhencomputerwakesonbattery",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_power_requirepasswordwhencomputerwakesonbattery_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_power_requirepasswordwhencomputerwakespluggedin",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_power_requirepasswordwhencomputerwakespluggedin_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_remoteassistance_solicitedremoteassistance",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_remoteassistance_solicitedremoteassistance_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_autoplay_turnoffautoplay",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_autoplay_turnoffautoplay_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_autoplay_turnoffautoplay_autorun_box",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "device_vendor_msft_policy_config_autoplay_turnoffautoplay_autorun_box_255",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_autoplay_turnoffautoplay",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_autoplay_turnoffautoplay_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "user_vendor_msft_policy_config_autoplay_turnoffautoplay_autorun_box",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "user_vendor_msft_policy_config_autoplay_turnoffautoplay_autorun_box_255",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_bitlocker_systemdrivesminimumpinlength",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_bitlocker_systemdrivesminimumpinlength_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_bitlocker_systemdrivesminimumpinlength_minpinlength",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 6
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_credentialsui_enumerateadministrators",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_credentialsui_enumerateadministrators_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_admx_windowsexplorer_disablemotwoninsecurepathcopy",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_admx_windowsexplorer_disablemotwoninsecurepathcopy_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_internetexplorer_donotblockoutdatedactivexcontrols",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_internetexplorer_donotblockoutdatedactivexcontrols_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_internetexplorer_donotblockoutdatedactivexcontrols",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_internetexplorer_donotblockoutdatedactivexcontrols_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_admx_microsoftdefenderantivirus_mpengine_enablefilehashcomputation",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_admx_microsoftdefenderantivirus_mpengine_enablefilehashcomputation_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_admx_terminalserver_ts_user_authentication_policy",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_admx_terminalserver_ts_user_authentication_policy_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_remotedesktopservices_clientconnectionencryptionlevel",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_remotedesktopservices_clientconnectionencryptionlevel_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_remotedesktopservices_clientconnectionencryptionlevel_ts_encryption_level",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "device_vendor_msft_policy_config_remotedesktopservices_clientconnectionencryptionlevel_ts_encryption_level_3",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_enablescriptblockinvocationlogging",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "device_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_enablescriptblockinvocationlogging_1",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_1",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "user_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_enablescriptblockinvocationlogging",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "user_vendor_msft_policy_config_windowspowershell_turnonpowershellscriptblocklogging_enablescriptblockinvocationlogging_1",
+                    "children": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_remotemanagement_allowbasicauthentication_client",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_remotemanagement_allowbasicauthentication_client_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_remotemanagement_allowbasicauthentication_service",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_remotemanagement_allowbasicauthentication_service_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_dataprotection_allowdirectmemoryaccess",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_dataprotection_allowdirectmemoryaccess_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_defender_configuration_hideexclusionsfromlocaladmins",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_defender_configuration_hideexclusionsfromlocaladmins_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_defender_configuration_hideexclusionsfromlocalusers",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_defender_configuration_hideexclusionsfromlocalusers_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingCollectionInstance",
+            "settingDefinitionId": "device_vendor_msft_defender_configuration_passiveremediation",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingCollectionValue": [
+              {
+                "settingValueTemplateReference": null,
+                "value": "device_vendor_msft_defender_configuration_passiveremediation_0",
+                "children": []
+              },
+              {
+                "settingValueTemplateReference": null,
+                "value": "device_vendor_msft_defender_configuration_passiveremediation_1",
+                "children": []
+              }
+            ]
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_devicehealthmonitoring_allowdevicehealthmonitoring",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_devicehealthmonitoring_allowdevicehealthmonitoring_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_devicepasswordenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_devicelock_devicepasswordenabled_0",
+              "children": [
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_allowsimpledevicepassword",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "choiceSettingValue": {
+                    "settingValueTemplateReference": null,
+                    "value": "device_vendor_msft_policy_config_devicelock_allowsimpledevicepassword_0",
+                    "children": []
+                  }
+                },
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_devicepasswordhistory",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 24
+                  }
+                },
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_maxdevicepasswordfailedattempts",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 8
+                  }
+                },
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_maxinactivitytimedevicelock",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 10
+                  }
+                },
+                {
+                  "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+                  "settingDefinitionId": "device_vendor_msft_policy_config_devicelock_mindevicepasswordlength",
+                  "settingInstanceTemplateReference": null,
+                  "auditRuleInformation": null,
+                  "simpleSettingValue": {
+                    "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+                    "settingValueTemplateReference": null,
+                    "value": 4
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremoteaccessconnections",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremoteaccessconnections_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremoteaccessconnections",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremoteaccessconnections_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowfiletransfer",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowfiletransfer_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowfiletransfer",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowfiletransfer_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremotesupportconnections",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremotesupportconnections_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremotesupportconnections",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowremotesupportconnections_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowuiaccessforremoteassistance",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowuiaccessforremoteassistance_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowuiaccessforremoteassistance",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome~remoteaccess_remoteaccesshostallowuiaccessforremoteassistance_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordleakdetectionenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordleakdetectionenabled_recommended_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordleakdetectionenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordleakdetectionenabled_recommended_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_chromeintunev1~policy~googlechrome_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_interactivelogon_donotrequirectrlaltdel",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_interactivelogon_donotrequirectrlaltdel_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationSimpleSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_interactivelogon_machineinactivitylimit_v2",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "simpleSettingValue": {
+              "@odata.type": "#microsoft.graph.deviceManagementConfigurationIntegerSettingValue",
+              "settingValueTemplateReference": null,
+              "value": 900
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkclient_digitallysigncommunicationsalways",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkclient_digitallysigncommunicationsalways_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkclient_sendunencryptedpasswordtothirdpartysmbservers",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkclient_sendunencryptedpasswordtothirdpartysmbservers_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkserver_digitallysigncommunicationsalways",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_microsoftnetworkserver_digitallysigncommunicationsalways_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networkaccess_donotallowanonymousenumerationofsamaccounts",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networkaccess_donotallowanonymousenumerationofsamaccounts_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networkaccess_donotallowanonymousenumerationofsamaccountsandshares",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networkaccess_donotallowanonymousenumerationofsamaccountsandshares_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networksecurity_donotstorelanmanagerhashvalueonnextpasswordchange",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networksecurity_donotstorelanmanagerhashvalueonnextpasswordchange_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networksecurity_lanmanagerauthenticationlevel",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_networksecurity_lanmanagerauthenticationlevel_5",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_useraccountcontrol_behavioroftheelevationpromptforadministrators",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_useraccountcontrol_behavioroftheelevationpromptforadministrators_3",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_localpoliciessecurityoptions_useraccountcontrol_behavioroftheelevationpromptforstandardusers",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_localpoliciessecurityoptions_useraccountcontrol_behavioroftheelevationpromptforstandardusers_3",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev88.0.705.23~policy~microsoft_edge~httpauthentication_basicauthoverhttpenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev88.0.705.23~policy~microsoft_edge~httpauthentication_basicauthoverhttpenabled_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "3~policy~microsoft_edge~httpauthentication_basicauthoverhttpenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "3~policy~microsoft_edge~httpauthentication_basicauthoverhttpenabled_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev115~policy~microsoft_edge~manageability_edgemanagementenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev115~policy~microsoft_edge~manageability_edgemanagementenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edgev115~policy~microsoft_edge~manageability_edgemanagementenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edgev115~policy~microsoft_edge~manageability_edgemanagementenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev134~policy~microsoft_edge~scarewareblocker_scarewareblockerprotectionenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev134~policy~microsoft_edge~scarewareblocker_scarewareblockerprotectionenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_smartscreenenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_smartscreenenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_smartscreenenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_smartscreenenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev80diff~policy~microsoft_edge~smartscreen_smartscreenpuaenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev80diff~policy~microsoft_edge~smartscreen_smartscreenpuaenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edgev80diff~policy~microsoft_edge~smartscreen_smartscreenpuaenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edgev80diff~policy~microsoft_edge~smartscreen_smartscreenpuaenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev97~policy~microsoft_edge~smartscreen_smartscreendnsrequestsenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev97~policy~microsoft_edge~smartscreen_smartscreendnsrequestsenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edgev97~policy~microsoft_edge~smartscreen_smartscreendnsrequestsenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edgev97~policy~microsoft_edge~smartscreen_smartscreendnsrequestsenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edgev95~policy~microsoft_edge~smartscreen_newsmartscreenlibraryenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edgev95~policy~microsoft_edge~smartscreen_newsmartscreenlibraryenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edgev95~policy~microsoft_edge~smartscreen_newsmartscreenlibraryenabled",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edgev95~policy~microsoft_edge~smartscreen_newsmartscreenlibraryenabled_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverride",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverride_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverride",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverride_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverrideforfiles",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverrideforfiles_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverrideforfiles",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge~smartscreen_preventsmartscreenpromptoverrideforfiles_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "user_vendor_msft_policy_config_microsoft_edge~policy~microsoft_edge_recommended~passwordmanager_recommended_passwordmanagerenabled_recommended_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_office16v2~policy~l_microsoftofficemachine~l_updates_l_hideenabledisableupdates",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_office16v2~policy~l_microsoftofficemachine~l_updates_l_hideenabledisableupdates_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_webthreatdefense_notifymalicious",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_webthreatdefense_notifymalicious_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_webthreatdefense_notifypasswordreuse",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_webthreatdefense_notifypasswordreuse_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_webthreatdefense_notifyunsafeapp",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_webthreatdefense_notifyunsafeapp_1",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_sudo_enablesudo",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_sudo_enablesudo_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_wifi_allowautoconnecttowifisensehotspots",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_wifi_allowautoconnecttowifisensehotspots_0",
+              "children": []
+            }
+          }
+        },
+        {
+          "settingInstance": {
+            "@odata.type": "#microsoft.graph.deviceManagementConfigurationChoiceSettingInstance",
+            "settingDefinitionId": "device_vendor_msft_policy_config_wifi_allowinternetsharing",
+            "settingInstanceTemplateReference": null,
+            "auditRuleInformation": null,
+            "choiceSettingValue": {
+              "settingValueTemplateReference": null,
+              "value": "device_vendor_msft_policy_config_wifi_allowinternetsharing_0",
+              "children": []
+            }
+          }
+        }
+      ]
+    },
+    "tags": "",
+    "assignment_target": "all_devices",
+    "alert_routing": "support"
+  }
+}

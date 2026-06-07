@@ -1,0 +1,80 @@
+{
+  "seedFormat": 1,
+  "kind": "ca",
+  "template": {
+    "name": "Panoptica365 - Require compliant or hybrid Azure AD joined device or MFA for all users",
+    "description": "Check several conditions to allow connections",
+    "policy_json": {
+      "state": "enabled",
+      "conditions": {
+        "users": {
+          "excludeRoles": [
+            "d29b2b05-8046-44ba-8758-1e26182fcf32"
+          ],
+          "excludeUsers": [],
+          "includeRoles": [],
+          "includeUsers": [
+            "All"
+          ],
+          "excludeGroups": [],
+          "includeGroups": [],
+          "excludeGuestsOrExternalUsers": null,
+          "includeGuestsOrExternalUsers": null
+        },
+        "devices": null,
+        "locations": null,
+        "platforms": null,
+        "applications": {
+          "applicationFilter": null,
+          "includeUserActions": [],
+          "excludeApplications": [],
+          "includeApplications": [
+            "All"
+          ],
+          "includeAuthenticationContextClassReferences": []
+        },
+        "clientAppTypes": [
+          "all"
+        ],
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "insiderRiskLevels": null,
+        "clientApplications": null,
+        "authenticationFlows": null,
+        "servicePrincipalRiskLevels": []
+      },
+      "displayName": "Panoptica365 - Require compliant or hybrid Azure AD joined device or MFA for all users",
+      "grantControls": {
+        "operator": "OR",
+        "termsOfUse": [],
+        "builtInControls": [
+          "mfa",
+          "compliantDevice",
+          "domainJoinedDevice"
+        ],
+        "authenticationStrength": null,
+        "customAuthenticationFactors": []
+      },
+      "sessionControls": null
+    },
+    "state": "enabled",
+    "grant_controls": "Require MFA, Require compliant device, Require Hybrid Azure AD joined (OR)",
+    "target_users": "All users",
+    "target_apps": "All cloud apps",
+    "conditions_summary": "No extra conditions",
+    "monitored_fields": [
+      "state",
+      "grantControls.builtInControls",
+      "conditions.users.includeUsers",
+      "conditions.users.includeGroups",
+      "conditions.applications.includeApplications",
+      "conditions.users.excludeUsers",
+      "conditions.users.excludeGroups"
+    ],
+    "control_dimensions": [
+      "require_mfa",
+      "require_compliant_device",
+      "require_hybrid_join"
+    ]
+  }
+}

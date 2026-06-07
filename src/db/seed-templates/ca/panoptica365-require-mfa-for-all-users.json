@@ -1,0 +1,74 @@
+{
+  "seedFormat": 1,
+  "kind": "ca",
+  "template": {
+    "name": "Panoptica365 - Require MFA for all users",
+    "description": "Requires all users to login with MFA",
+    "policy_json": {
+      "state": "enabled",
+      "conditions": {
+        "users": {
+          "excludeRoles": [],
+          "excludeUsers": [],
+          "includeRoles": [],
+          "includeUsers": [
+            "All"
+          ],
+          "excludeGroups": [],
+          "includeGroups": [],
+          "excludeGuestsOrExternalUsers": null,
+          "includeGuestsOrExternalUsers": null
+        },
+        "devices": null,
+        "locations": null,
+        "platforms": null,
+        "applications": {
+          "applicationFilter": null,
+          "includeUserActions": [],
+          "excludeApplications": [],
+          "includeApplications": [
+            "All"
+          ],
+          "includeAuthenticationContextClassReferences": []
+        },
+        "clientAppTypes": [
+          "all"
+        ],
+        "userRiskLevels": [],
+        "signInRiskLevels": [],
+        "insiderRiskLevels": null,
+        "clientApplications": null,
+        "authenticationFlows": null,
+        "servicePrincipalRiskLevels": []
+      },
+      "displayName": "Panoptica365 - Require MFA for all users",
+      "grantControls": {
+        "operator": "OR",
+        "termsOfUse": [],
+        "builtInControls": [
+          "mfa"
+        ],
+        "authenticationStrength": null,
+        "customAuthenticationFactors": []
+      },
+      "sessionControls": null
+    },
+    "state": "enabled",
+    "grant_controls": "Require MFA (OR)",
+    "target_users": "All users",
+    "target_apps": "All cloud apps",
+    "conditions_summary": "No extra conditions",
+    "monitored_fields": [
+      "state",
+      "grantControls.builtInControls",
+      "conditions.users.includeUsers",
+      "conditions.users.includeGroups",
+      "conditions.applications.includeApplications",
+      "conditions.users.excludeUsers",
+      "conditions.users.excludeGroups"
+    ],
+    "control_dimensions": [
+      "require_mfa"
+    ]
+  }
+}
