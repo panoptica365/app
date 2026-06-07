@@ -84,6 +84,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_disk_desc">How much storage your server has used. Warns before it runs out.</div>
   </div>
 
+  <!-- PSA Integration Card (Feature 8.3) -->
+  <div class="settings-card" id="card-psa" style="cursor:pointer;" data-role-required="admin">
+    <div class="settings-card-icon"><i data-lucide="ticket"></i></div>
+    <div class="settings-card-title" data-i18n="psa.settings.title">PSA Integration</div>
+    <div class="settings-card-desc" data-i18n="psa.settings.subtitle">Create and synchronize tickets in your PSA instead of emailing them.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -281,6 +288,153 @@
     <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
       <button class="btn-primary" id="message-center-save" data-i18n="settings.message_center.save_btn">Save Message Feed Settings</button>
       <span id="message-center-status" style="font-size:0.85rem;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PSA Integration Sub-View (Feature 8.3) ─── -->
+<div id="settings-psa-view" style="display:none;">
+  <button class="btn-secondary" id="psa-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="psa.settings.title">PSA Integration</div>
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="psa.settings.subtitle">Create and synchronize tickets in your PSA instead of emailing them.</div>
+
+    <div class="form-group">
+      <label data-i18n="psa.settings.provider_label">Provider</label>
+      <div class="form-hint" style="margin-bottom:6px;" data-i18n="psa.settings.provider_help">When off, alerts continue to email your PSA exactly as before.</div>
+      <select id="psa-provider" style="max-width:420px;">
+        <option value="" data-i18n="psa.settings.provider_none">None (email tickets)</option>
+        <option value="autotask" data-i18n="psa.settings.provider_autotask">Autotask</option>
+      </select>
+    </div>
+
+    <div id="psa-email-warning" class="form-hint" style="display:none;color:#e67e22;margin-bottom:12px;">
+      <i data-lucide="alert-triangle" style="width:14px;height:14px;vertical-align:-2px;"></i>
+      <span data-i18n="psa.settings.psa_email_warning">PSA_EMAIL is not set. It is still needed as a fallback for unmapped tenants and when authentication fails.</span>
+    </div>
+
+    <!-- Autotask credentials (shown when provider = autotask) -->
+    <div id="psa-creds" style="display:none;">
+      <div class="settings-section-title" style="margin-top:8px;" data-i18n="psa.settings.creds_heading">API credentials</div>
+      <div class="form-hint" style="margin-bottom:10px;" data-i18n="psa.settings.creds_help">All three values come from Autotask’s Admin → Resources → New API User screen.</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.username">API user name</label>
+          <input type="text" id="psa-username" autocomplete="off" />
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.integration_code">Tracking identifier</label>
+          <input type="text" id="psa-integration-code" autocomplete="off" />
+        </div>
+      </div>
+      <div class="form-group" style="max-width:420px;">
+        <label data-i18n="psa.settings.secret">API secret</label>
+        <input type="password" id="psa-secret" autocomplete="new-password" placeholder="••••••••" />
+        <div class="form-hint" id="psa-secret-hint" style="display:none;" data-i18n="psa.settings.secret_set">Saved — leave blank to keep current</div>
+      </div>
+      <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+        <button class="btn-secondary" id="psa-test-btn" data-i18n="psa.settings.test_connection">Test connection</button>
+        <span id="psa-test-status" style="font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <!-- Ticket defaults + mapping (shown after a successful test / when zone known) -->
+    <div id="psa-config-sections" style="display:none; margin-top:24px;">
+      <div class="settings-section-title" data-i18n="psa.settings.config_heading">Ticket defaults</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.queue">Queue</label>
+          <select id="psa-queue"></select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.source">Source</label>
+          <select id="psa-source"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.new_status">New-ticket status</label>
+          <select id="psa-new-status"></select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.close_status">Status when closed from Panoptica365</label>
+          <select id="psa-close-status"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="psa.settings.complete_statuses">Statuses treated as “closed”</label>
+        <div class="form-hint" style="margin-bottom:6px;" data-i18n="psa.settings.complete_statuses_help">When a ticket reaches any of these, the linked alert(s) auto-resolve.</div>
+        <div id="psa-complete-statuses" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="psa.settings.severity_priority">Priority by severity</label>
+        <div id="psa-severity-priority"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.note_type">Note type</label>
+          <select id="psa-note-type"></select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.publish">Note visibility</label>
+          <select id="psa-publish"></select>
+          <div class="form-hint" style="color:#e67e22;margin-top:4px;" data-i18n="psa.settings.publish_warning">This controls whether notes are visible to the customer in Autotask. Choose an internal value unless you intend customers to see alert detail.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.due_offset">Due-date offset (hours)</label>
+          <input type="number" id="psa-due-offset" min="1" value="24" style="max-width:140px;" />
+          <div class="form-hint" style="margin-top:4px;" data-i18n="psa.settings.due_offset_help">Autotask requires a due date on every ticket; Panoptica365 sets it to creation time + this offset.</div>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label data-i18n="psa.settings.ticket_language">Ticket language</label>
+          <select id="psa-ticket-language" style="max-width:200px;">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="psa.settings.default_company">Default company (MSP-level alerts)</label>
+        <input type="text" id="psa-default-company-search" placeholder="Search…" style="max-width:420px;margin-bottom:6px;" />
+        <select id="psa-default-company" style="max-width:420px;"></select>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+        <button class="btn-primary" id="psa-save-config" data-i18n="psa.settings.save_config">Save settings</button>
+        <span id="psa-config-status" style="font-size:0.85rem;"></span>
+      </div>
+
+      <!-- Tenant → company mapping -->
+      <div class="settings-section-title" style="margin-top:28px;" data-i18n="psa.settings.mapping_heading">Tenant → company mapping</div>
+      <div class="form-hint" style="margin-bottom:4px;" data-i18n="psa.settings.mapping_help">Map each managed tenant to its Autotask company. Unmapped tenants fall back to email tickets.</div>
+      <div class="form-hint" style="margin-bottom:10px;font-style:italic;" data-i18n="psa.settings.mapping_managed_only">Audit-only tenants are not shown — they always use email tickets.</div>
+      <div id="psa-unmapped-count" class="form-hint" style="margin-bottom:8px;"></div>
+      <div style="display:flex;gap:12px;margin-bottom:10px;">
+        <button class="btn-secondary" id="psa-suggest-btn" data-i18n="psa.settings.suggest_matches">Suggest matches</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="text-align:left;border-bottom:1px solid rgba(255,255,255,0.22);">
+            <th style="padding:8px;" data-i18n="psa.settings.col_tenant">Tenant</th>
+            <th style="padding:8px;" data-i18n="psa.settings.col_psa_name">PSA name</th>
+            <th style="padding:8px;" data-i18n="psa.settings.col_company">Autotask company</th>
+            <th style="padding:8px;" data-i18n="psa.settings.col_status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="psa-mapping-body"></tbody>
+      </table>
+      <div style="display:flex; gap:12px; margin-top:16px; align-items:center;">
+        <button class="btn-primary" id="psa-save-mapping" data-i18n="psa.settings.save_mapping">Save mapping</button>
+        <span id="psa-mapping-status" style="font-size:0.85rem;"></span>
+      </div>
+
+      <!-- Health strip -->
+      <div class="settings-section-title" style="margin-top:28px;" data-i18n="psa.settings.health_heading">Health</div>
+      <div id="psa-health" class="form-hint" style="line-height:1.8;"></div>
     </div>
   </div>
 </div>

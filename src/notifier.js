@@ -126,16 +126,46 @@ async function sendAlertNotification(alert, tenant) {
     return;
   }
 
+  // ─── PSA bi-directional integration (Feature 8.3) ───
+  // When the PSA API integration is configured AND this alert is ours to handle
+  // (msp-scope with a default company, or a mapped tenant), the 'support'
+  // channel creates/appends a ticket via the API INSTEAD OF emailing PSA_EMAIL.
+  // 'personal' email behavior is untouched. A persistent auth failure
+  // (auth_failed) or an out-of-scope/unmapped result falls back to the existing
+  // email-to-ticket path. A transient failure ('deferred') queues a retry and
+  // does NOT email — emailing would double-ticket once the retry succeeds
+  // (decision §6.4). Mutes never apply to the PSA path (a ticket queue is not
+  // an inbox); this runs before the mute filter below.
+  const includesSupport = (target === 'support' || target === 'both');
+  let psaHandledSupport = false;
+  if (includesSupport) {
+    try {
+      const psa = require('./psa');
+      if (await psa.shouldHandleSupport(alert, tenant)) {
+        const result = await psa.dispatchAlert(alert, tenant);
+        // created | appended | deferred → PSA owns the support channel.
+        // auth_failed | skipped → fall through to email-to-ticket fallback.
+        psaHandledSupport = (result === 'created' || result === 'appended' || result === 'deferred');
+      }
+    } catch (err) {
+      console.error(`[Notifier] PSA dispatch error for alert ${alert.id} (falling back to email): ${err.message}`);
+      psaHandledSupport = false;
+    }
+  }
+
   const configuredRecipients = [];
-  if (target === 'support' || target === 'both') {
-    const psa = getPsaEmail();
-    if (psa) configuredRecipients.push(psa);
+  if (includesSupport && !psaHandledSupport) {
+    const psaEmail = getPsaEmail();
+    if (psaEmail) configuredRecipients.push(psaEmail);
   }
   if (target === 'personal' || target === 'both') {
     configuredRecipients.push(...getNotifyEmails());
   }
 
   if (configuredRecipients.length === 0) {
+    // PSA took the support channel and there's no personal recipient — done,
+    // no email to send (not an error).
+    if (psaHandledSupport) return;
     console.warn(`[Notifier] No recipients configured for target "${target}" — skipping alert ${alert.id}`);
     return;
   }
@@ -670,4 +700,12 @@ function _resetTransporter() {
   transporter = null;
 }
 
-module.exports = { sendAlertNotification, _resetTransporter, invalidateMuteCache };
+module.exports = {
+  sendAlertNotification,
+  _resetTransporter,
+  invalidateMuteCache,
+  // Exposed for the PSA provider (Feature 8.3) so ticket content reuses the
+  // exact same localized-message resolution as the email path — one source of
+  // truth for "what does this alert say in language X".
+  renderAlertMessageForLocale,
+};

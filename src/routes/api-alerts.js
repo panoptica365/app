@@ -8,9 +8,51 @@ const auth = require('../auth');
 const db = require('../db/database');
 const changeLog = require('../change-log');
 const mspAudit = require('../msp-audit');
+const psa = require('../psa');
 
 const router = express.Router();
 router.use(auth.requireAuth);
+
+/**
+ * PSA close/note pass for a manual resolution (Feature 8.3, decision 5). For
+ * each alert that has an open linked Autotask ticket: if the operator chose to
+ * close it (closeTicket=true) close the ticket via the API + closing note; else
+ * leave it open and append an informational note. Best-effort — a PSA failure
+ * never blocks or reverses the in-app resolution. The bulk variant applies the
+ * single choice to every affected ticket.
+ *
+ * @param {number[]} alertIds   alerts just transitioned to resolved/false_positive
+ * @param {boolean}  closeTicket operator's modal choice
+ * @param {object}   req         Express req (operator identity for audit)
+ */
+async function applyPsaResolutionChoice(alertIds, closeTicket, req) {
+  if (!psa.isConfigured()) return;
+  let linkMap;
+  try {
+    linkMap = await psa.store.getOpenLinksForAlertIds(alertIds);
+  } catch (err) {
+    console.warn(`[API] PSA link lookup failed during resolution (non-fatal): ${err.message}`);
+    return;
+  }
+  if (linkMap.size === 0) return;
+  const operator = req.session?.user?.email || null;
+  // When closing, only act once per distinct ticket (a grouped ticket has many
+  // linked alerts but one ticket). Note-only acts per open link.
+  const closedTickets = new Set();
+  for (const [alertId, link] of linkMap) {
+    try {
+      if (closeTicket) {
+        if (closedTickets.has(link.ticket_id)) continue;
+        closedTickets.add(link.ticket_id);
+        await psa.closeTicketForAlert(link, { id: alertId, tenant_id: link.tenant_id }, operator, req);
+      } else {
+        await psa.noteTicketForAlert(link, 'psa.ticket.note.resolved_left_open', { alertId });
+      }
+    } catch (err) {
+      console.warn(`[API] PSA resolution action failed for alert ${alertId} (non-fatal): ${err.message}`);
+    }
+  }
+}
 
 /**
  * Derive a change-log surface from an alert policy category. Alert categories
@@ -425,7 +467,7 @@ router.get('/:id', async (req, res) => {
 // A3 (May 9, 2026): operator — ack/clear individual alerts.
 router.patch('/:id/status', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, closeTicket } = req.body;
     const validStatuses = ['new', 'investigating', 'resolved', 'false_positive'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
@@ -448,6 +490,11 @@ router.patch('/:id/status', auth.requireMemberOrAdmin, async (req, res) => {
 
     if (affected === 0) return res.status(404).json({ error: 'Alert not found' });
     console.log(`[API] Alert ${req.params.id} status → ${status} by ${req.session.user.email}`);
+
+    // PSA close/note pass (Feature 8.3, decision 5) — only on a real resolution.
+    if (status === 'resolved' || status === 'false_positive') {
+      await applyPsaResolutionChoice([parseInt(req.params.id, 10)], closeTicket === true, req);
+    }
 
     // Audit only meaningful transitions (new→new is a noop write; skip).
     if (alertCtx.prior_status !== status) {
@@ -608,7 +655,7 @@ router.patch('/:id/notes', auth.requireMemberOrAdmin, async (req, res) => {
 // A3 (May 9, 2026): operator — bulk ack/clear.
 router.post('/bulk-status', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const { alert_ids, status } = req.body;
+    const { alert_ids, status, closeTicket } = req.body;
     const validStatuses = ['new', 'investigating', 'resolved', 'false_positive'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
@@ -637,6 +684,12 @@ router.post('/bulk-status', auth.requireMemberOrAdmin, async (req, res) => {
     );
 
     console.log(`[API] Bulk status change: ${alert_ids.length} alerts → ${status} by ${req.session.user.email}`);
+
+    // PSA close/note pass (Feature 8.3, decision 5) — the modal asked once;
+    // apply the single choice to every affected ticket. Only on real resolution.
+    if (status === 'resolved' || status === 'false_positive') {
+      await applyPsaResolutionChoice(intIds, closeTicket === true, req);
+    }
 
     // Group audit-worthy changes by tenant. Skip alerts already at target status.
     const byTenant = new Map(); // tenant_id -> { count, surfaces:Set, sampleIds:[] }
@@ -677,6 +730,56 @@ router.post('/bulk-status', auth.requireMemberOrAdmin, async (req, res) => {
   } catch (err) {
     console.error('[API] Bulk status change failed:', err.message);
     res.status(500).json({ error: 'Failed to update alerts' });
+  }
+});
+
+/**
+ * GET /api/alerts/:id/psa-link — PSA ticket link for one alert (chip rendering).
+ * Returns { linked, ticket_id, ticket_number, state, web_url } — linked=false
+ * when there is no link row or PSA is off.
+ */
+router.get('/:id/psa-link', async (req, res) => {
+  try {
+    if (!psa.isConfigured()) return res.json({ linked: false });
+    const link = await psa.store.getLinkForAlert(parseInt(req.params.id, 10));
+    if (!link) return res.json({ linked: false });
+    res.json({
+      linked: true,
+      ticket_id: Number(link.ticket_id),
+      ticket_number: link.ticket_number || null,
+      state: link.state,
+      web_url: psa.ticketWebUrl(link.ticket_id),
+    });
+  } catch (err) {
+    console.error('[API] psa-link lookup failed:', err.message);
+    res.json({ linked: false });
+  }
+});
+
+/**
+ * POST /api/alerts/psa-links — open links for a set of alert ids (modal gating).
+ * Body: { alert_ids: [..] }. Returns { links: { <alertId>: {ticket_number,
+ * ticket_id, state, web_url} } } for alerts that have an OPEN linked ticket.
+ * Used to decide whether the resolve flow shows the "close ticket?" modal.
+ */
+router.post('/psa-links', async (req, res) => {
+  try {
+    if (!psa.isConfigured()) return res.json({ links: {} });
+    const ids = Array.isArray(req.body.alert_ids) ? req.body.alert_ids : [];
+    const map = await psa.store.getOpenLinksForAlertIds(ids);
+    const links = {};
+    for (const [alertId, link] of map) {
+      links[alertId] = {
+        ticket_id: Number(link.ticket_id),
+        ticket_number: link.ticket_number || null,
+        state: link.state,
+        web_url: psa.ticketWebUrl(link.ticket_id),
+      };
+    }
+    res.json({ links });
+  } catch (err) {
+    console.error('[API] psa-links lookup failed:', err.message);
+    res.json({ links: {} });
   }
 });
 
@@ -749,6 +852,14 @@ router.post('/bulk-status-filtered', auth.requireMemberOrAdmin, async (req, res)
     );
 
     console.log(`[API] Bulk filtered status change: ${affected} alerts → ${new_status} by ${req.session.user.email}`);
+
+    // PSA pass (Feature 8.3). The "select all matching" flow has no per-ticket
+    // modal — closing potentially hundreds of customer tickets from one filter
+    // click is too blunt — so linked tickets are LEFT OPEN with an informational
+    // note (closeTicket=false). The tech closes them deliberately in Autotask.
+    if (new_status === 'resolved' || new_status === 'false_positive') {
+      await applyPsaResolutionChoice(preUpdate.map(r => r.id), false, req);
+    }
 
     // Same grouping as /bulk-status.
     const byTenant = new Map();
@@ -916,6 +1027,32 @@ router.post('/rollup', auth.requireMemberOrAdmin, async (req, res) => {
       metadata: { childCount: result.count },
       req,
     }).catch(err => console.warn('[API] mspAudit.logMspAudit (alert_rollup.create) failed (non-blocking):', err.message));
+
+    // PSA roll-up interaction (Feature 8.3 §4.1): if the merged children share
+    // exactly ONE distinct open Autotask ticket, link the parent to it so a
+    // later ticket-close auto-resolves the parent too. If children span multiple
+    // open tickets (or none), link the parent to none — per-child poll still
+    // works, and the children are already resolved 'rolled_up'.
+    if (psa.isConfigured()) {
+      try {
+        const childLinks = await psa.store.getOpenLinksForAlertIds(ids);
+        const distinctTickets = [...new Set([...childLinks.values()].map(l => Number(l.ticket_id)))];
+        if (distinctTickets.length === 1) {
+          const sample = [...childLinks.values()].find(l => Number(l.ticket_id) === distinctTickets[0]);
+          await psa.store.insertLink({
+            alert_id: result.parentId,
+            tenant_id: result.tenantId,
+            policy_id: null,
+            ticket_id: distinctTickets[0],
+            ticket_number: sample ? sample.ticket_number : null,
+            link_role: 'appended',
+            state: 'open',
+          });
+        }
+      } catch (err) {
+        console.warn(`[API] PSA roll-up link for parent #${result.parentId} failed (non-fatal): ${err.message}`);
+      }
+    }
 
     res.json({ id: result.parentId });
   } catch (err) {

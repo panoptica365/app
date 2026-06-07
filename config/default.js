@@ -153,6 +153,31 @@ module.exports = {
     notifyEmails: process.env.NOTIFY_EMAILS || '',
   },
 
+  // PSA bi-directional integration (Feature 8.3, 2026-06-06).
+  // provider '' / 'none' = OFF (default) — alerts keep using the email-to-ticket
+  // path via notification.psaEmail. 'autotask' = native REST API tickets for
+  // mapped tenants. All values live-reloaded by api-settings.reloadPsaConfig().
+  // ticketConfig is parsed from AUTOTASK_TICKET_CONFIG (single-line JSON in
+  // .env); see psa/index.js for its shape. Defaults to an empty object so a
+  // half-configured install never throws on config.psa.ticketConfig.queueId.
+  psa: {
+    provider: (process.env.PSA_PROVIDER || '').toLowerCase(),
+    pollIntervalMin: parseInt(process.env.PSA_POLL_INTERVAL_MIN, 10) || 10,
+    ticketLanguage: (process.env.PSA_TICKET_LANGUAGE || 'en').toLowerCase(),
+    defaultCompanyId: process.env.PSA_DEFAULT_COMPANY_ID
+      ? Number(process.env.PSA_DEFAULT_COMPANY_ID) : null,
+    autotask: {
+      username:        process.env.AUTOTASK_USERNAME || '',
+      secret:          process.env.AUTOTASK_SECRET || '',
+      integrationCode: process.env.AUTOTASK_INTEGRATION_CODE || '',
+      zoneUrl:         process.env.AUTOTASK_ZONE_URL || '',
+    },
+    ticketConfig: (() => {
+      try { return JSON.parse(process.env.AUTOTASK_TICKET_CONFIG || '{}'); }
+      catch { return {}; }
+    })(),
+  },
+
   session: {
     secret: process.env.SESSION_SECRET || 'change-me-in-production',
     maxAge: 8 * 60 * 60 * 1000, // 8 hours

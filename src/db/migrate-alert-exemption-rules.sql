@@ -97,7 +97,7 @@ BEGIN
   ) THEN
     ALTER TABLE alerts
       ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL
-        COMMENT 'manual | exemption_rule | drift_cleared | etc.'
+        COMMENT 'manual | exemption_rule | drift_cleared | known_good_app | rolled_up | psa_ticket_closed | etc.'
         AFTER status;
   END IF;
 

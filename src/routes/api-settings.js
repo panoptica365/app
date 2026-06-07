@@ -59,16 +59,20 @@ function parseEnvFile() {
  * Also updates process.env and the live config object.
  */
 function updateEnvVars(updates) {
+  const { escapeEnvValue } = require('../lib/env-file');
   const { lines, vars } = parseEnvFile();
 
   for (const [key, value] of Object.entries(updates)) {
     const safeVal = String(value);
+    // File line is quote-escaped so a value containing '#'/spaces/etc.
+    // round-trips through dotenv instead of being truncated at the '#'.
+    const fileVal = escapeEnvValue(value);
     if (vars.has(key)) {
-      lines[vars.get(key).lineIdx] = `${key}=${safeVal}`;
+      lines[vars.get(key).lineIdx] = `${key}=${fileVal}`;
     } else {
-      lines.push(`${key}=${safeVal}`);
+      lines.push(`${key}=${fileVal}`);
     }
-    // Update process.env in place
+    // Update process.env in place with the RAW (unquoted) value.
     process.env[key] = safeVal;
   }
 
@@ -108,6 +112,8 @@ function reloadNotificationConfig() {
   config.notification.psaAttribution = process.env.PSA_ATTRIBUTION || '//${PSA_NAME}//';
   config.notification.notifyEmails = process.env.NOTIFY_EMAILS || '';
 }
+// PSA integration config (Feature 8.3) live-reloads via its own route file
+// (src/routes/api-psa.js reloadPsaConfig). config/default.js parses it at boot.
 
 // ─── SMTP Settings ───
 

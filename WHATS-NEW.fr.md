@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.50 — 2026-06-06
+
+### Nouveau : billetterie PSA native — intégration Autotask
+
+Panoptica365 peut maintenant créer et gérer vos billets directement dans votre PSA au moyen de son API, au lieu de les envoyer par courriel. Le premier PSA pris en charge est **Autotask**, et il est **désactivé par défaut** — rien ne change tant que vous ne l’activez pas sous **Réglages → Intégration PSA**.
+
+Une fois activé, et un client associé à son entreprise Autotask, toute alerte acheminée vers « support » ouvre un véritable billet Autotask — avec la bonne entreprise, la bonne file d’attente, la priorité et l’échéance, l’analyse IA et un lien vers l’alerte dans Panoptica365 — au lieu d’un courriel analysé. Les alertes répétées pour un même client et une même politique (par exemple, plusieurs alertes de verrouillage de compte d’affilée) sont regroupées : la première crée un billet et les suivantes y sont ajoutées en notes, pour ne pas inonder votre file de doublons.
+
+La résolution reste synchronisée dans les deux sens. Lorsqu’un technicien ferme le billet dans Autotask, l’alerte liée se résout automatiquement dans Panoptica365 en quelques minutes, avec une note explicative. Lorsque vous résolvez une alerte dans Panoptica365, on vous demande s’il faut aussi fermer son billet Autotask — fermez-le (avec une note de fermeture) ou laissez-le ouvert pour que le technicien le termine. Chaque alerte affiche une pastille de billet qui mène directement au billet Autotask.
+
+Les clients que vous n’avez pas associés — et les locataires en audit seul — continuent d’utiliser le courriel vers billet, ce qui permet une adoption client par client. Les identifiants, les choix de file d’attente, de priorité et de statut, ainsi que la correspondance client-entreprise se trouvent tous dans la nouvelle fiche **Réglages → Intégration PSA**. La prise en charge de ConnectWise Manage est prévue ensuite; l’intégration a été conçue derrière une couche fournisseur afin que son ajout ne perturbe pas Autotask.
+
+---
+
 ## Version 0.1.49 — 2026-06-06
 
 ### Corrigé : le moniteur d’état ne signale plus comme défaillants les points de terminaison Graph limités par la licence

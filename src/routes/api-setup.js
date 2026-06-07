@@ -103,12 +103,16 @@ function updateEnvVars(updates) {
       lines.push('# Panoptica365 .env — created by setup wizard');
     }
   }
+  const { escapeEnvValue } = require('../lib/env-file');
   for (const [key, value] of Object.entries(updates)) {
     const safeVal = String(value);
+    // File line is quote-escaped so '#'/spaces/etc. round-trip through dotenv;
+    // process.env keeps the RAW value for immediate in-memory use.
+    const fileVal = escapeEnvValue(value);
     if (vars.has(key)) {
-      lines[vars.get(key).lineIdx] = `${key}=${safeVal}`;
+      lines[vars.get(key).lineIdx] = `${key}=${fileVal}`;
     } else {
-      lines.push(`${key}=${safeVal}`);
+      lines.push(`${key}=${fileVal}`);
     }
     process.env[key] = safeVal;
   }

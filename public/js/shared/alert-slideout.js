@@ -196,6 +196,7 @@
         ${autoResolvedPillHtml}
         ${createExemptionBtnHtml}
         ${identityTimelineBtnHtml}
+        <span id="alert-psa-chip"></span>
       </div>
       <div style="font-family:Inter,sans-serif;font-size:1.3rem;color:var(--p-text);margin-bottom:4px;">${esc(renderAlertMessage(alert))}</div>
       <div style="font-family:Inter,sans-serif;font-size:0.85rem;color:var(--p-text-muted);">
@@ -209,23 +210,57 @@
         : ''}
     `;
 
+    // PSA ticket chip (Feature 8.3) — populated async; no-op when PSA is off or
+    // the alert has no linked ticket. Also drives the resolve modal below.
+    let priorStatus = alert.status;
+    (async () => {
+      try {
+        const link = await Panoptica.api(`/api/alerts/${alert.id}/psa-link`);
+        const chip = el('alert-psa-chip');
+        if (chip && link && link.linked) {
+          const stateLabel = link.state === 'closed'
+            ? window.t('psa.chip.closed') : window.t('psa.chip.open');
+          const color = link.state === 'closed' ? 'var(--p-text-muted)' : '#4488ff';
+          const label = (link.ticket_number || ('#' + link.ticket_id));
+          const inner = `🎫 ${esc(label)} · ${esc(stateLabel)}`;
+          chip.innerHTML = link.web_url
+            ? `<a href="${esc(link.web_url)}" target="_blank" rel="noopener" title="${esc(window.t('psa.chip.view_in_autotask'))}"
+                  style="border:1px solid ${color};color:${color};border-radius:12px;padding:2px 10px;font-size:0.75rem;text-decoration:none;">${inner}</a>`
+            : `<span style="border:1px solid ${color};color:${color};border-radius:12px;padding:2px 10px;font-size:0.75rem;">${inner}</span>`;
+        }
+      } catch (_) { /* PSA off / lookup failed — no chip */ }
+    })();
+
     // Status change handler
     setTimeout(() => {
       const statusSelect = el('alert-detail-status');
       if (statusSelect) {
         statusSelect.addEventListener('change', async () => {
+          const newStatus = statusSelect.value;
           try {
+            // Resolve modal (decision 5): if resolving an alert with an open
+            // linked ticket, ask whether to also close the ticket.
+            let closeTicket = false;
+            if (newStatus === 'resolved' || newStatus === 'false_positive') {
+              const choice = await Panoptica.PsaResolveModal.maybeConfirm({ alertIds: [alert.id] });
+              if (!choice.proceed) {
+                statusSelect.value = priorStatus; // operator cancelled — revert
+                return;
+              }
+              closeTicket = choice.closeTicket;
+            }
             await Panoptica.api(`/api/alerts/${alert.id}/status`, {
               method: 'PATCH',
-              body: JSON.stringify({ status: statusSelect.value }),
+              body: JSON.stringify({ status: newStatus, closeTicket }),
             });
-            Panoptica.showToast(window.t('alerts.toast.status_changed', { status: statusSelect.value }), 'success');
+            priorStatus = newStatus;
+            Panoptica.showToast(window.t('alerts.toast.status_changed', { status: newStatus }), 'success');
             // Refresh global badges (bell, sidebar, status bar) so the count
             // reflects the new open-alert total immediately rather than on
             // the next 60s poll.
             Panoptica.refreshAlertSignals?.();
             if (typeof callbacks.onStatusChanged === 'function') {
-              try { callbacks.onStatusChanged(statusSelect.value); } catch (_) {}
+              try { callbacks.onStatusChanged(newStatus); } catch (_) {}
             }
           } catch (e) {
             Panoptica.showToast(window.t('alerts.toast.status_update_failed'), 'error');

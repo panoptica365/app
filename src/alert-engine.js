@@ -159,7 +159,7 @@ async function ensureAlertColumns() {
     // file was the only source-of-truth for these two columns; on
     // production it was applied manually back on Apr 30 (Phase 11 exemption
     // system). Container deployments need them in code.
-    { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | known_good_app | etc.' AFTER status" },
+    { name: 'resolution_reason', sql: "ALTER TABLE alerts ADD COLUMN resolution_reason VARCHAR(32) DEFAULT NULL COMMENT 'manual | exemption_rule | drift_cleared | known_good_app | rolled_up | psa_ticket_closed | etc.' AFTER status" },
     { name: 'resolution_rule_id', sql: "ALTER TABLE alerts ADD COLUMN resolution_rule_id INT UNSIGNED DEFAULT NULL COMMENT 'FK alert_exemption_rules.id when resolution_reason = exemption_rule' AFTER resolution_reason" },
     // Feature 8.8 (2026-05-30) — alert scope. Existing alerts are all single-
     // tenant. Message Center alerts are MSP-level: tenant_id holds the
@@ -3057,7 +3057,7 @@ async function processNewAlert(alert, tenant) {
   if (tenant && tenant.id && (tenant.psa_name === undefined || tenant.language === undefined)) {
     try {
       const enriched = await db.queryOne(
-        `SELECT id, tenant_id, display_name, psa_name, language, mode
+        `SELECT id, tenant_id, display_name, psa_name, psa_company_id, language, mode
            FROM tenants WHERE id = ? LIMIT 1`,
         [tenant.id]
       );
@@ -3160,6 +3160,21 @@ async function resolveOpenAlerts(tenantId, dedupKey, reason = 'Auto-resolved') {
   // text on top is safe — Quill renders text nodes verbatim.
   const stamp = new Date().toISOString();
   const noteSuffix = `\n[${stamp}] ${reason}`;
+
+  // Capture the ids of the alerts we're about to auto-resolve so the PSA
+  // integration can leave an informational note on any linked-and-open ticket
+  // (Feature 8.3 decision 7). Software auto-resolution NEVER closes a ticket —
+  // a tech may be mid-investigation — so we note only and leave it open.
+  let resolvingIds = [];
+  try {
+    const rows = await db.queryRows(
+      `SELECT id FROM alerts
+         WHERE tenant_id = ? AND dedup_key = ? AND status IN ('new','investigating')`,
+      [tenantId, dedupKey]
+    );
+    resolvingIds = rows.map(r => r.id);
+  } catch (_) { /* best-effort — non-fatal to the resolve itself */ }
+
   // db.execute() returns affectedRows directly (see src/db/database.js).
   const affectedRows = await db.execute(
     `UPDATE alerts
@@ -3173,6 +3188,21 @@ async function resolveOpenAlerts(tenantId, dedupKey, reason = 'Auto-resolved') {
   );
   if (affectedRows > 0) {
     console.log(`[AlertEngine] Auto-resolved ${affectedRows} open alert(s) for dedup_key=${dedupKey} — ${reason}`);
+    // PSA note-only pass (Feature 8.3). Lazy require avoids a load-time cycle
+    // (psa → notifier → psa). No-op unless PSA is configured and a link exists.
+    try {
+      const psa = require('./psa');
+      if (psa.isConfigured()) {
+        for (const alertId of resolvingIds) {
+          const link = await psa.store.getLinkForAlert(alertId);
+          if (link && link.state === 'open') {
+            await psa.noteTicketForAlert(link, 'psa.ticket.note.drift_cleared', { reason });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[AlertEngine] PSA note-on-auto-resolve failed for dedup_key=${dedupKey}: ${err.message}`);
+    }
   }
   return affectedRows || 0;
 }

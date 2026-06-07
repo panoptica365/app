@@ -17,6 +17,7 @@
     document.getElementById('card-licensing')?.addEventListener('click', () => showView('licensing'));
     document.getElementById('card-diagnostics')?.addEventListener('click', () => showView('diagnostics'));
     document.getElementById('card-disk')?.addEventListener('click', () => showView('disk'));
+    document.getElementById('card-psa')?.addEventListener('click', () => showView('psa'));
     // License Agreement — opens the shared EULA modal in read-only mode
     // (provenance + acceptance history). No sub-view.
     document.getElementById('card-eula')?.addEventListener('click', () => {
@@ -50,6 +51,15 @@
 
     // Microsoft Message Feed handlers
     document.getElementById('message-center-save')?.addEventListener('click', saveMessageCenter);
+
+    // PSA Integration handlers (Feature 8.3)
+    document.getElementById('psa-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('psa-provider')?.addEventListener('change', onPsaProviderChange);
+    document.getElementById('psa-test-btn')?.addEventListener('click', testPsaConnection);
+    document.getElementById('psa-save-config')?.addEventListener('click', savePsaConfig);
+    document.getElementById('psa-suggest-btn')?.addEventListener('click', suggestPsaMatches);
+    document.getElementById('psa-save-mapping')?.addEventListener('click', savePsaMapping);
+    document.getElementById('psa-default-company-search')?.addEventListener('input', debouncePsaCompanySearch);
 
     // SMTP handlers (unchanged)
     document.getElementById('smtp-save')?.addEventListener('click', saveSmtp);
@@ -373,6 +383,7 @@
       licensing: document.getElementById('settings-licensing-view'),
       diagnostics: document.getElementById('settings-diagnostics-view'),
       disk: document.getElementById('settings-disk-view'),
+      psa: document.getElementById('settings-psa-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -389,6 +400,7 @@
     if (view === 'licensing') loadLicensing();
     if (view === 'diagnostics') loadDiagnostics();
     if (view === 'disk') loadDisk();
+    if (view === 'psa') loadPsa();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───
@@ -841,6 +853,334 @@
       statusEl.textContent = window.t('settings.status.error');
       statusEl.style.color = '#e74c3c';
       Panoptica.showToast(window.t('settings.toast_save_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // ─── PSA Integration (Feature 8.3) ───
+
+  let psaConfig = null;          // last-loaded /api/psa/config
+  let psaCompanies = [];         // company list from /api/psa/mapping (≤200)
+  let psaCompanySearchTimer = null;
+  const PSA_SEVERITIES = ['severe', 'high', 'medium', 'low', 'info'];
+
+  function psaEl(id) { return document.getElementById(id); }
+  function psaVal(id) { const el = psaEl(id); return el ? el.value.trim() : ''; }
+  function psaNumOrNull(id) {
+    const v = psaVal(id);
+    return v === '' ? null : (parseInt(v, 10));
+  }
+
+  function psaPopulateSelect(el, items, selected) {
+    if (!el) return;
+    el.innerHTML = (items || [])
+      .map(it => `<option value="${it.value}">${escHtml(it.label)}</option>`)
+      .join('');
+    if (selected != null) el.value = String(selected);
+  }
+
+  function onPsaProviderChange() {
+    const provider = psaVal('psa-provider');
+    const isAt = provider === 'autotask';
+    const creds = psaEl('psa-creds');
+    if (creds) creds.style.display = isAt ? '' : 'none';
+    if (!isAt) {
+      const cfg = psaEl('psa-config-sections');
+      if (cfg) cfg.style.display = 'none';
+    }
+    const warn = psaEl('psa-email-warning');
+    if (warn) warn.style.display = (isAt && psaConfig && !psaConfig.psa_email_set) ? '' : 'none';
+  }
+
+  async function loadPsa() {
+    try {
+      psaConfig = await Panoptica.api('/api/psa/config');
+    } catch (err) {
+      Panoptica.showToast(window.t('psa.settings.save_failed', { error: err.message }), 'error');
+      return;
+    }
+    const cfg = psaConfig;
+    if (psaEl('psa-provider')) psaEl('psa-provider').value = cfg.provider || '';
+    if (psaEl('psa-username')) psaEl('psa-username').value = cfg.username || '';
+    if (psaEl('psa-integration-code')) psaEl('psa-integration-code').value = cfg.integration_code || '';
+    if (psaEl('psa-secret')) psaEl('psa-secret').value = '';
+    if (psaEl('psa-secret-hint')) psaEl('psa-secret-hint').style.display = cfg.secret_set ? '' : 'none';
+    if (psaEl('psa-ticket-language')) psaEl('psa-ticket-language').value = cfg.ticket_language || 'en';
+    if (psaEl('psa-test-status')) psaEl('psa-test-status').textContent = '';
+    onPsaProviderChange();
+
+    // Already-credentialed Autotask install: pull live picklists + mapping + health.
+    if (cfg.provider === 'autotask' && cfg.zone_url) {
+      await loadPsaPicklistsAndConfig(cfg);
+      await loadPsaMapping();
+      await loadPsaHealth();
+    }
+    if (window.PanopticaI18n && window.PanopticaI18n.applyTo) {
+      window.PanopticaI18n.applyTo(psaEl('settings-psa-view'));
+    }
+  }
+
+  async function testPsaConnection() {
+    const status = psaEl('psa-test-status');
+    status.style.color = 'var(--p-text-muted)';
+    status.textContent = window.t('psa.settings.testing');
+    const username = psaVal('psa-username');
+    const integration = psaVal('psa-integration-code');
+    const secret = psaEl('psa-secret') ? psaEl('psa-secret').value : '';
+    try {
+      const r = await Panoptica.api('/api/psa/test', {
+        method: 'POST',
+        body: JSON.stringify({ username, integration_code: integration, secret }),
+      });
+      if (!r.ok) {
+        status.style.color = '#e74c3c';
+        status.textContent = window.t('psa.settings.test_fail', { error: r.error || '' });
+        return;
+      }
+      status.style.color = '#27ae60';
+      status.textContent = window.t('psa.settings.test_success', { zone: r.zone_url || '' });
+      // Persist creds so the server-side picklist/company calls authenticate.
+      await Panoptica.api('/api/psa/config', {
+        method: 'PUT',
+        body: JSON.stringify({ provider: 'autotask', username, integration_code: integration, secret: secret || undefined }),
+      });
+      if (psaEl('psa-secret')) psaEl('psa-secret').value = '';
+      if (psaEl('psa-secret-hint')) psaEl('psa-secret-hint').style.display = '';
+      psaConfig = await Panoptica.api('/api/psa/config');
+      await loadPsaPicklistsAndConfig(psaConfig);
+      await loadPsaMapping();
+      await loadPsaHealth();
+    } catch (err) {
+      status.style.color = '#e74c3c';
+      status.textContent = window.t('psa.settings.test_fail', { error: err.message });
+    }
+  }
+
+  async function loadPsaPicklistsAndConfig(cfg) {
+    let pl;
+    try {
+      pl = await Panoptica.api('/api/psa/picklists');
+    } catch (err) {
+      Panoptica.showToast(window.t('psa.settings.test_fail', { error: err.message }), 'error');
+      return;
+    }
+    const tcfg = cfg.ticket_config || {};
+    psaPopulateSelect(psaEl('psa-queue'), pl.queue, tcfg.queueId);
+    psaPopulateSelect(psaEl('psa-source'), pl.source, tcfg.sourceId);
+    psaPopulateSelect(psaEl('psa-new-status'), pl.status, tcfg.newStatusId);
+    psaPopulateSelect(psaEl('psa-close-status'), pl.status, tcfg.closeStatusId);
+    psaPopulateSelect(psaEl('psa-note-type'), pl.noteType, tcfg.noteTypeId);
+    psaPopulateSelect(psaEl('psa-publish'), pl.publish, tcfg.publishId);
+    if (psaEl('psa-due-offset')) psaEl('psa-due-offset').value = tcfg.dueDateOffsetHours || 24;
+
+    // Complete-statuses checkboxes.
+    const csWrap = psaEl('psa-complete-statuses');
+    const selected = new Set((tcfg.completeStatusIds || []).map(Number));
+    if (csWrap) {
+      csWrap.innerHTML = (pl.status || []).map(s =>
+        `<label style="display:inline-flex;align-items:center;gap:4px;border:1px solid rgba(255,255,255,0.22);border-radius:14px;padding:3px 10px;font-size:0.8rem;cursor:pointer;">
+           <input type="checkbox" class="psa-complete-cb" value="${s.value}" ${selected.has(Number(s.value)) ? 'checked' : ''}/> ${escHtml(s.label)}
+         </label>`).join('');
+    }
+
+    // Severity → priority rows.
+    const spWrap = psaEl('psa-severity-priority');
+    const pmap = tcfg.priorityBySeverity || {};
+    if (spWrap) {
+      spWrap.innerHTML = PSA_SEVERITIES.map(sev => {
+        const sevLabel = window.t('alerts.' + sev);
+        const opts = (pl.priority || []).map(p =>
+          `<option value="${p.value}" ${String(pmap[sev]) === String(p.value) ? 'selected' : ''}>${escHtml(p.label)}</option>`).join('');
+        return `<div class="form-row" style="align-items:center;margin-bottom:6px;">
+            <div style="flex:1;text-transform:capitalize;">${escHtml(sevLabel)}</div>
+            <div style="flex:2;"><select class="psa-priority-sel" data-sev="${sev}">${opts}</select></div>
+          </div>`;
+      }).join('');
+    }
+
+    // Default company — seed with the current mapping if known.
+    const dc = psaEl('psa-default-company');
+    if (dc) {
+      const opts = [`<option value="">${escHtml(window.t('psa.settings.company_none'))}</option>`];
+      if (cfg.default_company_id != null) {
+        opts.push(`<option value="${cfg.default_company_id}" selected>#${cfg.default_company_id}</option>`);
+      }
+      dc.innerHTML = opts.join('');
+    }
+
+    const sections = psaEl('psa-config-sections');
+    if (sections) sections.style.display = '';
+  }
+
+  function debouncePsaCompanySearch() {
+    clearTimeout(psaCompanySearchTimer);
+    psaCompanySearchTimer = setTimeout(doPsaCompanySearch, 350);
+  }
+
+  async function doPsaCompanySearch() {
+    const term = psaVal('psa-default-company-search');
+    const dc = psaEl('psa-default-company');
+    if (!dc) return;
+    try {
+      const r = await Panoptica.api('/api/psa/companies?search=' + encodeURIComponent(term));
+      const current = dc.value;
+      const opts = [`<option value="">${escHtml(window.t('psa.settings.company_none'))}</option>`];
+      for (const c of (r.companies || [])) {
+        opts.push(`<option value="${c.id}">${escHtml(c.name)}</option>`);
+      }
+      dc.innerHTML = opts.join('');
+      if (current) dc.value = current;
+    } catch (err) {
+      Panoptica.showToast(window.t('psa.settings.save_failed', { error: err.message }), 'error');
+    }
+  }
+
+  async function savePsaConfig() {
+    const status = psaEl('psa-config-status');
+    status.style.color = 'var(--p-text-muted)';
+    status.textContent = window.t('settings.status.saving');
+    const completeIds = Array.from(document.querySelectorAll('.psa-complete-cb'))
+      .filter(cb => cb.checked).map(cb => parseInt(cb.value, 10));
+    const priorityBySeverity = {};
+    document.querySelectorAll('.psa-priority-sel').forEach(sel => {
+      priorityBySeverity[sel.dataset.sev] = parseInt(sel.value, 10);
+    });
+    const ticket_config = {
+      queueId: psaNumOrNull('psa-queue'),
+      sourceId: psaNumOrNull('psa-source'),
+      newStatusId: psaNumOrNull('psa-new-status'),
+      closeStatusId: psaNumOrNull('psa-close-status'),
+      completeStatusIds: completeIds,
+      priorityBySeverity,
+      noteTypeId: psaNumOrNull('psa-note-type'),
+      publishId: psaNumOrNull('psa-publish'),
+      dueDateOffsetHours: parseInt(psaVal('psa-due-offset'), 10) || 24,
+    };
+    const secret = psaEl('psa-secret') ? psaEl('psa-secret').value : '';
+    const body = {
+      provider: psaVal('psa-provider'),
+      username: psaVal('psa-username'),
+      integration_code: psaVal('psa-integration-code'),
+      default_company_id: psaVal('psa-default-company') || null,
+      ticket_language: psaVal('psa-ticket-language'),
+      ticket_config,
+    };
+    if (secret) body.secret = secret;
+    try {
+      await Panoptica.api('/api/psa/config', { method: 'PUT', body: JSON.stringify(body) });
+      status.style.color = '#27ae60';
+      status.textContent = window.t('psa.settings.saved');
+      if (psaEl('psa-secret')) psaEl('psa-secret').value = '';
+      psaConfig = await Panoptica.api('/api/psa/config');
+      onPsaProviderChange();
+    } catch (err) {
+      status.style.color = '#e74c3c';
+      const msg = (err && err.message) || '';
+      status.textContent = msg.includes('close_status_not_in_complete')
+        ? window.t('psa.settings.err_close_not_complete')
+        : window.t('psa.settings.save_failed', { error: msg });
+    }
+  }
+
+  // ─── Tenant → company mapping ───
+
+  async function loadPsaMapping() {
+    let data;
+    try {
+      data = await Panoptica.api('/api/psa/mapping');
+    } catch (err) {
+      Panoptica.showToast(window.t('psa.settings.save_failed', { error: err.message }), 'error');
+      return;
+    }
+    psaCompanies = data.companies || [];
+    const body = psaEl('psa-mapping-body');
+    if (!body) return;
+    body.innerHTML = (data.tenants || []).map(t => psaMappingRowHtml(t)).join('');
+    const countEl = psaEl('psa-unmapped-count');
+    if (countEl) countEl.textContent = window.t('psa.settings.unmapped_count', { count: data.unmapped_count });
+  }
+
+  function psaCompanyOptionsHtml(selectedId, suggestedId) {
+    const noneLabel = window.t('psa.settings.company_none');
+    const preselect = selectedId != null ? Number(selectedId) : (suggestedId != null ? Number(suggestedId) : null);
+    let opts = `<option value="">${escHtml(noneLabel)}</option>`;
+    const seen = new Set();
+    for (const c of psaCompanies) {
+      seen.add(Number(c.id));
+      opts += `<option value="${c.id}" ${preselect === Number(c.id) ? 'selected' : ''}>${escHtml(c.name)}</option>`;
+    }
+    // Ensure a mapped/suggested company not in the ≤200 list is still selectable.
+    for (const extra of [selectedId, suggestedId]) {
+      if (extra != null && !seen.has(Number(extra))) {
+        seen.add(Number(extra));
+        opts += `<option value="${extra}" ${preselect === Number(extra) ? 'selected' : ''}>#${extra}</option>`;
+      }
+    }
+    return opts;
+  }
+
+  function psaMappingRowHtml(t) {
+    const isSuggested = t.company_id == null && t.suggested_company_id != null;
+    const statusBadge = t.company_id != null
+      ? ''
+      : (isSuggested
+        ? `<span style="border:1px dashed #4488ff;border-radius:10px;padding:1px 8px;color:#4488ff;font-size:0.75rem;">${escHtml(window.t('psa.settings.suggested_badge'))}</span>`
+        : `<span style="border:1px solid rgba(255,255,255,0.22);border-radius:10px;padding:1px 8px;color:var(--p-text-muted);font-size:0.75rem;">${escHtml(window.t('psa.settings.email_fallback_badge'))}</span>`);
+    return `<tr data-tenant-id="${t.tenant_id}" style="border-bottom:1px solid rgba(255,255,255,0.08);">
+        <td style="padding:8px;">${escHtml(t.display_name)}</td>
+        <td style="padding:8px;color:var(--p-text-muted);">${escHtml(t.psa_name || '—')}</td>
+        <td style="padding:8px;">
+          <select class="psa-map-sel" data-tenant-id="${t.tenant_id}" data-suggested="${t.suggested_company_id != null ? t.suggested_company_id : ''}" style="min-width:240px;">
+            ${psaCompanyOptionsHtml(t.company_id, t.suggested_company_id)}
+          </select>
+        </td>
+        <td style="padding:8px;" class="psa-map-status">${statusBadge}</td>
+      </tr>`;
+  }
+
+  function suggestPsaMatches() {
+    // Apply each row's suggested company into its select (operator still must Save).
+    document.querySelectorAll('.psa-map-sel').forEach(sel => {
+      const suggested = sel.dataset.suggested;
+      if (suggested && !sel.value) sel.value = suggested;
+    });
+    Panoptica.showToast(window.t('psa.settings.suggest_matches'), 'info');
+  }
+
+  async function savePsaMapping() {
+    const status = psaEl('psa-mapping-status');
+    status.style.color = 'var(--p-text-muted)';
+    status.textContent = window.t('settings.status.saving');
+    const mappings = Array.from(document.querySelectorAll('.psa-map-sel')).map(sel => ({
+      tenant_id: parseInt(sel.dataset.tenantId, 10),
+      company_id: sel.value === '' ? null : parseInt(sel.value, 10),
+    }));
+    try {
+      await Panoptica.api('/api/psa/mapping', { method: 'POST', body: JSON.stringify({ mappings }) });
+      status.style.color = '#27ae60';
+      status.textContent = window.t('psa.settings.mapping_saved');
+      await loadPsaMapping();
+    } catch (err) {
+      status.style.color = '#e74c3c';
+      status.textContent = window.t('psa.settings.save_failed', { error: err.message });
+    }
+  }
+
+  async function loadPsaHealth() {
+    const el = psaEl('psa-health');
+    if (!el) return;
+    try {
+      const h = await Panoptica.api('/api/psa/health');
+      const fmtTs = (iso) => iso ? fmtDate(iso) + ' ' + new Date(iso).toLocaleTimeString() : window.t('psa.settings.never');
+      const authLine = h.auth_healthy
+        ? `<span style="color:#27ae60;">● ${escHtml(window.t('psa.settings.auth_ok'))}</span>`
+        : `<span style="color:#e74c3c;">● ${escHtml(window.t('psa.settings.auth_fail', { since: fmtTs(h.auth_failed_since) }))}</span>`;
+      el.innerHTML = `
+        ${authLine}<br>
+        ${escHtml(window.t('psa.settings.last_poll'))}: ${escHtml(fmtTs(h.last_poll_at))}<br>
+        ${escHtml(window.t('psa.settings.open_tickets'))}: ${h.open_tickets}<br>
+        ${escHtml(window.t('psa.settings.error_links'))}: ${h.error_links}`;
+    } catch (err) {
+      el.textContent = '';
     }
   }
 

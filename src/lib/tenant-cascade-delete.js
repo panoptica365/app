@@ -60,6 +60,11 @@ const TENANT_SCOPED_TABLES = [
   // header comment.
   { table: 'alerts_suppressed',       column: 'tenant_id', note: 'Suppressed alert ids' },
   { table: 'alerts',                  column: 'tenant_id', note: 'Drift / posture alerts' },
+  // PSA ticket links (Feature 8.3). Direct tenant_id column; msp-scope rows
+  // (tenant_id NULL) belong to no tenant and are intentionally not matched by
+  // a tenant delete. Deleted alongside alerts — the linked tickets in Autotask
+  // are the tech's work record and are NOT touched on tenant removal.
+  { table: 'psa_tickets',             column: 'tenant_id', note: 'Autotask ticket links for this tenant' },
 
   // CA exemptions + drift log link to tenants via ca_assignments.id, NOT
   // directly via tenant_id. Delete via the parent table — order matters

@@ -203,16 +203,26 @@
   async function bulkAction(newStatus) {
     try {
       if (selectedIds.has('__ALL_FILTERED__')) {
-        // Bulk update all matching alerts via filter
+        // Bulk update all matching alerts via filter. No per-ticket modal here —
+        // the server leaves any linked tickets OPEN with a note (Feature 8.3).
         await Panoptica.api('/api/alerts/bulk-status-filtered', {
           method: 'POST',
           body: JSON.stringify({ filters: getFilters(), new_status: newStatus }),
         });
       } else {
+        const ids = [...selectedIds];
+        // Resolve modal (decision 5): ask once whether to also close any linked
+        // Autotask tickets, then apply that single choice to all of them.
+        let closeTicket = false;
+        if (newStatus === 'resolved' || newStatus === 'false_positive') {
+          const choice = await Panoptica.PsaResolveModal.maybeConfirm({ alertIds: ids });
+          if (!choice.proceed) return; // operator cancelled
+          closeTicket = choice.closeTicket;
+        }
         // Bulk update selected IDs
         await Panoptica.api('/api/alerts/bulk-status', {
           method: 'POST',
-          body: JSON.stringify({ alert_ids: [...selectedIds], status: newStatus }),
+          body: JSON.stringify({ alert_ids: ids, status: newStatus, closeTicket }),
         });
       }
       Panoptica.showToast(window.t('alerts.toast_marked_as', { status: newStatus }), 'success');

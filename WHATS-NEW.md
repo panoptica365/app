@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.1.50 — 2026-06-06
+
+### New: native PSA ticketing — Autotask integration
+
+Panoptica365 can now create and manage your tickets directly in your PSA through its API, instead of emailing them. The first supported PSA is **Autotask**, and it is **off by default** — nothing changes until you turn it on under **Settings → PSA Integration**.
+
+Once enabled, with a customer mapped to its Autotask company, any alert routed to "support" opens a real Autotask ticket — under the right company, queue, priority and due date, carrying the AI analysis and a link back to the alert in Panoptica365 — instead of a parsed email. Repeated alerts for the same customer and policy (for example, several account-lockout alerts in a row) are grouped: the first one creates a ticket and the rest are added to it as notes, so your queue isn't flooded with duplicates.
+
+Resolution stays in sync both ways. When a technician closes the ticket in Autotask, the linked alert auto-resolves in Panoptica365 within a few minutes, with a note explaining why. When you resolve an alert in Panoptica365, you're asked whether to also close its Autotask ticket — close it (with a closing note) or leave it open for the technician to finish. Every alert shows a ticket chip that links straight to the Autotask ticket.
+
+Customers you haven't mapped — and audit-only tenants — keep using the existing email-to-ticket path, so you can adopt this one customer at a time. Credentials, the queue/priority/status choices, and the customer-to-company mapping all live in the new **Settings → PSA Integration** card. ConnectWise Manage support is planned next; the integration was built behind a provider layer so adding it won't disturb Autotask.
+
+---
+
 ## Version 0.1.49 — 2026-06-06
 
 ### Fixed: health monitor no longer flags license-gated Graph endpoints as failures

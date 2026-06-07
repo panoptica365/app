@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.50 — 2026-06-06
+
+### Nuevo: tickets nativos en el PSA — integración con Autotask
+
+Panoptica365 ya puede crear y gestionar sus tickets directamente en su PSA mediante su API, en lugar de enviarlos por correo. El primer PSA compatible es **Autotask**, y está **desactivado de forma predeterminada**: nada cambia hasta que lo active en **Ajustes → Integración con PSA**.
+
+Una vez activado, y con un cliente asignado a su empresa de Autotask, cualquier alerta dirigida a «soporte» abre un ticket real de Autotask —con la empresa, la cola, la prioridad y el vencimiento correctos, el análisis de IA y un enlace a la alerta en Panoptica365— en lugar de un correo analizado. Las alertas repetidas del mismo cliente y la misma política (por ejemplo, varias alertas de bloqueo de cuenta seguidas) se agrupan: la primera crea un ticket y las siguientes se añaden como notas, para no inundar su cola de duplicados.
+
+La resolución se mantiene sincronizada en ambos sentidos. Cuando un técnico cierra el ticket en Autotask, la alerta vinculada se resuelve automáticamente en Panoptica365 en unos minutos, con una nota que explica el motivo. Cuando usted resuelve una alerta en Panoptica365, se le pregunta si también desea cerrar su ticket de Autotask: ciérrelo (con una nota de cierre) o déjelo abierto para que el técnico lo termine. Cada alerta muestra una etiqueta de ticket que enlaza directamente con el ticket de Autotask.
+
+Los clientes que no haya asignado —y los inquilinos de solo auditoría— siguen usando la ruta de correo a ticket, de modo que puede adoptarlo cliente por cliente. Las credenciales, las opciones de cola, prioridad y estado, y la asignación cliente-empresa están todas en la nueva tarjeta **Ajustes → Integración con PSA**. La compatibilidad con ConnectWise Manage está prevista a continuación; la integración se construyó detrás de una capa de proveedor para que añadirla no afecte a Autotask.
+
+---
+
 ## Versión 0.1.49 — 2026-06-06
 
 ### Corregido: el monitor de estado ya no marca como fallidos los puntos de conexión de Graph limitados por la licencia
