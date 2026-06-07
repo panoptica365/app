@@ -5,6 +5,22 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.1.51 — 2026-06-07
+
+### Renforcement de la sécurité avant le déploiement élargi
+
+Cette version resserre plusieurs réglages de sécurité par défaut pour la configuration, la connexion et les diagnostics. Aucune nouvelle fonctionnalité, et aucune modification de configuration n’est requise pour les installations existantes — mais certains comportements sont maintenant plus sûrs par défaut.
+
+**La configuration exige désormais un groupe d’accès (RBAC).** L’assistant de premier démarrage traitait auparavant les trois groupes de rôles (Admins / Opérateurs / Lecteurs) comme facultatifs. L’**ID d’objet du groupe Admins est maintenant obligatoire** pour terminer la configuration. Cela corrige un comportement par défaut trop permissif : si les trois champs de groupe étaient laissés vides, tout compte pouvant se connecter à votre locataire Microsoft obtenait un accès Admin complet dans Panoptica365. Vous devez maintenant pointer Panoptica365 vers un groupe de sécurité Entra, et seuls les membres du ou des groupes configurés peuvent se connecter. Les installations existantes ne sont pas touchées — cela s’applique aux nouvelles installations et aux réinstallations. Les paliers Opérateurs et Lecteurs restent facultatifs.
+
+**La connexion échoue de façon sécuritaire.** Si aucun groupe d’accès n’est configuré, Panoptica365 refuse désormais la connexion au lieu d’admettre tout le monde, et n’attribue jamais le rôle Admin par défaut. Le secret de signature de session est aussi généré et enregistré automatiquement s’il est manquant ou faible — ainsi, une installation ne peut jamais fonctionner en silence avec un secret par défaut intégré, et vous ne pouvez jamais être verrouillé dehors à cause d’une mauvaise configuration. Une vue de données interne qui était accessible sans connexion exige maintenant une session valide.
+
+**Le lot de diagnostic est plus sûr à partager.** Le lot caviardé (Réglages → Diagnostics) masque désormais vos identifiants d’API PSA (Autotask), et son résumé de configuration est passé à un modèle « valeurs sûres connues seulement » : tout ce qu’il ne reconnaît pas explicitement comme non sensible — y compris les secrets ajoutés par de futures intégrations — est masqué plutôt qu’inclus. Le lot reste sûr à envoyer au soutien, par conception.
+
+**Image plus petite et plus propre.** Les fichiers de travail temporaires obsolètes ne sont plus inclus dans l’image de conteneur publiée.
+
+---
+
 ## Version 0.1.50 — 2026-06-06
 
 ### Nouveau : billetterie PSA native — intégration Autotask

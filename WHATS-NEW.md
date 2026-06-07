@@ -5,6 +5,22 @@ that release, newest first.
 
 ---
 
+## Version 0.1.51 — 2026-06-07
+
+### Security hardening ahead of wider rollout
+
+This release tightens several security defaults across setup, sign-in, and diagnostics. There are no new features, and existing installs need no configuration changes — but a few behaviours are now safer by default.
+
+**Setup now requires an access (RBAC) group.** The first-boot wizard previously treated the three role groups (Admins / Operators / Viewers) as optional. The **Admins group Object ID is now required** to finish setup. This closes a permissive default: if all three group fields were left blank, any account that could sign in to your Microsoft tenant was granted full Admin in Panoptica365. Now you must point Panoptica365 at an Entra security group, and only members of your configured group(s) can sign in. Existing installs are unaffected — this applies to new installs and re-installs. The Operators and Viewers tiers remain optional.
+
+**Sign-in fails safe.** If no access group is configured, Panoptica365 now denies sign-in rather than admitting everyone, and never defaults a user to Admin. The session-signing secret is also generated and saved automatically if it is ever missing or weak — so an install can never silently run on a built-in default secret, and you can never be locked out over a misconfigured one. One internal data view that was reachable without signing in now requires a valid session.
+
+**The diagnostics support bundle is safer to share.** The redacted bundle (Settings → Diagnostics) now masks your PSA (Autotask) API credentials, and its configuration summary was switched to a "known-safe values only" model: anything it does not explicitly recognize as non-sensitive — including secrets added by future integrations — is masked rather than included. The bundle stays safe to email to support, by construction.
+
+**Smaller, cleaner image.** Stale temporary working files are no longer included in the published container image.
+
+---
+
 ## Version 0.1.50 — 2026-06-06
 
 ### New: native PSA ticketing — Autotask integration

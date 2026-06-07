@@ -10,9 +10,9 @@
  *   POST /api/identity-timeline/analyze   (Member+)
  *        → forces (re)generation, upserts the cache, writes an audit row.
  *
- * Read-only: no route here mutates a tenant. The app gates /api behind auth
- * (matching sibling route mounts); the analyze route additionally requires
- * Member+.
+ * Read-only: no route here mutates a tenant. This router gates ALL its routes
+ * behind auth via router.use(requireAuth) below — each router must self-gate,
+ * there is NO global /api guard; the analyze route additionally requires Member+.
  */
 
 'use strict';
@@ -23,6 +23,12 @@ const router = express.Router();
 const db = require('../db/database');
 const auth = require('../auth');
 const mspAudit = require('../msp-audit');
+
+// Gate EVERY route in this router behind authentication. This was missing — the
+// GET timeline handler was reachable with no session, exposing per-user identity
+// telemetry for any tenant. There is no global /api auth guard; each router must
+// install its own, as the sibling routers do.
+router.use(auth.requireAuth);
 const itl = require('../lib/identity-timeline');
 
 const LANGS = new Set(['en', 'fr', 'es']);

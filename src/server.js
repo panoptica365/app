@@ -11,6 +11,12 @@ require('./file-logger').init();
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
+// MF-3: guarantee a strong session-signing secret BEFORE config + express-session
+// load. Self-healing — if SESSION_SECRET is missing/weak/placeholder it generates
+// a strong one and persists it to .env. Never uses the old hardcoded default, and
+// never fails closed (no lockouts).
+require('./lib/session-secret').ensureSessionSecret();
+
 const express = require('express');
 const http = require('http');
 const { Server: SocketIOServer } = require('socket.io');

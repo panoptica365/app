@@ -50,6 +50,10 @@ Links to consoles.txt
 claude api usage/
 dev/Panoptica/
 Documentation/
+# Loose dev/diagnostic script + the separate installer repo working copy —
+# never commit to the app repo (the installer lives in its own repo).
+diag-graph-403.js
+panoptica365-installer/
 # Internal-only root-level docs — guidance/notes for Claude sessions and ops,
 # not shipped to MSPs. (README.md stays tracked — it IS public-facing.)
 RELEASING.md

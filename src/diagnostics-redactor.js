@@ -37,6 +37,12 @@ const SECRET_KEYS = [
   'SESSION_SECRET',
   'LICENSE_TOKEN',
   'PANOPTICA_INSTALL_FINGERPRINT',
+  // PSA (Autotask) API credentials — added with the v0.1.50 PSA integration.
+  // config-summary already masks anything not on its safe-key allowlist, so these
+  // can't leak there; listing them here ALSO scrubs their values from any other
+  // collected text file (e.g. a stray log line).
+  'AUTOTASK_SECRET',
+  'AUTOTASK_INTEGRATION_CODE',
   // Certificate passphrase, if one is configured (defence in depth — the .pfx
   // itself is never collected).
   'GRAPH_CERT_PASSWORD',

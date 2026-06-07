@@ -184,9 +184,15 @@ router.post('/entra', (req, res) => {
   if (!client_secret || typeof client_secret !== 'string' || client_secret.length < 20) {
     return res.status(400).json({ error: 'invalid_client_secret', detail: 'client_secret looks too short' });
   }
-  // Group IDs optional but if provided must be GUIDs.
+  // Admin group is MANDATORY. Without at least one configured group, the login
+  // gate (auth.js checkGroupMembership / resolveUserRole) falls back to admitting
+  // EVERY authenticated tenant user as admin. Enforce it server-side so the
+  // wide-open state is unreachable regardless of what the browser sends.
+  if (!GUID_RE.test(admin_group_id || '')) {
+    return res.status(400).json({ error: 'invalid_admin_group_id', detail: 'admin_group_id is required and must be a GUID' });
+  }
+  // Member + viewer tiers stay optional, but must be GUIDs if provided.
   for (const [field, val] of [
-    ['admin_group_id', admin_group_id],
     ['member_group_id', member_group_id],
     ['viewer_group_id', viewer_group_id],
   ]) {
@@ -199,11 +205,9 @@ router.post('/entra', (req, res) => {
     ENTRA_TENANT_ID: tenant_id,
     ENTRA_CLIENT_ID: client_id,
     ENTRA_CLIENT_SECRET: client_secret,
+    ENTRA_ADMIN_GROUP_ID: admin_group_id,
+    ENTRA_AUTHORIZED_GROUP_ID: admin_group_id,  // legacy alias used as fallback
   };
-  if (admin_group_id) {
-    updates.ENTRA_ADMIN_GROUP_ID = admin_group_id;
-    updates.ENTRA_AUTHORIZED_GROUP_ID = admin_group_id;  // legacy alias used as fallback
-  }
   if (member_group_id) updates.ENTRA_MEMBER_GROUP_ID = member_group_id;
   if (viewer_group_id) updates.ENTRA_VIEWER_GROUP_ID = viewer_group_id;
   updateEnvVars(updates);

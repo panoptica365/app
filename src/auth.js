@@ -214,10 +214,15 @@ async function checkGroupMembership(accessToken) {
 
   const configuredGroupIds = [adminId, memberId, viewerId].filter(Boolean);
 
-  // Nothing configured anywhere — admit all authenticated users (legacy dev path).
+  // Nothing configured anywhere — FAIL CLOSED. Historically this admitted every
+  // authenticated user (and resolveUserRole then granted admin) — the wide-open
+  // "everyone is admin" state. Setup now makes the admin group mandatory, so a
+  // zero-group install should never occur; if one somehow does (e.g. a hand-blanked
+  // .env), deny login rather than expose every tenant's data. Recovery: set
+  // ENTRA_ADMIN_GROUP_ID and restart.
   if (configuredGroupIds.length === 0) {
-    console.log('[Auth] checkGroupMembership: no groups configured, admitting all authenticated users');
-    return true;
+    console.error('[Auth] checkGroupMembership: NO Entra groups configured — denying login (fail-closed). Set ENTRA_ADMIN_GROUP_ID.');
+    return false;
   }
 
   // Mirror the resolveUserRole pattern — pull all direct memberships once,
@@ -262,11 +267,11 @@ async function checkGroupMembership(accessToken) {
  * degrade to 'viewer' so a transient API failure doesn't grant Admin.
  *
  * Login-gate coordination: `checkGroupMembership` admits users who are
- * in any of the same three configured groups, so by the time this
- * function runs the user is guaranteed to qualify for at least one tier.
- * The 'viewer' fallback below covers (a) the bootstrap dev case with no
- * groups configured (returns 'admin' as a special case) and (b) the
- * edge case where Graph returns success but with no group rows.
+ * in any of the same three configured groups (and now FAILS CLOSED when no
+ * group is configured at all), so by the time this function runs the user is
+ * guaranteed to qualify for at least one tier. The 'viewer' fallback below
+ * covers (a) the (now unreachable) zero-group case — least privilege, never
+ * admin — and (b) the edge case where Graph returns success but no group rows.
  */
 async function resolveUserRole(accessToken) {
   // Pick up the latest group IDs from env/config. These are loaded by
@@ -279,13 +284,14 @@ async function resolveUserRole(accessToken) {
   const memberId = process.env.ENTRA_MEMBER_GROUP_ID || config.entra.memberGroupId || '';
   const viewerId = process.env.ENTRA_VIEWER_GROUP_ID || config.entra.viewerGroupId || '';
 
-  // If no group-tier IDs are configured at all, fall back to 'admin' —
-  // this preserves the single-operator dev setup where Jacques is the only
-  // user and there's no Entra group for role splitting yet. This fallback
-  // applies ONLY when none of the three tier group IDs are configured.
-  // Once any tier ID is set, unknown users correctly drop to 'viewer'.
+  // If no group-tier IDs are configured at all, fall back to 'viewer' (least
+  // privilege) — NEVER admin. This previously returned 'admin' for the
+  // single-operator dev setup, which was the "everyone is admin" default we
+  // closed. In practice login can no longer reach here with zero groups
+  // (checkGroupMembership now fails closed), but keep this defensive so role
+  // resolution can never silently grant admin.
   if (!adminId && !memberId && !viewerId) {
-    return 'admin';
+    return 'viewer';
   }
 
   // Query all direct group memberships once; filter client-side.

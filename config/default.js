@@ -179,7 +179,11 @@ module.exports = {
   },
 
   session: {
-    secret: process.env.SESSION_SECRET || 'change-me-in-production',
+    // ensureSessionSecret() (src/lib/session-secret.js), called at boot in
+    // server.js BEFORE this module loads, guarantees a strong SESSION_SECRET is
+    // present on process.env — generated + persisted if it was missing/weak. No
+    // hardcoded default here on purpose: a "doormat" secret must never be possible.
+    secret: process.env.SESSION_SECRET || '',
     maxAge: 8 * 60 * 60 * 1000, // 8 hours
   },
 

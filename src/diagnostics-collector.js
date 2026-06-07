@@ -343,16 +343,39 @@ function collectDisk(file) {
   writeJson(file, out);
 }
 
+// Known-non-secret config keys that are SAFE to emit with their real value in
+// the (emailable) diagnostics bundle. Everything NOT on this list — current
+// secrets AND any future integration's credentials nobody remembered to flag —
+// is reduced to { set, length }. This is an allowlist on purpose (robust-by-
+// construction): a key we forget to add shows up masked, never leaked. It
+// replaces the old secret-DENYLIST, which silently leaked AUTOTASK_* the day the
+// PSA integration shipped because nobody added them to the denylist.
+const SAFE_CONFIG_KEYS = new Set([
+  'NODE_ENV', 'PORT', 'TZ',
+  'PANOPTICA365_HOSTNAME', 'PANOPTICA_BASE_URL', 'LETSENCRYPT_EMAIL', 'LICENSE_SERVER_URL',
+  'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER',
+  'ENTRA_TENANT_ID', 'ENTRA_CLIENT_ID',
+  'ENTRA_ADMIN_GROUP_ID', 'ENTRA_MEMBER_GROUP_ID', 'ENTRA_VIEWER_GROUP_ID', 'ENTRA_AUTHORIZED_GROUP_ID',
+  'ENTRA_REDIRECT_URI', 'ENTRA_ADMIN_CONSENT_REDIRECT_URI', 'ENTRA_TEAMS_DELEGATED_REDIRECT_URI',
+  'GRAPH_CERT_PATH', 'GRAPH_CERT_THUMBPRINT',
+  'SMTP_HOST', 'SMTP_PORT', 'SMTP_FROM', 'SMTP_USER',
+  'NOTIFY_EMAILS', 'MSP_NAME', 'MSP_TENANT_GUID',
+  'PSA_PROVIDER', 'PSA_ATTRIBUTION', 'PSA_EMAIL', 'AUTOTASK_ZONE_URL',
+  'PWSH_BINARY', 'PWSH_IPPS_URI', 'PWSH_TIMEOUT_MS',
+  'OPUS_MODEL', 'REPORT_MODEL', 'REPORT_PLATFORM_ATTRIBUTION',
+  'AI_CAN_ADJUST_SEVERITY', 'AI_TENANT_DIGEST_CACHE_MS', 'BRIEFING_MIN_SEVERITY',
+  'DEFAULT_LICENSE_TIER', 'EXPORT_DIR',
+]);
+
 function collectConfigSummary(file) {
-  // For SECRET keys → { set, length } only; everything else → actual value
-  // (§3.3.8). Iterate the loaded environment.
-  const secretSet = new Set(redactor.SECRET_KEYS);
+  // ALLOWLIST model: only SAFE_CONFIG_KEYS emit their real value; every other
+  // env var → { set, length } so its value can never reach the emailable bundle.
   const out = {};
   for (const [k, v] of Object.entries(process.env)) {
-    if (secretSet.has(k)) {
-      out[k] = { set: typeof v === 'string' && v.length > 0, length: typeof v === 'string' ? v.length : 0 };
-    } else {
+    if (SAFE_CONFIG_KEYS.has(k)) {
       out[k] = v;
+    } else {
+      out[k] = { set: typeof v === 'string' && v.length > 0, length: typeof v === 'string' ? v.length : 0 };
     }
   }
   writeJson(file, out);

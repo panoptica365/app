@@ -56,6 +56,10 @@ DR-RESTORE.md
 panoptica-setup.sh
 panoptica_backup.sh
 ps-setup.sh
+# Loose dev/diagnostic script + the separate installer repo working copy —
+# neither is part of the app runtime; must never ship inside the app image.
+diag-graph-403.js
+panoptica365-installer/
 # Note: legacy schema-*.sql files used to live at the repo root; they
 # now live under dev/Panoptica/legacy-schema/ which is already excluded
 # by the `dev` line above. The schema-*.sql exclusion that used to be
@@ -72,6 +76,13 @@ RUNBOOK*.md
 .DS_Store
 ._*
 .smbdelete*
+# Editor / SMB scratch + .bak copies. .gitignore already excludes these, but
+# `docker build` reads the WORKING TREE (not git), so without these lines
+# `COPY . .` would bake stale snapshots of src/ and public/ into the image — and
+# the public/ ones become fetchable via express.static. (Fixes MF-4 by construction.)
+*.tmp
+*.tmp.*
+*.bak
 .vscode
 .idea
 *.swp

@@ -5,6 +5,22 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.1.51 — 2026-06-07
+
+### Refuerzo de seguridad antes del despliegue ampliado
+
+Esta versión refuerza varios valores de seguridad predeterminados en la configuración, el inicio de sesión y los diagnósticos. No hay funciones nuevas y las instalaciones existentes no requieren cambios de configuración, pero algunos comportamientos ahora son más seguros de forma predeterminada.
+
+**La configuración ahora exige un grupo de acceso (RBAC).** El asistente de primer arranque trataba antes los tres grupos de roles (Admins / Operadores / Visualizadores) como opcionales. El **ID de objeto del grupo Admins ahora es obligatorio** para completar la configuración. Esto cierra un valor predeterminado demasiado permisivo: si se dejaban los tres campos de grupo en blanco, cualquier cuenta que pudiera iniciar sesión en su inquilino de Microsoft obtenía acceso de Admin completo en Panoptica365. Ahora debe apuntar Panoptica365 a un grupo de seguridad de Entra, y solo los miembros de los grupos configurados pueden iniciar sesión. Las instalaciones existentes no se ven afectadas: esto se aplica a instalaciones nuevas y reinstalaciones. Los niveles Operadores y Visualizadores siguen siendo opcionales.
+
+**El inicio de sesión falla de forma segura.** Si no se configura ningún grupo de acceso, Panoptica365 ahora deniega el inicio de sesión en lugar de admitir a todos, y nunca asigna el rol de Admin de forma predeterminada. El secreto de firma de sesión también se genera y guarda automáticamente si falta o es débil, de modo que una instalación nunca puede ejecutarse en silencio con un secreto predeterminado incorporado, y usted nunca puede quedar bloqueado por una configuración incorrecta. Una vista de datos interna que era accesible sin iniciar sesión ahora requiere una sesión válida.
+
+**El paquete de diagnóstico es más seguro de compartir.** El paquete depurado (Ajustes → Diagnósticos) ahora enmascara sus credenciales de API del PSA (Autotask), y su resumen de configuración pasó a un modelo de «solo valores seguros conocidos»: todo lo que no reconozca explícitamente como no sensible —incluidos los secretos añadidos por futuras integraciones— se enmascara en lugar de incluirse. El paquete sigue siendo seguro para enviar al soporte, por diseño.
+
+**Imagen más pequeña y limpia.** Los archivos de trabajo temporales obsoletos ya no se incluyen en la imagen de contenedor publicada.
+
+---
+
 ## Versión 0.1.50 — 2026-06-06
 
 ### Nuevo: tickets nativos en el PSA — integración con Autotask

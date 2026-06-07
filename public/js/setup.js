@@ -546,7 +546,7 @@
     </div>`;
 
     // ─── Step 8: Three RBAC groups ─────────────────────────────────
-    html += `<h3>8. <span data-i18n="setup.app_reg.h_groups">Create the Three RBAC Groups</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(optional but recommended)</span></h3>`;
+    html += `<h3>8. <span data-i18n="setup.app_reg.h_groups">Create the Three RBAC Groups</span> <span style="color: var(--p-text-muted); font-weight: 400; font-size: 0.85em;">(admin group required)</span></h3>`;
     html += `<p data-i18n-html="setup.app_reg.groups_intro">Panoptica365 has three operator roles (admin / operator / viewer). Map each role to an Entra security group. Members of those groups get the corresponding role inside Panoptica365.</p>`;
     html += `<ol>
       <li data-i18n-html="setup.app_reg.groups_1">In the Entra portal sidebar, go to <strong>Identity</strong> → <strong>Groups</strong> → <strong>All groups</strong> → <strong>New group</strong>.</li>
@@ -559,13 +559,13 @@
     </ul>`;
     html += `<p data-i18n="setup.app_reg.groups_naming_note">You can name them anything you want — the wizard will ask you for each group's Object ID, not its name.</p>`;
     html += `<ol start="3">
-      <li data-i18n-html="setup.app_reg.groups_3">For each group, after creation, copy the <strong>Object Id</strong> from the group's Overview page. You'll paste them into the next wizard step (admin is recommended; operator + viewer are optional).</li>
+      <li data-i18n-html="setup.app_reg.groups_3">For each group, after creation, copy the <strong>Object Id</strong> from the group's Overview page. You'll paste them into the next wizard step (<strong>admin is required</strong>; operator + viewer are optional).</li>
       <li data-i18n="setup.app_reg.groups_4">Add yourself (and any colleagues) to the appropriate group(s).</li>
     </ol>`;
 
     html += `<div class="setup-callout warn">
       <span class="setup-callout-icon">⚠</span>
-      <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_skip_groups">If you skip group creation entirely and leave all three Object ID fields blank in the next step, <strong>any</strong> authenticated user from your MSP tenant gets full Admin access in Panoptica365. That's fine for single-operator installs — risky for multi-person MSPs.</div>
+      <div class="setup-callout-body" data-i18n-html="setup.app_reg.warn_skip_groups">You <strong>must</strong> create at least the <strong>Admins</strong> group and paste its Object ID in the next step — setup can't be completed without it, and without a configured admin group no one could sign in. (The Operator and Viewer tiers stay optional.)</div>
     </div>`;
 
     // ─── Step 9: Recap ─────────────────────────────────────────────
@@ -575,7 +575,7 @@
       <li data-i18n-html="setup.app_reg.recap_1"><strong>Directory (tenant) ID</strong> — GUID from the app's Overview page</li>
       <li data-i18n-html="setup.app_reg.recap_2"><strong>Application (client) ID</strong> — GUID from the app's Overview page</li>
       <li data-i18n-html="setup.app_reg.recap_3"><strong>Client Secret Value</strong> — the long random string from "Certificates &amp; secrets" (NOT the Secret ID)</li>
-      <li data-i18n-html="setup.app_reg.recap_4"><strong>Admin group Object ID</strong> (recommended) — GUID from the "Panoptica365 Admins" group's Overview</li>
+      <li data-i18n-html="setup.app_reg.recap_4"><strong>Admin group Object ID</strong> (required) — GUID from the "Panoptica365 Admins" group's Overview</li>
       <li data-i18n-html="setup.app_reg.recap_5"><strong>Operator group Object ID</strong> (optional) — GUID from "Panoptica365 Operators"</li>
       <li data-i18n-html="setup.app_reg.recap_6"><strong>Viewer group Object ID</strong> (optional) — GUID from "Panoptica365 Viewers"</li>
     </ul>`;
@@ -1024,9 +1024,9 @@
           <input type="password" id="setup-entra-secret" name="client_secret" required value="${esc(valueFor('entra', 'client_secret'))}">
         </div>
         <div class="setup-field">
-          <label for="setup-entra-admin-group" data-i18n="setup.entra.label_admin_group">Panoptica365 Admins group — Object ID (recommended)</label>
-          <p class="hint" data-i18n-html="setup.entra.hint_admin_group">Members of this Entra group get the <strong>Admin</strong> role in Panoptica365. Leave blank to allow all authenticated users (single-operator setup).</p>
-          <input type="text" id="setup-entra-admin-group" name="admin_group_id" placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'admin_group_id'))}">
+          <label for="setup-entra-admin-group" data-i18n="setup.entra.label_admin_group">Panoptica365 Admins group — Object ID (required)</label>
+          <p class="hint" data-i18n-html="setup.entra.hint_admin_group">Members of this Entra group get the <strong>Admin</strong> role in Panoptica365. <strong>Required</strong> — without it, no one can sign in. Create the group, add yourself, and paste its Object ID here.</p>
+          <input type="text" id="setup-entra-admin-group" name="admin_group_id" required placeholder="00000000-0000-0000-0000-000000000000" value="${esc(valueFor('entra', 'admin_group_id'))}">
         </div>
         <div class="setup-field">
           <label for="setup-entra-member-group" data-i18n="setup.entra.label_member_group">Panoptica365 Operators group — Object ID (optional)</label>
@@ -1064,10 +1064,18 @@
     }
 
     async function saveEntra() {
+      const adminGroupVal = container.querySelector('#setup-entra-admin-group').value.trim();
+      // Admin group is mandatory — mirror the server-side gate in api-setup.js
+      // (/entra). Without it the login gate would admit every authenticated
+      // tenant user as admin. Block here for a clean message; the server rejects too.
+      if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(adminGroupVal)) {
+        showToast(t('setup.entra.err_admin_group_required') || 'The Panoptica365 Admins group Object ID is required and must be a GUID.', 'error');
+        throw new Error('admin_group_id_required');
+      }
       const body = readEntraForm();
       stepValues.entra = {
         ...body,
-        admin_group_id: container.querySelector('#setup-entra-admin-group').value.trim(),
+        admin_group_id: adminGroupVal,
         member_group_id: container.querySelector('#setup-entra-member-group').value.trim(),
         viewer_group_id: container.querySelector('#setup-entra-viewer-group').value.trim(),
       };
