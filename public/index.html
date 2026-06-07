@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panoptica365 — M365 Monitoring</title>
+<link rel="stylesheet" href="/css/themes/panoptica-dark.css" id="theme-css">
+<link rel="stylesheet" href="/css/panoptica.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+</head>
+<body>
+
+  <!-- ═══ LICENSE BANNER (v0.1.8 Stage D) ═══
+       Shown ABOVE the header when the install's paid license is past its
+       expiry. Three phase variants (warning / soft / hard) driven by the
+       `data-phase` attribute. Hidden by default; populated by app.js via
+       /api/license/status polling. NFR installs and pre-expiry paid never
+       see this banner. Copy is fully i18n'd via license_banner.* keys. -->
+  <!-- Stage 5 in-app self-update banner. Shown to ALL roles when a newer
+       version is available; the "Update" action is admin-only (app.js gates it
+       and the menu item is removed for non-admins). Copy via update.* keys. -->
+  <div id="update-banner" class="update-banner" style="display:none;" role="status">
+    <div class="update-banner-inner">
+      <span class="update-banner-icon" aria-hidden="true">↑</span>
+      <span class="update-banner-text" id="update-banner-text"></span>
+      <button class="update-banner-action" id="update-banner-action" type="button"></button>
+      <button class="update-banner-dismiss" id="update-banner-dismiss" type="button" aria-label="Dismiss">×</button>
+    </div>
+  </div>
+
+  <div id="license-banner" class="license-banner" style="display:none;" role="alert">
+    <div class="license-banner-inner">
+      <span class="license-banner-icon" aria-hidden="true">⚠</span>
+      <div class="license-banner-text">
+        <strong id="license-banner-title"></strong>
+        <span id="license-banner-body"></span>
+      </div>
+      <a id="license-banner-cta" class="license-banner-cta"
+         href="mailto:license@panoptica365.com?subject=Panoptica365%20license%20renewal"
+         target="_blank" rel="noopener"
+         data-i18n="license_banner.cta">Contact license@panoptica365.com</a>
+    </div>
+  </div>
+
+  <!-- Disk-space sentry banner (shown at ≥80% used). Reuses the license-banner
+       styling; populated by refreshHealth() from /api/health's disk check. -->
+  <div id="disk-banner" class="license-banner" style="display:none;" role="alert">
+    <div class="license-banner-inner">
+      <span class="license-banner-icon" aria-hidden="true">⚠</span>
+      <div class="license-banner-text">
+        <strong id="disk-banner-title"></strong>
+        <span id="disk-banner-body"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HEADER FRAME — v6 ═══ -->
+  <header class="header-frame">
+    <div class="header-brand">
+      <img src="/img/panoptica365-logo.png" alt="Panoptica365">
+    </div>
+
+    <div class="header-info">
+      <span class="framed-plate" title="System time" data-i18n-attr-title="header.system_time_title">
+        <span class="live-dot"></span>
+        <span class="header-timestamp" id="header-clock"></span>
+      </span>
+
+      <!-- Notification bell — badge count driven by /api/alerts/stats -->
+      <button class="header-bell" id="header-bell" title="Open alerts" data-i18n-attr-title="header.bell_title" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M12 3 C8.5 3 6 5.5 6 9 v3 L4.5 14.5 H19.5 L18 12 V9 C18 5.5 15.5 3 12 3 Z"
+                fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M10 18 C10 19.1 10.9 20 12 20 C13.1 20 14 19.1 14 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span class="hb-badge" id="header-bell-badge" style="display:none;">0</span>
+      </button>
+
+      <!-- Mute indicator (Apr 28, 2026) — visible only when current operator
+           has an active mute. Click opens the user-prefs modal. -->
+      <span class="header-mute-chip" id="header-mute-chip" title="" role="button" tabindex="0">
+        🔇 <span id="header-mute-chip-text" data-i18n="header.muted_label">Muted</span>
+      </span>
+
+      <!-- User avatar + name + role badge — click opens the header menu
+           (Preferences / What's New / Log out). Wrapped in a relative
+           container so the menu can position-absolute against it. -->
+      <div class="header-user-wrap">
+        <div class="header-user-block" id="header-user-block" role="button" tabindex="0"
+             title="Open menu" data-i18n-attr-title="header.user_block_title"
+             aria-haspopup="menu" aria-expanded="false" aria-controls="header-menu">
+          <div class="header-avatar" id="header-avatar" title="">
+            <span class="ha-initials" id="header-avatar-initials">··</span>
+          </div>
+          <div class="header-user-stack">
+            <span class="header-user" id="header-user"></span>
+            <!--
+              A3 (May 9, 2026): visible role badge. Populated by app.js from the
+              session user object on /api/user-prefs load. Hidden by default
+              until the role is known, to avoid a brief "Viewer" flash.
+            -->
+            <span class="header-role-badge" id="header-role-badge" style="display:none;"></span>
+          </div>
+          <!-- v0.1.7 "unread release notes" dot — shown when current_version
+               > last_seen_version. Hidden by default; app.js toggles. -->
+          <span class="header-user-dot" id="header-user-dot" style="display:none;" aria-hidden="true"></span>
+        </div>
+
+        <!-- v0.1.7 header dropdown — Preferences / What's New / Log out.
+             Hidden by default; app.js toggles .active. -->
+        <div class="header-menu" id="header-menu" role="menu" aria-hidden="true">
+          <button class="header-menu-item" id="header-menu-prefs" role="menuitem" type="button"
+                  data-i18n="header.menu.preferences">Preferences</button>
+          <button class="header-menu-item" id="header-menu-whats-new" role="menuitem" type="button">
+            <span data-i18n="header.menu.whats_new">What's New</span>
+            <span class="header-menu-dot" id="header-menu-dot" style="display:none;" aria-hidden="true"></span>
+          </button>
+          <button class="header-menu-item" id="header-menu-update" role="menuitem" type="button"
+                  data-role-required="admin" data-i18n="update.menu_item">Update</button>
+          <div class="header-menu-divider" role="separator"></div>
+          <a class="header-menu-item header-menu-logout" id="header-menu-logout" role="menuitem"
+             href="/auth/logout" data-i18n="header.menu.logout">Log out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN LAYOUT ═══ -->
+  <div class="main-container">
+
+    <!-- ─── SIDEBAR NAV (v6 — numbered systems console) ─── -->
+    <nav class="sidebar" id="sidebar-nav">
+
+      <div class="nav-group" data-group="console">
+        <div class="sidebar-section" data-i18n="sidebar.section.console">Console</div>
+        <div class="nav-item active" data-page="main-console"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.main_console">Main Console</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="daily-activity"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.daily_activity">Daily Activity</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="alerts"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.alerts">Alerts</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="heatmap"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.heatmap">Heatmap</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="tenants"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.tenants">Tenants</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="reports"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.reports">Reports</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="sharepoint"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.sharepoint">SharePoint</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="learn"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.learn">Learn</span><span class="nav-indicator"></span></div>
+      </div>
+
+      <div class="nav-group" data-group="policies">
+        <div class="sidebar-section" data-i18n="sidebar.section.policies">Policies</div>
+        <div class="nav-item" data-page="alert-policies"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.alert_policies">Alert Policies</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="ca-templates"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.ca_templates">CA Policies</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="intune-templates"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.intune_templates">Intune Policies</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="security"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.security">Security</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="exemptions"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.exemptions">Exemptions</span><span class="nav-indicator"></span></div>
+      </div>
+
+      <!--
+        A3 (May 9, 2026): the entire System section is admin-only. The
+        sidebar-section header + every nav item underneath is hidden for
+        viewer + operator via data-role-required="admin". The role-hidden
+        class added by app.js applyRoleVisibility() handles the hide;
+        no inline style:none here, so the existing display:none on the
+        Audit Log nav (legacy) is consolidated to a single mechanism.
+        UI hide is a nicety — server-side requireAdmin gates the
+        partials + API.
+      -->
+      <div class="nav-group" data-group="system" data-role-required="admin">
+        <div class="sidebar-section" data-i18n="sidebar.section.system">System</div>
+        <div class="nav-item" data-page="settings" data-role-required="admin"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.settings">Settings</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="audit-log" data-role-required="admin"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.audit_log">Audit Log</span><span class="nav-indicator"></span></div>
+      </div>
+
+      <!-- v0.1.8 — sidebar-version block removed; the running app version is
+           now exclusively rendered in the status-bar bottom-right (#sb-version).
+           Single source of truth for "what version am I running" instead of
+           the v0.1.7 dual display. -->
+
+    </nav>
+
+    <!-- ─── CONTENT AREA ─── -->
+    <main class="content-area" id="content-area">
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <span data-i18n="common.loading">Loading...</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- ═══ BOTTOM STATUS BAR ═══ -->
+  <footer class="status-bar" id="status-bar">
+    <button class="sb-cell sb-cell-status sb-clickable" id="sb-health-cell" type="button"
+            title="Click for health diagnostics" data-i18n-attr-title="statusbar.health_diagnostics_title">
+      <span class="sb-led sb-led-ok" id="sb-health-led"></span>
+      <span class="sb-label" id="sb-health-label" data-i18n="statusbar.health.checking">Checking…</span>
+    </button>
+    <div class="sb-divider"></div>
+    <div class="sb-cell">
+      <span class="sb-key" data-i18n="statusbar.tenants">Tenants</span>
+      <span class="sb-val" id="sb-tenant-count">—</span>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-cell">
+      <span class="sb-key" data-i18n="statusbar.avg_secure_score">Avg Secure Score</span>
+      <span class="sb-val" id="sb-secure-score">—</span>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-cell">
+      <span class="sb-key" data-i18n="statusbar.open_alerts">Open Alerts</span>
+      <span class="sb-val" id="sb-open-alerts">—</span>
+    </div>
+    <div class="sb-cell sb-cell-right">
+      <span class="sb-version" id="sb-version">Panoptica365 v1.0.0</span>
+    </div>
+  </footer>
+
+  <!-- ═══ TOAST CONTAINER ═══ -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ═══ SHARED ALERT SLIDEOUT ═══ -->
+  <!--
+    Mounted once here so any page (global Alerts, per-tenant Alerts, etc.)
+    can open alert details without duplicating markup. The DOM is also
+    created lazily by the module if missing, but having it here keeps
+    the initial paint and first-open snappy.
+  -->
+  <div class="alert-overlay" id="alert-overlay"></div>
+  <div class="alert-slideout" id="alert-slideout">
+    <div class="alert-slideout-header">
+      <button class="alert-slideout-close" id="alert-slideout-close">&times;</button>
+      <div id="alert-detail-header"></div>
+    </div>
+    <div class="alert-slideout-body" id="alert-slideout-body"></div>
+  </div>
+
+  <!-- ═══ MODAL OVERLAY ═══ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-dialog">
+      <div class="modal-header">
+        <div class="mh-elbow"></div>
+        <span class="mh-title" id="modal-title"></span>
+        <button class="mh-close" id="modal-close" data-i18n="modals.close">Close</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- ═══ USER PREFERENCES MODAL ═══ -->
+  <!--
+    Apr 28, 2026 — backed by users + operator_mute_periods tables (server-
+    side, persists across devices). Theme-light selection is recorded but
+    inert until A2 lands the light stylesheet. Language selection is
+    recorded but does not yet drive UI strings — B1 is the i18n grind.
+    Mute section is end-to-end wired: notifier subtracts muted recipients;
+    failsafe to admins when all are muted; 60-day server-enforced cap.
+  -->
+  <div class="modal-overlay" id="user-prefs-overlay">
+    <div class="modal" id="user-prefs-dialog">
+      <div class="modal-header">
+        <div class="mh-elbow"></div>
+        <span class="mh-title" data-i18n="user_prefs.title">User preferences</span>
+        <button class="mh-close" id="user-prefs-close" data-i18n="modals.close">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="user-prefs-language" data-i18n="user_prefs.language_label">Language</label>
+          <select id="user-prefs-language">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label data-i18n="user_prefs.theme_label">Theme</label>
+          <div class="user-prefs-radio-group" id="user-prefs-theme">
+            <label class="user-prefs-radio">
+              <input type="radio" name="user-prefs-theme-radio" value="light"> <span data-i18n="user_prefs.theme_light">Light</span>
+            </label>
+            <label class="user-prefs-radio">
+              <input type="radio" name="user-prefs-theme-radio" value="dark"> <span data-i18n="user_prefs.theme_dark">Dark</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ─── Mute alerts section ─── -->
+        <div class="form-group user-prefs-mute-section" id="user-prefs-mute-section">
+          <label class="user-prefs-mute-label">
+            <input type="checkbox" id="user-prefs-mute-checkbox">
+            <span data-i18n="user_prefs.mute_label">Mute alerts to my email</span>
+            <span class="user-prefs-mute-email" id="user-prefs-mute-email"></span>
+          </label>
+
+          <!-- Active-mute status: shown when an active mute exists -->
+          <div class="user-prefs-mute-active" id="user-prefs-mute-active" style="display:none;">
+            <div class="user-prefs-mute-status-line">
+              <span class="user-prefs-mute-icon">🔇</span>
+              <span id="user-prefs-mute-status-text"></span>
+            </div>
+            <button class="btn-secondary" id="user-prefs-mute-cancel" type="button" data-i18n="user_prefs.cancel_mute">Cancel mute</button>
+          </div>
+
+          <!-- New-mute form: shown when checkbox checked and no active mute -->
+          <div class="user-prefs-mute-form" id="user-prefs-mute-form" style="display:none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="user-prefs-mute-from" data-i18n="user_prefs.mute_from">From</label>
+                <input type="datetime-local" id="user-prefs-mute-from">
+              </div>
+              <div class="form-group">
+                <label for="user-prefs-mute-to" data-i18n="user_prefs.mute_to">To</label>
+                <input type="datetime-local" id="user-prefs-mute-to">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="user-prefs-mute-reason" data-i18n="user_prefs.mute_reason">Reason (optional)</label>
+              <input type="text" id="user-prefs-mute-reason" maxlength="500" placeholder="e.g. vacation, conference" data-i18n-attr-placeholder="user_prefs.mute_reason_placeholder">
+            </div>
+            <div class="user-prefs-mute-hint" id="user-prefs-mute-hint"></div>
+          </div>
+
+          <!-- Warning when user has no email or isn't on any notification list -->
+          <div class="user-prefs-mute-warning" id="user-prefs-mute-warning" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" id="user-prefs-save" data-i18n="modals.save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ THEME SWITCHER ═══ -->
+  <!--
+    Two themes shipped as of Apr 28, 2026: panoptica-dark (default) and
+    panoptica-light. The user-prefs modal stores the operator's theme
+    choice in users.theme (DB) AND mirrors to localStorage as a same-
+    device fast path. This inline script reads localStorage on page load
+    so theme applies before app.js finishes loading (avoids FOUC). After
+    app.js loads user-prefs from DB, it re-applies if the DB value
+    differs (cross-device sync, brief flash on first cross-device load).
+
+    Friendly preference values ('light' / 'dark') are mapped to stylesheet
+    keys ('panoptica-light' / 'panoptica-dark') so the UI stays clean
+    while the file naming convention can evolve independently.
+  -->
+  <script>
+    (function() {
+      const THEMES = {
+        'panoptica-dark':  '/css/themes/panoptica-dark.css',
+        'panoptica-light': '/css/themes/panoptica-light.css',
+      };
+      const PREF_TO_THEME = { dark: 'panoptica-dark', light: 'panoptica-light' };
+      const STORAGE_KEY = 'panoptica365-theme';
+      const PREF_STORAGE_KEY = 'panoptica365-prefs-theme';
+
+      function setTheme(name) {
+        const link = document.getElementById('theme-css');
+        if (link && THEMES[name]) {
+          link.href = THEMES[name];
+          try { localStorage.setItem(STORAGE_KEY, name); } catch(e) {}
+        }
+      }
+
+      function setThemeByPref(pref) {
+        const themeName = PREF_TO_THEME[pref];
+        if (themeName) setTheme(themeName);
+      }
+
+      // Restore saved theme on page load. Two-key lookup:
+      //  1. Friendly pref ('light'/'dark') from the user-prefs modal — preferred.
+      //  2. Stylesheet name ('panoptica-dark'/etc.) — legacy / dev-console use.
+      // Fall back to dark default if neither is present or both reference a
+      // theme that no longer exists.
+      try {
+        const pref = localStorage.getItem(PREF_STORAGE_KEY);
+        if (pref && PREF_TO_THEME[pref]) {
+          setThemeByPref(pref);
+        } else {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved && THEMES[saved]) {
+            setTheme(saved);
+          } else if (saved && !THEMES[saved]) {
+            // Stale value — reset to default. Don't auto-clear PREF key
+            // because a future stylesheet might restore validity.
+            localStorage.setItem(STORAGE_KEY, 'panoptica-dark');
+          }
+        }
+      } catch(e) {}
+
+      // Expose for app.js + console use.
+      window.PanopticaTheme = {
+        set: setTheme,
+        setByPref: setThemeByPref,
+        current: () => {
+          try { return localStorage.getItem(STORAGE_KEY) || 'panoptica-dark'; } catch(e) { return 'panoptica-dark'; }
+        },
+        currentPref: () => {
+          try {
+            const p = localStorage.getItem(PREF_STORAGE_KEY);
+            return (p === 'light' || p === 'dark') ? p : 'dark';
+          } catch(e) { return 'dark'; }
+        },
+      };
+    })();
+  </script>
+
+  <!-- ═══ SOCKET.IO CLIENT ═══ -->
+  <!-- Served automatically by the socket.io server module at /socket.io/socket.io.js -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- ═══ LUCIDE ICONS (vanilla bundle) ═══ -->
+  <!-- Usage: <i data-lucide="mail"></i> then Panoptica.refreshIcons() after DOM updates. -->
+  <script src="/js/shared/lucide.min.js"></script>
+
+  <!-- ═══ I18N (chrome wired in Phase 1; partials still pending) ═══ -->
+  <!--
+    Loaded before app.js so window.t() and window.PanopticaI18n exist
+    by the time page modules boot. The script self-initializes: fetches
+    /api/i18n/<lang> based on localStorage / user-prefs, walks any
+    data-i18n / data-i18n-attr-* attributes in the DOM, and exposes
+    window.PanopticaI18n.applyTo(rootEl) for partials to call after
+    they're injected.
+
+    Phase 1 (Apr 29, 2026) wired chrome: header, sidebar nav, content-area
+    loading, status bar, generic modal, alert slideout, and user-prefs
+    modal. Phase 2+ extends to partials and JS-emitted strings.
+  -->
+  <script src="/js/shared/i18n.js"></script>
+
+  <!-- ═══ SPA ENGINE ═══ -->
+  <script src="/js/app.js"></script>
+
+  <!-- ═══ SHARED MODULES (loaded after app.js so window.Panoptica exists) ═══ -->
+  <script src="/js/shared/alert-explainer.js"></script>
+  <script src="/js/shared/learn-markdown.js"></script>
+  <script src="/js/shared/eula-modal.js"></script>
+  <script src="/js/shared/alert-slideout.js"></script>
+  <script src="/js/shared/identity-timeline.js"></script>
+  <script src="/js/shared/alert-filter-bar.js"></script>
+</body>
+</html>

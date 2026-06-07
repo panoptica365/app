@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!--
+  Panoptica365 — First-Boot Setup Wizard
+  (v0.1.10+, Stage 4 Part B)
+
+  Standalone page — NOT loaded through the main SPA shell (index.html).
+  This page renders before login + before any tenant config exists.
+  Operators arrive here either by hitting /setup directly, or by being
+  302'd from any other path by src/lib/setup/middleware.js when the
+  install hasn't completed first-boot setup yet.
+
+  Pulls just the theme tokens + a wizard-specific stylesheet; doesn't
+  load panoptica.css (which carries dashboard chrome rules we don't
+  want here). Uses the shared i18n module so wizard copy hits the
+  same en/fr/es locale files as the rest of the app — locked
+  triple-locale-mandatory policy applies (every UI string is keyed).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panoptica365 — Setup</title>
+
+  <!-- Theme tokens only. setup.css carries all wizard layout. -->
+  <link rel="stylesheet" href="/css/themes/panoptica-dark.css" id="theme-css">
+  <link rel="stylesheet" href="/css/setup.css">
+
+  <!-- Shared i18n module — exposes window.t() + window.PanopticaI18n.applyTo() -->
+  <script src="/js/shared/i18n.js"></script>
+</head>
+<body>
+
+  <!-- ─── HEADER BANNER: full-width chrome bar, mirrors the main app header ─── -->
+  <!-- Lives OUTSIDE setup-app so it spans the full viewport width (the app
+       container is padded + centered for the wizard card). v0.1.11 refit. -->
+  <header class="setup-header">
+    <div class="setup-header-inner">
+      <img src="/img/panoptica365-logo.png" alt="Panoptica365" class="setup-logo">
+      <div class="setup-lang-picker" id="setup-lang-picker" role="group" aria-label="Language">
+        <!-- buttons rendered by setup.js -->
+      </div>
+    </div>
+  </header>
+
+  <div class="setup-app">
+
+    <!-- ─── STEPPER: 8-step progress indicator ─── -->
+    <nav class="setup-stepper" id="setup-stepper" aria-label="Setup progress">
+      <!-- step dots rendered by setup.js -->
+    </nav>
+
+    <!-- ─── CONTENT: current step's form ─── -->
+    <main class="setup-content" id="setup-content">
+      <!-- Initial loading state replaced by setup.js as soon as state is fetched -->
+      <div class="setup-loading">
+        <div class="setup-spinner"></div>
+        <p data-i18n="common.loading">Loading…</p>
+      </div>
+    </main>
+
+    <!-- ─── TOAST: transient error/success messages ─── -->
+    <div id="setup-toast" class="setup-toast" hidden role="status" aria-live="polite"></div>
+
+  </div>
+
+  <!-- ─── APP REGISTRATION INSTRUCTIONS MODAL (v0.1.13) ─── -->
+  <!-- Full-window overlay shown when operator clicks "Open detailed
+       instructions" on the App Registration wizard step. Body content
+       rendered by setup.js renderAppRegModal() — instructions, copy
+       buttons for hostnames + permissions + group names, color-coded
+       warnings, etc. Hidden by default; .open class toggles visibility. -->
+  <div id="setup-modal-overlay" class="setup-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="setup-modal-title">
+    <div class="setup-modal">
+      <header class="setup-modal-header">
+        <h2 id="setup-modal-title" class="setup-modal-title"></h2>
+        <button type="button" class="setup-modal-close" id="setup-modal-close" aria-label="Close">×</button>
+      </header>
+      <div class="setup-modal-body" id="setup-modal-body">
+        <!-- populated by setup.js -->
+      </div>
+      <footer class="setup-modal-footer">
+        <button type="button" class="setup-btn setup-btn-primary" id="setup-modal-done">
+          <span data-i18n="setup.app_reg.modal_done_btn">I've completed the steps above</span>
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- EULA gate (welcome step). learn-markdown renders the agreement body;
+       eula-modal is the shared accept/read-only modal. Loaded before setup.js
+       so window.Panoptica.EulaModal exists when the operator clicks. -->
+  <script src="/js/shared/learn-markdown.js"></script>
+  <script src="/js/shared/eula-modal.js"></script>
+  <script src="/js/setup.js"></script>
+</body>
+</html>

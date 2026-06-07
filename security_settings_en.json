@@ -1,0 +1,106 @@
+{
+  "security_settings": {
+    "EXO-01": {
+      "name": "Enable MailTips (All Tips + External Recipients)",
+      "security_impact": "Most accidental data leaks in small businesses happen when someone sends an email to the wrong recipient — a client with the same first name, an old distribution list, the wrong Bob. MailTips puts a visible warning above the Send button so the user sees the mistake before the mail leaves the tenant.",
+      "user_impact": "Users will see a small banner above their email draft when they are sending to someone outside the organization, to a large group, or to a mailbox with unusual settings. No extra clicks, no blocking — just an advisory line.",
+      "admin_notes": "Safe to enable in any tenant. The external-recipient tip is off by default in most tenants, which is the single most valuable flag to flip. The large-audience threshold is set to 25 by Apply, matching the CIS recommendation; tune manually via PowerShell for tenants with very large distribution lists."
+    },
+    "EXO-02": {
+      "name": "Disable Automatic Forwarding to External Domains",
+      "security_impact": "When an attacker compromises an account, the first thing they usually do is create a silent inbox rule that forwards every new message to an address they control. Disabling auto-forward at the transport layer blocks this exfiltration path even if the inbox rule still exists.",
+      "user_impact": "Users will no longer be able to set up automatic forwarding to a personal email (e.g. Gmail, Hotmail). Forwarding to other internal colleagues still works. If any user legitimately forwards to a partner company, that exception needs to be documented and handled via a dedicated remote domain, not the Default one.",
+      "admin_notes": "Before applying, enumerate existing inbox rules with `Get-InboxRule -ResultSize Unlimited | Where {$_.ForwardTo}` to identify users who currently rely on external forwarding. This setting only modifies the Default remote domain; non-Default remote domains (e.g. a partner federation stub) are left alone because they almost always represent a deliberate exception."
+    },
+    "EXO-03": {
+      "name": "Enable Mailbox Auditing for All Users",
+      "security_impact": "If an account is compromised, there is no way to investigate what the attacker did without mailbox audit logs. Owner-action logging is what captures an attacker who is already logged in as the user. This setting is the prerequisite for every email-based forensic investigation.",
+      "user_impact": "Users will not notice any change. Auditing runs silently in the background and has no impact on mailbox performance or behaviour.",
+      "admin_notes": "Microsoft enabled mailbox auditing by default in 2019, but owner-action logging is still narrower than the recommended set. Apply pre-filters Get-Mailbox to only the mailboxes that need updating (those currently with AuditEnabled = $false), so on a typical SMB tenant where most mailboxes are already enabled, Apply runs quickly. On tenants with many disabled mailboxes (post-migration scenarios are common), Apply may take several minutes — the busy panel's elapsed counter will tick past the usual 5-15 second window. Writer timeout bumped to 5 min to accommodate this. No user-visible impact (audit runs silently in the background)."
+    },
+    "EXO-05": {
+      "name": "Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts)",
+      "security_impact": "Compromised accounts are used to spray phishing and spam to partners and clients. Left unchecked, this gets the entire tenant domain flagged on reputation blacklists — recovery is painful. Automatic restriction contains the blast radius in minutes and signals the MSP before any real damage lands.",
+      "user_impact": "Users will not notice any change unless their account starts sending spam — in which case the account is blocked from sending any outbound email until the MSP investigates and releases it.",
+      "admin_notes": "Set the notification recipient to an MSP-monitored address that someone actually reads (the MSP security inbox or ticketing queue). If the notification goes into a black hole, the value of this setting is halved. Apply uses BlockUserForToday (24h auto-release) — operators can manually escalate to permanent BlockUser via the portal if a real compromise is confirmed."
+    },
+    "EXO-06": {
+      "name": "Enable Preset Security Policy (Standard or Strict) — MDO",
+      "security_impact": "Default Exchange settings leak a lot of phishing. Microsoft's Strict preset adds zero-hour auto-purge, aggressive phishing verdicts, and impersonation protection the default policy doesn't have. Using the preset means the MSP gets Microsoft's expert tuning for free, updated automatically — no need to hand-maintain a custom policy per tenant.",
+      "user_impact": "Users will see more suspected-phishing messages quarantined and more file attachments blocked or delayed for sandbox analysis. False-positive rate is higher on Strict than Standard; a handful of legitimate emails may land in quarantine the first week and need release.",
+      "admin_notes": "Standard is the recommended baseline for every tenant — Microsoft's own default recommendation. Strict adds aggressive impersonation protection and stricter quarantine on top of Standard, scoped to high-risk users (executives, finance, anyone notorious for clicking on anything). PREREQUISITE: the preset RULES must exist on the tenant before Apply can flip them. Microsoft auto-creates them the first time someone visits the Defender portal Preset Security Policies page (security.microsoft.com → Email & collaboration → Policies & rules → Threat policies → Preset Security Policies) and walks through the wizard. Apply throws a clear error if the rules are missing. (Auto-creation deferred to a future version — Microsoft's New-EOPProtectionPolicyRule cmdlet requires three separate policy lookups per tier, plus the actual policy names contain timestamp suffixes that vary per tenant, so we want to test that path on a fresh tenant before shipping.) Apply preserves rule scope across runs — only State flips. Drift detection covers rule state AND impersonation lists (TargetedUsersToProtect, TargetedDomainsToProtect, ExcludedDomains) on the underlying anti-phish policy."
+    },
+    "EXO-08": {
+      "name": "Disable Basic Auth for SMTP AUTH Submission",
+      "security_impact": "SMTP AUTH uses basic username/password authentication, which bypasses MFA entirely. Attackers running credential-stuffing campaigns target SMTP AUTH because a single correct password gets them into the mailbox with no MFA prompt. Disabling it globally closes a major bypass.",
+      "user_impact": "Users will not notice any change on modern Outlook or Outlook on the Web — those use modern auth. Impact is only on legacy scanners, printers, and line-of-business apps that send email directly via SMTP AUTH. Those need to be identified, migrated to Graph-based sending, or exempted explicitly.",
+      "admin_notes": "Before applying, audit the tenant's scanners, multi-function printers, and any in-house app that sends email. For each still on SMTP AUTH, plan a migration to Graph sendMail or to an SMTP relay that uses app passwords with a dedicated service account."
+    },
+    "ENT-01": {
+      "name": "Enable Self-Service Password Reset (SSPR) for All Users",
+      "security_impact": "SSPR drives users to register multiple authentication methods, which directly improves MFA coverage and account recovery. It also eliminates helpdesk password-reset workflows, which are a favourite social-engineering target — an attacker who can call the helpdesk and impersonate a user often walks away with a reset password.",
+      "user_impact": "Users will be prompted to register authentication methods the next time they sign in. After that, they can reset their own password at aka.ms/sspr without involving the helpdesk.",
+      "admin_notes": "Requires Entra ID P1, which is included in Business Premium. Scope should normally be all users. Microsoft has migrated SSPR enablement into the Authentication Methods Policy — there is no longer a single \"SSPR on/off\" toggle exposed via Graph. Instead: if the right authentication methods are enabled with the right user targets, SSPR works. Apply enables Microsoft Authenticator + SMS + Email auth methods with includeTarget=all_users — the Microsoft-recommended SSPR baseline. Operators wanting more methods (FIDO2, Voice, OATH tokens) configure those manually via the Entra portal; Apply preserves them since each method is a separate sub-resource."
+    },
+    "ENT-05": {
+      "name": "Enable Number Matching and Additional Context for MFA Push",
+      "security_impact": "MFA fatigue attacks (also called prompt bombing) work by spamming the user with push notifications until they tap Approve by accident. Number matching breaks this: the user has to see the sign-in screen to know the number, so they cannot approve on reflex. This is one of the highest-ROI MFA hardening steps available.",
+      "user_impact": "Users will see a two-digit number on the sign-in screen and be asked to type it into the Authenticator app instead of just tapping Approve. The app will also show which application they are signing into and the approximate city the sign-in is coming from.",
+      "admin_notes": "Microsoft enabled number matching for all tenants by default in May 2023 and removed the opt-out — so the only operator-controllable bits are the app-name and location displays. Apply explicitly enables both, which both improves UX clarity AND establishes a baseline so future drift (e.g. an admin experimentally disabling them) is caught."
+    },
+    "ENT-06": {
+      "name": "Configure Entra ID Password Protection (Banned Password List)",
+      "security_impact": "Default complexity rules are easy to satisfy with passwords like \"Company2024!\" — which attackers include in their password-spray dictionaries. Banned-password enforcement rejects these predictable patterns at set-time, which is far more effective than forcing frequent rotation.",
+      "user_impact": "Users will see a rejection when they try to set a password that contains a banned term. The error message is clear; they simply pick a different password.",
+      "admin_notes": "The global Microsoft-maintained list is free. The custom list (tenant-specific banned terms) requires Entra ID P1. Keep the custom list short and memorable — 8-12 terms covering company name, brand names, and local geographic references. Anything longer has diminishing returns. Apply auto-creates the Password Rule Settings template on first use (POST /groupSettings) and updates it on subsequent edits (PATCH). Default lockout-threshold of 10 and lockout-duration of 60 seconds match Microsoft's recommendation; tune via portal if needed."
+    },
+    "ENT-07": {
+      "name": "Restrict User Consent for Third-Party Applications",
+      "security_impact": "OAuth consent phishing sends a user an innocent-looking link that ends up on a Microsoft consent screen asking for mail-read or file-read permission. Users routinely approve without reading. Restricting user consent forces every new app grant through an admin review queue — stopping this attack vector cold.",
+      "user_impact": "Users will no longer be able to approve third-party app permission requests on their own. If they encounter a legitimate app that needs consent, they will see a message asking them to request admin approval. The MSP receives these requests and approves them case-by-case.",
+      "admin_notes": "If choosing \"Do not allow user consent\", set up the admin consent request workflow first — otherwise legitimate app requests get stuck with nowhere to go. Configure the request review recipient to an MSP address that is actually monitored. The doc page at aka.ms/adminconsentrequests walks through the setup. The \"Microsoft-managed\" option is the safest baseline for tenants without an admin-consent workflow yet."
+    },
+    "ENT-09": {
+      "name": "Disable Guest User Default Permissions",
+      "security_impact": "Default guest permissions let an invited outsider browse a surprising amount of the directory — full group list, full user list, device names. If a guest account gets compromised, that becomes a reconnaissance toolkit. The Restricted role removes this.",
+      "user_impact": "Guest users will not see the organisation's global address list or group directory. They continue to see the specific teams, channels, and files they have been explicitly added to.",
+      "admin_notes": "Test with a sample guest account in each tenant before widespread rollout — a small percentage of tenants rely on guests being able to browse membership, and the change will need to be explained. Low rate of legitimate impact; high reconnaissance-prevention value."
+    },
+    "SPO-01": {
+      "name": "Restrict External Sharing (Limit to Existing Guests or Disable)",
+      "security_impact": "\"Anyone\" links give unauthenticated access to whoever has the URL — the link can be forwarded, leaked, or indexed, with no audit trail of who actually read the file. Restricting to authenticated sharing (or disabling external entirely) means every access is tied to a named identity and is loggable.",
+      "user_impact": "Users will see fewer sharing options in the Share dialog. \"Anyone with the link\" will be removed or limited to specific scoped cases. Sharing with existing guests and internal colleagues continues to work normally.",
+      "admin_notes": "Most SMB tenants can safely drop to \"Existing guests only\" without business impact. Before applying, run an audit of active anonymous links — existing links are not retroactively invalidated, but newly-created ones will follow the new policy. The full rollback path is trivial: a single PowerShell call to restore the prior setting."
+    },
+    "SPO-02": {
+      "name": "Restrict OneDrive Sync App on Unmanaged Devices",
+      "security_impact": "Without this restriction, a user signed in on a personal computer can install the OneDrive sync client and pull every shared file onto their unmanaged device. Once synced, the MSP has no visibility or recourse — the data is on a machine outside the security perimeter. Restricting the sync app stops this specific exfiltration path.",
+      "user_impact": "Users will see the OneDrive sync client refuse to run on their personal computers. Web-based access (reading files in the browser) is unaffected by this setting alone. On Entra-joined devices, nothing changes.",
+      "admin_notes": "This setting only restricts the sync app. To also block web-based downloads from unmanaged devices, pair this with a Conditional Access policy that targets the SharePoint cloud app and requires a compliant device — a separate setting that lives in CA Policies. Both controls are needed for full coverage; this one is the safer half of the pair to ship first."
+    },
+    "TEA-01": {
+      "name": "Anonymous Meeting Join and Lobby Policy",
+      "security_impact": "Anonymous join means anyone with the meeting link can enter with no authentication — no name, no audit trail. Combined with auto-admit-everyone, this is the configuration that enabled \"Zoom-bombing\" disruptions and corporate-meeting eavesdropping. The right answer depends on the tenant's business model: tenants whose external meeting attendees are always business contacts via federation should block anonymous; tenants running training, coaching, or sales meetings with non-business external customers need anonymous-allowed but lobby-held so the organiser controls admission.",
+      "user_impact": "Hardened mode: external participants must sign in with a Microsoft account (any tenant, including personal). Permissive-with-lobby mode: external participants click the link and wait in the lobby until the organiser admits them — works for Google, Yahoo, or any email provider. Open mode: external participants walk straight in without any control.",
+      "admin_notes": "CHOOSING THE RIGHT OPTION: Hardened (the original recommended) fits tenants whose external meeting attendees are always other M365 tenant users via federation. If your customer runs training sessions, coaching, sales calls, or any meetings with external NON-Microsoft users (e.g. a customer on Google Workspace), Hardened will block them — verified Apr 28, 2026 when Trilogiam's training attendee on Google Workspace was rejected at the verification screen. Permissive-with-lobby is the right answer for those tenants: anonymous can join (they go to lobby), organiser admits them, no Zoom-bombing because nobody auto-admits without organiser action. Open mode is dangerous and should never be the deliberate choice — flagged danger for that reason. Apply modifies the GLOBAL meeting policy; org-specific exception policies are untouched."
+    },
+    "TEA-02": {
+      "name": "Restrict External Access and Guest Access in Teams",
+      "security_impact": "Unrestricted Teams federation means any attacker with any Microsoft 365 tenant can send chat messages to your users with no prior relationship. This has been used for social-engineering attacks and to deliver malicious links bypassing email protection entirely.",
+      "user_impact": "Users will no longer receive chats from unknown external tenants. Existing partner communications work unchanged if those domains are on the allowlist. If a new partner needs to be added, the MSP adds the domain to the allowlist — a quick operation.",
+      "admin_notes": "Field reality (Jacques, Apr 26): most SMBs leave federation open to other M365 tenants for practicality, but should block personal Microsoft accounts (consumer chat is a phishing vector). Allowlist mode is for tenants with specific named partners and a clear \"no other federation\" requirement (legal, finance, healthcare). Apply REPLACES the allowlist — operators see the current list pre-populated in the text area before editing, and the Confirm banner shows added/removed domains as a diff before the write fires."
+    },
+    "CMP-01": {
+      "name": "Enable Unified Audit Log",
+      "security_impact": "Without the Unified Audit Log, most security incidents cannot be investigated at all — there is no record of what the attacker did. Enabling the audit log is a prerequisite for every subsequent incident-response workflow, and many compliance frameworks require it outright.",
+      "user_impact": "Users will not notice any change. Auditing is silent and has no performance impact.",
+      "admin_notes": "Should already be enabled on new tenants by default, but older tenants sometimes have it off. Verify the log is retained long enough for the client's needs — 90 days is standard, Business Premium and above can extend further. Note that even after enabling the flag, Microsoft can take up to an hour to begin ingesting events into the log."
+    },
+    "CMP-02": {
+      "name": "Monitor DLP Policy Configuration",
+      "security_impact": "DLP weakening is a stealthy attack pattern: a compromised admin account or insider threat can disable a policy or remove a sensitive-type detector to exfiltrate data without tripping standard alerts. Drift detection on DLP catches these changes within minutes of the slow-tier poll.",
+      "user_impact": "No user-facing impact — this setting is read-only in Panoptica. Users continue to see DLP block/notify messages exactly as the operator configured them via the Purview portal.",
+      "admin_notes": "AUDIT-ONLY setting. Panoptica does NOT create or modify DLP policies. Microsoft's DLP write cmdlets (New-DlpCompliancePolicy etc.) require Microsoft 365 E5 Compliance licensing when invoked via service-principal IPPS, which is above the Business Premium SMB target tier — verified Apr 27 on Trilogiam where New-DlpCompliancePolicy returned InvalidLicenseException despite the tenant having working DLP policies in Purview UI. Manage DLP policies via the Microsoft Purview portal (compliance.microsoft.com → Data Loss Prevention). Use Match in Panoptica to capture your current DLP configuration as a baseline; Panoptica then alerts on any drift. If the tenant has zero DLP policies, the setting shows grey (not_applied) with a note — Match still captures the empty state, so creating the first policy later will fire drift and surface as \"new policy added\"."
+    }
+  }
+}

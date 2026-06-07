@@ -1,0 +1,238 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Panoptica365 — Docker Compose Stack
+# ═══════════════════════════════════════════════════════════════════
+#
+# Three containers run on the MSP's box, matching Master Plan §7:
+#
+#   panoptica-app    — Node + pwsh + Python runtime (this repo's Dockerfile)
+#   panoptica-db     — MySQL 8.4 (official upstream image)
+#   panoptica-proxy  — Caddy 2 (official upstream image, auto-TLS)
+#
+# The panoptica-updater container (Stage 5 self-update) is defined below.
+# It is the ONLY container with the Docker socket; see scripts/updater.sh.
+#
+# Volumes are bind-mounted under ./data/ + ./certs/ on the host (NOT
+# Docker named volumes) so the MSP can back them up with their existing
+# tools (Veeam, rclone, restic, robocopy, etc.) without going through
+# Docker. Master Plan §7 layout — do not relocate.
+#
+# Network: only panoptica-proxy exposes ports to the host (80 + 443).
+# panoptica-app and panoptica-db are only reachable on the internal
+# Docker network — never directly from the host or external internet.
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─── Application ────────────────────────────────────────────────
+  panoptica-app:
+    # May 24, 2026 (v0.1.9) — steady-state image pulling. GHCR package was
+    # flipped to public on the panoptica365 org, so `docker compose pull`
+    # works for any MSP on any box without GitHub credentials. The Stage 2
+    # `pull_policy: build` temporary is now retired.
+    #
+    # `:latest` is the safe default for fresh installs (Stage 4 installer
+    # will substitute a pinned version like `:0.1.9` for stability — the
+    # Stage 5 updater rewrites the tag on upgrade). For dev/test installs
+    # that want to iterate on local source, the `build:` block below is
+    # preserved: `docker compose build` produces an image tagged
+    # `ghcr.io/panoptica365/app:latest` locally, and `pull_policy: missing`
+    # then finds it locally and skips the pull on the next `up`.
+    image: ghcr.io/panoptica365/app:latest
+    pull_policy: missing
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: panoptica-app
+    restart: unless-stopped
+    # NOTE: deliberately NO `env_file: - .env`. The host .env is bind-mounted
+    # at /app/.env (first volume below) and loaded by the app's own dotenv
+    # (server.js + init-schema.js). Using env_file would inject the
+    # installer's BLANK wizard placeholders (ENTRA_CLIENT_ID= etc.) at
+    # container-create time, and dotenv won't override an already-set key —
+    # so wizard-collected creds would never go live on a plain restart.
+    # dotenv-as-single-source means a restart re-reads the populated .env and
+    # the creds take effect. The DB_HOST override below still wins (dotenv
+    # won't clobber an already-set env var). Compose's own ${VAR}
+    # interpolation for db/proxy reads the project .env independently of
+    # env_file, so it is unaffected.
+    environment:
+      # Override DB_HOST inside the container — point at the compose
+      # service name regardless of what's in .env (which is typically
+      # `localhost` for native installs).
+      DB_HOST: panoptica-db
+      # Ensure container processes use the same timezone as the host
+      # (matters for log timestamps, cron schedules, email datetime
+      # formatting). TZ env var is honored by tzdata in Debian.
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Host .env bind-mounted so wizard-collected credentials persist on
+      # the host and survive container recreates. Single-file bind mount is
+      # safe: updateEnvVars writes in place (writeFileSync, no atomic rename)
+      # so the inode is preserved.
+      - ./.env:/app/.env
+      # Cert bundle — read-WRITE: the first-boot wizard's cert-provisioner
+      # generates the app-only monitoring keypair into /app/certs at setup
+      # time (the operator then uploads the public .cer to their app reg).
+      # Must NOT be :ro or generation fails at write time.
+      - ./certs:/app/certs
+      # Future-use bind mounts (no current code writes to /app/uploads
+      # or /app/logs, but Master Plan §7 reserves them).
+      - ./data/uploads:/app/uploads
+      - ./data/logs:/app/logs
+      # Monthly JSON exports (15th of each month) land here for
+      # Custodia Menses ingestion. Bind-mount so the host's nightly
+      # backup can include them.
+      - ./data/exports:/app/exports
+      # Persistent app state — currently just the license-cache sidecar
+      # (data/state/license-cache.json) that backs up the LICENSE_TOKEN
+      # env var so a fumbled .env edit doesn't take the install down.
+      # Bind-mounted so the cache survives container destroys + image
+      # pulls. Permissions: writable by the app's runtime user (root in
+      # the current image — Stage 4 hardening may add a dedicated user).
+      - ./data/state:/app/data/state
+    depends_on:
+      panoptica-db:
+        condition: service_healthy
+    networks:
+      - panoptica-net
+    # Note: no `ports:` block — the app is internal-only. Caddy
+    # reaches it over the docker network on 3000.
+
+  # ─── Database ───────────────────────────────────────────────────
+  panoptica-db:
+    image: mysql:8.4
+    container_name: panoptica-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-panoptica}
+      MYSQL_USER: ${DB_USER:-panoptica}
+      MYSQL_PASSWORD: ${DB_PASS}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Database files. Survives container destroys + image pulls.
+      # Master Plan §7 explicitly chose bind-mount over named volume
+      # so MSPs can back it up with their own tools.
+      - ./data/mysql:/var/lib/mysql
+      # Pre-update mysqldumps (Stage 5 updater will write here) and
+      # daily backups. Mounted into both the db and app containers
+      # so the eventual updater can read snapshots produced by
+      # mysqldump-from-host or from-inside-db.
+      - ./data/snapshots:/snapshots
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u
+        - root
+        - -p${MYSQL_ROOT_PASSWORD}
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - panoptica-net
+    # Note: no `ports:` block — the database is internal-only. Direct
+    # connections from the host or external internet are blocked at
+    # the docker network boundary. To run mysql client commands from
+    # the host, use:  docker compose exec panoptica-db mysql -u root -p
+
+  # ─── Reverse proxy + automatic TLS ──────────────────────────────
+  panoptica-proxy:
+    image: caddy:2
+    container_name: panoptica-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"     # ACME HTTP-01 challenge for Let's Encrypt renewals
+      - "443:443"   # Real traffic
+    environment:
+      PANOPTICA365_HOSTNAME: ${PANOPTICA365_HOSTNAME}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      TZ: ${TZ:-America/Toronto}
+      # May 20, 2026 — Caddy listen address. Defaults to the production
+      # hostname (auto Let's Encrypt path); can be overridden in .env
+      # to `:80` for HTTP-only local IP testing. The fallback is done
+      # here in compose (not in the Caddyfile) because Caddy's parser
+      # doesn't handle nested {$VAR:{$OTHER}} substitutions cleanly —
+      # see the comment in Caddyfile.
+      CADDY_LISTEN: ${CADDY_LISTEN:-${PANOPTICA365_HOSTNAME}}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Caddy persists its issued certs + ACME account data here.
+      # Losing this directory triggers re-issuance from Let's Encrypt
+      # (subject to rate limits — 5 duplicate certs per week).
+      - ./data/caddy:/data
+      - ./data/caddy-config:/config
+    # May 20, 2026 — healthcheck via Caddy's admin API on localhost:2019.
+    # The admin endpoint is bound to localhost-only by default (not exposed
+    # externally), and GET /config/ returns the running config as JSON
+    # when Caddy is up. Probed from inside the container via wget (Alpine's
+    # BusyBox provides it). Stage 5's updater will use container health
+    # status to decide whether an update succeeded; this is the foundation.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      panoptica-app:
+        condition: service_healthy
+    networks:
+      - panoptica-net
+
+  # ─── Self-update sidecar (Stage 5 / C2) ─────────────────────────
+  # A tiny, fixed-purpose watcher — the ONLY container that mounts the
+  # Docker socket. It performs admin-triggered image swaps with automatic
+  # rollback (scripts/updater.sh holds the full safety contract). No custom
+  # image is built or published: it runs stock docker:27-cli (which bundles
+  # the compose v2 plugin + BusyBox wget) with the script mounted in. Update
+  # the script via an installer re-run, never through the in-app flow (§7.6).
+  panoptica-updater:
+    image: docker:27-cli
+    container_name: panoptica-updater
+    restart: unless-stopped
+    # The install dir is mounted at its REAL host path (below) and the script
+    # runs from there, so `docker compose` resolves the app's relative bind
+    # mounts (./.env, ./certs, …) to valid host paths.
+    working_dir: ${INSTALL_DIR:-/opt/panoptica365}
+    entrypoint: ["/bin/sh", "${INSTALL_DIR:-/opt/panoptica365}/scripts/updater.sh"]
+    environment:
+      # Pin the compose project so `docker compose` from inside the container
+      # targets the SAME stack the host started. MUST match the host project
+      # name — the installer sets COMPOSE_PROJECT_NAME identically in .env.
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-panoptica365}
+      PROJECT_DIR: ${INSTALL_DIR:-/opt/panoptica365}
+      STATE_DIR: ${INSTALL_DIR:-/opt/panoptica365}/data/state
+      APP_SERVICE: panoptica-app
+      DB_SERVICE: panoptica-db
+      APP_IMAGE_REPO: ghcr.io/panoptica365/app
+      HEALTH_URL: http://panoptica-app:3000/healthz/ready
+      HEALTH_TIMEOUT: ${HEALTH_TIMEOUT:-120}
+      UPDATE_MANIFEST_URL: ${UPDATE_MANIFEST_URL:-https://updates.panoptica365.com/latest.json}
+      TZ: ${TZ:-America/Toronto}
+    volumes:
+      # Root-equivalent on the host — exactly why ONLY this tiny, no-inbound
+      # container gets it, never the internet-facing app (§7.1).
+      - /var/run/docker.sock:/var/run/docker.sock
+      # CRITICAL: mount the install dir at the SAME absolute path it has on the
+      # host. `docker compose` run from inside this container resolves the app
+      # service's relative bind mounts (./.env, ./certs, ./data/...) against the
+      # project directory and hands the resulting paths to the HOST daemon — so
+      # they must be real host paths. Mounting at a different path (e.g.
+      # /project) made compose pass /project/.env to the host, which silently
+      # created an EMPTY .env and the app booted with no DB credentials.
+      # (Fixed v1.2.1 after the P365-Test rollback incident 2026-06-01.)
+      - ${INSTALL_DIR:-/opt/panoptica365}:${INSTALL_DIR:-/opt/panoptica365}
+    networks:
+      - panoptica-net
+    # No `ports:` — no inbound network surface at all (§7.1).
+    depends_on:
+      - panoptica-app
+
+networks:
+  panoptica-net:
+    driver: bridge

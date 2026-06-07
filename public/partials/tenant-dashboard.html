@@ -1,0 +1,377 @@
+<!-- ═══ TENANT DASHBOARD (Phase 2 — Card Grid) ═══ -->
+<div class="panel-header" style="margin-bottom:0;">
+  <div class="panel-elbow" style="background: var(--p-warm);"></div>
+  <!-- Tenant switcher: JS-populated with every tenant. Picking one re-loads the
+       dashboard for that tenant while staying on the currently-active tab. -->
+  <select class="td-tenant-switcher" id="td-tenant-switcher"
+          title="Switch to another tenant's dashboard"
+          data-i18n-attr-title="tenant_dashboard.switcher_title">
+    <option data-i18n="tenant_dashboard.switcher_loading">Loading tenants…</option>
+  </select>
+  <span class="panel-title" data-i18n="tenant_dashboard.header_dashboard_label">Dashboard</span>
+  <div class="td-view-toggle" id="td-view-toggle" style="margin-left:auto;">
+    <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
+    <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
+    <button class="td-view-btn" data-view="applications" data-i18n="tenant_dashboard.view_applications">Applications</button>
+    <button class="td-view-btn" data-view="ca-policies" data-i18n="tenant_dashboard.view_ca_policies">CA Policies</button>
+    <button class="td-view-btn" data-view="intune-policies" data-i18n="tenant_dashboard.view_intune_policies">Intune Policies</button>
+    <button class="td-view-btn" data-view="change-log" data-i18n="tenant_dashboard.view_change_log">Change Log</button>
+  </div>
+  <button class="td-poll-btn" id="td-poll-now" data-role-required="member" title="Poll this tenant now (full scan)" data-i18n-attr-title="tenant_dashboard.btn_poll_now_title" data-i18n="tenant_dashboard.btn_poll_now">&#x21bb; Poll Now</button>
+  <button class="td-poll-btn" id="td-log-change-btn" data-role-required="member" title="Log a manual change event for this tenant" style="margin-left:8px;" data-i18n-attr-title="tenant_dashboard.btn_log_change_title" data-i18n="tenant_dashboard.btn_log_change">&#x270E; Log Change</button>
+</div>
+
+<!-- Info Bar -->
+<div class="td-info-bar" id="td-info-bar">
+  <div class="td-info-item">
+    <div class="label" data-i18n="tenant_dashboard.info_display_name">Display Name</div>
+    <div class="td-info-value" id="td-display-name">—</div>
+  </div>
+  <div class="td-info-item">
+    <div class="label" data-i18n="tenant_dashboard.info_status">Status</div>
+    <div class="td-info-value" id="td-status">—</div>
+  </div>
+  <div class="td-info-item">
+    <div class="label" data-i18n="tenant_dashboard.info_polling_interval">Polling Interval</div>
+    <div class="td-info-value mono" id="td-polling">—</div>
+  </div>
+  <div class="td-info-item">
+    <div class="label" data-i18n="tenant_dashboard.info_last_polled">Last Polled</div>
+    <div class="td-info-value mono" id="td-last-polled">—</div>
+  </div>
+  <div class="td-info-item">
+    <div class="label" data-i18n="tenant_dashboard.info_poll_count">Poll Count</div>
+    <div class="td-info-value mono" id="td-poll-count">—</div>
+  </div>
+</div>
+
+<!-- Card Grid Content Area (Overview) -->
+<div id="td-card-grid" class="td-card-grid">
+  <div class="loading-container" style="height:200px;">
+    <div class="loading-spinner"></div>
+    <span data-i18n="tenant_dashboard.loading_tenant">Loading tenant data...</span>
+  </div>
+</div>
+
+<!-- ─── What's going on today? (Sonnet tenant digest) ─── -->
+<!--
+  24-hour correlation narrative for this tenant. Uses Sonnet (not Haiku)
+  because the task is cross-source synthesis. Cached 15 minutes server-side
+  so hitting this repeatedly doesn't burn tokens. Replaces the unscoped
+  per-alert "CORRELATIONS" section that used to confabulate cross-event
+  narratives — scope here is explicit: one tenant, last 24h.
+-->
+<div id="td-digest-card" class="briefing-card" style="margin:12px 0;">
+  <div class="panel-header">
+    <div class="panel-elbow" style="background: var(--p-accent, var(--p-secondary));"></div>
+    <span class="panel-title" data-i18n="tenant_dashboard.digest_title">What's going on today?</span>
+    <span class="label" style="margin-left:auto;" data-i18n="tenant_dashboard.digest_label_sonnet">Sonnet Digest</span>
+  </div>
+  <div id="td-digest-controls" style="padding:8px 0 4px 0; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <button id="td-digest-generate" class="btn-primary" data-role-required="member" data-i18n="tenant_dashboard.digest_generate">Generate digest</button>
+    <button id="td-digest-refresh" class="btn-secondary" data-role-required="member" style="display:none;" title="Bypass cache and regenerate" data-i18n-attr-title="tenant_dashboard.digest_refresh_title" data-i18n="tenant_dashboard.digest_refresh">Refresh</button>
+    <span id="td-digest-meta" style="font-size:0.8rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div id="td-digest-output" class="td-digest-output" style="display:none; margin-top:8px; padding:12px; background:var(--p-surface-alt); border:1px solid var(--p-border); border-radius:6px; font-size:0.95rem; line-height:1.6; color:var(--p-text);"></div>
+</div>
+
+<!-- ─── Ask Claude (Per-Tenant) — between cards and collapsible lists ─── -->
+<!-- A3 (May 10, 2026): hide the whole panel for viewers — there's no value
+     in showing an Ask Claude box to someone who can't trigger AI calls.
+     Operator+admin still see the panel. -->
+<div id="td-ask-claude" class="briefing-card" data-role-required="member" style="margin:12px 0;">
+  <div class="panel-header">
+    <div class="panel-elbow" style="background: var(--p-secondary);"></div>
+    <span class="panel-title" data-i18n="tenant_dashboard.ask_claude_title">Ask Claude</span>
+    <span class="label" style="margin-left:auto;" data-i18n="tenant_dashboard.ask_claude_label">AI Analysis</span>
+  </div>
+  <div id="td-chat-thread" class="chat-thread" style="display:none;"></div>
+  <div class="claude-chat-input" id="td-chat-container">
+    <input type="text" id="td-chat-input" placeholder="Ask Claude about this tenant..." data-i18n-attr-placeholder="tenant_dashboard.ask_claude_placeholder" maxlength="1000">
+    <button id="td-chat-send" data-role-required="member" data-i18n="tenant_dashboard.ask_btn">Ask</button>
+    <button id="td-chat-new" class="chat-new-btn" data-role-required="member" style="display:none;" title="Start new conversation" data-i18n-attr-title="tenant_dashboard.ask_new_title" data-i18n="tenant_dashboard.ask_new_btn">New</button>
+  </div>
+</div>
+
+<!-- Collapsible List Panels (below Ask Claude) -->
+<div id="td-list-panels" class="td-card-grid"></div>
+
+<!-- Per-Tenant Alerts View (hidden by default) -->
+<div id="td-alerts-view" style="display:none;"></div>
+
+<!-- ═══ Per-Tenant Applications View (Feature 8.9, hidden by default) ═══ -->
+<!--
+  Known-good / drift inventory of consented enterprise apps + app registrations.
+  Read-only toward the tenant: no revoke button — the Entra deep-link sends the
+  operator to the Enterprise Applications blade to remove a dead app there.
+-->
+<div id="td-applications-view" style="display:none;">
+  <div class="td-apps-actions">
+    <button class="btn-primary" id="td-apps-save-btn" data-role-required="member" data-i18n="tenant_dashboard.applications.save_btn">Save</button>
+    <button class="btn-secondary" id="td-apps-refresh-btn" data-role-required="member" data-i18n="tenant_dashboard.applications.refresh_btn">Refresh</button>
+    <a class="btn-secondary" id="td-apps-entra-link" href="https://entra.microsoft.com/" target="_blank" rel="noopener" data-i18n="tenant_dashboard.applications.entra_link">Open in Entra ↗</a>
+    <span id="td-apps-status" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div style="font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:10px;" data-i18n="tenant_dashboard.applications.help_text">
+    Review each app's permissions, tick "Known good", then Save. Known-good apps are watched for permission drift; the rest get a Sonnet triage dot (green/yellow/red — triage, not a guarantee). Panoptica never changes the tenant.
+  </div>
+  <!-- Save/Refresh progress + result banner (Feature 8.9) — persists so it's
+       still visible if the operator tabs away and comes back. -->
+  <div id="td-apps-progress" class="td-apps-progress" style="display:none;"></div>
+  <div id="td-apps-list">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.applications.loading">Loading applications…</span></div>
+  </div>
+</div>
+
+<!-- Per-Tenant CA Policies View (hidden by default) -->
+<div id="td-ca-view" style="display:none;">
+  <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+    <button class="btn-primary" id="td-ca-assign-btn" data-role-required="member" data-i18n="tenant_dashboard.ca_assign_btn">+ Assign Template</button>
+    <button class="btn-secondary" id="td-ca-check-all-btn" data-role-required="member" data-i18n="tenant_dashboard.ca_check_all_btn">Check All for Drift</button>
+    <span id="td-ca-status-summary" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div id="td-ca-assignments" class="ca-template-grid">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.ca_loading">Loading CA assignments...</span></div>
+  </div>
+
+  <!-- Drift Log -->
+  <div id="td-ca-drift-log-section" style="margin-top:24px; display:none;">
+    <div class="td-section-header" data-i18n="tenant_dashboard.ca_drift_section">Recent Drift Events</div>
+    <div id="td-ca-drift-log"></div>
+  </div>
+
+  <!-- Assign Template Modal -->
+  <div class="modal-overlay" id="td-ca-assign-overlay" style="display:none;">
+    <div class="modal" style="width:620px; max-width:94vw; max-height:88vh;">
+      <div class="modal-header">
+        <div class="mh-elbow"></div>
+        <span class="mh-title" data-i18n="tenant_dashboard.ca_assign_modal_title">Assign CA Templates</span>
+      </div>
+      <div class="modal-body">
+        <div class="ca-assign-selectall">
+          <label class="checkbox-row">
+            <input type="checkbox" id="td-ca-select-all"> <span data-i18n="tenant_dashboard.select_all">Select All</span>
+          </label>
+        </div>
+        <div id="td-ca-template-list" class="modal-scroll-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="td-ca-assign-cancel" data-i18n="modals.cancel">Cancel</button>
+        <button class="btn-primary" id="td-ca-assign-submit" data-role-required="member" data-i18n="tenant_dashboard.ca_assign_submit">Assign Selected</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Per-Tenant Change Log View (hidden by default) ═══ -->
+<!--
+  Operator-logged change events. Surfaces context to the MSP tech reviewing
+  alerts ("operator deployed CA templates at 14:00 — drift is expected")
+  and feeds the Haiku daily digest as NARRATIVE CONTEXT ONLY. Notes never
+  suppress or downgrade alert severity — that governance line is enforced
+  on the API + prompt side, not in this UI.
+-->
+<div id="td-changelog-view" style="display:none;">
+  <div class="cl-nav" style="display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+    <button class="btn-secondary" id="cl-prev-day" title="Previous day" data-i18n-attr-title="tenant_dashboard.cl_prev_day_title" data-i18n="tenant_dashboard.cl_prev_day">&#x25C0; Prev</button>
+    <input type="date" id="cl-date-input" class="form-control" style="width:170px;">
+    <button class="btn-secondary" id="cl-next-day" title="Next day" data-i18n-attr-title="tenant_dashboard.cl_next_day_title" data-i18n="tenant_dashboard.cl_next_day">Next &#x25B6;</button>
+    <button class="btn-secondary" id="cl-today" title="Jump to today" data-i18n-attr-title="tenant_dashboard.cl_today_title" data-i18n="tenant_dashboard.cl_today">Today</button>
+    <span id="cl-date-label" style="margin-left:12px; font-size:0.9rem; color:var(--p-text-secondary);"></span>
+    <button class="btn-primary" id="cl-log-change-btn-2" data-role-required="member" style="margin-left:auto;" data-i18n="tenant_dashboard.cl_log_change_btn">&#x270E; Log Change</button>
+  </div>
+
+  <div style="font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:8px;" data-i18n="tenant_dashboard.cl_help_text">
+    Click any event to edit or delete it. Panoptica365-initiated entries are read-only.
+  </div>
+
+  <div id="cl-list" class="cl-list">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.cl_loading">Loading change events...</span></div>
+  </div>
+
+  <!-- ─── Slide-out form (create / edit) ─── -->
+  <div class="alert-overlay" id="cl-form-overlay"></div>
+  <div class="alert-slideout" id="cl-form-slideout">
+    <div class="alert-slideout-header">
+      <button class="alert-slideout-close" id="cl-form-close">&times;</button>
+      <div id="cl-form-title" style="font-weight:600; font-size:1.05rem;" data-i18n="tenant_dashboard.cl_form_title">Log change event</div>
+    </div>
+    <div class="alert-slideout-body">
+      <!-- ─── Read-only panel (shown when viewing a Panoptica-initiated event) ─── -->
+      <div id="cl-readonly" class="cl-readonly" style="display:none;">
+        <div class="cl-ro-source-badge">
+          <span class="cl-ro-source-dot"></span>
+          <span id="cl-ro-source-label" data-i18n="tenant_dashboard.cl_ro_source_label">Panoptica-initiated</span>
+        </div>
+
+        <div class="cl-ro-category" id="cl-ro-category">—</div>
+
+        <div class="cl-ro-meta">
+          <div class="cl-ro-meta-item">
+            <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_when">When</div>
+            <div class="cl-ro-value" id="cl-ro-when">—</div>
+          </div>
+          <div class="cl-ro-meta-item">
+            <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_impact">Impact</div>
+            <div class="cl-ro-value"><span class="cl-ro-impact-pill" id="cl-ro-impact">—</span></div>
+          </div>
+          <div class="cl-ro-meta-item cl-ro-meta-wide">
+            <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_surface">Affected surface</div>
+            <div class="cl-ro-value cl-ro-surfaces" id="cl-ro-surfaces">—</div>
+          </div>
+          <div class="cl-ro-meta-item cl-ro-meta-wide">
+            <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_logged_by">Logged by</div>
+            <div class="cl-ro-value mono" id="cl-ro-author">—</div>
+          </div>
+        </div>
+
+        <div class="cl-ro-section">
+          <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_description">Description</div>
+          <div class="cl-ro-description" id="cl-ro-description">—</div>
+        </div>
+
+        <div class="cl-ro-section" id="cl-ro-ctag-section">
+          <div class="cl-ro-label" data-i18n="tenant_dashboard.cl_ro_label_ctag">Correlation tag</div>
+          <div class="cl-ro-value mono cl-ro-ctag" id="cl-ro-ctag">—</div>
+        </div>
+
+        <div class="cl-ro-notice" id="cl-ro-notice" data-i18n="tenant_dashboard.cl_ro_notice">
+          Recorded automatically when Panoptica365 mutated this tenant. The AI digest may reference this event as narrative context; it never affects alert severity. To silence recurring alerts, use the Exemptions system.
+        </div>
+
+        <div class="cl-ro-footer">
+          <button type="button" class="btn-primary" id="cl-ro-close-btn" data-i18n="tenant_dashboard.cl_ro_close">Close</button>
+        </div>
+      </div>
+
+      <form id="cl-form" autocomplete="off" onsubmit="return false;">
+        <input type="hidden" id="cl-form-id" value="">
+
+        <div class="form-group">
+          <label data-i18n="tenant_dashboard.cl_form_label_category">Category</label>
+          <select id="cl-form-category" class="form-control" required>
+            <option value="" data-i18n="tenant_dashboard.cl_form_select_category">Select category...</option>
+            <option value="ca_deploy" data-i18n="tenant_dashboard.cl_cat_ca_deploy">CA — deploy template</option>
+            <option value="ca_retire" data-i18n="tenant_dashboard.cl_cat_ca_retire">CA — retire policy</option>
+            <option value="ca_edit" data-i18n="tenant_dashboard.cl_cat_ca_edit">CA — edit policy</option>
+            <option value="intune_push" data-i18n="tenant_dashboard.cl_cat_intune_push">Intune — push policy</option>
+            <option value="intune_retire" data-i18n="tenant_dashboard.cl_cat_intune_retire">Intune — retire policy</option>
+            <option value="intune_edit" data-i18n="tenant_dashboard.cl_cat_intune_edit">Intune — edit policy</option>
+            <option value="named_location" data-i18n="tenant_dashboard.cl_cat_named_location">Named Location — edit</option>
+            <option value="remediation" data-i18n="tenant_dashboard.cl_cat_remediation">Remediation — run</option>
+            <option value="manual_cleanup" data-i18n="tenant_dashboard.cl_cat_manual_cleanup">Manual cleanup</option>
+            <option value="incident_response" data-i18n="tenant_dashboard.cl_cat_incident_response">Incident response</option>
+            <option value="migration" data-i18n="tenant_dashboard.cl_cat_migration">Migration work</option>
+            <option value="other" data-i18n="tenant_dashboard.cl_cat_other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="tenant_dashboard.cl_form_label_surface">Affected surface</label>
+          <div style="font-size:0.78rem; color:var(--p-text-secondary); margin-top:-2px; margin-bottom:6px;" data-i18n="tenant_dashboard.cl_form_hint_surface">Select all that apply. Drives LLM context matching.</div>
+          <div class="cl-chip-group" id="cl-form-surfaces">
+            <label class="cl-chip"><input type="checkbox" value="ca"> <span data-i18n="tenant_dashboard.cl_surface_ca">CA</span></label>
+            <label class="cl-chip"><input type="checkbox" value="intune"> <span data-i18n="tenant_dashboard.cl_surface_intune">Intune</span></label>
+            <label class="cl-chip"><input type="checkbox" value="identity"> <span data-i18n="tenant_dashboard.cl_surface_identity">Identity</span></label>
+            <label class="cl-chip"><input type="checkbox" value="mfa"> <span data-i18n="tenant_dashboard.cl_surface_mfa">MFA</span></label>
+            <label class="cl-chip"><input type="checkbox" value="named_locations"> <span data-i18n="tenant_dashboard.cl_surface_named_locations">Named Locations</span></label>
+            <label class="cl-chip"><input type="checkbox" value="sharepoint"> <span data-i18n="tenant_dashboard.cl_surface_sharepoint">SharePoint</span></label>
+            <label class="cl-chip"><input type="checkbox" value="exchange"> <span data-i18n="tenant_dashboard.cl_surface_exchange">Exchange</span></label>
+            <label class="cl-chip"><input type="checkbox" value="devices"> <span data-i18n="tenant_dashboard.cl_surface_devices">Devices</span></label>
+            <label class="cl-chip"><input type="checkbox" value="other"> <span data-i18n="tenant_dashboard.cl_surface_other">Other</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="tenant_dashboard.cl_form_label_started">Started at</label>
+          <input type="datetime-local" id="cl-form-started" class="form-control" required>
+          <div class="cl-quick-pick">
+            <button type="button" class="btn-secondary cl-quick-btn" data-offset="0" data-i18n="tenant_dashboard.cl_quick_now">Now</button>
+            <button type="button" class="btn-secondary cl-quick-btn" data-offset="15" data-i18n="tenant_dashboard.cl_quick_15m">15m ago</button>
+            <button type="button" class="btn-secondary cl-quick-btn" data-offset="60" data-i18n="tenant_dashboard.cl_quick_1h">1h ago</button>
+            <button type="button" class="btn-secondary cl-quick-btn" data-offset="240" data-i18n="tenant_dashboard.cl_quick_4h">4h ago</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><span data-i18n="tenant_dashboard.cl_form_label_ended">Ended at</span> <span style="font-weight:normal; color:var(--p-text-secondary); font-size:0.8rem;" data-i18n="tenant_dashboard.cl_form_ended_hint">(optional — leave blank for point-in-time)</span></label>
+          <input type="datetime-local" id="cl-form-ended" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label data-i18n="tenant_dashboard.cl_form_label_impact">Impact estimate</label>
+          <div style="font-size:0.78rem; color:var(--p-text-secondary); margin-top:-2px; margin-bottom:6px;" data-i18n="tenant_dashboard.cl_form_hint_impact">How much alert noise do you expect this change to cause? Select one.</div>
+          <div class="cl-chip-group" id="cl-form-impact">
+            <label class="cl-chip"><input type="radio" name="cl-impact" value="low"> <span data-i18n="tenant_dashboard.cl_impact_low">Low</span></label>
+            <label class="cl-chip"><input type="radio" name="cl-impact" value="medium"> <span data-i18n="tenant_dashboard.cl_impact_medium">Medium</span></label>
+            <label class="cl-chip"><input type="radio" name="cl-impact" value="high"> <span data-i18n="tenant_dashboard.cl_impact_high">High</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><span data-i18n="tenant_dashboard.cl_form_label_description">Description</span> <span style="font-weight:normal; color:var(--p-text-secondary); font-size:0.8rem;" data-i18n="tenant_dashboard.cl_form_desc_hint">(optional, max 500 chars)</span></label>
+          <textarea id="cl-form-description" class="form-control" rows="4" maxlength="500" placeholder="What did you do and why? Kept short and factual — this shows up in reports." data-i18n-attr-placeholder="tenant_dashboard.cl_form_desc_placeholder"></textarea>
+          <div style="font-size:0.75rem; color:var(--p-text-secondary); margin-top:4px;"><span id="cl-form-desc-count">0</span> / 500</div>
+        </div>
+
+        <div class="cl-form-notice" data-i18n-html="tenant_dashboard.cl_form_governance_html">
+          <strong>Governance note:</strong> this entry is used by the AI digest as narrative context only. It will never suppress or downgrade alerts. If you need to silence a recurring alert, use the Exemptions system instead.
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button type="button" class="btn-primary" id="cl-form-submit" data-role-required="member" data-i18n="tenant_dashboard.cl_form_save">Save</button>
+          <button type="button" class="btn-secondary" id="cl-form-cancel" data-i18n="tenant_dashboard.cl_form_cancel">Cancel</button>
+          <button type="button" class="btn-secondary" id="cl-form-delete" data-role-required="admin" style="margin-left:auto; display:none; color:var(--p-danger);" data-i18n="tenant_dashboard.cl_form_delete">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Per-Tenant Intune Policies View (hidden by default) -->
+<div id="td-intune-view" style="display:none;">
+  <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+    <button class="btn-primary" id="td-intune-add-btn" data-role-required="member" data-i18n="tenant_dashboard.intune_add_btn">+ Add Policies</button>
+    <button class="btn-secondary" id="td-intune-check-all-btn" data-role-required="member" data-i18n="tenant_dashboard.intune_check_all_btn">Check All for Drift</button>
+    <span id="td-intune-status-summary" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div id="td-intune-deployments" class="ca-template-grid">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.intune_loading">Loading Intune deployments...</span></div>
+  </div>
+
+  <!-- Add Policies Modal -->
+  <div class="modal-overlay" id="td-intune-add-overlay" style="display:none;">
+    <div class="modal" style="width:620px; max-width:94vw; max-height:88vh;">
+      <div class="modal-header">
+        <div class="mh-elbow"></div>
+        <span class="mh-title" data-i18n="tenant_dashboard.intune_add_modal_title">Add Intune Policies</span>
+      </div>
+      <div class="modal-body">
+        <div class="ca-assign-selectall" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <label class="checkbox-row">
+            <input type="checkbox" id="td-intune-select-all"> <span data-i18n="tenant_dashboard.select_all">Select All</span>
+          </label>
+          <span style="margin-left:auto; font-size:0.8rem; color:var(--p-text-muted);" data-i18n="tenant_dashboard.intune_default_assignment">Default Assignment:</span>
+          <select id="td-intune-default-assign" class="form-control" style="width:auto; min-width:120px; font-size:0.8rem; padding:4px 8px;">
+            <option value="none" data-i18n="tenant_dashboard.intune_assign_none">None</option>
+            <option value="all_users" data-i18n="tenant_dashboard.intune_assign_all_users">All Users</option>
+            <option value="all_devices" data-i18n="tenant_dashboard.intune_assign_all_devices">All Devices</option>
+          </select>
+        </div>
+        <div id="td-intune-template-list" class="modal-scroll-list"></div>
+        <!-- Deploy progress (hidden until deploy starts) -->
+        <div id="td-intune-bulk-progress" style="display:none; margin-top:12px;">
+          <div style="font-size:0.85rem; color:var(--p-text-muted); margin-bottom:6px;" id="td-intune-bulk-status" data-i18n="tenant_dashboard.intune_deploying">Deploying...</div>
+          <div style="background:rgba(150,150,180,0.15); border-radius:4px; height:6px; overflow:hidden;">
+            <div id="td-intune-bulk-bar" style="height:100%; width:0%; background:var(--p-accent); transition:width 0.3s;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="td-intune-add-cancel" data-i18n="modals.cancel">Cancel</button>
+        <button class="btn-secondary" id="td-intune-add-only" data-role-required="member" data-i18n="tenant_dashboard.intune_add_only_btn">Add (Monitor Only)</button>
+        <button class="btn-primary" id="td-intune-add-deploy" data-role-required="member" data-i18n="tenant_dashboard.intune_add_deploy_btn">Add &amp; Deploy</button>
+      </div>
+    </div>
+  </div>
+</div>

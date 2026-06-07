@@ -5,7 +5,7 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
-## Versión 0.1.48 — 2026-06-06
+## Versión 0.1.49 — 2026-06-06
 
 ### Corregido: el monitor de estado ya no marca como fallidos los puntos de conexión de Graph limitados por la licencia
 

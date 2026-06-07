@@ -1,0 +1,27 @@
+{
+  "card_number": 5,
+  "slug": "email-security-settings",
+  "icon": "mail",
+  "titles": {
+    "en": "Email Security Settings",
+    "fr": "Paramètres de sécurité courriel",
+    "es": "Ajustes de seguridad del correo"
+  },
+  "subtitles": {
+    "en": "SPF/DKIM/DMARC, anti-phishing, Safe Links, quarantine, forwarding controls, and mailbox auditing for Exchange Online.",
+    "fr": "SPF/DKIM/DMARC, anti-hameçonnage, Safe Links, quarantaine, contrôle du transfert et audit des boîtes aux lettres pour Exchange Online.",
+    "es": "SPF/DKIM/DMARC, antiphishing, Safe Links, cuarentena, control de reenvío y auditoría de buzón para Exchange Online."
+  },
+  "lessons": [
+    "email-hardening-pre-flight",
+    "spf-dkim-dmarc",
+    "anti-phishing-policies",
+    "safe-links-and-safe-attachments",
+    "preset-policies-and-operating-at-scale",
+    "quarantine-policies-and-user-release",
+    "auto-forwarding-and-inbox-rules",
+    "outbound-spam-and-smtp-auth",
+    "mail-flow-rules-and-mailtips",
+    "mailbox-auditing"
+  ]
+}

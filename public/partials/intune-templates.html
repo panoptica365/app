@@ -1,0 +1,151 @@
+<!-- ═══ INTUNE POLICY TEMPLATES ═══ -->
+<div class="panel-header" style="margin-bottom:16px;">
+  <div class="panel-elbow" style="background: var(--p-warm-bright);"></div>
+  <span class="panel-title" data-i18n="intune_templates.title">Intune — Policy Templates</span>
+</div>
+
+<!-- Action Bar -->
+<div class="ca-action-bar" style="display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
+  <button class="btn-primary" id="intune-import-btn" data-role-required="admin" data-i18n="intune_templates.import_btn">+ Import Templates</button>
+  <button class="btn-secondary" id="intune-export-btn" data-role-required="admin" data-i18n="intune_templates.export_btn">Export from Tenant</button>
+  <span class="ca-count" id="intune-template-count" style="color:var(--p-text-muted); font-size:0.85rem;"></span>
+  <!-- Category filter -->
+  <select id="intune-category-filter" class="form-control" style="width:auto; min-width:180px; margin-left:auto;">
+    <option value="" data-i18n="intune_templates.all_categories">All Categories</option>
+  </select>
+</div>
+
+<!-- Template Cards -->
+<div id="intune-template-list" class="ca-template-grid">
+  <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="intune_templates.loading">Loading templates...</span></div>
+</div>
+
+<!-- ═══ EXPORT MODAL ═══ -->
+<div class="modal-overlay" id="intune-export-overlay" style="display:none;">
+  <div class="modal" style="width:600px;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="intune_templates.export_modal_title">Export Intune Policies</span>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--p-text-muted); font-size:0.85rem; margin:0 0 12px 0;" data-i18n="intune_templates.export_intro">
+        Select a tenant to export all Intune policies. You'll get a ZIP file with one JSON per policy.
+        Delete the ones you don't want, then import the rest as templates.
+      </p>
+      <div class="form-group">
+        <label data-i18n="intune_templates.label_source_tenant">Source Tenant</label>
+        <select id="intune-export-tenant" class="form-control">
+          <option value="" data-i18n="intune_templates.option_select_tenant">Select a tenant...</option>
+        </select>
+      </div>
+      <div id="intune-export-progress" style="display:none;">
+        <div class="report-gen-stage">
+          <span class="stage-indicator pending" id="intune-export-indicator"></span>
+          <span class="stage-label" id="intune-export-status" data-i18n="intune_templates.fetching_policies">Fetching policies...</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="intune-export-cancel-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="intune-export-start-btn" data-role-required="admin" data-i18n="intune_templates.export_policies_btn">Export Policies</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="modal-overlay" id="intune-import-overlay" style="display:none;">
+  <div class="modal" style="width:720px; max-height:85vh;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="intune_templates.import_modal_title">Import Policy Templates</span>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--p-text-muted); font-size:0.85rem; margin:0 0 12px 0;" data-i18n="intune_templates.import_intro">
+        Upload the exported ZIP (or a single JSON). Select which policies you want to import as templates.
+      </p>
+      <div class="form-group">
+        <label data-i18n="intune_templates.label_zip_file">ZIP or JSON File</label>
+        <input type="file" id="intune-import-file" accept=".json,.zip" class="form-control" style="padding:8px;">
+      </div>
+      <div id="intune-import-preview" style="display:none;">
+        <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
+          <!-- "Policies found:" + dynamic count is split: label is i18n'd, count is JS-injected -->
+          <strong style="color:var(--p-text-bright);"><span data-i18n="intune_templates.policies_found">Policies found:</span> <span id="intune-import-count">0</span></strong>
+          <button class="btn-small" id="intune-import-select-all" style="font-size:0.75rem;" data-i18n="intune_templates.select_all">Select All</button>
+          <button class="btn-small" id="intune-import-select-none" style="font-size:0.75rem;" data-i18n="intune_templates.select_none">Select None</button>
+          <span style="margin-left:auto; font-size:0.8rem; color:var(--p-text-muted);" data-i18n="intune_templates.default_assignment">Default Assignment:</span>
+          <select id="intune-import-default-assign" class="form-control" style="width:auto; min-width:120px; font-size:0.8rem; padding:4px 8px;">
+            <option value="none" data-i18n="intune_templates.assign_none">None</option>
+            <option value="all_users" data-i18n="intune_templates.assign_all_users">All Users</option>
+            <option value="all_devices" data-i18n="intune_templates.assign_all_devices">All Devices</option>
+          </select>
+        </div>
+        <div id="intune-import-list" class="modal-scroll-list" style="max-height:40vh; border:1px solid var(--p-border-subtle); border-radius:4px; padding:8px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="intune-import-cancel-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="intune-import-submit-btn" data-role-required="admin" disabled data-i18n="intune_templates.import_selected_btn">Import Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="intune-detail-overlay" style="display:none;">
+  <div class="modal" style="width:780px; max-height:85vh;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" id="intune-detail-title" data-i18n="intune_templates.detail_title">Template Details</span>
+    </div>
+    <div class="modal-body">
+      <div id="intune-detail-body"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="intune-detail-delete-btn" data-role-required="admin" data-i18n="intune_templates.delete_btn">Delete</button>
+      <button class="btn-secondary" id="intune-detail-close-btn" data-i18n="modals.close">Close</button>
+      <button class="btn-primary" id="intune-detail-save-btn" data-role-required="admin" data-i18n="intune_templates.save_changes_btn">Save Changes</button>
+      <button class="btn-primary" id="intune-detail-deploy-btn" data-role-required="member" data-i18n="intune_templates.deploy_to_tenant_btn">Deploy to Tenant</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEPLOY MODAL ═══ -->
+<div class="modal-overlay" id="intune-deploy-overlay" style="display:none;">
+  <div class="modal" style="width:550px;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="intune_templates.deploy_modal_title">Deploy Policy</span>
+    </div>
+    <div class="modal-body">
+      <!-- TODO i18n: "Deploy <name> to:" has dynamic content inside <strong>.
+           Phase 4 will move that to t() with interpolation: t('intune_templates.deploy_intro', {name}). -->
+      <p style="color:var(--p-text-muted); font-size:0.85rem; margin:0 0 12px 0;">
+        Deploy <strong id="intune-deploy-template-name" style="color:var(--p-text-bright);"></strong> to:
+      </p>
+      <div class="form-group">
+        <label data-i18n="intune_templates.label_target_tenant">Target Tenant</label>
+        <select id="intune-deploy-tenant" class="form-control">
+          <option value="" data-i18n="intune_templates.option_select_tenant">Select a tenant...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="intune_templates.label_assignment_target">Assignment Target</label>
+        <select id="intune-deploy-assign" class="form-control">
+          <option value="none" data-i18n="intune_templates.assign_none">None</option>
+          <option value="all_users" data-i18n="intune_templates.assign_all_users">All Users</option>
+          <option value="all_devices" data-i18n="intune_templates.assign_all_devices">All Devices</option>
+        </select>
+      </div>
+      <div id="intune-deploy-progress" style="display:none;">
+        <div class="report-gen-stage">
+          <span class="stage-indicator pending" id="intune-deploy-indicator"></span>
+          <span class="stage-label" id="intune-deploy-status" data-i18n="intune_templates.deploying_policy">Deploying policy...</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="intune-deploy-cancel-btn" data-i18n="modals.cancel">Cancel</button>
+      <button class="btn-primary" id="intune-deploy-start-btn" data-role-required="member" data-i18n="intune_templates.deploy_btn">Deploy</button>
+    </div>
+  </div>
+</div>

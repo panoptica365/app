@@ -1,0 +1,124 @@
+{
+  "security_settings": {
+    "EXO-01": {
+      "writer_recommended_label": "Le préréglage « Activé » active les trois fonctionnalités MailTips (conseils généraux, avertissements pour les destinataires externes, avertissements pour les grands auditoires) et définit le seuil de grand auditoire à 25 — conformément aux directives CIS.",
+      "writer_options": {
+        "all_mailtips_enabled_threshold_25_recommended": "Tous les MailTips activés, seuil 25 (recommandé)",
+        "external_recipient_warnings_off_microsoft_default": "Avertissements pour les destinataires externes désactivés (valeur par défaut de Microsoft)"
+      }
+    },
+    "EXO-02": {
+      "writer_recommended_label": "La désactivation du transfert automatique sur le domaine distant par défaut bloque le vecteur d’exfiltration BEC le plus courant. Les domaines distants non par défaut (fédérations partenaires délibérées) ne sont pas affectés.",
+      "writer_options": {
+        "auto_forward_disabled_on_default_domain_recommended": "Transfert automatique DÉSACTIVÉ sur le domaine par défaut (recommandé)",
+        "auto_forward_enabled_on_default_domain_bec_exfiltration_vector": "Transfert automatique activé sur le domaine par défaut (vecteur d’exfiltration BEC)"
+      }
+    },
+    "EXO-03": {
+      "writer_recommended_label": "L’audit des boîtes aux lettres est le prérequis de toute enquête judiciaire basée sur les courriels. Microsoft l’active par défaut sur les nouvelles boîtes aux lettres depuis 2019, mais les boîtes aux lettres héritées ou migrées peuvent l’avoir désactivé. Apply synchronise chaque boîte aux lettres utilisateur à AuditEnabled = $true.",
+      "writer_options": {
+        "enabled_every_user_mailbox_audited_recommended": "Activé — chaque boîte aux lettres utilisateur est auditée (recommandé)",
+        "disabled_no_per_mailbox_audit_logging_forensics_gap": "Désactivé — aucune journalisation d’audit par boîte aux lettres (lacune judiciaire)"
+      }
+    },
+    "EXO-05": {
+      "writer_recommended_label": "Le préréglage « Bloquer + alerter le MSP » empêche les comptes compromis d’envoyer davantage de courriels sortants (libération automatique après 24 h) ET alerte la liste de destinataires du MSP afin que les opérateurs puissent enquêter. La valeur par défaut de Microsoft est alerte seulement, ce qui ne bloque PAS le pourriel.",
+      "writer_options": {
+        "block_compromised_accounts_24h_alert_msp_recipients_recommended": "Bloquer les comptes compromis (24 h) + alerter les destinataires MSP (recommandé)",
+        "microsoft_default_alert_only_does_not_block_compromised_accounts": "Valeur par défaut de Microsoft (alerte seulement — ne bloque PAS les comptes compromis)"
+      }
+    },
+    "EXO-06": {
+      "writer_recommended_label": "Standard seul est le minimum que chaque locataire devrait avoir — l’activer à l’échelle du locataire est la mesure de renforcement EXO offrant le plus de valeur. Standard + Strict ajoute une défense en profondeur pour les locataires ayant des cibles à haute valeur (direction, finances, juridique). Désactivé correspond aux « stratégies Microsoft par défaut », que Microsoft reconnaît comme permissives.",
+      "writer_options": {
+        "standard_strict_defense_in_depth_strict_for_high_risk_users_on_top_of_standard_baseline": "Standard + Strict (défense en profondeur — Strict pour les utilisateurs à risque élevé par-dessus la base Standard)",
+        "standard_for_all_users_recommended_baseline": "Standard pour tous les utilisateurs (base recommandée)",
+        "no_presets_tenant_runs_on_default_policies_microsoft_acknowledges_these_are_loose": "Aucun préréglage — le locataire utilise les stratégies par défaut (Microsoft reconnaît qu’elles sont permissives)"
+      }
+    },
+    "EXO-08": {
+      "writer_recommended_label": "Définir ce paramètre à « Désactivé » désactive la soumission SMTP avec authentification de base à l’échelle du locataire. Des exceptions par boîte aux lettres demeurent possibles pour les comptes de service précis qui ont réellement besoin de SMTP AUTH.",
+      "writer_options": {
+        "smtp_auth_disabled_tenant_wide_recommended": "SMTP AUTH désactivé à l’échelle du locataire (recommandé)",
+        "smtp_auth_enabled_tenant_wide_basic_auth_credential_stuffing_exposure": "SMTP AUTH activé à l’échelle du locataire (exposition au credential stuffing via authentification de base)"
+      }
+    },
+    "ENT-01": {
+      "writer_recommended_label": "La « configuration SSPR standard » active Microsoft Authenticator (préféré), SMS (solution de rechange) et Email (récupération) pour tous les utilisateurs — la base SSPR recommandée par Microsoft. Les méthodes avancées optionnelles (FIDO2, TAP, jetons OATH, etc.) peuvent être activées dans la section extensible « Additional Authentication Methods » ci-dessous.",
+      "writer_options": {
+        "standard_sspr_config_authenticator_sms_email_enabled_for_all_users_recommended": "Configuration SSPR standard — Authenticator + SMS + Email activés pour tous les utilisateurs (recommandé)",
+        "disabled_authenticator_sms_email_turned_off_no_sspr": "Désactivé — Authenticator/SMS/Email désactivés (aucun SSPR)"
+      }
+    },
+    "ENT-05": {
+      "writer_recommended_label": "La configuration recommandée active à la fois l’affichage du nom de l’application et du contexte d’emplacement, en plus de la correspondance de nombre par défaut du locataire Microsoft. Ces deux éléments supplémentaires rendent les attaques de prompt bombing nettement plus difficiles en forçant l’utilisateur à regarder l’écran de connexion.",
+      "writer_options": {
+        "number_matching_app_and_location_context_recommended": "Correspondance de nombre + contexte d’application et d’emplacement (recommandé)",
+        "number_matching_only_no_extra_context_displayed": "Correspondance de nombre seulement — aucun contexte supplémentaire affiché"
+      }
+    },
+    "ENT-06": {
+      "writer_recommended_label": "Les mots interdits personnalisés détectent les modèles propres à l’entreprise que la liste globale de Microsoft ne couvrira pas — nom de l’entreprise, noms de produits, géographie locale, noms de fondateurs ou dirigeants. 8 à 12 termes est le bon équilibre. Au-delà, les rendements diminuent.",
+      "writer_options": {
+        "global_microsoft_list_tenant_specific_custom_banned_words_recommended": "Liste globale de Microsoft + mots interdits personnalisés propres au locataire (recommandé)",
+        "global_microsoft_list_only_no_tenant_specific_words": "Liste globale de Microsoft seulement (aucun mot propre au locataire)"
+      }
+    },
+    "ENT-07": {
+      "writer_recommended_label": "Microsoft recommande maintenant « Laisser Microsoft gérer vos paramètres de consentement » — ils mettent automatiquement à jour la stratégie sous-jacente à mesure que leurs directives évoluent. Choisissez « Ne pas autoriser le consentement utilisateur » seulement si vous avez un flux de demandes de consentement administrateur configuré et surveillé.",
+      "writer_options": {
+        "let_microsoft_manage_your_consent_settings_recommended": "Laisser Microsoft gérer vos paramètres de consentement (recommandé)",
+        "do_not_allow_user_consent_admin_consent_workflow_required": "Ne pas autoriser le consentement utilisateur (flux de consentement administrateur requis)",
+        "allow_user_consent_for_verified_publishers_low_impact_permissions_only": "Autoriser le consentement utilisateur pour les éditeurs vérifiés, permissions à faible impact seulement"
+      }
+    },
+    "ENT-09": {
+      "writer_recommended_label": "Microsoft recommande Restricted Guest User pour les locataires qui n’ont pas besoin que les invités parcourent le répertoire.",
+      "writer_options": {
+        "restricted_guest_user_recommended": "Restricted Guest User (recommandé)",
+        "guest_user_default_limited": "Guest User (valeur par défaut — limité)",
+        "same_as_member_user_not_recommended": "Identique à un utilisateur membre (NON recommandé)"
+      }
+    },
+    "SPO-01": {
+      "writer_recommended_label": "Microsoft recommande « Invités existants seulement » pour les locataires PME qui partagent avec des partenaires nommés, mais jamais avec des utilisateurs anonymes.",
+      "writer_options": {
+        "existing_guests_only_recommended": "Invités existants seulement (recommandé)",
+        "only_people_in_your_organization": "Seulement les personnes de votre organisation",
+        "new_and_existing_guests": "Invités nouveaux et existants",
+        "anyone_anonymous_links_high_risk": "Toute personne (liens anonymes — risque élevé)"
+      }
+    },
+    "SPO-02": {
+      "writer_recommended_label": "Microsoft recommande de restreindre l’application de synchronisation OneDrive sur les appareils non gérés pour tout locataire disposant de l’accès conditionnel.",
+      "writer_options": {
+        "restricted_on_unmanaged_devices_recommended": "Restreint sur les appareils non gérés (recommandé)",
+        "allowed_on_all_devices": "Autorisé sur tous les appareils"
+      }
+    },
+    "TEA-01": {
+      "writer_recommended_label": "Il n’y a AUCUNE recommandation universelle — choisissez selon le profil de réunions externes du locataire. Locataires qui rencontrent uniquement des partenaires fédérés M365 → Renforcé. Locataires qui organisent de la formation, du coaching, des ventes ou d’autres réunions avec des participants externes non professionnels → Permissif avec salle d’attente. Le mode ouvert est réellement dangereux et ne devrait jamais être choisi délibérément.",
+      "writer_options": {
+        "hardened_anonymous_join_blocked_lobby_holds_external_federated_only_meeting_tenants": "Renforcé — participation anonyme bloquée + salle d’attente pour les externes (locataires avec réunions fédérées seulement)",
+        "permissive_with_lobby_anonymous_join_allowed_lobby_holds_external_training_coaching_sales_meetings": "Permissif avec salle d’attente — participation anonyme autorisée + salle d’attente pour les externes (formations, coaching, réunions de vente)",
+        "open_anonymous_join_allowed_everyone_auto_admits_zoom_bombing_risk": "Ouvert — participation anonyme autorisée + tout le monde est admis automatiquement (risque de Zoom-bombing)"
+      }
+    },
+    "TEA-02": {
+      "writer_recommended_label": "La plupart des PME veulent « Ouvert + comptes personnels bloqués » — la fédération fonctionne avec n’importe quel locataire M365 pour les communications d’affaires, mais les comptes Microsoft personnels ne peuvent pas clavarder avec vos utilisateurs. Le mode liste d’autorisation est le plus sécuritaire, mais exige une gestion par partenaire. La fédération désactivée est l’option la plus restrictive et peut être perturbatrice.",
+      "writer_options": {
+        "open_to_other_businesses_personal_accounts_blocked_recommended_for_most_smbs": "Ouvert aux autres entreprises, comptes personnels bloqués (recommandé pour la plupart des PME)",
+        "federation_restricted_to_specific_partner_domains_most_secure_when_business_needs_allow": "Fédération restreinte à des domaines partenaires précis (plus sécuritaire lorsque les besoins d’affaires le permettent)",
+        "federation_disabled_no_external_teams_chat_most_restrictive": "Fédération désactivée — aucun clavardage Teams externe (plus restrictif)",
+        "open_personal_microsoft_accounts_allowed_microsoft_default_risky": "Ouvert + comptes Microsoft personnels autorisés (valeur par défaut de Microsoft — risqué)"
+      }
+    },
+    "CMP-01": {
+      "writer_recommended_label": "Activez le journal d’audit unifié sur chaque locataire — sans lui, aucun incident de sécurité ne peut être investigué. Microsoft l’active généralement par défaut sur les nouveaux locataires, mais les anciens locataires nécessitent parfois un Apply explicite.",
+      "writer_options": {
+        "enabled_recommended": "Activé (recommandé)",
+        "disabled_no_forensic_capability": "Désactivé — aucune capacité judiciaire"
+      }
+    }
+  }
+}

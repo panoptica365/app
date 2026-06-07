@@ -1,0 +1,13 @@
+# Python dependencies for Panoptica365 PDF report generation.
+#
+# Consumed by:
+#   - panoptica-setup.sh  (host install -> /opt/panoptica/venv)
+#   - Dockerfile          (container image -> /app/venv)
+#
+# reportlab   PDF layout engine. Both report generators need it
+#             (generate-documentation-report.py, generate-pdf-report.py).
+# matplotlib  Charts in the Security Posture report
+#             (generate-pdf-report.py only). Used headless via the 'Agg'
+#             backend; pip pulls numpy / pillow / etc. transitively.
+reportlab>=4,<5
+matplotlib>=3,<4

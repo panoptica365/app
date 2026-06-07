@@ -5,7 +5,7 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
-## Version 0.1.48 — 2026-06-06
+## Version 0.1.49 — 2026-06-06
 
 ### Corrigé : le moniteur d’état ne signale plus comme défaillants les points de terminaison Graph limités par la licence
 

@@ -1,0 +1,156 @@
+<!--
+  Heatmap — multi-tenant security posture, flattened across customers.
+  Read-only operator view. No action buttons, no mutations.
+  Styles are scoped here so the page is self-contained (no panoptica.css edit).
+-->
+<style>
+  /* All colors come from the active theme's --p-* variables so the page
+     matches the rest of the app in both light and dark themes. The earlier
+     version hardcoded a dark navy (via a non-existent --panel-bg fallback),
+     which is what produced the "big black header" on the light theme. */
+  .hm-wrap { padding: 4px 2px 40px; font-family: var(--font-body); color: var(--p-text); }
+
+  /* Fleet header */
+  .hm-fleet { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; margin: 6px 0 18px; }
+  .hm-fleet-score { display: flex; align-items: baseline; gap: 8px; }
+  .hm-fleet-score .hm-bignum { font-family: var(--font-heading); font-size: 2.7rem; font-weight: 700; line-height: 1; color: var(--p-accent); }
+  .hm-fleet-score .hm-bignum-suffix { font-size: 1.2rem; font-weight: 600; color: var(--p-accent); opacity: .8; }
+  .hm-fleet-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+  .hm-stat { display: flex; flex-direction: column; gap: 2px; }
+  .hm-stat .hm-stat-num { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 600; color: var(--p-text); }
+  .hm-stat .hm-stat-lbl { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--p-text-muted); }
+  .hm-caption { font-size: .8rem; color: var(--p-text-muted); margin: -8px 0 16px; font-style: italic; }
+
+  /* Insight strip */
+  .hm-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+  @media (max-width: 1100px) { .hm-strip { grid-template-columns: 1fr; } }
+  .hm-card { border: 1px solid var(--p-border); border-left: 3px solid var(--p-accent); border-radius: var(--corner-radius); padding: 14px 16px; background: var(--p-surface); }
+  .hm-card.hm-card-weak { border-left-color: var(--p-secondary); }
+  .hm-card h3 { margin: 0 0 4px; font-family: var(--font-heading); font-size: .95rem; color: var(--p-text); }
+  .hm-card .hm-card-sub { font-size: .76rem; color: var(--p-text-muted); margin: 0 0 10px; }
+  .hm-weak-row, .hm-mover-row { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: var(--corner-radius-sm); cursor: default; border-bottom: 1px solid var(--p-border-subtle); }
+  .hm-weak-row:last-child, .hm-mover-row:last-child { border-bottom: none; }
+  .hm-weak-row { cursor: pointer; transition: background var(--p-transition); }
+  .hm-weak-row:hover { background: var(--p-surface-hover); }
+  .hm-weak-name { flex: 1; font-size: .86rem; color: var(--p-text); }
+  .hm-weak-count { font-variant-numeric: tabular-nums; font-weight: 700; font-size: .82rem; color: var(--p-secondary); }
+  .hm-pill { display: inline-block; font-size: .68rem; padding: 1px 7px; border-radius: 999px; font-weight: 600; }
+  .hm-pill-drift { background: var(--p-danger-glow-rgba); color: var(--p-danger); }
+  .hm-pill-notset { background: var(--p-warn-glow-rgba); color: var(--p-warn); }
+  .hm-mover-delta { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .hm-mover-delta.down { color: var(--p-danger); }
+  .hm-mover-delta.up { color: var(--p-success); }
+  .hm-collecting { font-size: .82rem; color: var(--p-text-muted); padding: 8px 4px; line-height: 1.5; }
+
+  /* Grid */
+  .hm-gridwrap { overflow-x: auto; border: 1px solid var(--p-border); border-radius: var(--corner-radius); background: var(--p-surface); }
+  table.hm-grid { border-collapse: collapse; width: 100%; font-size: .85rem; }
+  /* NOTE: do NOT add a `table.hm-grid th, table.hm-grid td { padding: 0 }`
+     reset here — it outranks the per-cell padding rules below on specificity
+     and silently flattens the row height. Each cell sets its own padding. */
+  /* Header: light chrome surface + accent-colored text, ALWAYS readable
+     (not just on hover). Bottom accent rule ties it to the app's panels. */
+  table.hm-grid thead th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--p-surface-deep);
+    color: var(--p-accent);
+    padding: 11px 12px; text-align: center; vertical-align: bottom;
+    font-family: var(--font-heading); font-weight: 600; font-size: .72rem;
+    letter-spacing: .06em; text-transform: uppercase;
+    border-bottom: 2px solid var(--p-accent);
+  }
+  table.hm-grid thead th.hm-tenant-th { color: var(--p-text-secondary); text-align: left; vertical-align: middle; }
+  table.hm-grid thead th.hm-cat-th { cursor: pointer; user-select: none; white-space: nowrap; transition: background var(--p-transition); }
+  table.hm-grid thead th.hm-cat-th:hover { background: var(--p-surface-hover); color: var(--p-accent-deep); }
+  table.hm-grid thead th .hm-caret { opacity: .7; font-size: .7rem; margin-left: 4px; }
+
+  /* Rows: alternating shading + dividers so the eye tracks across a row. */
+  table.hm-grid tbody tr { border-bottom: 1px solid var(--p-border-subtle); transition: background var(--p-transition); }
+  table.hm-grid tbody tr:nth-child(even) { background: var(--p-surface-alt); }
+  table.hm-grid tbody tr:hover { background: var(--p-surface-hover); }
+  .hm-tenant-cell { padding: 20px 14px; white-space: nowrap; cursor: pointer; vertical-align: middle; border-right: 1px solid var(--p-border-subtle); }
+  .hm-tenant-name { font-weight: 600; color: var(--p-text); margin-bottom: 3px; }
+  .hm-tenant-score { font-size: .78rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hm-tenant-score .hm-score-frac { font-weight: 400; color: var(--p-text-muted); margin-left: 4px; }
+  .hm-score-good { color: var(--p-success); }
+  .hm-score-warn { color: var(--p-warn); }
+  .hm-score-bad  { color: var(--p-danger); }
+  .hm-score-na   { color: var(--p-text-muted); }
+  tr.hm-stale .hm-tenant-name::after { content: " · stale"; font-size: .7rem; color: var(--p-text-muted); font-style: italic; }
+
+  /* Category cell + dots */
+  td.hm-cat-cell { padding: 20px 12px; border-left: 4px solid transparent; vertical-align: middle; cursor: pointer; text-align: center; }
+  td.hm-cat-cell.edge-critical { border-left-color: var(--p-danger); }
+  td.hm-cat-cell.edge-high     { border-left-color: var(--p-warn); }
+  td.hm-cat-cell.edge-medium   { border-left-color: var(--p-warn); }
+  td.hm-cat-cell.edge-low      { border-left-color: var(--p-text-dim); }
+  td.hm-cat-cell.hm-na-cell { cursor: default; color: var(--p-text-dim); font-size: .76rem; font-style: italic; }
+  .hm-dots { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: nowrap; }
+  .hm-dot { width: 11px; height: 11px; border-radius: 50%; flex: 0 0 auto; cursor: pointer; box-shadow: 0 0 0 1px rgba(10,20,36,.12) inset; }
+  .hm-dot.compliant  { background: var(--p-success); }
+  .hm-dot.drifted    { background: var(--p-danger); }
+  .hm-dot.not_set    { background: var(--p-warn); }
+  .hm-dot.na { background: var(--p-text-dim); background-image: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,.45) 2px, rgba(255,255,255,.45) 3px); }
+  .hm-dot.stale      { background: var(--p-surface-sunken); box-shadow: 0 0 0 1px var(--p-border-strong) inset; background-image: repeating-linear-gradient(90deg, var(--p-border-strong), var(--p-border-strong) 1px, transparent 1px, transparent 3px); }
+  .hm-overflow { font-size: .72rem; color: var(--p-text-muted); margin-left: 2px; font-variant-numeric: tabular-nums; }
+
+  /* Expanded per-control sub-columns. A group of control columns shares a
+     left accent border at its start so it reads as "these belong to the
+     category you expanded". Headers are dark-text-on-light → always legible. */
+  th.hm-ctrl-th {
+    font-family: var(--font-body) !important;
+    font-weight: 500 !important; font-size: .68rem !important;
+    text-transform: none !important; letter-spacing: 0 !important;
+    color: var(--p-text-secondary) !important;
+    max-width: 130px; white-space: normal !important; line-height: 1.2; vertical-align: bottom;
+  }
+  th.hm-group-start, td.hm-group-start { border-left: 2px solid var(--p-accent); }
+  /* Collapse control sits on its OWN line above the control name (flex = block-
+     level full width), so the category label and control name never run
+     together as "IDENTITYEnable…". */
+  .hm-collapse { display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; color: var(--p-accent); font-weight: 600; font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--p-border-subtle); }
+  .hm-collapse:hover { color: var(--p-accent-deep); text-decoration: underline; }
+  td.hm-ctrl-cell { text-align: center; padding: 20px 6px; vertical-align: middle; }
+  td.hm-ctrl-cell .hm-dot { display: inline-block; }
+  td.hm-ctrl-cell .hm-dash { color: var(--p-text-dim); }
+
+  /* Legend */
+  .hm-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 14px 2px 0; font-size: .76rem; color: var(--p-text-secondary); }
+  .hm-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .hm-legend .hm-dot { cursor: default; }
+
+  .hm-loading, .hm-error { padding: 40px; text-align: center; color: var(--p-text-muted); }
+  .hm-error { color: var(--p-danger); }
+
+  /* Campaign slideout — theme surface, not hardcoded dark. */
+  .hm-campaign-backdrop { position: fixed; inset: 0; background: rgba(10,20,36,.45); z-index: 1400; display: none; }
+  .hm-campaign-backdrop.open { display: block; }
+  .hm-campaign { position: fixed; top: 0; right: 0; height: 100%; width: 480px; max-width: 92vw; background: var(--p-surface); color: var(--p-text); border-left: 1px solid var(--p-border); box-shadow: -4px 0 24px rgba(10,20,36,.25); z-index: 1401; transform: translateX(100%); transition: transform .18s ease; display: flex; flex-direction: column; }
+  .hm-campaign.open { transform: translateX(0); }
+  .hm-campaign-head { padding: 16px 18px; border-bottom: 1px solid var(--p-border); display: flex; align-items: flex-start; gap: 10px; }
+  .hm-campaign-head h2 { margin: 0; font-family: var(--font-heading); font-size: 1.05rem; flex: 1; color: var(--p-text); }
+  .hm-campaign-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--p-text-muted); line-height: 1; }
+  .hm-campaign-close:hover { color: var(--p-text); }
+  .hm-campaign-body { padding: 16px 18px; overflow-y: auto; }
+  .hm-campaign-body h4 { margin: 16px 0 6px; font-family: var(--font-heading); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--p-accent); }
+  .hm-campaign-body p { font-size: .86rem; line-height: 1.55; margin: 0 0 10px; color: var(--p-text-secondary); }
+  .hm-affected { list-style: none; padding: 0; margin: 0; }
+  .hm-affected li { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--p-border-subtle); }
+  .hm-affected a { flex: 1; cursor: pointer; text-decoration: none; color: var(--p-accent); font-weight: 600; font-size: .88rem; }
+  .hm-affected a:hover { text-decoration: underline; }
+</style>
+
+<div class="hm-wrap">
+  <div class="panel-header">
+    <span class="panel-elbow"></span>
+    <span class="panel-title" data-i18n="nav.heatmap">Heatmap</span>
+  </div>
+
+  <div id="hm-caption" class="hm-caption" data-i18n="heatmap.caption_managed_only">
+    Managed tenants only — audit-only tenants excluded.
+  </div>
+
+  <div id="hm-content">
+    <div class="hm-loading" data-i18n="heatmap.loading">Building heatmap…</div>
+  </div>
+</div>

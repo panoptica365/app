@@ -5,7 +5,7 @@ that release, newest first.
 
 ---
 
-## Version 0.1.48 — 2026-06-06
+## Version 0.1.49 — 2026-06-06
 
 ### Fixed: health monitor no longer flags license-gated Graph endpoints as failures
 

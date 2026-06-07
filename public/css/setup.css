@@ -1,0 +1,711 @@
+/* ═════════════════════════════════════════════════════════════════════
+   Panoptica365 — Setup Wizard Styles
+   (v0.1.10+, Stage 4 Part B)
+
+   Standalone stylesheet for the first-boot wizard. Reuses the theme
+   token variables from /css/themes/panoptica-dark.css but does NOT
+   inherit anything from /css/panoptica.css (which is dashboard-only).
+
+   Layout strategy: full-viewport centered card. Step indicator at top,
+   form area in the middle, action buttons at the bottom of each step.
+   Mobile-friendly down to ~520px.
+   ════════════════════════════════════════════════════════════════════ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--p-text);
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 9px),
+    var(--p-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Wizard frame (content area below the banner) ─── */
+
+.setup-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+}
+
+/* ─── Header banner (full-width chrome bar — mirrors main app header) ─── */
+/* v0.1.11 — was previously a small dark header with a tiny floating logo.
+   Now matches the main app's .header-frame style: light chrome gradient,
+   diagonal pinstripes, prominent logo. Lives OUTSIDE .setup-app so it
+   spans full viewport width regardless of the card's max-width below. */
+
+.setup-header {
+  width: 100%;
+  height: var(--header-height, 64px);
+  background:
+    repeating-linear-gradient(135deg, var(--p-chrome-pinstripe) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, var(--p-chrome-top) 0%, var(--p-chrome-bot) 100%);
+  border-bottom: 1px solid var(--p-chrome-border);
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 14px rgba(0, 0, 0, 0.38),
+    0 8px 34px rgba(0, 0, 0, 0.16);
+  position: relative;
+  z-index: 10;
+}
+
+/* Cyan hairline accent at the bottom of the header — echoes the "365" in
+   the logo, matches the main app's .header-frame::after detail. */
+.setup-header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(38, 197, 197, 0.4) 30%,
+    rgba(38, 197, 197, 0.6) 50%,
+    rgba(38, 197, 197, 0.4) 70%,
+    transparent 100%);
+}
+
+.setup-header-inner {
+  height: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.setup-logo {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+.setup-lang-picker {
+  display: inline-flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--p-chrome-border-soft);
+  border-radius: 6px;
+  padding: 3px;
+}
+
+.setup-lang-picker button {
+  background: transparent;
+  color: var(--p-chrome-text-mut);
+  border: 0;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.setup-lang-picker button:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--p-chrome-text);
+}
+
+.setup-lang-picker button.active {
+  background: var(--p-accent);
+  color: #fff;
+}
+
+/* ─── Stepper (1-2-3-...-8) ─── */
+
+.setup-stepper {
+  width: 100%;
+  max-width: 760px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+  padding: 0 8px;
+}
+
+/* The connecting line behind the dots */
+.setup-stepper::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  background: var(--p-border);
+  z-index: 0;
+}
+
+.setup-step-dot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.setup-step-dot .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--p-surface);
+  border: 2px solid var(--p-border);
+  color: var(--p-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.setup-step-dot .label {
+  font-size: 0.7rem;
+  color: var(--p-text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.setup-step-dot.current .num {
+  background: var(--p-accent);
+  border-color: var(--p-accent);
+  color: var(--p-bg);
+}
+
+.setup-step-dot.current .label {
+  color: var(--p-text);
+}
+
+.setup-step-dot.completed .num {
+  background: var(--p-ok, #2fa84f);
+  border-color: var(--p-ok, #2fa84f);
+  color: #fff;
+}
+
+.setup-step-dot.completed .label {
+  color: var(--p-text-muted);
+}
+
+/* Hide labels on narrow viewports — keep just the numbers */
+@media (max-width: 720px) {
+  .setup-step-dot .label { display: none; }
+  .setup-stepper { padding: 0 4px; }
+}
+
+/* ─── Content card (current step's form) ─── */
+
+.setup-content {
+  width: 100%;
+  max-width: 720px;
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 10px;
+  padding: 36px 40px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 600px) {
+  .setup-content { padding: 24px 20px; }
+}
+
+.setup-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0;
+}
+
+.setup-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--p-border);
+  border-top-color: var(--p-accent);
+  border-radius: 50%;
+  animation: setup-spin 0.8s linear infinite;
+}
+
+@keyframes setup-spin { to { transform: rotate(360deg); } }
+
+/* Terminal "reconnecting after restart" screen (post-/complete). */
+.setup-reconnect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  padding: 48px 24px;
+}
+.setup-reconnect .setup-step-subtitle {
+  max-width: 42ch;
+}
+
+/* Per-step structure */
+
+.setup-step-header {
+  margin-bottom: 24px;
+}
+
+.setup-step-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: var(--p-text);
+}
+
+.setup-step-subtitle {
+  font-size: 0.95rem;
+  color: var(--p-text-muted);
+  margin: 0;
+}
+
+.setup-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.setup-step-body p {
+  margin: 0;
+  color: var(--p-text);
+}
+
+.setup-step-body .form-note {
+  font-size: 0.85rem;
+  color: var(--p-text-muted);
+  margin-top: -10px;
+}
+
+/* Form fields */
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setup-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--p-text);
+  letter-spacing: 0.02em;
+}
+
+.setup-field .hint {
+  font-size: 0.8rem;
+  color: var(--p-text-muted);
+  margin-bottom: 4px;
+}
+
+.setup-field input[type="text"],
+.setup-field input[type="email"],
+.setup-field input[type="password"],
+.setup-field input[type="number"],
+.setup-field textarea,
+.setup-field select {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 9px 12px;
+  background: var(--p-surface-sunken, var(--p-bg));
+  border: 1px solid var(--p-border);
+  border-radius: 5px;
+  color: var(--p-text);
+  width: 100%;
+}
+
+.setup-field input:focus,
+.setup-field textarea:focus,
+.setup-field select:focus {
+  outline: none;
+  border-color: var(--p-accent);
+  box-shadow: 0 0 0 2px rgba(38, 197, 197, 0.25);
+}
+
+.setup-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .setup-field-row { grid-template-columns: 1fr; }
+}
+
+/* Action buttons (Back / Skip / Next) */
+
+.setup-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--p-border);
+}
+
+.setup-actions-left { display: flex; gap: 8px; }
+.setup-actions-right { display: flex; gap: 10px; }
+
+.setup-btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 9px 22px;
+  border-radius: 6px;
+  border: 1px solid var(--p-border);
+  background: var(--p-surface-alt);
+  color: var(--p-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.setup-btn:hover:not(:disabled) {
+  background: var(--p-surface);
+  border-color: var(--p-text-muted);
+}
+
+.setup-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.setup-btn-primary {
+  background: var(--p-accent);
+  border-color: var(--p-accent);
+  color: var(--p-bg);
+}
+
+.setup-btn-primary:hover:not(:disabled) {
+  background: var(--p-accent);
+  filter: brightness(1.1);
+}
+
+.setup-btn-secondary {
+  background: transparent;
+  color: var(--p-text-muted);
+  border-color: transparent;
+}
+
+.setup-btn-secondary:hover:not(:disabled) {
+  color: var(--p-text);
+  background: var(--p-surface-alt);
+}
+
+/* Toast */
+
+.setup-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  max-width: 480px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  z-index: 1000;
+}
+
+.setup-toast.error  { border-color: var(--p-danger); color: var(--p-danger); }
+.setup-toast.success { border-color: var(--p-ok, #2fa84f); color: var(--p-ok, #2fa84f); }
+
+/* Status text inside steps (e.g. "SMTP test sent to ___") */
+
+.setup-status-line {
+  padding: 10px 14px;
+  border-radius: 5px;
+  background: var(--p-surface-alt);
+  border: 1px solid var(--p-border);
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-status-line.success { border-color: var(--p-ok, #2fa84f); color: var(--p-ok, #2fa84f); }
+.setup-status-line.error   { border-color: var(--p-danger); color: var(--p-danger); }
+.setup-status-line.info    { border-color: var(--p-accent); color: var(--p-text); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   APP REGISTRATION MODAL (v0.1.13 — Stage 4 Part B addition)
+   Full-window overlay used to deliver the detailed Entra app registration
+   instructions. Body rendered dynamically by setup.js renderAppRegModal().
+   ═══════════════════════════════════════════════════════════════════ */
+
+.setup-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 12, 22, 0.85);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.setup-modal-overlay.open { display: flex; }
+
+.setup-modal {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 1080px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+
+.setup-modal-header {
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--p-border);
+  background: var(--p-surface-alt);
+  flex: 0 0 auto;
+}
+
+.setup-modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--p-text);
+}
+
+.setup-modal-close {
+  background: transparent;
+  color: var(--p-text-muted);
+  border: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.setup-modal-close:hover {
+  background: var(--p-surface);
+  color: var(--p-text);
+}
+
+.setup-modal-body {
+  padding: 24px 32px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scroll-behavior: smooth;
+  font-size: 0.92rem;
+  line-height: 1.62;
+  color: var(--p-text);
+}
+
+.setup-modal-body h3 {
+  margin: 28px 0 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--p-border);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--p-text);
+  letter-spacing: 0.01em;
+}
+.setup-modal-body h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.setup-modal-body h4 {
+  margin: 18px 0 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--p-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setup-modal-body p {
+  margin: 0 0 12px 0;
+}
+
+.setup-modal-body ol,
+.setup-modal-body ul {
+  margin: 0 0 14px 0;
+  padding-left: 22px;
+}
+.setup-modal-body ol li,
+.setup-modal-body ul li {
+  margin-bottom: 8px;
+}
+
+.setup-modal-body code {
+  background: var(--p-surface-sunken, var(--p-bg));
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  border: 1px solid var(--p-border);
+}
+
+.setup-modal-body a {
+  color: var(--p-accent);
+  text-decoration: underline;
+}
+.setup-modal-body a:hover { filter: brightness(1.15); }
+
+.setup-modal-footer {
+  padding: 16px 28px;
+  border-top: 1px solid var(--p-border);
+  background: var(--p-surface-alt);
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+/* ─── Color-coded callout boxes inside the modal ─── */
+
+.setup-callout {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 14px 0;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.setup-callout-icon {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  flex: 0 0 auto;
+}
+.setup-callout-body {
+  flex: 1 1 auto;
+}
+.setup-callout-body strong { font-weight: 700; }
+
+.setup-callout.danger {
+  border-left-color: var(--p-danger);
+  background: rgba(220, 60, 60, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.danger strong { color: var(--p-danger); }
+
+.setup-callout.warn {
+  border-left-color: var(--p-warn);
+  background: rgba(230, 160, 50, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.warn strong { color: var(--p-warn); }
+
+.setup-callout.ok {
+  border-left-color: var(--p-ok, #2fa84f);
+  background: rgba(47, 168, 79, 0.10);
+  color: var(--p-text);
+}
+.setup-callout.ok strong { color: var(--p-ok, #2fa84f); }
+
+/* ─── Copy-to-clipboard buttons (used for hostname, redirect URI,
+       permission names, group name suggestions) ─── */
+
+.setup-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--p-surface-sunken, var(--p-bg));
+  border: 1px solid var(--p-border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  color: var(--p-text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: all;
+  vertical-align: middle;
+  line-height: 1.4;
+}
+.setup-copy:hover {
+  border-color: var(--p-accent);
+  background: var(--p-surface);
+}
+.setup-copy.copied {
+  border-color: var(--p-ok, #2fa84f);
+  background: rgba(47, 168, 79, 0.14);
+  color: var(--p-ok, #2fa84f);
+}
+.setup-copy-icon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+
+/* Permission list — flat alphabetical with copy buttons per row */
+.setup-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 16px;
+  padding: 10px 12px;
+  background: var(--p-surface-sunken, var(--p-bg));
+  border: 1px solid var(--p-border);
+  border-radius: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.setup-perm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 0.88rem;
+}
+.setup-perm-row:hover { background: var(--p-surface); }
+.setup-perm-name {
+  font-family: 'JetBrains Mono', Menlo, Consolas, monospace;
+  color: var(--p-text);
+}
+
+/* "Copy all 47" / "Copy all 6" buttons */
+.setup-copy-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--p-accent);
+  color: var(--p-bg);
+  border: 0;
+  border-radius: 5px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.setup-copy-all:hover { filter: brightness(1.1); }
+.setup-copy-all.copied {
+  background: var(--p-ok, #2fa84f);
+  color: #fff;
+}

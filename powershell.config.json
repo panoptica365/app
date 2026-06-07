@@ -1,0 +1,9 @@
+{
+  "LogLevel": "Error",
+  "PowerShellPolicies": {
+    "ScriptBlockLogging": {
+      "EnableScriptBlockLogging": false,
+      "EnableScriptBlockInvocationLogging": false
+    }
+  }
+}
