@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.1 — 2026-06-09
+
+### Clearer selection when scoping an alert exemption
+
+When you create an alert exemption, the **Country scope** and **Duration** choices appear as pill buttons. The selected pill now fills with colour while the others stay plain, so it's obvious at a glance which option is active — previously the highlight was so faint it was easy to think clicking a pill had done nothing. Hovering a pill now also shows a coloured outline so it reads as clickable.
+
+This is a visual change only. How exemptions match and suppress alerts is unchanged.
+
+---
+
 ## Version 0.2.0 — 2026-06-07
 
 ### PSA tickets now close themselves when the underlying drift is resolved

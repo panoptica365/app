@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.2.0",
-    "image_tag": "v0.2.0",
-    "released_at": "2026-06-07",
+    "version": "0.2.1",
+    "image_tag": "v0.2.1",
+    "released_at": "2026-06-09",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "PSA tickets now close themselves when the underlying configuration drift is resolved. When a drift alert is linked to a PSA ticket and the drift is cleared in Panoptica365 — whether you click Accept, Remediate or Match on the setting, push a fix and let the next check confirm it, or someone simply corrects it in the Microsoft admin portal — Panoptica365 now closes the linked ticket automatically and adds a note explaining why. Previously the alert resolved but the ticket was left open, leaving orphaned tickets behind after a round of drift acceptances. The one deliberate exception: if you resolve an alert from the alert panel and choose \"Leave ticket open\", the ticket stays open for your technician to finish.",
-      "fr": "Les billets PSA se ferment désormais d’eux-mêmes lorsque la dérive de configuration sous-jacente est résolue. Lorsqu’une alerte de dérive est liée à un billet PSA et que la dérive est corrigée dans Panoptica365 — que vous cliquiez sur Accepter, Corriger ou Faire correspondre sur le paramètre, que vous poussiez un correctif confirmé à la vérification suivante, ou que quelqu’un la corrige simplement dans le portail d’administration Microsoft — Panoptica365 ferme maintenant le billet lié automatiquement et ajoute une note explicative. Auparavant, l’alerte se résolvait mais le billet restait ouvert, laissant des billets orphelins après une série d’acceptations de dérive. La seule exception délibérée : si vous résolvez une alerte depuis le panneau d’alerte et choisissez « Laisser le billet ouvert », le billet reste ouvert pour que votre technicien le termine.",
-      "es": "Los tickets del PSA ahora se cierran solos cuando se resuelve la desviación de configuración subyacente. Cuando una alerta de desviación está vinculada a un ticket del PSA y la desviación se corrige en Panoptica365 —ya sea que haga clic en Aceptar, Corregir o Coincidir en el ajuste, que aplique una corrección confirmada en la siguiente comprobación, o que alguien simplemente la corrija en el portal de administración de Microsoft— Panoptica365 ahora cierra el ticket vinculado automáticamente y añade una nota que explica el motivo. Antes, la alerta se resolvía pero el ticket quedaba abierto, dejando tickets huérfanos tras una ronda de aceptaciones de desviación. La única excepción deliberada: si resuelve una alerta desde el panel de alertas y elige «Dejar el ticket abierto», el ticket permanece abierto para que su técnico lo termine."
+      "en": "When you create an alert exemption, the selected Country scope and Duration pills now fill with colour so it's obvious at a glance which option is active — previously the highlight was so faint it looked like clicking a pill did nothing, and hovering a pill now shows a coloured outline so it reads as clickable. This is a visual change only; how exemptions match and suppress alerts is unchanged.",
+      "fr": "Lorsque vous créez une exemption d'alerte, les pastilles de portée par pays et de durée sélectionnées se remplissent maintenant de couleur, ce qui rend évident d'un coup d'œil quelle option est active — auparavant, la surbrillance était si pâle qu'on croyait qu'un clic sur une pastille n'avait rien fait, et le survol d'une pastille affiche désormais un contour coloré pour indiquer qu'elle est cliquable. Il s'agit d'un changement visuel seulement; la façon dont les exemptions correspondent aux alertes et les suppriment demeure inchangée.",
+      "es": "Cuando crea una exención de alerta, las píldoras seleccionadas de alcance por país y de duración ahora se rellenan con color, de modo que se ve de un vistazo qué opción está activa; antes el resaltado era tan tenue que parecía que pulsar una píldora no hacía nada, y ahora al pasar el cursor sobre una píldora aparece un contorno de color para indicar que se puede pulsar. Es un cambio solo visual; la forma en que las exenciones coinciden con las alertas y las suprimen no cambia."
     }
   },
   "yanked": []

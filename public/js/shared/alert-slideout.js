@@ -845,10 +845,12 @@
           padding:6px 12px; border:1px solid var(--p-border-subtle);
           border-radius:999px; cursor:pointer; font-size:0.82rem;
           background:var(--p-surface-sunken); color:var(--p-text);
-          user-select:none; }
+          user-select:none; transition:background 0.12s, border-color 0.12s, color 0.12s; }
+        .aex-pill:hover { border-color:var(--p-accent, #4a90d9); }
         .aex-pill input { display:none; }
-        .aex-pill:has(input:checked) { background:var(--p-accent-subtle, rgba(120,160,200,0.18));
-          border-color:var(--p-accent, #5a8); color:var(--p-text); }
+        .aex-pill:has(input:checked) { background:var(--p-accent, #4a90d9);
+          border-color:var(--p-accent, #4a90d9); color:var(--p-on-accent, #fff);
+          font-weight:600; }
       `;
       document.head.appendChild(styleEl);
     }

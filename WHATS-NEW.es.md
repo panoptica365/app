@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.1 — 2026-06-09
+
+### Selección más clara al definir el alcance de una exención de alerta
+
+Cuando crea una exención de alerta, las opciones de **alcance por país** y de **duración** se muestran como botones tipo píldora. La píldora seleccionada ahora se rellena con color mientras que las demás permanecen neutras, de modo que se ve de un vistazo qué opción está activa; antes el resaltado era tan tenue que era fácil pensar que pulsar una píldora no había hecho nada. Al pasar el cursor sobre una píldora también aparece ahora un contorno de color para indicar que se puede pulsar.
+
+Es un cambio solo visual. La forma en que las exenciones coinciden con las alertas y las suprimen no cambia.
+
+---
+
 ## Versión 0.2.0 — 2026-06-07
 
 ### Los tickets del PSA ahora se cierran solos cuando se resuelve la desviación subyacente

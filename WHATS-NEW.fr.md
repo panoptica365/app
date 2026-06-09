@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.1 — 2026-06-09
+
+### Sélection plus claire lors du cadrage d'une exemption d'alerte
+
+Lorsque vous créez une exemption d'alerte, les choix de **portée par pays** et de **durée** s'affichent sous forme de boutons en pastille. La pastille sélectionnée se remplit maintenant de couleur tandis que les autres restent neutres, ce qui rend évident d'un coup d'œil quelle option est active — auparavant, la surbrillance était si pâle qu'on pouvait croire qu'un clic sur une pastille n'avait rien fait. Le survol d'une pastille affiche aussi désormais un contour coloré pour indiquer qu'elle est cliquable.
+
+Il s'agit d'un changement visuel seulement. La façon dont les exemptions correspondent aux alertes et les suppriment demeure inchangée.
+
+---
+
 ## Version 0.2.0 — 2026-06-07
 
 ### Les billets PSA se ferment maintenant d’eux-mêmes lorsque la dérive sous-jacente est résolue
