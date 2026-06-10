@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.2 — 2026-06-10
+
+### Restablecimiento de contraseña de autoservicio: cada método de autenticación es ahora una casilla independiente
+
+El control **Habilitar el restablecimiento de contraseña de autoservicio (SSPR)** antes trataba a Microsoft Authenticator, SMS y correo electrónico como un único bloque «Estándar» de todo o nada. Eso hacía imposible expresar una estrategia de refuerzo común y recomendada por Microsoft: desactivar el SMS (el método más débil) y conservar Authenticator y el correo. La pestaña Configurar no dejaba desmarcar el SMS, y si lo quitaba directamente en Entra, Panoptica365 detectaba correctamente la desviación pero **Aceptar** fallaba con el mensaje *«El valor actual desviado no corresponde a ninguna opción documentada.»*
+
+La pestaña Configurar ahora muestra **cada** método de autenticación como su propia casilla, con el trío recomendado al principio. **Estándar** y **Deshabilitado** se convierten en preajustes de un clic — Estándar marca el conjunto recomendado, Deshabilitado borra todo — pero usted puede habilitar cualquier combinación. Lo que elija se sincroniza con exactitud: los métodos marcados se habilitan para todos los usuarios y los desmarcados se deshabilitan, de modo que la detección de desviación sigue captando cualquier cambio externo en cualquier método.
+
+**Aceptar** (y **Coincidir**) ahora adoptan la configuración en vivo como nueva línea base sin importar cómo esté establecida, así que quitar el SMS — o cualquier otro método — ya no queda en un punto muerto. Las líneas base existentes no se ven afectadas: siguen funcionando igual que antes y pasan a la nueva forma por método la próxima vez que aplique, acepte o haga coincidir.
+
+---
+
 ## Versión 0.2.1 — 2026-06-09
 
 ### Selección más clara al definir el alcance de una exención de alerta

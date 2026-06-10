@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.2 — 2026-06-10
+
+### Self-Service Password Reset: every authentication method is now its own toggle
+
+The **Enable Self-Service Password Reset (SSPR)** control used to treat Microsoft Authenticator, SMS, and Email as a single all-or-nothing "Standard" bundle. That made a common, Microsoft-recommended hardening — turning off SMS (the weakest method) while keeping Authenticator and Email — impossible to express: the Configure tab wouldn't let you uncheck SMS, and if you removed it directly in Entra, Panoptica365 correctly detected the drift but **Accept** failed with *"Drifted current value does not correspond to any documented option."*
+
+The Configure tab now lists **every** authentication method as its own checkbox, with the recommended trio at the top. **Standard** and **Disabled** become one-click presets — Standard checks the recommended set, Disabled clears everything — but you're free to enable any combination. Whatever you pick is synced exactly: checked methods are enabled for all users, unchecked methods are disabled, so drift detection still catches any external change to any method.
+
+**Accept** (and **Match**) now adopt the live configuration as the new baseline no matter how it's set up, so dropping SMS — or any other method — no longer dead-ends. Existing baselines are unaffected: they keep working exactly as before and convert to the new per-method form the next time you Apply, Accept, or Match.
+
+---
+
 ## Version 0.2.1 — 2026-06-09
 
 ### Clearer selection when scoping an alert exemption

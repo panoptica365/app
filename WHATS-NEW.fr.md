@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.2 — 2026-06-10
+
+### Réinitialisation de mot de passe en libre-service : chaque méthode d'authentification est maintenant une case à cocher distincte
+
+Le contrôle **Activer la réinitialisation de mot de passe en libre-service (SSPR)** traitait auparavant Microsoft Authenticator, le SMS et le courriel comme un bloc « Standard » tout ou rien. Une stratégie de renforcement courante et recommandée par Microsoft — désactiver le SMS (la méthode la plus faible) tout en conservant Authenticator et le courriel — était donc impossible à exprimer : l'onglet Configurer ne permettait pas de décocher le SMS, et si vous le retiriez directement dans Entra, Panoptica365 détectait correctement la dérive mais **Accepter** échouait avec le message *« La valeur actuelle dérivée ne correspond à aucune option documentée. »*
+
+L'onglet Configurer présente maintenant **chaque** méthode d'authentification comme sa propre case à cocher, le trio recommandé en tête. **Standard** et **Désactivé** deviennent des préréglages en un clic — Standard coche l'ensemble recommandé, Désactivé efface tout — mais vous êtes libre d'activer n'importe quelle combinaison. Votre choix est synchronisé exactement : les méthodes cochées sont activées pour tous les utilisateurs, les méthodes décochées sont désactivées, de sorte que la détection de dérive capte toujours tout changement externe à n'importe quelle méthode.
+
+**Accepter** (et **Faire correspondre**) adoptent désormais la configuration en direct comme nouvelle référence, peu importe comment elle est établie; retirer le SMS — ou toute autre méthode — ne mène donc plus à une impasse. Les références existantes ne sont pas touchées : elles continuent de fonctionner exactement comme avant et passent à la nouvelle forme par méthode au prochain Appliquer, Accepter ou Faire correspondre.
+
+---
+
 ## Version 0.2.1 — 2026-06-09
 
 ### Sélection plus claire lors du cadrage d'une exemption d'alerte

@@ -611,10 +611,16 @@
       : '';
 
     // Default selection: prefer current_matches_option (if any), else the recommended.
+    // Per-method settings (ENT-01 SSPR): the radio is a PRESET shortcut, not the
+    // baseline itself — the checklist below carries the real per-method state. So
+    // we only highlight a preset when the live config exactly equals it; on a
+    // drifted tenant (the common case) none is highlighted and the checklist shows
+    // reality. Leaving it null avoids implying "Standard" when, say, SMS is off.
     const recommended = writer.options.find(o => o.recommended);
+    const perMethod = !!(writer.secondary_section && writer.secondary_section.per_method);
     const defaultValue = state?.current_matches_option != null
       ? state.current_matches_option
-      : (recommended ? recommended.value : writer.options[0].value);
+      : (perMethod ? null : (recommended ? recommended.value : writer.options[0].value));
     configureSelectedValue = defaultValue;
 
     // Render the option list (works for select_one, toggle, and multi_toggle UI types).
@@ -666,6 +672,14 @@
         btn.classList.add('selected');
         textInputUserEdited = false;  // reset; new option may pre-populate fresh
         renderTextInputForOption(opt);
+        // Per-method (ENT-01 SSPR): the radio is a PRESET that mutates the
+        // method checklist. "Standard" checks the recommended trio (without
+        // disturbing any advanced methods already chosen); "Disabled" clears
+        // everything. The checklist remains the source of truth for Apply.
+        if (perMethod) {
+          applyPerMethodPreset(opt.value);
+          renderSecondarySection();
+        }
         updateApplyMatchButtons();
       });
 
@@ -698,6 +712,22 @@
   let secondaryUserEdited = false;
   let secondarySelected = new Set();
 
+  // Core SSPR trio for the per-method radio preset (ENT-01). Mirrors SSPR_TRIO
+  // in src/lib/security-settings/registry.js — keep in sync. This is a UI
+  // convenience only; the authoritative baseline is the full method set sent
+  // to /apply by packageChosenForApply().
+  const SSPR_PRESET_TRIO = ['MicrosoftAuthenticator', 'Sms', 'Email'];
+  function applyPerMethodPreset(presetValue) {
+    secondaryUserEdited = true;
+    if (presetValue === 'disabled') {
+      secondarySelected.clear();
+    } else {
+      // 'standard' (or any non-disabled preset) → ensure the recommended trio
+      // is enabled, without disturbing advanced methods already selected.
+      SSPR_PRESET_TRIO.forEach(id => secondarySelected.add(id));
+    }
+  }
+
   function renderSecondarySection() {
     const writer = openDetail?.setting?.writer;
     const wrapper = document.getElementById('sec-cfg-secondary-wrapper');
@@ -726,12 +756,20 @@
       secondarySelected = new Set(Array.isArray(ss.current_additionals) ? ss.current_additionals : []);
     }
 
-    // Master toggle reflects whether ANY additional is selected (so the
-    // operator opens the section by default if their tenant has any
-    // additional methods enabled).
+    // always_open (ENT-01 per-method): there's nothing to "expand" — every
+    // method matters — so hide the master toggle and keep the list visible.
+    // Otherwise the master toggle reflects whether ANY method is selected and
+    // gates the list's visibility (legacy advanced-only checklist behaviour).
     const masterToggle = document.getElementById('sec-cfg-secondary-toggle');
-    masterToggle.checked = secondarySelected.size > 0;
-    list.style.display = masterToggle.checked ? '' : 'none';
+    const masterLabel = masterToggle.closest('label');
+    if (ss.always_open) {
+      if (masterLabel) masterLabel.style.display = 'none';
+      list.style.display = '';
+    } else {
+      if (masterLabel) masterLabel.style.display = '';
+      masterToggle.checked = secondarySelected.size > 0;
+      list.style.display = masterToggle.checked ? '' : 'none';
+    }
 
     // Render per-method checkboxes. Method labels are keyed under
     // security_settings.<id>.secondary_section.options.<opt.id> (using the
@@ -748,6 +786,13 @@
         secondaryUserEdited = true;
         if (cb.checked) secondarySelected.add(opt.id);
         else secondarySelected.delete(opt.id);
+        // Per-method: a manual toggle means the set may no longer equal a
+        // preset, so drop the radio highlight rather than imply otherwise.
+        if (ss.per_method) {
+          configureSelectedValue = null;
+          document.querySelectorAll('#sec-cfg-input .sec-opt').forEach(o => o.classList.remove('selected'));
+          updateApplyMatchButtons();
+        }
       });
       const label = document.createElement('span');
       label.className = 'sec-secondary-item-label';
@@ -858,6 +903,12 @@
   //   {option, input, additional}                  — both (no current setting uses this, but supported)
   function packageChosenForApply() {
     const writer = openDetail?.setting?.writer;
+    // Per-method (ENT-01 SSPR): the baseline IS the explicit set of methods to
+    // enable for all users. Send {methods:[…]}; the radio is just a preset and
+    // there's no text input. Sorted for canonical, diff-stable JSON.
+    if (writer?.secondary_section?.per_method) {
+      return { methods: [...secondarySelected].sort() };
+    }
     const optDef = (writer?.options || []).find(o =>
       JSON.stringify(o.value) === JSON.stringify(configureSelectedValue)
     );
@@ -1004,6 +1055,7 @@
     const state = openDetail?.state;
     if (!setting || !setting.writer) return;
 
+    const perMethod = !!(setting.writer.secondary_section && setting.writer.secondary_section.per_method);
     const optDef = setting.writer.options.find(
       o => JSON.stringify(o.value) === JSON.stringify(configureSelectedValue)
     );
@@ -1011,12 +1063,19 @@
     // Slug-translate the option label (matches the writer_options.<slug> pattern
     // used in the Configure tab so the Confirm banner stays consistent).
     const settingId = setting._internal_id;
-    const chosenLabel = optDef?.label
-      ? window.PanopticaI18n.tOrFallback(
-          'security_settings.' + settingId + '.writer_options.' + window.PanopticaI18n.slugify(optDef.label),
-          chosenLabelRaw
-        )
-      : chosenLabelRaw;
+    let chosenLabel;
+    if (perMethod) {
+      // No single "option" — summarize the resulting method count. The precise
+      // per-method enable/disable changes are shown by the secondary diff below.
+      chosenLabel = window.t('security_page.confirm_new_methods_count', { count: secondarySelected.size });
+    } else if (optDef?.label) {
+      chosenLabel = window.PanopticaI18n.tOrFallback(
+        'security_settings.' + settingId + '.writer_options.' + window.PanopticaI18n.slugify(optDef.label),
+        chosenLabelRaw
+      );
+    } else {
+      chosenLabel = chosenLabelRaw;
+    }
     // Slug-translate the setting name too (already-keyed under .name).
     const settingName = window.PanopticaI18n.tOrFallback(
       'security_settings.' + settingId + '.name', setting.name

@@ -1320,7 +1320,8 @@
       "psa.auth_failed": "Autotask authentication failing ({reason})",
       "psa.auth_recovered": "Autotask authentication recovered",
       "psa.sync_error": "Autotask {op} failed for alert #{alertId}: {error}",
-      "settings.psa.update": "PSA integration settings changed ({fields})"
+      "settings.psa.update": "PSA integration settings changed ({fields})",
+      "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1872,7 +1873,8 @@
     "confirm_apply_on": "Apply on {tenant}:",
     "confirm_current": "Current:",
     "confirm_new": "New:",
-    "diff_additional_method_changes": "Additional method changes:",
+    "confirm_new_methods_count": "{count} authentication method(s) enabled for all users",
+    "diff_additional_method_changes": "Method changes:",
     "diff_enable": "ENABLE",
     "diff_disable": "DISABLE",
     "diff_will_add": "Will ADD:",
@@ -2049,9 +2051,12 @@
         "disabled_authenticator_sms_email_turned_off_no_sspr": "Disabled — Authenticator/SMS/Email turned off (no SSPR)"
       },
       "secondary_section": {
-        "toggle_label": "Additional Authentication Methods",
-        "help": "Optional methods to enable on top of the SSPR baseline. Useful for tenants with passwordless rollouts, hardware tokens, or first-time-access flows. Methods you don't check will be DISABLED on Apply — Panoptica365 syncs the complete set so drift detection catches any external change.",
+        "toggle_label": "Authentication methods (synced to all users)",
+        "help": "Panoptica365 syncs the COMPLETE set: every method you check is enabled for all users; every method you leave unchecked is DISABLED on Apply. The presets above are shortcuts — \"Standard\" checks the Microsoft-recommended trio, \"Disabled\" clears everything. SMS is the weakest method; Microsoft recommends moving off it, so you can leave it unchecked and keep SSPR working on Authenticator + Email.",
         "options": {
+          "MicrosoftAuthenticator": "Microsoft Authenticator (recommended — push + passwordless)",
+          "Sms": "SMS text message (weakest method — Microsoft recommends moving off it)",
+          "Email": "Email one-time passcode (account recovery)",
           "Fido2": "FIDO2 Security Keys (passwordless sign-in)",
           "TemporaryAccessPass": "Temporary Access Pass (first-time setup, account recovery)",
           "Voice": "Voice Call (legacy fallback for accounts without phones)",
@@ -3900,7 +3905,11 @@
         "info_title": "Panoptica365 update",
         "drift_cleared": "The linked Panoptica365 alert was resolved automatically ({reason}). This ticket was left open for your review.",
         "resolved_left_open": "The linked Panoptica365 alert (#{alertId}) was resolved by an operator. This ticket was left open.",
-        "closed_drift_cleared": "Closing automatically: the linked Panoptica365 alert was resolved (the configuration drift cleared)."
+        "closed_drift_cleared": "Closing automatically: the linked Panoptica365 alert was resolved (the configuration drift cleared).",
+        "rollup_survivor_title": "Consolidated roll-up",
+        "rollup_survivor": "This ticket now consolidates a Panoptica365 roll-up: \"{title}\" — covering {count} alerts. Related tickets were closed and point here.",
+        "rollup_absorbed_title": "Consolidated into another ticket",
+        "rollup_absorbed": "Consolidated into ticket {survivor} via a Panoptica365 roll-up. This ticket was closed — continue in {survivor}."
       }
     },
     "settings": {

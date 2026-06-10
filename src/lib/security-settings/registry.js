@@ -202,6 +202,71 @@ function _computeDlpDiff(applied, current) {
  *           drift detection in poll.js. Pure, no side effects.
  */
 
+// ──────────────────────────────────────────────────────────────────
+// ENT-01 SSPR — per-method baseline helpers (Jun 10, 2026)
+// ──────────────────────────────────────────────────────────────────
+// SSPR has no single on/off toggle in Graph; it's driven entirely by which
+// authentication methods are enabled with includeTarget=all_users. The
+// original v2 model bundled the trio (Authenticator + SMS + Email) into a
+// single "standard" preset, so a partial trio — e.g. "Authenticator + Email,
+// SMS dropped", which is the Microsoft-recommended hardening — could NOT be
+// represented, captured (Accept dead-ended), or re-applied.
+//
+// Fix: the baseline is the EXPLICIT SET of methods that should be enabled.
+// Every managed method NOT in the set must be disabled. Any combination is
+// now a first-class baseline by construction. See the ENT-01 writer below.
+//
+// FederatedIdentityCredential is intentionally EXCLUDED: Graph beta returns it
+// on the parent policy GET but exposes no per-method management endpoint, so
+// we can neither Apply it nor reliably own its state.
+const SSPR_MANAGED_METHODS = [
+  'MicrosoftAuthenticator', 'Sms', 'Email',
+  'Fido2', 'TemporaryAccessPass', 'Voice', 'SoftwareOath',
+  'HardwareOath', 'X509Certificate', 'QRCodePin', 'VerifiableCredentials',
+];
+const SSPR_TRIO = ['MicrosoftAuthenticator', 'Sms', 'Email'];
+
+// Method ids that are currently enabled for ALL users, in canonical order.
+// Single source of truth for captureCurrentBaseline() and the UI's
+// extractCurrentAdditionals() pre-population so they can never diverge.
+function _ssprCurrentEnabled(currentValue) {
+  const all = (currentValue && currentValue.all_methods) || {};
+  return SSPR_MANAGED_METHODS.filter(id => {
+    const m = all[id];
+    return m && m.state === 'enabled' && m.all_users === true;
+  });
+}
+
+// Normalize ANY stored applied_value shape into the set of method ids that
+// should be enabled (+all_users). Backward-compatible across three shapes:
+//   { methods: [...] }       — canonical per-method baseline (Jun 10, 2026+)
+//   { option, additional }   — legacy v2 rich baseline: 'standard' enables the
+//                              trio, 'additional' enables advanced methods
+//   'standard' | 'disabled'  — legacy v1 primitive (trio only)
+// CRITICAL: legacy shapes keep their ORIGINAL meaning, so baselines already
+// stored on live tenants (e.g. Trilogiam's {option:'standard',additional:[…]})
+// are NOT silently reinterpreted — they keep matching exactly as before, and
+// only convert to the {methods} shape on the next Apply/Accept/Match.
+// Returns { set:Set<string>, strict:boolean } or null if unrecognised.
+//   strict=true  → matches() checks EVERY managed method (in-set ⇒ must be
+//                  enabled, rest ⇒ must be disabled).
+//   strict=false → legacy primitive: check ONLY the trio, ignore advanced
+//                  methods (preserves pre-v2 behaviour so old primitives that
+//                  never tracked advanced methods don't suddenly read as drift).
+function _ssprEnabledSet(applied) {
+  if (applied && typeof applied === 'object' && Array.isArray(applied.methods)) {
+    return { set: new Set(applied.methods), strict: true };
+  }
+  if (applied && typeof applied === 'object' && 'option' in applied) {
+    const set = new Set(Array.isArray(applied.additional) ? applied.additional : []);
+    if (applied.option === 'standard') for (const id of SSPR_TRIO) set.add(id);
+    return { set, strict: true };
+  }
+  if (applied === 'standard') return { set: new Set(SSPR_TRIO), strict: false };
+  if (applied === 'disabled') return { set: new Set(), strict: false };
+  return null;
+}
+
 /** @type {SecuritySetting[]} */
 const SETTINGS = [
   // ══════════ EXCHANGE ONLINE ══════════
@@ -1109,23 +1174,30 @@ if ($errors.Count -gt 0) {
         { value: 'standard', label: 'Standard SSPR config — Authenticator + SMS + Email enabled for all users (recommended)', recommended: true },
         { value: 'disabled', label: 'Disabled — Authenticator/SMS/Email turned off (no SSPR)', danger: true },
       ],
-      // Apr 26 v4 — secondary checklist for advanced auth methods.
-      // Operator toggles a master checkbox to expand the section, then picks
-      // any combination of these methods to ALSO enable for all users.
-      // Apply syncs the COMPLETE set: methods checked → enabled+all_users,
-      // methods unchecked → disabled. This means matches() catches drift on
-      // ANY method state change, not just the baseline 3.
+      // Jun 10, 2026 — per-method model. The secondary section now lists EVERY
+      // managed auth method (the core SSPR trio FIRST, then advanced methods)
+      // as an independent toggle. The radio above acts as a preset shortcut:
+      // "Standard" checks the recommended trio, "Disabled" clears everything.
+      // Apply syncs the COMPLETE set — methods checked → enabled+all_users,
+      // methods unchecked → disabled — so drift detection catches ANY external
+      // change to ANY method, and a partial trio (e.g. dropping SMS) is a
+      // first-class, capturable, re-appliable baseline.
+      //
+      // always_open: render as a flat, always-visible list (no master-toggle
+      //   gating — every method matters, so there's nothing to "expand").
+      // per_method: tells the frontend to package Apply as {methods:[…]} and
+      //   to treat the radio as a preset that mutates the checklist.
       secondary_section: {
-        toggle_label: 'Additional Authentication Methods',
-        help: 'Optional methods to enable on top of the SSPR baseline. Useful for tenants with passwordless rollouts, hardware tokens, or first-time-access flows. Methods you don\'t check will be DISABLED on Apply — Panoptica syncs the complete set so drift detection catches any external change.',
-        // FederatedIdentityCredential removed Apr 26, 2026 — Microsoft Graph
-        // beta returns it in the parent policy GET but the per-method PATCH
-        // endpoint /authenticationMethodConfigurations/FederatedIdentityCredential
-        // returns 404. Newer entry that isn't wired into the management API
-        // yet. Reader still surfaces it in all_methods (so the diagnostic
-        // shows complete state), but matches() and prepareGraphCalls ignore
-        // it. Re-enable when Microsoft ships the management endpoint.
+        always_open: true,
+        per_method: true,
+        toggle_label: 'Authentication methods (synced to all users)',
+        help: 'Panoptica365 syncs the COMPLETE set: every method you check is enabled for all users; every method you leave unchecked is DISABLED on Apply. The presets above are shortcuts — "Standard" checks the Microsoft-recommended trio, "Disabled" clears everything. SMS is the weakest method; Microsoft recommends moving off it, so you can leave it unchecked and keep SSPR working on Authenticator + Email.',
+        // Core SSPR trio first, then advanced. FederatedIdentityCredential is
+        // intentionally absent — see SSPR_MANAGED_METHODS comment above.
         options: [
+          { id: 'MicrosoftAuthenticator', label: 'Microsoft Authenticator (recommended — push + passwordless)' },
+          { id: 'Sms',                   label: 'SMS text message (weakest method — Microsoft recommends moving off it)' },
+          { id: 'Email',                 label: 'Email one-time passcode (account recovery)' },
           { id: 'Fido2',                 label: 'FIDO2 Security Keys (passwordless sign-in)' },
           { id: 'TemporaryAccessPass',   label: 'Temporary Access Pass (first-time setup, account recovery)' },
           { id: 'Voice',                 label: 'Voice Call (legacy fallback for accounts without phones)' },
@@ -1135,17 +1207,9 @@ if ($errors.Count -gt 0) {
           { id: 'QRCodePin',             label: 'QR Code + PIN (frontline worker scenarios, preview)' },
           { id: 'VerifiableCredentials', label: 'Verifiable Credentials (decentralized identity, preview)' },
         ],
-        // Pre-populate the checkboxes from the tenant's current state.
-        // Returns array of method IDs that are currently enabled and NOT
-        // part of the SSPR baseline (those are governed by the radio choice).
-        extractCurrentAdditionals: (currentValue) => {
-          const all = currentValue?.all_methods || {};
-          const SSPR_BASELINE = new Set(['MicrosoftAuthenticator', 'Sms', 'Email']);
-          return Object.entries(all)
-            .filter(([id, m]) => !SSPR_BASELINE.has(id) && m && m.state === 'enabled')
-            .map(([id]) => id)
-            .sort();
-        },
+        // Pre-populate the checkboxes from the tenant's current state: every
+        // managed method that's currently enabled for all users.
+        extractCurrentAdditionals: (currentValue) => _ssprCurrentEnabled(currentValue),
       },
       // Multi-PATCH: one Graph call per auth method configuration. Apply
       // SYNCS the full set — every method we know about gets an explicit
@@ -1161,13 +1225,11 @@ if ($errors.Count -gt 0) {
       // (e.g. 'microsoftAuthenticatorAuthenticationMethodConfiguration') —
       // different convention from the id field. Microsoft, not us.
       prepareGraphCalls: (chosen) => {
-        const isRich = chosen && typeof chosen === 'object' && 'option' in chosen;
-        const option = isRich ? chosen.option : chosen;
-        const additionalsChosen = (isRich && Array.isArray(chosen.additional))
-          ? new Set(chosen.additional)
-          : new Set();
-
-        const baselineEnabled = (option === 'standard');
+        // Normalize whatever shape arrives ({methods}, legacy {option,additional},
+        // or primitive) into the explicit set of methods that must end up
+        // enabled. Everything not in the set is synced to disabled.
+        const norm = _ssprEnabledSet(chosen) || { set: new Set() };
+        const enabledSet = norm.set;
 
         // Every method we manage. SSPR baseline first, then advanced.
         // PascalCase ids match the reader's keys + Microsoft's response.
@@ -1191,15 +1253,8 @@ if ($errors.Count -gt 0) {
         const includeTargetsEmpty = [];
 
         return methods.map(m => {
-          // Decide target state for this method based on chosen.
-          let methodEnabled;
-          if (m.baseline) {
-            // Baseline methods follow the option choice
-            methodEnabled = baselineEnabled;
-          } else {
-            // Advanced methods: enabled iff in additionalsChosen
-            methodEnabled = additionalsChosen.has(m.id);
-          }
+          // Per-method: enabled iff the method is in the chosen baseline set.
+          const methodEnabled = enabledSet.has(m.id);
           return {
             method: 'PATCH',
             path: `/policies/authenticationMethodsPolicy/authenticationMethodConfigurations/${m.id}`,
@@ -1212,36 +1267,20 @@ if ($errors.Count -gt 0) {
           };
         });
       },
+      // Jun 10, 2026 — per-method comparison. The applied baseline (any of the
+      // three shapes) is normalized to an "enabled set"; each managed method
+      // must be enabled+all_users iff it's in the set, disabled otherwise.
+      // Legacy primitives ('standard'/'disabled') stay trio-only for backward
+      // compatibility (strict=false) so pre-v2 baselines don't read as drift.
       matches: (applied, current) => {
         if (!current || typeof current !== 'object') return false;
-        const isRich = applied && typeof applied === 'object' && 'option' in applied;
-        const option = isRich ? applied.option : applied;
-        const additionalsApplied = (isRich && Array.isArray(applied.additional))
-          ? new Set(applied.additional)
-          : new Set();
-
+        const norm = _ssprEnabledSet(applied);
+        if (!norm) return false;
         const all = current.all_methods || current.sspr_methods || {};
-        const baselineIds = ['MicrosoftAuthenticator', 'Sms', 'Email'];
-        const advancedIds = ['Fido2', 'TemporaryAccessPass', 'Voice', 'SoftwareOath', 'HardwareOath', 'X509Certificate', 'QRCodePin', 'VerifiableCredentials'];
-
-        // Baseline check: 3 methods match the option
-        const baselineOk = baselineIds.every(id => {
+        const idsToCheck = norm.strict ? SSPR_MANAGED_METHODS : SSPR_TRIO;
+        for (const id of idsToCheck) {
           const m = all[id];
-          if (option === 'standard') return m && m.state === 'enabled' && m.all_users === true;
-          if (option === 'disabled') return !m || m.state === 'disabled';
-          return false;
-        });
-        if (!baselineOk) return false;
-
-        // Advanced methods check: each must match its applied state
-        // (enabled+all_users iff in additionalsApplied; disabled otherwise).
-        // For LEGACY primitive applied values (no .additional), we don't
-        // check advanced methods — that's backward compat with v1 baselines
-        // captured before this v2 design existed.
-        if (!isRich) return true;
-        for (const id of advancedIds) {
-          const m = all[id];
-          const shouldBeEnabled = additionalsApplied.has(id);
+          const shouldBeEnabled = norm.set.has(id);
           if (shouldBeEnabled) {
             if (!m || m.state !== 'enabled' || m.all_users !== true) return false;
           } else {
@@ -1250,6 +1289,13 @@ if ($errors.Count -gt 0) {
         }
         return true;
       },
+      // Jun 10, 2026 — Accept/Match capture the LIVE method set as the new
+      // baseline, regardless of whether it maps to a named preset. This is what
+      // lets an operator adopt a legitimate hardening (e.g. SMS removed) without
+      // the "does not correspond to any documented option" dead-end. Returns the
+      // canonical {methods:[…]} shape. api-security.js prefers this over
+      // deriveChosenFromCurrent() whenever a writer defines it.
+      captureCurrentBaseline: (currentValue) => ({ methods: _ssprCurrentEnabled(currentValue) }),
       // Apr 30, 2026 — i18n Phase 6. Plural form via params.count.
       interpret: (current) => {
         if (!current || typeof current !== 'object') return null;

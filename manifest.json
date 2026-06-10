@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.2.1",
-    "image_tag": "v0.2.1",
-    "released_at": "2026-06-09",
+    "version": "0.2.2",
+    "image_tag": "v0.2.2",
+    "released_at": "2026-06-10",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "When you create an alert exemption, the selected Country scope and Duration pills now fill with colour so it's obvious at a glance which option is active — previously the highlight was so faint it looked like clicking a pill did nothing, and hovering a pill now shows a coloured outline so it reads as clickable. This is a visual change only; how exemptions match and suppress alerts is unchanged.",
-      "fr": "Lorsque vous créez une exemption d'alerte, les pastilles de portée par pays et de durée sélectionnées se remplissent maintenant de couleur, ce qui rend évident d'un coup d'œil quelle option est active — auparavant, la surbrillance était si pâle qu'on croyait qu'un clic sur une pastille n'avait rien fait, et le survol d'une pastille affiche désormais un contour coloré pour indiquer qu'elle est cliquable. Il s'agit d'un changement visuel seulement; la façon dont les exemptions correspondent aux alertes et les suppriment demeure inchangée.",
-      "es": "Cuando crea una exención de alerta, las píldoras seleccionadas de alcance por país y de duración ahora se rellenan con color, de modo que se ve de un vistazo qué opción está activa; antes el resaltado era tan tenue que parecía que pulsar una píldora no hacía nada, y ahora al pasar el cursor sobre una píldora aparece un contorno de color para indicar que se puede pulsar. Es un cambio solo visual; la forma en que las exenciones coinciden con las alertas y las suprimen no cambia."
+      "en": "The Self-Service Password Reset (SSPR) control no longer treats Authenticator, SMS, and Email as an all-or-nothing bundle. Every authentication method is now its own checkbox in the Configure tab, with Standard and Disabled as one-click presets, so you can enable any combination — for example turning off SMS (the weakest method) while keeping Authenticator and Email. Accept and Match now adopt whatever configuration is live as the baseline, so dropping SMS no longer fails with 'does not correspond to any documented option.' Existing baselines keep working unchanged and convert to the new per-method form on the next Apply, Accept, or Match.",
+      "fr": "Le contrôle de réinitialisation de mot de passe en libre-service (SSPR) ne traite plus Authenticator, le SMS et le courriel comme un bloc tout ou rien. Chaque méthode d'authentification est maintenant sa propre case à cocher dans l'onglet Configurer, avec Standard et Désactivé comme préréglages en un clic; vous pouvez donc activer n'importe quelle combinaison — par exemple désactiver le SMS (la méthode la plus faible) tout en conservant Authenticator et le courriel. Accepter et Faire correspondre adoptent désormais la configuration en direct comme référence, de sorte que retirer le SMS n'échoue plus avec « ne correspond à aucune option documentée ». Les références existantes continuent de fonctionner sans changement et passent à la nouvelle forme par méthode au prochain Appliquer, Accepter ou Faire correspondre.",
+      "es": "El control de restablecimiento de contraseña de autoservicio (SSPR) ya no trata a Authenticator, SMS y correo electrónico como un bloque de todo o nada. Cada método de autenticación es ahora su propia casilla en la pestaña Configurar, con Estándar y Deshabilitado como preajustes de un clic, así que puede habilitar cualquier combinación — por ejemplo, desactivar el SMS (el método más débil) y conservar Authenticator y el correo. Aceptar y Coincidir ahora adoptan como línea base la configuración en vivo, de modo que quitar el SMS ya no falla con «no corresponde a ninguna opción documentada». Las líneas base existentes siguen funcionando sin cambios y pasan a la nueva forma por método en el próximo Aplicar, Aceptar o Coincidir."
     }
   },
   "yanked": []

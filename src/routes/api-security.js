@@ -1014,8 +1014,16 @@ router.post('/tenants/:tid/settings/:sid/match', auth.requireMemberOrAdmin, asyn
   // later do deep snapshot equality. Empty state (zero policies) is valid —
   // captures empty baseline, future config creation fires drift.
   let chosenValue;
+  let baselineToStoreMatch;
   if (setting.writer && setting.writer.audit_only === true) {
     chosenValue = setting.writer.captureBaseline(null, readResult.current_value);
+    baselineToStoreMatch = chosenValue;
+  } else if (setting.writer && typeof setting.writer.captureCurrentBaseline === 'function') {
+    // Per-method settings (ENT-01 SSPR): adopt the live method set directly.
+    // Any combination is a valid baseline by construction, so Match never
+    // dead-ends on "no documented option."
+    chosenValue = setting.writer.captureCurrentBaseline(readResult.current_value);
+    baselineToStoreMatch = chosenValue;
   } else {
     // Match requires the current value to map to one of the writer's documented
     // options. If it doesn't (operator has a custom configuration we don't
@@ -1028,18 +1036,14 @@ router.post('/tenants/:tid/settings/:sid/match', auth.requireMemberOrAdmin, asyn
         detail: 'Current configuration does not correspond to any documented option. Use Apply to set an explicit baseline.',
       });
     }
+    // Run captureBaseline to wrap if the writer wants snapshot tracking.
+    baselineToStoreMatch = setting.writer.captureBaseline
+      ? setting.writer.captureBaseline(chosenValue, readResult.current_value)
+      : chosenValue;
   }
 
   const previous = await priorAppliedValue(tenant.id, settingId);
   const operatorEmail = operatorEmailOf(req);
-
-  // For audit-only, chosenValue IS the captured baseline (snapshot already).
-  // For others, run captureBaseline to wrap if the writer wants snapshot tracking.
-  const baselineToStoreMatch = (setting.writer && setting.writer.audit_only === true)
-    ? chosenValue
-    : (setting.writer.captureBaseline
-        ? setting.writer.captureBaseline(chosenValue, readResult.current_value)
-        : chosenValue);
 
   await persistTransition({
     tenant, settingId, setting,
@@ -1256,11 +1260,24 @@ router.post('/tenants/:tid/settings/:sid/accept', auth.requireMemberOrAdmin, asy
   catch (e) { return res.status(502).json({ error: 'Accept read failed', detail: e.message }); }
   if (!readResult.ok) return res.status(502).json({ error: 'Accept read failed', detail: readResult.error });
 
-  // Apr 27 — audit-only writers bypass option-matching (no documented options).
-  // Accept = capture the current snapshot as the new baseline.
+  // Determine the new baseline from the freshly-read current state:
+  //   audit_only             → captureBaseline(null, current) IS the snapshot.
+  //   captureCurrentBaseline → per-method settings (ENT-01 SSPR): adopt the
+  //                            LIVE method set directly, even when it maps to
+  //                            no named preset (e.g. the operator dropped SMS —
+  //                            a legitimate hardening that the two coarse
+  //                            presets can't express). This is what eliminates
+  //                            the old "does not correspond to any documented
+  //                            option" dead-end on Accept.
+  //   otherwise              → must map to a documented option, else 409.
   let newChosen;
+  let baselineToStoreAccept;
   if (setting.writer && setting.writer.audit_only === true) {
     newChosen = setting.writer.captureBaseline(null, readResult.current_value);
+    baselineToStoreAccept = newChosen;
+  } else if (setting.writer && typeof setting.writer.captureCurrentBaseline === 'function') {
+    newChosen = setting.writer.captureCurrentBaseline(readResult.current_value);
+    baselineToStoreAccept = newChosen;
   } else {
     newChosen = deriveChosenFromCurrent(setting, readResult.current_value);
     if (newChosen === null) {
@@ -1269,16 +1286,13 @@ router.post('/tenants/:tid/settings/:sid/accept', auth.requireMemberOrAdmin, asy
         detail: 'Drifted current value does not correspond to any documented option. Use Apply to set an explicit value.',
       });
     }
+    baselineToStoreAccept = setting.writer.captureBaseline
+      ? setting.writer.captureBaseline(newChosen, readResult.current_value)
+      : newChosen;
   }
 
   const previous = safeParse(existing.applied_value);
   const operatorEmail = operatorEmailOf(req);
-
-  const baselineToStoreAccept = (setting.writer && setting.writer.audit_only === true)
-    ? newChosen   // already a snapshot
-    : (setting.writer.captureBaseline
-        ? setting.writer.captureBaseline(newChosen, readResult.current_value)
-        : newChosen);
 
   await persistTransition({
     tenant, settingId, setting,

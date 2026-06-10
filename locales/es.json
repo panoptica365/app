@@ -1320,7 +1320,8 @@
       "psa.auth_failed": "La autenticación de Autotask falla ({reason})",
       "psa.auth_recovered": "Autenticación de Autotask restablecida",
       "psa.sync_error": "Autotask ({op}) falló para la alerta n.º {alertId}: {error}",
-      "settings.psa.update": "Ajustes de la integración con PSA modificados ({fields})"
+      "settings.psa.update": "Ajustes de la integración con PSA modificados ({fields})",
+      "psa.rollup_consolidated": "Alerta de agrupación n.º {alertId}: se conservó el ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -1872,7 +1873,8 @@
     "confirm_apply_on": "Aplicar en {tenant}:",
     "confirm_current": "Actual:",
     "confirm_new": "Nuevo:",
-    "diff_additional_method_changes": "Cambios de métodos adicionales:",
+    "confirm_new_methods_count": "{count} método(s) de autenticación habilitado(s) para todos los usuarios",
+    "diff_additional_method_changes": "Cambios de métodos:",
     "diff_enable": "HABILITAR",
     "diff_disable": "DESHABILITAR",
     "diff_will_add": "Se AÑADIRÁ:",
@@ -2049,9 +2051,12 @@
         "disabled_authenticator_sms_email_turned_off_no_sspr": "Deshabilitado — Authenticator/SMS/Email desactivados (sin SSPR)"
       },
       "secondary_section": {
-        "toggle_label": "Métodos de autenticación adicionales",
-        "help": "Métodos opcionales a habilitar además de la línea base SSPR. Útil para inquilinos con despliegue sin contraseña, tokens de hardware o flujos de primer acceso. Los métodos no marcados se DESHABILITARÁN al aplicar — Panoptica365 sincroniza el conjunto completo para que la detección de desviación capte cualquier cambio externo.",
+        "toggle_label": "Métodos de autenticación (sincronizados para todos los usuarios)",
+        "help": "Panoptica365 sincroniza el conjunto COMPLETO: cada método marcado se habilita para todos los usuarios; cada método sin marcar se DESHABILITA al aplicar. Los preajustes de arriba son atajos — «Estándar» marca el trío recomendado por Microsoft, «Deshabilitado» borra todo. El SMS es el método más débil; Microsoft recomienda dejar de usarlo, así que puede dejarlo sin marcar y mantener el SSPR funcionando con Authenticator + Email.",
         "options": {
+          "MicrosoftAuthenticator": "Microsoft Authenticator (recomendado — notificación + sin contraseña)",
+          "Sms": "Mensaje de texto SMS (método más débil — Microsoft recomienda dejar de usarlo)",
+          "Email": "Código de un solo uso por correo (recuperación de cuenta)",
           "Fido2": "Llaves de seguridad FIDO2 (inicio de sesión sin contraseña)",
           "TemporaryAccessPass": "Pase de acceso temporal (configuración inicial, recuperación de cuenta)",
           "Voice": "Llamada de voz (alternativa para cuentas sin teléfono)",
@@ -3900,7 +3905,11 @@
         "info_title": "Actualización de Panoptica365",
         "drift_cleared": "La alerta de Panoptica365 vinculada se resolvió automáticamente ({reason}). Este ticket se dejó abierto para su revisión.",
         "resolved_left_open": "Un operador resolvió la alerta de Panoptica365 vinculada (n.º {alertId}). Este ticket se dejó abierto.",
-        "closed_drift_cleared": "Cierre automático: la alerta de Panoptica365 vinculada se resolvió (la desviación de configuración se corrigió)."
+        "closed_drift_cleared": "Cierre automático: la alerta de Panoptica365 vinculada se resolvió (la desviación de configuración se corrigió).",
+        "rollup_survivor_title": "Agrupación consolidada",
+        "rollup_survivor": "Este ticket ahora consolida una agrupación de Panoptica365: «{title}», que abarca {count} alertas. Los tickets relacionados se cerraron y apuntan aquí.",
+        "rollup_absorbed_title": "Consolidado en otro ticket",
+        "rollup_absorbed": "Consolidado en el ticket {survivor} mediante una agrupación de Panoptica365. Este ticket se cerró: continúe en {survivor}."
       }
     },
     "settings": {

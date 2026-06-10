@@ -1320,7 +1320,8 @@
       "psa.auth_failed": "Échec de l’authentification Autotask ({reason})",
       "psa.auth_recovered": "Authentification Autotask rétablie",
       "psa.sync_error": "Échec Autotask ({op}) pour l’alerte nº {alertId} : {error}",
-      "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})"
+      "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})",
+      "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1872,7 +1873,8 @@
     "confirm_apply_on": "Appliquer sur {tenant} :",
     "confirm_current": "Actuel :",
     "confirm_new": "Nouveau :",
-    "diff_additional_method_changes": "Modifications des méthodes supplémentaires :",
+    "confirm_new_methods_count": "{count} méthode(s) d'authentification activée(s) pour tous les utilisateurs",
+    "diff_additional_method_changes": "Modifications des méthodes :",
     "diff_enable": "ACTIVER",
     "diff_disable": "DÉSACTIVER",
     "diff_will_add": "Sera AJOUTÉ :",
@@ -2049,9 +2051,12 @@
         "disabled_authenticator_sms_email_turned_off_no_sspr": "Désactivé — Authenticator/SMS/Email désactivés (aucun SSPR)"
       },
       "secondary_section": {
-        "toggle_label": "Méthodes d'authentification supplémentaires",
-        "help": "Méthodes optionnelles à activer en plus de la base SSPR. Utile pour les locataires avec un déploiement sans mot de passe, des jetons matériels ou des flux de premier accès. Les méthodes non cochées seront DÉSACTIVÉES lors d'Apply — Panoptica365 synchronise l'ensemble complet afin que la détection de dérive détecte tout changement externe.",
+        "toggle_label": "Méthodes d'authentification (synchronisées pour tous les utilisateurs)",
+        "help": "Panoptica365 synchronise l'ensemble COMPLET : chaque méthode cochée est activée pour tous les utilisateurs; chaque méthode décochée est DÉSACTIVÉE lors d'Apply. Les préréglages ci-dessus sont des raccourcis — « Standard » coche le trio recommandé par Microsoft, « Désactivé » efface tout. Le SMS est la méthode la plus faible; Microsoft recommande de l'abandonner, vous pouvez donc le laisser décoché et garder le SSPR fonctionnel avec Authenticator + Email.",
         "options": {
+          "MicrosoftAuthenticator": "Microsoft Authenticator (recommandé — notification + sans mot de passe)",
+          "Sms": "Message texte SMS (méthode la plus faible — Microsoft recommande de l'abandonner)",
+          "Email": "Code à usage unique par courriel (récupération de compte)",
           "Fido2": "Clés de sécurité FIDO2 (connexion sans mot de passe)",
           "TemporaryAccessPass": "Passe d'accès temporaire (configuration initiale, récupération de compte)",
           "Voice": "Appel vocal (solution de repli pour comptes sans téléphone)",
@@ -3900,7 +3905,11 @@
         "info_title": "Mise à jour Panoptica365",
         "drift_cleared": "L’alerte Panoptica365 associée a été résolue automatiquement ({reason}). Ce billet a été laissé ouvert pour votre examen.",
         "resolved_left_open": "L’alerte Panoptica365 associée (nº {alertId}) a été résolue par un opérateur. Ce billet a été laissé ouvert.",
-        "closed_drift_cleared": "Fermeture automatique : l’alerte Panoptica365 associée a été résolue (la dérive de configuration a été corrigée)."
+        "closed_drift_cleared": "Fermeture automatique : l’alerte Panoptica365 associée a été résolue (la dérive de configuration a été corrigée).",
+        "rollup_survivor_title": "Regroupement consolidé",
+        "rollup_survivor": "Ce billet consolide maintenant un regroupement Panoptica365 : « {title} » — couvrant {count} alertes. Les billets liés ont été fermés et pointent ici.",
+        "rollup_absorbed_title": "Consolidé dans un autre billet",
+        "rollup_absorbed": "Consolidé dans le billet {survivor} au moyen d’un regroupement Panoptica365. Ce billet a été fermé — poursuivez dans {survivor}."
       }
     },
     "settings": {
