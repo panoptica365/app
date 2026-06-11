@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.3 — 2026-06-11
+
+### Corregido: los tickets de desviación ahora se vinculan a su alerta y se cierran al aceptar la desviación
+
+Los tickets abiertos para **alertas de desviación de configuración** —desviación de Acceso condicional y desviación de política de Intune— se creaban en su PSA pero **no se vinculaban** con la alerta. Por eso no mostraban etiqueta de ticket y, cuando usted **aceptaba (o resolvía de otro modo) la desviación**, el ticket quedaba abierto: un huérfano que debía cerrar a mano. Ahora se vinculan correctamente y se cierran automáticamente al aceptar/resolver, igual que cualquier otro ticket del PSA. (Las alertas de bloqueo de cuenta e inicio de sesión nunca se vieron afectadas.)
+
+Nota: los tickets de desviación creados *antes* de esta corrección no tienen vínculo, así que no se cerrarán solos; vacíe ese pendiente manualmente en su PSA una última vez.
+
+### Las agrupaciones ahora consolidan sus tickets en lugar de dejarlos huérfanos
+
+Cuando combina varias alertas en una **agrupación**, sus tickets del PSA ahora se consolidan en consecuencia. El ticket **más antiguo** se conserva como superviviente —renombrado con el título de su agrupación y vinculado a la alerta de agrupación— y los demás tickets se **cierran con una nota que apunta al superviviente**. Antes, combinar alertas dejaba abierto el ticket de cada hijo. Como el PSA no ofrece una verdadera operación de «combinar tickets», esto reproduce lo que usted haría a mano: un ticket lleva el trabajo y los demás se cierran con una referencia cruzada.
+
+---
+
 ## Versión 0.2.2 — 2026-06-10
 
 ### Restablecimiento de contraseña de autoservicio: cada método de autenticación es ahora una casilla independiente

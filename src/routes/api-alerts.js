@@ -1028,29 +1028,22 @@ router.post('/rollup', auth.requireMemberOrAdmin, async (req, res) => {
       req,
     }).catch(err => console.warn('[API] mspAudit.logMspAudit (alert_rollup.create) failed (non-blocking):', err.message));
 
-    // PSA roll-up interaction (Feature 8.3 §4.1): if the merged children share
-    // exactly ONE distinct open Autotask ticket, link the parent to it so a
-    // later ticket-close auto-resolves the parent too. If children span multiple
-    // open tickets (or none), link the parent to none — per-child poll still
-    // works, and the children are already resolved 'rolled_up'.
+    // PSA roll-up consolidation (Feature 8.3, 2026-06-09 — supersedes the
+    // original §4.1 "link only when one shared ticket" rule, which orphaned
+    // child tickets whenever the merged alerts spanned multiple tickets).
+    // Autotask has no merge API, so emulate it: keep the oldest child ticket as
+    // the survivor, rename it to the roll-up title + link it to the parent, and
+    // auto-close the rest with a pointer. Best-effort — never breaks the merge.
     if (psa.isConfigured()) {
       try {
-        const childLinks = await psa.store.getOpenLinksForAlertIds(ids);
-        const distinctTickets = [...new Set([...childLinks.values()].map(l => Number(l.ticket_id)))];
-        if (distinctTickets.length === 1) {
-          const sample = [...childLinks.values()].find(l => Number(l.ticket_id) === distinctTickets[0]);
-          await psa.store.insertLink({
-            alert_id: result.parentId,
-            tenant_id: result.tenantId,
-            policy_id: null,
-            ticket_id: distinctTickets[0],
-            ticket_number: sample ? sample.ticket_number : null,
-            link_role: 'appended',
-            state: 'open',
-          });
-        }
+        await psa.consolidateRollupTickets(ids, {
+          parentAlertId: result.parentId,
+          parentTenantId: result.tenantId,
+          title: cleanTitle,
+          operatorEmail: req.session?.user?.email || null,
+        });
       } catch (err) {
-        console.warn(`[API] PSA roll-up link for parent #${result.parentId} failed (non-fatal): ${err.message}`);
+        console.warn(`[API] PSA roll-up consolidation for parent #${result.parentId} failed (non-fatal): ${err.message}`);
       }
     }
 

@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.2.3 — 2026-06-11
+
+### Fixed: drift tickets now link to their alert and close when you accept the drift
+
+Tickets opened for **configuration-drift alerts** — Conditional Access drift and Intune policy drift — were being created in your PSA but **not linked** back to the alert. As a result they showed no ticket chip, and when you **accepted (or otherwise resolved) the drift** the ticket was left open — an orphan you had to close by hand. They now link correctly and close automatically on accept/resolve, exactly like every other PSA ticket. (Account-lockout and sign-in alerts were never affected.)
+
+Note: drift tickets created *before* this fix have no link, so they won't close themselves — clear that backlog manually in your PSA one last time.
+
+### Roll-ups now consolidate their tickets instead of orphaning them
+
+When you merge several alerts into a **roll-up**, their PSA tickets are now consolidated to match. The **oldest** ticket is kept as the survivor — renamed to your roll-up title and linked to the roll-up alert — and the other tickets are **closed with a note pointing to the survivor**. Previously merging alerts left every child's ticket open. Since the PSA has no real "merge tickets" operation, this mirrors what you'd otherwise do by hand: one ticket carries the work, the rest close with a cross-reference.
+
+---
+
 ## Version 0.2.2 — 2026-06-10
 
 ### Self-Service Password Reset: every authentication method is now its own toggle

@@ -2009,11 +2009,22 @@ async function createIntuneDriftAlert(deployment, template, drifts) {
     const tenant = await db.queryOne('SELECT * FROM tenants WHERE id = ?', [deployment.tenant_id]);
     await notifier.sendAlertNotification({
       id: alertId,
+      // tenant_id + policy_id are REQUIRED: the PSA integration builds its
+      // alert↔ticket link row from them, and mysql2 rejects undefined bind
+      // params — omitting these created the ticket but threw on link insert,
+      // orphaning every Intune-drift PSA ticket (fixed 2026-06-10).
+      tenant_id: deployment.tenant_id,
+      policy_id: intuneDriftPolicyId,
+      alert_scope: 'tenant',
       severity: 'high',
       message,
       notification_target: alertRouting,
       policy_name: 'Intune Policy Drift Detected',
       category: 'config_changes',
+      raw_data: JSON.stringify({
+        message_template_key: messageTemplateKey,
+        message_template_params: messageTemplateParams,
+      }),
     }, tenant);
   } catch (nErr) {
     console.error(`[Intune:Drift] Notification failed: ${nErr.message}`);

@@ -228,7 +228,7 @@ async function dispatchAlert(alert, tenant) {
   const companyId = await resolveCompanyId(alert, tenant);
   if (companyId == null) return 'skipped';
 
-  const dedupTenantId = alert.alert_scope === 'msp' ? null : alert.tenant_id;
+  const dedupTenantId = alert.alert_scope === 'msp' ? null : (alert.tenant_id ?? null);
   const policyId = alert.policy_id != null ? alert.policy_id : null;
 
   let existing = null;
@@ -384,7 +384,7 @@ async function retryErroredLink(linkRow) {
     [alert.tenant_id]
   ) : null;
 
-  const dedupTenantId = alert.alert_scope === 'msp' ? null : alert.tenant_id;
+  const dedupTenantId = alert.alert_scope === 'msp' ? null : (alert.tenant_id ?? null);
   const policyId = alert.policy_id != null ? alert.policy_id : null;
 
   try {
@@ -652,6 +652,117 @@ async function closeTicketsForResolvedAlerts(alertIds, opts = {}) {
   return closed;
 }
 
+/**
+ * Roll-up ticket consolidation (Feature 8.3 — 2026-06-09, supersedes the §4.1
+ * "link parent only when exactly one shared ticket" rule). Autotask has no merge
+ * API (merge is UI-only), so we emulate it: when the operator rolls up N alerts,
+ * keep the OLDEST of the children's open tickets as the survivor (most history),
+ * rename it to the roll-up title, link it to the parent roll-up alert, and close
+ * every other child ticket with a note pointing at the survivor. Best-effort;
+ * never throws to the caller. Returns { survivor, survivorNumber, closed } | null.
+ */
+async function consolidateRollupTickets(childAlertIds, opts = {}) {
+  if (!isConfigured()) return null;
+  const { parentAlertId, parentTenantId, title, operatorEmail } = opts;
+
+  let map;
+  try { map = await store.getOpenLinksForAlertIds(childAlertIds); }
+  catch (err) { console.warn(`[PSA] roll-up link lookup failed: ${err.message}`); return null; }
+  if (map.size === 0) return null;
+
+  // One link per distinct open ticket; survivor = lowest ticket_id (oldest).
+  const byTicket = new Map();
+  for (const link of map.values()) {
+    const tid = Number(link.ticket_id);
+    if (tid > 0 && !byTicket.has(tid)) byTicket.set(tid, link);
+  }
+  if (byTicket.size === 0) return null;
+  const ticketIds = [...byTicket.keys()].sort((a, b) => a - b);
+  const survivorId = ticketIds[0];
+  const survivorLink = byTicket.get(survivorId);
+  const survivorNumber = survivorLink.ticket_number || ('#' + survivorId);
+
+  const c = tc();
+  const lang = ticketLang();
+  const nowSql = toMysqlDatetime(new Date());
+
+  // The children's existing OPEN links to the survivor are superseded by the
+  // parent link below (the survivor now belongs to the roll-up), so close them.
+  try {
+    const survLinks = await store.getLinksForTicket(survivorId);
+    for (const l of survLinks) {
+      if (l.state === 'open') await store.updateLink(l.id, { state: 'closed', last_synced_at: nowSql });
+    }
+  } catch (_) { /* best-effort */ }
+
+  // Link the parent roll-up alert to the survivor (its new owner) so the chip
+  // points there and resolving the roll-up later closes it.
+  try {
+    await store.insertLink({
+      alert_id: parentAlertId,
+      tenant_id: parentTenantId == null ? null : parentTenantId,
+      policy_id: null,
+      ticket_id: survivorId,
+      ticket_number: survivorLink.ticket_number || null,
+      link_role: 'appended',
+      state: 'open',
+      last_synced_at: nowSql,
+    });
+  } catch (err) {
+    console.warn(`[PSA] roll-up parent link failed for ticket ${survivorId}: ${err.message}`);
+  }
+
+  // Rename + note the survivor.
+  try {
+    if (title) await client.patchTicketTitle(survivorId, title);
+    await client.createTicketNote(survivorId, {
+      title: i18n.t('psa.ticket.note.rollup_survivor_title', { lang }),
+      description: i18n.t('psa.ticket.note.rollup_survivor', { title: title || '', count: childAlertIds.length, lang }),
+      noteType: c.noteTypeId,
+      publish: c.publishId,
+    });
+    recoverAuthIfNeeded();
+  } catch (err) {
+    if ((err && err.statusCode) === 401) await flipAuthUnhealthy(err.message);
+    console.warn(`[PSA] roll-up survivor update failed for ticket ${survivorId}: ${err.message}`);
+  }
+
+  // Close every other child ticket with a cross-reference note.
+  let closed = 0;
+  for (const tid of ticketIds.slice(1)) {
+    try {
+      if (c.closeStatusId != null) await client.patchTicketStatus(tid, c.closeStatusId);
+      await client.createTicketNote(tid, {
+        title: i18n.t('psa.ticket.note.rollup_absorbed_title', { lang }),
+        description: i18n.t('psa.ticket.note.rollup_absorbed', { survivor: survivorNumber, lang }),
+        noteType: c.noteTypeId,
+        publish: c.publishId,
+      });
+      const links = await store.getLinksForTicket(tid);
+      for (const l of links) {
+        if (l.state === 'open') await store.updateLink(l.id, { state: 'closed', closed_at: nowSql, last_synced_at: nowSql });
+      }
+      recoverAuthIfNeeded();
+      closed += 1;
+    } catch (err) {
+      if ((err && err.statusCode) === 401) await flipAuthUnhealthy(err.message);
+      console.warn(`[PSA] roll-up absorb-close failed for ticket ${tid}: ${err.message}`);
+    }
+  }
+
+  mspAudit.logMspAudit({
+    category: mspAudit.CATEGORY.OTHER,
+    action: 'psa.rollup_consolidated',
+    description: `Roll-up #${parentAlertId}: kept Autotask ticket ${survivorNumber}, closed ${closed} absorbed ticket(s)`,
+    templateKey: 'psa.rollup_consolidated',
+    templateParams: { survivor: survivorNumber, closed, alertId: parentAlertId, operator: operatorEmail || '' },
+    targetType: 'alert', targetId: String(parentAlertId), targetName: survivorNumber,
+  }).catch(() => {});
+
+  console.log(`[PSA] Roll-up #${parentAlertId}: survivor ticket ${survivorNumber}, closed ${closed} absorbed`);
+  return { survivor: survivorId, survivorNumber, closed };
+}
+
 // ─── Auth health (§7) ───
 
 async function flipAuthUnhealthy(reason) {
@@ -804,6 +915,7 @@ module.exports = {
   closeTicketForAlert,
   noteTicketForAlert,
   closeTicketsForResolvedAlerts,
+  consolidateRollupTickets,
   // worker
   retryErroredLink,
   pollLinkedTickets,

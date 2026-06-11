@@ -602,11 +602,21 @@ async function createDriftAlert(assignment, drifts, remediated) {
     const tenant = await db.queryOne('SELECT * FROM tenants WHERE id = ?', [assignment.tenant_id]);
     await notifier.sendAlertNotification({
       id: alertId,
+      // tenant_id + policy_id are REQUIRED — the PSA integration builds its
+      // alert↔ticket link row from them (mysql2 rejects undefined bind params).
+      // Omitting these orphaned every CA-drift PSA ticket (fixed 2026-06-10).
+      tenant_id: assignment.tenant_id,
+      policy_id: policyId,
+      alert_scope: 'tenant',
       severity,
       message,
       notification_target: alertRouting,
       policy_name: policyName,
       category: 'config_changes',
+      raw_data: JSON.stringify({
+        message_template_key: messageTemplateKey,
+        message_template_params: messageTemplateParams,
+      }),
     }, tenant);
   } catch (e) {
     console.error(`[CA] Notification failed for drift alert ${alertId}:`, e.message);

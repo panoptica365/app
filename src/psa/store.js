@@ -167,7 +167,11 @@ async function insertLink(fields) {
   };
   const cols = Object.keys(row);
   const placeholders = cols.map(() => '?').join(', ');
-  const params = cols.map((c) => row[c]);
+  // Coerce undefined → null: mysql2 throws on undefined bind params, which would
+  // abort the link insert AFTER the ticket was already created in the PSA —
+  // orphaning it. A caller that omits a nullable field (e.g. tenant_id on a
+  // hand-built drift alert) must degrade to NULL, never crash. (2026-06-10)
+  const params = cols.map((c) => (row[c] === undefined ? null : row[c]));
   return db.insert(
     `INSERT INTO psa_tickets (${cols.join(', ')}) VALUES (${placeholders})`,
     params

@@ -202,6 +202,17 @@ async function patchTicketStatus(id, statusId, ctx) {
   return data && data.itemId;
 }
 
+/**
+ * Patch ONLY a ticket's title (used by roll-up consolidation). Autotask PATCH is
+ * partial, so this touches the `title` field alone — and title is a plain string
+ * (255), NOT the rich-text `description` that decision 11 forbids overwriting.
+ */
+async function patchTicketTitle(id, title, ctx) {
+  const body = { id: Number(id), title: String(title).slice(0, 255) };
+  const data = await request('PATCH', 'Tickets', { body, ctx });
+  return data && data.itemId;
+}
+
 /** Create a TicketNote under a ticket. Returns the new note id (itemId). */
 async function createTicketNote(ticketId, { title, description, noteType, publish }, ctx) {
   const body = {
@@ -261,6 +272,7 @@ module.exports = {
   getTicket,
   createTicket,
   patchTicketStatus,
+  patchTicketTitle,
   createTicketNote,
   getTicketFieldInfo,
   getTicketNoteFieldInfo,

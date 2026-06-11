@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.3 — 2026-06-11
+
+### Corrigé : les billets de dérive se relient à leur alerte et se ferment quand vous acceptez la dérive
+
+Les billets ouverts pour les **alertes de dérive de configuration** — dérive d'Accès conditionnel et dérive de politique Intune — étaient créés dans votre PSA mais **non reliés** à l'alerte. Ils n'affichaient donc aucune pastille de billet, et lorsque vous **acceptiez (ou résolviez autrement) la dérive**, le billet restait ouvert — un orphelin à fermer à la main. Ils se relient maintenant correctement et se ferment automatiquement à l'acceptation/résolution, exactement comme tout autre billet PSA. (Les alertes de verrouillage de compte et de connexion n'ont jamais été touchées.)
+
+Remarque : les billets de dérive créés *avant* ce correctif n'ont pas de lien et ne se fermeront donc pas d'eux-mêmes — videz cet arriéré manuellement dans votre PSA une dernière fois.
+
+### Les regroupements consolident maintenant leurs billets au lieu de les abandonner
+
+Lorsque vous fusionnez plusieurs alertes en un **regroupement**, leurs billets PSA sont maintenant consolidés en conséquence. Le billet le **plus ancien** est conservé comme survivant — renommé selon le titre de votre regroupement et lié à l'alerte de regroupement — et les autres billets sont **fermés avec une note qui renvoie au survivant**. Auparavant, fusionner des alertes laissait ouvert le billet de chaque enfant. Comme le PSA n'offre aucune véritable opération de « fusion de billets », ceci reproduit ce que vous feriez à la main : un billet porte le travail, les autres se ferment avec un renvoi.
+
+---
+
 ## Version 0.2.2 — 2026-06-10
 
 ### Réinitialisation de mot de passe en libre-service : chaque méthode d'authentification est maintenant une case à cocher distincte
