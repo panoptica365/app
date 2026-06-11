@@ -12,6 +12,7 @@
   <div class="td-view-toggle" id="td-view-toggle" style="margin-left:auto;">
     <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
     <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
+    <button class="td-view-btn" data-view="security" data-i18n="tenant_dashboard.view_security">Security</button>
     <button class="td-view-btn" data-view="applications" data-i18n="tenant_dashboard.view_applications">Applications</button>
     <button class="td-view-btn" data-view="ca-policies" data-i18n="tenant_dashboard.view_ca_policies">CA Policies</button>
     <button class="td-view-btn" data-view="intune-policies" data-i18n="tenant_dashboard.view_intune_policies">Intune Policies</button>
@@ -98,6 +99,16 @@
 
 <!-- Per-Tenant Alerts View (hidden by default) -->
 <div id="td-alerts-view" style="display:none;"></div>
+
+<!-- ═══ Per-Tenant Security View (hidden by default) ═══ -->
+<!--
+  Host for the shared SecurityPanel controller (window.Panoptica.SecurityPanel).
+  Lazy-mounted on Security-tab activation only (loadSecurity in tenant-dashboard.js)
+  — 25 readers / 17+ settings is heavy and must never slow the Overview tab.
+  The controller injects /partials/security-body.html here and unmounts on tab/
+  tenant switch + page leave so its refresh-poll timer never leaks.
+-->
+<div id="td-security-view" style="display:none;"></div>
 
 <!-- ═══ Per-Tenant Applications View (Feature 8.9, hidden by default) ═══ -->
 <!--

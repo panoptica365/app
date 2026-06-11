@@ -5,6 +5,28 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.4 — 2026-06-11
+
+### Los ajustes de seguridad ahora están en el panel de cada inquilino
+
+Los ajustes de seguridad son, por naturaleza, propios de cada inquilino, así que ahora tienen su propia pestaña **Seguridad** en el panel del inquilino — entre **Alertas** y **Aplicaciones**. Ya no tiene que salir del inquilino en el que está trabajando, abrir la página de Seguridad aparte y volver a elegir el inquilino: todo lo de ese inquilino, incluida su postura de seguridad, está ahora en un solo lugar. La pestaña incluye el mismo botón **Actualizar** para volver a sondear los ajustes de seguridad de un inquilino cuando lo necesite, y los enlaces de «explorar un ajuste» del Mapa de calor ahora lo llevan directamente a esta pestaña, con el ajuste abierto.
+
+La página de Seguridad independiente (en **Políticas**) sigue funcionando exactamente como antes — no se eliminó nada.
+
+### Abrir un incidente de Defender directamente desde su alerta
+
+Las alertas generadas a partir de un incidente de Microsoft Defender ahora muestran un botón **Abrir el incidente en Defender** que lo lleva directamente a ese incidente en el portal de Microsoft Defender — ya no hay que copiar el enlace de los datos sin procesar de la alerta. Abrirlo requiere una sesión del navegador iniciada con una cuenta habilitada para GDAP del inquilino cliente.
+
+### Haga clic en el nombre de un inquilino en una alerta para abrir su panel
+
+En el panel de detalle de la alerta, el nombre del inquilino ahora es un enlace. Haga clic en él para ir directamente al panel de ese inquilino, en lugar de cerrar la alerta, volver a la consola principal y buscar el inquilino a mano. (Las alertas multiinquilino del Centro de mensajes siguen mostrando sus inquilinos afectados como texto simple, ya que no apuntan a un solo panel.)
+
+### «Solo Strict» ahora es una configuración de preajuste admitida
+
+El ajuste de **preajuste de directiva de seguridad** (Standard / Strict) ahora reconoce como configuración válida a un inquilino que ejecuta **Strict sin la línea base Standard**. Antes, si un inquilino se desviaba a ese estado, **Aceptar** terminaba en un callejón sin salida («no corresponde a ninguna opción documentada») y tenía que corregirlo desde Configurar. Ahora puede aceptar ese estado como línea base — o elegirlo deliberadamente — como cualquier otra opción de preajuste.
+
+---
+
 ## Versión 0.2.3 — 2026-06-11
 
 ### Corregido: los tickets de desviación ahora se vinculan a su alerta y se cierran al aceptar la desviación

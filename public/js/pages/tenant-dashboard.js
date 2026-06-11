@@ -18,6 +18,9 @@
   let pollWatchdog = null;       // safety-net timer for a missed poll-complete event
   let pollSocketHandlers = null; // { socket, updated, failed } — kept for destroy() cleanup
   let appsInventory = null;      // Feature 8.9 — cached Applications inventory for the current tenant
+  let securityMounted = false;   // Security tab — whether SecurityPanel is currently mounted
+  let securityDeepLinkSetting = null;  // heatmap drill-in: setting id to auto-open on first mount
+  let securityDeepLinkCategory = null; // heatmap drill-in: category to pre-filter on first mount
 
   // ─── Lifecycle ───
 
@@ -68,6 +71,14 @@
       });
     }
 
+    // Jun 11, 2026: Heatmap drill-in deep-links here with view=security plus a
+    // setting (+ optional category). Stash them so loadSecurity() hands them to
+    // SecurityPanel.mount(), which opens the setting's detail modal once the
+    // panel mounts. Mirrors params.change_id handling below. One-shot — cleared
+    // after the first mount consumes them.
+    securityDeepLinkSetting = params.setting || null;
+    securityDeepLinkCategory = params.category || null;
+
     await loadTenantData();
 
     // Show the requested non-overview tab now that its scaffolding exists.
@@ -85,6 +96,12 @@
   function destroy() {
     // Close any open alert slideout so it doesn't stay stuck over the next page
     if (window.Panoptica && Panoptica.AlertSlideout) Panoptica.AlertSlideout.close();
+    // Tear down the Security panel (if mounted) so its refresh-status poll /
+    // busy ticker / async-apply poll don't leak across the navigation.
+    if (securityMounted && window.Panoptica && Panoptica.SecurityPanel) {
+      Panoptica.SecurityPanel.unmount();
+    }
+    securityMounted = false;
     // Drop the poll-completion socket listeners + any pending watchdog so they
     // don't fire against a torn-down page or leak across tenant navigations.
     if (pollSocketHandlers) {
@@ -146,6 +163,7 @@
     const listPanels = el('td-list-panels');
     const alertsView = el('td-alerts-view');
     const caView = el('td-ca-view');
+    const secView = el('td-security-view');
 
     // Hide all views
     grid.style.display = 'none';
@@ -154,6 +172,15 @@
     if (listPanels) listPanels.style.display = 'none';
     alertsView.style.display = 'none';
     if (caView) caView.style.display = 'none';
+    if (secView) secView.style.display = 'none';
+
+    // Tear down the Security panel whenever we leave its tab so its 5s
+    // refresh-status poll + busy tickers can't keep firing against a hidden
+    // subtree. Re-mounting on return is cheap (one settings fetch).
+    if (currentView !== 'security' && securityMounted) {
+      if (window.Panoptica && Panoptica.SecurityPanel) Panoptica.SecurityPanel.unmount();
+      securityMounted = false;
+    }
     const intuneView = el('td-intune-view');
     if (intuneView) intuneView.style.display = 'none';
 
@@ -171,6 +198,9 @@
     } else if (currentView === 'alerts') {
       alertsView.style.display = 'block';
       loadTenantAlerts();
+    } else if (currentView === 'security') {
+      if (secView) secView.style.display = 'block';
+      loadSecurity();
     } else if (currentView === 'ca-policies') {
       if (caView) caView.style.display = 'block';
       loadCaAssignments();
@@ -183,6 +213,36 @@
     } else if (currentView === 'change-log') {
       if (changelogView) changelogView.style.display = 'block';
       ChangeLog.show();
+    }
+  }
+
+  // ─── Security tab (Jun 11, 2026 — shared SecurityPanel controller) ───
+  //
+  // Mounts the shared Security settings controller scoped to THIS tenant (no
+  // tenant picker). Lazy: only runs on tab activation, never on dashboard
+  // open. Mounts once and persists while the tab is shown; toggleView()
+  // unmounts when the operator switches away, and destroy() unmounts on page
+  // leave — both so the controller's refresh-status poll can't leak.
+  function loadSecurity() {
+    if (securityMounted) return; // already mounted; tab was just re-shown
+    const root = el('td-security-view');
+    if (!root || !window.Panoptica || !Panoptica.SecurityPanel) {
+      console.error('[TenantDashboard] SecurityPanel controller not available');
+      return;
+    }
+    securityMounted = true;
+    const p = Panoptica.SecurityPanel.mount({
+      root,
+      tenantId,
+      showPicker: false,
+      openSettingId: securityDeepLinkSetting,
+      category: securityDeepLinkCategory,
+    });
+    // One-shot deep-link — don't reopen the setting on a later tab re-entry.
+    securityDeepLinkSetting = null;
+    securityDeepLinkCategory = null;
+    if (p && typeof p.catch === 'function') {
+      p.catch(e => console.error('[TenantDashboard] Security mount failed:', e));
     }
   }
 

@@ -5,6 +5,28 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.4 — 2026-06-11
+
+### Les paramètres de sécurité se trouvent maintenant dans le tableau de bord de chaque locataire
+
+Les paramètres de sécurité sont par nature propres à chaque locataire; ils ont donc maintenant leur propre onglet **Sécurité** dans le tableau de bord du locataire — entre **Alertes** et **Applications**. Vous n'avez plus à quitter le locataire en cours, à ouvrir la page Sécurité distincte et à resélectionner le locataire : tout ce qui concerne ce locataire, y compris sa posture de sécurité, est maintenant au même endroit. L'onglet comprend le même bouton **Actualiser** pour relancer le sondage des paramètres de sécurité d'un locataire à la demande, et les liens « explorer un paramètre » de la Carte thermique vous amènent maintenant directement à cet onglet, le paramètre ouvert.
+
+La page Sécurité autonome (sous **Politiques**) fonctionne toujours exactement comme avant — rien n'a été retiré.
+
+### Ouvrir un incident Defender directement depuis son alerte
+
+Les alertes issues d'un incident Microsoft Defender affichent maintenant un bouton **Ouvrir l'incident dans Defender** qui vous amène directement à cet incident dans le portail Microsoft Defender — fini la copie du lien depuis les données brutes de l'alerte. Son ouverture nécessite une session de navigateur connectée avec un compte habilité GDAP pour le locataire client.
+
+### Cliquer sur le nom d'un locataire dans une alerte pour ouvrir son tableau de bord
+
+Dans le panneau de détail de l'alerte, le nom du locataire est maintenant un lien. Cliquez dessus pour accéder directement au tableau de bord de ce locataire, au lieu de fermer l'alerte, de revenir à la console principale et de chercher le locataire à la main. (Les alertes multilocataires du Centre de messages affichent toujours leurs locataires concernés en texte simple, puisqu'elles ne pointent pas vers un seul tableau de bord.)
+
+### « Strict seulement » est maintenant une configuration de préréglage prise en charge
+
+Le paramètre **préréglage de stratégie de sécurité** (Standard / Strict) reconnaît maintenant un locataire qui utilise **Strict sans la base Standard** comme une configuration valide. Auparavant, si un locataire dérivait vers cet état, **Accepter** aboutissait à une impasse (« ne correspond à aucune option documentée ») et vous deviez le corriger via Configurer. Vous pouvez maintenant accepter cet état comme base — ou le choisir délibérément — comme toute autre option de préréglage.
+
+---
+
 ## Version 0.2.3 — 2026-06-11
 
 ### Corrigé : les billets de dérive se relient à leur alerte et se ferment quand vous acceptez la dérive

@@ -601,6 +601,11 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
       options: [
         { value: 'standard_strict', label: 'Standard + Strict (defense in depth — Strict for high-risk users on top of Standard baseline)' },
         { value: 'standard',        label: 'Standard for all users (recommended baseline)', recommended: true },
+        // Jun 11, 2026 — Strict-without-Standard. Microsoft's recommended floor
+        // is Standard, so this is an explicit, non-default choice; it exists so
+        // a tenant that ends up Strict-only is a documented option Accept can
+        // adopt (previously it matched no option and dead-ended Accept Drift).
+        { value: 'strict_only',     label: 'Strict for all users (Strict preset only — no Standard baseline)' },
         { value: 'disabled',        label: 'No presets — tenant runs on default policies (Microsoft acknowledges these are loose)', danger: true },
       ],
       // Single-line composite. Rule names contain epoch timestamp suffixes
@@ -748,6 +753,17 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
             ...ensureEnabledTier('Strict', STRICT_PATTERN, STRICT_NAME, 'Strict', 'Strict'),
           ].join('; ');
         }
+        if (chosen === 'strict_only') {
+          // Mirror of the 'standard' branch with the tiers swapped: enable
+          // Strict, disable Standard. Same already-enabled / name-OR-policy
+          // guards, so it's safe to re-run (idempotent) and EOP-only tenants
+          // skip the ATP cmdlets inside the helpers.
+          return [
+            ...preamble,
+            ...ensureEnabledTier('Strict', STRICT_PATTERN, STRICT_NAME, 'Strict', 'Strict'),
+            ...ensureDisabled('Std', STD_PATTERN, 'Standard'),
+          ].join('; ');
+        }
         // chosen === 'disabled' — turn off both presets if either is on
         return [mdoDetect, ...ensureDisabled('Std', STD_PATTERN, 'Standard'), ...ensureDisabled('Strict', STRICT_PATTERN, 'Strict')].join('; ');
       },
@@ -770,7 +786,7 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
             excluded_domains:  [...(currentValue?.standard_excluded_domains || [])].sort(),
           };
         }
-        if (chosenValue === 'standard_strict') {
+        if (chosenValue === 'standard_strict' || chosenValue === 'strict_only') {
           base.strict_lists = {
             targeted_users:    [...(currentValue?.strict_targeted_users || [])].sort(),
             targeted_domains:  [...(currentValue?.strict_targeted_domains || [])].sort(),
@@ -797,8 +813,10 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
       //
       // Strict matching: chosen state must EXACTLY equal current state. A
       // tenant with both presets on doesn't match "standard" — it only matches
-      // "standard_strict". A tenant with "Strict only" doesn't match any of
-      // our 3 options — Match returns null, operator must Apply explicitly.
+      // "standard_strict". Strict-without-Standard matches "strict_only" (added
+      // Jun 11, 2026) so Accept Drift can adopt it; before that it matched no
+      // option and dead-ended Accept ("does not correspond to any documented
+      // option"), forcing the operator to Apply an explicit value.
       matches: (applied, current) => {
         if (!current || typeof current !== 'object') return false;
         const isRich = applied && typeof applied === 'object' && !Array.isArray(applied) && 'tier' in applied;
@@ -819,6 +837,7 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
         let stateOk;
         if (tier === 'standard_strict')   stateOk = eopStd && eopStrict && (mdoAvailable ? (atpStd && atpStrict) : true);
         else if (tier === 'standard')      stateOk = eopStd && !eopStrict && (mdoAvailable ? (atpStd && !atpStrict) : true);
+        else if (tier === 'strict_only')   stateOk = !eopStd && eopStrict && (mdoAvailable ? (!atpStd && atpStrict) : true);
         else if (tier === 'disabled')      stateOk = !eopStd && !eopStrict && (mdoAvailable ? (!atpStd && !atpStrict) : true);
         else return false;
         if (!stateOk) return false;

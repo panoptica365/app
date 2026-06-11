@@ -1,0 +1,360 @@
+<!-- Per-tenant security actions — Refresh re-polls THIS tenant's security
+     settings immediately (the security poll otherwise runs on the slow tier).
+     Lives in the shared body so both the standalone route and the per-tenant
+     dashboard's Security tab get it from one source. -->
+<div class="sec-action-bar" style="display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
+  <button class="btn-secondary" id="sec-refresh-btn" data-role-required="member" disabled title="Poll security settings for this tenant now" data-i18n-attr-title="security_page.btn_refresh_title" data-i18n="security_page.btn_refresh">
+    ↻ Refresh
+  </button>
+  <span id="sec-refresh-status" style="color:var(--p-text-muted); font-size:0.85rem;"></span>
+</div>
+
+<!-- Summary bar (D.3) -->
+<div id="sec-summary-bar" class="sec-summary" style="display:none; margin-bottom:16px; padding:12px 16px; border:1px solid var(--p-border); border-radius:6px; background:var(--p-panel); display:flex; gap:24px; flex-wrap:wrap;">
+  <div class="sec-sum-chunk"><strong id="sec-sum-critical">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_critical">Critical</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-drift">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_drifted">Drifted</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-monitored">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_monitored">Monitored</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-not-applied">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_not_applied">Not Applied</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-errors">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_poll_errors">Poll Errors</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-unavailable">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_awaiting_infra">Awaiting Infra</span></div>
+</div>
+
+<!-- Filter chips -->
+<div id="sec-filter-bar" class="sec-filter-bar" style="display:none; gap:16px; margin-bottom:14px; flex-wrap:wrap;">
+  <div class="sec-filter-group">
+    <label class="sec-filter-label" data-i18n="security_page.filter_category">Category</label>
+    <div class="sec-chips" id="sec-category-chips">
+      <button class="sec-chip active" data-filter="category" data-value="all" data-i18n="security_page.cat_all">All</button>
+      <button class="sec-chip" data-filter="category" data-value="exchange" data-i18n="security_page.cat_exchange">Exchange</button>
+      <button class="sec-chip" data-filter="category" data-value="identity" data-i18n="security_page.cat_identity">Identity</button>
+      <button class="sec-chip" data-filter="category" data-value="sharepoint" data-i18n="security_page.cat_sharepoint">SharePoint</button>
+      <button class="sec-chip" data-filter="category" data-value="teams" data-i18n="security_page.cat_teams">Teams</button>
+      <button class="sec-chip" data-filter="category" data-value="compliance" data-i18n="security_page.cat_compliance">Compliance</button>
+    </div>
+  </div>
+  <div class="sec-filter-group">
+    <label class="sec-filter-label" data-i18n="security_page.filter_priority">Priority</label>
+    <div class="sec-chips" id="sec-priority-chips">
+      <button class="sec-chip active" data-filter="priority" data-value="all" data-i18n="security_page.pri_all">All</button>
+      <button class="sec-chip" data-filter="priority" data-value="critical" data-i18n="security_page.pri_critical">Critical</button>
+      <button class="sec-chip" data-filter="priority" data-value="high" data-i18n="security_page.pri_high">High</button>
+      <button class="sec-chip" data-filter="priority" data-value="medium" data-i18n="security_page.pri_medium">Medium</button>
+      <button class="sec-chip" data-filter="priority" data-value="low" data-i18n="security_page.pri_low">Low</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings table -->
+<div id="sec-table-container">
+  <div class="td-no-data" id="sec-empty-state" style="padding:40px; text-align:center; color:var(--p-text-muted);" data-i18n="security_page.empty_state">
+    Select a tenant to load its security settings.
+  </div>
+  <table class="td-list-table" id="sec-settings-table" style="display:none;">
+    <thead>
+      <tr>
+        <th style="width:32px;"></th>
+        <th data-i18n="security_page.col_setting">Setting</th>
+        <th data-i18n="security_page.col_category">Category</th>
+        <th data-i18n="security_page.col_priority">Priority</th>
+        <th data-i18n="security_page.col_current_value">Current Value</th>
+        <th data-i18n="security_page.col_last_checked">Last Checked</th>
+      </tr>
+    </thead>
+    <tbody id="sec-settings-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ═══ DETAIL MODAL (Phase B — tabbed) ═══ -->
+<div class="modal-overlay" id="sec-detail-overlay" style="display:none;">
+  <div class="modal" style="width:780px; max-width:94vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" id="sec-detail-title">Setting</span>
+    </div>
+    <div class="modal-body">
+      <!-- Header meta strip -->
+      <div id="sec-detail-meta" style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;">
+        <span class="sec-pill" id="sec-detail-category">—</span>
+        <span class="sec-pill sec-pill-priority" id="sec-detail-priority">—</span>
+        <span class="sec-pill sec-pill-licence" id="sec-detail-licence" style="display:none;">—</span>
+      </div>
+
+      <!-- State box (always visible regardless of tab) -->
+      <div id="sec-detail-state-box" style="padding:10px 12px; background:var(--p-panel-alt, var(--p-panel)); border:1px solid var(--p-border); border-radius:4px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="sec-led" id="sec-detail-led"></span>
+          <strong id="sec-detail-status">—</strong>
+        </div>
+        <div style="margin-top:6px; color:var(--p-text-muted); font-size:0.85rem;" id="sec-detail-current">Current value: —</div>
+        <div style="margin-top:2px; color:var(--p-text-muted); font-size:0.8rem;" id="sec-detail-last-checked">Last checked: —</div>
+      </div>
+
+      <!-- Tab strip -->
+      <div class="sec-tabs" id="sec-tabs" style="display:flex; gap:0; border-bottom:1px solid var(--p-border); margin-bottom:14px;">
+        <button class="sec-tab active" data-tab="overview" data-i18n="security_page.tab_overview">Overview</button>
+        <button class="sec-tab" data-tab="configure" id="sec-tab-configure" disabled title="No write surface available for this setting" data-i18n-attr-title="security_page.tab_configure_disabled_title" data-i18n="security_page.tab_configure">Configure</button>
+        <button class="sec-tab" data-tab="history" data-i18n="security_page.tab_history">History</button>
+        <button class="sec-tab" data-tab="remediate" id="sec-tab-remediate" style="display:none;" data-i18n="security_page.tab_remediate">Remediate</button>
+      </div>
+
+      <!-- Overview tab -->
+      <div class="sec-tab-panel" id="sec-panel-overview">
+        <h4 style="margin:8px 0 6px 0;" data-i18n="security_page.section_security_impact">Security Impact</h4>
+        <p class="sec-explainer" id="sec-detail-security-impact"></p>
+
+        <h4 style="margin:16px 0 6px 0;" data-i18n="security_page.section_user_impact">User Impact</h4>
+        <p class="sec-explainer" id="sec-detail-user-impact"></p>
+
+        <h4 style="margin:16px 0 6px 0;" data-i18n="security_page.section_admin_planning">Admin Planning</h4>
+        <p class="sec-explainer" id="sec-detail-admin-notes"></p>
+      </div>
+
+      <!-- Configure tab -->
+      <div class="sec-tab-panel" id="sec-panel-configure" style="display:none;">
+        <div id="sec-cfg-no-writer" style="padding:14px; border:1px dashed var(--p-border); border-radius:4px; color:var(--p-text-muted);" data-i18n="security_page.no_writer_text">
+          No write surface available for this setting yet. Read-only.
+        </div>
+
+        <!-- Audit-only panel (CMP-02 DLP) — read-only setting that monitors -->
+        <div id="sec-cfg-audit-only" style="display:none;">
+          <div id="sec-cfg-audit-warning" class="sec-audit-warning">
+            <div class="sec-audit-warning-icon">!</div>
+            <div class="sec-audit-warning-body">
+              <div class="sec-audit-warning-title" data-i18n="security_page.audit_warning_title">Read-only — Panoptica monitors only</div>
+              <div id="sec-cfg-audit-warning-text" class="sec-audit-warning-text"></div>
+            </div>
+          </div>
+          <div id="sec-cfg-audit-empty-note" style="display:none; padding:14px; margin-top:14px; border:1px dashed var(--p-border); border-radius:4px; color:var(--p-text-muted); font-size:0.9rem;"></div>
+          <div id="sec-cfg-audit-actions" style="margin-top:18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-primary" id="sec-cfg-audit-match-btn" data-role-required="member" data-i18n="security_page.audit_match_btn">Match — Capture Current Configuration as Baseline</button>
+            <span id="sec-cfg-audit-status" style="color:var(--p-text-muted); font-size:0.85rem;"></span>
+          </div>
+          <div id="sec-cfg-audit-busy" style="display:none; margin-top:18px; padding:18px; border:1px solid var(--p-border); border-radius:4px; background:var(--p-panel-alt, var(--p-panel)); text-align:center;">
+            <div class="sec-busy-spinner" style="margin:0 auto 12px auto;"></div>
+            <div style="font-weight:600; margin-bottom:4px;" data-i18n="security_page.capturing_baseline">Capturing baseline…</div>
+            <div style="color:var(--p-text-muted); font-size:0.85rem;"><span data-i18n="security_page.audit_busy_subtitle">Reading current DLP configuration via Microsoft Compliance PowerShell.</span> <span id="sec-cfg-audit-busy-elapsed"></span></div>
+          </div>
+        </div>
+
+        <div id="sec-cfg-form" style="display:none;">
+          <!-- Apr 28, 2026 — Delegated auth banner (Teams writers only).
+               Shown when the writer's strategy === 'delegated_teams'. Reflects
+               the current operator's session token state for Microsoft Teams
+               admin. Hidden for all other writer strategies. -->
+          <div id="sec-cfg-delegated-auth-wrapper" style="display:none; margin-bottom:14px; padding:14px; border-radius:4px; border:1px solid var(--p-border);">
+            <div id="sec-cfg-delegated-auth-status" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <span id="sec-cfg-delegated-auth-icon" style="font-size:1.2rem; line-height:1;"></span>
+              <div style="flex:1; min-width:200px;">
+                <div id="sec-cfg-delegated-auth-title" style="font-weight:600; margin-bottom:2px;"></div>
+                <div id="sec-cfg-delegated-auth-detail" style="font-size:0.85rem; color:var(--p-text-muted);"></div>
+              </div>
+              <button class="btn-secondary" id="sec-cfg-delegated-auth-signin" data-role-required="member" style="display:none;" data-i18n="security_page.delegated_auth_signin_btn">Sign in to push Teams settings</button>
+              <button class="btn-secondary" id="sec-cfg-delegated-auth-signout" data-role-required="member" style="display:none;" data-i18n="security_page.delegated_auth_signout_btn">Sign out</button>
+            </div>
+          </div>
+          <p id="sec-cfg-recommended" class="sec-explainer" style="margin:0 0 14px 0; color:var(--p-text-muted);"></p>
+          <div style="margin-bottom:8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--p-text-muted);" data-i18n="security_page.choose_value">Choose value</div>
+          <div id="sec-cfg-input"></div>
+
+          <!-- Text input (renders below option list when selected option carries `input` metadata) -->
+          <div id="sec-cfg-text-input-wrapper" style="display:none; margin-top:14px;">
+            <div style="margin-bottom:6px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--p-text-muted);" id="sec-cfg-text-input-label" data-i18n="security_page.input_label">Input</div>
+            <p id="sec-cfg-text-input-help" class="sec-explainer" style="margin:0 0 8px 0; color:var(--p-text-muted); font-size:0.85rem;"></p>
+            <textarea id="sec-cfg-text-input" rows="6" class="sec-text-input" spellcheck="false" autocapitalize="off"></textarea>
+            <div id="sec-cfg-text-input-validation" style="margin-top:6px; font-size:0.82rem; color:#ef4444; display:none;"></div>
+          </div>
+
+          <!-- Secondary section (expandable checklist below options) — used by ENT-01 -->
+          <div id="sec-cfg-secondary-wrapper" style="display:none; margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.12);">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;">
+              <input type="checkbox" id="sec-cfg-secondary-toggle" style="cursor:pointer;">
+              <span style="font-weight:600;" id="sec-cfg-secondary-toggle-label" data-i18n="security_page.additional_options">Additional options</span>
+            </label>
+            <p id="sec-cfg-secondary-help" class="sec-explainer" style="margin:6px 0 10px 0; color:var(--p-text-muted); font-size:0.85rem;"></p>
+            <div id="sec-cfg-secondary-checklist" style="display:none; margin-left:24px; margin-top:10px;"></div>
+          </div>
+
+          <div id="sec-cfg-actions" style="margin-top:18px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-primary" id="sec-cfg-apply-btn" data-role-required="member" data-i18n="security_page.btn_apply">Apply</button>
+            <button class="btn-secondary" id="sec-cfg-match-btn" data-role-required="member" style="display:none;" data-i18n="security_page.btn_match_current">Match Current</button>
+            <span id="sec-cfg-status" style="color:var(--p-text-muted); font-size:0.85rem;"></span>
+          </div>
+
+          <!-- Inline confirmation panel (replaces actions when Apply clicked) -->
+          <div id="sec-cfg-confirm" style="display:none; margin-top:18px; padding:14px; border:1px solid var(--p-warm, #f59e0b); border-radius:4px; background:rgba(245, 158, 11, 0.06);">
+            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.confirm_write_title">Confirm write to customer tenant</div>
+            <div id="sec-cfg-confirm-summary" style="font-size:0.9rem; color:var(--p-text); margin-bottom:14px;"></div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn-primary" id="sec-cfg-confirm-yes" data-role-required="member" data-i18n="security_page.btn_confirm">Confirm</button>
+              <button class="btn-secondary" id="sec-cfg-confirm-cancel" data-i18n="security_page.btn_cancel">Cancel</button>
+            </div>
+          </div>
+
+          <!-- In-flight busy panel — shown during Apply/Match/Remediate/Accept network calls -->
+          <div id="sec-cfg-busy" style="display:none; margin-top:18px; padding:18px; border:1px solid var(--p-border); border-radius:4px; background:var(--p-panel-alt, var(--p-panel)); text-align:center;">
+            <div class="sec-busy-spinner" style="margin:0 auto 12px auto;"></div>
+            <div id="sec-cfg-busy-title" style="font-weight:600; margin-bottom:4px;" data-i18n="security_page.applying_setting">Applying setting…</div>
+            <div id="sec-cfg-busy-subtitle" style="color:var(--p-text-muted); font-size:0.85rem;"><span data-i18n="security_page.powershell_busy">PowerShell connections to Microsoft 365 typically take 5–15 seconds.</span> <span id="sec-cfg-busy-elapsed"></span></div>
+            <!-- May 6, 2026 — async-Apply progress row. Hidden by default; shown only when the worker emits per-item progress (X/Y mailboxes). The elapsed counter above keeps ticking regardless. -->
+            <div id="sec-cfg-busy-progress" style="display:none; color:var(--p-text); font-size:0.9rem; margin-top:8px; font-variant-numeric: tabular-nums;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History tab -->
+      <div class="sec-tab-panel" id="sec-panel-history" style="display:none;">
+        <div id="sec-hist-loading" style="color:var(--p-text-muted);" data-i18n="security_page.history_loading">Loading history…</div>
+        <table class="td-list-table" id="sec-hist-table" style="display:none;">
+          <thead>
+            <tr>
+              <th data-i18n="security_page.hist_col_when">When</th>
+              <th data-i18n="security_page.hist_col_event">Event</th>
+              <th data-i18n="security_page.hist_col_actor">Actor</th>
+              <th data-i18n="security_page.hist_col_change">Change</th>
+            </tr>
+          </thead>
+          <tbody id="sec-hist-tbody"></tbody>
+        </table>
+        <div id="sec-hist-empty" style="display:none; padding:20px; text-align:center; color:var(--p-text-muted);" data-i18n="security_page.hist_empty">
+          No events recorded for this setting on this tenant yet.
+        </div>
+      </div>
+
+      <!-- Remediate tab -->
+      <div class="sec-tab-panel" id="sec-panel-remediate" style="display:none;">
+
+        <!-- "Never initialized" guidance (EXO-06 preset never turned on).
+             Shown instead of Restore/Accept when current_value.never_initialized
+             is true — Panoptica cannot create the preset programmatically, so we
+             guide the operator to the one-time Defender portal turn-on. -->
+        <div id="sec-rem-noinit" style="display:none;">
+          <div style="padding:14px; border:1px solid var(--p-warm, #f59e0b); border-radius:4px; background:rgba(245, 158, 11, 0.06); margin-bottom:14px;">
+            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.preset_guide.noinit_title">This must be turned on once in Microsoft Defender</div>
+            <div style="font-size:0.9rem;" data-i18n="security_page.preset_guide.noinit_body">Microsoft creates this preset only the first time it's turned on in the Defender portal — there is no API or PowerShell command that can create it from scratch. After this one-time step, Panoptica monitors it automatically.</div>
+          </div>
+          <button class="btn-primary" id="sec-rem-guide-btn" data-role-required="member" data-i18n="security_page.preset_guide.open_btn">Show me how to turn it on →</button>
+        </div>
+
+        <!-- Standard drift UI (Restore / Accept) -->
+        <div id="sec-rem-drift-wrap">
+          <div style="padding:14px; border:1px solid #ef4444; border-radius:4px; background:rgba(239, 68, 68, 0.06); margin-bottom:14px;">
+            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.drift_detected">Drift detected</div>
+            <div id="sec-rem-summary" style="font-size:0.9rem;"></div>
+          </div>
+          <div id="sec-rem-actions" style="display:flex; gap:10px;">
+            <button class="btn-primary" id="sec-rem-restore-btn" data-role-required="member" data-i18n="security_page.btn_restore">Restore to Applied Value</button>
+            <button class="btn-secondary" id="sec-rem-accept-btn" data-role-required="member" data-i18n="security_page.btn_accept">Accept This Change</button>
+            <span id="sec-rem-status" style="color:var(--p-text-muted); font-size:0.85rem; align-self:center;"></span>
+          </div>
+          <p style="margin-top:12px; color:var(--p-text-muted); font-size:0.8rem;" data-i18n="security_page.remediate_help">
+            Restore re-applies the original baseline value. Accept makes the current (drifted) value the new baseline.
+          </p>
+        </div>
+
+        <!-- In-flight busy panel for Remediate Restore/Accept -->
+        <div id="sec-rem-busy" style="display:none; margin-top:18px; padding:18px; border:1px solid var(--p-border); border-radius:4px; background:var(--p-panel-alt, var(--p-panel)); text-align:center;">
+          <div class="sec-busy-spinner" style="margin:0 auto 12px auto;"></div>
+          <div id="sec-rem-busy-title" style="font-weight:600; margin-bottom:4px;" data-i18n="security_page.working">Working…</div>
+          <div style="color:var(--p-text-muted); font-size:0.85rem;"><span data-i18n="security_page.powershell_busy">PowerShell connections to Microsoft 365 typically take 5–15 seconds.</span> <span id="sec-rem-busy-elapsed"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-secondary" id="sec-detail-close-btn" data-i18n="security_page.btn_close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRESET SECURITY POLICY — FIRST-TIME TURN-ON GUIDE (EXO-06) ═══ -->
+<!-- Shown when a tenant has never had the Standard preset turned on
+     (current_value.never_initialized). Walks the operator through the
+     one-time Defender portal wizard, then hands monitoring back to Panoptica.
+     Opened from the Remediate tab's "Show me how" button. -->
+<div class="modal-overlay" id="sec-preset-guide-overlay" style="display:none;">
+  <div class="modal" style="width:760px; max-width:94vw;">
+    <div class="modal-header">
+      <div class="mh-elbow"></div>
+      <span class="mh-title" data-i18n="security_page.preset_guide.title">Turn on Standard protection in Microsoft Defender</span>
+    </div>
+    <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+
+      <!-- ── MDO variant (tenant HAS Defender for Office 365 P1 / Business Premium) ── -->
+      <div id="sec-guide-body-mdo">
+      <!-- Why this is manual -->
+      <p class="sec-explainer" data-i18n="security_page.preset_guide.why_p1">This tenant has never had Microsoft's Standard preset security policy turned on. Microsoft creates the underlying policies only the first time the preset is enabled in the Defender portal — there is no API or PowerShell command that can create them from scratch. So this first activation is a one-time manual step. Once it's done, Panoptica takes over and monitors it for drift automatically — you'll never have to do this again for this tenant.</p>
+      <div style="padding:12px 14px; border-left:3px solid var(--p-warm, #f59e0b); background:rgba(245,158,11,0.06); border-radius:4px; margin:12px 0 4px 0; font-size:0.88rem;" data-i18n="security_page.preset_guide.why_callout">Keep the Standard preset rather than building custom policies: Microsoft re-tunes these policies daily from billions of threat signals, so the customer's protection keeps improving on its own.</div>
+
+      <!-- Step 1 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step1_title">Step 1 — Open the preset policies</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step1_body">Go to <strong>security.microsoft.com</strong> and sign in to the customer's tenant. In the left nav: <strong>Email &amp; collaboration → Policies &amp; rules → Threat policies</strong>. Under <strong>Templated policies</strong>, open <strong>Preset Security Policies</strong>. On the <strong>Standard protection</strong> card, click <strong>Manage protection settings</strong> to launch the “Apply standard protection” wizard.</p>
+
+      <!-- Step 2 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step2_title">Step 2 — Exchange Online Protection</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step2_body">Anti-spam, anti-malware and anti-phishing for inbound mail. Set <strong>Apply protection to → All recipients</strong> and leave <strong>Exclude these recipients</strong> unchecked. Protect the whole organization, not a subset. Click <strong>Next</strong>.</p>
+
+      <!-- Step 3 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step3_title">Step 3 — Defender for Office 365 protection</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step3_body">Safe Attachments and Safe Links (included with Business Premium). Again set <strong>Apply protection to → All recipients</strong> and leave the exclusions unchecked. Click <strong>Next</strong>.</p>
+
+      <!-- Step 4 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step4_title">Step 4 — Impersonation protection: people</h4>
+      <p class="sec-explainer" data-i18n="security_page.preset_guide.step4_body">Add the high-value people most likely to be spoofed in phishing / business-email-compromise attacks — not everyone. Good candidates:</p>
+      <ul class="sec-explainer" style="margin:6px 0 6px 0; padding-left:22px;">
+        <li data-i18n="security_page.preset_guide.step4_li1">CEO, owner or managing director</li>
+        <li data-i18n="security_page.preset_guide.step4_li2">CFO or finance director, and anyone who can authorize payments</li>
+        <li data-i18n="security_page.preset_guide.step4_li3">HR director (payroll and direct-deposit targets)</li>
+        <li data-i18n="security_page.preset_guide.step4_li4">Any other executive or signatory with payment or data authority</li>
+      </ul>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step4_note">For each person, enter their display name and primary email, then <strong>Add</strong> (for example, <code>John Smith — john.smith@domain.com</code>). Adding low-risk staff just inflates false positives, so keep this list to the handful of high-value targets. Click <strong>Next</strong>.</p>
+
+      <!-- Step 5 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step5_title">Step 5 — Impersonation protection: domains</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step5_body">Add the customer's own email domain(s) here — for example <code>domain.com</code>, plus any other domains they send mail from. This flags external senders trying to impersonate the customer's own domain. Click <strong>Next</strong>.</p>
+
+      <!-- Step 6 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step6_title">Step 6 — Trusted senders and domains</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step6_body">Leave this empty for now. This is the allow-list of senders/domains you never want flagged as impersonation — start clean. If a legitimate partner later gets caught, come back and add them here. Click <strong>Next</strong>.</p>
+
+      <!-- Step 7 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step7_title">Step 7 — Policy mode</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step7_body">Select <strong>Turn on the policy when finished</strong>, then click <strong>Next</strong>.</p>
+
+      <!-- Step 8 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step8_title">Step 8 — Review and confirm</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step8_body">Review the summary and click <strong>Confirm</strong>. Microsoft now creates the Standard preset policies and turns them on for all users.</p>
+
+      <!-- Step 9 -->
+      <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.step9_title">Step 9 — Hand it back to Panoptica</h4>
+      <p class="sec-explainer" data-i18n-html="security_page.preset_guide.step9_body">Come back here and click <strong>Refresh now</strong> below (or close and use the page's Refresh button). Panoptica will re-read the tenant and detect the now-live preset. Because you added impersonation targets, the live config will differ from the old baseline — open this setting again and click <strong>Accept This Change</strong> to adopt the live Microsoft preset as your monitored baseline. From that point on, Panoptica monitors it for any deviation.</p>
+      </div><!-- /sec-guide-body-mdo -->
+
+      <!-- ── EOP-only variant (tenant has NO Defender for Office 365 — e.g. Business Standard) ──
+           The Standard preset still applies EOP protections and should be turned on; Microsoft's
+           wizard skips the Defender-for-O365 and impersonation pages on these tenants. -->
+      <div id="sec-guide-body-eop" style="display:none;">
+        <p class="sec-explainer" data-i18n="security_page.preset_guide.eop_intro">This tenant is on a licence without Defender for Office 365 (for example, Business Standard). The Standard preset still applies Exchange Online Protection — anti-spam, anti-malware and anti-phishing — and should be turned on. The Defender for Office 365 pieces (Safe Attachments, Safe Links) and impersonation protection aren't available until the tenant moves to Business Premium, so Microsoft's wizard skips those steps. Once it's done, Panoptica monitors it for drift automatically.</p>
+        <div style="padding:12px 14px; border-left:3px solid var(--p-warm, #f59e0b); background:rgba(245,158,11,0.06); border-radius:4px; margin:12px 0 4px 0; font-size:0.88rem;" data-i18n="security_page.preset_guide.why_callout">Keep the Standard preset rather than building custom policies: Microsoft re-tunes these policies daily from billions of threat signals, so the customer's protection keeps improving on its own.</div>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step1_title">Step 1 — Open the preset policies</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step1_body">Go to <strong>security.microsoft.com</strong> and sign in to the customer's tenant. In the left nav: <strong>Email &amp; collaboration → Policies &amp; rules → Threat policies</strong>. Under <strong>Templated policies</strong>, open <strong>Preset Security Policies</strong>. Slide the <strong>Standard protection</strong> toggle to <strong>On</strong>, then click <strong>Manage protection settings</strong> to start the wizard.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step2_title">Step 2 — Exchange Online Protection</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step2_body">This is the only configuration page you'll see on this licence. Set <strong>Apply protection to → All recipients</strong> and leave <strong>Exclude these recipients</strong> unchecked. Protect the whole organization, not a subset. Click <strong>Next</strong>.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step3_title">Step 3 — Straight to Review</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step3_body">On this licence the wizard goes straight to the Review page — there is no Defender for Office 365 step and no impersonation pages (those need Business Premium). That's expected, not a problem.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step4_title">Step 4 — Review and confirm</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step4_body">Make sure the <strong>Standard protection</strong> toggle is <strong>On</strong>, review the summary and click <strong>Confirm</strong>. Microsoft creates the Standard preset's EOP policies and turns them on for all users.</p>
+
+        <h4 class="sec-guide-step" data-i18n="security_page.preset_guide.eop_step5_title">Step 5 — Hand it back to Panoptica</h4>
+        <p class="sec-explainer" data-i18n-html="security_page.preset_guide.eop_step5_body">Come back here and click <strong>Refresh now</strong> below (or close and use the page's Refresh button). Panoptica will re-read the tenant and detect the now-live preset. If it shows as drift against the old baseline, click <strong>Accept This Change</strong> to adopt the live config as your monitored baseline. From that point on, Panoptica monitors it for any deviation. When the customer later moves to Business Premium, re-run this on the Defender for Office 365 and impersonation steps to complete the hardening.</p>
+      </div><!-- /sec-guide-body-eop -->
+
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-secondary" id="sec-preset-guide-close-btn" data-i18n="security_page.btn_close">Close</button>
+      <button class="btn-primary" id="sec-preset-guide-refresh-btn" data-role-required="member" data-i18n="security_page.preset_guide.refresh_btn">I've turned it on — Refresh now</button>
+    </div>
+  </div>
+</div>

@@ -5,6 +5,28 @@ that release, newest first.
 
 ---
 
+## Version 0.2.4 — 2026-06-11
+
+### Security settings now live on each tenant's dashboard
+
+Security settings are inherently per-tenant, so they now have their own **Security** tab on the tenant dashboard — between **Alerts** and **Applications**. You no longer have to leave the tenant you're working on, open the separate Security page, and re-pick the tenant: everything for that tenant, including its security posture, is now in one place. The tab carries the same **Refresh** button to re-poll a tenant's security settings on demand, and the Heatmap's "drill into a setting" links now land you directly on this tab with the setting open.
+
+The standalone Security page (under **Policies**) still works exactly as before — nothing was removed.
+
+### Open a Defender incident straight from its alert
+
+Alerts raised from a Microsoft Defender incident now show an **Open incident in Defender** button that takes you directly to that incident in the Microsoft Defender portal — no more copying the link out of the alert's raw data. Opening it requires a browser session signed in with a GDAP-enabled account for the customer tenant.
+
+### Click a tenant's name in an alert to open its dashboard
+
+In the alert detail panel, the tenant name is now a link. Click it to jump straight to that tenant's dashboard, instead of closing the alert, returning to the main console, and finding the tenant by hand. (Multi-tenant Message Center alerts still list their affected tenants as plain text, since they don't point at a single dashboard.)
+
+### "Strict-only" is now a supported preset configuration
+
+The **preset security policy** setting (Standard / Strict) now recognizes a tenant running **Strict without the Standard baseline** as a valid configuration. Previously, if a tenant drifted into that state, **Accept** dead-ended with "does not correspond to any documented option" and you had to fix it through Configure. You can now Accept that state as the baseline — or choose it deliberately — like any other preset option.
+
+---
+
 ## Version 0.2.3 — 2026-06-11
 
 ### Fixed: drift tickets now link to their alert and close when you accept the drift

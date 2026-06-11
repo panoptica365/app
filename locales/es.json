@@ -1512,7 +1512,10 @@
       "learn_more": "Microsoft",
       "learn_more_link": "Leer la publicación del Centro de mensajes →",
       "alert_id": "ID de alerta",
-      "email_sent": "Correo enviado"
+      "email_sent": "Correo enviado",
+      "open_in_defender": "Abrir el incidente en Defender",
+      "gdap_required_note": "Requiere una cuenta habilitada para GDAP",
+      "open_tenant_dashboard": "Abrir el panel del inquilino"
     },
     "common": {
       "yes": "Sí",
@@ -2014,6 +2017,7 @@
       "writer_options": {
         "standard_strict_defense_in_depth_strict_for_high_risk_users_on_top_of_standard_baseline": "Standard + Strict (defensa en profundidad — Strict para usuarios de alto riesgo sobre línea base Standard)",
         "standard_for_all_users_recommended_baseline": "Standard para todos los usuarios (línea base recomendada)",
+        "strict_for_all_users_strict_preset_only_no_standard_baseline": "Strict para todos los usuarios (solo el preajuste Strict — sin línea base Standard)",
         "no_presets_tenant_runs_on_default_policies_microsoft_acknowledges_these_are_loose": "Sin préréglages — el inquilino usa directivas predeterminadas (Microsoft reconoce que son laxas)"
       },
       "interpreted": {
@@ -2619,6 +2623,7 @@
     "placeholder": "Detailed inquilino dashboards will be available in Phase 2.",
     "view_overview": "Resumen",
     "view_alerts": "Alertas",
+    "view_security": "Seguridad",
     "view_ca_policies": "Directivas de CA",
     "view_intune_policies": "Directivas de Intune",
     "view_change_log": "Registro de cambios",

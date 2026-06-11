@@ -66,6 +66,12 @@ router.get('/intune-templates', servePartial('intune-templates.html'));
 // ─── Security Settings (Phase A1) ───
 router.get('/security', servePartial('security.html'));
 
+// ─── Security body fragment (shared by the standalone Security route AND the
+// per-tenant dashboard's Security tab). SecurityPanel.mount() fetches this and
+// injects it into its host element so the two surfaces render identical markup
+// from one source. Not a navigable page — fetched by the controller only. ───
+router.get('/security-body', servePartial('security-body.html'));
+
 // ─── Alert Policies ───
 router.get('/alert-policies', servePartial('alert-policies.html'));
 

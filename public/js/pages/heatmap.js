@@ -64,22 +64,27 @@
     ));
   }
 
-  // ── Deep-link into the per-tenant Security page (single source of truth).
-  // Prefers the in-app SPA navigator if exposed; otherwise falls back to a URL
-  // the SPA reads on load. Never mutates anything.
+  // ── Deep-link into a tenant's Security settings (single source of truth).
+  // Jun 11, 2026: Security settings moved into the per-tenant dashboard's
+  // Security tab, so the drill-in now lands there (giving the operator the full
+  // per-tenant context) rather than the standalone Security route. The
+  // tenant-dashboard reads params.id; view=security selects the tab; the
+  // setting (+ optional category) are honored when SecurityPanel mounts.
+  // Prefers the in-app SPA navigator; falls back to a URL the SPA reads on
+  // load. Never mutates anything.
   function gotoSecurity(tenantId, settingId, category) {
-    const params = { tenant: String(tenantId) };
+    const params = { id: String(tenantId), view: 'security' };
     if (settingId) params.setting = settingId;
     if (category) params.category = category;
     try {
       if (window.Panoptica && typeof window.Panoptica.navigateTo === 'function') {
-        return window.Panoptica.navigateTo('security', params);
+        return window.Panoptica.navigateTo('tenant-dashboard', params);
       }
       if (typeof window.navigateTo === 'function') {
-        return window.navigateTo('security', params);
+        return window.navigateTo('tenant-dashboard', params);
       }
     } catch (_e) { /* fall through to URL */ }
-    const qs = new URLSearchParams(Object.assign({ page: 'security' }, params)).toString();
+    const qs = new URLSearchParams(Object.assign({ page: 'tenant-dashboard' }, params)).toString();
     window.location.href = '/?' + qs;
   }
 

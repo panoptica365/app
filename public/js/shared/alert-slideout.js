@@ -490,11 +490,36 @@
     const rawForDetail = (alert.raw_data && typeof alert.raw_data === 'object') ? alert.raw_data : {};
     const mspAffectedNames = Array.isArray(rawForDetail.affectedTenantNames) ? rawForDetail.affectedTenantNames : [];
     const mspLearnMoreUrl = rawForDetail.ms_web_url || rawForDetail.learn_more_url || null;
+
+    // Feature 2 (2026-06-11) — make the single (tenant-scoped) tenant name a
+    // link straight to that tenant's dashboard, so the operator doesn't have
+    // to close → main console → scroll → click. MSP-scoped alerts span many
+    // tenants (no single target), so that branch stays plain text. Guard on a
+    // working SPA navigator + a tenant id; otherwise fall back to plain text.
+    const canLinkTenant = !isMspScope && alert.tenant_id != null &&
+      window.Panoptica && typeof window.Panoptica.navigateTo === 'function';
+    const tenantCellHtml = canLinkTenant
+      ? `<a href="#" id="alert-tenant-link-${alert.id}" data-tenant-id="${esc(String(alert.tenant_id))}" title="${esc(window.t('alerts.details.open_tenant_dashboard'))}" style="color:var(--p-accent);">${esc(alert.tenant_name)}</a>`
+      : esc(alert.tenant_name);
     const tenantRowHtml = isMspScope
       ? `<tr><td>${esc(window.t('alerts.details.affected_tenants'))}</td><td>${mspAffectedNames.length ? esc(mspAffectedNames.join(', ')) : '—'}</td></tr>`
-      : `<tr><td>${esc(window.t('alerts.details.tenant'))}</td><td>${esc(alert.tenant_name)}</td></tr>`;
+      : `<tr><td>${esc(window.t('alerts.details.tenant'))}</td><td>${tenantCellHtml}</td></tr>`;
     const mspLearnMoreRowHtml = (isMspScope && mspLearnMoreUrl)
       ? `<tr><td>${esc(window.t('alerts.details.learn_more'))}</td><td><a href="${esc(mspLearnMoreUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--p-accent);">${esc(window.t('alerts.details.learn_more_link'))}</a></td></tr>`
+      : '';
+
+    // Feature 1 (2026-06-11) — Defender-incident alerts carry an
+    // incident_web_url in raw_data (a security.microsoft.com/incident2/<n>/…
+    // link). Surface it as a clickable row so operators don't copy it out of
+    // the raw JSON. Read is narrowed to incident_web_url so non-Defender (and
+    // older) alerts render no row. Opening it needs a GDAP-elevated Microsoft
+    // session, hence the muted note that pre-empts "why did this 404 for me".
+    const defenderUrl = rawForDetail.incident_web_url || null;
+    const defenderRowHtml = defenderUrl
+      ? `<tr><td>${esc(window.t('alerts.details.learn_more'))}</td><td>` +
+          `<a href="${esc(defenderUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--p-accent);">${esc(window.t('alerts.details.open_in_defender'))} ↗</a>` +
+          `<div style="color:var(--p-text-muted);font-size:0.8rem;margin-top:2px;">${esc(window.t('alerts.details.gdap_required_note'))}</div>` +
+        `</td></tr>`
       : '';
 
     el('alert-slideout-body').innerHTML = `
@@ -508,6 +533,7 @@
           ${mspLearnMoreRowHtml}
           <tr><td>${esc(window.t('alerts.details.alert_id'))}</td><td>#${alert.id}</td></tr>
           <tr><td>${esc(window.t('alerts.details.email_sent'))}</td><td>${alert.email_sent ? esc(window.t('alerts.common.yes')) : esc(window.t('alerts.common.no'))}</td></tr>
+          ${defenderRowHtml}
         </table>
       </div>
       ${attributionHtml}
@@ -586,6 +612,23 @@
             close();
             // tenant-dashboard reads params.id (legacy name); change_id is new (Apr 28).
             window.Panoptica.navigateTo('tenant-dashboard', { id: tenantId, change_id: changeId });
+          });
+        }
+      }, 0);
+    }
+
+    // Feature 2 (2026-06-11) — wire the tenant-name link: close the slideout,
+    // then navigate to that tenant's dashboard. Mirrors the attribution
+    // "view change" button wiring above (close → navigateTo with params.id).
+    if (canLinkTenant) {
+      setTimeout(() => {
+        const link = el(`alert-tenant-link-${alert.id}`);
+        if (link) {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tid = link.dataset.tenantId;
+            close();
+            window.Panoptica.navigateTo('tenant-dashboard', { id: tid });
           });
         }
       }, 0);

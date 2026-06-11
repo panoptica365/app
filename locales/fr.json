@@ -1512,7 +1512,10 @@
       "learn_more": "Microsoft",
       "learn_more_link": "Lire la publication du Centre de messages →",
       "alert_id": "ID de l'alerte",
-      "email_sent": "Courriel envoyé"
+      "email_sent": "Courriel envoyé",
+      "open_in_defender": "Ouvrir l'incident dans Defender",
+      "gdap_required_note": "Nécessite un compte avec GDAP",
+      "open_tenant_dashboard": "Ouvrir le tableau de bord du locataire"
     },
     "common": {
       "yes": "Oui",
@@ -2014,6 +2017,7 @@
       "writer_options": {
         "standard_strict_defense_in_depth_strict_for_high_risk_users_on_top_of_standard_baseline": "Standard + Strict (défense en profondeur — Strict pour les utilisateurs à risque élevé par-dessus la base Standard)",
         "standard_for_all_users_recommended_baseline": "Standard pour tous les utilisateurs (base recommandée)",
+        "strict_for_all_users_strict_preset_only_no_standard_baseline": "Strict pour tous les utilisateurs (préréglage Strict seulement — sans base Standard)",
         "no_presets_tenant_runs_on_default_policies_microsoft_acknowledges_these_are_loose": "Aucun préréglage — le locataire utilise les stratégies par défaut (Microsoft reconnaît qu’elles sont permissives)"
       },
       "interpreted": {
@@ -2619,6 +2623,7 @@
     "placeholder": "Les tableaux de bord détaillés des locataires seront disponibles en phase 2.",
     "view_overview": "Vue d’ensemble",
     "view_alerts": "Alertes",
+    "view_security": "Sécurité",
     "view_ca_policies": "Stratégies AC",
     "view_intune_policies": "Stratégies Intune",
     "view_change_log": "Journal des changements",

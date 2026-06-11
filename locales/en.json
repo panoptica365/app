@@ -1512,7 +1512,10 @@
       "learn_more": "Microsoft",
       "learn_more_link": "Read the Message Center post →",
       "alert_id": "Alert ID",
-      "email_sent": "Email Sent"
+      "email_sent": "Email Sent",
+      "open_in_defender": "Open incident in Defender",
+      "gdap_required_note": "Requires a GDAP-enabled account",
+      "open_tenant_dashboard": "Open tenant dashboard"
     },
     "common": {
       "yes": "Yes",
@@ -2014,6 +2017,7 @@
       "writer_options": {
         "standard_strict_defense_in_depth_strict_for_high_risk_users_on_top_of_standard_baseline": "Standard + Strict (defense in depth — Strict for high-risk users on top of Standard baseline)",
         "standard_for_all_users_recommended_baseline": "Standard for all users (recommended baseline)",
+        "strict_for_all_users_strict_preset_only_no_standard_baseline": "Strict for all users (Strict preset only — no Standard baseline)",
         "no_presets_tenant_runs_on_default_policies_microsoft_acknowledges_these_are_loose": "No presets — tenant runs on default policies (Microsoft acknowledges these are loose)"
       },
       "interpreted": {
@@ -2619,6 +2623,7 @@
     "placeholder": "Detailed tenant dashboards will be available in Phase 2.",
     "view_overview": "Overview",
     "view_alerts": "Alerts",
+    "view_security": "Security",
     "view_ca_policies": "CA Policies",
     "view_intune_policies": "Intune Policies",
     "view_change_log": "Change Log",
