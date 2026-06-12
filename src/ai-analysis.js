@@ -35,6 +35,8 @@
  */
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('./lib/ai-client');
+const aiGuard = require('./lib/ai-guard');
 const config = require('../config/default');
 const db = require('./db/database');
 const tenantMode = require('./lib/tenant-mode');
@@ -88,7 +90,7 @@ let client = null;
 
 function getClient() {
   if (!client && config.ai.apiKey) {
-    client = new Anthropic({ apiKey: config.ai.apiKey });
+    client = createAiClient(config.ai.apiKey);
   }
   return client;
 }
@@ -244,6 +246,12 @@ async function analyzeAlert(alert, tenant) {
     return null;
   }
 
+  const gate = await aiGuard.preflight('alert_analysis');
+  if (!gate.allowed) {
+    console.warn(`[AI] Skipping alert analysis — ${gate.reason}`);
+    return null;
+  }
+
   // Lazy-run the locale-column migration the first time we're about to
   // write to the new columns. Mirrors morning-briefing's lazy approach.
   await ensureAlertAiColumns();
@@ -263,6 +271,7 @@ async function analyzeAlert(alert, tenant) {
       messages: [{ role: 'user', content: prompt }],
     });
 
+    aiGuard.recordSuccess(response.usage);
     const text = response.content?.[0]?.text || null;
     if (!text) return null;
 
@@ -282,6 +291,7 @@ async function analyzeAlert(alert, tenant) {
       proposedReason: parsed.proposedReason,
     };
   } catch (e) {
+    aiGuard.recordFailure(e);
     console.error('[AI] Haiku analysis failed:', e.message);
     return null;
   }
@@ -586,6 +596,12 @@ async function analyzeMessageCenterItem(message, controlCatalog) {
     return null;
   }
 
+  const gate = await aiGuard.preflight('message_center_correlation');
+  if (!gate.allowed) {
+    console.warn(`[AI] Skipping Message Center correlation — ${gate.reason}`);
+    return null;
+  }
+
   const prompt = buildMessageCenterPrompt(message, controlCatalog || []);
 
   try {
@@ -594,6 +610,7 @@ async function analyzeMessageCenterItem(message, controlCatalog) {
       max_tokens: Math.max(config.ai.maxTokens || 0, 4096),
       messages: [{ role: 'user', content: prompt }],
     });
+    aiGuard.recordSuccess(response.usage);
     const text = response.content?.[0]?.text || null;
     if (!text) return null;
     if (response.usage) {
@@ -604,6 +621,7 @@ async function analyzeMessageCenterItem(message, controlCatalog) {
     }
     return parseMessageCenterResponse(text);
   } catch (e) {
+    aiGuard.recordFailure(e);
     console.error('[AI] Message Center correlation failed:', e.message);
     return null;
   }

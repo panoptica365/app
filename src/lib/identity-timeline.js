@@ -18,6 +18,8 @@
 
 const crypto = require('crypto');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('./ai-client');
+const aiGuard = require('./ai-guard');
 const config = require('../../config/default');
 const db = require('../db/database');
 
@@ -588,7 +590,7 @@ let client = null;
 function getClient() {
   const apiKey = config.ai && config.ai.apiKey;
   if (!apiKey) return null;
-  if (!client) client = new Anthropic({ apiKey });
+  if (!client) client = createAiClient(apiKey);
   return client;
 }
 
@@ -719,6 +721,12 @@ async function generateAnalysis(events) {
   // Override with IDENTITY_TIMELINE_MODEL if ever needed.
   const model = (config.ai && (config.ai.identityTimelineModel || config.ai.sonnetModel))
     || 'claude-sonnet-4-6';
+  const gate = await aiGuard.preflight('identity_timeline');
+  if (!gate.allowed) {
+    console.warn(`[IdentityTimeline] Skipping analysis — ${gate.reason}`);
+    return null;
+  }
+
   const prompt = buildAnalysisPrompt(events);
   let resp;
   try {
@@ -728,10 +736,12 @@ async function generateAnalysis(events) {
       messages: [{ role: 'user', content: prompt }],
     });
   } catch (e) {
+    aiGuard.recordFailure(e);
     console.error('[IdentityTimeline] model call failed:', e.message);
     return null;
   }
 
+  aiGuard.recordSuccess(resp && resp.usage);
   const text = (resp && resp.content && resp.content[0] && resp.content[0].text) || '';
   const parsed = parseModelJson(text);
   if (!parsed) {

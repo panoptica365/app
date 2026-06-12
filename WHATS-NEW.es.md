@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.6 — 2026-06-12
+
+### La vía de IA ya no puede atascarse, descontrolarse ni llevarse las alertas consigo
+
+Cada llamada al servicio de IA lleva ahora un límite de tiempo estricto (antes, el ajuste predeterminado subyacente permitía que una llamada quedara colgada diez minutos, reteniendo con ella un proceso en segundo plano). Un **presupuesto diario de tokens de IA** actúa como fusible: si un bucle descontrolado llegara a agotarlo, las narrativas de IA se pausan hasta la medianoche UTC, una alerta en el panel le explica el motivo y todo se reanuda automáticamente — importante sobre todo en instalaciones que usan su propia clave de IA, donde un descontrol es una factura sorpresa. Un **cortacircuitos** deja de insistir al servicio de IA tras fallos repetidos y reintenta por sí solo unos minutos después. En todas estas situaciones se mantiene la invariante: **las alertas siempre se disparan — solo se omite la narrativa de IA.**
+
+### Las actualizaciones se vigilan a sí mismas durante tres minutos
+
+El actualizador automático siempre ha comprobado la salud de una versión nueva al arrancar y revertido automáticamente en caso de fallo. Ahora además **observa la versión nueva durante tres minutos después** de superar la comprobación inicial, y revierte si se vuelve inestable — cubriendo el caso más difícil de una versión que arranca limpia y entra en bucle de fallos un minuto después. Las versiones pasan también por un **canal anticipado**: la instalación del proveedor absorbe cada versión unos días antes de que las instalaciones de clientes del canal estable la vean.
+
+### Telemetría de salud — para que el soporte vea el problema antes de que usted escriba
+
+Una vez al día, su instalación envía un pequeño resumen de salud al servidor de licencias: versión de la aplicación, canal de actualización, estados de las comprobaciones de salud, nombres de procesos atrasados, contador de fallos, tamaño de la base de datos, uso de disco y *número* de tenants. **Nunca nombres de tenants, identidades de usuarios, contenido de alertas ni textos de error — los datos de clientes y tenants nunca salen de su instalación.** La lista exacta de campos está documentada en la plantilla de configuración, y `TELEMETRY_ENABLED=false` la desactiva por completo.
+
+### Cada versión pasa ahora controles de calidad automatizados
+
+Nuevos controles de integración continua se ejecutan con cada cambio: una verificación de seguridad que prueba que cada ruta de la API lleva su guarda de autenticación, un control de completitud de los tres idiomas (inglés, francés, español — más de 3.400 cadenas verificadas estructuralmente idénticas) y una prueba de doble arranque contra una base de datos vacía — exactamente el escenario que un cliente nuevo encuentra primero.
+
+---
+
 ## Versión 0.2.5 — 2026-06-12
 
 ### Hecho para resistir: recuperación de fallos, límites de tiempo de red y vigilantes

@@ -19,6 +19,10 @@ const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
 
+// CI-ROUTE-GUARD-EXEMPT: these routes ARE the authentication flow (login,
+// OAuth callback, logout, session status) — they cannot require an
+// authenticated session. Everything stateful they touch is the session itself.
+
 // ─── User Login (Panoptica UI access) ───
 
 router.get('/login', async (req, res) => {

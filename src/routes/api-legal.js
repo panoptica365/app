@@ -27,6 +27,10 @@ const setupState = require('../lib/setup/state');
 const mspAudit = require('../msp-audit');
 
 const router = express.Router();
+
+// CI-ROUTE-GUARD-EXEMPT: the eulaAccess middleware below enforces auth —
+// anonymous ONLY while first-boot setup is incomplete (the operator is not
+// logged in yet), auth.requireAdmin on every call once setup completes.
 router.use(express.json());
 
 // While setup is incomplete, allow anonymous access (wizard context). Once

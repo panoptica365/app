@@ -18,12 +18,14 @@
 'use strict';
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('./ai-client');
+const aiGuard = require('./ai-guard');
 const config = require('../../config/default');
 
 let client = null;
 function getClient() {
   if (!client && config.ai.apiKey) {
-    client = new Anthropic({ apiKey: config.ai.apiKey });
+    client = createAiClient(config.ai.apiKey);
   }
   return client;
 }
@@ -85,6 +87,12 @@ async function evaluateApps(apps) {
     return result;
   }
 
+  const gate = await aiGuard.preflight('known_good_evaluation');
+  if (!gate.allowed) {
+    console.warn(`[KnownGood] Skipping Sonnet evaluation — ${gate.reason}`);
+    return result;
+  }
+
   const payload = apps.map(appForPrompt);
   try {
     const resp = await anthropic.messages.create({
@@ -96,6 +104,7 @@ async function evaluateApps(apps) {
         content: `Triage these ${payload.length} app(s). Return one result object per appId.\n\n${JSON.stringify(payload, null, 2)}`,
       }],
     });
+    aiGuard.recordSuccess(resp.usage);
     const text = (resp.content && resp.content[0] && resp.content[0].text) || '';
     const parsed = parseJson(text);
     const list = (parsed && Array.isArray(parsed.results)) ? parsed.results : [];
@@ -113,6 +122,7 @@ async function evaluateApps(apps) {
       });
     }
   } catch (err) {
+    aiGuard.recordFailure(err);
     console.error('[KnownGood] Sonnet evaluation failed:', err.message);
   }
   return result;

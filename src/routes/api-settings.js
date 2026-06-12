@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('../lib/ai-client');
 const auth = require('../auth');
 const config = require('../../config/default');
 const mspAudit = require('../msp-audit');
@@ -673,7 +674,7 @@ router.post('/anthropic-key/test', async (req, res) => {
   }
 
   try {
-    const client = new Anthropic({ apiKey: keyToTest });
+    const client = createAiClient(keyToTest, { timeoutMs: 30000 }); // operator is waiting on a spinner
     const result = await client.messages.create({
       model: config.ai.haikuModel || 'claude-haiku-4-5-20251001',
       max_tokens: 8,

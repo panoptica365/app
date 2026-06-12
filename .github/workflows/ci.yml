@@ -1,0 +1,135 @@
+# ═══════════════════════════════════════════════════════════════════
+#  Panoptica365 — CI gate (Reliability 1.6, 2026-06-12)
+# ═══════════════════════════════════════════════════════════════════
+#
+# Three checks that encode defect classes we already paid for once:
+#
+#   1. checks      — route-guard lint (the H-1 missing-auth class),
+#                    en/fr/es i18n parity + content presence, and a
+#                    syntax pass over every src/ + scripts/ JS file.
+#   2. double-boot — build the production image, boot it TWICE against a
+#                    fresh MySQL 8 (first-boot wizard mode, no license),
+#                    assert clean start both times with no DDL errors or
+#                    [FATAL] lines. Catches the "works on an 18-month-old
+#                    DB, fails on a fresh install" class — exactly what a
+#                    new MSP customer hits first.
+#
+# DELIBERATELY SEPARATE from release.yml: a bug in this gate must not be
+# able to brick a release build. Once it has run green on main for a few
+# weeks, wire release.yml to require it.
+# ═══════════════════════════════════════════════════════════════════
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Syntax pass (node --check on all src/ + scripts/ JS)
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            node --check "$f" || { echo "SYNTAX FAIL: $f"; fail=1; }
+          done < <(find src scripts config -name '*.js' -not -name '._*' -not -path '*/node_modules/*')
+          exit $fail
+
+      - name: Route-guard lint
+        run: node scripts/ci/route-guard-lint.js
+
+      - name: i18n parity (en/fr/es)
+        run: node scripts/ci/i18n-parity.js
+
+      - name: Release-file consistency (VERSION vs manifest.json)
+        run: |
+          node -e "
+            const v = require('fs').readFileSync('VERSION','utf8').trim();
+            const m = require('./manifest.json');
+            const entries = [m.latest, m.early].filter(Boolean);
+            const ok = entries.some(e => e.version === v && e.image_tag === 'v' + v);
+            if (!ok) { console.error('VERSION ' + v + ' matches no manifest entry (latest/early)'); process.exit(1); }
+            console.log('VERSION ' + v + ' consistent with manifest');
+          "
+
+  double-boot:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-pw
+          MYSQL_DATABASE: panoptica
+          MYSQL_USER: panoptica
+          MYSQL_PASSWORD: ci-app-pw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -pci-root-pw"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: panoptica365-ci:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Boot twice against a fresh DB
+        run: |
+          set -e
+          boot_once() {
+            local n="$1"
+            echo "── boot #$n ──"
+            docker run -d --name "app$n" --network host \
+              -e DB_HOST=127.0.0.1 -e DB_PORT=3306 -e DB_NAME=panoptica \
+              -e DB_USER=panoptica -e DB_PASS=ci-app-pw \
+              -e NODE_ENV=production \
+              panoptica365-ci:local
+            # Give entrypoint (schema apply) + boot 45s, then assert.
+            sleep 45
+            docker logs "app$n" > "boot$n.log" 2>&1 || true
+            if [ "$(docker inspect -f '{{.State.Running}}' "app$n")" != "true" ]; then
+              echo "FAIL: container app$n is not running after 45s"; cat "boot$n.log"; exit 1
+            fi
+            # /healthz = process alive; /healthz/ready = DB + schema applied.
+            curl -fsS http://127.0.0.1:3000/healthz >/dev/null || { echo "FAIL: /healthz"; cat "boot$n.log"; exit 1; }
+            curl -fsS http://127.0.0.1:3000/healthz/ready >/dev/null || { echo "FAIL: /healthz/ready"; cat "boot$n.log"; exit 1; }
+            # No DDL errors, no crash-handler fatals, no unhandled schema failures.
+            if grep -E "\[FATAL\]|ER_[A-Z_]+|Schema ensure failed|ensure failed at boot" "boot$n.log" | grep -v "Duplicate" ; then
+              echo "FAIL: boot #$n log contains schema/fatal errors (above)"; exit 1
+            fi
+            docker rm -f "app$n" >/dev/null
+            echo "boot #$n clean"
+          }
+          boot_once 1
+          boot_once 2
+
+      - name: Upload boot logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: double-boot-logs
+          path: boot*.log

@@ -47,6 +47,13 @@ APP_IMAGE_REPO="${APP_IMAGE_REPO:-ghcr.io/panoptica365/app}"
 HEALTH_URL="${HEALTH_URL:-http://panoptica-app:3000/healthz/ready}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-120}"               # seconds
 HEALTH_CONSECUTIVE="${HEALTH_CONSECUTIVE:-3}"         # consecutive 200s = healthy
+# Post-gate observation window (Reliability 1.7, payload v2): after the initial
+# health gate passes, keep watching readiness for this many seconds. A new
+# image that boots clean but crash-loops a minute later (poisoned worker,
+# delayed migration failure) still triggers the automatic rollback instead of
+# being declared a success at the ~9s mark. 0 disables the window.
+HEALTH_SETTLE="${HEALTH_SETTLE:-180}"                 # seconds to observe after the gate
+HEALTH_SETTLE_FAILS="${HEALTH_SETTLE_FAILS:-5}"       # consecutive probe failures = unhealthy
 MANIFEST_URL="${UPDATE_MANIFEST_URL:-https://updates.panoptica365.com/latest.json}"
 
 # Hard-coded container names + log window for the diag verb. NOTHING from any
@@ -166,13 +173,16 @@ run_update() {
   esac
 
   # Best-effort manifest cross-check (defense in depth). If the manifest is
-  # reachable, the target must match its current image_tag; a transient
-  # manifest outage does not block (the strict regex already bounds the input).
-  manifest_tag=""
+  # reachable, the target should match ONE of its image_tags — the manifest
+  # may now carry both a stable (`latest`) and an `early` channel entry
+  # (Reliability 1.7), so collect every image_tag rather than just the first.
+  # A transient manifest outage does not block (the strict regex already
+  # bounds the input).
   if wget -q -O /tmp/manifest.json "$MANIFEST_URL" 2>/dev/null; then
-    manifest_tag=$(json_get /tmp/manifest.json image_tag)
-    if [ -n "$manifest_tag" ] && [ "$manifest_tag" != "$TARGET_TAG" ]; then
-      log "WARN target $TARGET_TAG != manifest image_tag $manifest_tag — proceeding on validated tag"
+    manifest_tags=$(grep -o '"image_tag"[[:space:]]*:[[:space:]]*"[^"]*"' /tmp/manifest.json 2>/dev/null \
+      | sed 's/.*:[[:space:]]*"\(.*\)"/\1/')
+    if [ -n "$manifest_tags" ] && ! printf '%s\n' "$manifest_tags" | grep -qx "$TARGET_TAG"; then
+      log "WARN target $TARGET_TAG matches no manifest image_tag ($(printf '%s' "$manifest_tags" | tr '\n' ' ')) — proceeding on validated tag"
     fi
   else
     log "WARN manifest unreachable for cross-check — proceeding on validated tag"
@@ -218,17 +228,39 @@ run_update() {
     return $?
   fi
 
-  # health_check
+  # health_check — the boot gate
   write_status "health_check" "" "Checking it's healthy" ""
-  if health_gate; then
-    write_status "success" "success" "Update complete" ""
-    log "update SUCCESS → $TARGET_TAG"
-    return 0
+  if ! health_gate; then
+    log "health gate FAILED for $TARGET_TAG — rolling back"
+    do_rollback "New version failed its health check"
+    return $?
   fi
 
-  log "health gate FAILED for $TARGET_TAG — rolling back"
-  do_rollback "New version failed its health check"
-  return $?
+  # settle window — keep observing readiness after the gate so a delayed
+  # crash-loop still rolls back. Single probe blips are tolerated; only
+  # HEALTH_SETTLE_FAILS consecutive failures count as unhealthy.
+  if [ "$HEALTH_SETTLE" -gt 0 ] 2>/dev/null; then
+    write_status "health_check" "" "Healthy — observing for ${HEALTH_SETTLE}s before confirming" ""
+    settle_deadline=$(( $(date +%s) + HEALTH_SETTLE ))
+    fail_streak=0
+    while [ "$(date +%s)" -lt "$settle_deadline" ]; do
+      if wget -q -O /dev/null "$HEALTH_URL" 2>/dev/null; then
+        fail_streak=0
+      else
+        fail_streak=$(( fail_streak + 1 ))
+        if [ "$fail_streak" -ge "$HEALTH_SETTLE_FAILS" ]; then
+          log "settle window: readiness lost ($fail_streak consecutive probe failures) — rolling back"
+          do_rollback "New version went unhealthy during the post-update observation window"
+          return $?
+        fi
+      fi
+      sleep 5
+    done
+  fi
+
+  write_status "success" "success" "Update complete" ""
+  log "update SUCCESS → $TARGET_TAG"
+  return 0
 }
 
 # do_rollback REASON

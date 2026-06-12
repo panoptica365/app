@@ -77,19 +77,25 @@ jobs:
           echo "VERSION ($file_version) matches tag ($GITHUB_REF_NAME) ✓"
 
       - name: Verify manifest.json matches the pushed tag
+        # Reliability 1.7 (2026-06-12): a tag may now be released to either
+        # channel — it must match the STABLE entry (latest) or the EARLY
+        # entry. An early-only release leaves `latest` on the prior version
+        # on purpose, so the old strict latest-only check would wrongly fail.
         run: |
           tag_version="${GITHUB_REF_NAME#v}"
-          manifest_version=$(node -e "process.stdout.write(require(\"./manifest.json\").latest.version)")
-          manifest_tag=$(node -e "process.stdout.write(require(\"./manifest.json\").latest.image_tag)")
-          if [ "$manifest_version" != "$tag_version" ]; then
-            echo "::error::manifest.json latest.version ($manifest_version) does not match git tag ($GITHUB_REF_NAME) — bump manifest.json before tagging."
-            exit 1
-          fi
-          if [ "$manifest_tag" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::manifest.json latest.image_tag ($manifest_tag) does not match git tag ($GITHUB_REF_NAME)."
-            exit 1
-          fi
-          echo "manifest.json (version $manifest_version, tag $manifest_tag) matches tag ($GITHUB_REF_NAME) ✓"
+          node -e "
+            const m = require('./manifest.json');
+            const tagV = '$tag_version', tag = '$GITHUB_REF_NAME';
+            const entries = [['latest', m.latest], ['early', m.early]].filter(([, e]) => e);
+            const hit = entries.find(([, e]) => e.version === tagV && e.image_tag === tag);
+            if (!hit) {
+              console.error('::error::git tag ' + tag + ' matches no manifest entry — latest is ' +
+                (m.latest ? m.latest.image_tag : 'absent') + ', early is ' +
+                (m.early ? m.early.image_tag : 'absent') + '. Bump manifest.json before tagging.');
+              process.exit(1);
+            }
+            console.log('manifest.json ' + hit[0] + ' entry (version ' + tagV + ', tag ' + tag + ') matches ✓');
+          "
 
       # Guardrail (2026-06-03) — the signed updater payload must verify against
       # the committed public key BEFORE we ship an image. Catches the

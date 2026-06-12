@@ -179,6 +179,15 @@ module.exports = {
     canAdjustSeverity: process.env.AI_CAN_ADJUST_SEVERITY !== 'false',
     // Tenant-level digest cache TTL (ms). 15 min default.
     tenantDigestCacheMs: parseInt(process.env.AI_TENANT_DIGEST_CACHE_MS, 10) || (15 * 60 * 1000),
+    // Reliability 1.9 (2026-06-12): daily token fuse for the AUTOMATED AI
+    // enrichment paths (per-alert analysis, summaries, correlations).
+    // Honors an explicit 0 = unlimited. 5M tokens/day is far above normal
+    // operation (a busy 15-tenant day uses well under 1M) — this trips on
+    // runaway loops, not legitimate load. Enforced by src/lib/ai-guard.js.
+    dailyTokenBudget: (() => {
+      const n = parseInt(process.env.AI_DAILY_TOKEN_BUDGET, 10);
+      return Number.isFinite(n) && n >= 0 ? n : 5000000;
+    })(),
   },
 
   // SMTP (SMTP2GO)

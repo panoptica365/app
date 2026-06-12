@@ -7,6 +7,8 @@
 
 const cron = require('node-cron');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('./lib/ai-client');
+const aiGuard = require('./lib/ai-guard');
 const nodemailer = require('nodemailer');
 const config = require('../config/default');
 const db = require('./db/database');
@@ -109,7 +111,7 @@ async function createSystemAlert(message) {
 
 function getClient() {
   if (!client && config.ai.apiKey) {
-    client = new Anthropic({ apiKey: config.ai.apiKey });
+    client = createAiClient(config.ai.apiKey, { timeoutMs: 300000 }); // 3-locale Sonnet summary runs long
   }
   return client;
 }
@@ -365,6 +367,7 @@ async function generateSummary(data) {
       messages: [{ role: 'user', content: prompt }],
     });
 
+    aiGuard.recordUsage(response.usage);
     const raw = response.content?.[0]?.text || '';
     // Token logging for cost visibility (Phase 8 — Jacques wanted to watch
     // the trend; 3-locale output ~3x token cost vs single-locale).

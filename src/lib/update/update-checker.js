@@ -21,6 +21,10 @@ const versionInfo = require('../../version');
 const workerHeartbeat = require('../../worker-heartbeat');
 
 const MANIFEST_URL = process.env.UPDATE_MANIFEST_URL || 'https://updates.panoptica365.com/latest.json';
+// Release channel (Reliability 1.7): 'stable' (default) follows manifest
+// `latest`; 'early' additionally considers the optional `early` block when
+// it is newer. Anything other than the literal 'early' means stable.
+const CHANNEL = (process.env.UPDATE_CHANNEL || 'stable').toLowerCase() === 'early' ? 'early' : 'stable';
 const CHECK_INTERVAL_MS = parseInt(process.env.UPDATE_CHECK_INTERVAL || '3600000', 10) || 3600000; // 1h
 const FETCH_TIMEOUT_MS = parseInt(process.env.UPDATE_FETCH_TIMEOUT_MS || '8000', 10) || 8000;
 const INITIAL_DELAY_MS = 15000; // let the app finish booting before the first check
@@ -165,11 +169,29 @@ async function checkInner() {
     return cache;
   }
 
-  const latest = m.latest;
+  // Release channels (Reliability 1.7, 2026-06-12). `latest` is the STABLE
+  // channel and remains the validated baseline every install understands.
+  // Installs with UPDATE_CHANNEL=early additionally consider the manifest's
+  // optional `early` block — used only when present, well-formed, and NEWER
+  // than stable (a stale early entry falls back to stable automatically, so
+  // an early-channel install can never be "held back" on an old early build).
+  // Lets the vendor's own instance + a friendly pilot absorb a release for a
+  // few days before the fleet's stable channel sees it.
+  let entry = m.latest;
+  let channel = 'stable';
+  if (CHANNEL === 'early') {
+    const e = m.early;
+    if (e && isPlainSemver(e.version) && e.image_tag && IMAGE_TAG_RE.test(e.image_tag)
+        && compareSemver(e.version, m.latest.version) > 0) {
+      entry = e;
+      channel = 'early';
+    }
+  }
+
   const yanked = Array.isArray(m.yanked) ? m.yanked : [];
-  const available = computeAvailable(latest.version, latest.image_tag, yanked);
-  const belowMin = latest.min_supported && isPlainSemver(latest.min_supported)
-    ? compareSemver(RUNNING_VERSION, latest.min_supported) < 0
+  const available = computeAvailable(entry.version, entry.image_tag, yanked);
+  const belowMin = entry.min_supported && isPlainSemver(entry.min_supported)
+    ? compareSemver(RUNNING_VERSION, entry.min_supported) < 0
     : false;
 
   cache = {
@@ -177,18 +199,20 @@ async function checkInner() {
     manifest_ok: true,
     update_available: available,
     running_version: RUNNING_VERSION,
-    latest_version: latest.version,
-    latest_image_tag: latest.image_tag,
-    released_at: latest.released_at || null,
-    mandatory: !!latest.mandatory,
-    min_supported: latest.min_supported || null,
+    channel,
+    configured_channel: CHANNEL,
+    latest_version: entry.version,
+    latest_image_tag: entry.image_tag,
+    released_at: entry.released_at || null,
+    mandatory: !!entry.mandatory,
+    min_supported: entry.min_supported || null,
     below_min_supported: belowMin,
-    notes_summary: latest.notes_summary || null,
+    notes_summary: entry.notes_summary || null,
     yanked,
     last_error: null,
   };
   persistCache();
-  log(`checked: running ${RUNNING_VERSION}, latest ${latest.version}, available=${available}`);
+  log(`checked: running ${RUNNING_VERSION}, ${channel} ${entry.version}, available=${available}`);
   return cache;
 }
 

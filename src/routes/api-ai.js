@@ -5,6 +5,8 @@
 
 const express = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('../lib/ai-client');
+const aiGuard = require('../lib/ai-guard');
 const auth = require('../auth');
 const db = require('../db/database');
 const config = require('../../config/default');
@@ -18,7 +20,7 @@ let aiClient = null;
 
 function getAiClient() {
   if (!aiClient && config.ai.apiKey) {
-    aiClient = new Anthropic({ apiKey: config.ai.apiKey });
+    aiClient = createAiClient(config.ai.apiKey);
   }
   return aiClient;
 }
@@ -175,6 +177,7 @@ router.post('/tenant-digest/:tenantId', auth.requireMemberOrAdmin, async (req, r
       messages: [{ role: 'user', content: prompt }],
     });
 
+    aiGuard.recordUsage(response.usage);
     const content = response.content?.[0]?.text || 'No digest generated.';
     const generatedAt = new Date().toISOString();
     tenantDigestCache.set(cacheKey, { content, generatedAt });
@@ -597,6 +600,7 @@ router.post('/chat', auth.requireMemberOrAdmin, async (req, res) => {
       messages,
     });
 
+    aiGuard.recordUsage(response.usage);
     const answer = response.content?.[0]?.text || 'No response generated.';
 
     // Add assistant response to history

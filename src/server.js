@@ -474,6 +474,12 @@ async function start() {
       console.error('[Server] worker-heartbeat schema ensure failed at boot:', err.message)
     );
 
+    // Reliability 1.9 (2026-06-12) — eager-create ai_usage_daily, the AI
+    // token ledger behind the daily budget fuse. Fire-and-forget.
+    require('./lib/ai-guard').ensureSchema().catch(err =>
+      console.error('[Server] ai-guard schema ensure failed at boot:', err.message)
+    );
+
     // Ensure users + operator_mute_periods exist before the first login
     // (Apr 28, 2026). Lazily ensured by usersStore.upsertUserOnLogin, but
     // explicit boot-time ensure surfaces schema errors loudly. Same fire-
@@ -576,6 +582,12 @@ async function start() {
     // Enforces the config.retention.days windows on the six previously
     // unbounded tables. Batched deletes; stamps the heartbeat registry.
     retentionWorker.start();
+
+    // Reliability 1.8 (2026-06-12) — daily allowlisted instance-health
+    // summary to the license server's /api/v1/telemetry (best-effort, its
+    // own endpoint — never piggybacked onto the license refresh call).
+    // States and counts only; no tenant data. TELEMETRY_ENABLED=false opts out.
+    require('./lib/telemetry').start();
   });
 }
 
@@ -602,6 +614,7 @@ async function shutdown(signal) {
   licenseRefresh.stop();
   psaWorker.stop();
   retentionWorker.stop();
+  require('./lib/telemetry').stop();
   await db.close();
   server.close(() => process.exit(0));
 }

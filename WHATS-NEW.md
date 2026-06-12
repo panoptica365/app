@@ -5,6 +5,26 @@ that release, newest first.
 
 ---
 
+## Version 0.2.6 — 2026-06-12
+
+### The AI path can no longer stall, runaway, or take alerts down with it
+
+Every call to the AI service now carries a strict time limit (previously the underlying default allowed a call to hang for ten minutes, holding a background worker with it). A **daily AI token budget** acts as a fuse: if a runaway loop ever burns through it, AI narratives pause until midnight UTC, a dashboard alert tells you why, and everything resumes automatically — important above all for installs running their own AI key, where a runaway is a surprise bill. A **circuit breaker** stops hammering the AI service after repeated failures and retries on its own a few minutes later. In every one of these situations the invariant holds: **alerts always fire — only the AI narrative is skipped.**
+
+### Updates now watch their own back for three minutes
+
+The self-updater has always health-checked a new version at boot and rolled back automatically on failure. It now also keeps **observing the new version for three minutes after** the boot check passes, and rolls back if it goes unhealthy — catching the harder case of a version that boots cleanly and crash-loops a minute later. Releases are also staged through an **early channel**: the vendor's own installation absorbs each release for a few days before customer installs on the stable channel see it.
+
+### Fleet health telemetry — so support sees trouble before you write
+
+Once a day, your install sends a small instance-health summary to the licensing server: app version, update channel, health-check states, stale worker names, crash count, database size, disk use, and tenant *count*. **Never tenant names, user identities, alert content, or error text — customer and tenant data never leaves your installation.** The exact field list is documented in the configuration template, and `TELEMETRY_ENABLED=false` switches it off entirely.
+
+### Every release now passes automated quality gates
+
+New continuous-integration checks run on every change: a security lint proving every API route carries its authentication guard, a three-language completeness check (English, French, Spanish — 3,400+ strings verified identical in structure), and a fresh-install double-boot test against an empty database — the exact scenario a new customer hits first.
+
+---
+
 ## Version 0.2.5 — 2026-06-12
 
 ### Built to survive: crash recovery, network time limits, and worker watchdogs

@@ -5,6 +5,26 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.6 — 2026-06-12
+
+### Le volet IA ne peut plus se bloquer, s'emballer, ni entraîner les alertes avec lui
+
+Chaque appel au service d'IA porte désormais une limite de temps stricte (auparavant, le réglage par défaut sous-jacent permettait à un appel de rester suspendu dix minutes, immobilisant un processus d'arrière-plan avec lui). Un **budget quotidien de jetons IA** sert de fusible : si un emballement venait à l'épuiser, les narratifs IA se mettent en pause jusqu'à minuit UTC, une alerte au tableau de bord vous en informe, et tout reprend automatiquement — essentiel surtout pour les installations utilisant leur propre clé IA, où un emballement se traduit par une facture surprise. Un **disjoncteur** cesse de solliciter le service d'IA après des échecs répétés et réessaie de lui-même quelques minutes plus tard. Dans chacune de ces situations, l'invariant tient : **les alertes se déclenchent toujours — seul le narratif IA est omis.**
+
+### Les mises à jour surveillent leurs arrières pendant trois minutes
+
+Le système de mise à jour automatique a toujours vérifié la santé d'une nouvelle version au démarrage et effectué un retour en arrière automatique en cas d'échec. Il **observe maintenant la nouvelle version pendant trois minutes après** la réussite de la vérification initiale, et revient en arrière si elle devient instable — couvrant le cas plus sournois d'une version qui démarre proprement puis plante en boucle une minute plus tard. Les versions passent aussi par un **canal anticipé** : l'installation du fournisseur absorbe chaque version quelques jours avant que les installations clientes du canal stable ne la voient.
+
+### Télémétrie de santé — pour que le soutien voie le problème avant que vous n'écriviez
+
+Une fois par jour, votre installation envoie un petit résumé de santé au serveur de licences : version de l'application, canal de mise à jour, états des contrôles de santé, noms des processus en retard, compteur de plantages, taille de la base de données, utilisation du disque et *nombre* de locataires. **Jamais de noms de locataires, d'identités d'utilisateurs, de contenu d'alertes ni de textes d'erreur — les données des clients et des locataires ne quittent jamais votre installation.** La liste exacte des champs est documentée dans le gabarit de configuration, et `TELEMETRY_ENABLED=false` désactive le tout.
+
+### Chaque version passe désormais des contrôles qualité automatisés
+
+De nouveaux contrôles d'intégration continue s'exécutent à chaque changement : une vérification de sécurité prouvant que chaque route d'API porte son garde d'authentification, un contrôle de complétude des trois langues (anglais, français, espagnol — plus de 3 400 chaînes vérifiées structurellement identiques) et un test de double démarrage sur une base de données vierge — exactement le scénario qu'un nouveau client rencontre en premier.
+
+---
+
 ## Version 0.2.5 — 2026-06-12
 
 ### Conçu pour durer : reprise après plantage, limites de temps réseau et chiens de garde

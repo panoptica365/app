@@ -889,12 +889,14 @@ async function getDailyBaseline(tenantDbId, policyId) {
 // ═══════════════════════════════════════════
 
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('./lib/ai-client');
+const aiGuard = require('./lib/ai-guard');
 const config = require('../config/default');
 
 let _anthropicClient = null;
 function getAiClient() {
   if (!_anthropicClient && config.ai.apiKey) {
-    _anthropicClient = new Anthropic({ apiKey: config.ai.apiKey });
+    _anthropicClient = createAiClient(config.ai.apiKey);
   }
   return _anthropicClient;
 }
@@ -1120,6 +1122,12 @@ OUTPUT RULES:
 - Do NOT start with a title or preamble like "Login Failure Summary" or labels like "Date:", "Total Events:", "Tenant:". Start directly with the assessment.
 - One flowing paragraph.`;
 
+  const gate = await aiGuard.preflight('event_summary');
+  if (!gate.allowed) {
+    console.warn(`[AlertEngine] Skipping event summary — ${gate.reason}`);
+    return;
+  }
+
   try {
     const response = await anthropic.messages.create({
       model: config.ai.haikuModel,
@@ -1127,6 +1135,7 @@ OUTPUT RULES:
       messages: [{ role: 'user', content: prompt }],
     });
 
+    aiGuard.recordSuccess(response.usage);
     const summary = response.content?.[0]?.text;
     if (!summary) return;
 
@@ -1137,6 +1146,7 @@ OUTPUT RULES:
       [tenantDbId, eventType, summary, totalCount]
     );
   } catch (e) {
+    aiGuard.recordFailure(e);
     console.warn(`[AlertEngine] Haiku summary failed for ${tenantName} ${eventType}: ${e.message}`);
   }
 }

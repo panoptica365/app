@@ -18,6 +18,8 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('../lib/ai-client');
+const aiGuard = require('../lib/ai-guard');
 const auth = require('../auth');
 const db = require('../db/database');
 const graph = require('../graph');
@@ -31,7 +33,7 @@ router.use(auth.requireAuth);
 let aiClient = null;
 function getAiClient() {
   if (!aiClient && config.ai.apiKey) {
-    aiClient = new Anthropic({ apiKey: config.ai.apiKey });
+    aiClient = createAiClient(config.ai.apiKey, { timeoutMs: 600000 }); // Opus deep reports are long by nature
   }
   return aiClient;
 }
@@ -802,6 +804,7 @@ Be honest and specific. If there are genuine risks, say so clearly. If the polic
       }],
     });
 
+    aiGuard.recordUsage(response.usage);
     const text = response.content?.[0]?.text || '';
     try {
       const cleaned = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
@@ -1150,6 +1153,7 @@ Keep the total output under 2400 words. Be specific. Use real numbers from the d
       }],
     });
 
+    aiGuard.recordUsage(response.usage);
     const text = response.content?.[0]?.text || '';
     // Try to parse as JSON
     try {
@@ -1574,6 +1578,7 @@ Match the "name" field exactly to the displayName in the input — the consumer 
         content: `Generate per-policy summaries for these Conditional Access policies:\n\n${policyData}`,
       }],
     });
+    aiGuard.recordUsage(response.usage);
     const text = response.content?.[0]?.text || '';
     const cleaned = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
     let parsed;

@@ -42,6 +42,7 @@ const path = require('path');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const Anthropic = require('@anthropic-ai/sdk');
+const { createAiClient } = require('../lib/ai-client');
 
 const setupState = require('../lib/setup/state');
 const setupMiddleware = require('../lib/setup/middleware');
@@ -53,6 +54,10 @@ const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
 router.use(express.json());
+
+// CI-ROUTE-GUARD-EXEMPT: first-boot wizard runs pre-auth by design; the
+// router-level isInSetupMode() gate below 403s EVERY endpoint permanently
+// once setup completes (setup-completed-once.flag). See header comment.
 
 // ─── Setup-mode-required gate ──────────────────────────────────────────
 // Every endpoint in this router refuses unless the install is actively
@@ -585,7 +590,7 @@ router.post('/anthropic/test', async (req, res) => {
     return res.status(400).json({ error: 'anthropic_not_configured', detail: 'Save Anthropic API key first.' });
   }
   try {
-    const client = new Anthropic({ apiKey });
+    const client = createAiClient(apiKey, { timeoutMs: 30000 }); // operator is waiting on a spinner
     // Tiny prompt — cheapest possible Haiku call (~$0.0001).
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
