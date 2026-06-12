@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.7 — 2026-06-12
+
+### Quick Assessment reports now open with a plain-language summary for the business owner
+
+The Quick Assessment has always produced an operator-grade report — technical findings, configuration detail, one-click template mappings. This release adds a new **Executive Summary** as the first page of every Quick Assessment, written for the non-technical business owner or prospect you hand the report to.
+
+It says, in plain business terms: where the tenant stands today, what could actually go wrong for the business (a lost laptop exposing client files, an account takeover, downtime — not the names of technical controls), the single most important next step and what it takes, and what "good" looks like once that step is taken. It deliberately contains no configuration keys, field names, or product jargon — so you can put it in front of an owner without translating it first.
+
+Nothing else about the report changed: the full technical assessment — Conditional Access, Intune, security settings, strengths, and prioritized actions — follows immediately after, exactly as before. The summary is fully localized in English, French, and Spanish along with the rest of the report, and any context you type in the assessment modal informs how it is framed.
+
+---
+
 ## Version 0.2.6 — 2026-06-12
 
 ### The AI path can no longer stall, runaway, or take alerts down with it

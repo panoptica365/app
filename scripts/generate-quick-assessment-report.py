@@ -70,6 +70,10 @@ STRINGS = {
         'sec_settings': 'Security Settings Posture',
         'sec_strengths': 'Strengths',
         'sec_actions': 'Priority Actions',
+        'exec_summary_title': 'Executive Summary',
+        'exec_risks_label': "What's at stake",
+        'exec_path_label': 'Recommended next step',
+        'exec_outlook_label': 'Where this leads',
         'sub_working': 'What is working',
         'sub_gaps': 'Gaps & recommendations',
         'deployable': 'One-click template available',
@@ -101,6 +105,10 @@ STRINGS = {
         'sec_settings': 'Posture des paramètres de sécurité',
         'sec_strengths': 'Points forts',
         'sec_actions': 'Actions prioritaires',
+        'exec_summary_title': 'Sommaire exécutif',
+        'exec_risks_label': 'Ce qui est en jeu',
+        'exec_path_label': 'Prochaine étape recommandée',
+        'exec_outlook_label': 'Où cela vous mène',
         'sub_working': 'Ce qui fonctionne',
         'sub_gaps': 'Lacunes et recommandations',
         'deployable': 'Modèle déployable en un clic',
@@ -132,6 +140,10 @@ STRINGS = {
         'sec_settings': 'Postura de configuración de seguridad',
         'sec_strengths': 'Fortalezas',
         'sec_actions': 'Acciones prioritarias',
+        'exec_summary_title': 'Resumen ejecutivo',
+        'exec_risks_label': 'Lo que está en juego',
+        'exec_path_label': 'Próximo paso recomendado',
+        'exec_outlook_label': 'Adónde lleva esto',
         'sub_working': 'Lo que funciona',
         'sub_gaps': 'Brechas y recomendaciones',
         'deployable': 'Plantilla disponible en un clic',
@@ -504,6 +516,40 @@ def main():
     width = letter[0] - 1.5 * inch  # matches the 0.75" left/right margins
 
     story = []
+
+    # ─── Executive Summary (business-owner audience) — first content page ───
+    # Plain-language page written for the client/owner, prepended before the
+    # operator-grade technical report. Every field access is guarded: if the
+    # model omitted "executive_summary" (older cache, malformed output), the
+    # whole page is skipped and the technical report renders unchanged.
+    exec_sum = analysis.get('executive_summary')
+    if isinstance(exec_sum, dict):
+        risks = exec_sum.get('business_risks')
+        risks = [r for r in risks if r] if isinstance(risks, list) else []
+        if exec_sum.get('verdict') or risks or exec_sum.get('recommended_path') or exec_sum.get('outlook'):
+            exec_flows = []
+            exec_flows.extend(prose(exec_sum.get('verdict'), styles))
+            if risks:
+                risk_bullets = [
+                    Paragraph(f'<font color="{COLORS["accent"]}">&#8226;</font> {esc(r)}', styles['Bullet'])
+                    for r in risks
+                ]
+                exec_flows.append(KeepTogether(
+                    [Paragraph(esc(S['exec_risks_label']), styles['SubHead']), risk_bullets[0]]))
+                exec_flows.extend(risk_bullets[1:])
+            if exec_sum.get('recommended_path'):
+                exec_flows.append(KeepTogether([
+                    Paragraph(esc(S['exec_path_label']), styles['SubHead']),
+                    Paragraph(esc(exec_sum.get('recommended_path')), styles['Body']),
+                ]))
+            if exec_sum.get('outlook'):
+                exec_flows.append(KeepTogether([
+                    Paragraph(esc(S['exec_outlook_label']), styles['SubHead']),
+                    Paragraph(esc(exec_sum.get('outlook')), styles['Body']),
+                ]))
+            if exec_flows:
+                story.extend(section(S['exec_summary_title'], exec_flows, styles, width))
+                story.append(PageBreak())
 
     # ─── Page 2: meta line ───
     story.append(Paragraph(

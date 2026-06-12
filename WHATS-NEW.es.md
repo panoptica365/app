@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.7 — 2026-06-12
+
+### Los informes de evaluación rápida ahora abren con un resumen en lenguaje claro para el dueño del negocio
+
+La evaluación rápida siempre ha producido un informe de nivel operador — hallazgos técnicos, detalle de configuración, plantillas desplegables en un clic. Esta versión añade un nuevo **resumen ejecutivo** como primera página de cada evaluación rápida, redactado para el dueño del negocio (o el cliente potencial) sin perfil técnico a quien usted entrega el informe.
+
+Dice, en términos de negocio sencillos: dónde se encuentra el tenant hoy, qué podría salir mal de verdad para el negocio (un portátil perdido que expone archivos de clientes, una toma de control de cuenta, una interrupción del servicio — y no los nombres de controles técnicos), el único próximo paso más importante y lo que requiere, y cómo se ve una buena postura una vez dado ese paso. No contiene deliberadamente ninguna clave de configuración, nombre de campo ni jerga de producto — de modo que puede presentárselo a un dueño sin tener que traducirlo antes.
+
+Nada más del informe cambió: la evaluación técnica completa — acceso condicional, Intune, configuración de seguridad, fortalezas y acciones prioritarias — sigue inmediatamente después, exactamente como antes. El resumen está totalmente localizado en inglés, francés y español junto con el resto del informe, y cualquier contexto que escriba en la ventana de evaluación orienta su redacción.
+
+---
+
 ## Versión 0.2.6 — 2026-06-12
 
 ### La vía de IA ya no puede atascarse, descontrolarse ni llevarse las alertas consigo

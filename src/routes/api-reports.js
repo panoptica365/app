@@ -2098,8 +2098,20 @@ Respect the LICENSING block. Entra ID P2 features (sign-in risk and user risk Co
 
 ${langInstruction}
 
+═══ EXECUTIVE SUMMARY — DIFFERENT AUDIENCE, READ CAREFULLY ═══
+
+The "executive_summary" is the ONLY part of this report written for the BUSINESS OWNER, not the operator. It must be readable by someone with no IT background. ABSOLUTELY FORBIDDEN in "executive_summary": configuration key names, Graph/API field names, internal identifiers, Panoptica template names, severity labels (high/medium/low), and product/feature jargon ("Conditional Access", "ASR", "BitLocker" may be named only if immediately explained in plain words). Speak in terms of business consequences and decisions. Every other key in this object stays operator-grade exactly as before.
+
 Return ONLY a JSON object (no markdown fence, no preamble) with exactly these keys:
 {
+  "executive_summary": {
+    "verdict": "One or two plain-language sentences a non-technical business owner immediately understands. No jargon. e.g. 'Your email security is in good shape, but the way staff sign in and the laptops themselves are largely unprotected — which is where a real incident would most likely start.'",
+    "business_risks": [
+      "2-4 short plain-language statements of what could actually go wrong FOR THE BUSINESS — framed as consequences (data loss, downtime, a stolen laptop exposing client/IP data, an account takeover), never as technical control names."
+    ],
+    "recommended_path": "1-2 sentences naming the single most important move in business terms and what it takes (e.g. the licensing step that unlocks the rest). No template names.",
+    "outlook": "1 sentence — what 'good' looks like once the recommended path is followed. The destination, stated positively."
+  },
   "overall_posture": "2-3 paragraphs. Open with a one-line verdict. Summarize the tenant's overall security standing across identity, devices, and configuration. End with the single most important thing to address.",
   "conditional_access": {
     "narrative": "1-2 paragraphs assessing the CA policies that ARE configured — coverage, gaps, and weaknesses.",
@@ -2133,7 +2145,7 @@ Order "prioritized_actions" hardest-hitting first. Use real numbers and real nam
   // report call sites and the pinned SDK.)
   const stream = anthropic.messages.stream({
     model: getAssessmentModel(),
-    max_tokens: 16000,
+    max_tokens: 20000,
     system,
     messages: [{ role: 'user', content: userContent }],
   });

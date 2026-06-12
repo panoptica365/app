@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.7 — 2026-06-12
+
+### Les rapports d'évaluation rapide s'ouvrent désormais sur un sommaire en langage clair pour le propriétaire d'entreprise
+
+L'évaluation rapide a toujours produit un rapport de calibre opérateur — constats techniques, détails de configuration, modèles déployables en un clic. Cette version ajoute un nouveau **sommaire exécutif** en première page de chaque évaluation rapide, rédigé pour le propriétaire d'entreprise (ou le client potentiel) non technique à qui vous remettez le rapport.
+
+Il dit, en termes d'affaires simples : où en est le locataire aujourd'hui, ce qui pourrait réellement mal tourner pour l'entreprise (un portable perdu exposant des fichiers clients, une prise de contrôle de compte, une interruption de service — et non les noms de contrôles techniques), la seule prochaine étape la plus importante et ce qu'elle exige, et à quoi ressemble une bonne posture une fois cette étape franchie. Il ne contient volontairement aucune clé de configuration, aucun nom de champ ni jargon de produit — vous pouvez donc le présenter à un propriétaire sans avoir à le traduire au préalable.
+
+Rien d'autre n'a changé dans le rapport : l'évaluation technique complète — accès conditionnel, Intune, paramètres de sécurité, points forts et actions prioritaires — suit immédiatement, exactement comme avant. Le sommaire est entièrement localisé en anglais, en français et en espagnol au même titre que le reste du rapport, et tout contexte que vous saisissez dans la fenêtre d'évaluation oriente sa formulation.
+
+---
+
 ## Version 0.2.6 — 2026-06-12
 
 ### Le volet IA ne peut plus se bloquer, s'emballer, ni entraîner les alertes avec lui
