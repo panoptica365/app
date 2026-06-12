@@ -5,6 +5,32 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.5 — 2026-06-12
+
+### Conçu pour durer : reprise après plantage, limites de temps réseau et chiens de garde
+
+Panoptica365 fonctionne sans surveillance; cette version durcit donc tout ce qui pouvait auparavant échouer en silence. Si l'application plante de façon inattendue, la raison complète est maintenant écrite dans le fichier journal, un compteur de plantages est enregistré (et inclus dans les bundles de diagnostic), et le processus redémarre proprement. Chaque appel sortant — Microsoft Graph, téléchargements de journaux d'audit, votre PSA, le serveur de licences — a maintenant une limite de temps stricte, de sorte qu'un point de terminaison Microsoft qui ne répond plus ne peut plus geler un processus d'arrière-plan indéfiniment. Et si un cycle se coince malgré tout, un chien de garde le détecte, le journalise clairement et laisse le cycle suivant s'exécuter — plus aucune boucle d'arrière-plan ne peut rester bloquée en permanence.
+
+### Chaque processus d'arrière-plan signale maintenant son pouls
+
+Le panneau de santé (cliquez sur l'indicateur d'état dans la barre du bas) comporte un nouveau contrôle **Processus d'arrière-plan**. Toutes les boucles d'arrière-plan de Panoptica365 — sondage des métriques, ingestion des journaux d'audit, synchronisation des billets PSA, planificateurs de dérive CA et Intune, résumé matinal, nettoyage nocturne et plus — enregistrent maintenant une pulsation après chaque cycle. Si l'une d'elles devient silencieuse au-delà de son rythme attendu, le panneau de santé vous indique laquelle, depuis combien de temps, avec sa dernière erreur. Les processus non configurés (par exemple le PSA sans fournisseur) s'affichent comme *inactifs par configuration* au lieu de générer de fausses alertes.
+
+### La base de données fait maintenant son propre ménage
+
+Un nettoyage nocturne (3 h 30) applique des fenêtres de rétention aux données historiques qui croissaient auparavant sans limite. La nouvelle carte **Réglages → Rétention des données** affiche chaque fenêtre, préremplie avec les valeurs recommandées que vous pouvez ajuster — chacune accompagnée d'une note claire sur l'impact d'un changement, et de garde-fous pour qu'une valeur ne puisse pas casser les alertes ou les rapports. Les changements s'appliquent dès le prochain nettoyage nocturne, sans redémarrage, et sont consignés dans le journal d'audit. **Les alertes ne sont jamais supprimées automatiquement.**
+
+Le gain le plus important concerne les instantanés de sondage : le détail complet est conservé une semaine (les alertes de détection de changement n'ont besoin que du sondage précédent), tandis que l'historique plus ancien est consolidé en une valeur compacte de Secure Score par locataire et par jour — exactement ce qu'utilisent les courbes de tendance des rapports. Tableaux de bord, alertes et rapports se comportent à l'identique. Sur notre propre installation de production, une base de deux mois est passée de 28 Go à 10 Go.
+
+### Nouveau contrôle de santé « Taille de la base de données »
+
+Le panneau de santé gagne aussi un contrôle **Taille de la base de données** affichant le total réel et les plus grandes tables — en lisant des statistiques fraîches plutôt que celles mises en cache par MySQL, pour refléter la réalité immédiatement. Il avertit lorsque la base dépasse un seuil configurable (10 Go par défaut), vous laissant le temps de planifier l'espace disque avant que cela ne devienne un problème.
+
+### Une couche base de données plus silencieuse et plus robuste
+
+Sous charge ou pendant un blocage de la base de données, l'application échoue maintenant rapidement au lieu de s'empiler : la file d'attente de connexions est bornée, l'attente d'une connexion a une échéance, la taille du pool est ajustable, et toute requête de plus de deux secondes est journalisée (le texte de la requête seulement — jamais ses données) afin que les ralentissements soient diagnosticables depuis un bundle de support.
+
+---
+
 ## Version 0.2.4 — 2026-06-11
 
 ### Les paramètres de sécurité se trouvent maintenant dans le tableau de bord de chaque locataire

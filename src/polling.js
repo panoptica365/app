@@ -8,6 +8,7 @@ const cron = require('node-cron');
 const db = require('./db/database');
 const fetchers = require('./fetchers');
 const alertEngine = require('./alert-engine');
+const workerHeartbeat = require('./worker-heartbeat');
 
 const SLOW_POLL_INTERVAL = 10; // Run slow-tier fetchers every 10th poll
 
@@ -173,6 +174,21 @@ async function ensureLatestSnapshotsTable() {
  * Check which tenants are due for polling and poll them.
  */
 async function pollDueTenants() {
+  // Liveness stamp wraps the real cycle (Reliability P0, 2026-06-12). A
+  // zero-due cycle still stamps success — staleness here means the polling
+  // loop itself is dead, not that tenants are idle.
+  const hbStart = Date.now();
+  workerHeartbeat.stampStart('polling');
+  try {
+    await pollDueTenantsInner();
+    workerHeartbeat.stampSuccess('polling', Date.now() - hbStart);
+  } catch (err) {
+    workerHeartbeat.stampError('polling', err.message);
+    throw err;
+  }
+}
+
+async function pollDueTenantsInner() {
   // Purge yesterday's event details before processing any tenants
   try {
     await alertEngine.purgeOldEventDetails();

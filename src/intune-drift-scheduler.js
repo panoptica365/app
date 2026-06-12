@@ -6,6 +6,9 @@
 
 const cron = require('node-cron');
 const heartbeat = require('./drift-scheduler-heartbeat');
+// drift_scheduler_runs keeps per-run HISTORY (useful here); the registry stamp
+// is additive so the worker_liveness health check reads ONE table for all loops.
+const workerHeartbeat = require('./worker-heartbeat');
 
 let driftJob = null;
 let runDriftChecksFn = null;
@@ -24,11 +27,15 @@ function start(runAllChecks, schemaReady) {
   const safeRun = async () => {
     if (schemaReady) await schemaReady;  // wait for tables to exist
     const runId = await heartbeat.recordStart('intune');
+    const cycleStart = Date.now();
+    workerHeartbeat.stampStart('intune_drift');
     try {
       const summary = await runDriftChecksFn();
       await heartbeat.recordEnd(runId, summary);
+      workerHeartbeat.stampSuccess('intune_drift', Date.now() - cycleStart);
     } catch (err) {
       await heartbeat.recordEnd(runId, null, err.message || String(err));
+      workerHeartbeat.stampError('intune_drift', err.message || String(err));
       throw err;
     }
   };

@@ -21,6 +21,7 @@
 const config = require('../config/default');
 const psa = require('./psa');
 const store = require('./psa/store');
+const workerHeartbeat = require('./worker-heartbeat');
 
 const TICK_MS = 60 * 1000;       // wake every minute
 const MAX_RETRIES = 10;          // matches store default + spec §5.3
@@ -28,6 +29,11 @@ const MAX_RETRIES = 10;          // matches store default + spec §5.3
 let tickHandle = null;
 let cycleInProgress = false;
 let lastActionMs = 0;
+// Stuck-cycle watchdog (Reliability P0, 2026-06-12): if the guard is older
+// than this, the previous cycle's `finally` never ran (hung await) — clear it
+// and proceed. A real cycle is batch ticket queries, minutes at most.
+let guardSetAt = 0;
+const MAX_CYCLE_RUNTIME_MS = 30 * 60 * 1000;
 
 /** Has the configured poll interval elapsed since the last action cycle? */
 function intervalElapsed() {
@@ -44,9 +50,19 @@ function retryWindowElapsed(linkRow) {
 }
 
 async function runOnce() {
-  if (cycleInProgress) return { skipped: 'in_progress' };
+  if (cycleInProgress) {
+    const ageMs = guardSetAt ? Date.now() - guardSetAt : 0;
+    if (ageMs > MAX_CYCLE_RUNTIME_MS) {
+      console.error(`[Watchdog] [PsaWorker] previous cycle still flagged in-progress after ${Math.round(ageMs / 60000)} min (max ${MAX_CYCLE_RUNTIME_MS / 60000}) — abandoning it and starting a fresh cycle`);
+    } else {
+      return { skipped: 'in_progress' };
+    }
+  }
   if (!psa.isConfigured()) return { skipped: 'not_configured' };
   cycleInProgress = true;
+  guardSetAt = Date.now();
+  const cycleStart = Date.now();
+  workerHeartbeat.stampStart('psa');
   const summary = { retried: 0, retryCleared: 0, polled: 0, closed: 0 };
 
   try {
@@ -76,6 +92,9 @@ async function runOnce() {
     } catch (err) {
       console.error(`[PsaWorker] poll failed: ${err.message}`);
     }
+  } catch (err) {
+    workerHeartbeat.stampError('psa', err.message);
+    throw err;
   } finally {
     cycleInProgress = false;
   }
@@ -83,6 +102,7 @@ async function runOnce() {
   if (summary.retried || summary.closed) {
     console.log(`[PsaWorker] Cycle — retried ${summary.retried} (cleared ${summary.retryCleared}), polled ${summary.polled} tickets, closed ${summary.closed} alert(s)`);
   }
+  workerHeartbeat.stampSuccess('psa', Date.now() - cycleStart);
   return summary;
 }
 

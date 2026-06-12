@@ -1682,6 +1682,152 @@ if ($errors.Count -gt 0) {
       },
     },
   },
+  // ENT-10 … ENT-13 — Entra authorization-policy toggles (Purple Knight, Jun 11 2026).
+  // All four read GET /policies/authorizationPolicy (Policy.Read.All) and PATCH it
+  // (Policy.ReadWrite.Authorization) — the SAME endpoint + consent ENT-07/ENT-09
+  // already use, so no new admin consent on any tenant. Monitored-state-with-context,
+  // NOT must-be-hardened alarms (allowedToCreateApps=false / restrictive invites break
+  // legitimate workflows on some tenants — mirror ENT-09's measured tone).
+  {
+    setting_id: 'ENT-10',
+    name: 'Restrict App Registrations to Admins',
+    category: 'identity',
+    priority: 'medium',
+    poll_strategy: 'graph',
+    poll_key: 'GET /policies/authorizationPolicy (defaultUserRolePermissions.allowedToCreateApps)',
+    description: 'Stops standard (non-admin) users from registering new Entra application registrations. New app registrations route through an admin instead.',
+    security_impact: 'A compromised user account can register an application and use it for persistence, lateral movement, reconnaissance, or data exfiltration via delegated/app permissions. Restricting registration to admins removes a quiet attacker foothold.',
+    user_impact: 'Users will no longer be able to self-register apps in Entra. Developers or power users who genuinely need this will ask an admin. Most SMB users never use this.',
+    admin_notes: 'Safe to restrict in the large majority of SMB tenants. Before applying, confirm no line-of-business workflow relies on self-service app registration (rare). Reversible with a single PATCH.',
+    licence_required: null,
+    writer: {
+      strategy: 'graph',
+      graph_path: '/policies/authorizationPolicy',
+      graph_method: 'PATCH',
+      ui: 'toggle',
+      recommended_label: 'Microsoft recommends restricting app registration to administrators for tenants without a developer self-service need.',
+      options: [
+        { value: false, label: 'Admins only (recommended)', recommended: true },
+        { value: true,  label: 'All users can register apps (Microsoft default)', danger: true },
+      ],
+      buildPayload: (chosenAllow) => ({ defaultUserRolePermissions: { allowedToCreateApps: !!chosenAllow } }),
+      matches: (chosenAllow, current) =>
+        current && typeof current === 'object' &&
+        !!current.allowedToCreateApps === !!chosenAllow,
+      interpret: (current) => {
+        if (!current || typeof current !== 'object') return null;
+        return current.allowedToCreateApps
+          ? { template_key: 'security_settings.ENT-10.interpreted.all_users', params: {} }
+          : { template_key: 'security_settings.ENT-10.interpreted.admins_only', params: {} };
+      },
+    },
+  },
+  {
+    setting_id: 'ENT-11',
+    name: 'Restrict Security Group Creation to Admins',
+    category: 'identity',
+    priority: 'medium',
+    poll_strategy: 'graph',
+    poll_key: 'GET /policies/authorizationPolicy (defaultUserRolePermissions.allowedToCreateSecurityGroups)',
+    description: 'Stops standard (non-admin) users from creating new Entra security groups. New security-group creation routes through an admin instead.',
+    security_impact: 'Self-service security-group creation lets any user spin up groups that can later be granted access to apps, resources, or roles. A compromised account can use this to engineer access paths or muddy the access-review picture. Restricting creation to admins keeps the group inventory clean and intentional.',
+    user_impact: 'Users will no longer be able to create their own security groups; those who need one ask an admin. This covers security groups only — Microsoft 365 Group creation (Teams, Planner, etc.) is a separate control and is unaffected.',
+    admin_notes: 'Safe to restrict in most SMB tenants. This setting covers security groups ONLY; Microsoft 365 Group creation is governed by a separate directory group setting and is out of scope here. Reversible with a single PATCH.',
+    licence_required: null,
+    writer: {
+      strategy: 'graph',
+      graph_path: '/policies/authorizationPolicy',
+      graph_method: 'PATCH',
+      ui: 'toggle',
+      recommended_label: 'Microsoft recommends restricting security-group creation to administrators for tenants that do not need end-user self-service groups.',
+      options: [
+        { value: false, label: 'Admins only (recommended)', recommended: true },
+        { value: true,  label: 'All users can create security groups (Microsoft default)', danger: true },
+      ],
+      buildPayload: (chosenAllow) => ({ defaultUserRolePermissions: { allowedToCreateSecurityGroups: !!chosenAllow } }),
+      matches: (chosenAllow, current) =>
+        current && typeof current === 'object' &&
+        !!current.allowedToCreateSecurityGroups === !!chosenAllow,
+      interpret: (current) => {
+        if (!current || typeof current !== 'object') return null;
+        return current.allowedToCreateSecurityGroups
+          ? { template_key: 'security_settings.ENT-11.interpreted.all_users', params: {} }
+          : { template_key: 'security_settings.ENT-11.interpreted.admins_only', params: {} };
+      },
+    },
+  },
+  {
+    setting_id: 'ENT-12',
+    name: 'Restrict Tenant Creation to Admins',
+    category: 'identity',
+    priority: 'low',
+    poll_strategy: 'graph',
+    poll_key: 'GET /policies/authorizationPolicy (defaultUserRolePermissions.allowedToCreateTenants)',
+    description: 'Stops standard (non-admin) users from creating brand-new Entra tenants from this directory. New-tenant creation routes through an admin instead.',
+    security_impact: 'When any user can create a tenant, they become Global Administrator of a brand-new directory the MSP does not manage or monitor — a shadow-IT / unmanaged-tenant risk that can hold corporate data outside every guardrail. Restricting creation to admins removes that escape hatch. Low real-world frequency, but high blast radius when it happens.',
+    user_impact: 'Users will no longer be able to create new Entra tenants. This is an action almost no standard user ever needs to take.',
+    admin_notes: 'Safe to restrict in essentially every SMB tenant — legitimate need for end-user tenant creation is vanishingly rare. Reversible with a single PATCH.',
+    licence_required: null,
+    writer: {
+      strategy: 'graph',
+      graph_path: '/policies/authorizationPolicy',
+      graph_method: 'PATCH',
+      ui: 'toggle',
+      recommended_label: 'Microsoft recommends restricting tenant creation to administrators; standard users almost never have a legitimate need to create a new tenant.',
+      options: [
+        { value: false, label: 'Admins only (recommended)', recommended: true },
+        { value: true,  label: 'All users can create tenants (Microsoft default)', danger: true },
+      ],
+      buildPayload: (chosenAllow) => ({ defaultUserRolePermissions: { allowedToCreateTenants: !!chosenAllow } }),
+      matches: (chosenAllow, current) =>
+        current && typeof current === 'object' &&
+        !!current.allowedToCreateTenants === !!chosenAllow,
+      interpret: (current) => {
+        if (!current || typeof current !== 'object') return null;
+        return current.allowedToCreateTenants
+          ? { template_key: 'security_settings.ENT-12.interpreted.all_users', params: {} }
+          : { template_key: 'security_settings.ENT-12.interpreted.admins_only', params: {} };
+      },
+    },
+  },
+  {
+    setting_id: 'ENT-13',
+    name: 'Restrict Who Can Invite Guests',
+    category: 'identity',
+    priority: 'medium',
+    poll_strategy: 'graph',
+    poll_key: 'GET /policies/authorizationPolicy (allowInvitesFrom)',
+    description: 'Controls who in the tenant is allowed to invite external guest users. Prevents existing guests from inviting further guests.',
+    security_impact: 'When guests can invite other guests, a single compromised guest account can pull more outsiders into the tenant to create persistence and move laterally. Limiting invitations to members (or admins) removes that self-propagation path.',
+    user_impact: 'Guests will no longer be able to send guest invitations. Internal members (and admins) continue to invite partners normally.',
+    admin_notes: 'The Microsoft default (members + admins can invite, guests cannot) resolves the finding and is non-disruptive for almost every tenant. Choose "Admins and designated inviters only" for tighter control where business users should not be inviting outsiders at all.',
+    licence_required: null,
+    writer: {
+      strategy: 'graph',
+      graph_path: '/policies/authorizationPolicy',
+      graph_method: 'PATCH',
+      ui: 'select_one',
+      recommended_label: 'Microsoft default ("Member users and admins") stops guests inviting guests while keeping normal partner collaboration. Tighten to admins-only where business users should never invite externals.',
+      options: [
+        { value: 'adminsGuestInvitersAndAllMembers', label: 'Members and admins can invite (recommended — Microsoft default)', recommended: true },
+        { value: 'adminsAndGuestInviters',           label: 'Admins and designated inviters only (hardened)' },
+        { value: 'none',                             label: 'No one can invite guests (most restrictive)' },
+        { value: 'everyone',                         label: 'Anyone including guests can invite (NOT recommended)', danger: true },
+      ],
+      buildPayload: (chosenEnum) => ({ allowInvitesFrom: chosenEnum }),
+      matches: (chosenEnum, current) =>
+        current && typeof current === 'object' &&
+        current.allowInvitesFrom === chosenEnum,
+      interpret: (current) => {
+        if (!current || typeof current !== 'object') return null;
+        const v = String(current.allowInvitesFrom || '');
+        const known = ['none', 'adminsAndGuestInviters', 'adminsGuestInvitersAndAllMembers', 'everyone'];
+        return known.includes(v)
+          ? { template_key: `security_settings.ENT-13.interpreted.${v}`, params: {} }
+          : { template_key: 'security_settings.ENT-13.interpreted.unknown', params: { value: v } };
+      },
+    },
+  },
 
   // ══════════ SHAREPOINT ONLINE ══════════
   {
@@ -2410,8 +2556,12 @@ if ($errors.Count -gt 0) {
   // May 5, 2026 — count back up to 17 with EXO-09 addition (Strict Mailbox
   // Audit Posture — Bypass + Action List). Companion to EXO-03; required
   // prerequisite for the MailItemsAccessed and HardDelete UAL detections.
-  if (SETTINGS.length !== 17) {
-    throw new Error(`security-settings/registry: expected 17 settings, got ${SETTINGS.length}`);
+  // Jun 11, 2026 — count 17 → 21 with ENT-10..13 (Entra authorization-policy
+  // toggles from a Purple Knight assessment: app-registration / security-group
+  // / tenant creation restrictions + guest-invite scope). All read+PATCH the
+  // existing /policies/authorizationPolicy endpoint; no new consent.
+  if (SETTINGS.length !== 21) {
+    throw new Error(`security-settings/registry: expected 21 settings, got ${SETTINGS.length}`);
   }
 })();
 

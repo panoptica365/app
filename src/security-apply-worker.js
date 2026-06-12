@@ -40,6 +40,14 @@ const pwshRunner = require('./lib/security-settings/pwsh-runner');
 const tenantMode = require('./lib/tenant-mode');
 const { byId } = require('./lib/security-settings/registry');
 const db = require('./db/database');
+const workerHeartbeat = require('./worker-heartbeat');
+
+// Liveness stamp throttle (Reliability P0, 2026-06-12). The poll loop ticks
+// every 2s — stamping every tick would be 43k writes/day to one row for zero
+// signal gain. One stamp per 5 min is plenty for the worker_liveness check
+// (warn threshold is well above this).
+const HEARTBEAT_THROTTLE_MS = 5 * 60 * 1000;
+let lastHeartbeatMs = 0;
 
 // May 6, 2026 — Lazy-loaded because src/routes/api-security.js can't be
 // imported at module-load time without circular-dependency risk through
@@ -325,6 +333,10 @@ async function processJob(job) {
  */
 async function tick() {
   if (stopRequested) return;
+  if (Date.now() - lastHeartbeatMs >= HEARTBEAT_THROTTLE_MS) {
+    lastHeartbeatMs = Date.now();
+    workerHeartbeat.stampSuccess('security_apply', null);
+  }
   if (currentJob) return; // already running one
 
   let job;

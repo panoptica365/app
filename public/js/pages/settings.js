@@ -18,6 +18,7 @@
     document.getElementById('card-diagnostics')?.addEventListener('click', () => showView('diagnostics'));
     document.getElementById('card-disk')?.addEventListener('click', () => showView('disk'));
     document.getElementById('card-psa')?.addEventListener('click', () => showView('psa'));
+    document.getElementById('card-retention')?.addEventListener('click', () => showView('retention'));
     // License Agreement — opens the shared EULA modal in read-only mode
     // (provenance + acceptance history). No sub-view.
     document.getElementById('card-eula')?.addEventListener('click', () => {
@@ -45,6 +46,10 @@
     // Disk space handlers
     document.getElementById('disk-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('disk-refresh')?.addEventListener('click', loadDisk);
+
+    // Data retention handlers
+    document.getElementById('retention-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('retention-save')?.addEventListener('click', saveRetention);
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -368,6 +373,104 @@
     }
   }
 
+  // ─── Data retention (editable, Reliability P0 2026-06-12) ───
+  // Rows render from GET /api/settings/retention (values + per-field bounds);
+  // names and impact explanations are localized. Saving PUTs only the fields,
+  // which the server validates again, persists to .env, and live-reloads.
+  let retentionWindows = [];
+
+  function renderRetentionRows() {
+    const rowsEl = document.getElementById('retention-rows');
+    if (!rowsEl) return;
+    rowsEl.innerHTML = retentionWindows.map(w => {
+      const name = window.t('settings.retention.tables.' + w.table);
+      const hint = window.t('settings.retention.hints.' + w.table);
+      const recommended = window.t('settings.retention.recommended', { days: w.default });
+      const foreverNote = w.allow_zero ? ' ' + window.t('settings.retention.forever_note') : '';
+      return `<div class="form-group" style="margin-bottom:18px;">
+        <label>${esc(name)}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="ret-${esc(w.table)}" value="${esc(w.days)}"
+                 min="${w.allow_zero ? 0 : w.min}" max="${w.max}" step="1" style="width:110px;">
+          <span>${esc(window.t('settings.retention.days_unit'))}</span>
+          <span class="form-hint" style="margin:0;">${esc(recommended)}${esc(foreverNote)}</span>
+        </div>
+        <div class="form-hint" style="margin-top:4px;">${esc(hint)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function loadRetention() {
+    const loading = document.getElementById('retention-loading');
+    const body = document.getElementById('retention-body');
+    const errEl = document.getElementById('retention-error');
+    const statusEl = document.getElementById('retention-status');
+    if (statusEl) statusEl.textContent = '';
+    if (loading) loading.style.display = '';
+    if (body) body.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
+    try {
+      const data = await Panoptica.api('/api/settings/retention');
+      retentionWindows = data.windows || [];
+      renderRetentionRows();
+      if (loading) loading.style.display = 'none';
+      if (body) body.style.display = '';
+    } catch (err) {
+      if (loading) loading.style.display = 'none';
+      if (errEl) {
+        errEl.textContent = (err && err.message) || window.t('settings.retention.load_failed');
+        errEl.style.display = '';
+      }
+    }
+  }
+
+  async function saveRetention() {
+    const statusEl = document.getElementById('retention-status');
+    const windows = {};
+    // Client-side pass mirrors the server bounds so the operator gets a named,
+    // localized error instead of a 400; the server re-validates regardless.
+    for (const w of retentionWindows) {
+      const input = document.getElementById('ret-' + w.table);
+      if (!input) continue;
+      const v = Number(input.value);
+      const valid = Number.isInteger(v)
+        && ((w.allow_zero && v === 0) || (v >= w.min && v <= w.max));
+      if (!valid) {
+        const msg = window.t('settings.retention.invalid_value', {
+          name: window.t('settings.retention.tables.' + w.table),
+          min: w.min, max: w.max,
+        });
+        if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#e74c3c'; }
+        Panoptica.showToast(msg, 'error');
+        input.focus();
+        return;
+      }
+      windows[w.table] = v;
+    }
+    if (statusEl) {
+      statusEl.textContent = window.t('settings.status.saving');
+      statusEl.style.color = 'var(--p-text-muted)';
+    }
+    try {
+      await Panoptica.api('/api/settings/retention', {
+        method: 'PUT',
+        body: JSON.stringify({ windows }),
+      });
+      if (statusEl) { statusEl.textContent = window.t('settings.status.saved'); statusEl.style.color = '#27ae60'; }
+      Panoptica.showToast(window.t('settings.retention.toast_saved'), 'success');
+      loadRetention();
+    } catch (err) {
+      if (statusEl) { statusEl.textContent = window.t('settings.status.error'); statusEl.style.color = '#e74c3c'; }
+      Panoptica.showToast(window.t('settings.toast_save_failed', { message: err.message }), 'error');
+    }
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function destroy() { stopDiagnosticsPoll(); }
 
   function showView(view) {
@@ -384,6 +487,7 @@
       diagnostics: document.getElementById('settings-diagnostics-view'),
       disk: document.getElementById('settings-disk-view'),
       psa: document.getElementById('settings-psa-view'),
+      retention: document.getElementById('settings-retention-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -401,6 +505,7 @@
     if (view === 'diagnostics') loadDiagnostics();
     if (view === 'disk') loadDisk();
     if (view === 'psa') loadPsa();
+    if (view === 'retention') loadRetention();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───

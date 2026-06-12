@@ -5,6 +5,32 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.5 — 2026-06-12
+
+### Hecho para resistir: recuperación de fallos, límites de tiempo de red y vigilantes
+
+Panoptica365 funciona sin supervisión, así que esta versión refuerza todo lo que antes podía fallar en silencio. Si la aplicación sufre un fallo inesperado, la razón completa se escribe ahora en el archivo de registro, se anota un contador de fallos (incluido en los paquetes de diagnóstico) y el proceso se reinicia limpiamente. Cada llamada saliente — Microsoft Graph, descargas de registros de auditoría, su PSA, el servidor de licencias — tiene ahora un límite de tiempo estricto, de modo que un punto de conexión de Microsoft que deja de responder ya no puede congelar un proceso en segundo plano indefinidamente. Y si aun así un ciclo se atasca, un vigilante lo detecta, lo registra claramente y deja que el siguiente ciclo se ejecute — ningún bucle en segundo plano puede volver a quedarse bloqueado permanentemente.
+
+### Cada proceso en segundo plano informa ahora de su pulso
+
+El panel de salud (haga clic en el indicador de estado de la barra inferior) tiene una nueva comprobación de **Procesos en segundo plano**. Todos los bucles en segundo plano de Panoptica365 — sondeo de métricas, ingesta de registros de auditoría, sincronización de tiques PSA, planificadores de desviación de CA e Intune, resumen matinal, limpieza nocturna y más — registran ahora un latido tras cada ciclo. Si alguno queda en silencio más allá de su ritmo esperado, el panel de salud le dice cuál, desde hace cuánto y con su último error. Los procesos sin configurar (por ejemplo, PSA sin proveedor) aparecen como *inactivos por configuración* en lugar de generar avisos falsos.
+
+### La base de datos ahora se limpia sola
+
+Una limpieza nocturna (03:30) aplica ventanas de retención a los datos históricos que antes crecían sin límite. La nueva tarjeta **Ajustes → Retención de datos** muestra cada ventana, precargada con los valores recomendados que puede ajustar — cada una con una nota clara sobre el impacto de cambiarla, y con límites de seguridad para que un valor no pueda romper las alertas ni los informes. Los cambios se aplican desde la siguiente limpieza nocturna, sin reinicio, y quedan registrados en el registro de auditoría. **Las alertas nunca se eliminan automáticamente.**
+
+La mayor ganancia está en las instantáneas del sondeo: el detalle completo se conserva una semana (las alertas de detección de cambios solo necesitan el sondeo anterior), mientras que el historial más antiguo se consolida en un valor compacto de Secure Score por tenant y día — exactamente lo que usan las líneas de tendencia de los informes. Paneles, alertas e informes se comportan igual. En nuestra propia instalación de producción, una base de datos de dos meses pasó de 28 GB a 10 GB.
+
+### Nueva comprobación de salud « Tamaño de la base de datos »
+
+El panel de salud incorpora también una comprobación de **Tamaño de la base de datos** que muestra el total real y las tablas más grandes — leyendo estadísticas frescas en lugar de las almacenadas en caché por MySQL, para reflejar la realidad de inmediato. Avisa cuando la base de datos supera un umbral configurable (10 GB por defecto), dándole tiempo para planificar el disco antes de que importe.
+
+### Una capa de base de datos más silenciosa y robusta
+
+Bajo carga o durante un bloqueo de la base de datos, la aplicación ahora falla rápido en lugar de acumularse: la cola de conexiones está acotada, la espera de una conexión tiene un plazo, el tamaño del pool es ajustable, y cualquier consulta que tarde más de dos segundos se registra (solo el texto de la consulta — nunca sus datos) para que las ralentizaciones puedan diagnosticarse desde un paquete de soporte.
+
+---
+
 ## Versión 0.2.4 — 2026-06-11
 
 ### Los ajustes de seguridad ahora están en el panel de cada inquilino

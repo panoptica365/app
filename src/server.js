@@ -9,6 +9,13 @@
 // (original write always runs first), so docker/pm2 logs are unaffected.
 require('./file-logger').init();
 
+// Process-level crash handlers (Reliability P0, 2026-06-12). Installed right
+// after the file logger (so [FATAL] lines land in the daily log file) and
+// BEFORE dotenv/config, so even boot-path crashes are caught. An unhandled
+// rejection or uncaught exception logs the full stack, bumps
+// data/state/crash-counter.json, and exits non-zero so docker/pm2 restarts us.
+require('./lib/fatal-handlers').install();
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 // MF-3: guarantee a strong session-signing secret BEFORE config + express-session
@@ -100,6 +107,7 @@ const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 const psaWorker = require('./psa-worker');
 const psaStore = require('./psa/store');
+const retentionWorker = require('./retention-worker');
 
 const app = express();
 const server = http.createServer(app);
@@ -459,6 +467,13 @@ async function start() {
     // mid-cycle. Fire-and-forget — heartbeat failure never blocks startup.
     driftHeartbeat.ensureSchema().catch(() => {});
 
+    // Reliability P0 (2026-06-12) — eager-create worker_heartbeats, the
+    // one-row-per-loop liveness registry every background worker stamps and
+    // the worker_liveness health check reads. Same fire-and-forget posture.
+    require('./worker-heartbeat').ensureSchema().catch(err =>
+      console.error('[Server] worker-heartbeat schema ensure failed at boot:', err.message)
+    );
+
     // Ensure users + operator_mute_periods exist before the first login
     // (Apr 28, 2026). Lazily ensured by usersStore.upsertUserOnLogin, but
     // explicit boot-time ensure surfaces schema errors loudly. Same fire-
@@ -556,12 +571,25 @@ async function start() {
     // acts every PSA_POLL_INTERVAL_MIN, no-ops entirely until an operator
     // selects a provider + credentials in Settings → PSA Integration.
     psaWorker.start();
+
+    // Reliability P0 (2026-06-12) — daily retention worker (03:30 local).
+    // Enforces the config.retention.days windows on the six previously
+    // unbounded tables. Batched deletes; stamps the heartbeat registry.
+    retentionWorker.start();
   });
 }
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n[Server] Shutting down...');
+// Graceful shutdown. The 30s deadline race (Reliability P0, 2026-06-12)
+// guarantees a hung worker stop or stalled DB close can't stall `docker stop`
+// until the daemon SIGKILLs us mid-write. The timer is unref'd so it never
+// holds the process open when the clean path wins.
+async function shutdown(signal) {
+  console.log(`\n[Server] ${signal} received, shutting down...`);
+  const deadline = setTimeout(() => {
+    console.error('[Server] Shutdown deadline (30s) exceeded — forcing exit');
+    process.exit(1);
+  }, 30 * 1000);
+  if (deadline.unref) deadline.unref();
   polling.stop();
   driftScheduler.stop();
   intuneDriftScheduler.stop();
@@ -573,25 +601,12 @@ process.on('SIGINT', async () => {
   securityApplyWorker.stop();
   licenseRefresh.stop();
   psaWorker.stop();
+  retentionWorker.stop();
   await db.close();
   server.close(() => process.exit(0));
-});
+}
 
-process.on('SIGTERM', async () => {
-  console.log('\n[Server] SIGTERM received, shutting down...');
-  polling.stop();
-  driftScheduler.stop();
-  intuneDriftScheduler.stop();
-  morningBriefing.stop();
-  auditExpiryScheduler.stop();
-  ualWorker.stopLoop();
-  messageCenterWorker.stop();
-  knownGoodWorker.stop();
-  securityApplyWorker.stop();
-  licenseRefresh.stop();
-  psaWorker.stop();
-  await db.close();
-  server.close(() => process.exit(0));
-});
+process.on('SIGINT', () => { shutdown('SIGINT'); });
+process.on('SIGTERM', () => { shutdown('SIGTERM'); });
 
 start();

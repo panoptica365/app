@@ -63,6 +63,8 @@
 const validator = require('./validator');
 const store = require('./store');
 const db = require('../../db/database');
+const { fetchWithTimeout } = require('../http-timeout');
+const workerHeartbeat = require('../../worker-heartbeat');
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -191,20 +193,14 @@ async function postRefresh(currentJwt, fingerprint, currentSeats) {
     body.current_seats = currentSeats;
   }
 
-  const ctrl = new AbortController();
-  const timeout = setTimeout(() => ctrl.abort(), REFRESH_TIMEOUT_MS);
-
-  let res;
-  try {
-    res = await fetch(REFRESH_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
+  // fetchWithTimeout's deadline also covers the res.json() body read below —
+  // the previous hand-rolled AbortController cleared its timer as soon as
+  // headers arrived, leaving the body read unbounded.
+  const res = await fetchWithTimeout(REFRESH_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }, REFRESH_TIMEOUT_MS);
 
   if (!res.ok) {
     // Read body once for diagnostic; try JSON first, fall back to text.
@@ -263,6 +259,8 @@ function scheduleNext(delayMs) {
  */
 async function performRefresh() {
   if (_stopping) return;
+  const hbStart = Date.now();
+  workerHeartbeat.stampStart('license_refresh');
 
   const currentToken = store.getEnvToken() || store.getCachedToken();
   if (!currentToken) {
@@ -271,6 +269,7 @@ async function performRefresh() {
       `Boot validation must have skipped — investigate. Retrying in 24h.`,
     );
     _lastResult = { ok: false, at: new Date(), error: 'no_token' };
+    workerHeartbeat.stampError('license_refresh', 'no_token');
     scheduleNext(RETRY_INTERVAL_MS);
     return;
   }
@@ -280,6 +279,7 @@ async function performRefresh() {
   if (!fingerprint) {
     console.error(`[License] Cannot refresh: no fingerprint available. Retrying in 24h.`);
     _lastResult = { ok: false, at: new Date(), error: 'no_fingerprint' };
+    workerHeartbeat.stampError('license_refresh', 'no_fingerprint');
     scheduleNext(RETRY_INTERVAL_MS);
     return;
   }
@@ -316,10 +316,12 @@ async function performRefresh() {
       exp: new Date(newClaims.exp * 1000),
       seats: currentSeats,
     };
+    workerHeartbeat.stampSuccess('license_refresh', Date.now() - hbStart);
     scheduleNext(REFRESH_INTERVAL_MS);
   } catch (e) {
     console.error(`[License] Refresh failed: ${e.message}. Retrying in 24h.`);
     _lastResult = { ok: false, at: new Date(), error: e.message };
+    workerHeartbeat.stampError('license_refresh', e.message);
     scheduleNext(RETRY_INTERVAL_MS);
   }
 }

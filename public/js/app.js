@@ -1515,6 +1515,33 @@
         ).join('');
       }
 
+      case 'worker_liveness': {
+        if (!Array.isArray(d.workers) || d.workers.length === 0) return '';
+        const statusKey = (w) => w.idle ? 'status_idle'
+          : w.state === 'crit' ? 'status_crit'
+          : w.state === 'warn' ? 'status_warn'
+          : 'status_ok';
+        const dur = (ms) => ms == null ? '—' : (ms >= 1000 ? (ms / 1000).toFixed(1) + ' s' : ms + ' ms');
+        let html = `<table class="hc-table"><thead><tr>
+          <th>${escHtml(window.t('health.worker_liveness.table_worker'))}</th>
+          <th>${escHtml(window.t('health.worker_liveness.table_status'))}</th>
+          <th>${escHtml(window.t('health.worker_liveness.table_last_success'))}</th>
+          <th>${escHtml(window.t('health.worker_liveness.table_duration'))}</th>
+          <th>${escHtml(window.t('health.worker_liveness.table_failures'))}</th>
+        </tr></thead><tbody>`;
+        for (const w of d.workers) {
+          html += `<tr>
+            <td>${escHtml(w.name)}</td>
+            <td>${escHtml(window.t('health.worker_liveness.' + statusKey(w)))}</td>
+            <td class="mono">${escHtml(w.last_success || '—')}</td>
+            <td class="mono">${escHtml(dur(w.last_duration_ms))}</td>
+            <td>${escHtml(w.consecutive_failures || 0)}</td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        return html;
+      }
+
       case 'database': {
         const rows = [
           [window.t('health.database.ping'), d.ping_ms != null ? window.t('health.database.ms_unit', { ms: d.ping_ms }) : '—'],
@@ -1525,6 +1552,30 @@
         return rows.map(([k, v]) =>
           `<div class="hc-kv"><span class="k">${escHtml(k)}</span><span class="v mono">${escHtml(v)}</span></div>`
         ).join('');
+      }
+
+      case 'db_size': {
+        if (!Array.isArray(d.top_tables) || d.top_tables.length === 0) return '';
+        const fmtBytes = (b) => {
+          if (typeof b !== 'number') return '—';
+          if (b >= 1024 ** 3) return (b / (1024 ** 3)).toFixed(2) + ' GB';
+          if (b >= 1024 ** 2) return (b / (1024 ** 2)).toFixed(1) + ' MB';
+          return Math.round(b / 1024) + ' KB';
+        };
+        let html = `<table class="hc-table"><thead><tr>
+          <th>${escHtml(window.t('health.db_size.table_table'))}</th>
+          <th>${escHtml(window.t('health.db_size.table_rows'))}</th>
+          <th>${escHtml(window.t('health.db_size.table_size'))}</th>
+        </tr></thead><tbody>`;
+        for (const r of d.top_tables) {
+          html += `<tr>
+            <td class="mono">${escHtml(r.table)}</td>
+            <td>${escHtml((r.rows || 0).toLocaleString())}</td>
+            <td class="mono">${escHtml(fmtBytes((r.data_bytes || 0) + (r.index_bytes || 0)))}</td>
+          </tr>`;
+        }
+        html += '</tbody></table>';
+        return html;
       }
 
       case 'disk': {

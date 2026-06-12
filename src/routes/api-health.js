@@ -31,6 +31,9 @@ const auth = require('../auth');
 const db = require('../db/database');
 const aiAnalysis = require('../ai-analysis');
 const driftHeartbeat = require('../drift-scheduler-heartbeat');
+const workerHeartbeat = require('../worker-heartbeat');
+const config = require('../../config/default');
+const psa = require('../psa');
 const { t } = require('../i18n');
 
 const router = express.Router();
@@ -405,6 +408,219 @@ function truncate(s, n) {
   return s.length <= n ? s : s.substring(0, n - 1) + '…';
 }
 
+// ─── Worker liveness (Reliability P0, 2026-06-12) ───
+//
+// Reads the worker_heartbeats registry every background loop stamps (see
+// src/worker-heartbeat.js) and applies per-worker staleness thresholds.
+// Workers that are configured OFF (PSA without a provider, Message Center
+// without a source tenant, briefing disabled) report ok with an
+// "idle by configuration" summary — read from the same config the workers
+// read, so the gate can never disagree with the worker.
+//
+// thresholds in SECONDS, keyed on time-since-last-success. `idle` is an
+// optional () => boolean evaluated per request.
+const WORKER_LIVENESS_SPEC = [
+  { id: 'polling',          warn: 45 * 60,        crit: 2 * 3600 },
+  { id: 'ual',              warn: 15 * 60,        crit: 3600 },
+  { id: 'psa',              warn: 3600,           crit: 6 * 3600,   idle: () => !psa.isConfigured() },
+  { id: 'known_good',       warn: 26 * 3600,      crit: 50 * 3600 },
+  { id: 'message_center',   warn: 26 * 3600,      crit: 50 * 3600,  idle: () => !(config.messageCenter && config.messageCenter.sourceTenant) },
+  { id: 'morning_briefing', warn: 26 * 3600,      crit: 50 * 3600,  idle: () => !config.briefing.enabled },
+  { id: 'audit_expiry',     warn: 26 * 3600,      crit: 50 * 3600 },
+  { id: 'security_apply',   warn: 15 * 60,        crit: 3600 },
+  { id: 'license_refresh',  warn: 8 * 86400,      crit: 15 * 86400 },
+  { id: 'update_checker',   warn: 4 * 3600,       crit: 26 * 3600 },
+  { id: 'retention',        warn: 26 * 3600,      crit: 50 * 3600 },
+  { id: 'ca_drift',         warn: 75 * 60,        crit: 90 * 60 },
+  { id: 'intune_drift',     warn: 75 * 60,        crit: 90 * 60 },
+];
+
+// Human-readable age with localized unit. Minutes under 2h, hours under 2d,
+// days beyond — matches how an operator reads a staleness number.
+function formatAge(seconds, lang) {
+  if (seconds == null) return '—';
+  if (seconds < 2 * 3600) return t('health.worker_liveness.age_min', { lang, n: Math.max(0, Math.floor(seconds / 60)) });
+  if (seconds < 48 * 3600) return t('health.worker_liveness.age_hours', { lang, n: Math.floor(seconds / 3600) });
+  return t('health.worker_liveness.age_days', { lang, n: Math.floor(seconds / 86400) });
+}
+
+async function checkWorkerLiveness(lang) {
+  const beats = await workerHeartbeat.getAllHeartbeats();
+  const uptimeSec = Math.round(process.uptime());
+
+  const workers = [];
+  const problems = [];
+  let state = 'ok';
+  let idleCount = 0;
+
+  for (const spec of WORKER_LIVENESS_SPEC) {
+    const name = t(`health.worker_liveness.workers.${spec.id}`, { lang });
+    const row = beats.get(spec.id) || null;
+    let wState = 'ok';
+    let wSummary;
+    let idle = false;
+    try { idle = spec.idle ? !!spec.idle() : false; } catch (_) { idle = false; }
+
+    if (idle) {
+      idleCount++;
+      wSummary = t('health.worker_liveness.worker.idle', { lang, worker: name });
+    } else if (!row || (!row.last_success && !row.last_error)) {
+      // Never completed a cycle. The registry persists across restarts, so
+      // this is a fresh install / first run — stay quiet while the process is
+      // younger than the warn threshold, escalate if it never shows up.
+      if (uptimeSec >= spec.crit) {
+        wState = 'crit';
+        wSummary = t('health.worker_liveness.worker.never_ran', { lang, worker: name, age: formatAge(uptimeSec, lang) });
+      } else if (uptimeSec >= spec.warn) {
+        wState = 'warn';
+        wSummary = t('health.worker_liveness.worker.never_ran', { lang, worker: name, age: formatAge(uptimeSec, lang) });
+      } else {
+        wSummary = t('health.worker_liveness.worker.pending', { lang, worker: name });
+      }
+    } else if (!row.last_success) {
+      // Has started (and erred) but never completed a single cycle.
+      wState = 'crit';
+      wSummary = t('health.worker_liveness.worker.never_succeeded', {
+        lang, worker: name,
+        failures: row.consecutive_failures || 0,
+        error: truncate(row.last_error_message || '', 80),
+      });
+    } else {
+      const age = row.seconds_since_success;
+      if (age >= spec.crit) {
+        wState = 'crit';
+        wSummary = t('health.worker_liveness.worker.stale_crit', { lang, worker: name, age: formatAge(age, lang), threshold: formatAge(spec.crit, lang) });
+      } else if (age >= spec.warn) {
+        wState = 'warn';
+        wSummary = t('health.worker_liveness.worker.stale_warn', { lang, worker: name, age: formatAge(age, lang), threshold: formatAge(spec.warn, lang) });
+      } else if ((row.consecutive_failures || 0) >= 3) {
+        // Fresh last_success but the recent cycles keep failing — early signal.
+        wState = 'warn';
+        wSummary = t('health.worker_liveness.worker.failing', {
+          lang, worker: name,
+          failures: row.consecutive_failures,
+          error: truncate(row.last_error_message || '', 80),
+        });
+      } else {
+        wSummary = t('health.worker_liveness.worker.ok', { lang, worker: name, age: formatAge(age, lang) });
+      }
+    }
+
+    state = worseOf(state, wState);
+    if (wState !== 'ok') problems.push(name);
+    workers.push({
+      id: spec.id,
+      name,
+      state: wState,
+      summary: wSummary,
+      idle,
+      last_start: row?.last_start ?? null,
+      last_success: row?.last_success ?? null,
+      last_error: row?.last_error ?? null,
+      last_error_message: row?.last_error_message ?? null,
+      consecutive_failures: row?.consecutive_failures ?? 0,
+      last_duration_ms: row?.last_duration_ms ?? null,
+      seconds_since_success: row?.seconds_since_success ?? null,
+      warn_threshold_seconds: spec.warn,
+      crit_threshold_seconds: spec.crit,
+    });
+  }
+
+  const activeCount = workers.length - idleCount;
+  const summary = state === 'ok'
+    ? (idleCount > 0
+        ? t('health.worker_liveness.summary.all_ok_with_idle', { lang, count: activeCount, idle: idleCount })
+        : t('health.worker_liveness.summary.all_ok', { lang, count: activeCount }))
+    : t('health.worker_liveness.summary.degraded', { lang, count: problems.length, list: problems.join(', ') });
+
+  return {
+    id: 'worker_liveness',
+    label: t('health.worker_liveness.label', { lang }),
+    state,
+    summary,
+    detail: { workers, process_uptime_seconds: uptimeSec },
+  };
+}
+
+// ─── DB size (Reliability P0, 2026-06-12) ───
+//
+// Per-table rows + bytes from information_schema, warn when the schema total
+// crosses config.db.sizeWarnGb (env DB_SIZE_WARN_GB, default 10). TABLE_ROWS /
+// DATA_LENGTH are InnoDB estimates — fine for a trend sentry, not an audit.
+const DB_SIZE_TOP_TABLES = 12;
+
+async function checkDbSize(lang) {
+  try {
+    // MySQL 8 caches information_schema.TABLES statistics for up to 24h
+    // (information_schema_stats_expiry, default 86400) — long enough to
+    // report yesterday's size after a big prune, which is exactly the kind
+    // of stale signal a health check must not emit (bit on Prod 2026-06-12:
+    // the modal showed 27.98 GB for hours after a 2.1M-row delete). Force
+    // fresh stats for THESE reads only, on a single dedicated connection,
+    // and reset before releasing it back to the pool. withTransaction is
+    // just the same-connection vehicle here — the reads don't need one.
+    const { totals, rows } = await db.withTransaction(async (conn) => {
+      await conn.query('SET SESSION information_schema_stats_expiry = 0');
+      try {
+        const [totalRows] = await conn.query(
+          `SELECT COALESCE(SUM(DATA_LENGTH + INDEX_LENGTH), 0) AS total_bytes,
+                  COUNT(*) AS table_count
+             FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()`
+        );
+        const [topRows] = await conn.query(
+          `SELECT TABLE_NAME AS table_name,
+                  TABLE_ROWS AS table_rows,
+                  DATA_LENGTH AS data_bytes,
+                  INDEX_LENGTH AS index_bytes
+             FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+            ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC
+            LIMIT ${DB_SIZE_TOP_TABLES}`
+        );
+        return { totals: totalRows[0] || null, rows: topRows };
+      } finally {
+        await conn.query('SET SESSION information_schema_stats_expiry = DEFAULT').catch(() => {});
+      }
+    });
+
+    const totalBytes = Number(totals?.total_bytes || 0);
+    const warnGb = config.db.sizeWarnGb;
+    const totalGb = totalBytes / (1024 ** 3);
+    const state = totalGb >= warnGb ? 'warn' : 'ok';
+
+    const summary = state === 'ok'
+      ? t('health.db_size.summary.ok', { lang, gb: totalGb.toFixed(2), tables: totals?.table_count ?? 0 })
+      : t('health.db_size.summary.warn', { lang, gb: totalGb.toFixed(2), warnGb });
+
+    return {
+      id: 'db_size',
+      label: t('health.db_size.label', { lang }),
+      state,
+      summary,
+      detail: {
+        total_bytes: totalBytes,
+        table_count: totals?.table_count ?? 0,
+        warn_threshold_gb: warnGb,
+        top_tables: rows.map(r => ({
+          table: r.table_name,
+          rows: Number(r.table_rows || 0),
+          data_bytes: Number(r.data_bytes || 0),
+          index_bytes: Number(r.index_bytes || 0),
+        })),
+      },
+    };
+  } catch (err) {
+    return {
+      id: 'db_size',
+      label: t('health.db_size.label', { lang }),
+      state: 'warn',
+      summary: t('health.db_size.summary.unknown', { lang }),
+      detail: { error: err.message || String(err) },
+    };
+  }
+}
+
 async function checkDatabase(lang) {
   const t0 = Date.now();
   try {
@@ -504,17 +720,19 @@ async function checkDisk(lang) {
  */
 async function runAllChecks(lang = 'en') {
   // Run all checks in parallel — they each hit different tables.
-  const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database, disk] = await Promise.all([
+  const [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, workerLiveness, database, dbSize, disk] = await Promise.all([
     checkAlertPoller(lang),
     checkGraphEndpoints(lang),
     checkClaudeApi(lang),
     checkAiParseHealth(lang),
     checkDriftSchedulers(lang),
+    checkWorkerLiveness(lang),
     checkDatabase(lang),
+    checkDbSize(lang),
     checkDisk(lang),
   ]);
 
-  const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, database, disk];
+  const checks = [alertPoller, graphEndpoints, claudeApi, aiParse, driftSchedulers, workerLiveness, database, dbSize, disk];
   const rolled = overallState(checks);
   const overall = rolled === 'ok' ? 'nominal' : (rolled === 'warn' ? 'degraded' : 'critical');
 

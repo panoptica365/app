@@ -1321,7 +1321,8 @@
       "psa.auth_recovered": "Autotask authentication recovered",
       "psa.sync_error": "Autotask {op} failed for alert #{alertId}: {error}",
       "settings.psa.update": "PSA integration settings changed ({fields})",
-      "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)"
+      "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
+      "settings.retention.update": "Data retention windows changed ({fields})"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -2159,6 +2160,71 @@
         "unknown": "Unknown role template ({roleId})"
       }
     },
+    "ENT-10": {
+      "name": "Restrict App Registrations to Admins",
+      "security_impact": "A compromised user account can register an application and use it for persistence, lateral movement, reconnaissance, or data exfiltration via delegated/app permissions. Restricting registration to admins removes a quiet attacker foothold.",
+      "user_impact": "Users will no longer be able to self-register apps in Entra. Developers or power users who genuinely need this will ask an admin. Most SMB users never use this.",
+      "admin_notes": "Safe to restrict in the large majority of SMB tenants. Before applying, confirm no line-of-business workflow relies on self-service app registration (rare). Reversible with a single PATCH.",
+      "writer_recommended_label": "Microsoft recommends restricting app registration to administrators for tenants without a developer self-service need.",
+      "writer_options": {
+        "admins_only_recommended": "Admins only (recommended)",
+        "all_users_can_register_apps_microsoft_default": "All users can register apps (Microsoft default)"
+      },
+      "interpreted": {
+        "admins_only": "Admins only (recommended)",
+        "all_users": "All users can register apps (Microsoft default)"
+      }
+    },
+    "ENT-11": {
+      "name": "Restrict Security Group Creation to Admins",
+      "security_impact": "Self-service security-group creation lets any user spin up groups that can later be granted access to apps, resources, or roles. A compromised account can use this to engineer access paths or muddy the access-review picture. Restricting creation to admins keeps the group inventory clean and intentional.",
+      "user_impact": "Users will no longer be able to create their own security groups; those who need one ask an admin. This covers security groups only — Microsoft 365 Group creation (Teams, Planner, etc.) is a separate control and is unaffected.",
+      "admin_notes": "Safe to restrict in most SMB tenants. This setting covers security groups ONLY; Microsoft 365 Group creation is governed by a separate directory group setting and is out of scope here. Reversible with a single PATCH.",
+      "writer_recommended_label": "Microsoft recommends restricting security-group creation to administrators for tenants that do not need end-user self-service groups.",
+      "writer_options": {
+        "admins_only_recommended": "Admins only (recommended)",
+        "all_users_can_create_security_groups_microsoft_default": "All users can create security groups (Microsoft default)"
+      },
+      "interpreted": {
+        "admins_only": "Admins only (recommended)",
+        "all_users": "All users can create security groups (Microsoft default)"
+      }
+    },
+    "ENT-12": {
+      "name": "Restrict Tenant Creation to Admins",
+      "security_impact": "When any user can create a tenant, they become Global Administrator of a brand-new directory the MSP does not manage or monitor — a shadow-IT / unmanaged-tenant risk that can hold corporate data outside every guardrail. Restricting creation to admins removes that escape hatch. Low real-world frequency, but high blast radius when it happens.",
+      "user_impact": "Users will no longer be able to create new Entra tenants. This is an action almost no standard user ever needs to take.",
+      "admin_notes": "Safe to restrict in essentially every SMB tenant — legitimate need for end-user tenant creation is vanishingly rare. Reversible with a single PATCH.",
+      "writer_recommended_label": "Microsoft recommends restricting tenant creation to administrators; standard users almost never have a legitimate need to create a new tenant.",
+      "writer_options": {
+        "admins_only_recommended": "Admins only (recommended)",
+        "all_users_can_create_tenants_microsoft_default": "All users can create tenants (Microsoft default)"
+      },
+      "interpreted": {
+        "admins_only": "Admins only (recommended)",
+        "all_users": "All users can create tenants (Microsoft default)"
+      }
+    },
+    "ENT-13": {
+      "name": "Restrict Who Can Invite Guests",
+      "security_impact": "When guests can invite other guests, a single compromised guest account can pull more outsiders into the tenant to create persistence and move laterally. Limiting invitations to members (or admins) removes that self-propagation path.",
+      "user_impact": "Guests will no longer be able to send guest invitations. Internal members (and admins) continue to invite partners normally.",
+      "admin_notes": "The Microsoft default (members + admins can invite, guests cannot) resolves the finding and is non-disruptive for almost every tenant. Choose \"Admins and designated inviters only\" for tighter control where business users should not be inviting outsiders at all.",
+      "writer_recommended_label": "Microsoft default (\"Member users and admins\") stops guests inviting guests while keeping normal partner collaboration. Tighten to admins-only where business users should never invite externals.",
+      "writer_options": {
+        "members_and_admins_can_invite_recommended_microsoft_default": "Members and admins can invite (recommended — Microsoft default)",
+        "admins_and_designated_inviters_only_hardened": "Admins and designated inviters only (hardened)",
+        "no_one_can_invite_guests_most_restrictive": "No one can invite guests (most restrictive)",
+        "anyone_including_guests_can_invite_not_recommended": "Anyone including guests can invite (NOT recommended)"
+      },
+      "interpreted": {
+        "none": "No one can invite guests (most restrictive)",
+        "adminsAndGuestInviters": "Admins and designated inviters only (hardened)",
+        "adminsGuestInvitersAndAllMembers": "Members and admins can invite (recommended — Microsoft default)",
+        "everyone": "Anyone including guests can invite (NOT recommended)",
+        "unknown": "Unknown invite setting (\"{value}\")"
+      }
+    },
     "SPO-01": {
       "name": "Restrict External Sharing (Limit to Existing Guests or Disable)",
       "security_impact": "\"Anyone\" links give unauthenticated access to whoever has the URL — the link can be forwarded, leaked, or indexed, with no audit trail of who actually read the file. Restricting to authenticated sharing (or disabling external entirely) means every access is tied to a named identity and is loggable.",
@@ -2559,6 +2625,46 @@
     },
     "card_disk_title": "Disk space",
     "card_disk_desc": "How much storage your server has used. Warns before it runs out.",
+    "card_retention_title": "Data retention",
+    "card_retention_desc": "How long historical data is kept before automatic cleanup.",
+    "retention": {
+      "section_title": "Data retention",
+      "intro": "A nightly cleanup keeps the database from growing without limit. Each data type below is kept for the period shown, then deleted automatically. Alerts are never auto-deleted.",
+      "loading": "Loading retention policy…",
+      "load_failed": "Could not load the retention policy.",
+      "days_value": {
+        "one": "{days} day",
+        "other": "{days} days"
+      },
+      "disabled_value": "Disabled (kept forever)",
+      "tables": {
+        "defender_incidents": "Defender incidents (raw feed)",
+        "identity_timeline_analysis": "Identity timeline analyses (cache)",
+        "heatmap_posture_daily": "Heatmap posture history",
+        "message_center_items": "Microsoft message feed items",
+        "msp_audit_events": "MSP audit log (evidence)",
+        "tenant_change_events": "Tenant change log (evidence)",
+        "metric_snapshots_raw": "Metric snapshots (full poll history)",
+        "metric_snapshots_agg": "Secure Score daily history"
+      },
+      "defaults_note": "The pre-filled values are the recommended defaults. You can adjust them; changes take effect at the next nightly cleanup (03:30).",
+      "recommended": "Recommended: {days} days",
+      "forever_note": "(0 = keep forever)",
+      "days_unit": "days",
+      "save_btn": "Save retention settings",
+      "toast_saved": "Retention settings saved",
+      "invalid_value": "{name}: enter a whole number between {min} and {max}",
+      "hints": {
+        "defender_incidents": "Raw incident records imported from Microsoft Defender. Alerts created from them are kept independently — shortening this only limits how far back the incident history can be browsed.",
+        "identity_timeline_analysis": "AI-generated sign-in timeline analyses. This is a cache: anything deleted is simply regenerated on demand the next time that timeline is opened.",
+        "heatmap_posture_daily": "One compliance score per tenant per day, drawn by the heatmap trend view. Tiny rows — shortening this only shortens how far back trends can look.",
+        "message_center_items": "Microsoft service announcements after they have been analyzed and alerted on. Kept for reference only — safe to shorten.",
+        "msp_audit_events": "Evidence: every operator action in Panoptica365. This is your audit trail — shorten it only if your compliance obligations allow.",
+        "tenant_change_events": "Evidence: every configuration change per tenant, linked from drift alerts. Shorten it only if your compliance obligations allow.",
+        "metric_snapshots_raw": "Full detail from every poll, used by the change-detection alerts (they compare against the previous poll). Raising this grows the database quickly — roughly a gigabyte per tenant per month.",
+        "metric_snapshots_agg": "One Secure Score reading per tenant per day, powering the report trend line. Must cover your longest report period (90 days). Storage cost is negligible."
+      }
+    },
     "disk": {
       "section_title": "Disk space",
       "intro": "Storage used on the server hosting Panoptica365. A banner warns you at 80% and again at 90% so you can free space before anything breaks.",
@@ -3808,6 +3914,60 @@
         "ok": "{scheduler}: last cycle {min} min ago, {checks} checked"
       }
     },
+    "worker_liveness": {
+      "label": "Background workers",
+      "summary": {
+        "all_ok": {
+          "one": "{count} background worker reporting",
+          "other": "All {count} background workers reporting"
+        },
+        "all_ok_with_idle": {
+          "one": "{count} background worker reporting ({idle} idle by configuration)",
+          "other": "All {count} background workers reporting ({idle} idle by configuration)"
+        },
+        "degraded": {
+          "one": "{count} worker needs attention: {list}",
+          "other": "{count} workers need attention: {list}"
+        }
+      },
+      "worker": {
+        "ok": "{worker}: last successful cycle {age} ago",
+        "idle": "{worker}: idle by configuration",
+        "pending": "{worker}: first cycle pending",
+        "never_ran": "{worker}: no completed cycle since process start ({age})",
+        "never_succeeded": "{worker}: started but never completed a cycle ({failures} failure(s)) — last error: {error}",
+        "stale_warn": "{worker}: last success {age} ago (warning threshold {threshold})",
+        "stale_crit": "{worker}: last success {age} ago (critical threshold {threshold})",
+        "failing": "{worker}: {failures} consecutive failures — last error: {error}"
+      },
+      "age_min": "{n} min",
+      "age_hours": "{n} h",
+      "age_days": "{n} d",
+      "workers": {
+        "polling": "Metric polling",
+        "ual": "Audit log ingestion (UAL)",
+        "psa": "PSA ticket sync",
+        "known_good": "App permission drift (daily)",
+        "message_center": "Microsoft message feed",
+        "morning_briefing": "Morning briefing",
+        "audit_expiry": "Audit-tenant expiry",
+        "security_apply": "Security apply queue",
+        "license_refresh": "License refresh",
+        "update_checker": "Update checker",
+        "retention": "Data retention",
+        "ca_drift": "CA drift scheduler",
+        "intune_drift": "Intune drift scheduler"
+      },
+      "table_worker": "Worker",
+      "table_status": "Status",
+      "table_last_success": "Last success",
+      "table_duration": "Cycle time",
+      "table_failures": "Fails",
+      "status_ok": "OK",
+      "status_idle": "Idle",
+      "status_warn": "Stale",
+      "status_crit": "Critical"
+    },
     "database": {
       "label": "Database",
       "summary": {
@@ -3819,6 +3979,17 @@
       "crit_threshold": "Crit threshold",
       "error": "Error",
       "ms_unit": "{ms} ms"
+    },
+    "db_size": {
+      "label": "Database size",
+      "summary": {
+        "ok": "Database is {gb} GB across {tables} tables",
+        "warn": "Database is {gb} GB — above the {warnGb} GB attention threshold",
+        "unknown": "Could not read database size"
+      },
+      "table_table": "Table",
+      "table_rows": "Rows (est.)",
+      "table_size": "Size"
     },
     "disk": {
       "label": "Disk space",

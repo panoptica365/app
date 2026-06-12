@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const versionInfo = require('../../version');
+const workerHeartbeat = require('../../worker-heartbeat');
 
 const MANIFEST_URL = process.env.UPDATE_MANIFEST_URL || 'https://updates.panoptica365.com/latest.json';
 const CHECK_INTERVAL_MS = parseInt(process.env.UPDATE_CHECK_INTERVAL || '3600000', 10) || 3600000; // 1h
@@ -132,6 +133,22 @@ function validateManifest(m) {
 
 /** Run one check. Never throws. Returns the (possibly unchanged) cache. */
 async function check() {
+  // Liveness stamp (Reliability P0, 2026-06-12). Success means "the checker
+  // loop ran", NOT "the manifest was reachable" — manifest_ok already carries
+  // that and an unreachable CDN must not page as a dead worker.
+  const hbStart = Date.now();
+  workerHeartbeat.stampStart('update_checker');
+  try {
+    const out = await checkInner();
+    workerHeartbeat.stampSuccess('update_checker', Date.now() - hbStart);
+    return out;
+  } catch (e) {
+    workerHeartbeat.stampError('update_checker', e.message);
+    throw e;
+  }
+}
+
+async function checkInner() {
   const result = await fetchManifest();
   if (!result.ok) {
     warn(`manifest fetch failed (${result.error}) — keeping last good result, no banner change`);

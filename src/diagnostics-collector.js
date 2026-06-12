@@ -391,6 +391,18 @@ function collectVersion(file) {
   });
 }
 
+// Crash counter written by src/lib/fatal-handlers.js on every fatal exit
+// (Reliability P0, 2026-06-12). Not a secret — count + timestamp + first line
+// of the reason. Absence means no fatal crash has ever been recorded.
+function collectCrashCounter(file) {
+  const src = path.join(STATE_DIR, 'crash-counter.json');
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, file);
+  } else {
+    writeJson(file, { count: 0, note: 'No fatal crashes recorded on this install.' });
+  }
+}
+
 function collectUpdateHistory(outDir) {
   fs.mkdirSync(outDir, { recursive: true });
   const files = ['update-status.json', 'update-request.json', 'sidecar-versions.json', 'payload-rejected'];
@@ -486,37 +498,40 @@ async function runCapture(captureId, operator, lang) {
     const skipped = manifest.skipped;
 
     // Plan: count the discrete steps so the UI can show progress.
-    setPhase('collecting', 0, 8);
+    setPhase('collecting', 0, 9);
 
     await step(workDir, 'version.json', included, skipped, async () => collectVersion(path.join(workDir, 'version.json')));
     setPhase('collecting', 1);
+
+    await step(workDir, 'crash-counter.json', included, skipped, async () => collectCrashCounter(path.join(workDir, 'crash-counter.json')));
+    setPhase('collecting', 2);
 
     await step(workDir, 'health.json', included, skipped, async () => {
       const health = await require('./routes/api-health').runAllChecks(lang);
       writeJson(path.join(workDir, 'health.json'), health);
     });
-    setPhase('collecting', 2);
-
-    await step(workDir, 'config-summary.json', included, skipped, async () => collectConfigSummary(path.join(workDir, 'config-summary.json')));
     setPhase('collecting', 3);
 
-    await step(workDir, 'disk.json', included, skipped, async () => collectDisk(path.join(workDir, 'disk.json')));
+    await step(workDir, 'config-summary.json', included, skipped, async () => collectConfigSummary(path.join(workDir, 'config-summary.json')));
     setPhase('collecting', 4);
 
-    await step(workDir, 'update-history', included, skipped, async () => collectUpdateHistory(path.join(workDir, 'update-history')));
+    await step(workDir, 'disk.json', included, skipped, async () => collectDisk(path.join(workDir, 'disk.json')));
     setPhase('collecting', 5);
 
-    await step(workDir, 'app-logs', included, skipped, async () => collectAppLogs(path.join(workDir, 'app-logs')));
+    await step(workDir, 'update-history', included, skipped, async () => collectUpdateHistory(path.join(workDir, 'update-history')));
     setPhase('collecting', 6);
+
+    await step(workDir, 'app-logs', included, skipped, async () => collectAppLogs(path.join(workDir, 'app-logs')));
+    setPhase('collecting', 7);
 
     // DB block — its own try/caught sub-files; the whole block also guarded so
     // a dead DB still yields logs + config + manifest (§3.7).
     await step(workDir, 'db', included, skipped, async () => collectDb(path.join(workDir, 'db'), included, skipped));
-    setPhase('collecting', 7);
+    setPhase('collecting', 8);
 
     // Docker logs via the sidecar (may be skipped/degraded — always recorded).
     await collectDockerLogs(path.join(workDir, 'docker-logs'), captureId, operator, manifest);
-    setPhase('redacting', 8);
+    setPhase('redacting', 9);
 
     // Redact EVERY text file (including sidecar docker logs) before zipping.
     const redaction = redactor.redactDir(workDir);

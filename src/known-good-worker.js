@@ -24,12 +24,18 @@ const collector = require('./lib/enterprise-apps-graph');
 const store = require('./lib/known-good-store');
 const tenantMode = require('./lib/tenant-mode');
 const alertEngine = require('./alert-engine');
+const workerHeartbeat = require('./worker-heartbeat');
 
 const LOOP_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
 const FIRST_RUN_DELAY_MS = 90 * 1000;         // let boot work settle
 
 let loopHandle = null;
 let cycleInProgress = false;
+// Stuck-cycle watchdog (Reliability P0, 2026-06-12): if the guard is older
+// than this, the previous cycle's `finally` never ran (hung await) — clear it
+// and proceed on this tick rather than skipping for the rest of the process.
+let guardSetAt = 0;
+const MAX_CYCLE_RUNTIME_MS = 30 * 60 * 1000;
 
 /**
  * Re-collect + drift-check ONE tenant, rebuild its inventory snapshot.
@@ -169,11 +175,18 @@ function humanizeToken(token) {
 
 async function runOnce() {
   if (cycleInProgress) {
-    console.log('[KnownGood] Skipping cycle — previous run still in progress');
-    return { skipped: true };
+    const ageMs = guardSetAt ? Date.now() - guardSetAt : 0;
+    if (ageMs > MAX_CYCLE_RUNTIME_MS) {
+      console.error(`[Watchdog] [KnownGood] previous cycle still flagged in-progress after ${Math.round(ageMs / 60000)} min (max ${MAX_CYCLE_RUNTIME_MS / 60000}) — abandoning it and starting a fresh cycle`);
+    } else {
+      console.log('[KnownGood] Skipping cycle — previous run still in progress');
+      return { skipped: true };
+    }
   }
   cycleInProgress = true;
+  guardSetAt = Date.now();
   const start = Date.now();
+  workerHeartbeat.stampStart('known_good');
   let processed = 0;
   let driftedTotal = 0;
 
@@ -193,12 +206,16 @@ async function runOnce() {
         console.error(`[KnownGood] refresh failed for tenant ${tenant.id} (${tenant.display_name}): ${err.message}`);
       }
     }
+  } catch (err) {
+    workerHeartbeat.stampError('known_good', err.message);
+    throw err;
   } finally {
     cycleInProgress = false;
   }
 
   const secs = ((Date.now() - start) / 1000).toFixed(1);
   console.log(`[KnownGood] Daily cycle complete in ${secs}s — ${processed} tenant(s), ${driftedTotal} new drift event(s)`);
+  workerHeartbeat.stampSuccess('known_good', Date.now() - start);
   return { processed, driftedTotal };
 }
 

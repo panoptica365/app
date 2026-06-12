@@ -1321,7 +1321,8 @@
       "psa.auth_recovered": "Authentification Autotask rétablie",
       "psa.sync_error": "Échec Autotask ({op}) pour l’alerte nº {alertId} : {error}",
       "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})",
-      "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)"
+      "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)",
+      "settings.retention.update": "Fenêtres de rétention des données modifiées ({fields})"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -2159,6 +2160,71 @@
         "unknown": "Modèle de rôle inconnu ({roleId})"
       }
     },
+    "ENT-10": {
+      "name": "Restreindre l’enregistrement d’applications aux administrateurs",
+      "security_impact": "Un compte utilisateur compromis peut enregistrer une application et l’utiliser pour la persistance, le déplacement latéral, la reconnaissance ou l’exfiltration de données au moyen de permissions déléguées ou applicatives. Restreindre l’enregistrement aux administrateurs élimine un point d’ancrage discret pour l’attaquant.",
+      "user_impact": "Les utilisateurs ne pourront plus enregistrer eux-mêmes des applications dans Entra. Les développeurs ou utilisateurs avancés qui en ont réellement besoin le demanderont à un administrateur. La plupart des utilisateurs de PME ne s’en servent jamais.",
+      "admin_notes": "Sécuritaire à restreindre dans la grande majorité des locataires de PME. Avant d’appliquer, confirmez qu’aucun flux de travail métier ne dépend de l’enregistrement libre-service d’applications (rare). Réversible avec un seul PATCH.",
+      "writer_recommended_label": "Microsoft recommande de restreindre l’enregistrement d’applications aux administrateurs pour les locataires qui n’ont pas de besoin de libre-service pour les développeurs.",
+      "writer_options": {
+        "admins_only_recommended": "Administrateurs seulement (recommandé)",
+        "all_users_can_register_apps_microsoft_default": "Tous les utilisateurs peuvent enregistrer des applications (valeur par défaut Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Administrateurs seulement (recommandé)",
+        "all_users": "Tous les utilisateurs peuvent enregistrer des applications (valeur par défaut Microsoft)"
+      }
+    },
+    "ENT-11": {
+      "name": "Restreindre la création de groupes de sécurité aux administrateurs",
+      "security_impact": "La création libre-service de groupes de sécurité permet à n’importe quel utilisateur de créer des groupes auxquels on pourra ensuite accorder l’accès à des applications, des ressources ou des rôles. Un compte compromis peut s’en servir pour fabriquer des chemins d’accès ou brouiller le portrait des révisions d’accès. Restreindre la création aux administrateurs garde l’inventaire des groupes propre et intentionnel.",
+      "user_impact": "Les utilisateurs ne pourront plus créer leurs propres groupes de sécurité; ceux qui en ont besoin le demanderont à un administrateur. Cela couvre uniquement les groupes de sécurité — la création de groupes Microsoft 365 (Teams, Planner, etc.) est un contrôle distinct et n’est pas touchée.",
+      "admin_notes": "Sécuritaire à restreindre dans la plupart des locataires de PME. Ce paramètre couvre UNIQUEMENT les groupes de sécurité; la création de groupes Microsoft 365 est régie par un paramètre de groupe de répertoire distinct et est hors de portée ici. Réversible avec un seul PATCH.",
+      "writer_recommended_label": "Microsoft recommande de restreindre la création de groupes de sécurité aux administrateurs pour les locataires qui n’ont pas besoin de groupes en libre-service pour les utilisateurs.",
+      "writer_options": {
+        "admins_only_recommended": "Administrateurs seulement (recommandé)",
+        "all_users_can_create_security_groups_microsoft_default": "Tous les utilisateurs peuvent créer des groupes de sécurité (valeur par défaut Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Administrateurs seulement (recommandé)",
+        "all_users": "Tous les utilisateurs peuvent créer des groupes de sécurité (valeur par défaut Microsoft)"
+      }
+    },
+    "ENT-12": {
+      "name": "Restreindre la création de locataires aux administrateurs",
+      "security_impact": "Lorsque n’importe quel utilisateur peut créer un locataire, il devient Administrateur global d’un tout nouveau répertoire que le MSP ne gère ni ne surveille — un risque d’informatique fantôme et de locataire non géré qui peut contenir des données d’entreprise hors de tous les garde-fous. Restreindre la création aux administrateurs élimine cette porte de sortie. Faible fréquence dans la réalité, mais grand rayon d’impact lorsque cela se produit.",
+      "user_impact": "Les utilisateurs ne pourront plus créer de nouveaux locataires Entra. C’est une action que pratiquement aucun utilisateur standard n’a jamais besoin de poser.",
+      "admin_notes": "Sécuritaire à restreindre dans pratiquement tous les locataires de PME — le besoin légitime de création de locataires par les utilisateurs finaux est extrêmement rare. Réversible avec un seul PATCH.",
+      "writer_recommended_label": "Microsoft recommande de restreindre la création de locataires aux administrateurs; les utilisateurs standards n’ont presque jamais un besoin légitime de créer un nouveau locataire.",
+      "writer_options": {
+        "admins_only_recommended": "Administrateurs seulement (recommandé)",
+        "all_users_can_create_tenants_microsoft_default": "Tous les utilisateurs peuvent créer des locataires (valeur par défaut Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Administrateurs seulement (recommandé)",
+        "all_users": "Tous les utilisateurs peuvent créer des locataires (valeur par défaut Microsoft)"
+      }
+    },
+    "ENT-13": {
+      "name": "Restreindre qui peut inviter des invités",
+      "security_impact": "Lorsque les invités peuvent inviter d’autres invités, un seul compte invité compromis peut faire entrer davantage de personnes externes dans le locataire pour établir une persistance et se déplacer latéralement. Limiter les invitations aux membres (ou aux administrateurs) élimine ce chemin d’auto-propagation.",
+      "user_impact": "Les invités ne pourront plus envoyer d’invitations à des invités. Les membres internes (et les administrateurs) continuent d’inviter les partenaires normalement.",
+      "admin_notes": "La valeur par défaut de Microsoft (les membres et les administrateurs peuvent inviter, pas les invités) résout la constatation et est non perturbatrice pour presque tous les locataires. Choisissez « Administrateurs et personnes désignées seulement » pour un contrôle plus strict là où les utilisateurs métier ne devraient pas inviter d’externes du tout.",
+      "writer_recommended_label": "La valeur par défaut de Microsoft (« Utilisateurs membres et administrateurs ») empêche les invités d’inviter des invités tout en préservant la collaboration normale avec les partenaires. Resserrez à administrateurs seulement là où les utilisateurs métier ne devraient jamais inviter d’externes.",
+      "writer_options": {
+        "members_and_admins_can_invite_recommended_microsoft_default": "Les membres et les administrateurs peuvent inviter (recommandé — valeur par défaut Microsoft)",
+        "admins_and_designated_inviters_only_hardened": "Administrateurs et personnes désignées seulement (renforcé)",
+        "no_one_can_invite_guests_most_restrictive": "Personne ne peut inviter d’invités (le plus restrictif)",
+        "anyone_including_guests_can_invite_not_recommended": "N’importe qui, y compris les invités, peut inviter (NON recommandé)"
+      },
+      "interpreted": {
+        "none": "Personne ne peut inviter d’invités (le plus restrictif)",
+        "adminsAndGuestInviters": "Administrateurs et personnes désignées seulement (renforcé)",
+        "adminsGuestInvitersAndAllMembers": "Les membres et les administrateurs peuvent inviter (recommandé — valeur par défaut Microsoft)",
+        "everyone": "N’importe qui, y compris les invités, peut inviter (NON recommandé)",
+        "unknown": "Paramètre d’invitation inconnu (« {value} »)"
+      }
+    },
     "SPO-01": {
       "name": "Restreindre le partage externe (limiter aux invités existants ou désactiver)",
       "security_impact": "Les liens « Toute personne » donnent un accès non authentifié à quiconque possède l’URL — le lien peut être transféré, divulgué ou indexé, sans piste d’audit indiquant qui a réellement lu le fichier. Restreindre le partage authentifié (ou désactiver complètement l’externe) signifie que chaque accès est lié à une identité nommée et peut être journalisé.",
@@ -2559,6 +2625,46 @@
     },
     "card_disk_title": "Espace disque",
     "card_disk_desc": "L’espace de stockage utilisé sur votre serveur. Vous avertit avant qu’il ne soit plein.",
+    "card_retention_title": "Rétention des données",
+    "card_retention_desc": "Durée de conservation des données historiques avant le nettoyage automatique.",
+    "retention": {
+      "section_title": "Rétention des données",
+      "intro": "Un nettoyage nocturne empêche la base de données de croître sans limite. Chaque type de données ci-dessous est conservé pour la période indiquée, puis supprimé automatiquement. Les alertes ne sont jamais supprimées automatiquement.",
+      "loading": "Chargement de la politique de rétention…",
+      "load_failed": "Impossible de charger la politique de rétention.",
+      "days_value": {
+        "one": "{days} jour",
+        "other": "{days} jours"
+      },
+      "disabled_value": "Désactivée (conservation illimitée)",
+      "tables": {
+        "defender_incidents": "Incidents Defender (flux brut)",
+        "identity_timeline_analysis": "Analyses de chronologie d’identité (cache)",
+        "heatmap_posture_daily": "Historique de posture (carte thermique)",
+        "message_center_items": "Éléments du flux de messages Microsoft",
+        "msp_audit_events": "Journal d’audit MSP (preuve)",
+        "tenant_change_events": "Journal des changements locataires (preuve)",
+        "metric_snapshots_raw": "Instantanés de métriques (historique complet des sondages)",
+        "metric_snapshots_agg": "Historique quotidien du Secure Score"
+      },
+      "defaults_note": "Les valeurs préremplies sont les réglages recommandés. Vous pouvez les ajuster ; les changements prennent effet au prochain nettoyage nocturne (3 h 30).",
+      "recommended": "Recommandé : {days} jours",
+      "forever_note": "(0 = conservation illimitée)",
+      "days_unit": "jours",
+      "save_btn": "Enregistrer la rétention",
+      "toast_saved": "Réglages de rétention enregistrés",
+      "invalid_value": "{name} : entrez un nombre entier entre {min} et {max}",
+      "hints": {
+        "defender_incidents": "Incidents bruts importés de Microsoft Defender. Les alertes créées à partir d’eux sont conservées indépendamment — raccourcir cette période limite seulement la profondeur de l’historique consultable.",
+        "identity_timeline_analysis": "Analyses de chronologie de connexion générées par l’IA. C’est un cache : toute analyse supprimée est simplement régénérée à la demande.",
+        "heatmap_posture_daily": "Un score de conformité par locataire et par jour, utilisé par la tendance de la carte thermique. Données minuscules — raccourcir réduit seulement la profondeur des tendances.",
+        "message_center_items": "Annonces de service Microsoft déjà analysées et transformées en alertes. Conservées pour référence — raccourcir sans risque.",
+        "msp_audit_events": "Preuve : chaque action d’opérateur dans Panoptica365. C’est votre piste d’audit — ne raccourcissez que si vos obligations de conformité le permettent.",
+        "tenant_change_events": "Preuve : chaque changement de configuration par locataire, lié aux alertes de dérive. Ne raccourcissez que si vos obligations de conformité le permettent.",
+        "metric_snapshots_raw": "Détail complet de chaque sondage, utilisé par les alertes de détection de changement (comparaison avec le sondage précédent). Augmenter cette valeur fait grossir la base rapidement — environ un gigaoctet par locataire par mois.",
+        "metric_snapshots_agg": "Une valeur de Secure Score par locataire et par jour, alimentant la tendance des rapports. Doit couvrir votre plus longue période de rapport (90 jours). Coût de stockage négligeable."
+      }
+    },
     "disk": {
       "section_title": "Espace disque",
       "intro": "Espace de stockage utilisé sur le serveur qui héberge Panoptica365. Une bannière vous avertit à 80 % puis à 90 % afin que vous puissiez libérer de l’espace avant toute panne.",
@@ -3808,6 +3914,60 @@
         "ok": "{scheduler} : dernière exécution il y a {min} min, {checks} vérifiés"
       }
     },
+    "worker_liveness": {
+      "label": "Processus d’arrière-plan",
+      "summary": {
+        "all_ok": {
+          "one": "{count} processus d’arrière-plan au rapport",
+          "other": "Les {count} processus d’arrière-plan répondent"
+        },
+        "all_ok_with_idle": {
+          "one": "{count} processus d’arrière-plan au rapport ({idle} inactif par configuration)",
+          "other": "Les {count} processus d’arrière-plan répondent ({idle} inactif(s) par configuration)"
+        },
+        "degraded": {
+          "one": "{count} processus à surveiller : {list}",
+          "other": "{count} processus à surveiller : {list}"
+        }
+      },
+      "worker": {
+        "ok": "{worker} : dernier cycle réussi il y a {age}",
+        "idle": "{worker} : inactif par configuration",
+        "pending": "{worker} : premier cycle à venir",
+        "never_ran": "{worker} : aucun cycle terminé depuis le démarrage du processus ({age})",
+        "never_succeeded": "{worker} : démarré mais aucun cycle terminé ({failures} échec(s)) — dernière erreur : {error}",
+        "stale_warn": "{worker} : dernier succès il y a {age} (seuil d’avertissement {threshold})",
+        "stale_crit": "{worker} : dernier succès il y a {age} (seuil critique {threshold})",
+        "failing": "{worker} : {failures} échecs consécutifs — dernière erreur : {error}"
+      },
+      "age_min": "{n} min",
+      "age_hours": "{n} h",
+      "age_days": "{n} j",
+      "workers": {
+        "polling": "Sondage des métriques",
+        "ual": "Ingestion des journaux d’audit (UAL)",
+        "psa": "Synchronisation des billets PSA",
+        "known_good": "Dérive des permissions d’applications (quotidien)",
+        "message_center": "Flux de messages Microsoft",
+        "morning_briefing": "Résumé matinal",
+        "audit_expiry": "Expiration des locataires en audit",
+        "security_apply": "File d’application sécurité",
+        "license_refresh": "Actualisation de la licence",
+        "update_checker": "Vérificateur de mises à jour",
+        "retention": "Rétention des données",
+        "ca_drift": "Planificateur de dérive CA",
+        "intune_drift": "Planificateur de dérive Intune"
+      },
+      "table_worker": "Processus",
+      "table_status": "État",
+      "table_last_success": "Dernier succès",
+      "table_duration": "Durée du cycle",
+      "table_failures": "Échecs",
+      "status_ok": "OK",
+      "status_idle": "Inactif",
+      "status_warn": "En retard",
+      "status_crit": "Critique"
+    },
     "database": {
       "label": "Base de données",
       "summary": {
@@ -3819,6 +3979,17 @@
       "crit_threshold": "Seuil critique",
       "error": "Erreur",
       "ms_unit": "{ms} ms"
+    },
+    "db_size": {
+      "label": "Taille de la base de données",
+      "summary": {
+        "ok": "La base de données fait {gb} Go répartis sur {tables} tables",
+        "warn": "La base de données fait {gb} Go — au-dessus du seuil d’attention de {warnGb} Go",
+        "unknown": "Impossible de lire la taille de la base de données"
+      },
+      "table_table": "Table",
+      "table_rows": "Lignes (est.)",
+      "table_size": "Taille"
     },
     "disk": {
       "label": "Espace disque",

@@ -18,6 +18,7 @@ const config = require('../config/default');
 const db = require('./db/database');
 const tenantMode = require('./lib/tenant-mode');
 const cascadeDelete = require('./lib/tenant-cascade-delete');
+const workerHeartbeat = require('./worker-heartbeat');
 
 let cronJob = null;
 let transporter = null;
@@ -276,11 +277,13 @@ async function processDeletions() {
 async function runOnce() {
   const t0 = Date.now();
   console.log('[AuditExpiry] Cycle start');
+  workerHeartbeat.stampStart('audit_expiry');
   let warning = { warned: 0, sent: 0 };
   let deletion = { deleted: 0, succeeded: 0 };
   try { warning  = await processWarnings();  } catch (e) { console.error('[AuditExpiry] Warning pass error:', e.message); }
   try { deletion = await processDeletions(); } catch (e) { console.error('[AuditExpiry] Deletion pass error:', e.message); }
   console.log(`[AuditExpiry] Cycle end (+${Date.now() - t0}ms) — warned=${warning.warned} (sent=${warning.sent}), deleted=${deletion.deleted} (ok=${deletion.succeeded})`);
+  workerHeartbeat.stampSuccess('audit_expiry', Date.now() - t0);
   return { warning, deletion };
 }
 

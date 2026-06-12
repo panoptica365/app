@@ -1321,7 +1321,8 @@
       "psa.auth_recovered": "Autenticación de Autotask restablecida",
       "psa.sync_error": "Autotask ({op}) falló para la alerta n.º {alertId}: {error}",
       "settings.psa.update": "Ajustes de la integración con PSA modificados ({fields})",
-      "psa.rollup_consolidated": "Alerta de agrupación n.º {alertId}: se conservó el ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)"
+      "psa.rollup_consolidated": "Alerta de agrupación n.º {alertId}: se conservó el ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)",
+      "settings.retention.update": "Ventanas de retención de datos modificadas ({fields})"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -2159,6 +2160,71 @@
         "unknown": "Plantilla de rol desconocida ({roleId})"
       }
     },
+    "ENT-10": {
+      "name": "Restringir el registro de aplicaciones a los administradores",
+      "security_impact": "Una cuenta de usuario comprometida puede registrar una aplicación y usarla para persistencia, movimiento lateral, reconocimiento o exfiltración de datos mediante permisos delegados o de aplicación. Restringir el registro a los administradores elimina un punto de apoyo silencioso para el atacante.",
+      "user_impact": "Los usuarios ya no podrán registrar aplicaciones por su cuenta en Entra. Los desarrolladores o usuarios avanzados que realmente lo necesiten se lo pedirán a un administrador. La mayoría de los usuarios de PYME nunca lo utilizan.",
+      "admin_notes": "Seguro de restringir en la gran mayoría de los inquilinos de PYME. Antes de aplicar, confirme que ningún flujo de trabajo empresarial dependa del registro de aplicaciones de autoservicio (poco común). Reversible con un solo PATCH.",
+      "writer_recommended_label": "Microsoft recomienda restringir el registro de aplicaciones a los administradores en los inquilinos que no necesitan autoservicio para desarrolladores.",
+      "writer_options": {
+        "admins_only_recommended": "Solo administradores (recomendado)",
+        "all_users_can_register_apps_microsoft_default": "Todos los usuarios pueden registrar aplicaciones (valor predeterminado de Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Solo administradores (recomendado)",
+        "all_users": "Todos los usuarios pueden registrar aplicaciones (valor predeterminado de Microsoft)"
+      }
+    },
+    "ENT-11": {
+      "name": "Restringir la creación de grupos de seguridad a los administradores",
+      "security_impact": "La creación de grupos de seguridad de autoservicio permite a cualquier usuario crear grupos a los que más tarde se les puede conceder acceso a aplicaciones, recursos o roles. Una cuenta comprometida puede usar esto para fabricar rutas de acceso o enturbiar el panorama de las revisiones de acceso. Restringir la creación a los administradores mantiene el inventario de grupos limpio e intencional.",
+      "user_impact": "Los usuarios ya no podrán crear sus propios grupos de seguridad; quienes los necesiten se lo pedirán a un administrador. Esto abarca únicamente los grupos de seguridad — la creación de grupos de Microsoft 365 (Teams, Planner, etc.) es un control distinto y no se ve afectada.",
+      "admin_notes": "Seguro de restringir en la mayoría de los inquilinos de PYME. Este ajuste abarca ÚNICAMENTE los grupos de seguridad; la creación de grupos de Microsoft 365 se rige por un ajuste de grupo de directorio distinto y queda fuera del alcance aquí. Reversible con un solo PATCH.",
+      "writer_recommended_label": "Microsoft recomienda restringir la creación de grupos de seguridad a los administradores en los inquilinos que no necesitan grupos de autoservicio para los usuarios.",
+      "writer_options": {
+        "admins_only_recommended": "Solo administradores (recomendado)",
+        "all_users_can_create_security_groups_microsoft_default": "Todos los usuarios pueden crear grupos de seguridad (valor predeterminado de Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Solo administradores (recomendado)",
+        "all_users": "Todos los usuarios pueden crear grupos de seguridad (valor predeterminado de Microsoft)"
+      }
+    },
+    "ENT-12": {
+      "name": "Restringir la creación de inquilinos a los administradores",
+      "security_impact": "Cuando cualquier usuario puede crear un inquilino, se convierte en Administrador global de un directorio totalmente nuevo que el MSP no gestiona ni supervisa — un riesgo de TI en la sombra y de inquilino no gestionado que puede contener datos corporativos fuera de todas las protecciones. Restringir la creación a los administradores elimina esa vía de escape. Baja frecuencia en la realidad, pero gran radio de impacto cuando ocurre.",
+      "user_impact": "Los usuarios ya no podrán crear nuevos inquilinos de Entra. Es una acción que casi ningún usuario estándar necesita realizar jamás.",
+      "admin_notes": "Seguro de restringir en prácticamente todos los inquilinos de PYME — la necesidad legítima de creación de inquilinos por parte de los usuarios finales es sumamente rara. Reversible con un solo PATCH.",
+      "writer_recommended_label": "Microsoft recomienda restringir la creación de inquilinos a los administradores; los usuarios estándar casi nunca tienen una necesidad legítima de crear un nuevo inquilino.",
+      "writer_options": {
+        "admins_only_recommended": "Solo administradores (recomendado)",
+        "all_users_can_create_tenants_microsoft_default": "Todos los usuarios pueden crear inquilinos (valor predeterminado de Microsoft)"
+      },
+      "interpreted": {
+        "admins_only": "Solo administradores (recomendado)",
+        "all_users": "Todos los usuarios pueden crear inquilinos (valor predeterminado de Microsoft)"
+      }
+    },
+    "ENT-13": {
+      "name": "Restringir quién puede invitar a invitados",
+      "security_impact": "Cuando los invitados pueden invitar a otros invitados, una sola cuenta de invitado comprometida puede atraer a más personas externas al inquilino para establecer persistencia y moverse lateralmente. Limitar las invitaciones a los miembros (o a los administradores) elimina esa vía de autopropagación.",
+      "user_impact": "Los invitados ya no podrán enviar invitaciones a invitados. Los miembros internos (y los administradores) siguen invitando a los socios con normalidad.",
+      "admin_notes": "El valor predeterminado de Microsoft (los miembros y los administradores pueden invitar, los invitados no) resuelve el hallazgo y no es disruptivo para casi ningún inquilino. Elija «Solo administradores y personas designadas» para un control más estricto donde los usuarios de negocio no deberían invitar a externos en absoluto.",
+      "writer_recommended_label": "El valor predeterminado de Microsoft («Usuarios miembros y administradores») impide que los invitados inviten a invitados mientras mantiene la colaboración normal con los socios. Endurezca a solo administradores donde los usuarios de negocio nunca deberían invitar a externos.",
+      "writer_options": {
+        "members_and_admins_can_invite_recommended_microsoft_default": "Los miembros y los administradores pueden invitar (recomendado — valor predeterminado de Microsoft)",
+        "admins_and_designated_inviters_only_hardened": "Solo administradores y personas designadas (reforzado)",
+        "no_one_can_invite_guests_most_restrictive": "Nadie puede invitar a invitados (lo más restrictivo)",
+        "anyone_including_guests_can_invite_not_recommended": "Cualquiera, incluidos los invitados, puede invitar (NO recomendado)"
+      },
+      "interpreted": {
+        "none": "Nadie puede invitar a invitados (lo más restrictivo)",
+        "adminsAndGuestInviters": "Solo administradores y personas designadas (reforzado)",
+        "adminsGuestInvitersAndAllMembers": "Los miembros y los administradores pueden invitar (recomendado — valor predeterminado de Microsoft)",
+        "everyone": "Cualquiera, incluidos los invitados, puede invitar (NO recomendado)",
+        "unknown": "Ajuste de invitación desconocido («{value}»)"
+      }
+    },
     "SPO-01": {
       "name": "Restringir el uso compartido externo (limitar a invitados existentes o deshabilitar)",
       "security_impact": "Los enlaces «Cualquier persona» otorgan acceso no autenticado a quien tenga la URL — el enlace puede reenviarse, filtrarse o indexarse, sin pista de auditoría de quién leyó realmente el archivo. Restringir el uso compartido autenticado (o deshabilitar el externo por completo) significa que cada acceso queda vinculado a una identidad nombrada y se puede registrar.",
@@ -2559,6 +2625,46 @@
     },
     "card_disk_title": "Espacio en disco",
     "card_disk_desc": "Cuánto almacenamiento ha usado su servidor. Avisa antes de que se agote.",
+    "card_retention_title": "Retención de datos",
+    "card_retention_desc": "Cuánto tiempo se conservan los datos históricos antes de la limpieza automática.",
+    "retention": {
+      "section_title": "Retención de datos",
+      "intro": "Una limpieza nocturna evita que la base de datos crezca sin límite. Cada tipo de datos se conserva durante el período indicado y luego se elimina automáticamente. Las alertas nunca se eliminan automáticamente.",
+      "loading": "Cargando la política de retención…",
+      "load_failed": "No se pudo cargar la política de retención.",
+      "days_value": {
+        "one": "{days} día",
+        "other": "{days} días"
+      },
+      "disabled_value": "Desactivada (se conserva para siempre)",
+      "tables": {
+        "defender_incidents": "Incidentes de Defender (fuente sin procesar)",
+        "identity_timeline_analysis": "Análisis de cronología de identidad (caché)",
+        "heatmap_posture_daily": "Historial de postura (mapa de calor)",
+        "message_center_items": "Elementos de la fuente de mensajes de Microsoft",
+        "msp_audit_events": "Registro de auditoría MSP (evidencia)",
+        "tenant_change_events": "Registro de cambios de tenants (evidencia)",
+        "metric_snapshots_raw": "Instantáneas de métricas (historial completo de sondeos)",
+        "metric_snapshots_agg": "Historial diario de Secure Score"
+      },
+      "defaults_note": "Los valores precargados son los ajustes recomendados. Puede modificarlos; los cambios se aplican en la próxima limpieza nocturna (03:30).",
+      "recommended": "Recomendado: {days} días",
+      "forever_note": "(0 = conservar para siempre)",
+      "days_unit": "días",
+      "save_btn": "Guardar la retención",
+      "toast_saved": "Ajustes de retención guardados",
+      "invalid_value": "{name}: introduzca un número entero entre {min} y {max}",
+      "hints": {
+        "defender_incidents": "Incidentes sin procesar importados de Microsoft Defender. Las alertas creadas a partir de ellos se conservan de forma independiente — acortar este período solo limita cuánto se puede retroceder en el historial.",
+        "identity_timeline_analysis": "Análisis de cronología de inicios de sesión generados por IA. Es una caché: cualquier análisis eliminado se regenera bajo demanda.",
+        "heatmap_posture_daily": "Una puntuación de cumplimiento por tenant y día, usada por la tendencia del mapa de calor. Datos mínimos — acortar solo reduce el alcance de las tendencias.",
+        "message_center_items": "Anuncios de servicio de Microsoft ya analizados y convertidos en alertas. Se conservan solo como referencia — se pueden acortar sin riesgo.",
+        "msp_audit_events": "Evidencia: cada acción de operador en Panoptica365. Es su pista de auditoría — acórtela solo si sus obligaciones de cumplimiento lo permiten.",
+        "tenant_change_events": "Evidencia: cada cambio de configuración por tenant, vinculado a las alertas de desviación. Acórtela solo si sus obligaciones de cumplimiento lo permiten.",
+        "metric_snapshots_raw": "Detalle completo de cada sondeo, usado por las alertas de detección de cambios (comparación con el sondeo anterior). Aumentarlo hace crecer la base de datos rápidamente — alrededor de un gigabyte por tenant al mes.",
+        "metric_snapshots_agg": "Un valor de Secure Score por tenant y día, que alimenta la tendencia de los informes. Debe cubrir su período de informe más largo (90 días). Coste de almacenamiento insignificante."
+      }
+    },
     "disk": {
       "section_title": "Espacio en disco",
       "intro": "Almacenamiento usado en el servidor que aloja Panoptica365. Un aviso le advierte al 80 % y de nuevo al 90 % para que pueda liberar espacio antes de que algo falle.",
@@ -3808,6 +3914,60 @@
         "ok": "{scheduler}: último ciclo hace {min} min, {checks} verificados"
       }
     },
+    "worker_liveness": {
+      "label": "Procesos en segundo plano",
+      "summary": {
+        "all_ok": {
+          "one": "{count} proceso en segundo plano informando",
+          "other": "Los {count} procesos en segundo plano responden"
+        },
+        "all_ok_with_idle": {
+          "one": "{count} proceso en segundo plano informando ({idle} inactivo por configuración)",
+          "other": "Los {count} procesos en segundo plano responden ({idle} inactivo(s) por configuración)"
+        },
+        "degraded": {
+          "one": "{count} proceso requiere atención: {list}",
+          "other": "{count} procesos requieren atención: {list}"
+        }
+      },
+      "worker": {
+        "ok": "{worker}: último ciclo exitoso hace {age}",
+        "idle": "{worker}: inactivo por configuración",
+        "pending": "{worker}: primer ciclo pendiente",
+        "never_ran": "{worker}: ningún ciclo completado desde el inicio del proceso ({age})",
+        "never_succeeded": "{worker}: iniciado pero ningún ciclo completado ({failures} fallo(s)) — último error: {error}",
+        "stale_warn": "{worker}: último éxito hace {age} (umbral de aviso {threshold})",
+        "stale_crit": "{worker}: último éxito hace {age} (umbral crítico {threshold})",
+        "failing": "{worker}: {failures} fallos consecutivos — último error: {error}"
+      },
+      "age_min": "{n} min",
+      "age_hours": "{n} h",
+      "age_days": "{n} d",
+      "workers": {
+        "polling": "Sondeo de métricas",
+        "ual": "Ingesta de registros de auditoría (UAL)",
+        "psa": "Sincronización de tiques PSA",
+        "known_good": "Desviación de permisos de aplicaciones (diario)",
+        "message_center": "Fuente de mensajes de Microsoft",
+        "morning_briefing": "Resumen matinal",
+        "audit_expiry": "Expiración de tenants en auditoría",
+        "security_apply": "Cola de aplicación de seguridad",
+        "license_refresh": "Renovación de licencia",
+        "update_checker": "Comprobador de actualizaciones",
+        "retention": "Retención de datos",
+        "ca_drift": "Planificador de desviación CA",
+        "intune_drift": "Planificador de desviación Intune"
+      },
+      "table_worker": "Proceso",
+      "table_status": "Estado",
+      "table_last_success": "Último éxito",
+      "table_duration": "Duración del ciclo",
+      "table_failures": "Fallos",
+      "status_ok": "OK",
+      "status_idle": "Inactivo",
+      "status_warn": "Atrasado",
+      "status_crit": "Crítico"
+    },
     "database": {
       "label": "Base de datos",
       "summary": {
@@ -3819,6 +3979,17 @@
       "crit_threshold": "Umbral crítico",
       "error": "Error",
       "ms_unit": "{ms} ms"
+    },
+    "db_size": {
+      "label": "Tamaño de la base de datos",
+      "summary": {
+        "ok": "La base de datos ocupa {gb} GB en {tables} tablas",
+        "warn": "La base de datos ocupa {gb} GB — por encima del umbral de atención de {warnGb} GB",
+        "unknown": "No se pudo leer el tamaño de la base de datos"
+      },
+      "table_table": "Tabla",
+      "table_rows": "Filas (est.)",
+      "table_size": "Tamaño"
     },
     "disk": {
       "label": "Espacio en disco",

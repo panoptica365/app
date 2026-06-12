@@ -1,12 +1,29 @@
 /**
  * Panoptica — MySQL Database Module
  * Connection pool + query helpers.
+ *
+ * Reliability P0 (2026-06-12):
+ *   - Finite queue (config.db.queueLimit, env DB_QUEUE_LIMIT, default 200) —
+ *     under a DB stall, excess getConnection calls fail fast ("Queue limit
+ *     reached.") instead of queueing unboundedly.
+ *   - Acquire deadline: mysql2@3.x has NO pool acquire-timeout option
+ *     (verified in node_modules/mysql2/lib/base/pool.js — a queued waiter
+ *     waits until a connection frees or the pool closes; the only bound is
+ *     queueLimit). The deadline is therefore enforced HERE, app-level, with
+ *     a leak-free race: if the timer wins, the late-arriving connection is
+ *     released straight back to the pool, never stranded.
+ *   - Slow-query log: queries over DB_SLOW_QUERY_MS (default 2000) log the
+ *     first 120 chars of SQL + duration. Parameter values are NEVER logged —
+ *     they can carry UPNs and tenant data.
  */
 
 const mysql = require('mysql2/promise');
 const config = require('../../config/default');
 
 let pool = null;
+
+const ACQUIRE_TIMEOUT_MS = parseInt(process.env.DB_ACQUIRE_TIMEOUT_MS, 10) || 15000;
+const SLOW_QUERY_MS = parseInt(process.env.DB_SLOW_QUERY_MS, 10) || 2000;
 
 /**
  * Get or create the connection pool.
@@ -30,11 +47,55 @@ function getPool() {
 }
 
 /**
+ * pool.getConnection with an app-level acquire deadline (see header — mysql2
+ * has no native option for this). Leak-free: when the deadline wins the race,
+ * the eventually-acquired connection is immediately released back to the
+ * pool rather than stranded on an abandoned promise.
+ */
+function getConnectionWithTimeout() {
+  const p = getPool();
+  return new Promise((resolve, reject) => {
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      reject(new Error(`DB connection acquire timed out after ${ACQUIRE_TIMEOUT_MS}ms (pool exhausted or MySQL stalled)`));
+    }, ACQUIRE_TIMEOUT_MS);
+    if (timer.unref) timer.unref();
+    p.getConnection().then(
+      (conn) => {
+        if (timedOut) { try { conn.release(); } catch (_) { /* ignore */ } return; }
+        clearTimeout(timer);
+        resolve(conn);
+      },
+      (err) => {
+        if (timedOut) return;
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+/**
  * Execute a query and return [rows, fields].
+ *
+ * Goes through getConnectionWithTimeout (bounded acquire) + a duration timer
+ * (slow-query log). conn.execute is the same prepared-statement path
+ * pool.execute used — statements stay cached per connection.
  */
 async function query(sql, params = []) {
-  const p = getPool();
-  return p.execute(sql, params);
+  const conn = await getConnectionWithTimeout();
+  const t0 = Date.now();
+  try {
+    return await conn.execute(sql, params);
+  } finally {
+    conn.release();
+    const ms = Date.now() - t0;
+    if (ms >= SLOW_QUERY_MS) {
+      const preview = String(sql).replace(/\s+/g, ' ').trim().slice(0, 120);
+      console.warn(`[DB] Slow query (${ms}ms): ${preview}`);
+    }
+  }
 }
 
 /**
@@ -113,8 +174,7 @@ async function executeWithDeadlockRetry(sql, params = [], maxAttempts = 5) {
  * because every prior mutation was a single statement.
  */
 async function withTransaction(fn) {
-  const p = getPool();
-  const conn = await p.getConnection();
+  const conn = await getConnectionWithTimeout();
   try {
     await conn.beginTransaction();
     const result = await fn(conn);
@@ -132,10 +192,12 @@ async function withTransaction(fn) {
  * Health check — ping the database.
  */
 async function ping() {
-  const p = getPool();
-  const conn = await p.getConnection();
-  await conn.ping();
-  conn.release();
+  const conn = await getConnectionWithTimeout();
+  try {
+    await conn.ping();
+  } finally {
+    conn.release();
+  }
   return true;
 }
 

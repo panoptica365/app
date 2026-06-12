@@ -6,6 +6,7 @@
 const config = require('../config/default');
 const auth = require('./auth');
 const db = require('./db/database');
+const { fetchWithTimeout } = require('./lib/http-timeout');
 
 /**
  * Make a resilient Graph API call for a specific tenant.
@@ -36,7 +37,11 @@ async function callGraph(tenantId, endpoint, options = {}) {
       };
       if (body) fetchOptions.body = JSON.stringify(body);
 
-      const response = await fetch(url, fetchOptions);
+      // Deadline-bounded (Reliability P0, 2026-06-12). A timeout throws a plain
+      // Error, which lands in the generic catch below — i.e. it is treated as a
+      // TRANSIENT network error (retry, then surface as GraphError(0)), never
+      // as a capability gate or auth failure.
+      const response = await fetchWithTimeout(url, fetchOptions);
 
       // Rate limited — back off and retry
       if (response.status === 429) {

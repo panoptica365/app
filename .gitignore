@@ -49,6 +49,12 @@ Links to consoles.txt
 # ─── Personal/internal working files (not part of the shipped app) ───
 claude api usage/
 dev/Panoptica/
+# Diagnostics bundle exports unzipped for support analysis — contain real
+# tenant names and operational data; NEVER push to GitHub.
+dev/diag-*/
+# Customer/prospect working folders + local test scratch under dev/.
+dev/Groupe Millenium Micro/
+dev/test-setup/
 Documentation/
 # Loose dev/diagnostic script + the separate installer repo working copy —
 # never commit to the app repo (the installer lives in its own repo).

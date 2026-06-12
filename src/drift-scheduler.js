@@ -8,6 +8,9 @@
 const cron = require('node-cron');
 const db = require('./db/database');
 const heartbeat = require('./drift-scheduler-heartbeat');
+// drift_scheduler_runs keeps per-run HISTORY (useful here); the registry stamp
+// is additive so the worker_liveness health check reads ONE table for all loops.
+const workerHeartbeat = require('./worker-heartbeat');
 
 let driftJob = null;
 let checkDriftFn = null;
@@ -65,6 +68,8 @@ async function runAllDriftChecks() {
   }
 
   const runId = await heartbeat.recordStart('ca');
+  const cycleStart = Date.now();
+  workerHeartbeat.stampStart('ca_drift');
 
   try {
     // Expire overdue CA exemptions before the drift cycle — so that any
@@ -91,6 +96,7 @@ async function runAllDriftChecks() {
     if (assignments.length === 0) {
       console.log('[DriftScheduler] No linked assignments to check');
       await heartbeat.recordEnd(runId, { total: 0, drifted: 0, remediated: 0, errors: 0 });
+      workerHeartbeat.stampSuccess('ca_drift', Date.now() - cycleStart);
       return;
     }
 
@@ -118,8 +124,10 @@ async function runAllDriftChecks() {
       remediated: remediatedCount,
       errors: errorCount,
     });
+    workerHeartbeat.stampSuccess('ca_drift', Date.now() - cycleStart);
   } catch (err) {
     await heartbeat.recordEnd(runId, null, err.message || String(err));
+    workerHeartbeat.stampError('ca_drift', err.message || String(err));
     throw err;
   }
 }

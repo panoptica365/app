@@ -5,6 +5,32 @@ that release, newest first.
 
 ---
 
+## Version 0.2.5 — 2026-06-12
+
+### Built to survive: crash recovery, network time limits, and worker watchdogs
+
+Panoptica365 runs unattended, so this release hardens everything that could previously fail silently. If the application ever crashes unexpectedly, the full reason is now written to the log file, a crash counter is recorded (and included in diagnostics bundles), and the process restarts cleanly. Every outbound call — Microsoft Graph, audit-log downloads, your PSA, the license server — now carries a hard time limit, so a stalled Microsoft endpoint can no longer freeze a background worker forever. And if a worker cycle ever does get wedged, a watchdog detects it, logs it loudly, and lets the next cycle proceed — no background loop can be permanently stuck again.
+
+### Every background worker now reports its pulse
+
+The health panel (click the status indicator in the bottom bar) has a new **Background workers** check. All of Panoptica365's background loops — metric polling, audit-log ingestion, PSA ticket sync, the CA and Intune drift schedulers, the morning briefing, the nightly cleanup, and more — now record a heartbeat after every cycle. If one goes quiet beyond its expected rhythm, the health panel tells you which one and for how long, with its last error. Workers you've left unconfigured (say, PSA without a provider) show as *idle by configuration* rather than raising false warnings.
+
+### The database now cleans up after itself
+
+A nightly cleanup (03:30) enforces retention windows on historical data that previously grew without limit. The new **Settings → Data retention** card shows every window, pre-filled with recommended defaults that you can adjust — each with a plain-language note on what changing it affects, and guardrails so a value can't break alerting or reports. Changes apply from the next nightly run, no restart needed, and are recorded in the audit log. **Alerts are never auto-deleted.**
+
+The biggest win is poll-history snapshots: full detail is kept for a week (all the change-detection alerts need is the previous poll), while older history collapses to one compact Secure Score reading per tenant per day — exactly what report trend lines use. Dashboards, alerts, and reports behave identically. On our own production install, this took a two-month, 28 GB database down to 10 GB.
+
+### New "Database size" health check
+
+The health panel also gains a **Database size** check showing the live total and the largest tables — reading fresh statistics rather than MySQL's cached ones, so it reflects reality immediately. It warns when the database crosses a configurable threshold (10 GB by default), giving you time to plan disk before it matters.
+
+### A quieter, tougher database layer
+
+Under load or during a database stall, the application now fails fast instead of piling up: the connection queue is bounded, waiting for a connection has a deadline, the pool size is tunable, and any query slower than two seconds is logged (the query text only — never its data) so slowdowns are diagnosable from a support bundle.
+
+---
+
 ## Version 0.2.4 — 2026-06-11
 
 ### Security settings now live on each tenant's dashboard

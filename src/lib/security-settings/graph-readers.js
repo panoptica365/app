@@ -375,6 +375,87 @@ async function readGuestUserPermissions(tenantAzureId) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════
+// ENT-10..13 — Entra authorization-policy toggles (Purple Knight, Jun 11 2026)
+// ══════════════════════════════════════════════════════════════════
+//
+// All four read the SAME GET /policies/authorizationPolicy we already call for
+// ENT-07 (user consent) and ENT-09 (guest role) — Policy.Read.All, already
+// consented on every tenant. ENT-10/11/12 read booleans under
+// defaultUserRolePermissions; ENT-13 reads the top-level allowInvitesFrom enum.
+// The current_value shape each returns is what the registry writer.interpret()
+// and writer.matches() consume.
+
+// ENT-10 — Restrict App Registrations to Admins
+async function readAppRegistrationPolicy(tenantAzureId) {
+  try {
+    const res = await graph.callGraph(tenantAzureId, '/policies/authorizationPolicy');
+    const allowed = res?.defaultUserRolePermissions?.allowedToCreateApps === true;
+    return {
+      ok: true,
+      current_value: { allowedToCreateApps: allowed },
+      interpreted: allowed ? 'All users can register apps (Microsoft default)' : 'Admins only (recommended)',
+    };
+  } catch (e) {
+    return { ok: false, error: `authorizationPolicy read failed: ${e.message}` };
+  }
+}
+
+// ENT-11 — Restrict Security Group Creation to Admins
+async function readSecurityGroupCreationPolicy(tenantAzureId) {
+  try {
+    const res = await graph.callGraph(tenantAzureId, '/policies/authorizationPolicy');
+    const allowed = res?.defaultUserRolePermissions?.allowedToCreateSecurityGroups === true;
+    return {
+      ok: true,
+      current_value: { allowedToCreateSecurityGroups: allowed },
+      interpreted: allowed ? 'All users can create security groups (Microsoft default)' : 'Admins only (recommended)',
+    };
+  } catch (e) {
+    return { ok: false, error: `authorizationPolicy read failed: ${e.message}` };
+  }
+}
+
+// ENT-12 — Restrict Tenant Creation to Admins
+async function readTenantCreationPolicy(tenantAzureId) {
+  try {
+    const res = await graph.callGraph(tenantAzureId, '/policies/authorizationPolicy');
+    const allowed = res?.defaultUserRolePermissions?.allowedToCreateTenants === true;
+    return {
+      ok: true,
+      current_value: { allowedToCreateTenants: allowed },
+      interpreted: allowed ? 'All users can create tenants (Microsoft default)' : 'Admins only (recommended)',
+    };
+  } catch (e) {
+    return { ok: false, error: `authorizationPolicy read failed: ${e.message}` };
+  }
+}
+
+// ENT-13 — Restrict Who Can Invite Guests.
+// Top-level allowInvitesFrom enum: none | adminsAndGuestInviters |
+// adminsGuestInvitersAndAllMembers (Microsoft default) | everyone (finding fires here).
+async function readGuestInvitePolicy(tenantAzureId) {
+  try {
+    const res = await graph.callGraph(tenantAzureId, '/policies/authorizationPolicy');
+    const value = String(res?.allowInvitesFrom || '');
+    const map = {
+      none: 'No one can invite guests (most restrictive)',
+      adminsAndGuestInviters: 'Admins and designated inviters only (hardened)',
+      adminsGuestInvitersAndAllMembers: 'Members and admins can invite (recommended — Microsoft default)',
+      everyone: 'Anyone including guests can invite (NOT recommended)',
+    };
+    const interpreted = map[value] || `Unknown allowInvitesFrom="${value}"`;
+    return {
+      ok: true,
+      current_value: { allowInvitesFrom: value },
+      interpreted,
+    };
+  } catch (e) {
+    return { ok: false, error: `authorizationPolicy read failed: ${e.message}` };
+  }
+}
+
+
 // All 5 Defender readers (DEF-01 Tamper Protection, DEF-02 Network Protection,
 // DEF-04 Controlled Folder Access, DEF-05 SmartScreen, DEF-07 LAPS) removed
 // Apr 26, 2026. Managed by the existing Intune Templates module.
@@ -490,6 +571,10 @@ const READERS = {
   'ENT-06': readPasswordProtection,
   'ENT-07': readUserConsentPolicy,
   'ENT-09': readGuestUserPermissions,
+  'ENT-10': readAppRegistrationPolicy,
+  'ENT-11': readSecurityGroupCreationPolicy,
+  'ENT-12': readTenantCreationPolicy,
+  'ENT-13': readGuestInvitePolicy,
   'SPO-01': readSharingCapability,
 };
 

@@ -15,6 +15,7 @@ const versionInfo = require('../version');
 const updateChecker = require('../lib/update/update-checker');
 const legal = require('../legal');
 const assignExoRoles = require('../lib/assign-exo-roles');
+const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
 
@@ -110,7 +111,7 @@ router.get('/callback', async (req, res) => {
     let realMail = null;
     let displayName = account.name || null;
     try {
-      const meResp = await fetch('https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName,displayName', {
+      const meResp = await fetchWithTimeout('https://graph.microsoft.com/v1.0/me?$select=mail,userPrincipalName,displayName', {
         headers: { Authorization: `Bearer ${tokenResponse.accessToken}` },
       });
       if (meResp.ok) {

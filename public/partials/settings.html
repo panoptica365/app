@@ -91,6 +91,13 @@
     <div class="settings-card-desc" data-i18n="psa.settings.subtitle">Create and synchronize tickets in your PSA instead of emailing them.</div>
   </div>
 
+  <!-- Data Retention Card (Reliability P0, 2026-06-12 — read-only v1) -->
+  <div class="settings-card" id="card-retention" style="cursor:pointer;" data-role-required="admin">
+    <div class="settings-card-icon"><i data-lucide="archive"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_retention_title">Data retention</div>
+    <div class="settings-card-desc" data-i18n="settings.card_retention_desc">How long historical data is kept before automatic cleanup.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -682,5 +689,34 @@
     </div>
 
     <div id="disk-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
+  </div>
+</div>
+
+<!-- ─── Data Retention Sub-View (Reliability P0, 2026-06-12 — editable) ─── -->
+<div id="settings-retention-view" style="display:none;">
+  <button class="btn-secondary" id="retention-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.retention.section_title">Data retention</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.retention.intro">
+      A nightly cleanup keeps the database from growing without limit. Each data type below is kept for the period shown, then deleted automatically. Alerts are never auto-deleted.
+    </div>
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.retention.defaults_note">
+      The pre-filled values are the recommended defaults. You can adjust them; changes take effect at the next nightly cleanup (03:30).
+    </div>
+
+    <div id="retention-loading" class="form-hint" data-i18n="settings.retention.loading">Loading retention policy…</div>
+
+    <div id="retention-body" style="display:none;">
+      <div id="retention-rows"></div>
+
+      <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+        <button class="btn-primary" id="retention-save" data-i18n="settings.retention.save_btn">Save retention settings</button>
+        <span id="retention-status" style="font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <div id="retention-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
   </div>
 </div>

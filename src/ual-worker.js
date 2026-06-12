@@ -32,6 +32,7 @@ const tenantMode = require('./lib/tenant-mode');
 const ualEvents = require('./lib/ual-events');
 const mgmtApi = require('./lib/management-api');
 const ualEvaluators = require('./ual-evaluators');
+const workerHeartbeat = require('./worker-heartbeat');
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000;            // 5 minutes
 const MAX_BACKFILL_DAYS = 7;                        // Microsoft retains blobs 7 days
@@ -60,6 +61,15 @@ const BLOB_FETCH_CONCURRENCY = 10;
 
 let loopHandle = null;
 let cycleInProgress = false;
+// Stuck-cycle watchdog (Reliability P0, 2026-06-12). guardSetAt records when
+// cycleInProgress was set; if a tick finds the guard older than
+// MAX_CYCLE_RUNTIME_MS, the previous cycle is a zombie (its `finally` never
+// ran because an await never settled) — clear the guard and proceed instead
+// of skipping forever. Generous ceiling: a legitimate first-boot backfill
+// cycle on a large tenant book can run tens of minutes; only a true hang
+// (near-impossible after the fetchWithTimeout sweep) should ever trip this.
+let guardSetAt = 0;
+const MAX_CYCLE_RUNTIME_MS = 90 * 60 * 1000;
 
 /**
  * Get the list of tenants to process this cycle.
@@ -346,11 +356,18 @@ async function processSubscription(tenant, contentType, subRow) {
  */
 async function runOnce() {
   if (cycleInProgress) {
-    console.log('[UalWorker] Skipping cycle — previous run still in progress');
-    return { skipped: true };
+    const ageMs = guardSetAt ? Date.now() - guardSetAt : 0;
+    if (ageMs > MAX_CYCLE_RUNTIME_MS) {
+      console.error(`[Watchdog] [UalWorker] previous cycle still flagged in-progress after ${Math.round(ageMs / 60000)} min (max ${MAX_CYCLE_RUNTIME_MS / 60000}) — abandoning it and starting a fresh cycle`);
+    } else {
+      console.log('[UalWorker] Skipping cycle — previous run still in progress');
+      return { skipped: true };
+    }
   }
   cycleInProgress = true;
+  guardSetAt = Date.now();
   const cycleStart = Date.now();
+  workerHeartbeat.stampStart('ual');
 
   const summary = {
     tenantsConsidered: 0,
@@ -435,6 +452,9 @@ async function runOnce() {
       summary.perTenant.push(tenantSummary);
       summary.tenantsProcessed += 1;
     }
+  } catch (err) {
+    workerHeartbeat.stampError('ual', err.message);
+    throw err;
   } finally {
     cycleInProgress = false;
   }
@@ -442,6 +462,7 @@ async function runOnce() {
   const elapsedSec = ((Date.now() - cycleStart) / 1000).toFixed(1);
   const alertSuffix = summary.alertsFiredTotal ? `, ${summary.alertsFiredTotal} alerts fired` : '';
   console.log(`[UalWorker] Cycle complete in ${elapsedSec}s — ${summary.tenantsProcessed}/${summary.tenantsConsidered} tenants, ${summary.blobsSeenTotal} blobs, ${summary.eventsInsertedTotal} events inserted${alertSuffix}`);
+  workerHeartbeat.stampSuccess('ual', Date.now() - cycleStart);
   return summary;
 }
 

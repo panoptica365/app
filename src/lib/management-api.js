@@ -16,6 +16,7 @@
  */
 
 const auth = require('../auth');
+const { fetchWithTimeout } = require('./http-timeout');
 
 const BASE_URL = 'https://manage.office.com/api/v1.0';
 
@@ -24,6 +25,11 @@ const BASE_URL = 'https://manage.office.com/api/v1.0';
 // retry budget.
 const DEFAULT_RETRIES = 4;
 const DEFAULT_RETRY_DELAY_MS = 1000;
+
+// Content-blob downloads can be legitimately slow (multi-MB JSON from Azure
+// blob storage on a busy day) — give them a higher total deadline than the
+// global HTTP_TIMEOUT_MS default instead of letting them race it.
+const BLOB_TIMEOUT_MS = 300 * 1000;
 
 class ManagementApiError extends Error {
   constructor(statusCode, message, endpoint) {
@@ -60,6 +66,7 @@ async function callManagement(tenantGuid, pathOrUrl, options = {}) {
     query = null,
     retries = DEFAULT_RETRIES,
     silent = false,
+    timeoutMs = 0, // 0 → config.http.timeoutMs default
   } = options;
 
   if (!tenantGuid) {
@@ -91,7 +98,10 @@ async function callManagement(tenantGuid, pathOrUrl, options = {}) {
       };
       if (body) fetchOptions.body = JSON.stringify(body);
 
-      const response = await fetch(url, fetchOptions);
+      // Deadline-bounded; a timeout lands in the generic catch below and is
+      // retried like any transient network error, then surfaced as
+      // ManagementApiError(0).
+      const response = await fetchWithTimeout(url, fetchOptions, timeoutMs);
 
       // 429 — back off and retry per Retry-After
       if (response.status === 429) {
@@ -297,7 +307,7 @@ async function listAvailableContent(tenantGuid, contentType, startTime, endTime)
  * @param {string} contentUri  Fully-qualified URL from listAvailableContent
  */
 async function fetchContentBlob(tenantGuid, contentUri) {
-  const result = await callManagement(tenantGuid, contentUri);
+  const result = await callManagement(tenantGuid, contentUri, { timeoutMs: BLOB_TIMEOUT_MS });
   return Array.isArray(result.data) ? result.data : [];
 }
 

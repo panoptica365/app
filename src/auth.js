@@ -8,6 +8,7 @@
 
 const msal = require('@azure/msal-node');
 const config = require('../config/default');
+const { fetchWithTimeout } = require('./lib/http-timeout');
 
 // msp-audit is loaded lazily so requireAdmin / requireMemberOrAdmin can write
 // an audit row on every 403. msp-audit only imports `./db/database`; no risk
@@ -232,7 +233,7 @@ async function checkGroupMembership(accessToken) {
   // Client-side is more diagnostic-friendly and matches what tier resolution
   // does anyway.
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.graph.baseUrl}/me/memberOf?$select=id&$top=999`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
@@ -298,7 +299,7 @@ async function resolveUserRole(accessToken) {
   // $top=999 is the Graph max per page — plenty for typical MSP headcount.
   let membershipIds = new Set();
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `${config.graph.baseUrl}/me/memberOf?$select=id&$top=999`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );

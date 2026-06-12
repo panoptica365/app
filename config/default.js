@@ -8,6 +8,13 @@
 // feedback_mysql_utc_timestamp.md. Override via TZ env var.
 const TIMEZONE = process.env.TZ || 'America/Toronto';
 
+// Retention windows honor an explicit 0 ("keep forever"); any missing or
+// invalid value falls back to the recommended default.
+function retentionDays(envName, def) {
+  const n = parseInt(process.env[envName], 10);
+  return Number.isFinite(n) && n >= 0 ? n : def;
+}
+
 module.exports = {
   server: {
     port: parseInt(process.env.PORT, 10) || 3000,
@@ -29,9 +36,44 @@ module.exports = {
     database: process.env.DB_NAME || 'panoptica',
     user: process.env.DB_USER || 'panoptica',
     password: process.env.DB_PASS || '',
-    connectionLimit: 10,
+    connectionLimit: parseInt(process.env.DB_POOL_SIZE, 10) || 10,
     waitForConnections: true,
-    queueLimit: 0,
+    // Reliability P0 (2026-06-12): finite queue. Under a DB stall, requests
+    // beyond this fail fast ("Queue limit reached.") instead of queueing
+    // forever — memory stays bounded and recovery avoids a thundering herd.
+    queueLimit: parseInt(process.env.DB_QUEUE_LIMIT, 10) || 200,
+    // db_size health check: warn when total schema size crosses this (GB).
+    sizeWarnGb: parseFloat(process.env.DB_SIZE_WARN_GB) || 10,
+  },
+
+  // Data retention windows (days) enforced by src/retention-worker.js daily
+  // at 03:30 (Reliability P0, 2026-06-12). 0 = keep forever (retention off
+  // for that table). retentionDays() honors an explicit 0 — a plain
+  // `parseInt(...) || default` would silently turn 0 into the default.
+  // Editable in Settings → Data retention (api-settings PUT /retention
+  // writes the RETENTION_* vars and live-reloads this block). The `alerts`
+  // table is deliberately NOT governed — alerts are cross-referenced
+  // (identity timeline, exemption drawers, PSA links) and their retention
+  // needs its own design.
+  retention: {
+    days: {
+      defender_incidents:         retentionDays('RETENTION_DEFENDER_INCIDENTS_DAYS', 395),
+      identity_timeline_analysis: retentionDays('RETENTION_IDENTITY_TIMELINE_DAYS', 90),
+      heatmap_posture_daily:      retentionDays('RETENTION_HEATMAP_DAYS', 730),
+      message_center_items:       retentionDays('RETENTION_MESSAGE_CENTER_DAYS', 365),
+      msp_audit_events:           retentionDays('RETENTION_MSP_AUDIT_DAYS', 730),
+      tenant_change_events:       retentionDays('RETENTION_TENANT_CHANGES_DAYS', 730),
+    },
+    // metric_snapshots: full raw poll history is kept rawDays whole days
+    // (the snapshot-delta alert engine only needs the previous poll); beyond
+    // that one daily_agg_secure_score row per tenant per day survives for
+    // aggDays so the Posture Report's score-trend works over any period.
+    // rawDays has no keep-forever option — unbounded raw history is the
+    // 20 GB-in-2-months failure mode this exists to prevent.
+    metricSnapshots: {
+      rawDays: parseInt(process.env.RETENTION_METRIC_RAW_DAYS, 10) || 7,
+      aggDays: retentionDays('RETENTION_METRIC_AGG_DAYS', 730),
+    },
   },
 
   // Entra ID — app authentication (user login to Panoptica UI)
@@ -62,6 +104,15 @@ module.exports = {
     authority: `https://login.microsoftonline.com/${process.env.ENTRA_TENANT_ID}`,
     // Multi-tenant authority for admin consent flow (customer tenant onboarding)
     multiTenantAuthority: 'https://login.microsoftonline.com/common',
+  },
+
+  // Outbound HTTP (Reliability P0, 2026-06-12). Total deadline applied by
+  // src/lib/http-timeout.js fetchWithTimeout() to every outbound request —
+  // covers headers AND body read, so a TCP stall can never hang a worker
+  // loop. Per-call overrides exist where slow is legitimate (UAL blob
+  // downloads use 300s in src/lib/management-api.js).
+  http: {
+    timeoutMs: parseInt(process.env.HTTP_TIMEOUT_MS, 10) || 120000,
   },
 
   // Graph API — same client_id/secret as entra (single multi-tenant app)

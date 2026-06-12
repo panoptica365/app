@@ -7,6 +7,7 @@
  */
 
 const auth = require('../auth');
+const { fetchWithTimeout } = require('./http-timeout');
 
 const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
 
@@ -42,7 +43,7 @@ async function spRequest(tenantGuid, endpoint, options = {}) {
 
 async function fetchWithRetry(url, opts, maxRetries = 5) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const res = await fetch(url, opts);
+    const res = await fetchWithTimeout(url, opts);
     if (res.status === 429 || res.status === 503 || res.status === 504) {
       const retryAfter = res.headers.get('Retry-After');
       const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : Math.min(1000 * Math.pow(2, attempt), 30000);

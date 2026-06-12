@@ -49,6 +49,7 @@ const legal = require('../legal');
 const licenseValidator = require('../lib/license/validator');
 const licenseStore = require('../lib/license/store');
 const certProvisioner = require('../lib/setup/cert-provisioner');
+const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
 router.use(express.json());
@@ -355,7 +356,7 @@ async function verifyCertOnAppReg(token, clientId) {
   }
   try {
     const url = `https://graph.microsoft.com/v1.0/applications?$filter=appId eq '${encodeURIComponent(clientId)}'&$select=appId,keyCredentials`;
-    const r = await fetch(url, {
+    const r = await fetchWithTimeout(url, {
       headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
     });
     if (!r.ok) {
@@ -400,7 +401,7 @@ router.post('/entra/test', async (req, res) => {
       client_secret: clientSecret,
       scope: 'https://graph.microsoft.com/.default',
     });
-    const tokenRes = await fetch(tokenUrl, {
+    const tokenRes = await fetchWithTimeout(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
@@ -437,7 +438,7 @@ router.post('/entra/test', async (req, res) => {
   // ─── Step 2: Run permission spot-checks in parallel ────────────────
   const results = await Promise.all(ENTRA_TEST_CHECKS.map(async (c) => {
     try {
-      const r = await fetch(`https://graph.microsoft.com/v1.0${c.url}`, {
+      const r = await fetchWithTimeout(`https://graph.microsoft.com/v1.0${c.url}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
       });
       if (r.ok) return { perm: c.perm, status: r.status, category: 'ok' };
@@ -628,15 +629,13 @@ router.post('/license', async (req, res) => {
   const activateUrl = `${LICENSE_SERVER_URL}/api/v1/activate`;
   let activateResponse;
   try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 15_000);
-    const r = await fetch(activateUrl, {
+    // 15s total deadline — also covers the r.json() body reads below (the old
+    // hand-rolled AbortController cleared its timer at headers-arrived).
+    const r = await fetchWithTimeout(activateUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ activation_key: activation_key.trim(), fingerprint }),
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
+    }, 15_000);
     if (!r.ok) {
       let body = '';
       try { body = JSON.stringify(await r.json()); } catch { try { body = await r.text(); } catch { body = '(no body)'; } }

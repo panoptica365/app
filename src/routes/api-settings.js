@@ -12,6 +12,7 @@ const auth = require('../auth');
 const config = require('../../config/default');
 const mspAudit = require('../msp-audit');
 const db = require('../db/database');
+const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -606,7 +607,7 @@ router.get('/access-control/verify-group/:id', async (req, res) => {
   try {
     const token = await auth.acquireTokenForTenant(mspTenantId);
     const url = `${config.graph.baseUrl}/groups/${encodeURIComponent(id)}?$select=id,displayName,description,mailNickname,securityEnabled`;
-    const graphRes = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const graphRes = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${token}` } });
 
     if (graphRes.status === 404) {
       return res.status(404).json({ error: 'Group not found in your tenant' });
@@ -880,6 +881,121 @@ router.put('/branding', (req, res) => {
   } catch (err) {
     console.error('[Settings] Branding save failed:', err.message);
     res.status(500).json({ error: 'Failed to save branding settings' });
+  }
+});
+
+// ─── Data retention (Reliability P0, 2026-06-12; editable same day) ───
+//
+// The Settings → Data retention card shows AND edits the windows the nightly
+// retention worker enforces. Values persist as RETENTION_* vars in .env (via
+// the quote-safe updateEnvVars) and live-reload into config.retention, so
+// the next 03:30 cycle uses them without a restart.
+//
+// Bounds are guardrails against foot-guns: 0 = keep forever where allowed;
+// the metric raw window has NO forever option (unbounded raw poll history is
+// the 20 GB-in-2-months failure mode) and needs ≥2 days so the snapshot-delta
+// alert engine always has a previous poll across the day boundary; the
+// Secure Score daily history must cover the longest report period (90 days).
+const RETENTION_FIELDS = [
+  { key: 'defender_incidents',         env: 'RETENTION_DEFENDER_INCIDENTS_DAYS', def: 395, min: 30, max: 3650, allowZero: true },
+  { key: 'identity_timeline_analysis', env: 'RETENTION_IDENTITY_TIMELINE_DAYS',  def: 90,  min: 7,  max: 3650, allowZero: true },
+  { key: 'heatmap_posture_daily',      env: 'RETENTION_HEATMAP_DAYS',            def: 730, min: 30, max: 3650, allowZero: true },
+  { key: 'message_center_items',       env: 'RETENTION_MESSAGE_CENTER_DAYS',     def: 365, min: 30, max: 3650, allowZero: true },
+  { key: 'msp_audit_events',           env: 'RETENTION_MSP_AUDIT_DAYS',          def: 730, min: 90, max: 3650, allowZero: true },
+  { key: 'tenant_change_events',       env: 'RETENTION_TENANT_CHANGES_DAYS',     def: 730, min: 90, max: 3650, allowZero: true },
+  { key: 'metric_snapshots_raw',       env: 'RETENTION_METRIC_RAW_DAYS',         def: 7,   min: 2,  max: 90,   allowZero: false },
+  { key: 'metric_snapshots_agg',       env: 'RETENTION_METRIC_AGG_DAYS',         def: 730, min: 90, max: 3650, allowZero: true },
+];
+
+// Mirror config/default.js's retention block from current process.env so a
+// save takes effect on the next nightly cycle without a restart.
+function reloadRetentionConfig() {
+  const val = (env, def) => {
+    const n = parseInt(process.env[env], 10);
+    return Number.isFinite(n) && n >= 0 ? n : def;
+  };
+  config.retention = config.retention || { days: {}, metricSnapshots: {} };
+  for (const f of RETENTION_FIELDS) {
+    if (f.key === 'metric_snapshots_raw') {
+      config.retention.metricSnapshots.rawDays = parseInt(process.env[f.env], 10) || f.def;
+    } else if (f.key === 'metric_snapshots_agg') {
+      config.retention.metricSnapshots.aggDays = val(f.env, f.def);
+    } else {
+      config.retention.days[f.key] = val(f.env, f.def);
+    }
+  }
+}
+
+function currentRetentionDays(field) {
+  const retentionWorker = require('../retention-worker');
+  if (field.key === 'metric_snapshots_raw') return retentionWorker.metricRawDays();
+  if (field.key === 'metric_snapshots_agg') return retentionWorker.metricAggDays();
+  return config.retention?.days?.[field.key] ?? field.def;
+}
+
+router.get('/retention', (req, res) => {
+  const windows = RETENTION_FIELDS.map(f => ({
+    table: f.key,
+    days: currentRetentionDays(f),
+    default: f.def,
+    min: f.min,
+    max: f.max,
+    allow_zero: f.allowZero,
+  }));
+  res.json({ windows });
+});
+
+router.put('/retention', (req, res) => {
+  try {
+    const body = (req.body && req.body.windows) || {};
+    const updates = {};
+    const changed = [];
+
+    for (const f of RETENTION_FIELDS) {
+      if (body[f.key] === undefined) continue;
+      const v = Number(body[f.key]);
+      const valid = Number.isInteger(v)
+        && ((f.allowZero && v === 0) || (v >= f.min && v <= f.max));
+      if (!valid) {
+        return res.status(400).json({
+          error: 'invalid_value',
+          field: f.key,
+          min: f.min,
+          max: f.max,
+          allow_zero: f.allowZero,
+        });
+      }
+      if (v !== currentRetentionDays(f)) {
+        updates[f.env] = String(v);
+        changed.push(`${f.key}=${v}`);
+      }
+    }
+
+    if (changed.length === 0) {
+      return res.json({ success: true, no_changes: true });
+    }
+
+    updateEnvVars(updates);
+    reloadRetentionConfig();
+
+    console.log(`[Settings] Data retention updated by ${req.session.user.email} (${changed.join(', ')})`);
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.SETTINGS_CHANGE,
+      action: 'settings.retention.update',
+      description: `Data retention windows changed (${changed.join(', ')})`,
+      templateKey: 'settings.retention.update',
+      templateParams: { fields: changed.join(', ') },
+      targetType: 'setting',
+      targetId: 'retention',
+      targetName: 'Data Retention',
+      metadata: { fields_changed: changed },
+      req,
+    }).catch(() => {});
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Settings] Retention save failed:', err.message);
+    res.status(500).json({ error: 'Failed to save retention settings' });
   }
 });
 

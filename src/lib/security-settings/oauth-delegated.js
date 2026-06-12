@@ -42,6 +42,7 @@
 'use strict';
 
 const config = require('../../../config/default');
+const { fetchWithTimeout } = require('../http-timeout');
 
 // Microsoft API resource IDs.
 // 48ac35b8-9aa8-4d74-927d-1f4a14a0b239 = Skype and Teams Tenant Admin API.
@@ -130,7 +131,7 @@ async function exchangeCodeForTokens(authCode) {
     scope: INITIAL_TOKEN_SCOPES.join(' '),
   });
 
-  const resp = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+  const resp = await fetchWithTimeout('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params,
@@ -175,7 +176,7 @@ async function acquireTokenForTenantViaRefresh(refreshToken, customerTenantId, s
     scope: scopes.join(' '),
   });
 
-  const resp = await fetch(
+  const resp = await fetchWithTimeout(
     `https://login.microsoftonline.com/${customerTenantId}/oauth2/v2.0/token`,
     {
       method: 'POST',

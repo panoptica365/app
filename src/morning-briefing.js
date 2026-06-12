@@ -10,6 +10,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const nodemailer = require('nodemailer');
 const config = require('../config/default');
 const db = require('./db/database');
+const workerHeartbeat = require('./worker-heartbeat');
 
 let client = null;
 let transporter = null;
@@ -144,9 +145,13 @@ function start() {
 
   cronJob = cron.schedule(config.briefing.cronSchedule, async () => {
     console.log('[Briefing] Generating morning briefing...');
+    const hbStart = Date.now();
+    workerHeartbeat.stampStart('morning_briefing');
     try {
       await generateAndSend();
+      workerHeartbeat.stampSuccess('morning_briefing', Date.now() - hbStart);
     } catch (err) {
+      workerHeartbeat.stampError('morning_briefing', err.message);
       console.error('[Briefing] Failed:', err.message);
     }
   }, {

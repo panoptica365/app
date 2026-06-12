@@ -34,6 +34,7 @@ const alertEngine = require('./alert-engine');
 const notifier = require('./notifier');
 const registry = require('./lib/security-settings/registry');
 const store = require('./lib/message-center-store');
+const workerHeartbeat = require('./worker-heartbeat');
 
 const WAKE_INTERVAL_MS = 60 * 60 * 1000;   // wake hourly
 const RUN_INTERVAL_MS = 24 * 60 * 60 * 1000; // act once per 24h
@@ -46,6 +47,11 @@ const SEVERITY_RANK = { info: 1, low: 2, medium: 3, high: 4, severe: 5 };
 
 let loopHandle = null;
 let cycleInProgress = false;
+// Stuck-cycle watchdog (Reliability P0, 2026-06-12): if the guard is older
+// than this, the previous cycle's `finally` never ran (hung await) — clear it
+// and proceed on this tick rather than skipping for the rest of the process.
+let guardSetAt = 0;
+const MAX_CYCLE_RUNTIME_MS = 30 * 60 * 1000;
 
 /** Resolve the configured source-tenant GUID to its internal tenant row. */
 async function resolveSourceTenant(guid) {
@@ -218,8 +224,13 @@ async function raiseAlert(sourceTenant, policy, msg, correlation, affectedTenant
  */
 async function runOnce(opts = {}) {
   if (cycleInProgress) {
-    console.log('[MessageCenter] Skipping cycle — previous run still in progress');
-    return { skipped: 'in_progress' };
+    const ageMs = guardSetAt ? Date.now() - guardSetAt : 0;
+    if (ageMs > MAX_CYCLE_RUNTIME_MS) {
+      console.error(`[Watchdog] [MessageCenter] previous cycle still flagged in-progress after ${Math.round(ageMs / 60000)} min (max ${MAX_CYCLE_RUNTIME_MS / 60000}) — abandoning it and starting a fresh cycle`);
+    } else {
+      console.log('[MessageCenter] Skipping cycle — previous run still in progress');
+      return { skipped: 'in_progress' };
+    }
   }
 
   const guid = (config.messageCenter && config.messageCenter.sourceTenant) || '';
@@ -240,6 +251,8 @@ async function runOnce(opts = {}) {
   }
 
   cycleInProgress = true;
+  guardSetAt = Date.now();
+  workerHeartbeat.stampStart('message_center');
   // firstRun is decided per source tenant below (after we resolve it), once we
   // know whether any items already exist for that tenant.
   const summary = { source: guid, firstRun: false, pulled: 0, newItems: 0, filtered: 0, correlated: 0, alerted: 0, emailsSuppressed: 0, errors: 0 };
@@ -252,11 +265,13 @@ async function runOnce(opts = {}) {
     if (!sourceTenant) {
       console.warn(`[MessageCenter] Source tenant ${guid} not found — feature configured but tenant missing. No-op.`);
       await store.setLastRunNow();
+      workerHeartbeat.stampSuccess('message_center', Date.now() - cycleStart);
       return { ...summary, skipped: 'source_missing' };
     }
     if (!sourceTenant.enabled) {
       console.warn(`[MessageCenter] Source tenant "${sourceTenant.display_name}" is disabled — no-op this cycle.`);
       await store.setLastRunNow();
+      workerHeartbeat.stampSuccess('message_center', Date.now() - cycleStart);
       return { ...summary, skipped: 'source_disabled' };
     }
 
@@ -280,6 +295,7 @@ async function runOnce(opts = {}) {
     } catch (e) {
       console.error(`[MessageCenter] Graph pull failed for "${sourceTenant.display_name}": ${e.message}`);
       // Do NOT stamp last-run — let the next hourly wake retry today.
+      workerHeartbeat.stampError('message_center', e.message);
       return { ...summary, error: e.message };
     }
     summary.pulled = messages.length;
@@ -354,6 +370,9 @@ async function runOnce(opts = {}) {
     }
 
     await store.setLastRunNow();
+  } catch (err) {
+    workerHeartbeat.stampError('message_center', err.message);
+    throw err;
   } finally {
     cycleInProgress = false;
   }
@@ -363,6 +382,7 @@ async function runOnce(opts = {}) {
     ? ` (first run — ${summary.emailsSuppressed} backlog alert(s) created without email)`
     : '';
   console.log(`[MessageCenter] Cycle complete in ${elapsed}s — pulled ${summary.pulled}, new ${summary.newItems}, filtered ${summary.filtered}, correlated ${summary.correlated}, alerted ${summary.alerted}, errors ${summary.errors}${firstRunNote}`);
+  workerHeartbeat.stampSuccess('message_center', Date.now() - cycleStart);
   return summary;
 }
 

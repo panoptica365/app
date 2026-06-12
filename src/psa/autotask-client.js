@@ -18,6 +18,11 @@
  */
 
 const config = require('../../config/default');
+// Deadline-bounded fetch (Reliability P0, 2026-06-12). A timeout throws a
+// plain Error, which both call sites below wrap as AutotaskError(0, …) —
+// statusCode 0 is the TRANSIENT transport class (isRetryable), so a slow
+// Autotask call can never flip auth-health to email-fallback.
+const { fetchWithTimeout } = require('../lib/http-timeout');
 
 // Unauthenticated zone-discovery endpoint. Returns the per-instance REST base.
 const ZONE_DISCOVERY_BASE = 'https://webservices.autotask.net/atservicesrest';
@@ -93,7 +98,7 @@ async function request(method, path, { body, ctx, query } = {}) {
     try {
       const opts = { method, headers };
       if (body !== undefined) opts.body = JSON.stringify(body);
-      const res = await fetch(url, opts);
+      const res = await fetchWithTimeout(url, opts);
 
       if (res.status === 429 || res.status >= 500) {
         const text = await res.text().catch(() => '');
@@ -148,7 +153,7 @@ async function discoverZone(username) {
   const url = `${ZONE_DISCOVERY_BASE}/v1.0/zoneInformation?user=${user}`;
   let res;
   try {
-    res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+    res = await fetchWithTimeout(url, { method: 'GET', headers: { Accept: 'application/json' } });
   } catch (err) {
     throw new AutotaskError(0, `Zone discovery network error: ${err.message}`, [], 'zoneInformation');
   }

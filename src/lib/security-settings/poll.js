@@ -382,8 +382,11 @@ async function fireDriftAlert(tenantId, settingId, transition, result) {
   }
 
   let createdAlert = null;
+  // Hoisted so the post-creation pipeline (processNewAlert, below) can reuse
+  // the same tenant object. processNewAlert backfills psa_name/psa_company_id/
+  // mode/language from the DB by id, so the {id}-only stub is sufficient.
+  const tenantStub = { id: tenantId };
   try {
-    const tenantStub = { id: tenantId };
     const policyForCreate = { ...policy, severity };
     createdAlert = await alertEngine.createOrUpdateAlert(tenantStub, policyForCreate, {
       severity,
@@ -463,6 +466,26 @@ async function fireDriftAlert(tenantId, settingId, transition, result) {
     } catch (attribErr) {
       console.warn(`[SecurityPoll] Auto-attribution lookup failed for alert ${createdAlert.id} (non-fatal): ${attribErr.message}`);
     }
+  }
+
+  // Run the post-creation pipeline: Haiku AI analysis + notifier dispatch.
+  // CRITICAL: createOrUpdateAlert ONLY inserts the alert row — the notifier
+  // (which includes PSA ticket creation for the 'support'/'both' channel, plus
+  // email + Teams) lives in processNewAlert and every imperative alert producer
+  // must call it explicitly. Without this, SECURITY_DRIFT alerts were inserted
+  // but never notified: no email AND no PSA ticket (observed 2026-06-11 on an
+  // ENT-10 drift routed to PSA). This is the exact gap closed for UAL/Bundle F
+  // on May 12, 2026 — mirror ual-evaluators.js / known-good-worker.js here.
+  //
+  // Only NEW alerts run it; recurrences return createdAlert=null (no re-ticket/
+  // re-email spam every poll cycle — PSA append/retry is handled inside dispatch
+  // when a fresh alert fires). Auto-resolved alerts are skipped (defense in
+  // depth; processNewAlert also no-ops on isAutoResolved). Fire-and-forget with
+  // a .catch so Haiku/SMTP/PSA latency never stalls the sequential poll loop.
+  if (createdAlert && createdAlert.isNew && createdAlert.id && !createdAlert.isAutoResolved) {
+    alertEngine.processNewAlert(createdAlert, tenantStub).catch((e) => {
+      console.error(`[SecurityPoll] processNewAlert failed for alert ${createdAlert.id} (${settingId}): ${e.message}`);
+    });
   }
 }
 
