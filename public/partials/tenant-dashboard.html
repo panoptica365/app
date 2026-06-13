@@ -1,32 +1,38 @@
 <!-- ═══ TENANT DASHBOARD (Phase 2 — Card Grid) ═══ -->
-<div class="panel-header" style="margin-bottom:0;">
+<!-- Header redesign (2026-06-12): the tab bar grows with every feature, so it now
+     owns the whole top row, left-aligned. The tenant switcher moved DOWN into the
+     info bar where it doubles as the dashboard title (its selected option already
+     IS the tenant's display name), and Poll Now / Log Change moved to the right end
+     of the info bar. Nav (tabs) and identity+actions now live on separate rows,
+     leaving headroom for more tabs across en/fr/es. -->
+<div class="panel-header td-header-bar" style="margin-bottom:0;">
   <div class="panel-elbow" style="background: var(--p-warm);"></div>
-  <!-- Tenant switcher: JS-populated with every tenant. Picking one re-loads the
-       dashboard for that tenant while staying on the currently-active tab. -->
-  <select class="td-tenant-switcher" id="td-tenant-switcher"
-          title="Switch to another tenant's dashboard"
-          data-i18n-attr-title="tenant_dashboard.switcher_title">
-    <option data-i18n="tenant_dashboard.switcher_loading">Loading tenants…</option>
-  </select>
-  <span class="panel-title" data-i18n="tenant_dashboard.header_dashboard_label">Dashboard</span>
-  <div class="td-view-toggle" id="td-view-toggle" style="margin-left:auto;">
+  <div class="td-view-toggle" id="td-view-toggle">
     <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
     <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
     <button class="td-view-btn" data-view="security" data-i18n="tenant_dashboard.view_security">Security</button>
+    <button class="td-view-btn" data-view="access-review" data-i18n="tenant_dashboard.view_access_review">Access Review</button>
     <button class="td-view-btn" data-view="applications" data-i18n="tenant_dashboard.view_applications">Applications</button>
     <button class="td-view-btn" data-view="ca-policies" data-i18n="tenant_dashboard.view_ca_policies">CA Policies</button>
     <button class="td-view-btn" data-view="intune-policies" data-i18n="tenant_dashboard.view_intune_policies">Intune Policies</button>
     <button class="td-view-btn" data-view="change-log" data-i18n="tenant_dashboard.view_change_log">Change Log</button>
   </div>
-  <button class="td-poll-btn" id="td-poll-now" data-role-required="member" title="Poll this tenant now (full scan)" data-i18n-attr-title="tenant_dashboard.btn_poll_now_title" data-i18n="tenant_dashboard.btn_poll_now">&#x21bb; Poll Now</button>
-  <button class="td-poll-btn" id="td-log-change-btn" data-role-required="member" title="Log a manual change event for this tenant" style="margin-left:8px;" data-i18n-attr-title="tenant_dashboard.btn_log_change_title" data-i18n="tenant_dashboard.btn_log_change">&#x270E; Log Change</button>
 </div>
 
 <!-- Info Bar -->
+<!-- The tenant switcher leads the info bar and doubles as the dashboard title:
+     its selected option is the tenant's display name, so it REPLACES the old static
+     "Display Name" field rather than duplicating it. Poll Now / Log Change sit at
+     the right end via td-info-actions (margin-left:auto). -->
 <div class="td-info-bar" id="td-info-bar">
-  <div class="td-info-item">
-    <div class="label" data-i18n="tenant_dashboard.info_display_name">Display Name</div>
-    <div class="td-info-value" id="td-display-name">—</div>
+  <div class="td-info-item td-info-tenant">
+    <!-- JS-populated with every tenant; picking one re-loads the dashboard for that
+         tenant while staying on the currently-active tab (see wireTenantSwitcher). -->
+    <select class="td-tenant-switcher" id="td-tenant-switcher"
+            title="Switch to another tenant's dashboard"
+            data-i18n-attr-title="tenant_dashboard.switcher_title">
+      <option data-i18n="tenant_dashboard.switcher_loading">Loading tenants…</option>
+    </select>
   </div>
   <div class="td-info-item">
     <div class="label" data-i18n="tenant_dashboard.info_status">Status</div>
@@ -43,6 +49,10 @@
   <div class="td-info-item">
     <div class="label" data-i18n="tenant_dashboard.info_poll_count">Poll Count</div>
     <div class="td-info-value mono" id="td-poll-count">—</div>
+  </div>
+  <div class="td-info-actions">
+    <button class="td-poll-btn" id="td-poll-now" data-role-required="member" title="Poll this tenant now (full scan)" data-i18n-attr-title="tenant_dashboard.btn_poll_now_title" data-i18n="tenant_dashboard.btn_poll_now">&#x21bb; Poll Now</button>
+    <button class="td-poll-btn" id="td-log-change-btn" data-role-required="member" title="Log a manual change event for this tenant" data-i18n-attr-title="tenant_dashboard.btn_log_change_title" data-i18n="tenant_dashboard.btn_log_change">&#x270E; Log Change</button>
   </div>
 </div>
 
@@ -131,6 +141,30 @@
   <div id="td-apps-progress" class="td-apps-progress" style="display:none;"></div>
   <div id="td-apps-list">
     <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.applications.loading">Loading applications…</span></div>
+  </div>
+</div>
+
+<!-- ═══ Per-Tenant Access Review View (A1, hidden by default) ═══ -->
+<!--
+  Two surfaces: a REVIEW-ONLY roster of privileged-role holders (Table 1) and an
+  all-user-accounts table with operator-initiated, audited Disable/Delete
+  (Table 2). Reads are cache-first; Refresh does a live, audited re-pull. Writes
+  are Member+, pass a confirm modal AND server-side guards (no autonomous
+  remediation). Break-glass accounts are tagged blue and never shown inactive.
+  The summary cards + both tables render into #td-ar-body from JS.
+-->
+<div id="td-access-review-view" style="display:none;">
+  <div class="td-ar-actions">
+    <button class="btn-secondary" id="td-ar-refresh-btn" data-role-required="member" data-i18n="tenant_dashboard.access_review.refresh_btn">Refresh</button>
+    <button class="btn-secondary" id="td-ar-breakglass-btn" data-role-required="member" data-i18n="tenant_dashboard.access_review.breakglass_manage">Break-glass accounts</button>
+    <a class="btn-secondary" id="td-ar-entra-link" href="https://entra.microsoft.com/" target="_blank" rel="noopener" data-i18n="tenant_dashboard.access_review.entra_users_link">Open users in Entra ↗</a>
+    <span id="td-ar-status" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div style="font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:10px;" data-i18n="tenant_dashboard.access_review.help_text">
+    Review who holds administrative roles and which accounts are dormant. Disable and Delete are operator-initiated, audited, and confirmed — Panoptica never acts on its own.
+  </div>
+  <div id="td-ar-body">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.access_review.loading">Loading access review…</span></div>
   </div>
 </div>
 

@@ -63,6 +63,7 @@ const setupApiRoutes = require('./routes/api-setup');
 const legalApiRoutes = require('./routes/api-legal');
 const learnApiRoutes = require('./routes/api-learn');
 const applicationsApiRoutes = require('./routes/api-applications');
+const accessReviewApiRoutes = require('./routes/api-access-review');
 const identityTimelineApiRoutes = require('./routes/api-identity-timeline');
 const partialRoutes = require('./routes/partials');
 
@@ -103,6 +104,7 @@ const ualWorker = require('./ual-worker');
 const messageCenterWorker = require('./message-center-worker');
 const knownGoodWorker = require('./known-good-worker');
 const knownGoodStore = require('./lib/known-good-store');
+const accessReviewStore = require('./lib/access-review-store');
 const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 const psaWorker = require('./psa-worker');
@@ -324,6 +326,7 @@ app.use('/api/heatmap', heatmapApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
 app.use('/api/learn', learnApiRoutes);
 app.use('/api/applications', applicationsApiRoutes);
+app.use('/api/access-review', accessReviewApiRoutes);
 app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
 app.use('/api/update', updateApiRoutes);
@@ -507,6 +510,13 @@ async function start() {
     // Fire-and-forget (spec §4.1 eager-migration pattern).
     psaStore.ensureSchema().catch(err =>
       console.error('[Server] PSA schema ensure failed at boot:', err.message)
+    );
+
+    // A1 Access Review — eager-create access_review_snapshot + break_glass_accounts
+    // at boot so the tab + write guards have their schema regardless of whether
+    // anything has triggered them yet. Fire-and-forget.
+    accessReviewStore.ensureSchema().catch(err =>
+      console.error('[Server] access-review schema ensure failed at boot:', err.message)
     );
 
     // Extend api_health.status with 'unavailable' so capability-gated Graph

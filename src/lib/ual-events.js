@@ -47,6 +47,24 @@ function toMysqlDatetime(value) {
   return iso.replace('T', ' ').replace(/Z$/, '');
 }
 
+/**
+ * Parse a DATETIME value READ from MySQL into a correct Date. The pool runs with
+ * dateStrings:true, so columns come back as "YYYY-MM-DD HH:MM:SS[.fff]" — and we
+ * always WRITE UTC (toMysqlDatetime / UTC_TIMESTAMP), so that string is a UTC
+ * literal. `new Date(str)` would parse it in the SERVER's local zone; on a
+ * non-UTC host (Prod runs America/Toronto) that shifts the value by the UTC
+ * offset, pushing the UAL evaluation watermark hours into the future →
+ * sinceTime >= untilTime → the "no-window" guard freezes evaluation and events
+ * in the gap never alert. Force UTC by appending Z.
+ */
+function parseDbUtc(value) {
+  if (value === null || value === undefined) return null;
+  if (value instanceof Date) return value;
+  const s = String(value).trim();
+  if (!s) return null;
+  return new Date(s.replace(' ', 'T') + 'Z');
+}
+
 // 13-month raw retention per UAL Strategy doc §4.5. Daily aggregation
 // (deferred to a later phase) takes over for the 7-year audit trail.
 const RAW_RETENTION_DAYS = 395;
@@ -274,8 +292,10 @@ async function getTenantCutoverState(tenantId) {
     [tenantId]
   );
   return {
-    ual_first_seen_at: row?.ual_first_seen_at ? new Date(row.ual_first_seen_at) : null,
-    ual_last_evaluated_at: row?.ual_last_evaluated_at ? new Date(row.ual_last_evaluated_at) : null,
+    // parseDbUtc (not new Date) — these are UTC literals; local parsing freezes
+    // the watermark on non-UTC hosts. See parseDbUtc above.
+    ual_first_seen_at: parseDbUtc(row && row.ual_first_seen_at),
+    ual_last_evaluated_at: parseDbUtc(row && row.ual_last_evaluated_at),
   };
 }
 

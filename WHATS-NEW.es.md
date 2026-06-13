@@ -5,6 +5,30 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.8 — 2026-06-13
+
+### Nuevo: Revisión de acceso — cuentas con privilegios, cuentas inactivas y acceso de emergencia
+
+Una nueva pestaña **Revisión de acceso** en el panel del inquilino (entre Seguridad y Aplicaciones) responde, por inquilino, a tres preguntas: quién tiene roles administrativos, qué cuentas son peso muerto y qué pasa si una directiva de Acceso condicional bloquea a todos.
+
+La primera tabla es una lista de solo lectura de cada titular de un rol con privilegios, agrupada por nivel, que muestra para cada cuenta sus roles, su estado de habilitación, el registro de MFA y su última actividad. La segunda enumera todas las cuentas de usuario con filtros **Todas / Miembros / Invitados / Inactivas** y le permite **deshabilitar, volver a habilitar o eliminar** una cuenta directamente. Cada escritura se confirma, queda registrada tanto en el registro de auditoría del MSP como en el registro de cambios del inquilino, y está protegida en el servidor: no puede eliminar una cuenta que tiene un rol de administrador, ni deshabilitar al último Administrador global, y una eliminación es recuperable durante 30 días. La inactividad se calcula a partir de los informes de uso de Microsoft 365 en lugar de los registros de inicio de sesión del directorio, por lo que **funciona también en inquilinos Business Standard**.
+
+### Cuentas de emergencia («break-glass»), configuradas como recomienda Microsoft
+
+Desde la misma pestaña puede designar **cuentas de emergencia** — el administrador de respaldo al que recurre cuando una directiva de Acceso condicional mal configurada, o un proveedor de MFA caído, ha bloqueado a todos los administradores normales. Indique a Panoptica365 un grupo de seguridad dedicado y excluirá ese grupo de **cada** directiva de Acceso condicional. Una barrera de seguridad se niega a excluir un grupo con más de unos pocos miembros (para que no exima a toda su empresa por accidente), y el resultado se muestra directiva por directiva, de modo que un fallo parcial nunca se presente como un éxito. Designar una cuenta es entonces simplemente añadirla al grupo.
+
+La acompañan dos alertas: una **alerta CRÍTICA en cuanto una cuenta de emergencia inicia sesión** — que funciona sin licencia Premium y sigue funcionando aunque haya cambiado el dominio de la cuenta — y una alerta de cobertura si el grupo deja en algún momento de estar excluido de una directiva. Una nota importante sobre el contexto actual: Microsoft ahora exige MFA en los inicios de sesión de los portales de administración con independencia del Acceso condicional, así que una cuenta de emergencia debería llevar una **llave resistente a la suplantación (FIDO2)** guardada junto con sus credenciales. La configuración guiada lo acompaña en todo esto, incluidas las prácticas de nomenclatura que evitan que estas cuentas destaquen ante un atacante.
+
+### Fiabilidad: las alertas del registro de auditoría ahora se mantienen al día entre reinicios
+
+Un error de temporización en el evaluador del registro de auditoría unificado podía congelar su marca de evaluación en un servidor con una zona horaria fuera de UTC, de modo que las alertas del registro de auditoría — cambios de rol de administrador, consentimientos de OAuth, concesiones de permisos de buzón y la nueva alerta de inicio de sesión de emergencia — solo se disparaban de forma fiable justo después de un reinicio. La marca ahora se lee en UTC, por lo que estas alertas se mantienen al día de forma continua.
+
+### También en esta versión
+
+El encabezado del panel del inquilino se rediseñó para que la barra de pestañas tenga espacio para crecer — el selector de inquilino ahora se encuentra en la barra de información como título de la página, y los botones Sondear ahora / Registrar cambio se le unieron. Se añadió una nueva guía de **Revisión de acceso** en Aprendizaje (Guías de Panoptica365), en inglés, francés y español.
+
+---
+
 ## Versión 0.2.7 — 2026-06-12
 
 ### Los informes de evaluación rápida ahora abren con un resumen en lenguaje claro para el dueño del negocio

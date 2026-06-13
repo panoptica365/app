@@ -1785,7 +1785,12 @@ body.role-viewer [data-role-readonly="member"] {
 /* ─── Info Bar ─── */
 .td-info-bar {
   display: flex;
-  gap: 32px;
+  align-items: center;
+  /* row-gap small, column-gap wide; wraps gracefully on narrow MSP windows
+     instead of overflowing now that it also carries the tenant switcher + the
+     two action buttons. */
+  gap: 8px 28px;
+  flex-wrap: wrap;
   padding: 12px 16px;
   margin-bottom: 0;
   background: var(--p-surface-alt);
@@ -1795,6 +1800,19 @@ body.role-viewer [data-role-readonly="member"] {
 
 .td-info-item .label {
   margin-bottom: 2px;
+}
+
+/* Tenant switcher leads the info bar as the dashboard title (see the partial).
+   No stacked label above it — the control IS the title. */
+.td-info-tenant { align-self: center; }
+
+/* Poll Now / Log Change park at the right end of the info bar. The buttons keep
+   their own .td-poll-btn margin for inter-button spacing (that rule is shared
+   with alert-policies.js, so we don't add a gap here). */
+.td-info-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
 .td-info-value {
@@ -3111,6 +3129,11 @@ body.role-viewer [data-role-readonly="member"] {
   overflow: hidden;
 }
 
+/* In the redesigned header the toggle is the first element after the elbow, so it
+   no longer needs the 16px offset that separated it from the old "Dashboard"
+   label. The panel-header's own 10px gap is enough. */
+.td-header-bar .td-view-toggle { margin-left: 0; }
+
 .td-view-btn {
   background: transparent;
   border: none;
@@ -3188,16 +3211,166 @@ body.role-viewer [data-role-readonly="member"] {
 .app-del-link { color: var(--p-text-muted); font-size: 0.78rem; text-decoration: none; white-space: nowrap; }
 .app-del-link:hover { color: var(--status-broken, #f85149); text-decoration: underline; }
 
-/* ─── Tenant Dashboard — header tenant switcher ─── */
+/* ─── Access Review tab (A1) ─────────────────────────────────────────── */
+.td-ar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 6px; }
+.td-ar-actions a.btn-secondary { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* Summary metric cards */
+.td-ar-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0 18px; }
+.td-ar-card { background: var(--p-surface-alt); border: 1px solid var(--p-border); border-radius: 8px; padding: 12px 14px; }
+.td-ar-card-value { font-size: 1.6rem; font-weight: 600; color: var(--p-text); line-height: 1.1; }
+.td-ar-card-label { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--p-text-muted); margin-top: 4px; }
+
+/* Concealment ("anonymized reports") note */
+.td-ar-anon-note { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 0 0 14px;
+  background: rgba(210, 153, 34, 0.10); border: 1px solid var(--status-degraded, #d29922);
+  border-radius: 6px; font-size: 0.85rem; color: var(--p-text-secondary); }
+.td-ar-anon-note a { color: var(--p-accent); }
+
+.td-ar-section { margin: 0 0 22px; }
+.td-ar-section-title { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--p-text-secondary); margin-bottom: 8px; }
+
+/* 25-row internal scroll window with a sticky header (acceptance 1). ~46px/row. */
+.td-ar-scroll { max-height: 620px; overflow-y: auto; border: 1px solid var(--p-border); border-radius: 6px; }
+.td-ar-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.td-ar-table thead th { position: sticky; top: 0; z-index: 1; background: var(--p-surface-deep);
+  text-align: left; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--p-text-muted); padding: 8px 12px; border-bottom: 1px solid var(--p-border); }
+.td-ar-table td { padding: 8px 12px; border-bottom: 1px solid var(--p-border-subtle); vertical-align: middle; color: var(--p-text); }
+.td-ar-table tbody tr:last-child td { border-bottom: none; }
+.td-ar-empty-cell { text-align: center; color: var(--p-text-muted); padding: 18px; }
+
+.td-ar-acct { display: flex; flex-direction: column; gap: 1px; }
+.td-ar-acct-name { color: var(--p-text); font-weight: 500; text-decoration: none; }
+.td-ar-acct-name:hover { color: var(--p-accent); text-decoration: underline; }
+.td-ar-acct-upn { font-size: 0.74rem; color: var(--p-text-muted); }
+
+/* Role chips, tinted by tier (apex = severe). */
+.td-ar-roles { line-height: 1.9; }
+.td-ar-role { display: inline-block; font-size: 0.68rem; padding: 1px 7px; border-radius: 8px;
+  border: 1px solid var(--p-border); color: var(--p-text-secondary); white-space: nowrap; }
+.td-ar-role-apex { color: var(--status-broken, #f85149); border-color: var(--status-broken, #f85149); }
+.td-ar-role-high { color: var(--status-degraded, #d29922); border-color: var(--status-degraded, #d29922); }
+.td-ar-role-medium { color: var(--p-text-secondary); border-color: var(--p-border); }
+/* Tier cue on Table 1 rows — a colored left edge, sorted apex→medium. */
+.td-ar-tier-apex   td:first-child { box-shadow: inset 3px 0 0 var(--status-broken, #f85149); }
+.td-ar-tier-high   td:first-child { box-shadow: inset 3px 0 0 var(--status-degraded, #d29922); }
+.td-ar-tier-medium td:first-child { box-shadow: inset 3px 0 0 var(--p-border); }
+
+.td-ar-mfa-yes { color: var(--status-healthy, #3fb950); }
+.td-ar-mfa-no { color: var(--status-broken, #f85149); font-weight: 600; }
+.td-ar-mfa-unknown { color: var(--p-text-muted); }
+
+/* Inactivity → red on the activity CELL + marker (cell-red over full-row tint for
+   scannability in a 25-row window — acceptance §5). Break-glass row wins. */
+.td-ar-inactive { color: var(--status-broken, #f85149); font-weight: 600; }
+.td-ar-inactive-marker { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--status-broken, #f85149); border: 1px solid var(--status-broken, #f85149);
+  border-radius: 6px; padding: 0 5px; margin-left: 4px; }
+.td-ar-never { color: var(--status-degraded, #d29922); font-size: 0.8rem; }
+.td-ar-dash { color: var(--p-text-muted); }
+
+/* Break-glass: blue row tint + tag, suppresses any red. */
+.td-ar-row-bg { background: rgba(22, 132, 181, 0.08); }
+.td-ar-row-bg .td-ar-inactive { color: var(--p-text); font-weight: 400; }
+.td-ar-bg-tag { display: inline-block; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--p-accent-deep, #0b6c9a); background: rgba(22, 132, 181, 0.14);
+  border: 1px solid var(--p-accent, #1684b5); border-radius: 8px; padding: 0 6px; margin-left: 6px; }
+
+/* Filter pills */
+.td-ar-filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.td-ar-pill { background: transparent; border: 1px solid var(--p-border); color: var(--p-text-muted);
+  font-family: var(--font-heading); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 4px 12px; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+.td-ar-pill:hover { color: var(--p-text-secondary); border-color: var(--p-accent); }
+.td-ar-pill.active { background: var(--p-accent); color: var(--p-bg); border-color: var(--p-accent); }
+
+/* Row actions */
+.td-ar-actions-cell { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.td-ar-act { background: transparent; border: 1px solid var(--p-border); color: var(--p-text-secondary);
+  font-size: 0.72rem; padding: 3px 10px; border-radius: 10px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+/* Colored at rest for contrast against the gray row: the Disable/Enable toggle is
+   theme blue, Delete is danger red. Both fill on hover (same pattern as the active
+   filter pill, so text contrast holds in light AND dark themes). */
+.td-ar-act-disable, .td-ar-act-enable { border-color: var(--p-accent); color: var(--p-accent); }
+.td-ar-act-disable:hover, .td-ar-act-enable:hover { background: var(--p-accent); border-color: var(--p-accent); color: var(--p-bg); }
+.td-ar-act-delete { border-color: var(--status-broken, #f85149); color: var(--status-broken, #f85149); }
+.td-ar-act-delete:hover { background: var(--status-broken, #f85149); border-color: var(--status-broken, #f85149); color: #fff; }
+.td-ar-hint { font-size: 0.72rem; color: var(--p-text-muted); font-style: italic; }
+
+/* Empty state */
+.td-ar-empty { text-align: center; padding: 40px 20px; }
+.td-ar-empty-title { font-size: 1rem; color: var(--p-text-secondary); margin-bottom: 6px; }
+.td-ar-empty-hint { font-size: 0.85rem; color: var(--p-text-muted); }
+
+/* Confirm + break-glass modal bits */
+.td-ar-confirm-note { font-size: 0.85rem; color: var(--p-text-secondary); margin: 6px 0 0; }
+.td-ar-confirm-warning { font-size: 0.85rem; color: var(--status-degraded, #d29922); font-weight: 600; margin: 8px 0 0; }
+.td-ar-confirm-error { font-size: 0.85rem; color: var(--status-broken, #f85149); font-weight: 600; margin: 10px 0 0; }
+.td-ar-bg-add { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 14px; }
+.td-ar-bg-add input { flex: 1 1 180px; padding: 6px 10px; border: 1px solid var(--p-border);
+  border-radius: 6px; background: var(--p-bg); color: var(--p-text); font-size: 0.85rem; }
+.td-ar-bg-table { font-size: 0.84rem; width: 100%; }
+.td-ar-bg-table th, .td-ar-bg-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--p-border-subtle); }
+
+/* ── Break-glass governance wizard ── */
+.td-ar-bg-guidance { background: var(--p-surface-alt); border: 1px solid var(--p-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.td-ar-bg-guidance.compact { padding: 10px 12px; margin-bottom: 10px; }
+.td-ar-bg-guidance-title { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--p-text-secondary); margin-bottom: 6px; }
+.td-ar-bg-guidance p { font-size: 0.86rem; color: var(--p-text-secondary); margin: 0 0 8px; }
+.td-ar-bg-guidance ul { margin: 0 0 10px; padding-left: 18px; }
+.td-ar-bg-guidance li { font-size: 0.84rem; color: var(--p-text-secondary); line-height: 1.5; margin-bottom: 4px; }
+
+.td-ar-bg-groupcard { background: var(--p-surface-alt); border: 1px solid var(--p-border); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
+.td-ar-bg-groupline { display: flex; align-items: baseline; gap: 8px; }
+.td-ar-bg-groupname { font-size: 1.05rem; font-weight: 600; color: var(--p-text); }
+.td-ar-bg-groupactions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.td-ar-bg-ok { font-size: 0.85rem; color: var(--status-healthy, #1fb87c); margin-top: 6px; }
+.td-ar-bg-warn { font-size: 0.85rem; color: var(--status-degraded, #d29922); margin-top: 6px; line-height: 1.45; }
+
+.td-bg-search { width: 100%; padding: 7px 11px; border: 1px solid var(--p-border); border-radius: 6px; background: var(--p-bg); color: var(--p-text); font-size: 0.9rem; margin-bottom: 8px; }
+.td-bg-grouplist { max-height: 260px; overflow-y: auto; border: 1px solid var(--p-border); border-radius: 6px; }
+.td-bg-grouprow { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: transparent; border: none; border-bottom: 1px solid var(--p-border-subtle); padding: 8px 12px; cursor: pointer; color: var(--p-text); font-size: 0.88rem; }
+.td-bg-grouprow:last-child { border-bottom: none; }
+.td-bg-grouprow:hover { background: rgba(22, 132, 181, 0.07); }
+.td-bg-grouprow.active { background: rgba(22, 132, 181, 0.14); }
+.td-bg-grouprow-name { flex: 1; }
+.td-bg-grouprow-flag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--p-text-muted); border: 1px solid var(--p-border); border-radius: 8px; padding: 0 6px; }
+
+.td-ar-bg-inspect { margin-top: 12px; padding: 12px; border: 1px solid var(--p-border); border-radius: 6px; background: var(--p-surface-alt); }
+.td-ar-bg-inspect-name { font-weight: 600; color: var(--p-text); }
+.td-ar-bg-membercount { font-size: 0.85rem; color: var(--p-text-secondary); margin-top: 2px; }
+.td-ar-bg-members { font-size: 0.78rem; color: var(--p-text-muted); margin-top: 4px; }
+.td-ar-bg-ack { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; color: var(--p-text); margin: 10px 0; cursor: pointer; }
+.td-ar-bg-inspect .btn-primary { margin-top: 8px; }
+
+.td-ar-bg-applying { display: flex; align-items: center; gap: 10px; padding: 24px 12px; color: var(--p-text-secondary); }
+.td-ar-bg-applysummary { font-size: 0.9rem; font-weight: 600; color: var(--p-text); margin-bottom: 10px; }
+.td-bg-applylist { max-height: 320px; overflow-y: auto; border: 1px solid var(--p-border); border-radius: 6px; }
+.td-bg-applyrow { display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-bottom: 1px solid var(--p-border-subtle); font-size: 0.85rem; }
+.td-bg-applyrow:last-child { border-bottom: none; }
+.td-bg-applyicon { width: 16px; text-align: center; font-weight: 700; }
+.td-bg-applyname { flex: 1; color: var(--p-text); }
+.td-bg-applystatus { font-size: 0.78rem; color: var(--p-text-muted); }
+.td-bg-ok .td-bg-applyicon { color: var(--status-healthy, #1fb87c); }
+.td-bg-failed .td-bg-applyicon { color: var(--status-broken, #d43a4f); }
+.td-bg-failed .td-bg-applystatus { color: var(--status-broken, #d43a4f); }
+.td-bg-skipped .td-bg-applyicon { color: var(--p-text-muted); }
+
+/* ─── Tenant Dashboard — info-bar tenant switcher (doubles as the page title) ─── */
+/* Sized up from a plain dropdown to read as the dashboard's subject: larger, on a
+   white surface so it stands out against the surface-alt info bar. It still works
+   as the tenant switcher (native select chrome + chevron). */
 .td-tenant-switcher {
-  background: var(--p-bg);
+  background: var(--p-surface);
   border: 1px solid var(--p-border);
   color: var(--p-text);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 1.15rem;
   font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
   cursor: pointer;
   max-width: 460px;
 }

@@ -5,6 +5,30 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.8 — 2026-06-13
+
+### Nouveau : Revue des accès — comptes privilégiés, comptes dormants et accès de secours
+
+Un nouvel onglet **Revue des accès** sur le tableau de bord du locataire (entre Sécurité et Applications) répond, par locataire, à trois questions : qui détient des rôles d'administration, quels comptes sont du poids mort, et que se passe-t-il si une stratégie d'accès conditionnel verrouille tout le monde dehors.
+
+Le premier tableau est une liste en lecture seule de chaque détenteur d'un rôle privilégié, regroupée par palier, indiquant pour chaque compte ses rôles, son état d'activation, l'enregistrement de la MFA et sa dernière activité. Le second liste tous les comptes d'utilisateurs avec des filtres **Tous / Membres / Invités / Inactifs** et vous permet de **désactiver, réactiver ou supprimer** un compte directement. Chaque écriture est confirmée, consignée à la fois dans le journal d'audit MSP et le journal des changements du locataire, et protégée côté serveur : vous ne pouvez pas supprimer un compte détenant un rôle admin, ni désactiver le dernier administrateur général, et une suppression est récupérable pendant 30 jours. L'inactivité est calculée à partir des rapports d'usage de Microsoft 365 plutôt que des journaux de connexion de l'annuaire, elle **fonctionne donc aussi sur les locataires Business Standard**.
+
+### Comptes d'urgence (« break-glass »), configurés comme Microsoft le recommande
+
+Depuis le même onglet, vous pouvez désigner des **comptes d'urgence** — l'administrateur de secours que vous sortez quand une stratégie d'accès conditionnel mal configurée, ou un fournisseur de MFA en panne, a verrouillé dehors tous les administrateurs normaux. Indiquez à Panoptica365 un groupe de sécurité dédié, et il exclut ce groupe de **chaque** stratégie d'accès conditionnel. Un garde-fou refuse d'exclure un groupe comptant plus que quelques membres (pour ne pas exempter toute votre entreprise par accident), et le résultat est affiché stratégie par stratégie afin qu'un échec partiel ne soit jamais présenté comme un succès. Désigner un compte revient alors simplement à l'ajouter au groupe.
+
+Deux alertes l'accompagnent : une **alerte CRITIQUE dès qu'un compte d'urgence se connecte** — qui fonctionne sans licence Premium et continue de fonctionner même si vous avez changé le domaine du compte — et une alerte de couverture si le groupe cesse un jour d'être exclu d'une stratégie. Une note importante sur le contexte actuel : Microsoft impose désormais la MFA aux connexions des portails d'administration indépendamment de l'accès conditionnel, un compte d'urgence devrait donc disposer d'une **clé résistante à l'hameçonnage (FIDO2)** conservée avec ses identifiants. La configuration guidée vous accompagne dans tout cela, y compris les pratiques de nommage qui empêchent ces comptes de se démarquer aux yeux d'un attaquant.
+
+### Fiabilité : les alertes du journal d'audit restent à jour entre les redémarrages
+
+Un défaut de minutage dans l'évaluateur du journal d'audit unifié pouvait figer son repère d'évaluation sur un serveur dans un fuseau horaire hors UTC, de sorte que les alertes du journal d'audit — changements de rôle administrateur, consentements OAuth, octrois d'autorisations de boîte aux lettres, et la nouvelle alerte de connexion d'urgence — ne se déclenchaient de façon fiable que juste après un redémarrage. Le repère est désormais lu en UTC, ces alertes restent donc à jour en continu.
+
+### Aussi dans cette version
+
+L'en-tête du tableau de bord du locataire a été retravaillé pour que la barre d'onglets ait de la place pour grandir — le sélecteur de locataire se trouve maintenant dans la barre d'information en tant que titre de la page, et les boutons Sonder maintenant / Journaliser un changement l'ont rejoint. Un nouveau guide **Revue des accès** a été ajouté à Apprentissage (Guides Panoptica365), en anglais, en français et en espagnol.
+
+---
+
 ## Version 0.2.7 — 2026-06-12
 
 ### Les rapports d'évaluation rapide s'ouvrent désormais sur un sommaire en langage clair pour le propriétaire d'entreprise

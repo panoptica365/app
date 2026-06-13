@@ -5,6 +5,30 @@ that release, newest first.
 
 ---
 
+## Version 0.2.8 — 2026-06-13
+
+### New: Access review — privileged accounts, dormant accounts, and emergency access
+
+A new **Access review** tab on the tenant dashboard (between Security and Applications) gives you a per-tenant answer to three questions: who holds administrative roles, which accounts are dead weight, and what happens if a Conditional Access policy locks everyone out.
+
+The first table is a review-only roster of every privileged-role holder, grouped by tier, showing each account's roles, enabled state, MFA-registration status, and last activity. The second lists all user accounts with **All / Members / Guests / Inactive** filters and lets you **disable, re-enable, or delete** an account directly. Every write is confirmed, recorded to both the MSP audit log and the tenant Change log, and guarded on the server: you can't delete an account that holds an admin role, you can't disable the last Global Administrator, and a delete is a 30-day recoverable soft delete. Inactivity is derived from Microsoft 365 usage reports rather than directory sign-in logs, so it **works on Business Standard tenants** too.
+
+### Break-glass (emergency-access) accounts, set up the way Microsoft recommends
+
+From the same tab you can designate **break-glass accounts** — the emergency admin you reach for when a misconfigured Conditional Access policy, or a down MFA provider, has locked out every normal admin. Point Panoptica365 at a dedicated security group and it excludes that group from **every** Conditional Access policy. A safety guard refuses to exclude a group with more than a handful of members (so you can't accidentally exempt your whole company), and the result is shown policy by policy so a partial failure is never reported as success. Designating an account is then simply adding it to the group.
+
+Two alerts come with it: a **CRITICAL alert the instant a break-glass account signs in** — which works without a Premium licence and keeps working even if you've changed the account's domain — and a coverage alert if the group ever stops being excluded from a policy. One important note on today's landscape: Microsoft now enforces MFA on admin-portal sign-ins regardless of Conditional Access, so a break-glass account should carry a **phishing-resistant key (FIDO2)** stored alongside its credentials. The guided setup walks you through all of this, including the naming practices that keep these accounts from standing out to an attacker.
+
+### Reliability: scheduled audit-log alerts now stay current between restarts
+
+A timing bug in the unified-audit-log evaluator could freeze its evaluation watermark on a server running in a non-UTC timezone, so audit-log alerts — admin role changes, OAuth consents, mailbox-permission grants, and the new break-glass sign-in alert — only fired reliably right after a restart. The watermark is now read in UTC, so these alerts stay current continuously.
+
+### Also in this release
+
+The tenant-dashboard header was reworked so the tab bar has room to grow — the tenant switcher now sits in the info bar as the page title, and the Poll Now / Log Change buttons moved alongside it. A new **Access review** guide was added to Learn (Panoptica365 Guides), in English, French, and Spanish.
+
+---
+
 ## Version 0.2.7 — 2026-06-12
 
 ### Quick Assessment reports now open with a plain-language summary for the business owner

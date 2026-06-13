@@ -22,6 +22,11 @@ const crypto = require('crypto');
 // matches the Applications tab (and the Entra portal). See enterprise-apps-graph.js.
 const { MICROSOFT_TENANT_IDS } = require('./lib/enterprise-apps-graph');
 const { runExoCmdlet } = require('./lib/security-settings/pwsh-runner');
+// Canonical privileged-role map (templateId → {name, severity}) — the SAME
+// definition the UAL privilegedRole evaluator uses, reused read-only so the
+// Access Review admin roster and the role-add alerts agree on "what counts as
+// privileged". No circular dependency: ual-evaluators does not require fetchers.
+const { ROLE_PRIORITY } = require('./ual-evaluators');
 
 /**
  * Stable JSON stringify: recursively sorts object keys so two objects with the
@@ -1353,6 +1358,211 @@ async function fetchInactiveDevices(tenantId) {
 
 
 // ═══════════════════════════════════════════
+// ACCESS REVIEW (A1) — privileged-role roster + all-user roster w/ inactivity
+// ═══════════════════════════════════════════
+
+// severity (ROLE_PRIORITY) → operator-facing tier label used to group Table 1.
+const TIER_BY_SEVERITY = { severe: 'apex', high: 'high', medium: 'medium' };
+const SEV_RANK = { severe: 3, high: 2, medium: 1 };
+
+/**
+ * Access Review — Table 1: every account holding a watched privileged role,
+ * merged to ONE row per account carrying all roles held, with MFA-registered
+ * joined from the authentication-methods registration report.
+ *
+ * Permission honesty: MFA absent from the report ⇒ `mfaRegistered: null` (renders
+ * '—'), NEVER false-as-"no". The MFA join is best-effort — if the report 403s /
+ * fails, the roster still renders with MFA unknown.
+ *
+ * Robustness: a hard failure enumerating roles/members RE-THROWS so polling.js
+ * preserves the prior security baseline (the v0.1.23 snapshot-flip lesson) — an
+ * empty roster stored on a failed poll would later read as "all admins removed".
+ *
+ * Added to the slow-tier `security` bundle (background freshness + a path to
+ * migrate the existing global_admins consumers later) AND exported so the
+ * Access Review refresh route can pull it live.
+ */
+async function fetchPrivilegedRoles(tenantId) {
+  // 1. UPN → isMfaRegistered (best-effort, lowercased keys).
+  const mfaByUpn = new Map();
+  try {
+    const reg = await graph.callGraphPaged(tenantId,
+      '/reports/authenticationMethods/userRegistrationDetails?$select=userPrincipalName,isMfaRegistered&$top=999');
+    for (const r of reg || []) {
+      if (r.userPrincipalName) mfaByUpn.set(String(r.userPrincipalName).toLowerCase(), !!r.isMfaRegistered);
+    }
+  } catch (e) {
+    console.warn(`[Fetcher] Privileged-roles MFA join unavailable for ${tenantId}: ${e.message}`);
+  }
+
+  // 2. Activated directory roles → keep only the watched privileged set →
+  //    merge members one row per account. /directoryRoles returns only roles
+  //    that have ever been activated; a privileged role with no members simply
+  //    won't appear, which is correct (nothing to show).
+  const roles = await graph.callGraphPaged(tenantId, '/directoryRoles?$select=id,displayName,roleTemplateId');
+  const byAccount = new Map();
+
+  for (const role of roles || []) {
+    const info = ROLE_PRIORITY.get(String(role.roleTemplateId || '').toLowerCase());
+    if (!info) continue;
+    let members;
+    try {
+      members = await graph.callGraphPaged(tenantId,
+        `/directoryRoles/${role.id}/members?$select=id,displayName,userPrincipalName,accountEnabled`);
+    } catch (e) {
+      console.warn(`[Fetcher] Privileged-role members (${role.displayName}) failed for ${tenantId}: ${e.message}`);
+      throw e; // hard failure — never emit a partial roster (reads as removals)
+    }
+    for (const m of members || []) {
+      // Only user principals carry a UPN. Role-assignable GROUPS and service
+      // principals can also hold roles, but they're not account-lifecycle
+      // targets and have no UPN — skip them here.
+      if (!m.userPrincipalName) continue;
+      const key = m.id || String(m.userPrincipalName).toLowerCase();
+      let acct = byAccount.get(key);
+      if (!acct) {
+        const lk = String(m.userPrincipalName).toLowerCase();
+        acct = {
+          id: m.id || null,
+          displayName: m.displayName || m.userPrincipalName,
+          userPrincipalName: m.userPrincipalName,
+          enabled: m.accountEnabled !== false,
+          mfaRegistered: mfaByUpn.has(lk) ? mfaByUpn.get(lk) : null, // null ⇒ '—'
+          roles: [],
+        };
+        byAccount.set(key, acct);
+      }
+      if (!acct.roles.some(r => r.name === info.name)) {
+        acct.roles.push({ name: info.name, severity: info.severity, tier: TIER_BY_SEVERITY[info.severity] || 'medium' });
+      }
+    }
+  }
+
+  const accounts = Array.from(byAccount.values()).map(a => {
+    a.topSeverity = a.roles.reduce((top, r) => (SEV_RANK[r.severity] > SEV_RANK[top] ? r.severity : top), 'medium');
+    a.topTier = TIER_BY_SEVERITY[a.topSeverity] || 'medium';
+    a.roles.sort((x, y) => (SEV_RANK[y.severity] - SEV_RANK[x.severity]) || x.name.localeCompare(y.name));
+    return a;
+  }).sort((a, b) => (SEV_RANK[b.topSeverity] - SEV_RANK[a.topSeverity])
+    || (a.displayName || '').localeCompare(b.displayName || ''));
+
+  const tiers = { apex: 0, high: 0, medium: 0 };
+  for (const a of accounts) tiers[a.topTier] = (tiers[a.topTier] || 0) + 1;
+
+  return {
+    privileged_roles: {
+      accounts,
+      tiers,
+      count: accounts.length,
+      ga_count: accounts.filter(a => a.roles.some(r => r.name === 'Global Administrator')).length,
+      no_mfa_count: accounts.filter(a => a.mfaRegistered === false).length,
+    },
+  };
+}
+
+/**
+ * Access Review — Table 2: wide all-user roster joined with M365 usage-report
+ * last-activity. Usage reports are the NON-P1 inactivity path (directory
+ * last-sign-in is P1-gated and 403s on Business Standard).
+ *
+ * Inactivity is DERIVED — we only assert `inactive:true` when there is a real
+ * activity date older than the threshold. No data ⇒ inactive:false (unknown is
+ * never presented as a negative — acceptance 4).
+ *
+ * Anonymization: if the usage report's identity column comes back concealed
+ * (opaque tokens, no '@' — tenant has "Display concealed user, group, and site
+ * names" on), we set reports_anonymized=true and do NOT join activity (the tab
+ * shows the turn-it-off note instead of mapping garbage — acceptance 7).
+ *
+ * Exported + called live by the refresh route; NOT in the poll bundle (heavy,
+ * tab-only).
+ */
+async function fetchAccessReviewUsers(tenantId, { inactivityDays = 90 } = {}) {
+  const period = inactivityDays > 90 ? 'D180' : 'D90';
+
+  // 1. Usage-report last-activity map (UPN → max service date), with
+  //    concealment detection. Paginated + CSV-tolerant via parseReport.
+  const activityByUpn = new Map();
+  let reportsAnonymized = false;
+  try {
+    let url = reportUrl(`/reports/getOffice365ActiveUserDetail(period='${period}')`);
+    let pages = 0;
+    let checked = false;
+    while (url && pages < 50) {
+      const report = await graph.callGraph(tenantId, url, REPORT_OPTS);
+      const rows = parseReport(report);
+      if (!checked && rows.length) {
+        const sample = rows.slice(0, 25);
+        reportsAnonymized = sample.every(r => !String(rpt(r, 'userPrincipalName') || '').includes('@'));
+        checked = true;
+      }
+      if (reportsAnonymized) break;
+      for (const r of rows) {
+        const upn = String(rpt(r, 'userPrincipalName') || '').toLowerCase();
+        if (!upn) continue;
+        const dates = [
+          rpt(r, 'lastActivityDate'), rpt(r, 'exchangeLastActivityDate'),
+          rpt(r, 'oneDriveLastActivityDate'), rpt(r, 'sharePointLastActivityDate'),
+          rpt(r, 'teamsLastActivityDate'),
+        ].map(d => (d == null ? '' : String(d))).filter(d => /^\d{4}-\d{2}-\d{2}/.test(d));
+        activityByUpn.set(upn, dates.sort().pop() || null);
+      }
+      url = report && report['@odata.nextLink'] ? report['@odata.nextLink'] : null;
+      pages++;
+    }
+  } catch (e) {
+    // Non-fatal: no activity data ⇒ lastActivity unknown (rendered '—'), never a
+    // false "inactive". The roster below still renders.
+    console.warn(`[Fetcher] Access-review usage report unavailable for ${tenantId}: ${e.message}`);
+  }
+
+  // 2. Wide user roster (widened $select vs the licensing fetcher — adds
+  //    externalUserState + createdDateTime for the never-redeemed-guest signal).
+  const users = await graph.callGraphPaged(tenantId,
+    '/users?$select=id,displayName,userPrincipalName,accountEnabled,userType,externalUserState,createdDateTime&$top=999',
+    { maxPages: 50 });
+
+  const cutoff = Date.now() - inactivityDays * 24 * 60 * 60 * 1000;
+  const isGuest = (u) => u.userType === 'Guest' || (u.userPrincipalName || '').includes('#EXT#');
+
+  const roster = (users || []).map(u => {
+    const upn = String(u.userPrincipalName || '').toLowerCase();
+    const guest = isGuest(u);
+    const neverRedeemed = guest && u.externalUserState === 'PendingAcceptance';
+    const lastActivity = reportsAnonymized ? null : (activityByUpn.has(upn) ? activityByUpn.get(upn) : null);
+    let inactive = false;
+    if (lastActivity) inactive = new Date(lastActivity + 'T00:00:00Z').getTime() < cutoff;
+    return {
+      id: u.id,
+      displayName: u.displayName || u.userPrincipalName,
+      userPrincipalName: u.userPrincipalName,
+      type: guest ? 'guest' : 'member',
+      external: guest,
+      enabled: u.accountEnabled !== false,
+      externalUserState: u.externalUserState || null,
+      neverRedeemed,
+      created: u.createdDateTime || null,
+      lastActivity,
+      inactive,
+    };
+  }).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+
+  return {
+    users: roster,
+    reports_anonymized: reportsAnonymized,
+    inactivity_days: inactivityDays,
+    summary: {
+      total: roster.length,
+      members: roster.filter(u => u.type === 'member').length,
+      guests: roster.filter(u => u.type === 'guest').length,
+      inactive: roster.filter(u => u.inactive).length,
+      never_redeemed: roster.filter(u => u.neverRedeemed).length,
+    },
+  };
+}
+
+
+// ═══════════════════════════════════════════
 // EXPORTS
 // ═══════════════════════════════════════════
 
@@ -1374,7 +1584,7 @@ const liveFetchers = {
  * Merged into the same service keys for snapshot storage.
  */
 const slowFetchers = {
-  security:   [fetchGlobalAdmins, fetchConditionalAccess, fetchSecurityDefaults],
+  security:   [fetchGlobalAdmins, fetchPrivilegedRoles, fetchConditionalAccess, fetchSecurityDefaults],
   entra:      [fetchEntraConnect, fetchApplications, fetchEnterpriseApps, fetchInactiveUsers, fetchInactiveDevices],
   exchange:   [fetchMailForwarding, fetchMailboxLevelForwarding],
   sharepoint: [fetchDomains],
@@ -1383,4 +1593,10 @@ const slowFetchers = {
 module.exports = {
   liveFetchers,
   slowFetchers,
+  // Exported for the Access Review refresh route's live pull (src/routes/
+  // api-access-review.js). fetchPrivilegedRoles is ALSO in the slow security
+  // bundle above; fetchAccessReviewUsers is tab-only (heavy) and intentionally
+  // not polled.
+  fetchPrivilegedRoles,
+  fetchAccessReviewUsers,
 };

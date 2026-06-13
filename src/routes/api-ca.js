@@ -13,6 +13,10 @@ const groupResolver = require('../lib/group-resolver');
 const changeLog = require('../change-log');
 const mspAudit = require('../msp-audit');
 const caClassifier = require('../lib/ca-policy-classifier');
+// Break-Glass Governance: a tenant's break-glass group is, by operator design,
+// excluded from EVERY CA policy — so its presence in excludeGroups is expected,
+// not drift. access-review-store only requires ./db/database (no require cycle).
+const accessReviewStore = require('../lib/access-review-store');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -2313,11 +2317,31 @@ async function checkDrift(assignment) {
     console.warn(`[CA] Could not resolve placeholders for drift check: ${err.message}`);
   }
 
+  // Break-Glass Governance: the tenant's configured break-glass group is, by
+  // operator design, excluded from EVERY CA policy. Treat its presence in
+  // excludeGroups as part of the EXPECTED baseline so the operator-applied
+  // exclusion never reads as drift (policies stay 'ok', no manual Accept). Its
+  // ABSENCE still surfaces normally — a removed exclusion / coverage gap shows
+  // up as ordinary drift. Fetched once; non-fatal on error.
+  let _bgGroupId = null;
+  try {
+    const _bg = await accessReviewStore.getGroupConfig(assignment.tenant_id);
+    _bgGroupId = _bg && _bg.group_id;
+  } catch (e) { /* fall back to plain comparison */ }
+
   // Compare monitored fields (using resolved template with real GUIDs)
   const drifts = [];
   for (const fieldPath of monitoredFields) {
-    const expected = getNestedValue(resolvedTemplate, fieldPath);
+    let expected = getNestedValue(resolvedTemplate, fieldPath);
     const actual = getNestedValue(livePolicy, fieldPath);
+
+    // Inject the break-glass group into the expected excludeGroups — but ONLY
+    // when the template already defines an excludeGroups array, so we never
+    // begin flagging a field the template previously left unmonitored.
+    if (_bgGroupId && fieldPath === 'conditions.users.excludeGroups'
+        && Array.isArray(expected) && !expected.includes(_bgGroupId)) {
+      expected = [...expected, _bgGroupId];
+    }
 
     if (expected !== undefined && !deepEqual(expected, actual)) {
       console.log(`[CA:Drift] Field "${fieldPath}" drifted for assignment ${assignment.id} (${assignment.template_name}):`);

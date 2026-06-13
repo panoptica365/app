@@ -19,6 +19,7 @@
     "the-main-console",
     "the-tenant-dashboard",
     "review-applications",
+    "access-review",
     "deploy-ca-policies",
     "deploy-intune-policies",
     "monitor-security-settings",

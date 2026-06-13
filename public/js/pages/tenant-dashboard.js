@@ -190,6 +190,9 @@
     const appsView = el('td-applications-view');
     if (appsView) appsView.style.display = 'none';
 
+    const arView = el('td-access-review-view');
+    if (arView) arView.style.display = 'none';
+
     if (currentView === 'overview') {
       grid.style.display = '';
       if (digestCard) digestCard.style.display = '';
@@ -210,9 +213,666 @@
     } else if (currentView === 'applications') {
       if (appsView) appsView.style.display = 'block';
       loadApplications();
+    } else if (currentView === 'access-review') {
+      if (arView) arView.style.display = 'block';
+      loadAccessReview();
     } else if (currentView === 'change-log') {
       if (changelogView) changelogView.style.display = 'block';
       ChangeLog.show();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Access Review tab (A1) — admin roster (review-only) + all-user accounts
+  // with operator-initiated, audited Disable/Delete. Cache-first read; Refresh
+  // does a live re-pull. Writes are Member+ and pass a confirm modal + server-
+  // side guards. Mirrors the inline Applications-tab pattern above.
+  // ═══════════════════════════════════════════════════════════════════════
+  let accessReviewData = null;   // { snapshot, break_glass, inactivity_days }
+  let accessReviewFilter = 'all';
+  let arUserById = new Map();     // id → user row, for action lookups (no data in DOM attrs)
+
+  function arT(key, params) { return window.t('tenant_dashboard.access_review.' + key, params); }
+
+  function arStatus(msg, isError) {
+    const s = el('td-ar-status');
+    if (!s) return;
+    s.textContent = msg || '';
+    s.style.color = isError ? 'var(--status-broken, #f85149)' : 'var(--p-text-muted)';
+  }
+
+  function arEntraUserLink(userId) {
+    const tid = (tenantInfo && tenantInfo.tenant_id) ? tenantInfo.tenant_id + '/' : '';
+    return 'https://entra.microsoft.com/' + tid +
+      '#view/Microsoft_AAD_UsersAndTenants/UserProfileMenuBlade/~/overview/userId/' + encodeURIComponent(userId || '');
+  }
+
+  async function loadAccessReview() {
+    const refBtn = el('td-ar-refresh-btn');
+    const bgBtn = el('td-ar-breakglass-btn');
+    const link = el('td-ar-entra-link');
+    if (link && tenantInfo && tenantInfo.tenant_id) {
+      link.href = 'https://entra.microsoft.com/' + tenantInfo.tenant_id +
+        '/#view/Microsoft_AAD_UsersAndTenants/UsersManagementMenuBlade/~/AllUsers';
+    }
+    if (refBtn) refBtn.onclick = refreshAccessReview;
+    if (bgBtn) bgBtn.onclick = openBreakGlassModal;
+    try {
+      accessReviewData = await Panoptica.api(`/api/access-review?tenant_id=${tenantId}`);
+      renderAccessReview();
+    } catch (e) {
+      const body = el('td-ar-body');
+      if (body) body.innerHTML = `<div class="panel-error">${esc(arT('load_failed'))}</div>`;
+    }
+  }
+
+  async function refreshAccessReview() {
+    const refBtn = el('td-ar-refresh-btn');
+    if (refBtn) refBtn.disabled = true;
+    arStatus(arT('refreshing'), false);
+    try {
+      const res = await Panoptica.api(`/api/access-review/refresh?tenant_id=${tenantId}`, { method: 'POST' });
+      accessReviewData = Object.assign({}, accessReviewData, { snapshot: res.snapshot, break_glass: res.break_glass });
+      renderAccessReview();
+      arStatus(arT('refreshed_at', { time: arTimeNow() }), false);
+    } catch (e) {
+      arStatus(arT('refresh_failed'), true);
+    } finally {
+      if (refBtn) refBtn.disabled = false;
+    }
+  }
+
+  function arTimeNow() {
+    const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+    const loc = lang === 'fr' ? 'fr-CA' : (lang === 'es' ? 'es' : 'en-CA');
+    return new Date().toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Lowercased key for cross-referencing a roster row against the admin set.
+  function arKey(row) { return String(row.userPrincipalName || row.upn || row.id || '').toLowerCase(); }
+
+  function renderAccessReview() {
+    const body = el('td-ar-body');
+    if (!body) return;
+    const snap = accessReviewData && accessReviewData.snapshot;
+    const canAct = (Panoptica.getRole && (Panoptica.getRole() === 'admin' || Panoptica.getRole() === 'member'));
+
+    if (!snap) {
+      // No cached snapshot yet — prompt a refresh (operators) or wait (viewers).
+      body.innerHTML = `<div class="td-ar-empty">
+          <div class="td-ar-empty-title">${esc(arT('empty_title'))}</div>
+          <div class="td-ar-empty-hint">${esc(canAct ? arT('empty_hint') : arT('empty_hint_viewer'))}</div>
+        </div>`;
+      return;
+    }
+
+    const users = Array.isArray(snap.users) ? snap.users : [];
+    arUserById = new Map(users.map(u => [String(u.id), u])); // action lookups by id
+    const priv = (snap.privileged_roles && Array.isArray(snap.privileged_roles.accounts))
+      ? snap.privileged_roles.accounts : [];
+    const summary = snap.summary || {};
+
+    // Admin cross-reference (for Table 2 delete-guard hints) + last-GA detection.
+    const adminKeys = new Set(priv.map(arKey));
+    const enabledGAs = priv.filter(a => a.enabled && (a.roles || []).some(r => r.name === 'Global Administrator'));
+    const lastGAKey = enabledGAs.length === 1 ? arKey(enabledGAs[0]) : null;
+    // lastActivity per admin, joined from the user roster (Table 1 activity col).
+    const activityByKey = new Map(users.map(u => [arKey(u), u.lastActivity]));
+
+    let html = arSummaryCards(snap, summary);
+    if (snap.reports_anonymized) html += arAnonNote();
+    html += arTable1(priv, activityByKey);
+    html += arTable2(users, adminKeys, lastGAKey);
+    body.innerHTML = html;
+
+    // Wire filter pills + action delegation; apply role gating + i18n to the
+    // freshly-injected DOM.
+    body.querySelectorAll('.td-ar-pill').forEach(p =>
+      p.addEventListener('click', () => arSetFilter(p.dataset.filter)));
+    const t2 = body.querySelector('#td-ar-t2-body');
+    if (t2) t2.addEventListener('click', arOnRowAction);
+    if (window.PanopticaI18n) window.PanopticaI18n.applyTo(body);
+    if (Panoptica.applyRoleVisibility) Panoptica.applyRoleVisibility();
+  }
+
+  function arCard(value, labelKey) {
+    return `<div class="td-ar-card"><div class="td-ar-card-value">${esc(String(value))}</div>
+      <div class="td-ar-card-label">${esc(arT(labelKey))}</div></div>`;
+  }
+
+  function arSummaryCards(snap, summary) {
+    const pr = snap.privileged_roles || {};
+    return `<div class="td-ar-summary">
+      ${arCard(pr.ga_count != null ? pr.ga_count : '—', 'card_admins')}
+      ${arCard(pr.no_mfa_count != null ? pr.no_mfa_count : (summary.no_mfa_admins || 0), 'card_no_mfa')}
+      ${arCard(summary.inactive != null ? summary.inactive : '—', 'card_inactive')}
+      ${arCard(summary.total != null ? summary.total : '—', 'card_total')}
+    </div>`;
+  }
+
+  function arAnonNote() {
+    const tid = (tenantInfo && tenantInfo.tenant_id) ? tenantInfo.tenant_id + '/' : '';
+    const href = 'https://entra.microsoft.com/' + tid +
+      '#view/Microsoft_AAD_IAM/ConfigDirectoryProperties.ReactView';
+    return `<div class="td-ar-anon-note">
+      <i class="ti ti-eye-off" aria-hidden="true"></i>
+      <span>${esc(arT('anon_note'))} <a href="${href}" target="_blank" rel="noopener">${esc(arT('anon_note_link'))}</a></span>
+    </div>`;
+  }
+
+  function arBadge(enabled) {
+    return enabled
+      ? `<span class="status-badge status-enabled">${esc(arT('enabled_yes'))}</span>`
+      : `<span class="status-badge status-disabled">${esc(arT('enabled_no'))}</span>`;
+  }
+
+  function arMfaCell(v) {
+    if (v === true) return `<span class="td-ar-mfa-yes">${esc(arT('mfa_yes'))}</span>`;
+    if (v === false) return `<span class="td-ar-mfa-no">${esc(arT('mfa_no'))}</span>`;
+    return `<span class="td-ar-mfa-unknown">${esc(arT('mfa_unknown'))}</span>`;
+  }
+
+  function arRolesCell(roles) {
+    return (roles || []).map(r =>
+      `<span class="td-ar-role td-ar-role-${esc(r.tier || 'medium')}" title="${esc(r.name)}">${esc(r.name)}</span>`
+    ).join(' ');
+  }
+
+  function arAccountCell(row) {
+    const bgTag = row.breakGlass
+      ? `<span class="td-ar-bg-tag">${esc(arT('tag_breakglass'))}</span>` : '';
+    return `<div class="td-ar-acct">
+        <a href="${arEntraUserLink(row.id)}" target="_blank" rel="noopener" class="td-ar-acct-name">${esc(row.displayName || row.userPrincipalName)}</a>
+        ${bgTag}
+        <div class="td-ar-acct-upn">${esc(row.userPrincipalName || '')}</div>
+      </div>`;
+  }
+
+  function arActivityCell(row) {
+    if (row.neverRedeemed) return `<span class="td-ar-never">${esc(arT('marker_never_redeemed'))}</span>`;
+    if (!row.lastActivity) return `<span class="td-ar-dash">—</span>`;
+    const cls = row.inactive ? 'td-ar-inactive' : '';
+    const marker = row.inactive ? ` <span class="td-ar-inactive-marker">${esc(arT('marker_inactive'))}</span>` : '';
+    return `<span class="${cls}">${esc(row.lastActivity)}</span>${marker}`;
+  }
+
+  // ── Table 1 — review-only admin roster (sorted by tier in the reader) ──
+  function arTable1(priv, activityByKey) {
+    const rows = priv.map(a => {
+      const rowCls = 'td-ar-tier-' + esc(a.topTier || 'medium') + (a.breakGlass ? ' td-ar-row-bg' : '');
+      return `<tr class="${rowCls}">
+        <td>${arAccountCell(a)}</td>
+        <td class="td-ar-roles">${arRolesCell(a.roles)}</td>
+        <td>${arBadge(a.enabled)}</td>
+        <td>${arMfaCell(a.mfaRegistered)}</td>
+        <td>${arActivityCell({ lastActivity: activityByKey.get(arKey(a)) || null, inactive: false, breakGlass: a.breakGlass })}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" class="td-ar-empty-cell">${esc(arT('t1_none'))}</td></tr>`;
+    return `<div class="td-ar-section">
+      <div class="td-ar-section-title">${esc(arT('t1_title'))}</div>
+      <div class="td-ar-scroll">
+        <table class="td-ar-table">
+          <thead><tr>
+            <th>${esc(arT('t1_col_account'))}</th><th>${esc(arT('t1_col_roles'))}</th>
+            <th>${esc(arT('t1_col_enabled'))}</th><th>${esc(arT('t1_col_mfa'))}</th>
+            <th>${esc(arT('t1_col_activity'))}</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // ── Table 2 — all user accounts with filters + audited actions ──
+  function arFilterMatch(u, f) {
+    if (f === 'members') return u.type === 'member';
+    if (f === 'guests') return u.type === 'guest'; // guest = userType Guest OR #EXT# (B2B-homed)
+    if (f === 'inactive') return !!u.inactive;
+    return true; // all
+  }
+
+  function arSetFilter(f) {
+    accessReviewFilter = f || 'all';
+    // Re-render just Table 2 in place (cheap; keeps Table 1 + scroll position).
+    const snap = accessReviewData && accessReviewData.snapshot;
+    if (!snap) return;
+    const users = Array.isArray(snap.users) ? snap.users : [];
+    const priv = (snap.privileged_roles && snap.privileged_roles.accounts) || [];
+    const adminKeys = new Set(priv.map(arKey));
+    const enabledGAs = priv.filter(a => a.enabled && (a.roles || []).some(r => r.name === 'Global Administrator'));
+    const lastGAKey = enabledGAs.length === 1 ? arKey(enabledGAs[0]) : null;
+    const wrap = document.getElementById('td-ar-t2-wrap');
+    if (!wrap) return;
+    wrap.outerHTML = arTable2(users, adminKeys, lastGAKey);
+    const body = el('td-ar-body');
+    body.querySelectorAll('.td-ar-pill').forEach(p =>
+      p.addEventListener('click', () => arSetFilter(p.dataset.filter)));
+    const t2 = body.querySelector('#td-ar-t2-body');
+    if (t2) t2.addEventListener('click', arOnRowAction);
+    if (window.PanopticaI18n) window.PanopticaI18n.applyTo(document.getElementById('td-ar-t2-wrap'));
+    if (Panoptica.applyRoleVisibility) Panoptica.applyRoleVisibility();
+  }
+
+  function arActionsCell(u, adminKeys, lastGAKey) {
+    const key = arKey(u);
+    const isAdmin = adminKeys.has(key);
+    const isLastGA = lastGAKey && key === lastGAKey;
+    const id = esc(String(u.id)); // buttons carry only the id; the row is looked up from arUserById
+    // Enable/Disable toggle (member-gated). Disable is blocked client-side for the
+    // last enabled GA (server enforces too).
+    let toggle;
+    if (u.enabled) {
+      toggle = isLastGA
+        ? `<span class="td-ar-hint" title="${esc(arT('hint_last_ga'))}">${esc(arT('hint_last_ga'))}</span>`
+        : `<button class="td-ar-act td-ar-act-disable" data-role-required="member" data-act="disable" data-id="${id}">${esc(arT('action_disable'))}</button>`;
+    } else {
+      toggle = `<button class="td-ar-act td-ar-act-enable" data-role-required="member" data-act="enable" data-id="${id}">${esc(arT('action_enable'))}</button>`;
+    }
+    // Delete (member-gated). Blocked client-side for admin-role holders (server enforces).
+    const del = isAdmin
+      ? `<span class="td-ar-hint" title="${esc(arT('hint_holds_admin'))}">${esc(arT('hint_holds_admin'))}</span>`
+      : `<button class="td-ar-act td-ar-act-delete" data-role-required="member" data-act="delete" data-id="${id}">${esc(arT('action_delete'))}</button>`;
+    return `<div class="td-ar-actions-cell">${toggle}${del}</div>`;
+  }
+
+  function arTable2(users, adminKeys, lastGAKey) {
+    const filtered = users.filter(u => arFilterMatch(u, accessReviewFilter));
+    const rows = filtered.map(u => {
+      const rowCls = (u.breakGlass ? 'td-ar-row-bg' : (u.inactive ? 'td-ar-row-inactive' : ''));
+      return `<tr class="${rowCls}">
+        <td>${arAccountCell(u)}</td>
+        <td>${esc(arT(u.type === 'guest' ? 'type_guest' : 'type_member'))}</td>
+        <td>${arBadge(u.enabled)}</td>
+        <td>${arActivityCell(u)}</td>
+        <td>${arActionsCell(u, adminKeys, lastGAKey)}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" class="td-ar-empty-cell">${esc(arT('t2_none'))}</td></tr>`;
+    const pill = (f) => `<button class="td-ar-pill${accessReviewFilter === f ? ' active' : ''}" data-filter="${f}">${esc(arT('filter_' + f))}</button>`;
+    return `<div class="td-ar-section" id="td-ar-t2-wrap">
+      <div class="td-ar-section-title">${esc(arT('t2_title'))}</div>
+      <div class="td-ar-filters">${['all', 'members', 'guests', 'inactive'].map(pill).join('')}</div>
+      <div class="td-ar-scroll">
+        <table class="td-ar-table">
+          <thead><tr>
+            <th>${esc(arT('t2_col_account'))}</th><th>${esc(arT('col_type'))}</th>
+            <th>${esc(arT('col_enabled'))}</th><th>${esc(arT('col_activity'))}</th>
+            <th>${esc(arT('col_actions'))}</th>
+          </tr></thead>
+          <tbody id="td-ar-t2-body">${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // ── Action delegation + confirm modal ──
+  function arOnRowAction(e) {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const u = arUserById.get(String(btn.dataset.id));
+    if (!u) return;
+    arConfirmWrite(btn.dataset.act, u);
+  }
+
+  function arConfirmWrite(action, u) {
+    const titleKey = 'confirm_title_' + action;
+    const bodyKey = 'confirm_body_' + action;
+    const name = u.displayName || u.userPrincipalName || u.id;
+    let bodyHtml = `<p>${esc(arT(bodyKey, { name }))}</p>`;
+    bodyHtml += `<p class="td-ar-confirm-note">${esc(arT('confirm_audit_line'))}</p>`;
+    if (action === 'delete') bodyHtml += `<p class="td-ar-confirm-note">${esc(arT('confirm_delete_recovery'))}</p>`;
+    if (u.breakGlass && action !== 'enable') bodyHtml += `<p class="td-ar-confirm-warning">${esc(arT('confirm_breakglass_warning'))}</p>`;
+    const confirmCls = action === 'delete' ? 'btn-danger' : 'btn-primary';
+    const footer = `<button class="btn-secondary" id="td-ar-confirm-cancel">${esc(arT('confirm_cancel'))}</button>
+      <button class="${confirmCls}" id="td-ar-confirm-go">${esc(arT('confirm_btn_' + action))}</button>`;
+    Panoptica.openModal(arT(titleKey), bodyHtml, footer);
+    const cancel = document.getElementById('td-ar-confirm-cancel');
+    const go = document.getElementById('td-ar-confirm-go');
+    if (cancel) cancel.onclick = () => Panoptica.closeModal();
+    if (go) go.onclick = () => arDoWrite(action, u, !!u.breakGlass);
+  }
+
+  async function arDoWrite(action, u, ack) {
+    const go = document.getElementById('td-ar-confirm-go');
+    if (go) { go.disabled = true; go.textContent = arT('working'); }
+    try {
+      await Panoptica.api(`/api/access-review/${action}`, {
+        method: 'POST',
+        body: JSON.stringify({ tenant_id: tenantId, user_id: u.id, upn: u.userPrincipalName, display_name: u.displayName, acknowledge_breakglass: ack }),
+      });
+      Panoptica.closeModal();
+      arStatus(arT('write_success_' + action, { name: u.displayName || u.userPrincipalName }), false);
+      // Reflect the change locally from the snapshot the server patched.
+      await loadAccessReview();
+    } catch (e) {
+      // Show the mapped error inline in the modal; leave it open so the operator
+      // can read it and cancel. One error node, reused across retries.
+      const code = (e && e.message) || '';
+      const mb = document.getElementById('modal-body');
+      if (mb) {
+        let note = mb.querySelector('.td-ar-confirm-error');
+        if (!note) { note = document.createElement('p'); note.className = 'td-ar-confirm-error'; mb.appendChild(note); }
+        note.textContent = arWriteErrorMessage(e);
+      }
+      if (go) {
+        go.disabled = false;
+        go.textContent = arT('confirm_btn_' + action);
+        // Break-glass guard tripped server-side (the cached snapshot hadn't tagged
+        // this row, so we sent ack=false). The NEXT click re-confirms WITH the
+        // acknowledgement — keeps the explicit double-confirm, no auto-retry.
+        if (code === 'breakglass_ack_required') go.onclick = () => arDoWrite(action, u, true);
+      }
+    }
+  }
+
+  // api() throws Error(serverErrorCode) — the server's `error` field lands in
+  // e.message (NOT e.body). Map the known codes to localized copy.
+  function arWriteErrorMessage(e) {
+    const code = (e && e.message) || '';
+    if (code === 'write_scope_missing') return arT('err_write_scope');
+    if (code === 'target_is_admin') return arT('err_target_admin');
+    if (code === 'last_global_admin') return arT('err_last_ga');
+    if (code === 'breakglass_ack_required') return arT('err_breakglass_ack');
+    if (code === 'user_not_found') return arT('err_user_not_found');
+    return arT('err_generic');
+  }
+
+  // ═══ Break-glass governance modal (group config + designation) ═══
+  // A small stateful wizard inside the shared modal: configure the dedicated
+  // excluded GROUP (guidance → picker → member-count guard → configure + exclude
+  // from all CA policies, per-policy results), then manage the accounts (which
+  // are group members). All writes are operator-initiated + audited.
+  let bgState = { view: 'main', config: null, groups: [], query: '', selected: null, results: null };
+
+  function bgById(id, fn) { const e = document.getElementById(id); if (e) fn(e); }
+
+  function openBreakGlassModal() {
+    bgState = { view: 'main', config: null, groups: [], query: '', selected: null, results: null };
+    Panoptica.openModal(arT('bg_modal_title'),
+      '<div class="loading-container" style="height:120px;"><div class="loading-spinner"></div></div>', '');
+    bgReloadConfig().then(bgRender);
+  }
+
+  async function bgReloadConfig() {
+    try {
+      bgState.config = await Panoptica.api(`/api/access-review/break-glass/config?tenant_id=${tenantId}`);
+      if (accessReviewData) accessReviewData.break_glass = bgState.config.break_glass;
+    } catch (e) { bgState.config = { error: true }; }
+  }
+
+  function bgSet(bodyHtml, footerHtml) {
+    bgById('modal-body', el => el.innerHTML = bodyHtml);
+    bgById('modal-footer', el => el.innerHTML = footerHtml || '');
+    const mb = document.getElementById('modal-body');
+    if (mb && window.PanopticaI18n) window.PanopticaI18n.applyTo(mb);
+    if (Panoptica.applyRoleVisibility) Panoptica.applyRoleVisibility();
+  }
+
+  function bgRender() {
+    if (bgState.view === 'picker') return bgRenderPicker();
+    if (bgState.view === 'apply') return bgRenderApply();
+    return bgRenderMain();
+  }
+
+  function bgCoverageHtml(c) {
+    if (c.security_defaults) return `<div class="td-ar-bg-warn">${esc(arT('bg_secdef_on'))}</div>`;
+    if (!c.ca_policy_count) return `<div class="td-ar-bg-warn">${esc(arT('bg_secdef_no_policies'))}</div>`;
+    const cov = c.coverage;
+    if (!cov) return '';
+    if (cov.total > 0 && cov.covered >= cov.total) return `<div class="td-ar-bg-ok">${esc(arT('bg_coverage_full', { total: cov.total }))}</div>`;
+    return `<div class="td-ar-bg-warn">${esc(arT('bg_coverage_partial', { covered: cov.covered, total: cov.total }))}</div>`;
+  }
+
+  function bgRenderMain() {
+    const c = bgState.config || {};
+    const group = c.group;
+    let groupHtml;
+    if (!group) {
+      groupHtml = `<div class="td-ar-bg-guidance">
+          <div class="td-ar-bg-guidance-title">${esc(arT('bg_guidance_title'))}</div>
+          <p>${esc(arT('bg_guidance_intro'))}</p>
+          <ul><li>${esc(arT('bg_guidance_1'))}</li><li>${esc(arT('bg_guidance_2'))}</li><li>${esc(arT('bg_guidance_3'))}</li><li>${esc(arT('bg_guidance_4'))}</li></ul>
+          <button class="btn-primary" data-role-required="member" id="td-bg-choose">${esc(arT('bg_choose_group'))}</button>
+        </div>`;
+    } else {
+      groupHtml = `<div class="td-ar-bg-groupcard">
+          <div class="td-ar-bg-groupline"><span class="label">${esc(arT('bg_group_label'))}</span>
+            <span class="td-ar-bg-groupname">${esc(group.group_name || group.group_id)}</span></div>
+          ${bgCoverageHtml(c)}
+          <div class="td-ar-bg-groupactions">
+            ${(!c.security_defaults && c.ca_policy_count > 0) ? `<button class="btn-secondary" data-role-required="member" id="td-bg-reapply">${esc(arT('bg_reapply'))}</button>` : ''}
+            <button class="btn-secondary" data-role-required="member" id="td-bg-change">${esc(arT('bg_change_group'))}</button>
+          </div>
+        </div>`;
+    }
+    const list = c.break_glass || [];
+    const rows = list.map(b => `<tr>
+        <td><div class="td-ar-acct-name">${esc(b.display_name || b.user_principal_name)}</div>
+            <div class="td-ar-acct-upn">${esc(b.user_principal_name)}</div></td>
+        <td>${esc(b.note || '')}</td>
+        <td><button class="td-ar-act td-ar-act-delete" data-role-required="member" data-bg-remove="${esc(String(b.id))}">${esc(arT('bg_remove'))}</button></td>
+      </tr>`).join('') || `<tr><td colspan="3" class="td-ar-empty-cell">${esc(arT('bg_empty'))}</td></tr>`;
+    const accountsHtml = `<div class="td-ar-bg-accounts">
+        <div class="td-ar-section-title">${esc(arT('bg_accounts_title'))}</div>
+        <div class="td-ar-bg-add">
+          <input type="text" id="td-ar-bg-upn" placeholder="${esc(arT('bg_add_placeholder'))}">
+          <input type="text" id="td-ar-bg-note" placeholder="${esc(arT('bg_note_placeholder'))}">
+          <button class="btn-primary" data-role-required="member" id="td-ar-bg-add-btn">${esc(arT('bg_add_btn'))}</button>
+        </div>
+        <div id="td-bg-add-error" class="td-ar-confirm-error" style="display:none;"></div>
+        <table class="td-ar-table td-ar-bg-table"><thead><tr>
+          <th>${esc(arT('bg_col_account'))}</th><th>${esc(arT('bg_col_note'))}</th><th></th>
+        </tr></thead><tbody id="td-ar-bg-body">${rows}</tbody></table>
+      </div>`;
+    bgSet(groupHtml + accountsHtml, `<button class="btn-secondary" id="td-ar-bg-close">${esc(arT('bg_done'))}</button>`);
+    bgById('td-ar-bg-close', el => el.onclick = () => Panoptica.closeModal());
+    bgById('td-bg-choose', el => el.onclick = bgOpenPicker);
+    bgById('td-bg-change', el => el.onclick = bgOpenPicker);
+    bgById('td-bg-reapply', el => el.onclick = bgRunExclude);
+    bgById('td-ar-bg-add-btn', el => el.onclick = bgAddAccount);
+    const tbody = document.getElementById('td-ar-bg-body');
+    if (tbody) tbody.addEventListener('click', (e) => {
+      const rm = e.target.closest('button[data-bg-remove]');
+      if (rm) bgRemoveAccount(rm.dataset.bgRemove);
+    });
+  }
+
+  // ── Group picker ──
+  async function bgOpenPicker() {
+    bgState.view = 'picker'; bgState.selected = null; bgState.query = '';
+    bgSet('<div class="loading-container" style="height:100px;"><div class="loading-spinner"></div></div>', '');
+    try {
+      const r = await Panoptica.api(`/api/access-review/break-glass/groups?tenant_id=${tenantId}`);
+      bgState.groups = r.groups || [];
+    } catch (e) { bgState.groups = []; }
+    bgRenderPicker();
+  }
+
+  function bgFilteredGroups() {
+    const q = (bgState.query || '').trim().toLowerCase();
+    return (bgState.groups || []).filter(g => !q || String(g.displayName || '').toLowerCase().includes(q));
+  }
+
+  function bgGroupRowsHtml() {
+    const sel = bgState.selected;
+    const groups = bgFilteredGroups().slice(0, 200);
+    if (!groups.length) return `<div class="td-ar-empty-cell">${esc(arT('bg_no_groups'))}</div>`;
+    return groups.map(g => {
+      const flags = [];
+      if (!g.securityEnabled) flags.push(arT('bg_flag_not_security'));
+      if (g.dynamic) flags.push(arT('bg_flag_dynamic'));
+      const active = sel && (sel.groupId === g.id) ? ' active' : '';
+      return `<button type="button" class="td-bg-grouprow${active}" data-gid="${esc(g.id)}">
+          <span class="td-bg-grouprow-name">${esc(g.displayName)}</span>
+          ${flags.map(f => `<span class="td-bg-grouprow-flag">${esc(f)}</span>`).join('')}
+        </button>`;
+    }).join('');
+  }
+
+  function bgWireGroupRows() {
+    document.querySelectorAll('.td-bg-grouprow').forEach(b => b.onclick = () => bgSelectGroup(b.dataset.gid));
+  }
+
+  function bgRenderPicker() {
+    const body = `<div class="td-ar-bg-guidance compact">
+        <div class="td-ar-bg-guidance-title">${esc(arT('bg_guidance_title'))}</div>
+        <ul><li>${esc(arT('bg_guidance_1'))}</li><li>${esc(arT('bg_guidance_2'))}</li><li>${esc(arT('bg_guidance_3'))}</li></ul>
+      </div>
+      <input type="text" id="td-bg-search" class="td-bg-search" placeholder="${esc(arT('bg_search_placeholder'))}" value="${esc(bgState.query || '')}">
+      <div class="td-bg-grouplist" id="td-bg-grouplist">${bgGroupRowsHtml()}</div>
+      <div id="td-bg-detail">${bgState.selected ? bgInspectHtml(bgState.selected) : ''}</div>`;
+    bgSet(body, `<button class="btn-secondary" id="td-bg-back">${esc(arT('bg_picker_back'))}</button>`);
+    bgById('td-bg-back', el => el.onclick = () => { bgState.view = 'main'; bgRender(); });
+    bgById('td-bg-search', el => el.oninput = () => {
+      bgState.query = el.value;
+      bgById('td-bg-grouplist', g => g.innerHTML = bgGroupRowsHtml());
+      bgWireGroupRows();
+    });
+    bgWireGroupRows();
+    bgWireDetail();
+  }
+
+  async function bgSelectGroup(gid) {
+    bgState.selected = { groupId: gid, loading: true };
+    bgById('td-bg-detail', d => d.innerHTML = bgInspectHtml(bgState.selected));
+    bgById('td-bg-grouplist', g => g.innerHTML = bgGroupRowsHtml());
+    bgWireGroupRows();
+    try {
+      const r = await Panoptica.api('/api/access-review/break-glass/inspect', {
+        method: 'POST', body: JSON.stringify({ tenant_id: tenantId, group_id: gid }),
+      });
+      bgState.selected = { groupId: gid, group: r.group, validation: r.validation };
+    } catch (e) {
+      bgState.selected = { groupId: gid, error: e.message };
+    }
+    bgById('td-bg-detail', d => { d.innerHTML = bgInspectHtml(bgState.selected); });
+    const mb = document.getElementById('modal-body');
+    if (mb && window.PanopticaI18n) window.PanopticaI18n.applyTo(mb);
+    if (Panoptica.applyRoleVisibility) Panoptica.applyRoleVisibility();
+    bgWireDetail();
+  }
+
+  function bgInspectHtml(sel) {
+    if (sel.loading) return '<div class="loading-container" style="height:56px;"><div class="loading-spinner"></div></div>';
+    if (sel.error) return `<div class="td-ar-confirm-error">${esc(sel.error)}</div>`;
+    const g = sel.group, v = sel.validation;
+    const countStr = g.memberCountCapped ? ('≥ ' + g.memberCount) : String(g.memberCount);
+    let html = `<div class="td-ar-bg-inspect"><div class="td-ar-bg-inspect-name">${esc(g.displayName)}</div>`;
+    html += `<div class="td-ar-bg-membercount">${esc(arT('bg_members', { count: countStr }))}</div>`;
+    if (g.members && g.members.length) {
+      html += `<div class="td-ar-bg-members">${g.members.map(m => esc(m.displayName || m.userPrincipalName)).join(', ')}${g.memberCount > g.members.length ? '…' : ''}</div>`;
+    }
+    if (v.reasons.includes('not_security')) html += `<div class="td-ar-confirm-error">${esc(arT('bg_invalid_not_security'))}</div>`;
+    if (v.reasons.includes('dynamic')) html += `<div class="td-ar-confirm-error">${esc(arT('bg_invalid_dynamic'))}</div>`;
+    if (v.reasons.includes('synced')) html += `<div class="td-ar-bg-warn">${esc(arT('bg_flag_synced'))}</div>`;
+    if (!v.hardBlock) {
+      if (v.tooManyMembers) {
+        html += `<div class="td-ar-confirm-warning">${esc(arT('bg_guard_warning', { count: countStr }))}</div>`;
+        html += `<label class="td-ar-bg-ack"><input type="checkbox" id="td-bg-ack"> ${esc(arT('bg_guard_ack'))}</label>`;
+      }
+      html += `<button class="btn-primary" id="td-bg-configure" data-role-required="member">${esc(arT('bg_configure_exclude_btn'))}</button>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function bgWireDetail() {
+    bgById('td-bg-configure', el => el.onclick = bgConfigure);
+  }
+
+  async function bgConfigure() {
+    const sel = bgState.selected;
+    if (!sel || !sel.group) return;
+    const ackEl = document.getElementById('td-bg-ack');
+    const ack = ackEl ? ackEl.checked : false;
+    if (sel.validation.tooManyMembers && !ack) return; // require the explicit box
+    const btn = document.getElementById('td-bg-configure');
+    if (btn) { btn.disabled = true; btn.textContent = arT('working'); }
+    try {
+      await Panoptica.api('/api/access-review/break-glass/configure', {
+        method: 'POST', body: JSON.stringify({ tenant_id: tenantId, group_id: sel.group.id, acknowledge_large: ack }),
+      });
+    } catch (e) {
+      if (btn) { btn.disabled = false; btn.textContent = arT('bg_configure_exclude_btn'); }
+      bgById('td-bg-detail', d => {
+        let n = d.querySelector('.td-bg-cfg-error');
+        if (!n) { n = document.createElement('div'); n.className = 'td-ar-confirm-error td-bg-cfg-error'; d.appendChild(n); }
+        n.textContent = e.message === 'group_too_large' ? arT('bg_guard_ack') : (arT('err_generic') + ' (' + e.message + ')');
+      });
+      return;
+    }
+    await bgReloadConfig();
+    if (bgState.config && !bgState.config.security_defaults && bgState.config.ca_policy_count > 0) {
+      await bgRunExclude();
+    } else {
+      bgState.view = 'main'; bgRender();
+    }
+  }
+
+  async function bgRunExclude() {
+    bgState.view = 'apply'; bgState.results = null;
+    bgSet(`<div class="td-ar-bg-applying"><div class="loading-spinner"></div> <span>${esc(arT('bg_applying'))}</span></div>`, '');
+    try {
+      bgState.results = await Panoptica.api('/api/access-review/break-glass/exclude-group', {
+        method: 'POST', body: JSON.stringify({ tenant_id: tenantId }),
+      });
+    } catch (e) { bgState.results = { error: e.message }; }
+    await bgReloadConfig();
+    bgRenderApply();
+  }
+
+  function bgRenderApply() {
+    const r = bgState.results || {};
+    let body;
+    if (r.error) {
+      body = `<div class="td-ar-confirm-error">${esc(r.error === 'security_defaults' ? arT('bg_secdef_on') : r.error)}</div>`;
+    } else {
+      const results = r.results || [];
+      const rows = results.map(p => {
+        const ok = p.status === 'excluded' || p.status === 'already';
+        const icon = ok ? '✓' : (p.status === 'failed' ? '✕' : '–');
+        const cls = p.status === 'failed' ? 'failed' : (p.status === 'skipped' ? 'skipped' : 'ok');
+        return `<div class="td-bg-applyrow td-bg-${cls}"><span class="td-bg-applyicon">${icon}</span>
+            <span class="td-bg-applyname">${esc(p.name)}</span>
+            <span class="td-bg-applystatus">${esc(arT('bg_status_' + p.status))}${p.error ? ': ' + esc(p.error) : ''}</span></div>`;
+      }).join('');
+      const s = r.summary || {};
+      const warn = (s.failed > 0) ? `<div class="td-ar-confirm-warning">${esc(arT('bg_apply_partial', { failed: s.failed }))}</div>` : '';
+      body = `<div class="td-ar-bg-applysummary">${esc(arT('bg_apply_summary', { excluded: s.excluded || 0, already: s.already || 0, failed: s.failed || 0 }))}</div>
+        ${warn}<div class="td-bg-applylist">${rows}</div>`;
+    }
+    bgSet(body, `<button class="btn-primary" id="td-bg-applydone">${esc(arT('bg_done'))}</button>`);
+    bgById('td-bg-applydone', el => el.onclick = () => { bgState.view = 'main'; bgRender(); });
+  }
+
+  // ── Accounts (group-aware) ──
+  async function bgAddAccount() {
+    const upnEl = document.getElementById('td-ar-bg-upn');
+    const noteEl = document.getElementById('td-ar-bg-note');
+    const upn = (upnEl && upnEl.value || '').trim();
+    if (!upn) return;
+    const errEl = document.getElementById('td-bg-add-error');
+    const btn = document.getElementById('td-ar-bg-add-btn');
+    if (btn) btn.disabled = true;
+    if (errEl) errEl.style.display = 'none';
+    try {
+      await Panoptica.api('/api/access-review/break-glass', {
+        method: 'POST', body: JSON.stringify({ tenant_id: tenantId, upn, note: (noteEl && noteEl.value) || null }),
+      });
+      await bgReloadConfig();
+      bgRender();
+    } catch (e) {
+      if (errEl) { errEl.style.display = 'block'; errEl.textContent = e.message === 'user_not_found' ? arT('bg_user_not_found') : arT('err_generic'); }
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function bgRemoveAccount(id) {
+    try {
+      await Panoptica.api(`/api/access-review/break-glass/${id}?tenant_id=${tenantId}`, { method: 'DELETE' });
+      await bgReloadConfig();
+      bgRender();
+    } catch (e) {
+      bgById('td-bg-add-error', el => { el.style.display = 'block'; el.textContent = arT('err_generic'); });
     }
   }
 
@@ -683,7 +1343,9 @@
   // ─── Info Bar ───
 
   function renderInfoBar(t) {
-    el('td-display-name').textContent = t.display_name;
+    // Tenant identity now lives in the info-bar switcher (its selected option IS
+    // the display name), so there's no separate #td-display-name field to fill —
+    // wireTenantSwitcher() owns the selected tenant. Header redesign 2026-06-12.
     const statusEl = el('td-status');
     statusEl.innerHTML = t.enabled
       ? '<span class="status-badge status-enabled">' + window.t('tenant_dashboard.status_enabled') + '</span>'

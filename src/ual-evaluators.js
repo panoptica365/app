@@ -37,6 +37,12 @@ const correlation = require('./lib/ca-compliance-correlation');
 const defenderIncidents = require('./lib/defender-incidents');
 const tenantMode = require('./lib/tenant-mode');
 const alertEngine = require('./alert-engine');
+// Break-glass roster (sign-in alert matches UAL UserLoggedIn events against the
+// tenant's designated emergency accounts). access-review-store only requires
+// ./db/database, so no require cycle.
+const accessReviewStore = require('./lib/access-review-store');
+// Break-glass CA coverage check (Graph). break-glass-graph → ./graph only.
+const bgGraph = require('./lib/break-glass-graph');
 
 // Policy names — idempotent bootstrap targets in alert_policies
 const POLICY_MAILBOX_PERMISSION = 'UAL: Mailbox permission added';
@@ -44,6 +50,8 @@ const POLICY_ANOMALOUS_GEO_FILE = 'UAL: Anomalous-geo file access';
 const POLICY_OAUTH_CONSENT = 'UAL: OAuth consent / app role grant';
 const POLICY_SP_CREDENTIALS = 'UAL: Service principal credentials added';
 const POLICY_PRIVILEGED_ROLE = 'UAL: Privileged role assignment';
+const POLICY_BREAKGLASS_SIGNIN = 'UAL: Break-glass account sign-in';
+const POLICY_BREAKGLASS_COVERAGE = 'Break-glass CA coverage gap';
 // Bundle B (May 5, 2026) — tenant-scope mail integrity
 const POLICY_TRANSPORT_RULE = 'UAL: Transport rule changed';
 const POLICY_MAILBOX_FORWARDING = 'UAL: Mailbox forwarding configured (UAL)';
@@ -76,6 +84,8 @@ let _policyIdAnomGeoFile = null;
 let _policyIdOauthConsent = null;
 let _policyIdSpCredentials = null;
 let _policyIdPrivilegedRole = null;
+let _policyIdBreakGlassSignin = null;
+let _policyIdBreakGlassCoverage = null;
 let _policyIdTransportRule = null;
 let _policyIdMailboxFwd = null;
 let _policyIdInboxRuleUal = null;
@@ -265,6 +275,68 @@ async function ensureUalAlertPolicies() {
     _policyIdPrivilegedRole = id;
   } else {
     _policyIdPrivilegedRole = pr.id;
+  }
+
+  // Break-glass account sign-in (SEVERE) — Break-Glass Governance, 2026-06-13
+  let bg = await db.queryOne(
+    'SELECT id FROM alert_policies WHERE name = ? LIMIT 1',
+    [POLICY_BREAKGLASS_SIGNIN]
+  );
+  if (!bg) {
+    const id = await db.insert(
+      `INSERT INTO alert_policies
+         (name, description, category, severity, polling_tier, notification_target, detection_logic, enabled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [
+        POLICY_BREAKGLASS_SIGNIN,
+        'A designated break-glass (emergency-access) account signed in. These accounts should sit dormant and only be used during an outage or genuine emergency, so ANY sign-in is high-signal and worth immediate review. Matches UAL UserLoggedIn events against the tenant\'s break-glass roster — works without an Entra P1 license (directory sign-in logs are P1-gated). Source: Office 365 Management Activity API (Audit.AzureActiveDirectory, UserLoggedIn).',
+        'risky_signins',
+        'severe',
+        'critical',
+        'both',
+        JSON.stringify({ ual_evaluator: 'breakglass_signin' }),
+      ]
+    );
+    console.log(`[UalEvaluators] Created alert policy "${POLICY_BREAKGLASS_SIGNIN}" id=${id}`);
+    _policyIdBreakGlassSignin = id;
+  } else {
+    _policyIdBreakGlassSignin = bg.id;
+  }
+
+  // Break-glass CA coverage gap — the group stopped being excluded from every CA
+  // policy (a removed exclusion, or a new policy created without it).
+  let bgc = await db.queryOne(
+    'SELECT id FROM alert_policies WHERE name = ? LIMIT 1',
+    [POLICY_BREAKGLASS_COVERAGE]
+  );
+  if (!bgc) {
+    const id = await db.insert(
+      `INSERT INTO alert_policies
+         (name, description, category, severity, polling_tier, notification_target, detection_logic, enabled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [
+        POLICY_BREAKGLASS_COVERAGE,
+        'A designated break-glass group is no longer excluded from every enforceable Conditional Access policy — because an exclusion was removed, or a new CA policy was created that does not exclude it. The emergency accounts could be locked out during an outage. Panoptica verifies coverage each cycle for tenants with a break-glass group configured. Re-apply the exclusion from the Access Review tab to close the gap. Source: Microsoft Graph (conditionalAccess/policies).',
+        'config_changes',
+        'high',
+        'critical',
+        'both',
+        // threshold_type:'imperative' tells the scheduled alert-engine dispatcher
+        // to skip this policy cleanly (it's fired by evaluateBreakGlassCoverage,
+        // not the threshold poll). Without it the dispatcher logs "Unknown
+        // threshold_type" every cycle — this policy's name has no "UAL:" prefix,
+        // which is the OTHER skip path the UAL policies rely on.
+        JSON.stringify({ ual_evaluator: 'breakglass_coverage', threshold_type: 'imperative' }),
+      ]
+    );
+    console.log(`[UalEvaluators] Created alert policy "${POLICY_BREAKGLASS_COVERAGE}" id=${id}`);
+    _policyIdBreakGlassCoverage = id;
+  } else {
+    _policyIdBreakGlassCoverage = bgc.id;
+    // Migrate rows created before the imperative marker existed, so the
+    // dispatcher stops flooding the log with "Unknown threshold_type".
+    await db.execute('UPDATE alert_policies SET detection_logic = ? WHERE id = ?',
+      [JSON.stringify({ ual_evaluator: 'breakglass_coverage', threshold_type: 'imperative' }), bgc.id]);
   }
 
   // Transport rule changed (tenant-scope mail flow)
@@ -1779,6 +1851,197 @@ function classifyTransportRule(parsed) {
     severity: hasForwardingAction ? 'severe' : 'high',
     forwardingTarget: parsed.blindCopyTo || parsed.redirectMessageTo || null,
   };
+}
+
+/**
+ * Break-Glass Governance — SEVERE alert on any sign-in by a designated
+ * emergency-access account. Matches UAL `UserLoggedIn` events against the
+ * tenant's break-glass roster (by UPN and object id). UAL-based on purpose: it
+ * works even without Entra P1 (directory sign-in logs 403 on Business Standard).
+ * One alert per distinct sign-in event (dedup on the UAL event id).
+ */
+/**
+ * Break-Glass Governance — continuous coverage check. Fires HIGH when the
+ * tenant's break-glass GROUP is no longer excluded from every enforceable CA
+ * policy (a removed exclusion, or a new policy without it). Runs only for
+ * tenants that have a break-glass group configured, so it adds zero Graph load
+ * for everyone else. Not UAL-dependent — invoked from the unconditional
+ * pre-cutover block in runEvaluators. One alert per tenant (dedup), updated
+ * each cycle; the operator resolves it after re-applying the exclusion.
+ */
+async function evaluateBreakGlassCoverage(tenant) {
+  if (!_policyIdBreakGlassCoverage) return { fired: 0, skipped: 0 };
+
+  // Gate FIRST on a configured group — no group ⇒ one cheap DB read, no Graph.
+  let group;
+  try { group = await accessReviewStore.getGroupConfig(tenant.id); }
+  catch (e) { return { fired: 0, skipped: 0, error: e.message }; }
+  if (!group) return { fired: 0, skipped: 0 };
+
+  const policy = await db.queryOne(
+    'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
+    [_policyIdBreakGlassCoverage]
+  );
+  if (!policy || !policy.enabled) return { fired: 0, skipped: 0, disabled: !policy || !policy.enabled };
+
+  // Need the Azure GUID for Graph; the evaluator tenant may carry only the DB id.
+  let guid = tenant.tenant_id;
+  if (!guid) {
+    const t = await db.queryOne('SELECT tenant_id FROM tenants WHERE id = ? LIMIT 1', [tenant.id]);
+    guid = t && t.tenant_id;
+  }
+  if (!guid) return { fired: 0, skipped: 0 };
+
+  let cov;
+  try {
+    // Security Defaults ⇒ no CA to cover; nothing to alert on.
+    if (await bgGraph.securityDefaultsEnabled(guid)) return { fired: 0, skipped: 0, securityDefaults: true };
+    cov = await bgGraph.coverage(guid, group.group_id);
+  } catch (e) {
+    return { fired: 0, skipped: 0, error: e.message };
+  }
+  if (!cov || cov.total === 0 || !cov.gaps.length) return { fired: 0, skipped: 0 };
+
+  const gapNames = cov.gaps.map(g => g.name).filter(Boolean);
+  const alertData = {
+    dedup_key: `bg_coverage_gap:${tenant.id}`,
+    severity: 'high',
+    message: `Break-glass group "${group.group_name || group.group_id}" is excluded from only ${cov.covered} of ${cov.total} Conditional Access policies`,
+    raw_data: {
+      message_template_key: 'bg_coverage_gap',
+      message_template_params: {
+        ...buildPolicyNameParams(policy.name),
+        group: group.group_name || '',
+        covered: cov.covered,
+        total: cov.total,
+        gaps: gapNames.join(', '),
+      },
+      group_id: group.group_id,
+      group_name: group.group_name,
+      covered: cov.covered,
+      total: cov.total,
+      gaps: cov.gaps,
+    },
+  };
+
+  try {
+    const result = await alertEngine.createOrUpdateAlert(tenant, policy, alertData);
+    if (result?.isNew) {
+      alertEngine.processNewAlert(result, tenant).catch((e) => {
+        console.error(`[UalEvaluators] processNewAlert failed for alert ${result.id}: ${e.message}`);
+      });
+      return { fired: 1, skipped: 0 };
+    }
+    return { fired: 0, skipped: 1 };
+  } catch (err) {
+    console.error(`[UalEvaluators] break-glass coverage alert insert failed for tenant ${tenant.id}: ${err.message}`);
+    return { fired: 0, skipped: 0, error: err.message };
+  }
+}
+
+async function evaluateBreakGlassSignin(tenant, sinceTime, untilTime) {
+  if (!_policyIdBreakGlassSignin) return { fired: 0, skipped: 0 };
+
+  const policy = await db.queryOne(
+    'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
+    [_policyIdBreakGlassSignin]
+  );
+  if (!policy) return { fired: 0, skipped: 0 };
+  if (!policy.enabled) return { fired: 0, skipped: 0, disabled: true };
+
+  // Roster of break-glass accounts for this tenant. No accounts ⇒ nothing to do.
+  let bgAccounts = [];
+  try { bgAccounts = await accessReviewStore.listBreakGlass(tenant.id); }
+  catch (e) { return { fired: 0, skipped: 0, error: e.message }; }
+  if (!bgAccounts.length) return { fired: 0, skipped: 0 };
+
+  // Narrow to UserLoggedIn at the DB layer (these are high-volume; the roster
+  // match keeps only the rare emergency-account sign-ins).
+  const events = await ualEvents.lookupEvents({
+    tenantId: tenant.id,
+    since: sinceTime,
+    until: untilTime,
+    workload: 'AzureActiveDirectory',
+    operation: 'UserLoggedIn',
+    limit: 1000,
+  });
+  if (!events.length) return { fired: 0, skipped: 0 };
+
+  // UAL UserLoggedIn records identify the signer by UPN (both record.UserId and
+  // UserPrincipalName are the UPN — there's no object id in the normalized
+  // event). An operator can move the account's domain (UPN changes) while the
+  // object id stays put, so we build the match set from BOTH the stored UPN AND
+  // the CURRENT UPN resolved live from the stable object id. Resolved only now
+  // that we know there are sign-in events to check (keeps quiet cycles free of
+  // Graph calls), best-effort per account.
+  let guid = tenant.tenant_id;
+  if (!guid) {
+    const t = await db.queryOne('SELECT tenant_id FROM tenants WHERE id = ? LIMIT 1', [tenant.id]);
+    guid = t && t.tenant_id;
+  }
+  const bgByUpn = new Map(); // lowercased UPN → account (stored + current)
+  for (const a of bgAccounts) {
+    if (a.user_principal_name) bgByUpn.set(String(a.user_principal_name).toLowerCase(), a);
+    if (guid && a.user_id) {
+      try {
+        const live = await bgGraph.getUserById(guid, a.user_id);
+        if (live && live.userPrincipalName) bgByUpn.set(String(live.userPrincipalName).toLowerCase(), a);
+      } catch (e) { /* best-effort current-UPN resolve; stored UPN still matched */ }
+    }
+  }
+
+  let fired = 0;
+  let skipped = 0;
+
+  for (const event of events) {
+    const upn = String(event.user_upn || '').toLowerCase();
+    const acct = bgByUpn.get(upn) || bgByUpn.get(String(event.user_id || '').toLowerCase());
+    if (!acct) { skipped += 1; continue; }
+    const displayUpn = event.user_upn || acct.user_principal_name || upn;
+
+    // Dedup per ACCOUNT per DAY, not per event: a single interactive sign-in
+    // emits a burst of UserLoggedIn records (one per resource/app), and per-event
+    // keys would raise a stack of SEVERE alerts + tickets for one sign-in. With
+    // this key the burst (and repeat sign-ins the same day) collapse into one
+    // alert whose recurrence_count ticks up; a sign-in on a later day — or after
+    // the operator resolves it — raises a fresh one. Keyed on the stable object
+    // id so a UPN/domain change doesn't split it.
+    const dayKey = String(event.creation_time || '').slice(0, 10);
+    const alertData = {
+      dedup_key: `ual_breakglass_signin:${acct.user_id || upn}:${dayKey}`,
+      severity: 'severe',
+      message: `Break-glass account ${displayUpn} signed in${event.client_ip ? ' from ' + event.client_ip : ''}`,
+      raw_data: {
+        message_template_key: 'ual_breakglass_signin',
+        message_template_params: {
+          ...buildPolicyNameParams(policy.name),
+          upn: displayUpn,
+          clientIp: event.client_ip || '',
+        },
+        ual_event_id: event.id,
+        ual_record_id: event.record_id,
+        creation_time: event.creation_time,
+        upn: displayUpn,
+        client_ip: event.client_ip || null,
+      },
+    };
+
+    try {
+      const result = await alertEngine.createOrUpdateAlert(tenant, policy, alertData);
+      if (result?.isNew) {
+        fired += 1;
+        // Notifier + PSA ticket + AI live in processNewAlert (imperative
+        // producers must call it themselves — feedback_imperative_alerts_need_processnewalert).
+        alertEngine.processNewAlert(result, tenant).catch((e) => {
+          console.error(`[UalEvaluators] processNewAlert failed for alert ${result.id}: ${e.message}`);
+        });
+      } else skipped += 1;
+    } catch (err) {
+      console.error(`[UalEvaluators] break-glass signin alert insert failed for tenant ${tenant.id} event ${event.id}: ${err.message}`);
+    }
+  }
+
+  return { fired, skipped };
 }
 
 async function evaluateTransportRule(tenant, sinceTime, untilTime) {
@@ -4424,6 +4687,16 @@ async function runEvaluators(tenant) {
     bundleFResult.defenderIncident = { error: err.message };
   }
 
+  // Break-glass CA coverage — Graph-based, NOT UAL-dependent, so run it here in
+  // the unconditional block (a stalled UAL cutover must not blind us to an
+  // emergency account losing its CA exclusion). Self-gates on a configured group.
+  try {
+    bundleFResult.breakGlassCoverage = await evaluateBreakGlassCoverage(tenant);
+  } catch (err) {
+    console.error(`[UalEvaluators] breakGlassCoverage evaluator failed for tenant ${tenant.id}: ${err.message}`);
+    bundleFResult.breakGlassCoverage = { error: err.message };
+  }
+
   const cutover = await ualEvents.getTenantCutoverState(tenant.id);
   if (!cutover.ual_first_seen_at) {
     // No UAL cutover yet — should have been set by ualWorker on first poll.
@@ -4475,6 +4748,7 @@ async function runEvaluators(tenant) {
   await runEval('oauthConsent',          evaluateOauthConsent);
   await runEval('spCredentials',         evaluateSpCredentials);
   await runEval('privilegedRole',        evaluatePrivilegedRoleAssignment);
+  await runEval('breakGlassSignin',      evaluateBreakGlassSignin);
   await runEval('transportRule',         evaluateTransportRule);
   await runEval('mailboxForwarding',     evaluateMailboxForwarding);
   await runEval('inboxRuleUal',          evaluateInboxRuleUal);
@@ -4529,6 +4803,10 @@ module.exports = {
   _evaluateOauthConsent: evaluateOauthConsent,
   _evaluateSpCredentials: evaluateSpCredentials,
   _evaluatePrivilegedRoleAssignment: evaluatePrivilegedRoleAssignment,
+  _evaluateBreakGlassSignin: evaluateBreakGlassSignin,
+  _evaluateBreakGlassCoverage: evaluateBreakGlassCoverage,
+  POLICY_BREAKGLASS_SIGNIN,
+  POLICY_BREAKGLASS_COVERAGE,
   _parseMailboxPermissionRecord: parseMailboxPermissionRecord,
   _classifyMailboxPermission: classifyMailboxPermission,
   _parseConsentRecord: parseConsentRecord,

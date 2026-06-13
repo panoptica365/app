@@ -254,6 +254,20 @@ module.exports = {
     low: 30,
   },
 
+  // Access Review tab (A1). inactivityThresholdDays drives the "inactive" flag
+  // on the all-user roster — an account whose newest M365 usage-report activity
+  // is older than this is flagged. 90 d default (the usage report's own D90
+  // window; raise toward 180 and the reader switches to the D180 report).
+  // Override via ACCESS_REVIEW_INACTIVITY_DAYS in .env.
+  accessReview: {
+    inactivityThresholdDays: parseInt(process.env.ACCESS_REVIEW_INACTIVITY_DAYS, 10) || 90,
+    // Break-glass governance: hard safety gate. Excluding a group from every CA
+    // policy exempts all its members — so a break-glass group with more than this
+    // many members triggers a confirm-with-acknowledgement (server-enforced). A
+    // real emergency-access group holds ~1–3 accounts. Override via env.
+    breakGlassMaxGroupMembers: parseInt(process.env.BREAK_GLASS_MAX_GROUP_MEMBERS, 10) || 5,
+  },
+
   // Microsoft Message Center feed (Feature 8.8)
   // sourceTenant holds the Azure tenant GUID the daily worker pulls the
   // Message Center from. Empty/unset = None / disabled (the default — no

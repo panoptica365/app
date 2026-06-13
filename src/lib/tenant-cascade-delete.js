@@ -93,6 +93,12 @@ const TENANT_SCOPED_TABLES = [
   { table: 'api_health',              column: 'tenant_id', note: 'Per-tenant API health pings' },
   { table: 'chat_sessions',           column: 'tenant_id', note: 'Ask-Claude chat history' },
 
+  // Access Review (A1). Both also carry FK ON DELETE CASCADE, but they're listed
+  // here (belt-and-suspenders) so the explicit cascade tool reports their counts.
+  { table: 'access_review_snapshot',  column: 'tenant_id', note: 'Access Review tab snapshot (admin + user rosters)' },
+  { table: 'break_glass_accounts',    column: 'tenant_id', note: 'Operator-designated break-glass accounts' },
+  { table: 'break_glass_config',      column: 'tenant_id', note: 'Break-glass group (CA exclusion) config' },
+
   // Audit / change journals (deleted late so they retain context for as long
   // as possible). msp_audit_events has NO tenant_id column — tenant linkage
   // is via (target_type='tenant', target_id=<tenant_id>). Handled as a
