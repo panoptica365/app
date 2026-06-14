@@ -22,9 +22,10 @@
 
   // Alert bar chart
   let alertBarChart = null;
-  // DB uses 'severe' but we display 'Critical' to the user
+  // Severity tiers in display order. Labels are resolved from the shared
+  // alert_policies.sev_* keys at chart-create time (i18n), so 'severe' shows
+  // as "Severe" (matching the rest of the app), not "Critical".
   const SEVERITY_KEYS = ['severe', 'high', 'medium', 'low', 'info'];
-  const SEVERITY_LABELS = ['Critical', 'High', 'Medium', 'Low', 'Info'];
   const SEVERITY_COLORS = ['#cc4444', '#ff9900', '#ffcc66', '#6688cc', '#9999cc'];
 
   async function init() {
@@ -206,9 +207,9 @@
     const countEl = document.getElementById('tenant-count');
     if (!countEl) return;
     if (isFiltering) {
-      countEl.textContent = `${shown} of ${total} tenant${total !== 1 ? 's' : ''}`;
+      countEl.textContent = window.t('main_console.tenant_count_filtered', { count: total, shown });
     } else {
-      countEl.textContent = `${total} tenant${total !== 1 ? 's' : ''}`;
+      countEl.textContent = window.t('main_console.tenant_count', { count: total });
     }
   }
 
@@ -245,10 +246,10 @@
 
     let html = `<table class="tenant-list-table">
       <thead><tr>
-        <th>Tenant</th>
-        <th>Secure Score</th>
-        <th>Status</th>
-        <th>Last Polled</th>
+        <th>${window.t('main_console.col_tenant')}</th>
+        <th>${window.t('main_console.col_secure_score')}</th>
+        <th>${window.t('tenants.col_status')}</th>
+        <th>${window.t('tenants.last_polled')}</th>
       </tr></thead><tbody>`;
 
     for (const t of tenants) {
@@ -260,8 +261,8 @@
         <td class="tenant-name">${escHtml(t.display_name)}</td>
         <td><span class="tenant-score ${scoreClass}">${scoreText}</span></td>
         <td>${t.error
-          ? '<span class="status-badge status-disabled">Error</span>'
-          : '<span class="status-badge status-enabled">Active</span>'
+          ? '<span class="status-badge status-disabled">' + window.t('main_console.status_error') + '</span>'
+          : '<span class="status-badge status-enabled">' + window.t('main_console.status_active') + '</span>'
         }</td>
         <td class="mono">${t.last_polled_at || '—'}</td>
       </tr>`;
@@ -285,15 +286,15 @@
 
     let html = `<table class="tenant-list-table">
       <thead><tr>
-        <th>Tenant</th>
-        <th>Status</th>
-        <th>Language</th>
-        <th>Last Polled</th>
+        <th>${window.t('main_console.col_tenant')}</th>
+        <th>${window.t('tenants.col_status')}</th>
+        <th>${window.t('tenants.col_language')}</th>
+        <th>${window.t('tenants.last_polled')}</th>
       </tr></thead><tbody>`;
 
     for (const t of tenants) {
       const statusClass = t.enabled ? 'status-enabled' : 'status-disabled';
-      const statusText = t.enabled ? 'Enabled' : 'Disabled';
+      const statusText = t.enabled ? window.t('tenants.enabled') : window.t('tenants.disabled');
 
       html += `<tr data-tenant-id="${t.id}" data-tenant-name="${escHtml(t.display_name)}" class="tenant-row">
         <td class="tenant-name">${escHtml(t.display_name)}</td>
@@ -496,6 +497,9 @@
     if (!canvas) return;
 
     const values = SEVERITY_KEYS.map(k => counts[k] || 0);
+    // Resolve labels at chart-create time (Chart.js convention) so a locale
+    // switch is reflected on the next render.
+    const labels = SEVERITY_KEYS.map(k => window.t(`alert_policies.sev_${k}`));
 
     if (alertBarChart) alertBarChart.destroy();
 
@@ -516,7 +520,7 @@
     alertBarChart = new Chart(canvas.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: SEVERITY_LABELS,
+        labels: labels,
         datasets: [{
           data: values,
           backgroundColor: SEVERITY_COLORS,

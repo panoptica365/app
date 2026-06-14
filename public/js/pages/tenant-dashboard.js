@@ -257,6 +257,10 @@
     }
     if (refBtn) refBtn.onclick = refreshAccessReview;
     if (bgBtn) bgBtn.onclick = openBreakGlassModal;
+    const expAdmins = el('td-ar-export-admins-btn');
+    const expUsers = el('td-ar-export-users-btn');
+    if (expAdmins) expAdmins.onclick = arExportAdmins;
+    if (expUsers) expUsers.onclick = arExportUsers;
     try {
       accessReviewData = await Panoptica.api(`/api/access-review?tenant_id=${tenantId}`);
       renderAccessReview();
@@ -286,6 +290,50 @@
     const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
     const loc = lang === 'fr' ? 'fr-CA' : (lang === 'es' ? 'es' : 'en-CA');
     return new Date().toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Shared CSV filename builder for the tenant-scoped exports (Access Review,
+  // Applications): {section}_{tenant}_{YYYY-MM-DD}.csv.
+  function csvTenantFile(section) {
+    const scope = ((tenantInfo && tenantInfo.display_name) || 'tenant').replace(/\s+/g, '_');
+    return `${section}_${scope}_${new Date().toISOString().slice(0, 10)}.csv`;
+  }
+
+  // ── Access Review CSV exports (read-only; all roles) ──
+  // Exports the full in-memory snapshot. Users export ignores the active
+  // on-screen filter (arFilterMatch) per spec — the whole roster is exported.
+  function arExportAdmins() {
+    const snap = accessReviewData && accessReviewData.snapshot;
+    if (!snap || !Panoptica.downloadCsv) return;
+    const priv = (snap.privileged_roles && Array.isArray(snap.privileged_roles.accounts))
+      ? snap.privileged_roles.accounts : [];
+    const users = Array.isArray(snap.users) ? snap.users : [];
+    const activityByKey = new Map(users.map(u => [arKey(u), u.lastActivity]));
+    const mfa = (v) => v === true ? arT('mfa_yes') : (v === false ? arT('mfa_no') : arT('mfa_unknown'));
+    const rows = [[arT('t1_col_account'), arT('t1_col_roles'), arT('t1_col_enabled'), arT('t1_col_mfa'), arT('t1_col_activity')]];
+    priv.forEach(a => rows.push([
+      a.displayName || a.userPrincipalName || '',
+      (a.roles || []).map(r => r.name).join('; '),
+      a.enabled ? arT('enabled_yes') : arT('enabled_no'),
+      mfa(a.mfaRegistered),
+      activityByKey.get(arKey(a)) || '',
+    ]));
+    Panoptica.downloadCsv(rows, csvTenantFile('access_review_admins'));
+  }
+
+  function arExportUsers() {
+    const snap = accessReviewData && accessReviewData.snapshot;
+    if (!snap || !Panoptica.downloadCsv) return;
+    const users = Array.isArray(snap.users) ? snap.users : []; // ALL users — no arFilterMatch
+    const rows = [[arT('t2_col_account'), arT('col_type'), arT('col_enabled'), arT('col_activity'), arT('col_inactive')]];
+    users.forEach(u => rows.push([
+      u.displayName || u.userPrincipalName || '',
+      arT(u.type === 'guest' ? 'type_guest' : 'type_member'),
+      u.enabled ? arT('enabled_yes') : arT('enabled_no'),
+      u.neverRedeemed ? arT('marker_never_redeemed') : (u.lastActivity || ''),
+      u.inactive ? window.t('common.yes') : window.t('common.no'),
+    ]));
+    Panoptica.downloadCsv(rows, csvTenantFile('access_review_users'));
   }
 
   // Lowercased key for cross-referencing a roster row against the admin set.
@@ -918,8 +966,10 @@
     // on each navigation, so these are fresh elements anyway).
     const refBtn = el('td-apps-refresh-btn');
     const saveBtn = el('td-apps-save-btn');
+    const expBtn = el('td-apps-export-btn');
     if (refBtn) refBtn.onclick = refreshApplications;
     if (saveBtn) saveBtn.onclick = saveApplications;
+    if (expBtn) expBtn.onclick = appsExport;
     try {
       const data = await Panoptica.api(`/api/applications?tenant_id=${tenantId}`);
       appsInventory = data.inventory;
@@ -1005,15 +1055,46 @@
     setAppsProgress(`<div class="loading-spinner"></div><span>${esc(window.t('tenant_dashboard.applications.saving', { blessed: checked.length, evaluated: toEval }))}</span>`, false);
 
     try {
-      const res = await Panoptica.api('/api/applications/save', {
+      // Save is SSE-streamed (the Sonnet triage can outlast the reverse-proxy
+      // timeout). Read the stream like the report generators; the done event
+      // carries the counts, then we re-read the inventory cache-first for the
+      // fresh bless flags + Sonnet dots.
+      const response = await fetch('/api/applications/save', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ tenant_id: tenantId, blessed: checked }),
       });
-      appsInventory = res.inventory;
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${response.status}`);
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = null;
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop(); // keep any incomplete trailing line for the next chunk
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let msg;
+          try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+          if (msg.error) throw new Error(msg.error);
+          if (msg.done) result = msg;
+        }
+      }
+      if (!result) throw new Error(window.t('tenant_dashboard.applications.save_failed', { message: 'no result' }));
+      // Cache-first re-read for the updated inventory (bless flags + dots).
+      const data = await Panoptica.api(`/api/applications?tenant_id=${tenantId}`);
+      appsInventory = data.inventory;
       renderApplications();
-      setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_result', { when: appsTimeNow(), blessed: res.blessed, evaluated: res.evaluated }))}</span>`, false);
+      setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_result', { when: appsTimeNow(), blessed: result.blessed, evaluated: result.evaluated }))}</span>`, false);
       if (window.Panoptica && Panoptica.showToast) {
-        Panoptica.showToast(window.t('tenant_dashboard.applications.save_done', { blessed: res.blessed, evaluated: res.evaluated }), 'success');
+        Panoptica.showToast(window.t('tenant_dashboard.applications.save_done', { blessed: result.blessed, evaluated: result.evaluated }), 'success');
       }
     } catch (e) {
       setAppsProgress(esc(window.t('tenant_dashboard.applications.save_failed', { message: e.message })), true);
@@ -1116,6 +1197,27 @@
     let txt = window.t('tenant_dashboard.applications.summary', { total, blessed, drifted });
     if (inv.generated_at) txt += ' · ' + window.t('tenant_dashboard.applications.refreshed', { when: String(inv.generated_at).slice(0, 16) });
     s.textContent = txt;
+  }
+
+  // Applications CSV export (read-only; all roles). Uses the already-loaded
+  // appsInventory — no new fetch. Excludes the Sonnet rationale/notes per spec.
+  function appsExport() {
+    const apps = (appsInventory && appsInventory.apps) || [];
+    if (!Panoptica.downloadCsv) return;
+    const ta = (k) => window.t('tenant_dashboard.applications.' + k);
+    const verdict = (a) => (a.sonnet && a.sonnet.verdict)
+      ? ta('assessment_' + a.sonnet.verdict) : ta('not_evaluated');
+    const statusText = (a) => (a.blessed && a.drift_state === 'drifted')
+      ? ta('status_drift') : (a.blessed ? ta('status_known_good') : '');
+    const rows = [[ta('col_app'), ta('col_publisher'), ta('col_status'), ta('col_known_good'), ta('col_risk_verdict')]];
+    apps.forEach(a => rows.push([
+      a.displayName || a.appId || '',
+      a.publisher || '',
+      statusText(a),
+      a.blessed ? window.t('common.yes') : window.t('common.no'),
+      verdict(a),
+    ]));
+    Panoptica.downloadCsv(rows, csvTenantFile('applications'));
   }
 
   function renderApplications() {

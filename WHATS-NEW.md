@@ -5,6 +5,36 @@ that release, newest first.
 
 ---
 
+## Version 0.2.9 — 2026-06-14
+
+### Export to CSV across the console
+
+Three tables now have an **Export** button that downloads a clean, Excel-ready CSV — UTF-8 with a byte-order mark, so French and Spanish accents survive the trip into Excel for Mac:
+
+- **Applications** (tenant dashboard) — every app with its publisher, status, Known-Good flag, and stored risk verdict.
+- **Access review** — two exports: the privileged-role roster (account, roles, enabled, MFA, last activity) and the full user list (account, type, enabled, last activity, inactive). The user export always contains **every** account, regardless of the on-screen filter.
+- **Audit log** — every row matching the active filters, across **all** pages (not just the visible 100), for whichever view you're in (MSP audit or the unified timeline).
+
+### Reports now cover identity hygiene and application risk
+
+The three reports — **Security Posture**, **Quick Assessment**, and **Configuration Documentation** — now include the same identity and application signals you see in the Access review and Applications tabs:
+
+- **Inactive accounts** and **accounts holding admin roles** (with MFA status), drawn from the Access review snapshot and honoring your configured inactivity threshold.
+- **Break-glass readiness** — whether an emergency-access group is configured and who belongs to it.
+- **Application risk** — which apps are Known-Good versus not, with each unblessed app's stored risk verdict and the permissions it holds.
+
+In the two AI reports (Security Posture and Quick Assessment), Claude now factors these signals into the written analysis as well; the Configuration Documentation report adds them as plain tables. Everything is fully localized in English, French, and Spanish, and degrades gracefully when a tenant hasn't been scanned yet (the report says so rather than inventing findings).
+
+### Polish: a fully localized main console, and a cleaner update screen
+
+The main console is now fully translated — the tenant-list column headers, the alert severity chart (which now reads **Severe** everywhere, matching the rest of the app, instead of "Critical"), the tenant count, and the per-row status badge all follow the selected language. The in-app Software Update screen no longer shows a redundant English line beneath each translated step.
+
+### Reliability: saving the Applications tab no longer times out
+
+On tenants with many applications, **Save** on the Applications tab could fail with an HTTP 504 because the AI permission-triage of un-sanctioned apps ran longer than the gateway would wait. The save now streams its progress (the same way report generation does), so it completes regardless of how long the triage takes — the sanctioning happens immediately and the green/yellow/red triage dots fill in as the review finishes.
+
+---
+
 ## Version 0.2.8 — 2026-06-13
 
 ### New: Access review — privileged accounts, dormant accounts, and emergency access

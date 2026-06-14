@@ -270,21 +270,13 @@
         rows.push([site.displayName || site.name || '', site.webUrl || '', drive.name || '', drive.webUrl || '', gb, drive.lastModifiedDateTime || '']);
       });
     });
-    downloadCsv(rows, `sharepoint_inventory_${(currentInventory.tenantName || 'tenant').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+    Panoptica.downloadCsv(rows, `sharepoint_inventory_${(currentInventory.tenantName || 'tenant').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
     toast(window.t('sharepoint.toast_csv_exported'), 'success');
   }
 
-  function downloadCsv(rows, filename) {
-    const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-    // Prepend UTF-8 BOM (EF BB BF) so Excel for Mac/Windows auto-detects UTF-8
-    // instead of defaulting to Mac Roman / Windows-1252 and mangling accents.
-    const BOM = '\uFEFF';
-    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  }
+  // CSV download now lives in the shared helper (Panoptica.downloadCsv) — see
+  // public/js/shared/csv-export.js. Same UTF-8-BOM behavior, reused by the
+  // Applications, Access Review, and Audit Log exports too.
 
   // ─── Audit ───
   async function startAudit(siteId, driveId, driveName, siteUrl) {
@@ -507,7 +499,7 @@
       (f.roleAssignments || []).forEach(a => pushRow(f.folderPath, a));
     });
 
-    downloadCsv(rows, `audit_${(currentAuditData.driveName || 'lib').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
+    Panoptica.downloadCsv(rows, `audit_${(currentAuditData.driveName || 'lib').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`);
     toast(window.t('sharepoint.toast_audit_csv_exported'), 'success');
   }
 
@@ -769,7 +761,7 @@
 
     const t = tenants.find(x => x.id === currentTenantId);
     const safe = (t && (t.display_name || t.name) || 'tenant').replace(/\s+/g, '_');
-    downloadCsv(rows, `user_permissions_${safe}_${new Date().toISOString().slice(0, 10)}.csv`);
+    Panoptica.downloadCsv(rows, `user_permissions_${safe}_${new Date().toISOString().slice(0, 10)}.csv`);
     toast(window.t('sharepoint.toast_userperm_csv_exported'), 'success');
   }
 

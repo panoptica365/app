@@ -164,6 +164,18 @@
   },
   "main_console": {
     "title": "Consola principal",
+    "col_tenant": "Inquilino",
+    "col_secure_score": "Puntuación segura",
+    "status_active": "Activo",
+    "status_error": "Error",
+    "tenant_count": {
+      "one": "{count} inquilino",
+      "other": "{count} inquilinos"
+    },
+    "tenant_count_filtered": {
+      "one": "{shown} de {count} inquilino",
+      "other": "{shown} de {count} inquilinos"
+    },
     "secure_score": "Puntuación segura",
     "secure_score_avg": "Puntuación segura media",
     "tenant_list": "Inquilinos",
@@ -220,6 +232,7 @@
     "toast_load_failed": "Error al cargar los datos de actividad diaria"
   },
   "audit_log": {
+    "col_actor_tenant": "Actor / Inquilino",
     "title": "Registro de auditoría",
     "subtitle": "Acciones de operador a nivel MSP — solo anexar, solo administradores",
     "tab_msp": "Auditoría MSP",
@@ -266,7 +279,12 @@
     "col_actor": "Actor",
     "col_description": "Descripción",
     "col_outcome": "Resultado",
-    "detail_title": "Evento de auditoría"
+    "detail_title": "Evento de auditoría",
+    "export_btn": "Exportar",
+    "col_source": "Fuente",
+    "export_capped": "Exportación limitada a las primeras {count} filas: ajuste los filtros para exportar menos.",
+    "export_failed": "Error en la exportación: {message}",
+    "export_empty": "Ninguna fila coincide con los filtros actuales: nada que exportar."
   },
   "alert_policies": {
     "title": "Directivas de alerta",
@@ -2690,6 +2708,9 @@
   "tenant_dashboard": {
     "view_applications": "Aplicaciones",
     "access_review": {
+      "export_admins_btn": "Exportar roles de administrador",
+      "export_users_btn": "Exportar usuarios",
+      "col_inactive": "Inactivo",
       "refresh_btn": "Actualizar",
       "breakglass_manage": "Cuentas de emergencia",
       "entra_users_link": "Abrir usuarios en Entra ↗",
@@ -2811,6 +2832,7 @@
       "bg_user_not_found": "No existe ninguna cuenta con ese UPN en el inquilino."
     },
     "applications": {
+      "col_risk_verdict": "Veredicto de riesgo",
       "save_btn": "Guardar",
       "refresh_btn": "Actualizar",
       "entra_link": "Abrir en Entra ↗",
@@ -3736,10 +3758,11 @@
     "close": "Cerrar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "yes": "Yes",
+    "yes": "Sí",
     "no": "No",
     "never": "Nunca",
-    "page_load_failed": "Error al cargar page. Inténtelo de nuevo."
+    "page_load_failed": "Error al cargar page. Inténtelo de nuevo.",
+    "export": "Exportar"
   },
   "setup": {
     "step": {

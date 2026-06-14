@@ -63,24 +63,45 @@ router.post('/refresh', auth.requireMemberOrAdmin, async (req, res) => {
 // ── POST /api/applications/save (Member+) — bless checked + Sonnet-eval the rest
 //    body: { tenant_id, blessed: [{ appId, kind }] }
 router.post('/save', auth.requireMemberOrAdmin, async (req, res) => {
+  // SSE-streamed. The bless writes are fast, but the Sonnet triage of un-blessed
+  // apps is one batched Claude call that can run well past the reverse proxy's
+  // read timeout on a tenant with many apps — a plain POST would 504 mid-call.
+  // Streaming with a heartbeat keeps the connection alive (same pattern as the
+  // report generators), so Save never times out regardless of the proxy config.
+  // The done event carries only the counts; the client re-reads the inventory
+  // cache-first (GET /api/applications) for the fresh bless flags + dots.
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+  const sendEvent = (d) => { try { res.write(`data: ${JSON.stringify(d)}\n\n`); } catch { /* socket gone */ } };
+  const heartbeat = setInterval(() => {
+    try { res.write(`: heartbeat ${Date.now()}\n\n`); } catch { /* socket gone */ }
+  }, 10000);
+  req.on('close', () => clearInterval(heartbeat));
+  const finish = () => { clearInterval(heartbeat); res.end(); };
+
   try {
     const body = req.body || {};
     const tenantId = parseInt(body.tenant_id, 10);
-    if (!tenantId) return res.status(400).json({ error: 'tenant_id required' });
+    if (!tenantId) { sendEvent({ error: 'tenant_id required' }); return finish(); }
     const tenant = await loadTenant(tenantId);
-    if (!tenant) return res.status(404).json({ error: 'tenant not found' });
+    if (!tenant) { sendEvent({ error: 'tenant not found' }); return finish(); }
 
     // Baseline = what the operator REVIEWED = the last Refresh's cached data.
     // Never re-fetch here (spec §8.1).
     const inv = await store.readInventory(tenantId);
     if (!inv || !Array.isArray(inv.apps)) {
-      return res.status(409).json({ error: 'no inventory — run Refresh first' });
+      sendEvent({ error: 'no inventory — run Refresh first' });
+      return finish();
     }
     const byKey = new Map(inv.apps.map(a => [`${a.kind}:${a.appId}`, a]));
     const blessedReq = Array.isArray(body.blessed) ? body.blessed : [];
     const operator = (req.session && req.session.user && req.session.user.email) || null;
 
     // 1-3. Bless each checked app, auto-resolve its open consent alerts, audit.
+    sendEvent({ stage: 'blessing' });
     const blessedKeys = new Set();
     for (const sel of blessedReq) {
       const kind = sel.kind === 'registration' ? 'registration' : 'enterprise';
@@ -102,6 +123,7 @@ router.post('/save', auth.requireMemberOrAdmin, async (req, res) => {
     );
     let evaluated = 0;
     if (toEvaluate.length) {
+      sendEvent({ stage: 'evaluating' });
       const verdicts = await evaluator.evaluateApps(toEvaluate);
       const now = store.toMysqlDatetime(new Date());
       for (const a of inv.apps) {
@@ -119,10 +141,12 @@ router.post('/save', auth.requireMemberOrAdmin, async (req, res) => {
     inv.generated_at = store.toMysqlDatetime(new Date());
     await store.writeInventory(tenantId, inv);
 
-    res.json({ ok: true, blessed: blessedKeys.size, evaluated, inventory: inv });
+    sendEvent({ done: true, blessed: blessedKeys.size, evaluated });
+    finish();
   } catch (err) {
     console.error('[Applications] save failed:', err.message);
-    res.status(500).json({ error: err.message });
+    sendEvent({ error: err.message });
+    finish();
   }
 });
 

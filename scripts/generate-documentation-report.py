@@ -201,6 +201,50 @@ STRINGS = {
         'set_status_pending': 'Pending',
         'set_status_poll_error': 'Poll error',
         'set_status_unavailable': 'Unavailable',
+        # ─── Enrichment (Identity Hygiene + Application Governance) ───
+        'er_sec_identity': 'Identity Hygiene',
+        'er_sec_admins': 'Accounts with Admin Roles',
+        'er_sec_inactive': 'Inactive Accounts',
+        'er_sec_breakglass': 'Break-Glass (Emergency Access)',
+        'er_sec_app_risk': 'Application Risk',
+        'er_sec_app_gov': 'Application Governance',
+        'er_sec_known_good': 'Known-Good Applications',
+        'er_sec_other_apps': 'Other Applications',
+        'er_col_account': 'Account',
+        'er_col_roles': 'Roles',
+        'er_col_enabled': 'Enabled',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Last Activity',
+        'er_col_type': 'Type',
+        'er_col_app': 'Application',
+        'er_col_publisher': 'Publisher',
+        'er_col_verdict': 'Risk Verdict',
+        'er_col_permissions': 'Permissions',
+        'er_col_drift': 'Drift',
+        'er_yes': 'Yes',
+        'er_no': 'No',
+        'er_unknown': 'Unknown',
+        'er_member': 'Member',
+        'er_guest': 'Guest',
+        'er_verdict_green': 'Green',
+        'er_verdict_yellow': 'Yellow',
+        'er_verdict_red': 'Red',
+        'er_verdict_none': 'Not evaluated',
+        'er_drift_yes': 'Drifted',
+        'er_never_redeemed': 'Never redeemed',
+        'er_breakglass_tag': 'break-glass',
+        'er_bg_group_label': 'Group',
+        'er_bg_members_label': 'Members',
+        'er_none': 'None',
+        'er_more': '(+{n} more)',
+        'er_no_admins': 'No accounts hold admin roles.',
+        'er_no_inactive': 'No inactive accounts.',
+        'er_all_known_good': 'All applications are tagged Known-Good.',
+        'er_identity_unavailable': 'Access Review data has not been captured for this tenant. Run an Access Review to populate identity hygiene.',
+        'er_apps_unavailable': 'Application inventory is not available. Run the Applications scan.',
+        'er_bg_not_configured': 'No break-glass (emergency-access) group is configured for this tenant.',
+        'er_bg_members_unavailable': 'Group membership could not be read at report time.',
+        'er_threshold_note': 'Inactivity threshold: {n} days.',
     },
     'fr': {
         'report_title': 'Rapport de configuration',
@@ -353,6 +397,50 @@ STRINGS = {
         'set_status_pending': 'En attente',
         'set_status_poll_error': 'Erreur de scrutation',
         'set_status_unavailable': 'Indisponible',
+        # ─── Enrichment (Identity Hygiene + Application Governance) ───
+        'er_sec_identity': 'Hygiène des identités',
+        'er_sec_admins': 'Comptes avec rôles d\'administration',
+        'er_sec_inactive': 'Comptes inactifs',
+        'er_sec_breakglass': 'Compte d\'urgence (bris de glace)',
+        'er_sec_app_risk': 'Risque applicatif',
+        'er_sec_app_gov': 'Gouvernance des applications',
+        'er_sec_known_good': 'Applications approuvées',
+        'er_sec_other_apps': 'Autres applications',
+        'er_col_account': 'Compte',
+        'er_col_roles': 'Rôles',
+        'er_col_enabled': 'Activé',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Dernière activité',
+        'er_col_type': 'Type',
+        'er_col_app': 'Application',
+        'er_col_publisher': 'Éditeur',
+        'er_col_verdict': 'Verdict de risque',
+        'er_col_permissions': 'Autorisations',
+        'er_col_drift': 'Dérive',
+        'er_yes': 'Oui',
+        'er_no': 'Non',
+        'er_unknown': 'Inconnu',
+        'er_member': 'Membre',
+        'er_guest': 'Invité',
+        'er_verdict_green': 'Vert',
+        'er_verdict_yellow': 'Jaune',
+        'er_verdict_red': 'Rouge',
+        'er_verdict_none': 'Non évalué',
+        'er_drift_yes': 'En dérive',
+        'er_never_redeemed': 'Jamais accepté',
+        'er_breakglass_tag': 'compte d\'urgence',
+        'er_bg_group_label': 'Groupe',
+        'er_bg_members_label': 'Membres',
+        'er_none': 'Aucun',
+        'er_more': '(+{n} de plus)',
+        'er_no_admins': 'Aucun compte ne détient de rôle d\'administration.',
+        'er_no_inactive': 'Aucun compte inactif.',
+        'er_all_known_good': 'Toutes les applications sont approuvées.',
+        'er_identity_unavailable': 'Les données de revue des accès n\'ont pas été recueillies pour ce locataire. Lancez une revue des accès pour renseigner l\'hygiène des identités.',
+        'er_apps_unavailable': 'L\'inventaire des applications n\'est pas disponible. Lancez l\'analyse des applications.',
+        'er_bg_not_configured': 'Aucun groupe de compte d\'urgence (bris de glace) n\'est configuré pour ce locataire.',
+        'er_bg_members_unavailable': 'L\'appartenance au groupe n\'a pas pu être lue au moment du rapport.',
+        'er_threshold_note': 'Seuil d\'inactivité : {n} jours.',
     },
     'es': {
         'report_title': 'Documentación de Configuración',
@@ -505,6 +593,50 @@ STRINGS = {
         'set_status_pending': 'Pendiente',
         'set_status_poll_error': 'Error de sondeo',
         'set_status_unavailable': 'No disponible',
+        # ─── Enrichment (Identity Hygiene + Application Governance) ───
+        'er_sec_identity': 'Higiene de identidades',
+        'er_sec_admins': 'Cuentas con roles de administrador',
+        'er_sec_inactive': 'Cuentas inactivas',
+        'er_sec_breakglass': 'Acceso de emergencia (break-glass)',
+        'er_sec_app_risk': 'Riesgo de aplicaciones',
+        'er_sec_app_gov': 'Gobernanza de aplicaciones',
+        'er_sec_known_good': 'Aplicaciones aprobadas',
+        'er_sec_other_apps': 'Otras aplicaciones',
+        'er_col_account': 'Cuenta',
+        'er_col_roles': 'Roles',
+        'er_col_enabled': 'Habilitado',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Última actividad',
+        'er_col_type': 'Tipo',
+        'er_col_app': 'Aplicación',
+        'er_col_publisher': 'Editor',
+        'er_col_verdict': 'Veredicto de riesgo',
+        'er_col_permissions': 'Permisos',
+        'er_col_drift': 'Desviación',
+        'er_yes': 'Sí',
+        'er_no': 'No',
+        'er_unknown': 'Desconocido',
+        'er_member': 'Miembro',
+        'er_guest': 'Invitado',
+        'er_verdict_green': 'Verde',
+        'er_verdict_yellow': 'Amarillo',
+        'er_verdict_red': 'Rojo',
+        'er_verdict_none': 'Sin evaluar',
+        'er_drift_yes': 'Desviada',
+        'er_never_redeemed': 'Nunca aceptada',
+        'er_breakglass_tag': 'break-glass',
+        'er_bg_group_label': 'Grupo',
+        'er_bg_members_label': 'Miembros',
+        'er_none': 'Ninguno',
+        'er_more': '(+{n} más)',
+        'er_no_admins': 'Ninguna cuenta tiene roles de administrador.',
+        'er_no_inactive': 'Ninguna cuenta inactiva.',
+        'er_all_known_good': 'Todas las aplicaciones están aprobadas.',
+        'er_identity_unavailable': 'No se han recopilado datos de revisión de acceso para este inquilino. Ejecute una revisión de acceso para completar la higiene de identidades.',
+        'er_apps_unavailable': 'El inventario de aplicaciones no está disponible. Ejecute el análisis de aplicaciones.',
+        'er_bg_not_configured': 'No hay configurado ningún grupo de acceso de emergencia (break-glass) para este inquilino.',
+        'er_bg_members_unavailable': 'No se pudo leer la pertenencia al grupo al momento del informe.',
+        'er_threshold_note': 'Umbral de inactividad: {n} días.',
     },
 }
 
@@ -1818,6 +1950,183 @@ def build_section_apps(data, styles, s, width, lang):
     return flows
 
 
+def build_section_identity(data, styles, s, width, lang):
+    flows = []
+    enrichment = data.get('enrichment') or {}
+    identity = enrichment.get('identity') or {}
+
+    # Whole section unavailable when no Access Review snapshot was captured.
+    if not identity.get('available'):
+        flows.append(Paragraph(s['er_identity_unavailable'], styles['DocBody']))
+        return flows
+
+    def yes_no(v):
+        return s['er_yes'] if v else s['er_no']
+
+    def mfa_label(v):
+        if v == 'yes':
+            return s['er_yes']
+        if v == 'no':
+            return s['er_no']
+        return s['er_unknown']
+
+    def activity_label(item):
+        la = item.get('lastActivity')
+        if la:
+            return str(la)[:19]
+        if item.get('neverRedeemed'):
+            return s['er_never_redeemed']
+        return '—'
+
+    # ─── Accounts with Admin Roles ───
+    flows.append(Paragraph(f"<b>{esc(s['er_sec_admins'])}</b>", styles['DocSubHeading']))
+    admins = identity.get('admins') or []
+    if admins:
+        rows = []
+        for a in admins:
+            account = a.get('account') or a.get('upn') or '—'
+            if a.get('breakGlass'):
+                account = f"{account} ({s['er_breakglass_tag']})"
+            roles = ', '.join(a.get('roles') or []) or '—'
+            rows.append([
+                account,
+                roles,  # std_table wraps every cell in a DocTableCell Paragraph;
+                        # pass the STRING (a pre-built Paragraph would be re-esc'd
+                        # into its repr).
+                yes_no(a.get('enabled')),
+                mfa_label(a.get('mfa')),
+                activity_label(a),
+            ])
+        t = std_table(
+            [s['er_col_account'], s['er_col_roles'], s['er_col_enabled'],
+             s['er_col_mfa'], s['er_col_activity']],
+            rows, [140, 140, 50, 50, 124], styles
+        )
+        if t:
+            flows.append(t)
+            flows.append(Spacer(1, 8))
+    else:
+        flows.append(Paragraph(s['er_no_admins'], styles['DocBody']))
+        flows.append(Spacer(1, 8))
+
+    # ─── Inactive Accounts ───
+    flows.append(Paragraph(f"<b>{esc(s['er_sec_inactive'])}</b>", styles['DocSubHeading']))
+    threshold = identity.get('threshold_days')
+    if threshold is not None:
+        flows.append(Paragraph(
+            f"<i>{esc(s['er_threshold_note'].replace('{n}', str(threshold)))}</i>",
+            styles['DocBody']
+        ))
+    inactive = identity.get('inactive_users') or []
+    if inactive:
+        rows = []
+        for u in inactive:
+            account = u.get('account') or u.get('upn') or '—'
+            utype = s['er_guest'] if u.get('type') == 'guest' else s['er_member']
+            rows.append([account, utype, activity_label(u)])
+        t = std_table(
+            [s['er_col_account'], s['er_col_type'], s['er_col_activity']],
+            rows, [240, 100, 164], styles
+        )
+        if t:
+            flows.append(t)
+            flows.append(Spacer(1, 8))
+    else:
+        flows.append(Paragraph(s['er_no_inactive'], styles['DocBody']))
+        flows.append(Spacer(1, 8))
+
+    # ─── Break-Glass (Emergency Access) ───
+    flows.append(Paragraph(f"<b>{esc(s['er_sec_breakglass'])}</b>", styles['DocSubHeading']))
+    bg = enrichment.get('breakGlass') or {}
+    if not bg.get('configured'):
+        flows.append(Paragraph(s['er_bg_not_configured'], styles['DocBody']))
+    else:
+        group_name = bg.get('group_name') or bg.get('group_id') or '—'
+        flows.append(Paragraph(
+            f"<b>{esc(s['er_bg_group_label'])}:</b> {esc(group_name)}",
+            styles['DocBody']
+        ))
+        if not bg.get('members_available'):
+            flows.append(Paragraph(s['er_bg_members_unavailable'], styles['DocBody']))
+        else:
+            members = bg.get('members') or []
+            if members:
+                names = ', '.join(
+                    (m.get('account') or m.get('upn') or '') for m in members
+                ) or s['er_none']
+            else:
+                names = s['er_none']
+            flows.append(Paragraph(
+                f"<b>{esc(s['er_bg_members_label'])}:</b> {esc(names)}",
+                styles['DocBody']
+            ))
+
+    return flows
+
+
+def build_section_app_governance(data, styles, s, width, lang):
+    flows = []
+    enrichment = data.get('enrichment') or {}
+    apps = enrichment.get('apps') or {}
+
+    # Whole section unavailable when the inventory was not captured.
+    if not apps.get('available'):
+        flows.append(Paragraph(s['er_apps_unavailable'], styles['DocBody']))
+        return flows
+
+    def verdict_label(v):
+        if v == 'green':
+            return s['er_verdict_green']
+        if v == 'yellow':
+            return s['er_verdict_yellow']
+        if v == 'red':
+            return s['er_verdict_red']
+        return s['er_verdict_none']
+
+    # Each app is rendered as a SINGLE Paragraph — the app name + metadata on the
+    # first line, then the full permission list below. A Paragraph is a
+    # splittable flowable, so a broadly-permissioned app (e.g. the monitoring app
+    # or a Microsoft first-party app with dozens of permissions) simply flows
+    # onto the next page instead of producing an over-tall, unsplittable table
+    # row that crashes the build. This is why the Configuration Documentation
+    # report can list every permission where a fixed table cannot.
+    def app_block(meta_html, item):
+        items = [str(p) for p in (item.get('permissions') or []) if p]
+        perms = ', '.join(items) if items else '—'
+        html = (meta_html + '<br/>'
+                + '<font size="8" color="#555555">'
+                + esc(s['er_col_permissions']) + ': ' + esc(perms) + '</font>')
+        return [Paragraph(html, styles['DocBody']), Spacer(1, 6)]
+
+    # ─── Known-Good Applications ───
+    flows.append(Paragraph(f"<b>{esc(s['er_sec_known_good'])}</b>", styles['DocSubHeading']))
+    known_good = apps.get('knownGood') or []
+    if known_good:
+        for a in known_good:
+            meta = ('<b>' + esc(a.get('displayName') or '—') + '</b>'
+                    + ' · ' + esc(a.get('publisher') or '—'))
+            flows.extend(app_block(meta, a))
+    else:
+        flows.append(Paragraph(s['er_all_known_good'], styles['DocBody']))
+    flows.append(Spacer(1, 6))
+
+    # ─── Other Applications ───
+    flows.append(Paragraph(f"<b>{esc(s['er_sec_other_apps'])}</b>", styles['DocSubHeading']))
+    others = apps.get('others') or []
+    if others:
+        for a in others:
+            bits = ['<b>' + esc(a.get('displayName') or '—') + '</b>',
+                    esc(a.get('publisher') or '—'),
+                    esc(s['er_col_verdict']) + ': ' + esc(verdict_label(a.get('verdict')))]
+            if a.get('drift_state') == 'drifted':
+                bits.append(esc(s['er_drift_yes']))
+            flows.extend(app_block(' · '.join(bits), a))
+    else:
+        flows.append(Paragraph(s['er_none'], styles['DocBody']))
+
+    return flows
+
+
 def build_section_alert_policies(data, styles, s, width, project_root, lang):
     flows = []
     policies = data.get('alertPolicies') or []
@@ -1946,6 +2255,8 @@ def build_pdf(data, output_path):
         (s['sec_inbox_rules'], lambda: build_section_inbox_rules(data, styles, s, width, lang)),
         (s['sec_teams'], lambda: build_section_teams(data, styles, s, width, lang)),
         (s['sec_apps'], lambda: build_section_apps(data, styles, s, width, lang)),
+        (s['er_sec_identity'], lambda: build_section_identity(data, styles, s, width, lang)),
+        (s['er_sec_app_gov'], lambda: build_section_app_governance(data, styles, s, width, lang)),
         (s['sec_alert_policies'], lambda: build_section_alert_policies(data, styles, s, width, project_root, lang)),
         (s['sec_recent_changes'], lambda: build_section_recent_changes(data, styles, s, width, lang)),
     ]

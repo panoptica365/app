@@ -272,6 +272,50 @@ STRINGS = {
         'score_delta_up': 'improved by {delta} points',
         'score_delta_down': 'declined by {delta} points',
         'score_delta_flat': 'unchanged',
+        # ─── Report enrichment (Identity Hygiene + Application Risk) ───
+        'er_sec_identity': 'Identity Hygiene',
+        'er_sec_admins': 'Accounts with Admin Roles',
+        'er_sec_inactive': 'Inactive Accounts',
+        'er_sec_breakglass': 'Break-Glass (Emergency Access)',
+        'er_sec_app_risk': 'Application Risk',
+        'er_sec_app_gov': 'Application Governance',
+        'er_sec_known_good': 'Known-Good Applications',
+        'er_sec_other_apps': 'Other Applications',
+        'er_col_account': 'Account',
+        'er_col_roles': 'Roles',
+        'er_col_enabled': 'Enabled',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Last Activity',
+        'er_col_type': 'Type',
+        'er_col_app': 'Application',
+        'er_col_publisher': 'Publisher',
+        'er_col_verdict': 'Risk Verdict',
+        'er_col_permissions': 'Permissions',
+        'er_col_drift': 'Drift',
+        'er_yes': 'Yes',
+        'er_no': 'No',
+        'er_unknown': 'Unknown',
+        'er_member': 'Member',
+        'er_guest': 'Guest',
+        'er_verdict_green': 'Green',
+        'er_verdict_yellow': 'Yellow',
+        'er_verdict_red': 'Red',
+        'er_verdict_none': 'Not evaluated',
+        'er_drift_yes': 'Drifted',
+        'er_never_redeemed': 'Never redeemed',
+        'er_breakglass_tag': 'break-glass',
+        'er_bg_group_label': 'Group',
+        'er_bg_members_label': 'Members',
+        'er_none': 'None',
+        'er_more': '(+{n} more)',
+        'er_no_admins': 'No accounts hold admin roles.',
+        'er_no_inactive': 'No inactive accounts.',
+        'er_all_known_good': 'All applications are tagged Known-Good.',
+        'er_identity_unavailable': 'Access Review data has not been captured for this tenant. Run an Access Review to populate identity hygiene.',
+        'er_apps_unavailable': 'Application inventory is not available. Run the Applications scan.',
+        'er_bg_not_configured': 'No break-glass (emergency-access) group is configured for this tenant.',
+        'er_bg_members_unavailable': 'Group membership could not be read at report time.',
+        'er_threshold_note': 'Inactivity threshold: {n} days.',
     },
     'fr': {
         'report_title': 'Rapport de posture de sécurité',
@@ -331,6 +375,50 @@ STRINGS = {
         'score_delta_up': 'amélioration de {delta} points',
         'score_delta_down': 'baisse de {delta} points',
         'score_delta_flat': 'inchangé',
+        # ─── Report enrichment (Identity Hygiene + Application Risk) ───
+        'er_sec_identity': 'Hygiène des identités',
+        'er_sec_admins': 'Comptes avec rôles d\'administration',
+        'er_sec_inactive': 'Comptes inactifs',
+        'er_sec_breakglass': 'Compte d\'urgence (bris de glace)',
+        'er_sec_app_risk': 'Risque applicatif',
+        'er_sec_app_gov': 'Gouvernance des applications',
+        'er_sec_known_good': 'Applications approuvées',
+        'er_sec_other_apps': 'Autres applications',
+        'er_col_account': 'Compte',
+        'er_col_roles': 'Rôles',
+        'er_col_enabled': 'Activé',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Dernière activité',
+        'er_col_type': 'Type',
+        'er_col_app': 'Application',
+        'er_col_publisher': 'Éditeur',
+        'er_col_verdict': 'Verdict de risque',
+        'er_col_permissions': 'Autorisations',
+        'er_col_drift': 'Dérive',
+        'er_yes': 'Oui',
+        'er_no': 'Non',
+        'er_unknown': 'Inconnu',
+        'er_member': 'Membre',
+        'er_guest': 'Invité',
+        'er_verdict_green': 'Vert',
+        'er_verdict_yellow': 'Jaune',
+        'er_verdict_red': 'Rouge',
+        'er_verdict_none': 'Non évalué',
+        'er_drift_yes': 'En dérive',
+        'er_never_redeemed': 'Jamais accepté',
+        'er_breakglass_tag': 'compte d\'urgence',
+        'er_bg_group_label': 'Groupe',
+        'er_bg_members_label': 'Membres',
+        'er_none': 'Aucun',
+        'er_more': '(+{n} de plus)',
+        'er_no_admins': 'Aucun compte ne détient de rôle d\'administration.',
+        'er_no_inactive': 'Aucun compte inactif.',
+        'er_all_known_good': 'Toutes les applications sont approuvées.',
+        'er_identity_unavailable': 'Les données de revue des accès n\'ont pas été recueillies pour ce locataire. Lancez une revue des accès pour renseigner l\'hygiène des identités.',
+        'er_apps_unavailable': 'L\'inventaire des applications n\'est pas disponible. Lancez l\'analyse des applications.',
+        'er_bg_not_configured': 'Aucun groupe de compte d\'urgence (bris de glace) n\'est configuré pour ce locataire.',
+        'er_bg_members_unavailable': 'L\'appartenance au groupe n\'a pas pu être lue au moment du rapport.',
+        'er_threshold_note': 'Seuil d\'inactivité : {n} jours.',
     },
     'es': {
         'report_title': 'Informe de Postura de Seguridad',
@@ -390,6 +478,50 @@ STRINGS = {
         'score_delta_up': 'mejoró en {delta} puntos',
         'score_delta_down': 'disminuyó en {delta} puntos',
         'score_delta_flat': 'sin cambios',
+        # ─── Report enrichment (Identity Hygiene + Application Risk) ───
+        'er_sec_identity': 'Higiene de identidades',
+        'er_sec_admins': 'Cuentas con roles de administrador',
+        'er_sec_inactive': 'Cuentas inactivas',
+        'er_sec_breakglass': 'Acceso de emergencia (break-glass)',
+        'er_sec_app_risk': 'Riesgo de aplicaciones',
+        'er_sec_app_gov': 'Gobernanza de aplicaciones',
+        'er_sec_known_good': 'Aplicaciones aprobadas',
+        'er_sec_other_apps': 'Otras aplicaciones',
+        'er_col_account': 'Cuenta',
+        'er_col_roles': 'Roles',
+        'er_col_enabled': 'Habilitado',
+        'er_col_mfa': 'MFA',
+        'er_col_activity': 'Última actividad',
+        'er_col_type': 'Tipo',
+        'er_col_app': 'Aplicación',
+        'er_col_publisher': 'Editor',
+        'er_col_verdict': 'Veredicto de riesgo',
+        'er_col_permissions': 'Permisos',
+        'er_col_drift': 'Desviación',
+        'er_yes': 'Sí',
+        'er_no': 'No',
+        'er_unknown': 'Desconocido',
+        'er_member': 'Miembro',
+        'er_guest': 'Invitado',
+        'er_verdict_green': 'Verde',
+        'er_verdict_yellow': 'Amarillo',
+        'er_verdict_red': 'Rojo',
+        'er_verdict_none': 'Sin evaluar',
+        'er_drift_yes': 'Desviada',
+        'er_never_redeemed': 'Nunca aceptada',
+        'er_breakglass_tag': 'break-glass',
+        'er_bg_group_label': 'Grupo',
+        'er_bg_members_label': 'Miembros',
+        'er_none': 'Ninguno',
+        'er_more': '(+{n} más)',
+        'er_no_admins': 'Ninguna cuenta tiene roles de administrador.',
+        'er_no_inactive': 'Ninguna cuenta inactiva.',
+        'er_all_known_good': 'Todas las aplicaciones están aprobadas.',
+        'er_identity_unavailable': 'No se han recopilado datos de revisión de acceso para este inquilino. Ejecute una revisión de acceso para completar la higiene de identidades.',
+        'er_apps_unavailable': 'El inventario de aplicaciones no está disponible. Ejecute el análisis de aplicaciones.',
+        'er_bg_not_configured': 'No hay configurado ningún grupo de acceso de emergencia (break-glass) para este inquilino.',
+        'er_bg_members_unavailable': 'No se pudo leer la pertenencia al grupo al momento del informe.',
+        'er_threshold_note': 'Umbral de inactividad: {n} días.',
     }
 }
 
@@ -1178,6 +1310,208 @@ def build_pdf(data, output_path):
                     Paragraph(c.get('created_by', '') or c.get('source', ''), styles['TableCell']),
                 ])
             t = Table(rows, colWidths=[80, 90, 230, 100])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor(COLORS['border'])),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(t)
+            story.append(Spacer(1, 10))
+
+    # ── Identity Hygiene (enrichment: admins / inactive / break-glass) ──
+    enrichment = data.get('enrichment') or {}
+    identity = enrichment.get('identity') or {}
+    breakglass = enrichment.get('breakGlass') or {}
+    apps = enrichment.get('apps') or {}
+
+    def _er_yesno(val):
+        return s['er_yes'] if val else s['er_no']
+
+    def _er_mfa(val):
+        if val == 'yes':
+            return s['er_yes']
+        if val == 'no':
+            return s['er_no']
+        return s['er_unknown']
+
+    def _er_activity(item):
+        last = item.get('lastActivity')
+        if last:
+            return str(last)
+        if item.get('neverRedeemed'):
+            return s['er_never_redeemed']
+        return '—'
+
+    def _er_verdict(val):
+        return {
+            'green': s['er_verdict_green'],
+            'yellow': s['er_verdict_yellow'],
+            'red': s['er_verdict_red'],
+        }.get(val, s['er_verdict_none'])
+
+    def _er_drift(val):
+        return s['er_drift_yes'] if val == 'drifted' else '—'
+
+    def _er_join(lst):
+        items = [str(x) for x in (lst or []) if x]
+        return ', '.join(items) if items else '—'
+
+    def _er_perms(lst):
+        # Cap the permissions shown in a table cell — ReportLab cannot split a
+        # single row across pages, so an app with a very large consent (e.g. a
+        # broadly-permissioned monitoring/first-party app) would otherwise make
+        # a row taller than the page and crash the build. Full list lives in the
+        # Applications tab + CSV export.
+        items = [str(x) for x in (lst or []) if x]
+        if not items:
+            return '—'
+        limit = 20
+        if len(items) > limit:
+            return ', '.join(items[:limit]) + ' ' + s['er_more'].replace('{n}', str(len(items) - limit))
+        return ', '.join(items)
+
+    # Identity Hygiene section heading + narrative
+    id_narrative = (narrative.get('identity_hygiene_analysis') or '').strip()
+    build_section(s['er_sec_identity'], text_to_paras(id_narrative, styles) if id_narrative else [],
+                  styles, width, story)
+
+    if not identity.get('available'):
+        story.append(Paragraph(s['er_identity_unavailable'], styles['ReportBody']))
+        story.append(Spacer(1, 10))
+    else:
+        # Admin accounts table
+        admins = identity.get('admins') or []
+        admin_heading = Paragraph(s['er_sec_admins'], styles['SubHeading'])
+        if admins:
+            header_row = [
+                Paragraph(s['er_col_account'], styles['TableHeader']),
+                Paragraph(s['er_col_roles'], styles['TableHeader']),
+                Paragraph(s['er_col_enabled'], styles['TableHeader']),
+                Paragraph(s['er_col_mfa'], styles['TableHeader']),
+                Paragraph(s['er_col_activity'], styles['TableHeader']),
+            ]
+            rows = [header_row]
+            for a in admins:
+                account = a.get('account') or a.get('upn') or '—'
+                if a.get('breakGlass'):
+                    account = f"{account} ({s['er_breakglass_tag']})"
+                rows.append([
+                    Paragraph(account, styles['TableCell']),
+                    Paragraph(_er_join(a.get('roles')), styles['TableCell']),
+                    Paragraph(_er_yesno(a.get('enabled')), styles['TableCell']),
+                    Paragraph(_er_mfa(a.get('mfa')), styles['TableCell']),
+                    Paragraph(_er_activity(a), styles['TableCell']),
+                ])
+            t = Table(rows, colWidths=[140, 150, 50, 50, 100])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor(COLORS['border'])),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(KeepTogether([admin_heading, Spacer(1, 4), t]))
+        else:
+            story.append(KeepTogether([admin_heading, Spacer(1, 4),
+                                       Paragraph(s['er_no_admins'], styles['ReportBody'])]))
+        story.append(Spacer(1, 10))
+
+        # Inactive accounts table
+        inactive = identity.get('inactive_users') or []
+        inactive_heading = Paragraph(s['er_sec_inactive'], styles['SubHeading'])
+        threshold_n = identity.get('threshold_days')
+        note_line = Paragraph(
+            s['er_threshold_note'].replace('{n}', str(threshold_n)),
+            styles['ReportBody']
+        ) if threshold_n is not None else Spacer(1, 0)
+        if inactive:
+            header_row = [
+                Paragraph(s['er_col_account'], styles['TableHeader']),
+                Paragraph(s['er_col_type'], styles['TableHeader']),
+                Paragraph(s['er_col_activity'], styles['TableHeader']),
+            ]
+            rows = [header_row]
+            for u in inactive:
+                account = u.get('account') or u.get('upn') or '—'
+                utype = s['er_guest'] if u.get('type') == 'guest' else s['er_member']
+                rows.append([
+                    Paragraph(account, styles['TableCell']),
+                    Paragraph(utype, styles['TableCell']),
+                    Paragraph(_er_activity(u), styles['TableCell']),
+                ])
+            t = Table(rows, colWidths=[250, 80, 160])
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
+                ('GRID', (0, 0), (-1, -1), 0.5, HexColor(COLORS['border'])),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(KeepTogether([inactive_heading, Spacer(1, 4), note_line, Spacer(1, 4), t]))
+        else:
+            story.append(KeepTogether([inactive_heading, Spacer(1, 4), note_line, Spacer(1, 4),
+                                       Paragraph(s['er_no_inactive'], styles['ReportBody'])]))
+        story.append(Spacer(1, 10))
+
+        # Break-glass block
+        bg_heading = Paragraph(s['er_sec_breakglass'], styles['SubHeading'])
+        bg_flowables = [bg_heading, Spacer(1, 4)]
+        if not breakglass.get('configured'):
+            bg_flowables.append(Paragraph(s['er_bg_not_configured'], styles['ReportBody']))
+        else:
+            group_name = breakglass.get('group_name') or s['er_none']
+            bg_flowables.append(Paragraph(
+                f"<b>{s['er_bg_group_label']}:</b> {group_name}", styles['ReportBody']))
+            if not breakglass.get('members_available'):
+                bg_flowables.append(Paragraph(s['er_bg_members_unavailable'], styles['ReportBody']))
+            else:
+                members = breakglass.get('members') or []
+                member_names = [m.get('account') or m.get('upn') or '—' for m in members]
+                member_str = ', '.join(member_names) if member_names else s['er_none']
+                bg_flowables.append(Paragraph(
+                    f"<b>{s['er_bg_members_label']}:</b> {member_str}", styles['ReportBody']))
+        story.append(KeepTogether(bg_flowables))
+        story.append(Spacer(1, 10))
+
+    # ── Application Risk (enrichment: other apps with verdicts) ──
+    app_narrative = (narrative.get('application_risk_analysis') or '').strip()
+    build_section(s['er_sec_app_risk'], text_to_paras(app_narrative, styles) if app_narrative else [],
+                  styles, width, story)
+
+    if not apps.get('available'):
+        story.append(Paragraph(s['er_apps_unavailable'], styles['ReportBody']))
+        story.append(Spacer(1, 10))
+    else:
+        others = apps.get('others') or []
+        if others:
+            header_row = [
+                Paragraph(s['er_col_app'], styles['TableHeader']),
+                Paragraph(s['er_col_publisher'], styles['TableHeader']),
+                Paragraph(s['er_col_verdict'], styles['TableHeader']),
+                Paragraph(s['er_col_drift'], styles['TableHeader']),
+                Paragraph(s['er_col_permissions'], styles['TableHeader']),
+            ]
+            rows = [header_row]
+            for app in others:
+                rows.append([
+                    Paragraph(app.get('displayName') or '—', styles['TableCell']),
+                    Paragraph(app.get('publisher') or '—', styles['TableCell']),
+                    Paragraph(_er_verdict(app.get('verdict')), styles['TableCell']),
+                    Paragraph(_er_drift(app.get('drift_state')), styles['TableCell']),
+                    Paragraph(_er_perms(app.get('permissions')), styles['TableCell']),
+                ])
+            t = Table(rows, colWidths=[120, 90, 60, 50, 170])
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
                 ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),

@@ -164,6 +164,18 @@
   },
   "main_console": {
     "title": "Main Console",
+    "col_tenant": "Tenant",
+    "col_secure_score": "Secure Score",
+    "status_active": "Active",
+    "status_error": "Error",
+    "tenant_count": {
+      "one": "{count} tenant",
+      "other": "{count} tenants"
+    },
+    "tenant_count_filtered": {
+      "one": "{shown} of {count} tenant",
+      "other": "{shown} of {count} tenants"
+    },
     "secure_score": "Secure Score",
     "secure_score_avg": "Average Secure Score",
     "tenant_list": "Tenants",
@@ -220,6 +232,7 @@
     "toast_load_failed": "Failed to load daily activity data"
   },
   "audit_log": {
+    "col_actor_tenant": "Actor / Tenant",
     "title": "Audit Log",
     "subtitle": "MSP-level operator actions — append-only, Admin-only",
     "tab_msp": "MSP Audit",
@@ -266,7 +279,12 @@
     "col_actor": "Actor",
     "col_description": "Description",
     "col_outcome": "Outcome",
-    "detail_title": "Audit event"
+    "detail_title": "Audit event",
+    "export_btn": "Export",
+    "col_source": "Source",
+    "export_capped": "Export limited to the first {count} rows — narrow the filters to export fewer.",
+    "export_failed": "Export failed: {message}",
+    "export_empty": "No rows match the current filters — nothing to export."
   },
   "alert_policies": {
     "title": "Alert Policies",
@@ -2690,6 +2708,9 @@
   "tenant_dashboard": {
     "view_applications": "Applications",
     "access_review": {
+      "export_admins_btn": "Export admin roles",
+      "export_users_btn": "Export users",
+      "col_inactive": "Inactive",
       "refresh_btn": "Refresh",
       "breakglass_manage": "Break-glass accounts",
       "entra_users_link": "Open users in Entra ↗",
@@ -2811,6 +2832,7 @@
       "bg_user_not_found": "No account with that UPN exists on the tenant."
     },
     "applications": {
+      "col_risk_verdict": "Risk Verdict",
       "save_btn": "Save",
       "refresh_btn": "Refresh",
       "entra_link": "Open in Entra ↗",
@@ -3739,7 +3761,8 @@
     "yes": "Yes",
     "no": "No",
     "never": "Never",
-    "page_load_failed": "Failed to load page. Please try again."
+    "page_load_failed": "Failed to load page. Please try again.",
+    "export": "Export"
   },
   "setup": {
     "step": {

@@ -26,6 +26,10 @@ const graph = require('../graph');
 const config = require('../../config/default');
 const tenantMode = require('../lib/tenant-mode');
 const eventI18n = require('../lib/event-description-i18n');
+// v0.2.9 — report enrichment sources (identity hygiene, break-glass, app risk).
+const accessReviewStore = require('../lib/access-review-store');
+const breakGlassGraph = require('../lib/break-glass-graph');
+const knownGoodStore = require('../lib/known-good-store');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -71,6 +75,175 @@ function rangeToLabel(range, lang) {
 // ═══════════════════════════════════════════
 // DATA GATHERING (shared by PDF and JSON)
 // ═══════════════════════════════════════════
+
+// ─── Report enrichment (v0.2.9) ───
+// Shared, read-only assembly of the identity-hygiene, break-glass, and
+// application-risk signals that all three reports surface. Pulls from the same
+// stores the live UI uses (no re-implemented queries). Every source is wrapped
+// so a single failure degrades that section gracefully instead of failing the
+// whole report. Returns a plain object that is fed BOTH to the AI summaries
+// and (verbatim) to the Python PDF generators.
+//   tenantDbId    — tenants.id (INT) — for the DB-backed stores
+//   azureTenantId — tenants.tenant_id (GUID) — for the live break-glass Graph call
+
+// Permission-name helpers — render standard Graph permission names.
+function permNamesFromTokens(tokens) {
+  // baseline_perms tokens look like  del|<resourceAppId>|<scope>  /  app|...|<role>
+  // /  req|...|<value>  /  cred|<keyId>  /  uri|<uri>. Only the first three are
+  // permissions; the name is the last segment.
+  const out = new Set();
+  for (const tok of tokens || []) {
+    const parts = String(tok).split('|');
+    if (['del', 'app', 'req'].includes(parts[0]) && parts[2]) out.add(parts[2]);
+  }
+  return Array.from(out).sort();
+}
+function permNamesFromApp(app) {
+  const out = new Set();
+  for (const p of app.delegatedPermissions || []) if (p.scope) out.add(p.scope);
+  for (const p of app.applicationPermissions || []) if (p.role) out.add(p.role);
+  for (const p of app.requiredResourceAccess || []) if (p.value) out.add(p.value);
+  return Array.from(out).sort();
+}
+
+async function gatherReportEnrichment(tenantDbId, azureTenantId) {
+  const tid = parseInt(tenantDbId, 10);
+  const enrichment = {
+    identity: { available: false },
+    breakGlass: { configured: false },
+    apps: { available: false, knownGood: [], others: [] },
+  };
+
+  // ── Identity hygiene — privileged roles + inactive accounts ──
+  try {
+    const snap = await accessReviewStore.readSnapshot(tid);
+    if (snap) {
+      const users = Array.isArray(snap.users) ? snap.users : [];
+      const priv = (snap.privileged_roles && Array.isArray(snap.privileged_roles.accounts))
+        ? snap.privileged_roles.accounts : [];
+      // lastActivity for an admin is joined from the user roster, keyed by UPN/id.
+      const key = (r) => String(r.userPrincipalName || r.upn || r.id || '').toLowerCase();
+      const activityByKey = new Map(users.map(u => [key(u), u.lastActivity || null]));
+      const thresholdDays = Number.isFinite(snap.inactivity_days) && snap.inactivity_days > 0
+        ? snap.inactivity_days
+        : ((config.accessReview && config.accessReview.inactivityThresholdDays) || 90);
+      enrichment.identity = {
+        available: true,
+        captured_at: snap.captured_at || null,
+        reports_anonymized: !!snap.reports_anonymized,
+        threshold_days: thresholdDays,
+        summary: {
+          total: (snap.summary && snap.summary.total) ?? users.length,
+          inactive: (snap.summary && snap.summary.inactive) ?? users.filter(u => u.inactive).length,
+          ga_count: (snap.privileged_roles && snap.privileged_roles.ga_count) ?? (snap.summary && snap.summary.ga_count) ?? null,
+          no_mfa_admins: (snap.privileged_roles && snap.privileged_roles.no_mfa_count) ?? (snap.summary && snap.summary.no_mfa_admins) ?? null,
+          admin_total: priv.length,
+        },
+        admins: priv.map(a => ({
+          account: a.displayName || a.userPrincipalName || '',
+          upn: a.userPrincipalName || '',
+          roles: (a.roles || []).map(r => r.name),
+          enabled: a.enabled !== false,
+          mfa: a.mfaRegistered === true ? 'yes' : (a.mfaRegistered === false ? 'no' : 'unknown'),
+          lastActivity: activityByKey.get(key(a)) || null,
+          breakGlass: !!a.breakGlass,
+        })),
+        inactive_users: users.filter(u => u.inactive).map(u => ({
+          account: u.displayName || u.userPrincipalName || '',
+          upn: u.userPrincipalName || '',
+          type: u.type === 'guest' ? 'guest' : 'member',
+          lastActivity: u.lastActivity || null,
+          neverRedeemed: !!u.neverRedeemed,
+        })),
+      };
+    }
+  } catch (err) {
+    console.warn('[Reports.enrich] identity snapshot unavailable (non-fatal):', err.message);
+  }
+
+  // ── Break-glass — DB config/designations + live group membership ──
+  try {
+    const cfg = await accessReviewStore.getGroupConfig(tid);
+    const designations = await accessReviewStore.listBreakGlass(tid).catch(() => []);
+    if (cfg && cfg.group_id) {
+      enrichment.breakGlass = {
+        configured: true,
+        group_id: cfg.group_id,
+        group_name: cfg.group_name || null,
+        designations: (designations || []).map(d => ({
+          account: d.display_name || d.user_principal_name || '',
+          upn: d.user_principal_name || '',
+        })),
+        members_available: false,
+        members: [],
+      };
+      // Live Graph call — best-effort. On failure keep the group identity but
+      // mark members unavailable rather than failing the whole report.
+      try {
+        const inspected = await breakGlassGraph.inspectGroup(azureTenantId, cfg.group_id);
+        enrichment.breakGlass.members_available = true;
+        enrichment.breakGlass.member_count = inspected.memberCount;
+        enrichment.breakGlass.member_count_capped = !!inspected.memberCountCapped;
+        enrichment.breakGlass.members = (inspected.members || []).map(m => ({
+          account: m.displayName || m.userPrincipalName || '',
+          upn: m.userPrincipalName || '',
+        }));
+      } catch (gErr) {
+        enrichment.breakGlass.members_error = gErr.message;
+        console.warn('[Reports.enrich] break-glass member list unavailable (non-fatal):', gErr.message);
+      }
+    } else {
+      enrichment.breakGlass = { configured: false, designations: (designations || []).map(d => ({ account: d.display_name || d.user_principal_name || '', upn: d.user_principal_name || '' })) };
+    }
+  } catch (err) {
+    console.warn('[Reports.enrich] break-glass config unavailable (non-fatal):', err.message);
+  }
+
+  // ── Applications — known-good vs unblessed, with permissions + verdict ──
+  try {
+    const inv = await knownGoodStore.readInventory(tid);
+    if (inv && Array.isArray(inv.apps)) {
+      const baselines = await knownGoodStore.getBaselines(tid).catch(() => new Map());
+      const knownGood = [];
+      const others = [];
+      for (const app of inv.apps) {
+        const baseline = baselines.get(`${app.kind}:${app.appId}`);
+        if (app.blessed) {
+          knownGood.push({
+            displayName: app.displayName || app.appId || '',
+            publisher: app.publisher || '',
+            // Known-good apps surface their APPROVED permission set (baseline),
+            // not the live one (spec). Fall back to live if no baseline row.
+            permissions: baseline && Array.isArray(baseline.baseline_perms)
+              ? permNamesFromTokens(baseline.baseline_perms)
+              : permNamesFromApp(app),
+            drift_state: app.drift_state || null,
+          });
+        } else {
+          others.push({
+            displayName: app.displayName || app.appId || '',
+            publisher: app.publisher || '',
+            verdict: (app.sonnet && app.sonnet.verdict) || null,
+            rationale: (app.sonnet && app.sonnet.reasons) || null, // {en,fr,es} — resolved per-lang in Python
+            drift_state: app.drift_state || null,
+            permissions: permNamesFromApp(app),
+          });
+        }
+      }
+      enrichment.apps = {
+        available: true,
+        generated_at: inv.captured_at || inv.generated_at || null,
+        total: inv.apps.length,
+        knownGood,
+        others,
+      };
+    }
+  } catch (err) {
+    console.warn('[Reports.enrich] applications inventory unavailable (non-fatal):', err.message);
+  }
+
+  return enrichment;
+}
 
 async function gatherReportData(tenantId, range) {
   const interval = rangeToInterval(range);
@@ -528,6 +701,10 @@ async function gatherReportData(tenantId, range) {
   }
 
   tic('activity volume', tStep);
+
+  // v0.2.9 — identity-hygiene / break-glass / app-risk enrichment (graceful).
+  const enrichment = await gatherReportEnrichment(tenantIdInt, tenant.tenant_id);
+
   console.log(`[Reports.gather] DONE for tenant ${tenantIdInt} in ${Date.now() - t0}ms`);
 
   return {
@@ -542,6 +719,7 @@ async function gatherReportData(tenantId, range) {
     range,
     rangeLabel: rangeToLabel(range, tenant.language || 'en'),
     generatedAt: new Date().toISOString(),
+    enrichment,
     secureScore: parsedSecureScore,
     alerts: {
       bySeverity: Object.fromEntries(alertsBySeverity.map(r => [r.severity, r.cnt])),
@@ -1102,7 +1280,7 @@ async function generateNarrative(data) {
 
 Your audience is a non-technical business owner. Write in clear, accessible language — avoid jargon (or define it inline the first time you use a term). Be narrative, not bullet-heavy. Think of it as a trusted advisor explaining their security situation in person.
 
-This report covers ALL operational data for the period: alerts, Microsoft Secure Score, Conditional Access policies, the tenant's Security Settings posture (which protections are matched vs drifting), Microsoft Defender XDR incidents, the operator change log (every Match/Apply/Accept/Remediate action your MSP took, plus any operator-added manual notes), the MSP audit log, active alert exemptions, and overall activity volume.
+This report covers ALL operational data for the period: alerts, Microsoft Secure Score, Conditional Access policies, the tenant's Security Settings posture (which protections are matched vs drifting), Microsoft Defender XDR incidents, the operator change log (every Match/Apply/Accept/Remediate action your MSP took, plus any operator-added manual notes), the MSP audit log, active alert exemptions, overall activity volume, and — new — identity hygiene (accounts holding admin roles, admins missing MFA, inactive accounts, break-glass readiness) and third-party application risk (Known-Good vs unblessed apps and their risk verdicts). Factor the identity and application signals into your executive summary and recommendations, not just their dedicated sections.
 
 ═══ MANDATORY RULES ═══
 
@@ -1143,7 +1321,9 @@ You must return a JSON object with these exact keys:
   "operator_activity_analysis": "1-2 paragraphs on what the MSP team did during the period — CA deploys, Intune pushes, settings work, exemption rules created. Use BOTH automated (source=panoptica) and manual (source=manual) entries from the change log to tell the full story.",
   "defender_incidents_analysis": "1 paragraph if there are Defender XDR incidents during the period. If zero incidents, say so concisely (one sentence) — that's a positive signal. Connect to Panoptica alerts where they overlap.",
   "exemption_analysis": "1 paragraph if there are active exemption rules. Name each exemption (policy name + UPN/country/IP filter), the operator's reason, and the match count over the period. Be neutral — exemptions are normal in a managed environment, but the customer should know they exist. If no active exemptions, output an empty string for this key.",
-  "recommendations": "2-3 paragraphs of prioritized, actionable recommendations. Tie each one to a specific data point (drifting setting NAME, recurring alert pattern, missing CA policy, exemption due to expire). Respect the licensing boundary stated above. No generic 'enable MFA' filler — be specific."
+  "identity_hygiene_analysis": "1-2 paragraphs on identity hygiene from the IDENTITY HYGIENE and BREAK-GLASS data: how many accounts hold administrative roles, whether any admins lack registered MFA (call this out — it is high-risk), how many accounts are inactive (no activity beyond the stated threshold) and should be reviewed for offboarding, and whether a break-glass (emergency-access) group exists and looks healthy (a small, named, dedicated set). If a break-glass group is configured, say so positively; if none exists, recommend establishing one. If the Access Review snapshot was not available, say it was not captured and recommend running it — do NOT infer problems from missing data.",
+  "application_risk_analysis": "1-2 paragraphs on third-party / enterprise application risk from the APPLICATION RISK data: how many apps are tagged Known-Good vs not, and call out any non-Known-Good apps carrying a red or yellow risk verdict (name them, with publisher and the nature of their permissions). Note any app showing permission drift. If everything is Known-Good or the inventory was not available, say so plainly. Use standard permission names (e.g. Mail.Read) — never internal IDs.",
+  "recommendations": "2-3 paragraphs of prioritized, actionable recommendations. Tie each one to a specific data point (drifting setting NAME, recurring alert pattern, missing CA policy, exemption due to expire, an admin without MFA, an inactive privileged account, a red-verdict application). Respect the licensing boundary stated above. No generic 'enable MFA' filler — be specific."
 }
 
 Keep the total output under 2400 words. Be specific. Use real numbers from the data. Setting NAMES not IDs. Respect licensing.`,
@@ -1339,6 +1519,72 @@ function buildDataSummary(data) {
     }
   }
 
+  // ── Identity hygiene / break-glass / application risk (v0.2.9) ──
+  s += summarizeEnrichmentForAI(data.enrichment);
+
+  return s;
+}
+
+// Render the shared report enrichment as a compact text block for the AI
+// (Security Posture Sonnet narrative + Quick Assessment Opus analysis). Names
+// only, no internal IDs.
+function summarizeEnrichmentForAI(enrichment) {
+  if (!enrichment) return '';
+  let s = '';
+  const id = enrichment.identity || {};
+  s += '\n═══ IDENTITY HYGIENE ═══\n';
+  if (!id.available) {
+    s += 'Access Review snapshot not available for this tenant (none captured yet).\n';
+  } else {
+    const sum = id.summary || {};
+    s += `Users total: ${sum.total ?? '?'}; inactive (no activity in ${id.threshold_days}+ days): ${sum.inactive ?? '?'}.\n`;
+    s += `Accounts holding admin roles: ${sum.admin_total ?? (id.admins || []).length}; Global Admins: ${sum.ga_count ?? '?'}; admins without registered MFA: ${sum.no_mfa_admins ?? '?'}.\n`;
+    if ((id.admins || []).length) {
+      s += 'ADMIN ACCOUNTS (account — roles — enabled — MFA — last activity):\n';
+      for (const a of id.admins.slice(0, 25)) {
+        s += `  ${a.account} — ${a.roles.join(', ') || '(none)'} — ${a.enabled ? 'enabled' : 'DISABLED'} — MFA ${a.mfa}${a.breakGlass ? ' — break-glass' : ''} — ${a.lastActivity || 'no recent activity'}\n`;
+      }
+    }
+    const inact = id.inactive_users || [];
+    if (inact.length) {
+      s += `INACTIVE ACCOUNTS (${inact.length}; threshold ${id.threshold_days}d) — top 25:\n`;
+      for (const u of inact.slice(0, 25)) {
+        s += `  ${u.account} (${u.type}) — last activity ${u.lastActivity || (u.neverRedeemed ? 'never redeemed' : 'unknown')}\n`;
+      }
+    }
+  }
+
+  const bg = enrichment.breakGlass || {};
+  s += '\n═══ BREAK-GLASS (emergency access) ═══\n';
+  if (!bg.configured) {
+    s += 'No break-glass group is configured for this tenant.\n';
+  } else {
+    s += `Break-glass group: ${bg.group_name || bg.group_id}.\n`;
+    if (bg.members_available) {
+      s += `Members (${bg.member_count}): ${(bg.members || []).map(m => m.account).join(', ') || '(none)'}\n`;
+    } else {
+      s += 'Live membership could not be read at report time.\n';
+    }
+  }
+
+  const apps = enrichment.apps || {};
+  s += '\n═══ APPLICATION RISK ═══\n';
+  if (!apps.available) {
+    s += 'Application inventory not available for this tenant (run the Applications scan).\n';
+  } else {
+    const others = apps.others || [];
+    const byVerdict = { red: [], yellow: [], green: [], none: [] };
+    for (const a of others) (byVerdict[a.verdict] || byVerdict.none).push(a);
+    s += `Applications: ${apps.total}; Known-Good (blessed): ${(apps.knownGood || []).length}; not tagged Known-Good: ${others.length}.\n`;
+    s += `Unblessed by risk verdict — red: ${byVerdict.red.length}, yellow: ${byVerdict.yellow.length}, green: ${byVerdict.green.length}, not evaluated: ${byVerdict.none.length}.\n`;
+    const flagged = [...byVerdict.red, ...byVerdict.yellow];
+    if (flagged.length) {
+      s += 'NON-KNOWN-GOOD APPS OF NOTE (name — publisher — verdict — key permissions):\n';
+      for (const a of flagged.slice(0, 20)) {
+        s += `  ${a.displayName} — ${a.publisher || 'unknown publisher'} — ${a.verdict}${a.drift_state === 'drifted' ? ' — drifted' : ''} — ${(a.permissions || []).slice(0, 8).join(', ')}\n`;
+      }
+    }
+  }
   return s;
 }
 
@@ -1347,7 +1593,19 @@ function getDefaultNarrative(data) {
   const di = data.defenderIncidents || {};
   const cl = data.changeLog || {};
   const ex = data.exemptions || {};
+  const en = data.enrichment || {};
+  const idn = en.identity || {};
+  const bg = en.breakGlass || {};
+  const ap = en.apps || {};
+  const idText = idn.available
+    ? `${idn.summary?.admin_total ?? (idn.admins || []).length} account(s) hold admin roles${idn.summary?.no_mfa_admins ? `, ${idn.summary.no_mfa_admins} without registered MFA` : ''}; ${idn.summary?.inactive ?? (idn.inactive_users || []).length} account(s) are inactive (threshold ${idn.threshold_days}d). ${bg.configured ? `A break-glass group ("${bg.group_name || bg.group_id}") is configured.` : 'No break-glass group is configured.'} See the Identity tables for detail.`
+    : 'Access Review data was not captured for this tenant — run an Access Review to populate identity hygiene.';
+  const appText = ap.available
+    ? `${(ap.knownGood || []).length} application(s) are tagged Known-Good; ${(ap.others || []).length} are not. See the Application Risk table for verdicts and permissions.`
+    : 'Application inventory was not available — run the Applications scan to populate application risk.';
   return {
+    identity_hygiene_analysis: idText,
+    application_risk_analysis: appText,
     executive_summary: `This Security Posture Report covers the ${data.rangeLabel.toLowerCase()} for ${data.tenant.display_name}. During this period, ${data.alerts.total} alerts were detected. ${ss.total ? `${ss.byStatus?.monitored || 0} of ${ss.total} security settings are matched; ${ss.byStatus?.drift || 0} are drifting.` : ''} ${di.total ? `${di.total} Defender XDR incidents were observed.` : ''} The narrative generator was unavailable — review the data sections in this report for the full picture.`,
     security_highlights: 'AI narrative generation was unavailable. Review the alert and incident detail tables for security highlights.',
     alert_analysis: `A total of ${data.alerts.total} alerts were recorded. Review the severity distribution chart and the Notable Incidents table for details.`,
@@ -1647,6 +1905,10 @@ async function gatherDocumentationData(tenantId) {
   // block the rest of the gather; degrades to [] on any error.
   const caPolicySummaries = await generateCaPolicySummariesForDocs(caPolicies, lang);
 
+  // v0.2.9 — identity/break-glass/app-risk enrichment (Documentation + Quick
+  // Assessment both flow through here, so both inherit it).
+  const enrichment = await gatherReportEnrichment(tenant.id, tenant.tenant_id);
+
   return {
     tenant: {
       id: tenant.id,
@@ -1661,6 +1923,7 @@ async function gatherDocumentationData(tenantId) {
     },
     language: lang,
     generatedAt: new Date().toISOString(),
+    enrichment,
     capturedAt: serviceData.captured_at,
     services: serviceData.services,
     securitySettings,
@@ -2047,6 +2310,9 @@ function buildAssessmentInput(data) {
   if (!intuneT.length) s += '  (catalog empty — recommend gaps anyway; just do not tag them deployable)\n';
   s += '\n';
 
+  // ── Identity hygiene / break-glass / application risk (v0.2.9) ──
+  s += summarizeEnrichmentForAI(data.enrichment);
+
   return s;
 }
 
@@ -2128,8 +2394,18 @@ Return ONLY a JSON object (no markdown fence, no preamble) with exactly these ke
     "strengths": ["settings whose current_value confirms they are correctly configured"],
     "gaps": [{"title": "...", "detail": "...", "priority": "high|medium|low", "deployable_template": "name or null"}]
   },
+  "identity_posture": {
+    "narrative": "1-2 paragraphs assessing identity hygiene from the IDENTITY HYGIENE and BREAK-GLASS blocks: how many accounts hold admin roles, whether any admins lack registered MFA (high-risk — name them), how many accounts are inactive past the stated threshold and should be reviewed for offboarding, and whether a break-glass (emergency-access) group exists and is healthy. If the Access Review snapshot was not captured, say so and recommend running it — never infer gaps from missing data.",
+    "strengths": ["identity things done well — e.g. all admins have MFA, a dedicated break-glass group exists; [] if none"],
+    "gaps": [{"title": "...", "detail": "...", "priority": "high|medium|low", "deployable_template": "name or null"}]
+  },
+  "application_risk": {
+    "narrative": "1-2 paragraphs assessing third-party / enterprise application risk from the APPLICATION RISK block: how many apps are Known-Good vs not, and any non-Known-Good apps with a red/yellow risk verdict (name them with publisher and the nature of their permissions, using standard Graph permission names). Note any app with permission drift. If the inventory was not available, say so and do not speculate.",
+    "strengths": ["app-governance things done well — e.g. most apps tagged Known-Good, no risky over-permissioned apps; [] if none"],
+    "gaps": [{"title": "...", "detail": "...", "priority": "high|medium|low", "deployable_template": "name or null"}]
+  },
   "strengths_summary": "1 paragraph — what this tenant genuinely does well. Be specific; do not invent strengths.",
-  "prioritized_actions": [{"title": "short", "detail": "1-2 sentences", "priority": "high|medium|low", "area": "Conditional Access|Intune|Security Settings|Other", "deployable_template": "name or null"}]
+  "prioritized_actions": [{"title": "short", "detail": "1-2 sentences", "priority": "high|medium|low", "area": "Conditional Access|Intune|Security Settings|Identity|Applications|Other", "deployable_template": "name or null"}]
 }
 
 Order "prioritized_actions" hardest-hitting first. Use real numbers and real names from the data. Be specific — no "enable MFA" filler unless MFA truly is the gap.`;
@@ -2251,6 +2527,7 @@ router.post('/quick-assessment', auth.requireMemberOrAdmin, async (req, res) => 
         security_settings_total: (data.securitySettings || []).length,
       },
       analysis,
+      enrichment: data.enrichment || null,
       reportConfig: {
         mspName: (config.report && config.report.mspName) || '',
         platformAttribution: (config.report && config.report.platformAttribution) !== false,

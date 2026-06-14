@@ -230,7 +230,6 @@
       <div class="update-progress" id="update-progress">
         <div class="update-progress-spinner" aria-hidden="true"></div>
         <p class="update-progress-phase" id="update-progress-phase">${escHtml(ut('phase_queued'))}</p>
-        <p class="update-progress-detail" id="update-progress-detail"></p>
       </div>`;
   }
 
@@ -254,11 +253,9 @@
     }
   }
 
-  function setProgress(phaseKey, detail) {
+  function setProgress(phaseKey) {
     const p = document.getElementById('update-progress-phase');
-    const d = document.getElementById('update-progress-detail');
     if (p) p.textContent = ut(phaseKey);
-    if (d) d.textContent = detail || '';
   }
 
   function stopUpdatePolling() {
@@ -320,7 +317,7 @@
         return;
       }
       const key = PHASE_KEYS[prog.phase] || 'phase_reconnecting';
-      setProgress(key, prog.message || '');
+      setProgress(key);
     }, 3000);
   }
 

@@ -5,6 +5,36 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.9 — 2026-06-14
+
+### Exportación a CSV en toda la consola
+
+Tres tablas ahora tienen un botón **Exportar** que descarga un CSV limpio y listo para Excel — UTF-8 con marca de orden de bytes, para que los acentos en francés y español se conserven al abrirlo en Excel para Mac:
+
+- **Aplicaciones** (panel del inquilino) — cada aplicación con su editor, estado, indicador «Aprobada» y veredicto de riesgo almacenado.
+- **Revisión de acceso** — dos exportaciones: el registro de roles con privilegios (cuenta, roles, habilitado, MFA, última actividad) y la lista completa de usuarios (cuenta, tipo, habilitado, última actividad, inactivo). La exportación de usuarios siempre contiene **todas** las cuentas, sin importar el filtro en pantalla.
+- **Registro de auditoría** — todas las filas que coinciden con los filtros activos, en **todas** las páginas (no solo las 100 visibles), para la vista activa (auditoría MSP o cronología unificada).
+
+### Los informes ahora cubren la higiene de identidades y el riesgo de aplicaciones
+
+Los tres informes — **Postura de seguridad**, **Evaluación rápida** y **Documentación de la configuración** — ahora incluyen las mismas señales de identidad y aplicaciones que ve en las pestañas Revisión de acceso y Aplicaciones:
+
+- **Cuentas inactivas** y **cuentas con roles de administrador** (con su estado de MFA), tomadas de la instantánea de la Revisión de acceso y respetando el umbral de inactividad que configuró.
+- **Preparación de las cuentas de emergencia** — si hay un grupo de acceso de emergencia configurado y quién lo integra.
+- **Riesgo de aplicaciones** — qué aplicaciones están aprobadas o no, con el veredicto de riesgo almacenado de cada aplicación no aprobada y los permisos que posee.
+
+En los dos informes con IA (Postura de seguridad y Evaluación rápida), Claude ahora incorpora estas señales al análisis redactado; el informe de Documentación de la configuración las añade como tablas. Todo está completamente localizado en inglés, francés y español, y se degrada correctamente cuando un inquilino aún no se ha analizado (el informe lo indica en lugar de inventar hallazgos).
+
+### Mejoras: una consola principal totalmente localizada y una pantalla de actualización más limpia
+
+La consola principal ahora está completamente traducida — los encabezados de columna de la lista de inquilinos, el gráfico de severidad de alertas (que ahora muestra **Severo** en todas partes, igual que el resto de la aplicación, en lugar de «Crítico»), el conteo de inquilinos y la insignia de estado de cada fila siguen el idioma seleccionado. La pantalla de Actualización de software de la aplicación ya no muestra una línea en inglés redundante debajo de cada paso traducido.
+
+### Fiabilidad: guardar la pestaña Aplicaciones ya no se agota
+
+En inquilinos con muchas aplicaciones, el botón **Guardar** de la pestaña Aplicaciones podía fallar con un error HTTP 504 porque la evaluación con IA de los permisos de las aplicaciones no aprobadas tardaba más de lo que la puerta de enlace esperaba. Ahora el guardado transmite su progreso (igual que la generación de informes), de modo que se completa sin importar cuánto tarde la evaluación — la aprobación es inmediata y los puntos de evaluación verde/amarillo/rojo se completan a medida que termina el análisis.
+
+---
+
 ## Versión 0.2.8 — 2026-06-13
 
 ### Nuevo: Revisión de acceso — cuentas con privilegios, cuentas inactivas y acceso de emergencia

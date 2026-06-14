@@ -5,6 +5,36 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.9 — 2026-06-14
+
+### Exportation CSV dans toute la console
+
+Trois tableaux disposent maintenant d'un bouton **Exporter** qui télécharge un CSV propre, prêt pour Excel — en UTF-8 avec indicateur d'ordre des octets, afin que les accents français et espagnols survivent à l'ouverture dans Excel pour Mac :
+
+- **Applications** (tableau de bord du locataire) — chaque application avec son éditeur, son état, son indicateur « Approuvée » et son verdict de risque enregistré.
+- **Revue des accès** — deux exportations : le registre des rôles privilégiés (compte, rôles, activé, MFA, dernière activité) et la liste complète des utilisateurs (compte, type, activé, dernière activité, inactif). L'exportation des utilisateurs contient toujours **tous** les comptes, quel que soit le filtre affiché.
+- **Journal d'audit** — toutes les lignes correspondant aux filtres actifs, sur **toutes** les pages (pas seulement les 100 visibles), pour la vue active (audit MSP ou chronologie unifiée).
+
+### Les rapports couvrent désormais l'hygiène des identités et le risque applicatif
+
+Les trois rapports — **Posture de sécurité**, **Évaluation rapide** et **Documentation de la configuration** — intègrent maintenant les mêmes signaux d'identité et d'applications que les onglets Revue des accès et Applications :
+
+- **Comptes inactifs** et **comptes détenant des rôles d'administration** (avec leur état MFA), tirés de l'instantané de la Revue des accès et respectant le seuil d'inactivité que vous avez configuré.
+- **Préparation des comptes d'urgence** — si un groupe d'accès de secours est configuré et qui en fait partie.
+- **Risque applicatif** — quelles applications sont approuvées ou non, avec le verdict de risque enregistré de chaque application non approuvée et les autorisations qu'elle détient.
+
+Dans les deux rapports IA (Posture de sécurité et Évaluation rapide), Claude intègre désormais ces signaux à l'analyse rédigée ; le rapport de Documentation de la configuration les ajoute sous forme de tableaux. Tout est entièrement localisé en anglais, français et espagnol, et se dégrade proprement lorsqu'un locataire n'a pas encore été analysé (le rapport le mentionne au lieu d'inventer des constats).
+
+### Améliorations : une console principale entièrement localisée et un écran de mise à jour plus propre
+
+La console principale est maintenant entièrement traduite — les en-têtes de colonnes de la liste des locataires, le graphique de sévérité des alertes (qui affiche désormais **Sévère** partout, comme le reste de l'application, au lieu de « Critique »), le nombre de locataires et le badge d'état de chaque ligne suivent tous la langue choisie. L'écran de Mise à jour logicielle de l'application n'affiche plus de ligne anglaise redondante sous chaque étape traduite.
+
+### Fiabilité : l'enregistrement de l'onglet Applications n'expire plus
+
+Sur les locataires comptant beaucoup d'applications, le bouton **Enregistrer** de l'onglet Applications pouvait échouer avec une erreur HTTP 504, car le triage IA des autorisations des applications non approuvées durait plus longtemps que le délai d'attente de la passerelle. L'enregistrement diffuse maintenant sa progression (comme la génération des rapports), de sorte qu'il aboutit quelle que soit la durée du triage — l'approbation est immédiate et les pastilles de triage vert/jaune/rouge se remplissent à mesure que l'analyse se termine.
+
+---
+
 ## Version 0.2.8 — 2026-06-13
 
 ### Nouveau : Revue des accès — comptes privilégiés, comptes dormants et accès de secours

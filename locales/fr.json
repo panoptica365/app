@@ -164,6 +164,18 @@
   },
   "main_console": {
     "title": "Console principale",
+    "col_tenant": "Locataire",
+    "col_secure_score": "Score de sécurité",
+    "status_active": "Actif",
+    "status_error": "Erreur",
+    "tenant_count": {
+      "one": "{count} locataire",
+      "other": "{count} locataires"
+    },
+    "tenant_count_filtered": {
+      "one": "{shown} sur {count} locataire",
+      "other": "{shown} sur {count} locataires"
+    },
     "secure_score": "Score de sécurité",
     "secure_score_avg": "Score de sécurité moyen",
     "tenant_list": "Locataires",
@@ -220,6 +232,7 @@
     "toast_load_failed": "Échec du chargement des données d’activité quotidienne"
   },
   "audit_log": {
+    "col_actor_tenant": "Acteur / Locataire",
     "title": "Journal d’audit",
     "subtitle": "Actions des opérateurs au niveau MSP — ajout seulement, administrateurs seulement",
     "tab_msp": "Audit MSP",
@@ -266,7 +279,12 @@
     "col_actor": "Acteur",
     "col_description": "Description",
     "col_outcome": "Résultat",
-    "detail_title": "Événement d’audit"
+    "detail_title": "Événement d’audit",
+    "export_btn": "Exporter",
+    "col_source": "Source",
+    "export_capped": "Exportation limitée aux {count} premières lignes — affinez les filtres pour en exporter moins.",
+    "export_failed": "Échec de l’exportation : {message}",
+    "export_empty": "Aucune ligne ne correspond aux filtres actuels — rien à exporter."
   },
   "alert_policies": {
     "title": "Stratégies d’alerte",
@@ -2690,6 +2708,9 @@
   "tenant_dashboard": {
     "view_applications": "Applications",
     "access_review": {
+      "export_admins_btn": "Exporter les rôles admin",
+      "export_users_btn": "Exporter les utilisateurs",
+      "col_inactive": "Inactif",
       "refresh_btn": "Actualiser",
       "breakglass_manage": "Comptes d’urgence",
       "entra_users_link": "Ouvrir les utilisateurs dans Entra ↗",
@@ -2811,6 +2832,7 @@
       "bg_user_not_found": "Aucun compte avec ce UPN n’existe sur le locataire."
     },
     "applications": {
+      "col_risk_verdict": "Verdict de risque",
       "save_btn": "Enregistrer",
       "refresh_btn": "Actualiser",
       "entra_link": "Ouvrir dans Entra ↗",
@@ -3739,7 +3761,8 @@
     "yes": "Oui",
     "no": "Non",
     "never": "Jamais",
-    "page_load_failed": "Échec du chargement de la page. Veuillez réessayer."
+    "page_load_failed": "Échec du chargement de la page. Veuillez réessayer.",
+    "export": "Exporter"
   },
   "setup": {
     "step": {

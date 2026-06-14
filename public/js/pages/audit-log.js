@@ -142,7 +142,9 @@
     return fetchMspEvents();
   }
 
-  async function fetchMspEvents() {
+  // Filter-only param builders (no limit/offset) — shared by the paged fetch
+  // and the export fetch-all loop so the two can never drift apart.
+  function mspFilterParams() {
     const params = new URLSearchParams();
     const f = state.filters;
     if (f.category)    params.set('category', f.category);
@@ -151,6 +153,22 @@
     if (f.from)        params.set('from', new Date(f.from).toISOString());
     if (f.to)          params.set('to', new Date(f.to).toISOString());
     if (f.success)     params.set('success', f.success);
+    return params;
+  }
+
+  function unifiedFilterParams() {
+    const params = new URLSearchParams();
+    const f = state.unifiedFilters;
+    if (f.source && f.source !== 'all') params.set('source', f.source);
+    if (f.tenant_id) params.set('tenant_id', f.tenant_id);
+    if (f.q)         params.set('q', f.q);
+    if (f.from)      params.set('from', new Date(f.from).toISOString());
+    if (f.to)        params.set('to', new Date(f.to).toISOString());
+    return params;
+  }
+
+  async function fetchMspEvents() {
+    const params = mspFilterParams();
     params.set('limit', String(state.pageSize));
     params.set('offset', String(state.page * state.pageSize));
 
@@ -163,13 +181,7 @@
   }
 
   async function fetchUnifiedEvents() {
-    const params = new URLSearchParams();
-    const f = state.unifiedFilters;
-    if (f.source && f.source !== 'all') params.set('source', f.source);
-    if (f.tenant_id) params.set('tenant_id', f.tenant_id);
-    if (f.q)         params.set('q', f.q);
-    if (f.from)      params.set('from', new Date(f.from).toISOString());
-    if (f.to)        params.set('to', new Date(f.to).toISOString());
+    const params = unifiedFilterParams();
     params.set('limit', String(state.pageSize));
     params.set('offset', String(state.page * state.pageSize));
 
@@ -188,6 +200,94 @@
       const list = await r.json();
       return Array.isArray(list) ? list : [];
     } catch { return []; }
+  }
+
+  // ─── Export (all rows matching the active filters, across pages) ───
+
+  const EXPORT_PAGE = 500;
+  const EXPORT_CAP = 50000;
+
+  function sourceLabel(src) {
+    return src === 'msp' ? window.t('audit_log.detail_source_msp')
+      : src === 'tenant-auto' ? window.t('audit_log.detail_source_tenant_auto')
+      : src === 'tenant-manual' ? window.t('audit_log.detail_source_tenant_manual')
+      : (src || window.t('audit_log.detail_source_unknown'));
+  }
+
+  // Page through the active view's endpoint until a short page comes back,
+  // accumulating every row. Capped at EXPORT_CAP (caller surfaces if hit) so a
+  // pathological log volume can't lock up the browser.
+  async function fetchAllAuditRows() {
+    const isUnified = state.currentView === 'unified';
+    const base = isUnified ? '/api/msp-audit/unified' : '/api/msp-audit/events';
+    const filters = isUnified ? unifiedFilterParams() : mspFilterParams();
+    const all = [];
+    let offset = 0;
+    let capped = false;
+    for (;;) {
+      const params = new URLSearchParams(filters);
+      params.set('limit', String(EXPORT_PAGE));
+      params.set('offset', String(offset));
+      const r = await fetch(`${base}?${params.toString()}`, { credentials: 'same-origin' });
+      if (r.status === 403) throw new Error('Admin role required to view the audit log.');
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const data = await r.json();
+      const rows = data.rows || [];
+      all.push(...rows);
+      if (rows.length < EXPORT_PAGE) break;
+      offset += EXPORT_PAGE;
+      if (all.length >= EXPORT_CAP) { capped = true; break; }
+    }
+    return { rows: all, capped };
+  }
+
+  async function exportCsv() {
+    if (!window.Panoptica || !window.Panoptica.downloadCsv) return;
+    const btn = document.getElementById('audit-export');
+    const isUnified = state.currentView === 'unified';
+    const toast = (msg, type) => { if (window.Panoptica.showToast) window.Panoptica.showToast(msg, type); };
+    if (btn) btn.disabled = true;
+    try {
+      const { rows, capped } = await fetchAllAuditRows();
+      if (rows.length === 0) { toast(window.t('audit_log.export_empty'), 'info'); return; }
+      const outcome = (success) => success ? window.t('audit_log.outcome_success') : window.t('audit_log.outcome_failure');
+      let csvRows;
+      if (isUnified) {
+        csvRows = [[
+          window.t('audit_log.col_when'), window.t('audit_log.col_source'),
+          window.t('audit_log.col_category'), window.t('audit_log.col_actor_tenant'),
+          window.t('audit_log.col_description'), window.t('audit_log.col_outcome'),
+        ]];
+        rows.forEach(r => {
+          const actorOrTenant = r.source === 'msp'
+            ? (r.actor || '')
+            : (r.tenant_name || (r.tenant_id ? `(tenant #${r.tenant_id})` : ''));
+          csvRows.push([
+            formatWhen(r.timestamp), sourceLabel(r.source), categoryLabel(r.category),
+            actorOrTenant, r.description || '', r.source === 'msp' ? outcome(r.success) : '',
+          ]);
+        });
+      } else {
+        csvRows = [[
+          window.t('audit_log.col_when'), window.t('audit_log.col_category'),
+          window.t('audit_log.col_action'), window.t('audit_log.col_actor'),
+          window.t('audit_log.col_description'), window.t('audit_log.col_outcome'),
+        ]];
+        rows.forEach(r => {
+          csvRows.push([
+            formatWhen(r.created_at), categoryLabel(r.category), r.action || '',
+            r.actor_email || '', r.description || '', outcome(r.success),
+          ]);
+        });
+      }
+      const view = isUnified ? 'unified' : 'msp';
+      window.Panoptica.downloadCsv(csvRows, `audit_${view}_${new Date().toISOString().slice(0, 10)}.csv`);
+      if (capped) toast(window.t('audit_log.export_capped', { count: EXPORT_CAP }), 'error');
+    } catch (err) {
+      toast(window.t('audit_log.export_failed', { message: err.message }), 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   // ─── Rendering ───
@@ -640,6 +740,10 @@
     });
     document.getElementById('audit-detail-close')?.addEventListener('click', closeDetail);
     document.getElementById('audit-detail-overlay')?.addEventListener('click', closeDetail);
+
+    // Export — adapts to the active view (MSP / Unified), fetches all rows
+    // matching the active filters across pages, then downloads one CSV.
+    document.getElementById('audit-export')?.addEventListener('click', exportCsv);
 
     // Unified view controls
     document.getElementById('unified-apply')?.addEventListener('click', applyUnifiedFilters);
