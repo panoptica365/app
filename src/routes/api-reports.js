@@ -48,6 +48,41 @@ function getReportModel() {
   return process.env.REPORT_MODEL || config.ai.reportModel || config.ai.sonnetModel;
 }
 
+// Generous output ceiling for report narratives. The old 4000 cap truncated
+// long, data-heavy tenants — especially in French/Spanish, which are wordier
+// and tokenize worse (accented chars cost extra tokens). A truncated response
+// has no closing brace, so JSON parsing fails and the caller is forced into a
+// fallback. 8000 covers the worst realistic 11-section narrative with headroom.
+const REPORT_NARRATIVE_MAX_TOKENS = 8000;
+
+// Robustly extract a JSON object from a model response. Returns the parsed
+// object, or null if it cannot be parsed — it NEVER returns raw model text, so
+// a fenced ```json wrapper or escaped \n sequences can never leak into a
+// customer-facing report field. Callers fall back to clean, data-driven prose
+// when this returns null.
+function parseAiJson(text) {
+  if (!text || typeof text !== 'string') return null;
+  // Strip a leading ```json / ``` fence and a trailing ``` fence, anywhere
+  // leading whitespace precedes them (the old anchor required zero whitespace).
+  const cleaned = text
+    .replace(/^\s*```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch { /* fall through to brace extraction */ }
+  // Greedy first-brace-to-last-brace extraction handles prose wrapped around a
+  // complete object. A TRUNCATED response has no closing brace, so this also
+  // (correctly) fails rather than half-parsing a partial narrative.
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch { /* not recoverable */ }
+  }
+  return null;
+}
+
 // ─── Temp directory for generated reports ───
 const REPORTS_DIR = path.join(__dirname, '..', '..', 'reports');
 if (!fs.existsSync(REPORTS_DIR)) {
@@ -956,7 +991,7 @@ async function generateCaAnalysis(caPolicies, tenantName, language) {
 
     const response = await anthropic.messages.create({
       model: getReportModel(),
-      max_tokens: 4000,
+      max_tokens: REPORT_NARRATIVE_MAX_TOKENS,
       system: `You are a Microsoft 365 security specialist analyzing Conditional Access policies for a non-technical business owner.
 Your job is two-fold:
 
@@ -983,15 +1018,13 @@ Be honest and specific. If there are genuine risks, say so clearly. If the polic
     });
 
     aiGuard.recordUsage(response.usage);
-    const text = response.content?.[0]?.text || '';
-    try {
-      const cleaned = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      return JSON.parse(cleaned);
-    } catch {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
-      return { policies: [], crossAnalysis: text };
+    if (response.stop_reason === 'max_tokens') {
+      console.error(`[Reports] CA analysis truncated at max_tokens (${REPORT_NARRATIVE_MAX_TOKENS}) for ${tenantName} [${lang}]`);
+      return { policies: [], crossAnalysis: '' };
     }
+    const text = response.content?.[0]?.text || '';
+    // Never leak raw model output into crossAnalysis (customer-facing).
+    return parseAiJson(text) || { policies: [], crossAnalysis: '' };
   } catch (err) {
     console.error('[Reports] CA analysis (Sonnet) failed:', err.message);
     return { policies: [], cross_analysis: '' };
@@ -1275,7 +1308,7 @@ async function generateNarrative(data) {
 
     const response = await anthropic.messages.create({
       model: getReportModel(),
-      max_tokens: 4000,
+      max_tokens: REPORT_NARRATIVE_MAX_TOKENS,
       system: `You are a cybersecurity analyst writing a Security Posture Report for a small business client.
 
 Your audience is a non-technical business owner. Write in clear, accessible language — avoid jargon (or define it inline the first time you use a term). Be narrative, not bullet-heavy. Think of it as a trusted advisor explaining their security situation in person.
@@ -1334,23 +1367,25 @@ Keep the total output under 2400 words. Be specific. Use real numbers from the d
     });
 
     aiGuard.recordUsage(response.usage);
-    const text = response.content?.[0]?.text || '';
-    // Try to parse as JSON
-    try {
-      // Handle case where Sonnet wraps in ```json
-      const cleaned = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      return JSON.parse(cleaned);
-    } catch {
-      // If JSON parse fails, try to extract JSON from the response
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-      // Last resort — return as executive summary
-      return { executive_summary: text, security_highlights: '', alert_analysis: '', secure_score_analysis: '', recommendations: '' };
+
+    // If the model ran out of output budget the JSON is truncated (no closing
+    // brace) and unparseable. Don't try to salvage a half-narrative — fall back
+    // to clean, data-driven prose so the customer never sees a broken report.
+    if (response.stop_reason === 'max_tokens') {
+      console.error(`[Reports] Narrative truncated at max_tokens (${REPORT_NARRATIVE_MAX_TOKENS}) for ${data.tenant?.display_name} [${lang}] — using default narrative`);
+      return getDefaultNarrative(data);
     }
+
+    const text = response.content?.[0]?.text || '';
+    const parsed = parseAiJson(text);
+    if (parsed) return parsed;
+
+    // Parsing failed for some other reason — never dump the raw model output
+    // (fence + escaped newlines) into a customer-facing field. Use the default.
+    console.error(`[Reports] Could not parse narrative JSON for ${data.tenant?.display_name} — using default narrative`);
+    return getDefaultNarrative(data);
   } catch (err) {
-    console.error('[Reports] Sonnet narrative failed:', err.message);
+    console.error('[Reports] Narrative generation failed:', err.message);
     return getDefaultNarrative(data);
   }
 }
@@ -1811,7 +1846,7 @@ async function generateCaPolicySummariesForDocs(caPolicies, lang) {
     const policyData = JSON.stringify(caPolicies, null, 2);
     const response = await anthropic.messages.create({
       model: config.ai.haikuModel,
-      max_tokens: 4000,
+      max_tokens: REPORT_NARRATIVE_MAX_TOKENS,
       system: `You are a Microsoft 365 security specialist. For each Conditional Access policy in the list, write a concise 2-3 sentence plain-language summary explaining: (1) what the policy enforces, (2) who it applies to, and (3) what action it takes. Audience is a non-technical small-business owner — avoid jargon, define terms inline if necessary.
 
 Tone: matter-of-fact, no marketing fluff, no emojis, no headers within summaries. Write each summary as a single coherent paragraph.
@@ -1837,16 +1872,11 @@ Match the "name" field exactly to the displayName in the input — the consumer 
       }],
     });
     aiGuard.recordUsage(response.usage);
-    const text = response.content?.[0]?.text || '';
-    const cleaned = text.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    let parsed;
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-      else return [];
+    if (response.stop_reason === 'max_tokens') {
+      console.error(`[Reports] Doc CA summaries truncated at max_tokens (${REPORT_NARRATIVE_MAX_TOKENS}) — ${caPolicies.length} policies`);
     }
+    const text = response.content?.[0]?.text || '';
+    const parsed = parseAiJson(text);
     return Array.isArray(parsed?.policies) ? parsed.policies : [];
   } catch (err) {
     console.error('[Reports] Doc CA summaries (Haiku) failed:', err.message);
@@ -2427,17 +2457,14 @@ Order "prioritized_actions" hardest-hitting first. Use real numbers and real nam
   });
   const message = await stream.finalMessage();
 
+  if (message.stop_reason === 'max_tokens') {
+    throw new Error('The AI analysis was cut off before it finished. Try generating the report again.');
+  }
   const textBlock = (message.content || []).find(b => b && b.type === 'text');
   const raw = textBlock ? (textBlock.text || '') : '';
-  try {
-    return JSON.parse(raw.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim());
-  } catch {
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (m) {
-      try { return JSON.parse(m[0]); } catch { /* fall through */ }
-    }
-    throw new Error('The AI analysis did not return valid structured output. Try generating the report again.');
-  }
+  const parsed = parseAiJson(raw);
+  if (parsed) return parsed;
+  throw new Error('The AI analysis did not return valid structured output. Try generating the report again.');
 }
 
 /**

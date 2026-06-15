@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.10 — 2026-06-15
+
+### Corrección: el resumen ejecutivo de un informe podía mostrar texto de código sin procesar
+
+En inquilinos muy activos — con muchas alertas, incidentes, aplicaciones y administradores —, el texto redactado al inicio del informe de **Postura de seguridad** (y, en casos más raros, de los informes de **Evaluación rápida** y de **Documentación de la configuración**) podía aparecer con texto parecido a código en el resumen ejecutivo, incluida una etiqueta `json` y caracteres `\n` visibles, en lugar de texto limpio. Esto ocurría sobre todo en los informes generados en **francés** o **español**, donde el texto es más largo.
+
+La causa era un límite de longitud: en un inquilino con muchos datos, el análisis redactado se cortaba antes de terminar y el resultado incompleto se imprimía tal cual. Hemos aumentado el límite para que quepa cómodamente el texto completo, añadido una protección que detecta un corte y lo sustituye por un resumen limpio basado en los datos, y garantizado que un análisis incompleto no pueda volver a imprimirse en un informe.
+
+Si tiene un informe que muestra este problema, basta con regenerarlo después de actualizar — la nueva copia estará limpia.
+
+---
+
 ## Versión 0.2.9 — 2026-06-14
 
 ### Exportación a CSV en toda la consola

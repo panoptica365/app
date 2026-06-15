@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.10 — 2026-06-15
+
+### Fix: a report's executive summary could show raw code text
+
+On busy tenants — lots of alerts, incidents, applications, and administrators — the written narrative at the top of the **Security Posture** report (and, in rarer cases, the **Quick Assessment** and **Configuration Documentation** reports) could come out with raw code-like text in the executive summary, including a `json` label and visible `\n` characters, instead of clean prose. This was most likely on reports generated in **French** or **Spanish**, where the narrative runs longer.
+
+The cause was a length limit: on a data-rich tenant the written analysis was being cut off before it finished, and the unfinished result was being printed verbatim. We raised the limit so the full narrative fits comfortably, added a safeguard that detects a cut-off and substitutes a clean, data-driven summary instead, and made certain that an unfinished analysis can never again be printed into a report.
+
+If you have a report showing this, simply regenerate it after updating — the new copy will be clean.
+
+---
+
 ## Version 0.2.9 — 2026-06-14
 
 ### Export to CSV across the console

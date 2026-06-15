@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.10 — 2026-06-15
+
+### Correctif : le sommaire exécutif d'un rapport pouvait afficher du texte de code brut
+
+Sur les locataires très actifs — beaucoup d'alertes, d'incidents, d'applications et d'administrateurs —, le texte rédigé en tête du rapport de **Posture de sécurité** (et, plus rarement, des rapports d'**Évaluation rapide** et de **Documentation de la configuration**) pouvait s'afficher avec du texte ressemblant à du code dans le sommaire exécutif, dont une étiquette `json` et des caractères `\n` visibles, au lieu d'un texte propre. Ce problème survenait surtout dans les rapports générés en **français** ou en **espagnol**, où le texte est plus long.
+
+La cause était une limite de longueur : sur un locataire riche en données, l'analyse rédigée était coupée avant la fin, et le résultat incomplet était imprimé tel quel. Nous avons relevé la limite pour que le texte complet tienne aisément, ajouté une protection qui détecte une coupure et la remplace par un sommaire propre fondé sur les données, et garanti qu'une analyse incomplète ne pourra plus jamais être imprimée dans un rapport.
+
+Si l'un de vos rapports présente ce problème, il suffit de le régénérer après la mise à jour — la nouvelle version sera propre.
+
+---
+
 ## Version 0.2.9 — 2026-06-14
 
 ### Exportation CSV dans toute la console
