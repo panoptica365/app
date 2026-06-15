@@ -5,6 +5,26 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.11 — 2026-06-15
+
+### Adoptez les paramètres d'accès conditionnel et Intune existants d'un locataire — surveillance sur place
+
+Lorsque vous intégrez un locataire qui possède déjà ses propres stratégies d'accès conditionnel et configurations Intune, vous pouvez désormais **commencer à les surveiller sans d'abord pousser vos propres modèles**. Sous les onglets **Stratégies AC** et **Intune**, un nouveau bouton **Importer les paramètres existants** lit ce qui se trouve déjà dans le locataire et crée une carte par stratégie — marquée **Issu du locataire** (bordure gauche rouge et badge clair) pour les distinguer en un coup d'œil de vos modèles déployés. Panoptica enregistre chacune comme état initial et surveille ensuite tout changement.
+
+Depuis chaque carte issue du locataire, vous pouvez :
+
+- **Arrêter la surveillance** — retirer la carte ; cela **ne modifie jamais le locataire**.
+- **Désactiver** — la désactiver de façon réversible (accès conditionnel : mis à désactivé ; Intune : attributions supprimées), avec l'option de continuer à la surveiller. **Restaurer** la remet exactement en place.
+- **Supprimer** — la retirer définitivement du locataire, après une confirmation délibérée.
+
+L'importation, la désactivation, la restauration et la suppression sont accessibles aux **Opérateurs et Admins** ; la confirmation est proportionnée au risque (la suppression vous demande de saisir votre propre nom), et chaque action est consignée dans le **journal d'audit** et le **journal des modifications** du locataire.
+
+Panoptica surveille désormais **chaque** locataire afin de détecter toute **configuration créée en dehors de Panoptica** — une nouvelle stratégie AC ou un profil Intune créé directement dans la console Microsoft — et la présente sous forme de carte issue du locataire accompagnée d'une alerte, pour qu'un changement effectué hors de votre processus ne passe pas inaperçu. Pour l'accès conditionnel, c'est en **quasi-temps réel**.
+
+Les locataires vides ou sans licence sont gérés en douceur : si un locataire n'a aucune stratégie, ou si son forfait n'inclut pas l'accès conditionnel ou Intune, vous obtenez un message clair plutôt qu'une erreur.
+
+---
+
 ## Version 0.2.10 — 2026-06-15
 
 ### Correctif : le sommaire exécutif d'un rapport pouvait afficher du texte de code brut

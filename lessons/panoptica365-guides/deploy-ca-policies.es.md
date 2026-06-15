@@ -2,7 +2,7 @@
 title: "Despliegue directivas de Acceso Condicional"
 subtitle: "Asigne plantillas desde su biblioteca, despliéguelas en el inquilino y deje que la detección de deriva las custodie después."
 icon: "key-round"
-last_updated: 2026-06-07
+last_updated: 2026-06-15
 ---
 
 # Despliegue directivas de Acceso Condicional
@@ -49,6 +49,32 @@ Tiene tres opciones honestas:
    - **Aceptar con vencimiento** *(recomendado)* — la desviación queda aceptada hasta la fecha que elija (180 días por defecto), con un **motivo obligatorio**, y los principales excluidos pasan a la tabla de **Exenciones**, de modo que los evaluadores de alertas los omiten hasta el vencimiento. Acotado en el tiempo, documentado, auditable.
    - **Aceptar una vez, para siempre** — aceptada indefinidamente; solo vuelve a dispararse si cambia la firma de la desviación. Úselo con moderación.
 3. **Actualizar la plantilla** — si el cambio es en realidad correcto para todos los inquilinos, corríjalo en el origen, en la biblioteca de Directivas de CA.
+
+## Adoptar la configuración existente en su sitio (origen del inquilino)
+
+A veces incorpora un inquilino que **ya tiene** sus propias directivas de Acceso Condicional — directivas que usted no envió desde su biblioteca. No está obligado a imponer sus plantillas el primer día. **Importar la configuración existente** le permite adoptar lo que ya está allí y supervisarlo primero — una etapa deliberada de «supervisar lo que hay aquí, no imponer todavía».
+
+En la pestaña **Directivas de AC**, haga clic en **Importar la configuración existente**. Panoptica lee las directivas de AC vigentes en el inquilino y crea una tarjeta para cada una que aún no administra, marcada como **Origen: inquilino** (borde izquierdo rojo y distintivo) para distinguirlas de sus plantillas implementadas. Registra el estado actual de cada directiva como estado inicial y vigila los cambios a partir de ahí.
+
+Algunos puntos que conviene saber:
+
+- **Sin duplicados.** Las directivas que ya implementó desde una plantilla se reconocen por su identificador de objeto y se omiten — incluso si las renombró en el inquilino. El botón permanece disponible, y volver a hacer clic es seguro: solo se adopta lo que es genuinamente nuevo.
+- **Las directivas administradas por Microsoft** también se adoptan, señaladas como tales. Donde Microsoft rechaza un cambio, la acción se degrada con elegancia («administrada por Microsoft, no se puede cambiar aquí») en lugar de fallar. Los **valores predeterminados de seguridad** *no* son una directiva — se muestran como un simple indicador activado/desactivado, nunca como una tarjeta.
+- **Deriva respecto al estado original.** La alerta de una tarjeta de origen del inquilino dice *«cambió respecto al estado original»* — no «se desvía de su estándar», porque todavía no hay una plantilla detrás. La supervisión diaria detecta los cambios; una directiva de AC totalmente nueva creada directamente en la consola se detecta en minutos.
+
+### Qué puede hacer con una tarjeta de origen del inquilino
+
+Abra las **Acciones** de una tarjeta para tres opciones distintas:
+
+1. **Dejar de supervisar** — quita la tarjeta y deja de vigilarla. **Esto nunca modifica el inquilino** — es una acción solo de Panoptica.
+2. **Desactivar en el inquilino** — desactiva la directiva de forma reversible (la pone como *deshabilitada*). La tarjeta permanece, marcada como Inactiva, y **Restaurar** la devuelve exactamente a su estado. De forma predeterminada, una tarjeta desactivada solo alerta si alguien la reactiva fuera de Panoptica.
+3. **Eliminar del inquilino** — quita permanentemente la directiva del inquilino. La confirmación es proporcional al riesgo: eliminar le pide que escriba su propio nombre.
+
+Cada una de estas acciones queda registrada en el registro de auditoría y en el registro de cambios del inquilino, con su nombre y el nombre de la directiva.
+
+### Vigilar lo que aparezca más tarde
+
+Más allá de la adopción, Panoptica vigila **cada** inquilino — con plantillas o sin ellas — en busca de una directiva de AC que aparezca **fuera de Panoptica** (creada directamente en la consola de Entra). Cuando surge, se convierte en una tarjeta de origen del inquilino y activa una alerta *«configuración creada fuera de Panoptica»*, para que un cambio hecho al margen de su proceso no se le escape. A medida que después implemente sus propios estándares, puede desactivar o eliminar las directivas nativas desordenadas — o simplemente seguir supervisándolas.
 
 ## Nota operativa
 

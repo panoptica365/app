@@ -397,7 +397,8 @@
     "ual_per_mailbox_audit_tampered": "Audit altéré par boîte aux lettres",
     "ual_admin_initiated_password_reset": "Réinitialisation de mot de passe par administrateur",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Protocole hérité réactivé par boîte aux lettres",
-    "ual_microsoft_defender_incident": "Incident Microsoft Defender"
+    "ual_microsoft_defender_incident": "Incident Microsoft Defender",
+    "configuration_created_outside_panoptica": "Configuration créée en dehors de Panoptica"
   },
   "_comment_alert_message_prefix": "Préfixes de messages d'alerte personnalisés qui ne correspondent pas au alert_policy_names parent. Les alertes de dérive CA et Intune utilisent ces préfixes anglais littéraux côté serveur; le helper renderAlertMessage les détecte au moment de l'affichage et substitue la forme traduite.",
   "alert_message_prefix": {
@@ -913,6 +914,13 @@
       "attack_vectors": "Ce ne sont pas des vecteurs d'attaque — ce sont des modes d'échec côté Panoptica365 :\n\n- Échec de livraison SMTP. Le breffage matinal ou le courriel d'alerte n'a pas pu être envoyé. Habituellement un problème de serveur de courrier transitoire ou des identifiants expirés sur la config de courrier de Panoptica365.\n\n- Erreur de tâche de sondage. Un sondage planifié contre un locataire client a erré. Habituellement un problème d'API Microsoft ou une expiration de jeton.\n\n- Problème de base de données / file d'attente. La base de données ou la file d'attente interne de Panoptica365 a eu un problème.\n\n- Expiration de jeton. La connexion de Panoptica365 à un locataire client ou à Microsoft Graph a un jeton expiré/révoqué.",
       "what_to_do": "Étape 1. Lisez le message d'alerte — Panoptica365 signale le mode d'échec spécifique. Le message vous dit quel sous-système et quel type d'erreur.\n\nÉtape 2. Si lié à SMTP : vérifiez la config de courrier de Panoptica365, vérifiez les identifiants SMTP, retentez d'envoyer le breffage ou l'alerte impactée manuellement.\n\nÉtape 3. Si lié au sondage : vérifiez le locataire du client — est-il accessible depuis Panoptica365? Un jeton a-t-il expiré ou été révoqué? Réauthentifiez la connexion.\n\nÉtape 4. Si lié à la base de données/file d'attente : vérifiez les journaux et l'espace disque de la VM Panoptica365. La plupart des alertes de problèmes de file d'attente se résolvent d'elles-mêmes mais méritent une vérification.\n\nÉtape 5. Après résolution, vérifiez que la fonction sous-jacente est de retour à fonctionner : le breffage matinal a-t-il été livré après la nouvelle tentative? La tâche de sondage s'est-elle complétée à sa prochaine exécution? Ne présumez pas — vérifiez.",
       "example_scenario": "Panoptica365 déclenche une alerte de santé système : « Le courriel de breffage matinal n'a pas pu être envoyé. Raison : échec d'authentification SMTP (535 5.7.3). » Le code d'erreur indique que Microsoft rejette les identifiants SMTP que Panoptica365 utilise pour envoyer le courrier.\n\nC'est un échec d'outillage Panoptica365 — un problème d'identifiant ou de config côté Panoptica365, pas un événement client. La cause probable : les identifiants SMTP pour le courrier sortant de Panoptica365 ont été révoqués, ont expiré, ou ont eu leur mot de passe d'application retiré. Jusqu'à ce que ce soit réparé, aucune notification basée sur courriel ne joindra les opérateurs ou clients, incluant le breffage matinal et tout courriel d'alerte subséquent.\n\nVous : vérifieriez les identifiants du compte de courrier Panoptica365, regénéreriez le mot de passe d'application (ou réinitialiseriez le mécanisme d'identifiant), mettriez à jour la config de courrier de Panoptica365, enverriez manuellement un courriel test pour confirmer la correction, retenteriez d'envoyer le breffage matinal du jour s'il n'est pas parti, et noteriez l'incident dans le journal des changements opérateur pour que de futurs problèmes similaires puissent être repérés plus rapidement."
+    },
+    "configuration_created_outside_panoptica": {
+      "what_is_this": "Panoptica a détecté l’apparition, dans ce locataire, d’une stratégie d’accès conditionnel ou d’une configuration Intune qu’il n’a pas créée — par exemple créée directement dans le centre d’administration Microsoft Entra ou Intune. Elle est ajoutée comme carte « issue du locataire » afin que vous puissiez l’examiner et décider de la marche à suivre.",
+      "why_it_matters": "Une configuration créée en dehors de Panoptica échappe à vos normes. Une nouvelle stratégie d’accès conditionnel peut affaiblir ou contredire la protection que vous avez déployée (par exemple une exclusion trop large ou une application désactivée), et un nouveau profil Intune peut modifier la posture des appareils. Les détecter rapidement maintient la configuration réelle du locataire alignée sur vos intentions.",
+      "attack_vectors": "Comment cela se manifeste :\n- Un attaquant ou un initié disposant de droits d’administration crée une stratégie d’accès conditionnel permissive (par exemple en excluant son compte de la MFA) pour établir une persistance.\n- Un administrateur bien intentionné effectue une modification directement dans la console qui annule discrètement un contrôle que vous aviez normalisé.\n- Une nouvelle configuration Intune assouplit la conformité ou une base de référence de sécurité en dehors de votre processus de changement.",
+      "what_to_do": "Que faire :\n- Ouvrez la carte « issue du locataire » sous l’onglet Stratégies AC ou Intune et examinez la configuration.\n- Si elle est légitime, laissez-la surveillée (les écarts ultérieurs sont suivis) — ou Arrêtez la surveillance s’il s’agit de bruit.\n- Si elle est indésirable, Désactivez-la (réversible) ou Supprimez-la du locataire.\n- Si vous ne l’attendiez pas, confirmez qui l’a créée dans le journal d’audit du locataire avant d’agir.",
+      "example_scenario": "Au cours d’un mandat, vous adoptez les stratégies d’accès conditionnel existantes d’un client et démarrez la surveillance. Une semaine plus tard, un technicien du service d’assistance crée une nouvelle stratégie AC directement dans Entra, excluant de la MFA le propriétaire d’une boîte partagée. Panoptica la fait remonter (dans la journée via la réconciliation quotidienne, ou en quelques minutes via le signal du journal d’audit) sous forme de carte « issue du locataire » et déclenche cette alerte. Vous l’examinez, constatez la faille MFA involontaire, désactivez la stratégie et faites un suivi auprès du technicien."
     }
   },
   "intune_templates": {
@@ -1349,7 +1357,12 @@
       "psa.sync_error": "Échec Autotask ({op}) pour l’alerte nº {alertId} : {error}",
       "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})",
       "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)",
-      "settings.retention.update": "Fenêtres de rétention des données modifiées ({fields})"
+      "settings.retention.update": "Fenêtres de rétention des données modifiées ({fields})",
+      "tenant_config_imported": "{count} configuration(s) {surface} existante(s) importée(s) dans la surveillance",
+      "tenant_card_stop_monitoring": "Surveillance de {surface} « {name} » arrêtée (aucune modification du locataire)",
+      "tenant_object_deactivated": "{surface} « {name} » désactivé dans le locataire",
+      "tenant_object_restored": "{surface} « {name} » restauré dans le locataire",
+      "tenant_object_deleted": "{surface} « {name} » supprimé du locataire"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1379,7 +1392,12 @@
       "migration": "Migration — {summary}",
       "psa.ticket_created": "Billet Autotask {ticket} créé pour l’alerte nº {alertId}",
       "psa.note_appended": "Alerte nº {alertId} ajoutée au billet Autotask {ticket}",
-      "psa.alert_autoresolved_ticket_closed": "Alerte nº {alertId} résolue automatiquement — billet Autotask {ticket} fermé"
+      "psa.alert_autoresolved_ticket_closed": "Alerte nº {alertId} résolue automatiquement — billet Autotask {ticket} fermé",
+      "tenant_config_imported": "{count} configuration(s) {surface} existante(s) importée(s) dans la surveillance",
+      "tenant_card_stop_monitoring": "Surveillance de {surface} « {name} » arrêtée (aucune modification du locataire)",
+      "tenant_object_deactivated": "{surface} « {name} » désactivé dans le locataire",
+      "tenant_object_restored": "{surface} « {name} » restauré dans le locataire",
+      "tenant_object_deleted": "{surface} « {name} » supprimé du locataire"
     }
   },
   "alerts": {
@@ -1512,7 +1530,11 @@
       "ual_per_mailbox_audit_tamper": "{policyName} : {actor} a désactivé l'audit de la boîte aux lettres {mailbox} — {tampers}",
       "ual_admin_password_reset": "{policyName} : {actor} a réinitialisé le mot de passe de {targetUser} ({attributed})",
       "ual_legacy_protocol_re_enabled": "{policyName} : {actor} a réactivé {count} protocole(s) hérité(s) sur {mailbox} : {protocols}",
-      "ual_defender_incident": "{policyName} : {incidentName} ({msSeverity}, {alertsCount} alertes, statut {status}) — {reason}"
+      "ual_defender_incident": "{policyName} : {incidentName} ({msSeverity}, {alertsCount} alertes, statut {status}) — {reason}",
+      "adopt_native_appeared": "Nouvelle configuration {surface} créée en dehors de Panoptica : « {name} »",
+      "adopt_drift": "{surface} issu du locataire « {name} » modifié par rapport à l’état initial : {count} champ(s) ({fields})",
+      "adopt_removed": "{surface} issu du locataire « {name} » a été supprimé du locataire en dehors de Panoptica",
+      "adopt_reenabled": "{surface} issu du locataire désactivé « {name} » a été réactivé en dehors de Panoptica"
     },
     "section": {
       "details": "Détails",
@@ -3571,6 +3593,60 @@
         "devices": "Appareils",
         "other": "Autre"
       }
+    },
+    "adopt": {
+      "import_btn": "Importer les paramètres existants",
+      "section_title": "Configurations issues du locataire",
+      "section_sub": "Adoptées à partir des paramètres existants du locataire — surveillées pour tout écart par rapport à l’état initial.",
+      "badge": "Issu du locataire",
+      "none_yet": "Aucune configuration issue du locataire n’est encore surveillée.",
+      "load_failed": "Impossible de charger les configurations issues du locataire.",
+      "secdef_label": "Paramètres de sécurité par défaut :",
+      "secdef_on": "Activés",
+      "secdef_off": "Désactivés",
+      "secdef_unknown": "Inconnu",
+      "type_ca": "Stratégie d’accès conditionnel",
+      "state_active": "Actif",
+      "state_inactive": "Inactif",
+      "drift_changed": "Modifié par rapport à l’état initial",
+      "drift_removed": "Supprimé du locataire",
+      "drift_reenabled": "Réactivé en externe",
+      "ms_managed": "Géré par Microsoft",
+      "actions_btn": "Actions",
+      "actions_title": "Gérer la configuration",
+      "importing": "Importation…",
+      "import_success": "{count} configuration(s) importée(s).",
+      "import_empty_ca": "Aucune stratégie d’accès conditionnel à importer n’a été trouvée dans ce locataire.",
+      "import_empty_intune": "Aucune configuration Intune à importer n’a été trouvée dans ce locataire.",
+      "import_unlicensed_ca": "La licence de ce locataire n’inclut pas l’accès conditionnel — il n’y a rien à importer.",
+      "import_unlicensed_intune": "La licence de ce locataire n’inclut pas Intune — il n’y a rien à importer.",
+      "import_transient": "Impossible de lire les paramètres de ce locataire pour l’instant — réessayez.",
+      "restore_btn": "Restaurer",
+      "restore_title": "Restaurer la configuration",
+      "restore_confirm": "Restaurer « {name} » à son état antérieur à la désactivation ?",
+      "restore_done": "Configuration restaurée.",
+      "deactivate_btn": "Désactiver dans le locataire",
+      "deactivate_title": "Désactiver la configuration",
+      "deactivate_warn": "Cette action désactivera « {name} » dans le locataire (accès conditionnel : mis à désactivé ; Intune : attributions supprimées). Elle peut être restaurée.",
+      "deactivate_done": "Configuration désactivée.",
+      "keep_monitoring": "Continuer de surveiller les modifications pendant la désactivation",
+      "i_understand": "Je comprends que cela modifie le locataire.",
+      "delete_btn": "Supprimer du locataire",
+      "delete_title": "Supprimer la configuration",
+      "delete_warn": "Cette action supprime définitivement « {name} » du locataire. Elle est irréversible.",
+      "delete_done": "Configuration supprimée.",
+      "type_your_name": "Saisissez votre propre nom pour confirmer :",
+      "i_understand_delete": "Je comprends que cela supprime définitivement la configuration du locataire.",
+      "name_mismatch": "Le nom saisi ne correspond pas à votre compte — suppression annulée.",
+      "stop_btn": "Arrêter la surveillance",
+      "stop_title": "Arrêter la surveillance",
+      "stop_confirm": "Arrêter la surveillance de « {name} » ? La carte est retirée et Panoptica cesse de la surveiller.",
+      "stop_hint": "Panoptica uniquement — cela ne modifie pas le locataire.",
+      "stop_done": "Surveillance arrêtée.",
+      "managed_by_microsoft": "Cette stratégie est gérée par Microsoft et ne peut pas être modifiée ici.",
+      "action_failed": "L’action n’a pas pu être effectuée — réessayez.",
+      "cancel": "Annuler",
+      "import_nothing_new": "Rien de nouveau à importer — tout ce qui se trouve ici est déjà surveillé par Panoptica ou géré par un modèle."
     }
   },
   "learn": {

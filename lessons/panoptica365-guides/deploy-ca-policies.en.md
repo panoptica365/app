@@ -2,7 +2,7 @@
 title: "Deploy Conditional Access policies"
 subtitle: "Assign templates from your library, deploy them to the tenant, and let drift detection guard them afterward."
 icon: "key-round"
-last_updated: 2026-06-07
+last_updated: 2026-06-15
 ---
 
 # Deploy Conditional Access policies
@@ -49,6 +49,32 @@ You have three honest options:
    - **Accept with expiry** *(recommended)* — the drift is accepted until a date you choose (180 days by default), a **reason is required**, and excluded principals are lifted into the **Exemptions** table so alert evaluators skip them until expiry. Time-boxed, documented, auditable.
    - **Accept Once, forever** — accepted indefinitely; re-fires only if the drift signature changes. Use sparingly.
 3. **Update the template** — if the change is actually right for every tenant, fix it at the source in the CA Policies library.
+
+## Adopt existing settings in place (tenant-sourced)
+
+Sometimes you onboard a tenant that **already has** its own Conditional Access policies — ones you didn't push from your library. You don't have to impose your templates on day one. **Import existing settings** lets you adopt what's already there and watch it for change first — a deliberate "monitor what's here, don't impose yet" stage.
+
+On the **CA Policies** tab, click **Import existing settings**. Panoptica reads the tenant's live CA policies and creates a card for each one it doesn't already manage, marked **Tenant-sourced** (a red left edge and a badge) so you can tell them apart from your deployed templates. It snapshots each policy's current state as the baseline and watches for changes from there.
+
+A few things worth knowing:
+
+- **No duplicates.** Policies you already deployed from a template are matched by their object id and skipped — even if you renamed them in the tenant. The button stays available, and re-clicking is safe: it only adopts settings that are genuinely new.
+- **Microsoft-managed policies** are adopted too, flagged as such. Where Microsoft refuses a change, the action degrades gracefully ("managed by Microsoft, cannot be changed here") instead of failing. **Security Defaults** is *not* a policy — it's shown as a simple on/off indicator, never a card.
+- **Drift from as-found.** A tenant-sourced card's alert reads *"changed from as-found"* — not "deviates from your standard," because there's no template behind it yet. The daily sweep catches changes; a brand-new CA policy created directly in the console is caught within minutes.
+
+### What you can do with a tenant-sourced card
+
+Open a card's **Actions** for three distinct choices:
+
+1. **Stop monitoring** — removes the card and stops watching it. **This never changes the tenant** — it's a Panoptica-only action.
+2. **Deactivate in tenant** — reversibly turns the policy off (sets it to *disabled*). The card stays, marked Inactive, and **Restore** puts it back exactly. By default a deactivated card only alerts if someone re-enables it outside Panoptica.
+3. **Delete from tenant** — permanently removes the policy from the tenant. Friction scales with the blast radius: deleting asks you to type your own name to confirm.
+
+Every one of these is recorded in the audit log and the tenant's Change Log, with your name and the policy name.
+
+### Watching for what appears later
+
+Adoption aside, Panoptica watches **every** tenant — templated or not — for a CA policy that appears **outside Panoptica** (created directly in the Entra console). When one shows up it becomes a tenant-sourced card and fires a *"configuration created outside Panoptica"* alert, so a change made around your process doesn't slip by. As you later roll out your own standards, you can deactivate or delete the messy native policies — or just keep monitoring them.
 
 ## Operating note
 

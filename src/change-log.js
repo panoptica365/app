@@ -67,6 +67,15 @@ const CATEGORY = {
   // Requires the corresponding ENUM expansion in alert-engine.js
   // ensureAlertColumns() — already done in the same patch as this constant.
   SECURITY_SETTING_CHANGE: 'security_setting_change',
+  // Jun 15, 2026 — Adopt-in-Place (tenant-sourced CA/Intune cards). Distinct
+  // values so the Change Log distinguishes Panoptica-only actions (import,
+  // stop-monitoring — no tenant write) from tenant writes (deactivate, restore,
+  // delete). DB ENUM extension lives in alert-engine.js ensureAlertColumns().
+  ADOPT_IMPORT:           'adopt_import',          // Panoptica-only
+  ADOPT_STOP_MONITORING:  'adopt_stop_monitoring', // Panoptica-only
+  ADOPT_DEACTIVATE:       'adopt_deactivate',      // tenant write
+  ADOPT_RESTORE:          'adopt_restore',         // tenant write
+  ADOPT_DELETE:           'adopt_delete',          // tenant write
   OTHER:                  'other',
 };
 

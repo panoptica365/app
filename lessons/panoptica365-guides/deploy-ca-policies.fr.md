@@ -2,7 +2,7 @@
 title: "Déployez des stratégies d'accès conditionnel"
 subtitle: "Affectez des modèles de votre bibliothèque, déployez-les sur le locataire, et laissez la détection de dérive les garder par la suite."
 icon: "key-round"
-last_updated: 2026-06-07
+last_updated: 2026-06-15
 ---
 
 # Déployez des stratégies d'accès conditionnel
@@ -49,6 +49,32 @@ Vous avez trois options honnêtes :
    - **Accepter avec expiration** *(recommandé)* — la dérive est acceptée jusqu'à la date de votre choix (180 jours par défaut), un **motif est obligatoire**, et les principaux exclus sont transférés dans la table des **Exemptions** pour que les évaluateurs d'alertes les ignorent jusqu'à l'expiration. Limité dans le temps, documenté, vérifiable.
    - **Accepter une fois, pour toujours** — accepté indéfiniment; ne se redéclenche que si la signature de la dérive change. À utiliser avec parcimonie.
 3. **Mettre à jour le modèle** — si le changement est en fait le bon pour tous les locataires, corrigez à la source dans la bibliothèque Stratégies AC.
+
+## Adopter les paramètres existants sur place (issus du locataire)
+
+Il arrive que vous intégriez un locataire qui possède **déjà** ses propres stratégies d'accès conditionnel — des stratégies que vous n'avez pas poussées depuis votre bibliothèque. Vous n'êtes pas obligé d'imposer vos modèles dès le premier jour. **Importer les paramètres existants** vous permet d'adopter ce qui est déjà là et de le surveiller d'abord — une étape délibérée « surveiller ce qui est ici, ne rien imposer pour l'instant ».
+
+Sous l'onglet **Stratégies AC**, cliquez sur **Importer les paramètres existants**. Panoptica lit les stratégies AC en vigueur dans le locataire et crée une carte pour chacune qu'il ne gère pas déjà, marquée **Issu du locataire** (bordure gauche rouge et badge) afin de les distinguer de vos modèles déployés. Il enregistre l'état actuel de chaque stratégie comme état initial et surveille les changements à partir de là.
+
+Quelques points à savoir :
+
+- **Aucun doublon.** Les stratégies que vous avez déjà déployées à partir d'un modèle sont reconnues par leur identifiant d'objet et ignorées — même si vous les avez renommées dans le locataire. Le bouton reste disponible, et recliquer est sans risque : seuls les paramètres réellement nouveaux sont adoptés.
+- **Les stratégies gérées par Microsoft** sont aussi adoptées, signalées comme telles. Là où Microsoft refuse une modification, l'action se dégrade proprement (« géré par Microsoft, ne peut pas être modifié ici ») au lieu d'échouer. Les **paramètres de sécurité par défaut** ne sont *pas* une stratégie — ils sont affichés comme un simple indicateur activé/désactivé, jamais comme une carte.
+- **Dérive par rapport à l'état initial.** L'alerte d'une carte issue du locataire indique *« modifié par rapport à l'état initial »* — et non « s'écarte de votre standard », car il n'y a pas encore de modèle derrière. La surveillance quotidienne détecte les changements; une toute nouvelle stratégie AC créée directement dans la console est détectée en quelques minutes.
+
+### Ce que vous pouvez faire avec une carte issue du locataire
+
+Ouvrez les **Actions** d'une carte pour trois choix distincts :
+
+1. **Arrêter la surveillance** — retire la carte et cesse de la surveiller. **Cela ne modifie jamais le locataire** — c'est une action propre à Panoptica.
+2. **Désactiver dans le locataire** — désactive la stratégie de façon réversible (la met à *désactivée*). La carte demeure, marquée Inactive, et **Restaurer** la remet exactement en place. Par défaut, une carte désactivée n'alerte que si quelqu'un la réactive en dehors de Panoptica.
+3. **Supprimer du locataire** — retire définitivement la stratégie du locataire. La confirmation est proportionnée au risque : la suppression vous demande de saisir votre propre nom.
+
+Chacune de ces actions est consignée dans le journal d'audit et dans le journal des modifications du locataire, avec votre nom et le nom de la stratégie.
+
+### Surveiller ce qui apparaît plus tard
+
+Au-delà de l'adoption, Panoptica surveille **chaque** locataire — avec ou sans modèles — pour détecter une stratégie AC qui apparaît **en dehors de Panoptica** (créée directement dans la console Entra). Lorsqu'elle surgit, elle devient une carte issue du locataire et déclenche une alerte *« configuration créée en dehors de Panoptica »*, afin qu'un changement effectué hors de votre processus ne passe pas inaperçu. À mesure que vous déployez ensuite vos propres standards, vous pouvez désactiver ou supprimer les stratégies natives encombrantes — ou simplement continuer à les surveiller.
 
 ## Note d'exploitation
 

@@ -207,9 +207,12 @@
     } else if (currentView === 'ca-policies') {
       if (caView) caView.style.display = 'block';
       loadCaAssignments();
+      // Adopt-in-Place — tenant-sourced CA cards + import button (§5–6).
+      if (window.Panoptica && Panoptica.Adopt) Panoptica.Adopt.load(tenantId, 'ca');
     } else if (currentView === 'intune-policies') {
       if (intuneView) intuneView.style.display = 'block';
       loadIntuneDeployments();
+      if (window.Panoptica && Panoptica.Adopt) Panoptica.Adopt.load(tenantId, 'intune');
     } else if (currentView === 'applications') {
       if (appsView) appsView.style.display = 'block';
       loadApplications();

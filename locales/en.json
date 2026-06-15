@@ -397,7 +397,8 @@
     "ual_per_mailbox_audit_tampered": "Per-mailbox audit tampered",
     "ual_admin_initiated_password_reset": "Admin-initiated password reset",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Legacy protocol re-enabled per mailbox",
-    "ual_microsoft_defender_incident": "Microsoft Defender incident"
+    "ual_microsoft_defender_incident": "Microsoft Defender incident",
+    "configuration_created_outside_panoptica": "Configuration created outside Panoptica"
   },
   "_comment_alert_message_prefix": "Custom alert message prefixes that don't match the parent alert_policy_names. CA + Intune drift alerts use these literal English prefixes server-side; the renderAlertMessage helper detects them at display time and substitutes the translated form.",
   "alert_message_prefix": {
@@ -913,6 +914,13 @@
       "attack_vectors": "These aren't attack vectors — they're Panoptica365-side failure modes:\n\n- SMTP delivery failure. Morning briefing or alert email couldn't be sent. Usually a transient mail-server issue or expired credentials on Panoptica365's mail config.\n\n- Polling job error. A scheduled poll against a customer tenant errored out. Usually a Microsoft API issue or token expiry.\n\n- Database / queue issue. Internal Panoptica365 database or queue had a problem.\n\n- Token expiry. Panoptica365's connection to a customer tenant or to Microsoft Graph has an expired/revoked token.",
       "what_to_do": "Step 1. Read the alert message — Panoptica365 reports the specific failure mode. The message tells you which subsystem and what kind of error.\n\nStep 2. If SMTP-related: check the Panoptica365 mail config, verify SMTP credentials, retry sending the impacted briefing or alert manually.\n\nStep 3. If polling-related: check the customer's tenant — is it accessible from Panoptica365? Did a token expire or get revoked? Re-auth the connection.\n\nStep 4. If database/queue-related: check the Panoptica365 VM's logs and disk space. Most queue-issue alerts resolve themselves but warrant a check.\n\nStep 5. After resolution, verify the underlying function is back to working: was the morning briefing delivered after retry? Did the polling job complete on its next run? Don't assume — verify.",
       "example_scenario": "Panoptica365 fires a system-health alert: \"Morning briefing email failed to send. Reason: SMTP authentication failure (535 5.7.3).\" The error code indicates Microsoft is rejecting the SMTP credentials Panoptica365 is using to send mail.\n\nThis is a Panoptica365 tooling failure — a credential or config issue on the Panoptica365 side, not a customer event. The likely cause: the SMTP credentials for Panoptica365's outbound mail were revoked, expired, or had their app password removed. Until fixed, no email-based notifications will reach operators or customers, including the morning briefing and any subsequent alert emails.\n\nYou'd: check the Panoptica365 mail-account credentials, regenerate the app password (or reset the credential mechanism), update Panoptica365's mail config, manually send a test email to confirm the fix, retry sending today's morning briefing if it didn't go, and note the incident in the operator change log so future similar issues can be spotted faster."
+    },
+    "configuration_created_outside_panoptica": {
+      "what_is_this": "Panoptica saw a Conditional Access policy or Intune configuration appear in this tenant that it did not create — for example, one authored directly in the Microsoft Entra or Intune admin center. It is added as a tenant-sourced card so you can review it and decide what to do.",
+      "why_it_matters": "Configuration created outside Panoptica is unmanaged by your standards. A new Conditional Access policy can weaken or conflict with the protection you deployed (for example, a broad exclusion or a disabled enforcement), and a new Intune profile can change device posture. Catching these quickly keeps the tenant's real configuration aligned with what you intend.",
+      "attack_vectors": "How this shows up:\n- An attacker or insider with admin rights creates a permissive CA policy (for example, excluding their account from MFA) to establish persistence.\n- A well-meaning admin makes a change directly in the console that quietly undoes a control you standardized.\n- A new Intune configuration relaxes compliance or a security baseline outside your change process.",
+      "what_to_do": "What to do:\n- Open the tenant-sourced card on the CA Policies or Intune tab and review the configuration.\n- If it is legitimate, leave it monitored (drift from here is tracked) — or Stop monitoring if it is noise.\n- If it is unwanted, Deactivate it (reversible) or Delete it from the tenant.\n- If you did not expect it, confirm who created it in the tenant audit log before acting.",
+      "example_scenario": "During an engagement you adopt a client's existing CA policies and start monitoring. A week later a help-desk technician creates a new CA policy directly in Entra that excludes a shared-mailbox owner from MFA. Panoptica surfaces it (within a day via the daily reconcile, or within minutes via the audit-log signal) as a tenant-sourced card and fires this alert. You review it, see the unintended MFA gap, deactivate the policy, and follow up with the technician."
     }
   },
   "intune_templates": {
@@ -1349,7 +1357,12 @@
       "psa.sync_error": "Autotask {op} failed for alert #{alertId}: {error}",
       "settings.psa.update": "PSA integration settings changed ({fields})",
       "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
-      "settings.retention.update": "Data retention windows changed ({fields})"
+      "settings.retention.update": "Data retention windows changed ({fields})",
+      "tenant_config_imported": "Imported {count} existing {surface} configuration(s) into monitoring",
+      "tenant_card_stop_monitoring": "Stopped monitoring {surface} \"{name}\" (no tenant change)",
+      "tenant_object_deactivated": "Deactivated {surface} \"{name}\" in the tenant",
+      "tenant_object_restored": "Restored {surface} \"{name}\" in the tenant",
+      "tenant_object_deleted": "Deleted {surface} \"{name}\" from the tenant"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1379,7 +1392,12 @@
       "migration": "Migration — {summary}",
       "psa.ticket_created": "Autotask ticket {ticket} created for alert #{alertId}",
       "psa.note_appended": "Alert #{alertId} appended to Autotask ticket {ticket}",
-      "psa.alert_autoresolved_ticket_closed": "Alert #{alertId} auto-resolved — Autotask ticket {ticket} closed"
+      "psa.alert_autoresolved_ticket_closed": "Alert #{alertId} auto-resolved — Autotask ticket {ticket} closed",
+      "tenant_config_imported": "Imported {count} existing {surface} configuration(s) into monitoring",
+      "tenant_card_stop_monitoring": "Stopped monitoring {surface} \"{name}\" (no tenant change)",
+      "tenant_object_deactivated": "Deactivated {surface} \"{name}\" in the tenant",
+      "tenant_object_restored": "Restored {surface} \"{name}\" in the tenant",
+      "tenant_object_deleted": "Deleted {surface} \"{name}\" from the tenant"
     }
   },
   "alerts": {
@@ -1512,7 +1530,11 @@
       "ual_per_mailbox_audit_tamper": "{policyName}: {actor} disabled mailbox audit on {mailbox} — {tampers}",
       "ual_admin_password_reset": "{policyName}: {actor} reset password for {targetUser} ({attributed})",
       "ual_legacy_protocol_re_enabled": "{policyName}: {actor} re-enabled {count} legacy protocol(s) on {mailbox}: {protocols}",
-      "ual_defender_incident": "{policyName}: {incidentName} ({msSeverity}, {alertsCount} alerts, status {status}) — {reason}"
+      "ual_defender_incident": "{policyName}: {incidentName} ({msSeverity}, {alertsCount} alerts, status {status}) — {reason}",
+      "adopt_native_appeared": "New {surface} configuration created outside Panoptica: \"{name}\"",
+      "adopt_drift": "Tenant-sourced {surface} \"{name}\" changed from as-found: {count} field(s) ({fields})",
+      "adopt_removed": "Tenant-sourced {surface} \"{name}\" was removed from the tenant outside Panoptica",
+      "adopt_reenabled": "Deactivated tenant-sourced {surface} \"{name}\" was re-enabled outside Panoptica"
     },
     "section": {
       "details": "Details",
@@ -3571,6 +3593,60 @@
         "devices": "Devices",
         "other": "Other"
       }
+    },
+    "adopt": {
+      "import_btn": "Import existing settings",
+      "section_title": "Tenant-sourced configurations",
+      "section_sub": "Adopted from this tenant's existing settings — monitored for changes from as-found.",
+      "badge": "Tenant-sourced",
+      "none_yet": "No tenant-sourced configurations are being monitored yet.",
+      "load_failed": "Couldn't load tenant-sourced configurations.",
+      "secdef_label": "Security Defaults:",
+      "secdef_on": "On",
+      "secdef_off": "Off",
+      "secdef_unknown": "Unknown",
+      "type_ca": "Conditional Access policy",
+      "state_active": "Active",
+      "state_inactive": "Inactive",
+      "drift_changed": "Changed from as-found",
+      "drift_removed": "Removed from tenant",
+      "drift_reenabled": "Re-enabled externally",
+      "ms_managed": "Managed by Microsoft",
+      "actions_btn": "Actions",
+      "actions_title": "Manage configuration",
+      "importing": "Importing…",
+      "import_success": "Imported {count} configuration(s).",
+      "import_empty_ca": "No Conditional Access policies were found in this tenant to import.",
+      "import_empty_intune": "No Intune configurations were found in this tenant to import.",
+      "import_unlicensed_ca": "This tenant's licensing does not include Conditional Access — there is nothing to import.",
+      "import_unlicensed_intune": "This tenant's licensing does not include Intune — there is nothing to import.",
+      "import_transient": "Couldn't read this tenant's settings right now — try again.",
+      "restore_btn": "Restore",
+      "restore_title": "Restore configuration",
+      "restore_confirm": "Restore \"{name}\" to its state before deactivation?",
+      "restore_done": "Configuration restored.",
+      "deactivate_btn": "Deactivate in tenant",
+      "deactivate_title": "Deactivate configuration",
+      "deactivate_warn": "This will deactivate \"{name}\" in the tenant (Conditional Access: set to disabled; Intune: assignments removed). It can be restored.",
+      "deactivate_done": "Configuration deactivated.",
+      "keep_monitoring": "Keep monitoring for changes while deactivated",
+      "i_understand": "I understand this changes the tenant.",
+      "delete_btn": "Delete from tenant",
+      "delete_title": "Delete configuration",
+      "delete_warn": "This permanently deletes \"{name}\" from the tenant. This cannot be undone.",
+      "delete_done": "Configuration deleted.",
+      "type_your_name": "Type your own name to confirm:",
+      "i_understand_delete": "I understand this permanently deletes the configuration from the tenant.",
+      "name_mismatch": "The name you typed doesn't match your account — deletion cancelled.",
+      "stop_btn": "Stop monitoring",
+      "stop_title": "Stop monitoring",
+      "stop_confirm": "Stop monitoring \"{name}\"? The card is removed and Panoptica stops watching it.",
+      "stop_hint": "Panoptica-only — this does not change the tenant.",
+      "stop_done": "Stopped monitoring.",
+      "managed_by_microsoft": "This policy is managed by Microsoft and cannot be changed here.",
+      "action_failed": "The action couldn't be completed — try again.",
+      "cancel": "Cancel",
+      "import_nothing_new": "Nothing new to import — everything here is already monitored by Panoptica or managed by a template."
     }
   },
   "learn": {

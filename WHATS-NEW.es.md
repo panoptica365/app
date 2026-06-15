@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.11 — 2026-06-15
+
+### Adopte la configuración de acceso condicional e Intune existente de un inquilino — supervise en su sitio
+
+Cuando incorpora un inquilino que ya tiene sus propias directivas de acceso condicional y configuraciones de Intune, ahora puede **empezar a supervisarlas sin necesidad de enviar primero sus propias plantillas**. En las pestañas **Directivas de AC** e **Intune**, un nuevo botón **Importar la configuración existente** lee lo que ya hay en el inquilino y crea una tarjeta por directiva — marcada como **Origen: inquilino** (borde izquierdo rojo y distintivo claro) para distinguirlas de un vistazo de sus plantillas implementadas. Panoptica registra cada una como estado inicial y vigila los cambios a partir de ahí.
+
+Desde cada tarjeta de origen del inquilino puede:
+
+- **Dejar de supervisar** — quitar la tarjeta; esto **nunca modifica el inquilino**.
+- **Desactivar** — desactivarla de forma reversible (acceso condicional: se establece como deshabilitada; Intune: se quitan las asignaciones), con la opción de seguir vigilándola. **Restaurar** la devuelve exactamente a su estado.
+- **Eliminar** — quitarla permanentemente del inquilino, tras una confirmación deliberada.
+
+Importar, desactivar, restaurar y eliminar están disponibles para **Operadores y Administradores**; la confirmación es proporcional al riesgo (Eliminar le pide escribir su propio nombre), y cada acción queda registrada en el **registro de auditoría** y en el **registro de cambios** del inquilino.
+
+Panoptica ahora también vigila **cada** inquilino para detectar **configuración creada fuera de Panoptica** — una nueva directiva de AC o un perfil de Intune creado directamente en la consola de Microsoft — y la muestra como una tarjeta de origen del inquilino junto con una alerta, para que un cambio realizado fuera de su proceso no pase desapercibido. Para el acceso condicional, esto es **casi en tiempo real**.
+
+Los inquilinos vacíos o sin licencia se gestionan con cuidado: si un inquilino no tiene directivas, o si su plan no incluye acceso condicional o Intune, recibe un mensaje claro en lugar de un error.
+
+---
+
 ## Versión 0.2.10 — 2026-06-15
 
 ### Corrección: el resumen ejecutivo de un informe podía mostrar texto de código sin procesar

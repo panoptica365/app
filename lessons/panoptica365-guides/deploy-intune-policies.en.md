@@ -2,7 +2,7 @@
 title: "Deploy Intune policies"
 subtitle: "Same template-and-drift model as CA, applied to device configuration: assign, deploy, watch."
 icon: "monitor-smartphone"
-last_updated: 2026-06-07
+last_updated: 2026-06-15
 ---
 
 # Deploy Intune policies
@@ -40,6 +40,20 @@ When an exemption expires or is revoked, the next Intune drift cycle flags the d
 ## One important caution
 
 Avoid editing Panoptica365-deployed policies directly in the Intune console for per-tenant tweaks (extra exclusion groups, one-off setting changes). The platform's job is to converge live policies back to the template — console-side customizations either trigger perpetual drift alerts or get overwritten on a re-deploy. If a tenant genuinely needs a variation, make it explicit: a separate template, or an accepted, documented, time-boxed drift.
+
+## Adopt existing settings in place (tenant-sourced)
+
+Just like CA, you can adopt a tenant's **existing** Intune configurations instead of pushing your templates first. On the **Intune Policies** tab, click **Import existing settings**. Panoptica reads the tenant's live configurations — across the same types your library supports (settings catalogs, device configurations, compliance policies, administrative templates, security baselines) — and creates a **Tenant-sourced** card (red edge + badge) for each one it doesn't already manage. Anything you deployed from a template is matched by object id and skipped, so you never get duplicates; re-clicking is safe.
+
+Each card is baselined as-found — both the configuration **and its assignments** — and watched for change. A tenant-sourced card's alert reads *"changed from as-found."* Intune drift is caught on the **daily** sweep: unlike new CA policies, Intune changes aren't in the audit-log stream, so there's no minutes-latency path — the daily reconcile is the backstop.
+
+Open a card's **Actions** for three choices:
+
+1. **Stop monitoring** — removes the card; never touches the tenant.
+2. **Deactivate in tenant** — Intune has no global "off" switch, so Panoptica **snapshots the full assignment set first**, then removes all assignments so the config applies to no one. **Restore** replays the exact assignments. That pre-snapshot is what makes deactivate reversible — without it, stripping assignments would be a one-way door.
+3. **Delete from tenant** — permanently removes the configuration; deleting asks you to type your own name to confirm.
+
+All three are recorded in the MSP audit log and the tenant's Change Log. And as with CA, Panoptica watches every tenant for an Intune configuration created **outside Panoptica** and surfaces it as a tenant-sourced card plus an alert.
 
 ## The rhythm
 

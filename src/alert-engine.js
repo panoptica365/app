@@ -648,6 +648,7 @@ async function ensureAlertColumns() {
           'alert_status_change','alert_note','ai_severity_revert',
           'enforcement_toggle','tenant_lifecycle','named_location_create',
           'security_setting_change',
+          'adopt_import','adopt_stop_monitoring','adopt_deactivate','adopt_restore','adopt_delete',
           'manual_cleanup','incident_response','migration','other'
         ) NOT NULL
     `);

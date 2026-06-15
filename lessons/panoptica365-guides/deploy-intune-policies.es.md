@@ -2,7 +2,7 @@
 title: "Despliegue directivas de Intune"
 subtitle: "El mismo modelo de plantilla y deriva que en CA, aplicado a la configuración de dispositivos: asignar, desplegar, vigilar."
 icon: "monitor-smartphone"
-last_updated: 2026-06-07
+last_updated: 2026-06-15
 ---
 
 # Despliegue directivas de Intune
@@ -40,6 +40,20 @@ Cuando una exención caduca o se revoca, el siguiente ciclo de deriva de Intune 
 ## Una precaución importante
 
 Evite editar directamente en el portal de Intune las directivas desplegadas por Panoptica365 para hacer ajustes por inquilino (grupos de exclusión adicionales, cambios puntuales de configuración). El trabajo de la plataforma es hacer converger las directivas activas de vuelta a la plantilla — las personalizaciones hechas en el portal o bien disparan alertas de desviación perpetuas o bien se sobrescriben en el siguiente despliegue. Si un inquilino necesita de verdad una variación, hágala explícita: una plantilla aparte, o una desviación aceptada, documentada y acotada en el tiempo.
+
+## Adoptar la configuración existente en su sitio (origen del inquilino)
+
+Igual que con CA, puede adoptar las configuraciones de Intune **existentes** de un inquilino en lugar de enviar primero sus plantillas. En la pestaña **Directivas de Intune**, haga clic en **Importar la configuración existente**. Panoptica lee las configuraciones vigentes en el inquilino — para los mismos tipos que admite su biblioteca (catálogos de configuración, configuraciones de dispositivos, directivas de cumplimiento, plantillas administrativas, líneas base de seguridad) — y crea una tarjeta **Origen: inquilino** (borde rojo y distintivo) para cada una que aún no administra. Todo lo que implementó desde una plantilla se reconoce por su identificador de objeto y se omite, por lo que nunca obtiene duplicados; volver a hacer clic es seguro.
+
+Cada tarjeta se registra tal como se encontró — la configuración **y sus asignaciones** — y se vigila ante cualquier cambio. La alerta de una tarjeta de origen del inquilino dice *«cambió respecto al estado original»*. La deriva de Intune se detecta en la supervisión **diaria**: a diferencia de las directivas de AC nuevas, los cambios de Intune no están en el flujo del registro de auditoría, por lo que no hay una vía con latencia de minutos — la reconciliación diaria es la red de seguridad.
+
+Abra las **Acciones** de una tarjeta para tres opciones:
+
+1. **Dejar de supervisar** — quita la tarjeta; nunca toca el inquilino.
+2. **Desactivar en el inquilino** — Intune no tiene un interruptor global de «apagado», así que Panoptica **registra primero el conjunto completo de asignaciones** y luego quita todas las asignaciones para que la configuración no se aplique a nadie. **Restaurar** vuelve a aplicar exactamente las asignaciones. Ese registro previo es lo que hace que desactivar sea reversible — sin él, quitar las asignaciones sería una puerta de un solo sentido.
+3. **Eliminar del inquilino** — quita permanentemente la configuración; eliminar le pide que escriba su propio nombre.
+
+Las tres acciones quedan registradas en el registro de auditoría del MSP y en el registro de cambios del inquilino. Y como con CA, Panoptica vigila cada inquilino en busca de una configuración de Intune creada **fuera de Panoptica** y la presenta como una tarjeta de origen del inquilino junto con una alerta.
 
 ## El ritmo
 

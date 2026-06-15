@@ -397,7 +397,8 @@
     "ual_per_mailbox_audit_tampered": "Auditoría alterada por buzón",
     "ual_admin_initiated_password_reset": "Restablecimiento de contraseña iniciado por administrador",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Protocolo heredado reactivado por buzón",
-    "ual_microsoft_defender_incident": "Incidente de Microsoft Defender"
+    "ual_microsoft_defender_incident": "Incidente de Microsoft Defender",
+    "configuration_created_outside_panoptica": "Configuración creada fuera de Panoptica"
   },
   "_comment_alert_message_prefix": "Prefijos de mensajes de alerta personalizados que no coinciden con el alert_policy_names principal. Las alertas de deriva CA e Intune usan estos prefijos en inglés literal del lado servidor; el helper renderAlertMessage los detecta al mostrar y sustituye la forma traducida.",
   "alert_message_prefix": {
@@ -913,6 +914,13 @@
       "attack_vectors": "Estos no son vectores de ataque — son modos de fallo del lado de Panoptica365:\n\n- Fallo de entrega SMTP. El informe matutino o correo de alerta no se pudo enviar. Suele ser un problema de servidor de correo transitorio o credenciales caducadas en la configuración de correo de Panoptica365.\n\n- Error de tarea de sondeo. Un sondeo programado contra un inquilino cliente erró. Suele ser un problema de API de Microsoft o expiración de token.\n\n- Problema de base de datos / cola. La base de datos o cola interna de Panoptica365 tuvo un problema.\n\n- Expiración de token. La conexión de Panoptica365 a un inquilino cliente o a Microsoft Graph tiene un token expirado/revocado.",
       "what_to_do": "Paso 1. Lea el mensaje de alerta — Panoptica365 reporta el modo de fallo específico. El mensaje le dice qué subsistema y qué tipo de error.\n\nPaso 2. Si está relacionado con SMTP: verifique la configuración de correo de Panoptica365, verifique las credenciales SMTP, reintente enviar el informe o alerta impactada manualmente.\n\nPaso 3. Si está relacionado con sondeo: verifique el inquilino del cliente — ¿es accesible desde Panoptica365? ¿Caducó o se revocó un token? Re-autentique la conexión.\n\nPaso 4. Si está relacionado con base de datos/cola: verifique los registros y el espacio en disco de la VM de Panoptica365. La mayoría de las alertas de problemas de cola se resuelven solas pero merecen una verificación.\n\nPaso 5. Tras la resolución, verifique que la función subyacente está de vuelta funcionando: ¿se entregó el informe matutino tras el reintento? ¿Se completó la tarea de sondeo en su próxima ejecución? No asuma — verifique.",
       "example_scenario": "Panoptica365 dispara una alerta de salud del sistema: «Fallo al enviar el correo de informe matutino. Razón: fallo de autenticación SMTP (535 5.7.3)». El código de error indica que Microsoft está rechazando las credenciales SMTP que Panoptica365 usa para enviar correo.\n\nEsto es un fallo de herramientas de Panoptica365 — un problema de credencial o configuración del lado de Panoptica365, no un evento del cliente. La causa probable: las credenciales SMTP para el correo saliente de Panoptica365 fueron revocadas, expiraron, o tuvieron su contraseña de aplicación retirada. Hasta que se arregle, ninguna notificación basada en correo llegará a operadores o clientes, incluyendo el informe matutino y cualquier correo de alerta posterior.\n\nUsted: verificaría las credenciales de la cuenta de correo de Panoptica365, regeneraría la contraseña de aplicación (o restablecería el mecanismo de credencial), actualizaría la configuración de correo de Panoptica365, enviaría manualmente un correo de prueba para confirmar la corrección, reintentaría enviar el informe matutino del día si no se envió, y anotaría el incidente en el registro de cambios del operador para que problemas similares futuros puedan detectarse más rápido."
+    },
+    "configuration_created_outside_panoptica": {
+      "what_is_this": "Panoptica detectó que en este inquilino apareció una directiva de acceso condicional o una configuración de Intune que él no creó — por ejemplo, creada directamente en el centro de administración de Microsoft Entra o Intune. Se agrega como una tarjeta de «origen del inquilino» para que pueda revisarla y decidir qué hacer.",
+      "why_it_matters": "Una configuración creada fuera de Panoptica no se rige por sus estándares. Una nueva directiva de acceso condicional puede debilitar o entrar en conflicto con la protección que implementó (por ejemplo, una exclusión amplia o una aplicación deshabilitada), y un nuevo perfil de Intune puede cambiar la postura de los dispositivos. Detectarlas con rapidez mantiene la configuración real del inquilino alineada con lo que usted pretende.",
+      "attack_vectors": "Cómo se manifiesta:\n- Un atacante o una persona con información privilegiada y derechos de administrador crea una directiva de AC permisiva (por ejemplo, excluyendo su cuenta de la MFA) para establecer persistencia.\n- Un administrador bienintencionado hace un cambio directamente en la consola que anula de forma silenciosa un control que usted estandarizó.\n- Una nueva configuración de Intune relaja el cumplimiento o una línea base de seguridad fuera de su proceso de cambios.",
+      "what_to_do": "Qué hacer:\n- Abra la tarjeta de «origen del inquilino» en la pestaña Directivas de AC o Intune y revise la configuración.\n- Si es legítima, déjela supervisada (los cambios a partir de aquí se registran) — o Deje de supervisarla si es ruido.\n- Si no se desea, Desactívela (reversible) o Elimínela del inquilino.\n- Si no la esperaba, confirme quién la creó en el registro de auditoría del inquilino antes de actuar.",
+      "example_scenario": "Durante un proyecto, adopta las directivas de acceso condicional existentes de un cliente y comienza a supervisarlas. Una semana después, un técnico de soporte crea una nueva directiva de AC directamente en Entra que excluye de la MFA al propietario de un buzón compartido. Panoptica la muestra (en el transcurso del día mediante la reconciliación diaria, o en minutos mediante la señal del registro de auditoría) como una tarjeta de «origen del inquilino» y activa esta alerta. Usted la revisa, detecta el hueco de MFA no intencionado, desactiva la directiva y da seguimiento con el técnico."
     }
   },
   "intune_templates": {
@@ -1349,7 +1357,12 @@
       "psa.sync_error": "Autotask ({op}) falló para la alerta n.º {alertId}: {error}",
       "settings.psa.update": "Ajustes de la integración con PSA modificados ({fields})",
       "psa.rollup_consolidated": "Alerta de agrupación n.º {alertId}: se conservó el ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)",
-      "settings.retention.update": "Ventanas de retención de datos modificadas ({fields})"
+      "settings.retention.update": "Ventanas de retención de datos modificadas ({fields})",
+      "tenant_config_imported": "Se importaron {count} configuración(es) de {surface} existentes a la supervisión",
+      "tenant_card_stop_monitoring": "Se dejó de supervisar {surface} «{name}» (sin cambios en el inquilino)",
+      "tenant_object_deactivated": "{surface} «{name}» desactivado en el inquilino",
+      "tenant_object_restored": "{surface} «{name}» restaurado en el inquilino",
+      "tenant_object_deleted": "{surface} «{name}» eliminado del inquilino"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -1379,7 +1392,12 @@
       "migration": "Migración — {summary}",
       "psa.ticket_created": "Ticket de Autotask {ticket} creado para la alerta n.º {alertId}",
       "psa.note_appended": "Alerta n.º {alertId} añadida al ticket de Autotask {ticket}",
-      "psa.alert_autoresolved_ticket_closed": "Alerta n.º {alertId} resuelta automáticamente: ticket de Autotask {ticket} cerrado"
+      "psa.alert_autoresolved_ticket_closed": "Alerta n.º {alertId} resuelta automáticamente: ticket de Autotask {ticket} cerrado",
+      "tenant_config_imported": "Se importaron {count} configuración(es) de {surface} existentes a la supervisión",
+      "tenant_card_stop_monitoring": "Se dejó de supervisar {surface} «{name}» (sin cambios en el inquilino)",
+      "tenant_object_deactivated": "{surface} «{name}» desactivado en el inquilino",
+      "tenant_object_restored": "{surface} «{name}» restaurado en el inquilino",
+      "tenant_object_deleted": "{surface} «{name}» eliminado del inquilino"
     }
   },
   "alerts": {
@@ -1512,7 +1530,11 @@
       "ual_per_mailbox_audit_tamper": "{policyName}: {actor} desactivó la auditoría del buzón {mailbox} — {tampers}",
       "ual_admin_password_reset": "{policyName}: {actor} restableció la contraseña de {targetUser} ({attributed})",
       "ual_legacy_protocol_re_enabled": "{policyName}: {actor} reactivó {count} protocolo(s) heredado(s) en {mailbox}: {protocols}",
-      "ual_defender_incident": "{policyName}: {incidentName} ({msSeverity}, {alertsCount} alertas, estado {status}) — {reason}"
+      "ual_defender_incident": "{policyName}: {incidentName} ({msSeverity}, {alertsCount} alertas, estado {status}) — {reason}",
+      "adopt_native_appeared": "Nueva configuración de {surface} creada fuera de Panoptica: «{name}»",
+      "adopt_drift": "{surface} de origen del inquilino «{name}» cambió respecto al estado original: {count} campo(s) ({fields})",
+      "adopt_removed": "{surface} de origen del inquilino «{name}» se eliminó del inquilino fuera de Panoptica",
+      "adopt_reenabled": "{surface} de origen del inquilino desactivado «{name}» se reactivó fuera de Panoptica"
     },
     "section": {
       "details": "Detalles",
@@ -3571,6 +3593,60 @@
         "devices": "Dispositivos",
         "other": "Otro"
       }
+    },
+    "adopt": {
+      "import_btn": "Importar la configuración existente",
+      "section_title": "Configuraciones de origen del inquilino",
+      "section_sub": "Adoptadas de la configuración existente del inquilino — supervisadas ante cambios respecto al estado original.",
+      "badge": "Origen: inquilino",
+      "none_yet": "Todavía no se supervisa ninguna configuración de origen del inquilino.",
+      "load_failed": "No se pudieron cargar las configuraciones de origen del inquilino.",
+      "secdef_label": "Valores predeterminados de seguridad:",
+      "secdef_on": "Activados",
+      "secdef_off": "Desactivados",
+      "secdef_unknown": "Desconocido",
+      "type_ca": "Directiva de acceso condicional",
+      "state_active": "Activa",
+      "state_inactive": "Inactiva",
+      "drift_changed": "Cambió respecto al estado original",
+      "drift_removed": "Eliminada del inquilino",
+      "drift_reenabled": "Reactivada externamente",
+      "ms_managed": "Administrada por Microsoft",
+      "actions_btn": "Acciones",
+      "actions_title": "Administrar la configuración",
+      "importing": "Importando…",
+      "import_success": "Se importaron {count} configuración(es).",
+      "import_empty_ca": "No se encontraron directivas de acceso condicional para importar en este inquilino.",
+      "import_empty_intune": "No se encontraron configuraciones de Intune para importar en este inquilino.",
+      "import_unlicensed_ca": "La licencia de este inquilino no incluye el acceso condicional — no hay nada que importar.",
+      "import_unlicensed_intune": "La licencia de este inquilino no incluye Intune — no hay nada que importar.",
+      "import_transient": "No se pudo leer la configuración de este inquilino en este momento — inténtelo de nuevo.",
+      "restore_btn": "Restaurar",
+      "restore_title": "Restaurar la configuración",
+      "restore_confirm": "¿Restaurar «{name}» a su estado anterior a la desactivación?",
+      "restore_done": "Configuración restaurada.",
+      "deactivate_btn": "Desactivar en el inquilino",
+      "deactivate_title": "Desactivar la configuración",
+      "deactivate_warn": "Esto desactivará «{name}» en el inquilino (acceso condicional: se establece como deshabilitada; Intune: se quitan las asignaciones). Se puede restaurar.",
+      "deactivate_done": "Configuración desactivada.",
+      "keep_monitoring": "Seguir supervisando los cambios mientras está desactivada",
+      "i_understand": "Entiendo que esto modifica el inquilino.",
+      "delete_btn": "Eliminar del inquilino",
+      "delete_title": "Eliminar la configuración",
+      "delete_warn": "Esto elimina permanentemente «{name}» del inquilino. No se puede deshacer.",
+      "delete_done": "Configuración eliminada.",
+      "type_your_name": "Escriba su propio nombre para confirmar:",
+      "i_understand_delete": "Entiendo que esto elimina permanentemente la configuración del inquilino.",
+      "name_mismatch": "El nombre que escribió no coincide con su cuenta — eliminación cancelada.",
+      "stop_btn": "Dejar de supervisar",
+      "stop_title": "Dejar de supervisar",
+      "stop_confirm": "¿Dejar de supervisar «{name}»? Se quita la tarjeta y Panoptica deja de vigilarla.",
+      "stop_hint": "Solo en Panoptica — esto no modifica el inquilino.",
+      "stop_done": "Se dejó de supervisar.",
+      "managed_by_microsoft": "Esta directiva está administrada por Microsoft y no se puede cambiar aquí.",
+      "action_failed": "No se pudo completar la acción — inténtelo de nuevo.",
+      "cancel": "Cancelar",
+      "import_nothing_new": "No hay nada nuevo que importar — todo lo que hay aquí ya está supervisado por Panoptica o administrado por una plantilla."
     }
   },
   "learn": {

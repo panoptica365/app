@@ -5,6 +5,26 @@ that release, newest first.
 
 ---
 
+## Version 0.2.11 — 2026-06-15
+
+### Adopt a tenant's existing Conditional Access & Intune settings — monitor in place
+
+When you onboard a tenant that already has its own Conditional Access policies and Intune configurations, you can now **start monitoring them without first pushing your own templates**. On the **CA Policies** and **Intune** tabs, a new **Import existing settings** button reads what's already in the tenant and creates a card for each policy — marked **Tenant-sourced** (a red left edge and a clear badge) so you can tell them apart from your deployed templates at a glance. Panoptica snapshots each one as the baseline and watches for changes from there.
+
+From each tenant-sourced card you can:
+
+- **Stop monitoring** — remove the card; this **never touches the tenant**.
+- **Deactivate** — reversibly turn it off (Conditional Access: set to disabled; Intune: assignments removed), with an option to keep watching it. **Restore** puts it back exactly.
+- **Delete** — permanently remove it from the tenant, behind deliberate confirmation.
+
+Importing, deactivating, restoring and deleting are available to **Operators and Admins**; the confirmation friction scales with the risk (Delete asks you to type your own name), and every action is recorded in the **audit log** and the tenant **Change Log**.
+
+Panoptica now also watches **every** tenant for **configuration created outside Panoptica** — a new CA policy or Intune profile authored directly in the Microsoft console — and surfaces it as a tenant-sourced card plus an alert, so a change made outside your process doesn't go unnoticed. For Conditional Access this is **near-real-time**.
+
+Empty and unlicensed tenants are handled gracefully: if a tenant has no policies, or its plan doesn't include Conditional Access or Intune, you get a calm message instead of an error.
+
+---
+
 ## Version 0.2.10 — 2026-06-15
 
 ### Fix: a report's executive summary could show raw code text

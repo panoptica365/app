@@ -64,6 +64,7 @@ const legalApiRoutes = require('./routes/api-legal');
 const learnApiRoutes = require('./routes/api-learn');
 const applicationsApiRoutes = require('./routes/api-applications');
 const accessReviewApiRoutes = require('./routes/api-access-review');
+const adoptApiRoutes = require('./routes/api-adopt');
 const identityTimelineApiRoutes = require('./routes/api-identity-timeline');
 const partialRoutes = require('./routes/partials');
 
@@ -313,6 +314,7 @@ app.use('/api/ai', aiApiRoutes);
 app.use('/api/reports', reportApiRoutes);
 app.use('/api/ca', caApiRoutes);
 app.use('/api/intune', intuneApiRoutes);
+app.use('/api/adopt', adoptApiRoutes);
 app.use('/api/exemptions', exemptionsApiRoutes);
 app.use('/api/alert-exemptions', alertExemptionsApiRoutes);
 app.use('/api/settings', settingsApiRoutes);
@@ -503,6 +505,14 @@ async function start() {
     // of whether anything has triggered them yet. Fire-and-forget.
     knownGoodStore.ensureSchema().catch(err =>
       console.error('[Server] known-good schema ensure failed at boot:', err.message)
+    );
+
+    // Adopt-in-Place (2026-06-15) — eager-create tenant_sourced_objects +
+    // seen-set/watermark tables + the "Configuration created outside Panoptica"
+    // alert policy at boot so the CA/Intune adopt cards + daily discovery loop
+    // have their schema regardless of whether anything has triggered them yet.
+    require('./lib/adopt-store').ensureSchema().catch(err =>
+      console.error('[Server] adopt-in-place schema ensure failed at boot:', err.message)
     );
 
     // Feature 8.3 — eager-create psa_tickets + tenants.psa_company_id at boot so

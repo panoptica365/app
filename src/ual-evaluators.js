@@ -37,6 +37,12 @@ const correlation = require('./lib/ca-compliance-correlation');
 const defenderIncidents = require('./lib/defender-incidents');
 const tenantMode = require('./lib/tenant-mode');
 const alertEngine = require('./alert-engine');
+// Adopt-in-Place (2026-06-15): near-real-time detection of CA policies created
+// outside Panoptica (§7.4). The UAL "Add conditional access policy" event is a
+// trigger to run the read-only discovery reconcile immediately rather than wait
+// for the daily loop — both paths share the seen-set + dedup key, so neither
+// floods nor double-fires.
+const adoptService = require('./lib/adopt-service');
 // Break-glass roster (sign-in alert matches UAL UserLoggedIn events against the
 // tenant's designated emergency accounts). access-review-store only requires
 // ./db/database, so no require cycle.
@@ -4666,6 +4672,39 @@ async function evaluateDefenderIncident(tenant, _sinceTime, _untilTime) {
  * @param {object} tenant  Row from tenants table — must include id and tenant_id
  * @returns {Promise<object>}  Summary of evaluator runs
  */
+// ──────────────────────────────────────────────────────────────────────
+// Evaluator: native CA policy created outside Panoptica (Adopt-in-Place §7.4)
+// ──────────────────────────────────────────────────────────────────────
+//
+// Near-real-time companion to the daily discovery loop. A "Add conditional
+// access policy" UAL event means a CA policy was just created directly in the
+// Microsoft console — so we run the read-only CA reconcile NOW (creates the
+// tenant-sourced card + fires the "configuration created outside Panoptica"
+// alert). The reconcile is watermark-gated (no flood on a never-imported
+// tenant) and uses the same dedup key as the daily loop (no double-fire).
+//
+// Intune config creation is NOT reliably present in the Office 365 UAL — Intune
+// admin actions land in deviceManagement/auditEvents, a separate pipeline — so
+// Intune near-real-time is intentionally deferred; the daily loop is the Intune
+// backstop. (Documented follow-up.)
+async function evaluateAdoptNativeConfig(tenant, sinceTime, untilTime) {
+  const events = await ualEvents.lookupEvents({
+    tenantId: tenant.id,
+    since: sinceTime,
+    until: untilTime,
+    workload: 'AzureActiveDirectory',
+    limit: 1000,
+  });
+  const caAdds = events.filter(e =>
+    String(e.operation || '').toLowerCase().startsWith('add conditional access policy'));
+  if (!caAdds.length) return { fired: 0, skipped: 0 };
+
+  // One reconcile sweeps up every CA policy added in the window.
+  const r = await adoptService.reconcileTenantSurface(tenant, 'ca', { fireAlerts: true });
+  if (r && r.skipped) return { fired: 0, skipped: 1, reason: r.skipped };
+  return { fired: (r && r.newObjects) || 0, skipped: 0, triggers: caAdds.length };
+}
+
 async function runEvaluators(tenant) {
   if (!tenant?.id) return { skipped: 'no-tenant' };
 
@@ -4771,6 +4810,8 @@ async function runEvaluators(tenant) {
   await runEval('perMailboxAuditTamper', evaluatePerMailboxAuditTamper);
   await runEval('adminPasswordReset',    evaluateAdminPasswordReset);
   await runEval('legacyProtocolReenabled', evaluateLegacyProtocolReEnabled);
+  // Adopt-in-Place (2026-06-15) — near-real-time native CA policy creation.
+  await runEval('adoptNativeConfig',     evaluateAdoptNativeConfig);
   // Bundle F (May 6, 2026 evening) — Defender Incidents (Graph Security API,
   // not UAL). Now run BEFORE the UAL-cutover gate at the top of this function
   // since it has its own watermark and shouldn't be blocked by stalled UAL
@@ -4802,6 +4843,7 @@ module.exports = {
   _evaluateAnomalousGeoFileAccess: evaluateAnomalousGeoFileAccess,
   _evaluateOauthConsent: evaluateOauthConsent,
   _evaluateSpCredentials: evaluateSpCredentials,
+  _evaluateAdoptNativeConfig: evaluateAdoptNativeConfig,
   _evaluatePrivilegedRoleAssignment: evaluatePrivilegedRoleAssignment,
   _evaluateBreakGlassSignin: evaluateBreakGlassSignin,
   _evaluateBreakGlassCoverage: evaluateBreakGlassCoverage,

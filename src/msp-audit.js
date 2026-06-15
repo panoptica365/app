@@ -42,6 +42,7 @@ const CATEGORY = {
   EXPORT:               'export',               // reserved — CSV/PDF exports of privileged data
   USER_PREFS:           'user_prefs',           // per-operator prefs — mute create/revoke (Apr 28, 2026)
   ACCESS_DENIED:        'access_denied',        // 403 from requireAdmin / requireMemberOrAdmin (May 9, 2026)
+  TENANT_CONFIG:        'tenant_config',        // adopt-in-place: import + lifecycle of tenant-sourced CA/Intune objects (Jun 15, 2026)
   OTHER:                'other',
   MAINTENANCE:          'maintenance',          // app self-update events (Stage 5)
 };
@@ -227,7 +228,7 @@ async function ensureMspAuditTable() {
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         category ENUM(
           'auth','template_crud','rbac_change','settings_change',
-          'tenant_lifecycle_msp','export','user_prefs','access_denied','other','maintenance'
+          'tenant_lifecycle_msp','export','user_prefs','access_denied','tenant_config','other','maintenance'
         ) NOT NULL,
         action VARCHAR(64) NOT NULL,
         actor_email VARCHAR(255) DEFAULT NULL,
@@ -267,19 +268,23 @@ async function ensureMspAuditTable() {
   // through requireAdmin / requireMemberOrAdmin. Single ALTER handles both
   // additions — the probe checks for the newest value, so when an older DB
   // missing 'access_denied' boots, the MODIFY brings both into place at once.
+  //
+  // Jun 15, 2026 (Adopt-in-Place): extended to include 'tenant_config' for the
+  // import + lifecycle actions on tenant-sourced CA/Intune objects. The probe
+  // now checks for the newest value so a DB missing it gets brought current.
   try {
     const col = await db.queryOne(
       "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'msp_audit_events' AND COLUMN_NAME = 'category'"
     );
-    if (col && col.COLUMN_TYPE && !col.COLUMN_TYPE.includes("'access_denied'")) {
+    if (col && col.COLUMN_TYPE && !col.COLUMN_TYPE.includes("'tenant_config'")) {
       await db.execute(`
         ALTER TABLE msp_audit_events
           MODIFY COLUMN category ENUM(
             'auth','template_crud','rbac_change','settings_change',
-            'tenant_lifecycle_msp','export','user_prefs','access_denied','other','maintenance'
+            'tenant_lifecycle_msp','export','user_prefs','access_denied','tenant_config','other','maintenance'
           ) NOT NULL
       `);
-      console.log("[MspAudit] Extended category ENUM with 'user_prefs' + 'access_denied'");
+      console.log("[MspAudit] Extended category ENUM with 'tenant_config'");
     }
   } catch (e) {
     console.warn('[MspAudit] category ENUM extension (non-fatal):', e.message);

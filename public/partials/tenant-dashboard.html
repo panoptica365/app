@@ -176,11 +176,15 @@
   <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
     <button class="btn-primary" id="td-ca-assign-btn" data-role-required="member" data-i18n="tenant_dashboard.ca_assign_btn">+ Assign Template</button>
     <button class="btn-secondary" id="td-ca-check-all-btn" data-role-required="member" data-i18n="tenant_dashboard.ca_check_all_btn">Check All for Drift</button>
+    <button class="btn-secondary" id="td-ca-import-btn" data-role-required="member" data-i18n="tenant_dashboard.adopt.import_btn">Import existing settings</button>
     <span id="td-ca-status-summary" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
   </div>
   <div id="td-ca-assignments" class="ca-template-grid">
     <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.ca_loading">Loading CA assignments...</span></div>
   </div>
+
+  <!-- Adopt-in-Place: tenant-sourced CA cards + Security Defaults indicator (rendered by js/shared/adopt.js) -->
+  <div id="td-adopt-ca" class="td-adopt-section"></div>
 
   <!-- Drift Log -->
   <div id="td-ca-drift-log-section" style="margin-top:24px; display:none;">
@@ -381,11 +385,15 @@
   <div style="display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap;">
     <button class="btn-primary" id="td-intune-add-btn" data-role-required="member" data-i18n="tenant_dashboard.intune_add_btn">+ Add Policies</button>
     <button class="btn-secondary" id="td-intune-check-all-btn" data-role-required="member" data-i18n="tenant_dashboard.intune_check_all_btn">Check All for Drift</button>
+    <button class="btn-secondary" id="td-intune-import-btn" data-role-required="member" data-i18n="tenant_dashboard.adopt.import_btn">Import existing settings</button>
     <span id="td-intune-status-summary" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
   </div>
   <div id="td-intune-deployments" class="ca-template-grid">
     <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.intune_loading">Loading Intune deployments...</span></div>
   </div>
+
+  <!-- Adopt-in-Place: tenant-sourced Intune cards (rendered by js/shared/adopt.js) -->
+  <div id="td-adopt-intune" class="td-adopt-section"></div>
 
   <!-- Add Policies Modal -->
   <div class="modal-overlay" id="td-intune-add-overlay" style="display:none;">

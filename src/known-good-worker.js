@@ -25,6 +25,10 @@ const store = require('./lib/known-good-store');
 const tenantMode = require('./lib/tenant-mode');
 const alertEngine = require('./alert-engine');
 const workerHeartbeat = require('./worker-heartbeat');
+// Adopt-in-Place (2026-06-15): the daily read-only discovery reconcile for
+// tenant-sourced CA/Intune objects is folded into this loop (spec §7.3) — same
+// daily-per-tenant cadence, same audit-only exclusion, no extra worker/heartbeat.
+const adoptService = require('./lib/adopt-service');
 
 const LOOP_INTERVAL_MS = 24 * 60 * 60 * 1000; // daily
 const FIRST_RUN_DELAY_MS = 90 * 1000;         // let boot work settle
@@ -204,6 +208,13 @@ async function runOnce() {
         driftedTotal += r.driftedNow;
       } catch (err) {
         console.error(`[KnownGood] refresh failed for tenant ${tenant.id} (${tenant.display_name}): ${err.message}`);
+      }
+      // Adopt-in-Place discovery reconcile (§7) — independent of the known-good
+      // refresh above so a failure in either does not block the other.
+      try {
+        await adoptService.reconcileTenant(tenant, { fireAlerts: true });
+      } catch (err) {
+        console.error(`[Adopt] discovery reconcile failed for tenant ${tenant.id} (${tenant.display_name}): ${err.message}`);
       }
     }
   } catch (err) {
