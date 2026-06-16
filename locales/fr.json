@@ -2695,6 +2695,7 @@
         "message_center_items": "Éléments du flux de messages Microsoft",
         "msp_audit_events": "Journal d’audit MSP (preuve)",
         "tenant_change_events": "Journal des changements locataires (preuve)",
+        "ual_events": "Événements du journal d’audit unifié (activité M365)",
         "metric_snapshots_raw": "Instantanés de métriques (historique complet des sondages)",
         "metric_snapshots_agg": "Historique quotidien du Secure Score"
       },
@@ -2712,6 +2713,7 @@
         "message_center_items": "Annonces de service Microsoft déjà analysées et transformées en alertes. Conservées pour référence — raccourcir sans risque.",
         "msp_audit_events": "Preuve : chaque action d’opérateur dans Panoptica365. C’est votre piste d’audit — ne raccourcissez que si vos obligations de conformité le permettent.",
         "tenant_change_events": "Preuve : chaque changement de configuration par locataire, lié aux alertes de dérive. Ne raccourcissez que si vos obligations de conformité le permettent.",
+        "ual_events": "Les événements bruts du journal d’audit Microsoft 365 que Panoptica365 ingère pour les alertes et la chronologie d’identité — de loin la plus grosse table. Microsoft Purview conserve la copie de référence à long terme, donc 90 jours suffisent ici et les tendances sont préservées séparément. Augmentez la valeur pour une fenêtre d’enquête plus longue, mais elle grossit vite à grande échelle.",
         "metric_snapshots_raw": "Détail complet de chaque sondage, utilisé par les alertes de détection de changement (comparaison avec le sondage précédent). Augmenter cette valeur fait grossir la base rapidement — environ un gigaoctet par locataire par mois.",
         "metric_snapshots_agg": "Une valeur de Secure Score par locataire et par jour, alimentant la tendance des rapports. Doit couvrir votre plus longue période de rapport (90 jours). Coût de stockage négligeable."
       }
@@ -2868,6 +2870,7 @@
       "save_failed": "Échec de l’enregistrement : {message}",
       "saving": "Enregistrement… {blessed} application(s) approuvée(s); envoi de {evaluated} à Sonnet pour triage. Cela peut prendre un moment.",
       "save_result": "✓ Enregistré {when} — {blessed} approuvée(s), {evaluated} triée(s) par Sonnet.",
+      "save_partial": "⚠ Enregistré {when} — {blessed} approuvée(s), {evaluated} sur {attempted} triée(s) par Sonnet ({missing} n’ont pu être triées). Cliquez de nouveau sur Enregistrer pour réessayer le reste.",
       "save_nothing": "Rien à enregistrer — cochez au moins une application « Approuvée », ou actualisez d’abord.",
       "empty": "Aucune application chargée. Cliquez sur Actualiser pour récupérer les applications d’entreprise et les inscriptions d’applications de ce locataire.",
       "summary": "{total} applications · {blessed} approuvée(s) · {drifted} en dérive",

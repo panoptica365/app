@@ -5,6 +5,22 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.12 — 2026-06-16
+
+### Le triage des applications approuvées fonctionne maintenant pour les locataires de toute taille
+
+Sous l'onglet **Applications**, marquer des applications comme **Approuvées** puis enregistrer pouvait auparavant renvoyer **« 0 triée par Sonnet »** sans erreur sur les locataires comptant plus d'une dizaine d'applications — le triage par IA était envoyé en une seule requête surdimensionnée qui se tronquait silencieusement. Le triage s'effectue désormais par lots, de sorte que chaque application reçoit un verdict, quel qu'en soit le nombre. Si certaines applications ne peuvent pas être triées lors d'un passage (par exemple, le budget IA quotidien est atteint), un message clair **« X sur Y triées — Enregistrez de nouveau pour réessayer le reste »** s'affiche au lieu d'un zéro silencieux. Le marquage d'une application comme approuvée est aussi désormais correctement consigné dans le journal d'audit MSP.
+
+### La capture des diagnostics est maintenant rapide
+
+La capture d'un dossier de soutien depuis **Paramètres → Diagnostics** pouvait auparavant rester bloquée plusieurs minutes sur les installations ayant un important historique d'événements d'audit. Elle se termine désormais en quelques secondes, affiche un compteur de temps écoulé en direct pendant son exécution, et ne peut plus rester bloquée sur une requête de base de données lente.
+
+### Nouveau contrôle de conservation pour les événements du journal d'audit unifié
+
+**Paramètres → Conservation des données** inclut désormais les **événements du journal d'audit unifié** — l'activité Microsoft 365 brute que Panoptica365 ingère pour les alertes et la chronologie d'identité, et de loin la plus grosse table. La valeur par défaut est de **90 jours**, ce qui est amplement suffisant puisque Microsoft Purview conserve la copie de référence à long terme. Augmentez-la ou réduisez-la selon vos besoins.
+
+---
+
 ## Version 0.2.11 — 2026-06-15
 
 ### Adoptez les paramètres d'accès conditionnel et Intune existants d'un locataire — surveillance sur place

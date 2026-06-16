@@ -5,6 +5,22 @@ that release, newest first.
 
 ---
 
+## Version 0.2.12 — 2026-06-16
+
+### Known-good app triage now works for tenants of any size
+
+On the **Applications** tab, marking apps as **Known good** and saving could previously come back **"0 triaged by Sonnet"** with no error on tenants with more than about ten applications — the AI triage was sent as a single oversized request that silently truncated. The triage now runs in batches, so every application gets a verdict no matter how many there are. If any app can't be triaged in a given pass (for example, the daily AI budget was reached), you'll see a clear **"X of Y triaged — Save again to retry the rest"** message instead of a silent zero. Marking an app known good is now also recorded correctly in the MSP audit log.
+
+### Diagnostics capture is now fast
+
+Capturing a support bundle from **Settings → Diagnostics** used to stall for several minutes on installs with a large audit-event history. It now completes in a few seconds, shows a live elapsed-time counter while it runs, and can no longer stall on a slow database query.
+
+### New retention control for Unified Audit Log events
+
+**Settings → Data retention** now includes **Unified Audit Log events** — the raw Microsoft 365 activity Panoptica365 ingests for alerting and the identity timeline, and by far the largest table. It defaults to **90 days**, which is plenty since Microsoft Purview keeps the authoritative long-term copy. Raise or lower it to fit your needs.
+
+---
+
 ## Version 0.2.11 — 2026-06-15
 
 ### Adopt a tenant's existing Conditional Access & Intune settings — monitor in place

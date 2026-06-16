@@ -141,7 +141,7 @@ router.post('/save', auth.requireMemberOrAdmin, async (req, res) => {
     inv.generated_at = store.toMysqlDatetime(new Date());
     await store.writeInventory(tenantId, inv);
 
-    sendEvent({ done: true, blessed: blessedKeys.size, evaluated });
+    sendEvent({ done: true, blessed: blessedKeys.size, evaluated, attempted: toEvaluate.length });
     finish();
   } catch (err) {
     console.error('[Applications] save failed:', err.message);

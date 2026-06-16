@@ -123,6 +123,7 @@ async function ensureUalSchema() {
           INDEX idx_ual_events_user_temporal (tenant_id, user_upn, creation_time),
           INDEX idx_ual_events_workload_temporal (tenant_id, workload, creation_time),
           INDEX idx_ual_events_pruning (creation_time),
+          INDEX idx_ual_events_ingested (tenant_id, ingested_at),
           FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
@@ -149,6 +150,23 @@ async function ensureUalSchema() {
           FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
+
+      // Jun 16, 2026 — installs created before today lack the (tenant_id,
+      // ingested_at) index. Without it, the diagnostics ingestion sub-collector's
+      // MAX(ingested_at) GROUP BY tenant full-scans the multi-GB, fat-JSON
+      // ual_events table (a 6-9 min support-bundle hang at 1.8M rows). Add it
+      // idempotently — INPLACE online DDL, concurrent DML allowed, one-time cost.
+      const haveIngestedIdx = await db.queryRows(
+        `SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ual_events'
+            AND INDEX_NAME = 'idx_ual_events_ingested' LIMIT 1`
+      );
+      if (haveIngestedIdx.length === 0) {
+        await db.execute(
+          'ALTER TABLE ual_events ADD INDEX idx_ual_events_ingested (tenant_id, ingested_at)'
+        );
+        console.log('[UalEvents] Added index idx_ual_events_ingested (tenant_id, ingested_at)');
+      }
 
       schemaReady = true;
       console.log('[UalEvents] Schema ready (ual_events, ual_subscriptions)');

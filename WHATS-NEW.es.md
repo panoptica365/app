@@ -5,6 +5,22 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.12 — 2026-06-16
+
+### La clasificación de aplicaciones de confianza ahora funciona con inquilinos de cualquier tamaño
+
+En la pestaña **Aplicaciones**, marcar aplicaciones como **De confianza** y guardar podía devolver antes **«0 clasificadas por Sonnet»** sin ningún error en inquilinos con más de una decena de aplicaciones — la clasificación por IA se enviaba como una sola solicitud sobredimensionada que se truncaba de forma silenciosa. Ahora la clasificación se realiza por lotes, de modo que cada aplicación recibe un veredicto, sin importar cuántas haya. Si alguna aplicación no se puede clasificar en una pasada (por ejemplo, se alcanzó el presupuesto diario de IA), verá un mensaje claro **«X de Y clasificadas — Guarde de nuevo para reintentar el resto»** en lugar de un cero silencioso. Marcar una aplicación como de confianza también se registra ahora correctamente en el registro de auditoría del MSP.
+
+### La captura de diagnósticos ahora es rápida
+
+La captura de un paquete de soporte desde **Configuración → Diagnósticos** podía quedarse bloqueada varios minutos en instalaciones con un gran historial de eventos de auditoría. Ahora se completa en unos segundos, muestra un contador de tiempo transcurrido en vivo mientras se ejecuta y ya no puede bloquearse por una consulta lenta a la base de datos.
+
+### Nuevo control de retención para los eventos del registro de auditoría unificado
+
+**Configuración → Retención de datos** ahora incluye los **eventos del registro de auditoría unificado** — la actividad sin procesar de Microsoft 365 que Panoptica365 ingiere para las alertas y la línea de tiempo de identidad, y con diferencia la tabla más grande. El valor predeterminado es de **90 días**, que es más que suficiente, ya que Microsoft Purview conserva la copia autoritativa a largo plazo. Auméntelo o redúzcalo según sus necesidades.
+
+---
+
 ## Versión 0.2.11 — 2026-06-15
 
 ### Adopte la configuración de acceso condicional e Intune existente de un inquilino — supervise en su sitio

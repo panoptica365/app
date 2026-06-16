@@ -91,6 +91,15 @@ const TABLES = [
     configKey: 'tenant_change_events',
     ensureIndex: { name: 'idx_tce_created', ddl: 'ALTER TABLE tenant_change_events ADD INDEX idx_tce_created (created_at)' },
   },
+  {
+    // Raw UAL events — the high-volume working copy (Purview is the system of
+    // record). Prune by CreationTime; idx_ual_events_pruning (creation_time)
+    // already exists in the base schema, so no ensureIndex. ON DELETE CASCADE
+    // on the FK is irrelevant here — we delete the child rows directly.
+    table: 'ual_events',
+    column: 'creation_time',
+    configKey: 'ual_events',
+  },
 ];
 
 let cronJob = null;

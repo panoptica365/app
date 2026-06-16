@@ -904,6 +904,10 @@ const RETENTION_FIELDS = [
   { key: 'message_center_items',       env: 'RETENTION_MESSAGE_CENTER_DAYS',     def: 365, min: 30, max: 3650, allowZero: true },
   { key: 'msp_audit_events',           env: 'RETENTION_MSP_AUDIT_DAYS',          def: 730, min: 90, max: 3650, allowZero: true },
   { key: 'tenant_change_events',       env: 'RETENTION_TENANT_CHANGES_DAYS',     def: 730, min: 90, max: 3650, allowZero: true },
+  // No keep-forever: unbounded raw UAL is the growth footgun this caps (same
+  // posture as metric_snapshots_raw). 30-day floor keeps the identity timeline
+  // useful. Purview holds anything longer.
+  { key: 'ual_events',                 env: 'RETENTION_UAL_EVENTS_DAYS',         def: 90,  min: 30, max: 3650, allowZero: false },
   { key: 'metric_snapshots_raw',       env: 'RETENTION_METRIC_RAW_DAYS',         def: 7,   min: 2,  max: 90,   allowZero: false },
   { key: 'metric_snapshots_agg',       env: 'RETENTION_METRIC_AGG_DAYS',         def: 730, min: 90, max: 3650, allowZero: true },
 ];

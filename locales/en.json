@@ -2695,6 +2695,7 @@
         "message_center_items": "Microsoft message feed items",
         "msp_audit_events": "MSP audit log (evidence)",
         "tenant_change_events": "Tenant change log (evidence)",
+        "ual_events": "Unified Audit Log events (M365 activity)",
         "metric_snapshots_raw": "Metric snapshots (full poll history)",
         "metric_snapshots_agg": "Secure Score daily history"
       },
@@ -2712,6 +2713,7 @@
         "message_center_items": "Microsoft service announcements after they have been analyzed and alerted on. Kept for reference only — safe to shorten.",
         "msp_audit_events": "Evidence: every operator action in Panoptica365. This is your audit trail — shorten it only if your compliance obligations allow.",
         "tenant_change_events": "Evidence: every configuration change per tenant, linked from drift alerts. Shorten it only if your compliance obligations allow.",
+        "ual_events": "Raw Microsoft 365 audit-log events Panoptica365 ingests for alerting and the identity timeline — by far the largest table. Microsoft Purview keeps the authoritative long-term copy, so 90 days is plenty here and trends are preserved separately. Raise it for a longer investigation window, but it grows quickly at scale.",
         "metric_snapshots_raw": "Full detail from every poll, used by the change-detection alerts (they compare against the previous poll). Raising this grows the database quickly — roughly a gigabyte per tenant per month.",
         "metric_snapshots_agg": "One Secure Score reading per tenant per day, powering the report trend line. Must cover your longest report period (90 days). Storage cost is negligible."
       }
@@ -2868,6 +2870,7 @@
       "save_failed": "Save failed: {message}",
       "saving": "Saving… {blessed} app(s) marked known-good; sending {evaluated} to Sonnet for triage. This can take a moment.",
       "save_result": "✓ Saved {when} — {blessed} known-good, {evaluated} triaged by Sonnet.",
+      "save_partial": "⚠ Saved {when} — {blessed} known-good, {evaluated} of {attempted} triaged by Sonnet ({missing} could not be triaged). Click Save again to retry the rest.",
       "save_nothing": "Nothing to save — tick at least one app as Known good, or Refresh first.",
       "empty": "No applications loaded yet. Click Refresh to pull this tenant’s enterprise apps and app registrations.",
       "summary": "{total} apps · {blessed} known-good · {drifted} drifted",

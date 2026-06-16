@@ -185,6 +185,8 @@
 
   // ─── Diagnostics (Part 3, 2026-06-03) — capture + download support bundle ───
   let diagPollTimer = null;
+  let diagTickTimer = null;   // 1s elapsed-time ticker (liveness between 2s polls)
+  let diagLastStatus = null;  // last status the ticker re-renders the elapsed onto
 
   function fmtDateTime(iso) {
     if (!iso) return '—';
@@ -211,6 +213,38 @@
       case 'error':      return window.t('settings.diagnostics.phase_error');
       default:           return '';
     }
+  }
+
+  // Whole seconds since the capture started — drives the live elapsed counter so
+  // even a single slow step visibly "ticks" rather than looking frozen.
+  function diagElapsedSecs(s) {
+    if (!s || !s.started_at) return null;
+    const t = Date.parse(s.started_at);
+    if (!isFinite(t)) return null;
+    return Math.max(0, Math.round((Date.now() - t) / 1000));
+  }
+
+  function diagProgressText(s) {
+    let txt = diagPhaseLabel(s);
+    if (s && s.running) {
+      const secs = diagElapsedSecs(s);
+      if (secs !== null) txt += ` · ${secs} s`;
+    }
+    return txt;
+  }
+
+  function startDiagTick() {
+    if (diagTickTimer) return;
+    diagTickTimer = setInterval(() => {
+      const progress = document.getElementById('diagnostics-progress');
+      if (progress && diagLastStatus && diagLastStatus.running) {
+        progress.textContent = diagProgressText(diagLastStatus);
+      }
+    }, 1000);
+  }
+
+  function stopDiagTick() {
+    if (diagTickTimer) { clearInterval(diagTickTimer); diagTickTimer = null; }
   }
 
   function renderDiagnosticsBundles(bundles) {
@@ -247,7 +281,9 @@
       if (s.running) btn.setAttribute('disabled', 'disabled');
       else btn.removeAttribute('disabled');
     }
-    if (progress) progress.textContent = s.running || s.phase === 'done' || s.phase === 'error' ? diagPhaseLabel(s) : '';
+    diagLastStatus = s;
+    if (s.running) startDiagTick(); else stopDiagTick();
+    if (progress) progress.textContent = s.running || s.phase === 'done' || s.phase === 'error' ? diagProgressText(s) : '';
     if (errEl) {
       if (s.phase === 'error' && s.error) {
         errEl.textContent = window.t('settings.diagnostics.capture_failed', { message: s.error });
@@ -261,6 +297,7 @@
 
   function stopDiagnosticsPoll() {
     if (diagPollTimer) { clearInterval(diagPollTimer); diagPollTimer = null; }
+    stopDiagTick();
   }
 
   async function pollDiagnosticsOnce() {

@@ -59,6 +59,7 @@ router.get('/status', auth.requireAuth, auth.requireAdmin, (req, res) => {
     step: s.step,
     total: s.total,
     running: s.running,
+    started_at: s.started_at,
     capture_id: s.capture_id,
     partial: s.partial,
     error: s.error,

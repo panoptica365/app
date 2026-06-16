@@ -1095,9 +1095,19 @@
       const data = await Panoptica.api(`/api/applications?tenant_id=${tenantId}`);
       appsInventory = data.inventory;
       renderApplications();
-      setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_result', { when: appsTimeNow(), blessed: result.blessed, evaluated: result.evaluated }))}</span>`, false);
+      // Sonnet triages in chunks; if any app came back un-triaged (e.g. a
+      // batch hit the daily AI budget), say so and invite a retry — never let
+      // a partial pass read like a clean "0 triaged" no-op.
+      const attempted = (typeof result.attempted === 'number') ? result.attempted : result.evaluated;
+      const partial = result.evaluated < attempted;
+      if (partial) {
+        const missing = attempted - result.evaluated;
+        setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_partial', { when: appsTimeNow(), blessed: result.blessed, evaluated: result.evaluated, attempted, missing }))}</span>`, true);
+      } else {
+        setAppsProgress(`<span>${esc(window.t('tenant_dashboard.applications.save_result', { when: appsTimeNow(), blessed: result.blessed, evaluated: result.evaluated }))}</span>`, false);
+      }
       if (window.Panoptica && Panoptica.showToast) {
-        Panoptica.showToast(window.t('tenant_dashboard.applications.save_done', { blessed: result.blessed, evaluated: result.evaluated }), 'success');
+        Panoptica.showToast(window.t('tenant_dashboard.applications.save_done', { blessed: result.blessed, evaluated: result.evaluated }), partial ? 'warning' : 'success');
       }
     } catch (e) {
       setAppsProgress(esc(window.t('tenant_dashboard.applications.save_failed', { message: e.message })), true);

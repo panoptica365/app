@@ -33,6 +33,12 @@ const SIDECAR_MOUNT = process.env.SIDECAR_PAYLOAD_DIR || '/app/sidecar-payload';
 
 const APP_LOG_CAP_BYTES = 20 * 1024 * 1024; // last 20 MB of each app log (§3.3.5)
 const DIAG_POLL_MS = 90 * 1000;             // wait up to 90s for the sidecar (§3.4)
+// Hard per-query ceiling for every DB sub-collector. A support bundle must
+// never hang on a slow/contended/huge table — if a query exceeds this, MySQL
+// kills it (ER_QUERY_TIMEOUT), the sub() try/catch writes <name>.error.txt and
+// the capture proceeds. Robust by construction regardless of DB size/health.
+const DIAG_DB_TIMEOUT_MS = 20 * 1000;
+const MET = `/*+ MAX_EXECUTION_TIME(${DIAG_DB_TIMEOUT_MS}) */`; // SELECT-only hint
 const RETAIN_BUNDLES = 3;                    // keep the 3 most recent zips (§3.6)
 const BUNDLE_RE = /^diag-[0-9TZ-]+\.zip$/;   // strict id/filename shape (§3.2)
 
@@ -133,7 +139,7 @@ async function collectDb(dbDir, included, skipped) {
   await sub('table-counts.json', async () => {
     // Estimate from information_schema — no full COUNT(*) on big tables (§3.3.6).
     const rows = await db.queryRows(
-      `SELECT table_name, table_rows
+      `SELECT ${MET} table_name, table_rows
        FROM information_schema.tables
        WHERE table_schema = DATABASE()
        ORDER BY table_name`
@@ -142,18 +148,18 @@ async function collectDb(dbDir, included, skipped) {
   });
 
   await sub('api-health.json', async () => {
-    return await db.queryRows('SELECT * FROM api_health');
+    return await db.queryRows(`SELECT ${MET} * FROM api_health`);
   });
 
   await sub('scheduler-runs.json', async () => {
-    return await db.queryRows('SELECT * FROM drift_scheduler_runs ORDER BY id DESC LIMIT 50');
+    return await db.queryRows(`SELECT ${MET} * FROM drift_scheduler_runs ORDER BY id DESC LIMIT 50`);
   });
 
   await sub('tenants.json', async () => {
     // SELECT * then project in JS so a runtime-added column (e.g. `mode`) that
     // may or may not exist never turns into a SQL error. Names INCLUDED by
     // design (§3.3.6 decision 2026-06-03).
-    const rows = await db.queryRows('SELECT * FROM tenants ORDER BY id');
+    const rows = await db.queryRows(`SELECT ${MET} * FROM tenants ORDER BY id`);
     return rows.map(r => ({
       id: r.id,
       tenant_guid: r.tenant_id,
@@ -168,12 +174,12 @@ async function collectDb(dbDir, included, skipped) {
   });
 
   await sub('audit-events.json', async () => {
-    return await db.queryRows('SELECT * FROM msp_audit_events ORDER BY id DESC LIMIT 200');
+    return await db.queryRows(`SELECT ${MET} * FROM msp_audit_events ORDER BY id DESC LIMIT 200`);
   });
 
   await sub('alerts-summary.json', async () => {
     const counts = await db.queryRows(
-      `SELECT severity, status, COUNT(*) AS n
+      `SELECT ${MET} severity, status, COUNT(*) AS n
        FROM alerts
        WHERE triggered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
        GROUP BY severity, status`
@@ -181,7 +187,7 @@ async function collectDb(dbDir, included, skipped) {
     // Short message line only — never raw_data, operator notes, or ai_analysis_*
     // (§3.3.6). `alerts` has no title column; `message` is the condition summary.
     const recent = await db.queryRows(
-      `SELECT tenant_id, LEFT(message, 200) AS message, severity, status, triggered_at
+      `SELECT ${MET} tenant_id, LEFT(message, 200) AS message, severity, status, triggered_at
        FROM alerts
        ORDER BY triggered_at DESC
        LIMIT 20`
@@ -192,19 +198,36 @@ async function collectDb(dbDir, included, skipped) {
   await sub('ingestion.json', async () => {
     // Per-tenant latest timestamps. Each source is optional (the table may not
     // exist on every install) — probe independently.
-    const probe = async (label, sql) => {
-      try { return { [label]: await db.queryRows(sql) }; }
+    const probe = async (label, fn) => {
+      try { return { [label]: await fn() }; }
       catch (e) { return { [label]: { error: e.message } }; }
     };
-    const ual = await probe('ual_events_latest',
-      `SELECT tenant_id, MAX(creation_time) AS latest_event, MAX(ingested_at) AS latest_ingested
-       FROM ual_events GROUP BY tenant_id`);
-    const def = await probe('defender_incidents_latest',
-      `SELECT tenant_id, MAX(last_updated_at_utc) AS latest_update, MAX(ingested_at) AS latest_ingested
-       FROM defender_incidents GROUP BY tenant_id`);
+    // ual_events is the biggest table by far (1.8M+ fat-JSON rows). The old
+    // single query computed MAX(creation_time) AND MAX(ingested_at) together;
+    // only creation_time was indexed, so ingested_at forced a full clustered
+    // scan (the 6-9 min hang). Split into two single-MAX queries — each an
+    // index-only loose scan (idx_ual_events_temporal / idx_ual_events_ingested)
+    // — then merge by tenant. Sub-second instead of minutes.
+    const ual = await probe('ual_events_latest', async () => {
+      const byTenant = new Map();
+      const upsert = (tid, key, val) => {
+        const o = byTenant.get(tid) || { tenant_id: tid, latest_event: null, latest_ingested: null };
+        o[key] = val; byTenant.set(tid, o);
+      };
+      for (const r of await db.queryRows(
+        `SELECT ${MET} tenant_id, MAX(creation_time) AS latest_event
+         FROM ual_events GROUP BY tenant_id`)) upsert(r.tenant_id, 'latest_event', r.latest_event);
+      for (const r of await db.queryRows(
+        `SELECT ${MET} tenant_id, MAX(ingested_at) AS latest_ingested
+         FROM ual_events GROUP BY tenant_id`)) upsert(r.tenant_id, 'latest_ingested', r.latest_ingested);
+      return Array.from(byTenant.values());
+    });
+    const def = await probe('defender_incidents_latest', async () => db.queryRows(
+      `SELECT ${MET} tenant_id, MAX(last_updated_at_utc) AS latest_update, MAX(ingested_at) AS latest_ingested
+       FROM defender_incidents GROUP BY tenant_id`));
     // morning_briefings is a single GLOBAL daily briefing — no tenant_id column.
-    const brief = await probe('morning_briefings_latest',
-      `SELECT MAX(generated_at) AS latest FROM morning_briefings`);
+    const brief = await probe('morning_briefings_latest', async () => db.queryRows(
+      `SELECT ${MET} MAX(generated_at) AS latest FROM morning_briefings`));
     return { ...ual, ...def, ...brief };
   });
 }
@@ -611,6 +634,7 @@ function getStatus() {
     step: job ? job.step : 0,
     total: job ? job.total : 0,
     running: isRunning(),
+    started_at: job ? job.started_at : null,
     capture_id: job ? job.capture_id : null,
     partial: job ? job.partial : false,
     error: job ? job.error : null,

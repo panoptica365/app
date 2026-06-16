@@ -2695,6 +2695,7 @@
         "message_center_items": "Elementos de la fuente de mensajes de Microsoft",
         "msp_audit_events": "Registro de auditoría MSP (evidencia)",
         "tenant_change_events": "Registro de cambios de tenants (evidencia)",
+        "ual_events": "Eventos del registro de auditoría unificado (actividad de M365)",
         "metric_snapshots_raw": "Instantáneas de métricas (historial completo de sondeos)",
         "metric_snapshots_agg": "Historial diario de Secure Score"
       },
@@ -2712,6 +2713,7 @@
         "message_center_items": "Anuncios de servicio de Microsoft ya analizados y convertidos en alertas. Se conservan solo como referencia — se pueden acortar sin riesgo.",
         "msp_audit_events": "Evidencia: cada acción de operador en Panoptica365. Es su pista de auditoría — acórtela solo si sus obligaciones de cumplimiento lo permiten.",
         "tenant_change_events": "Evidencia: cada cambio de configuración por tenant, vinculado a las alertas de desviación. Acórtela solo si sus obligaciones de cumplimiento lo permiten.",
+        "ual_events": "Los eventos sin procesar del registro de auditoría de Microsoft 365 que Panoptica365 ingiere para las alertas y la línea de tiempo de identidad: la tabla más grande con diferencia. Microsoft Purview conserva la copia autoritativa a largo plazo, por lo que 90 días son suficientes aquí y las tendencias se conservan por separado. Auméntelo para una ventana de investigación más larga, pero crece rápido a gran escala.",
         "metric_snapshots_raw": "Detalle completo de cada sondeo, usado por las alertas de detección de cambios (comparación con el sondeo anterior). Aumentarlo hace crecer la base de datos rápidamente — alrededor de un gigabyte por tenant al mes.",
         "metric_snapshots_agg": "Un valor de Secure Score por tenant y día, que alimenta la tendencia de los informes. Debe cubrir su período de informe más largo (90 días). Coste de almacenamiento insignificante."
       }
@@ -2868,6 +2870,7 @@
       "save_failed": "Error al guardar: {message}",
       "saving": "Guardando… {blessed} aplicación(es) de confianza; enviando {evaluated} a Sonnet para triaje. Esto puede tardar un momento.",
       "save_result": "✓ Guardado {when} — {blessed} de confianza, {evaluated} clasificadas por Sonnet.",
+      "save_partial": "⚠ Guardado {when} — {blessed} de confianza, {evaluated} de {attempted} clasificadas por Sonnet ({missing} no pudieron clasificarse). Haga clic en Guardar de nuevo para reintentar el resto.",
       "save_nothing": "Nada que guardar: marque al menos una aplicación como «De confianza», o actualice primero.",
       "empty": "Aún no hay aplicaciones cargadas. Haga clic en Actualizar para obtener las aplicaciones empresariales y los registros de aplicaciones de este inquilino.",
       "summary": "{total} aplicaciones · {blessed} de confianza · {drifted} con cambios",
