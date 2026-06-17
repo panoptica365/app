@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.2.13 — 2026-06-17
+
+### Tidier action dialog for tenant-sourced configurations
+
+A couple of small visual fixes to the tenant-sourced (Adopt-in-Place) cards introduced in 0.2.11. The **Manage configuration** dialog — the one you open from a card's **Actions** — is now a clean row of icon buttons: **Stop monitoring**, **Deactivate** (or **Restore**), and **Delete**, with Delete clearly marked in red. We also fixed a text-contrast issue that made that dialog hard to read in the light theme.
+
+---
+
 ## Version 0.2.12 — 2026-06-16
 
 ### Known-good app triage now works for tenants of any size

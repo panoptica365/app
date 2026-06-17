@@ -42,7 +42,7 @@
       .td-adopt-sub { font-size: 0.78rem; color: var(--p-text-muted); margin-bottom: 12px; }
       .td-adopt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
       .td-adopt-card { border: 1px solid var(--p-border, rgba(150,150,180,0.25)); border-left: 4px solid var(--p-danger, #d9534f);
-                       border-radius: 8px; padding: 12px 14px; background: var(--p-card-bg, rgba(255,255,255,0.02)); }
+                       border-radius: 8px; padding: 12px 14px; background: var(--p-surface, rgba(127,127,127,0.04)); color: var(--p-text, inherit); }
       .td-adopt-card.inactive { opacity: 0.82; }
       .td-adopt-badge { display:inline-block; font-size:0.66rem; font-weight:700; letter-spacing:0.02em; text-transform:uppercase;
                         padding:2px 7px; border-radius:10px; background: var(--p-danger, #d9534f); color:#fff; }
@@ -56,14 +56,28 @@
       .td-adopt-secdef { font-size:0.78rem; color: var(--p-text-muted); margin: 0 0 12px; }
       .td-adopt-empty { font-size:0.82rem; color: var(--p-text-muted); padding: 6px 0; }
       .adopt-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index: 9000; }
-      .adopt-modal { width: 520px; max-width: 94vw; background: var(--p-modal-bg, #1d2230); color: var(--p-text); border-radius: 10px; padding: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+      .adopt-modal { width: 520px; max-width: 94vw; background: var(--p-surface, #0b1e33); color: var(--p-text, #14202e); border: 1px solid var(--p-border, rgba(127,127,127,0.3)); border-radius: 10px; padding: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
       .adopt-modal h3 { margin: 0 0 8px; font-size: 1.05rem; }
       .adopt-modal .warn { background: rgba(217,83,79,0.12); border:1px solid rgba(217,83,79,0.3); border-radius:6px; padding:10px 12px; font-size:0.84rem; margin:10px 0; }
       .adopt-modal label.row { display:flex; gap:8px; align-items:flex-start; font-size:0.84rem; margin:10px 0; }
-      .adopt-modal input[type=text] { width:100%; padding:7px 9px; border-radius:6px; border:1px solid var(--p-border, rgba(150,150,180,0.3)); background:transparent; color:var(--p-text); margin-top:6px; }
+      .adopt-modal input[type=text] { width:100%; padding:7px 9px; border-radius:6px; border:1px solid var(--p-border, rgba(150,150,180,0.3)); background: var(--p-surface-sunken, rgba(127,127,127,0.12)); color:var(--p-text, inherit); margin-top:6px; }
       .adopt-modal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; flex-wrap:wrap; }
       .adopt-modal .sep { border-top:1px solid var(--p-border, rgba(150,150,180,0.2)); margin:14px 0; }
       .adopt-modal .panoptica-only { font-size:0.74rem; color: var(--p-text-muted); margin-top:4px; }
+      .adopt-tiles { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:18px 0 0; }
+      .adopt-tile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; padding:14px 6px; min-height:96px;
+                    border:1px solid var(--p-border, rgba(127,127,127,0.3)); border-radius:8px; background: var(--p-surface-alt, rgba(127,127,127,0.06));
+                    color: var(--p-text, inherit); cursor:pointer; text-align:center; transition: background .15s, border-color .15s; }
+      .adopt-tile:hover { background: var(--p-surface-sunken, rgba(127,127,127,0.12)); border-color: var(--p-accent, #5ccbf4); }
+      .adopt-tile svg { width:22px; height:22px; }
+      .adopt-tile .lbl { font-size:0.82rem; font-weight:600; }
+      .adopt-tile .hint { font-size:0.68rem; color: var(--p-text-muted); }
+      .adopt-tile-danger { border-color: var(--p-danger,#d9534f); background: rgba(217,83,79,0.10); color: var(--p-danger,#d9534f); }
+      .adopt-tile-danger:hover { background: rgba(217,83,79,0.18); border-color: var(--p-danger,#d9534f); }
+      .adopt-tile-danger .lbl, .adopt-tile-danger .hint, .adopt-tile-danger svg { color: var(--p-danger,#d9534f); }
+      .adopt-footnote { display:flex; align-items:center; gap:6px; font-size:0.72rem; color: var(--p-text-muted); margin:12px 0 0; }
+      .adopt-footnote svg { width:14px; height:14px; flex-shrink:0; }
+      .adopt-cancel-row { display:flex; justify-content:flex-end; margin-top:18px; padding-top:12px; border-top:1px solid var(--p-border, rgba(127,127,127,0.2)); }
     `;
     const style = document.createElement('style');
     style.id = 'adopt-styles';
@@ -195,9 +209,19 @@
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if (e.target === overlay) close(overlay); });
     applyI18n(overlay);
+    // Render any <i data-lucide="..."> placeholders into SVG icons.
+    if (window.Panoptica && Panoptica.refreshIcons) Panoptica.refreshIcons(overlay);
     return overlay;
   }
   function close(overlay) { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+
+  // One square icon tile in the action modal.
+  function tile(act, icon, label, hint, danger) {
+    return '<button class="adopt-tile' + (danger ? ' adopt-tile-danger' : '') + '" data-act="' + act + '">' +
+      '<i data-lucide="' + icon + '"></i>' +
+      '<span class="lbl">' + esc(label) + '</span>' +
+      '<span class="hint">' + esc(hint) + '</span></button>';
+  }
 
   function openActions(surface, tenantId, card) {
     const deactivated = card.lifecycle_state === 'deactivated';
@@ -205,20 +229,17 @@
     let body = '<h3>' + esc(t('actions_title')) + '</h3>' +
       '<div class="td-adopt-meta" style="margin-bottom:6px;">' + name + '</div>';
 
-    const buttons = [];
-    if (deactivated) {
-      buttons.push('<button class="btn-primary" data-act="restore">' + esc(t('restore_btn')) + '</button>');
-    } else {
-      buttons.push('<button class="btn-secondary" data-act="deactivate">' + esc(t('deactivate_btn')) + '</button>');
-    }
-    buttons.push('<button class="btn-danger" data-act="delete" style="background:var(--p-danger,#d9534f);color:#fff;">' + esc(t('delete_btn')) + '</button>');
-
-    body += '<div class="actions">' + buttons.join('') + '</div>';
-    body += '<div class="sep"></div>';
-    // Stop monitoring — visually separated; Panoptica-only.
-    body += '<button class="btn-secondary" data-act="stop" style="font-size:0.8rem;">' + esc(t('stop_btn')) + '</button>' +
-      '<div class="panoptica-only">' + esc(t('stop_hint')) + '</div>';
-    body += '<div class="actions"><button class="btn-secondary" data-act="cancel">' + esc(t('cancel')) + '</button></div>';
+    // One row of square icon tiles: Stop monitoring · Deactivate/Restore · Delete.
+    const middle = deactivated
+      ? tile('restore', 'rotate-ccw', t('restore_btn'), t('hint_reversible'))
+      : tile('deactivate', 'ban', t('tile_deactivate'), t('hint_reversible'));
+    body += '<div class="adopt-tiles">' +
+      tile('stop', 'eye-off', t('stop_btn'), t('hint_panoptica_only')) +
+      middle +
+      tile('delete', 'trash-2', t('tile_delete'), t('hint_permanent'), true) +
+      '</div>';
+    body += '<div class="adopt-footnote"><i data-lucide="info"></i><span>' + esc(t('stop_hint')) + '</span></div>';
+    body += '<div class="adopt-cancel-row"><button class="btn-secondary" data-act="cancel">' + esc(t('cancel')) + '</button></div>';
 
     const overlay = modal(body);
     overlay.querySelectorAll('[data-act]').forEach(b => {

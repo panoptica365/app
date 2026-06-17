@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.13 — 2026-06-17
+
+### Cuadro de diálogo de acciones más cuidado para las configuraciones de origen del inquilino
+
+Algunas pequeñas correcciones visuales de las tarjetas de origen del inquilino (Adopción en su sitio) introducidas en la 0.2.11. El cuadro de diálogo **Administrar la configuración** — el que abre desde las **Acciones** de una tarjeta — ahora es una fila limpia de botones con iconos: **Dejar de supervisar**, **Desactivar** (o **Restaurar**) y **Eliminar**, con Eliminar claramente en rojo. También corregimos un problema de contraste del texto que dificultaba la lectura de ese cuadro de diálogo en el tema claro.
+
+---
+
 ## Versión 0.2.12 — 2026-06-16
 
 ### La clasificación de aplicaciones de confianza ahora funciona con inquilinos de cualquier tamaño

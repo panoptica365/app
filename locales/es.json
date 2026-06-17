@@ -3649,7 +3649,12 @@
       "managed_by_microsoft": "Esta directiva está administrada por Microsoft y no se puede cambiar aquí.",
       "action_failed": "No se pudo completar la acción — inténtelo de nuevo.",
       "cancel": "Cancelar",
-      "import_nothing_new": "No hay nada nuevo que importar — todo lo que hay aquí ya está supervisado por Panoptica o administrado por una plantilla."
+      "import_nothing_new": "No hay nada nuevo que importar — todo lo que hay aquí ya está supervisado por Panoptica o administrado por una plantilla.",
+      "tile_deactivate": "Desactivar",
+      "tile_delete": "Eliminar",
+      "hint_panoptica_only": "Solo Panoptica",
+      "hint_reversible": "Reversible",
+      "hint_permanent": "Permanente"
     }
   },
   "learn": {

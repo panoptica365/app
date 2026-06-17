@@ -5,6 +5,14 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.13 — 2026-06-17
+
+### Boîte de dialogue d'actions plus soignée pour les configurations issues du locataire
+
+Quelques petites corrections visuelles des cartes issues du locataire (Adoption sur place) introduites dans la 0.2.11. La boîte de dialogue **Gérer la configuration** — celle que vous ouvrez depuis les **Actions** d'une carte — est désormais une rangée nette de boutons à icônes : **Arrêter la surveillance**, **Désactiver** (ou **Restaurer**) et **Supprimer**, Supprimer étant clairement en rouge. Nous avons aussi corrigé un problème de contraste du texte qui rendait cette boîte de dialogue difficile à lire dans le thème clair.
+
+---
+
 ## Version 0.2.12 — 2026-06-16
 
 ### Le triage des applications approuvées fonctionne maintenant pour les locataires de toute taille

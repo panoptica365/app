@@ -3649,7 +3649,12 @@
       "managed_by_microsoft": "This policy is managed by Microsoft and cannot be changed here.",
       "action_failed": "The action couldn't be completed — try again.",
       "cancel": "Cancel",
-      "import_nothing_new": "Nothing new to import — everything here is already monitored by Panoptica or managed by a template."
+      "import_nothing_new": "Nothing new to import — everything here is already monitored by Panoptica or managed by a template.",
+      "tile_deactivate": "Deactivate",
+      "tile_delete": "Delete",
+      "hint_panoptica_only": "Panoptica-only",
+      "hint_reversible": "Reversible",
+      "hint_permanent": "Permanent"
     }
   },
   "learn": {

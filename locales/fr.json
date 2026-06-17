@@ -3649,7 +3649,12 @@
       "managed_by_microsoft": "Cette stratégie est gérée par Microsoft et ne peut pas être modifiée ici.",
       "action_failed": "L’action n’a pas pu être effectuée — réessayez.",
       "cancel": "Annuler",
-      "import_nothing_new": "Rien de nouveau à importer — tout ce qui se trouve ici est déjà surveillé par Panoptica ou géré par un modèle."
+      "import_nothing_new": "Rien de nouveau à importer — tout ce qui se trouve ici est déjà surveillé par Panoptica ou géré par un modèle.",
+      "tile_deactivate": "Désactiver",
+      "tile_delete": "Supprimer",
+      "hint_panoptica_only": "Panoptica seulement",
+      "hint_reversible": "Réversible",
+      "hint_permanent": "Permanent"
     }
   },
   "learn": {
