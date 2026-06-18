@@ -47,6 +47,8 @@ router.get('/alerts', servePartial('alerts.html'));
 // ─── Heatmap (multi-tenant posture roll-up) ───
 // Read-only, visible to all tiers (requireAuth via router.use above; no admin gate).
 router.get('/heatmap', servePartial('heatmap.html'));
+// Fleet Trends (B4) — same read-only/all-tiers gating as Heatmap.
+router.get('/global-trends', servePartial('global-trends.html'));
 
 // ─── Reports ───
 router.get('/reports', servePartial('reports.html'));

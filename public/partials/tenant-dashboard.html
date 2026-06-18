@@ -9,6 +9,7 @@
   <div class="panel-elbow" style="background: var(--p-warm);"></div>
   <div class="td-view-toggle" id="td-view-toggle">
     <button class="td-view-btn active" data-view="overview" data-i18n="tenant_dashboard.view_overview">Overview</button>
+    <button class="td-view-btn" data-view="trends" data-i18n="tenant_dashboard.view_trends">Trends</button>
     <button class="td-view-btn" data-view="alerts" data-i18n="tenant_dashboard.view_alerts">Alerts</button>
     <button class="td-view-btn" data-view="security" data-i18n="tenant_dashboard.view_security">Security</button>
     <button class="td-view-btn" data-view="access-review" data-i18n="tenant_dashboard.view_access_review">Access Review</button>
@@ -109,6 +110,147 @@
 
 <!-- Per-Tenant Alerts View (hidden by default) -->
 <div id="td-alerts-view" style="display:none;"></div>
+
+<!-- ═══ Per-Tenant Trends View (Feature B3, hidden by default) ═══ -->
+<!--
+  Posture + operations time-series. Read-only, all RBAC tiers. Charts are drawn
+  by js/shared/trend-charts.js (reused later by the B1/B2 report PDFs); the data
+  comes from a single GET /api/tenants/:id/trends?range= round-trip. Lazy-loaded
+  on first activation and torn down (chart.destroy) on tab leave — see
+  loadTrends()/destroyTrendCharts() in tenant-dashboard.js. No QBR/report button
+  here by design: report export lives in the Reports section (B2).
+-->
+<style id="td-trends-style">
+  #td-trends-view .td-trend-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:4px 0 6px; }
+  #td-trends-view .td-trend-range-lbl { font-size:11.5px; color:var(--p-text-muted); text-transform:uppercase; letter-spacing:.08em; margin-right:2px; }
+  #td-trends-view .td-trend-pill { font-size:12px; padding:5px 13px; border-radius:14px; border:1px solid var(--p-border-strong); color:var(--p-text-secondary); background:var(--p-surface-alt, var(--p-surface)); cursor:pointer; font-family:inherit; }
+  #td-trends-view .td-trend-pill:hover { color:var(--p-text); }
+  #td-trends-view .td-trend-pill.active { background:rgba(92,203,244,.14); border-color:var(--p-accent); color:var(--p-accent); }
+  #td-trends-view .td-trend-status { margin-left:auto; font-size:0.85rem; color:var(--p-text-muted); }
+  #td-trends-view .td-trend-section-h { font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--p-text-muted); margin:22px 0 10px; display:flex; align-items:center; gap:10px; }
+  #td-trends-view .td-trend-section-h::after { content:""; flex:1; height:1px; background:var(--p-border); }
+  #td-trends-view .td-trend-section-h.cust span { color:var(--p-accent); }
+  #td-trends-view .td-trend-section-h.msp span { color:var(--p-secondary); }
+  #td-trends-view .td-trend-grid { display:grid; gap:14px; grid-template-columns:1fr 1fr; }
+  @media (max-width:820px) { #td-trends-view .td-trend-grid { grid-template-columns:1fr; } }
+  #td-trends-view .td-trend-card { background:var(--p-surface); border:1px solid var(--p-border); border-radius:10px; padding:16px 18px 14px; position:relative; }
+  #td-trends-view .td-trend-card.hero { border-color:var(--p-secondary); box-shadow:inset 0 0 0 1px rgba(183,139,255,.10); }
+  #td-trends-view .td-trend-card.full { grid-column:1 / -1; }
+  #td-trends-view .td-trend-card.standalone { margin-top:14px; }
+  #td-trends-view .td-trend-card h3 { font-size:13.5px; font-weight:600; color:var(--p-text); margin:0; }
+  #td-trends-view .td-trend-desc { font-size:11.5px; color:var(--p-text-muted); margin-top:2px; }
+  #td-trends-view .td-trend-kpi { display:flex; align-items:baseline; gap:10px; margin:8px 0 2px; min-height:34px; }
+  #td-trends-view .td-trend-kpi .big { font-size:30px; font-weight:700; font-family:var(--mono, monospace); color:var(--p-text); letter-spacing:-.5px; }
+  #td-trends-view .td-trend-kpi .delta { font-size:13px; font-weight:600; }
+  #td-trends-view .td-trend-kpi .delta.up { color:var(--p-success); }
+  #td-trends-view .td-trend-kpi .delta.down { color:var(--p-danger); }
+  #td-trends-view .td-trend-kpi .since { font-size:11.5px; color:var(--p-text-muted); }
+  #td-trends-view .td-trend-chartwrap { position:relative; height:170px; margin-top:8px; }
+  #td-trends-view .td-trend-chartwrap.short { height:140px; }
+  #td-trends-view .td-trend-chartwrap.tall { height:230px; }
+  #td-trends-view .td-trend-chartwrap.hero { height:230px; }
+  /* Coverage reassurance strip — posture demoted from a flat chart to a stat. */
+  #td-trends-view .td-trend-coverage { display:flex; align-items:center; gap:18px; background:linear-gradient(90deg, rgba(46,232,160,.10), rgba(46,232,160,0)); border:1px solid var(--p-border); border-left:3px solid var(--p-success); border-radius:8px; padding:11px 16px; margin:14px 0 4px; flex-wrap:wrap; }
+  #td-trends-view .td-trend-coverage .cov-badge { font-family:var(--mono, monospace); font-size:22px; font-weight:700; color:var(--p-success); }
+  #td-trends-view .td-trend-coverage .cov-text { font-size:12.5px; color:var(--p-text-secondary); }
+  #td-trends-view .td-trend-coverage .cov-text b { color:var(--p-text); }
+  #td-trends-view .td-trend-coverage .cov-mini { margin-left:auto; display:flex; gap:22px; }
+  #td-trends-view .td-trend-coverage .cov-mini .n { font-family:var(--mono, monospace); font-size:17px; font-weight:600; color:var(--p-text); }
+  #td-trends-view .td-trend-coverage .cov-mini .l { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--p-text-muted); }
+  /* Benchmark pill + fraction on KPI rows; static legend row. */
+  #td-trends-view .td-trend-kpi { flex-wrap:wrap; }
+  #td-trends-view .td-trend-kpi .bench { font-size:12px; font-weight:600; color:var(--p-secondary); background:rgba(183,139,255,.12); border:1px solid var(--p-secondary); border-radius:12px; padding:2px 10px; }
+  #td-trends-view .td-trend-kpi .frac { font-size:18px; color:var(--p-text-muted); font-weight:600; }
+  #td-trends-view .td-trend-legend { display:flex; gap:16px; font-size:11px; color:var(--p-text-secondary); margin-top:8px; flex-wrap:wrap; }
+  #td-trends-view .td-trend-legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px; }
+  #td-trends-view .td-trend-legend i.dash { width:14px; height:0; border:0; border-top:2px dashed var(--p-secondary); border-radius:0; }
+  #td-trends-view .td-trend-statline { display:flex; gap:22px; margin-top:10px; flex-wrap:wrap; }
+  #td-trends-view .td-trend-statline .n { font-family:var(--mono, monospace); font-size:18px; font-weight:600; color:var(--p-text); }
+  #td-trends-view .td-trend-statline .l { font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--p-text-muted); }
+  #td-trends-view .td-trend-note { background:var(--p-surface-alt, var(--p-surface)); border-left:3px solid var(--p-warn); padding:8px 12px; border-radius:0 6px 6px 0; font-size:12px; color:var(--p-text-secondary); margin-top:10px; }
+  #td-trends-view .td-trend-empty { font-size:12px; color:var(--p-text-muted); padding:20px 0; text-align:center; }
+</style>
+<div id="td-trends-view" style="display:none;">
+  <div class="td-trend-toolbar">
+    <span class="td-trend-range-lbl" data-i18n="tenant_dashboard.trends.range_label">Range</span>
+    <button class="td-trend-pill" data-range="7d" data-i18n="tenant_dashboard.trends.range_7d">7 d</button>
+    <button class="td-trend-pill active" data-range="30d" data-i18n="tenant_dashboard.trends.range_30d">30 d</button>
+    <button class="td-trend-pill" data-range="90d" data-i18n="tenant_dashboard.trends.range_90d">90 d</button>
+    <button class="td-trend-pill" data-range="1y" data-i18n="tenant_dashboard.trends.range_1y">1 y</button>
+    <button class="btn-secondary" id="td-trend-refresh-btn" data-i18n="tenant_dashboard.trends.refresh_btn">Refresh</button>
+    <span id="td-trend-status" class="td-trend-status"></span>
+  </div>
+
+  <!-- Coverage reassurance strip (posture demoted to a stat — filled by JS, hidden if no data) -->
+  <div class="td-trend-coverage" id="td-trend-coverage" style="display:none;"></div>
+
+  <!-- ── Customer-facing ── -->
+  <div class="td-trend-section-h cust"><span data-i18n="tenant_dashboard.trends.section_customer">What the customer sees</span></div>
+
+  <!-- HERO: Microsoft Secure Score + peer benchmark, full width -->
+  <div class="td-trend-card hero">
+    <h3 data-i18n="tenant_dashboard.trends.secure_title">Microsoft Secure Score</h3>
+    <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.secure_desc">Microsoft's canonical security measure — how fully this tenant addresses Microsoft's current recommendations. It moves as Microsoft raises the bar; keeping it high is the job.</div>
+    <div class="td-trend-kpi" id="td-trend-secure-kpi"></div>
+    <div class="td-trend-chartwrap hero"><canvas id="td-trend-secure"></canvas></div>
+    <div class="td-trend-legend" id="td-trend-secure-legend"></div>
+    <div class="td-trend-note" id="td-trend-secure-note" style="display:none;"></div>
+  </div>
+
+  <!-- Row: category breakdown + recommendations addressed -->
+  <div class="td-trend-grid" style="margin-top:14px;">
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.category_title">Secure Score by category</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.category_desc">Where the score comes from and where the gaps remain — from Microsoft's control scores.</div>
+      <div class="td-trend-chartwrap"><canvas id="td-trend-category"></canvas></div>
+    </div>
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.recommendations_title">Security recommendations addressed</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.recommendations_desc">How many of Microsoft's recommended actions are in place over time — the work that keeps moving as Microsoft adds actions.</div>
+      <div class="td-trend-kpi" id="td-trend-recommendations-kpi"></div>
+      <div class="td-trend-chartwrap short"><canvas id="td-trend-recommendations"></canvas></div>
+      <div class="td-trend-note" id="td-trend-recommendations-note" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Retained from v1: work done + reassurance -->
+  <div class="td-trend-grid" style="margin-top:14px;">
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.resolved_title">Issues caught &amp; resolved</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.resolved_desc">Drift and threats Panoptica caught and your team cleared, by month and severity.</div>
+      <div class="td-trend-chartwrap"><canvas id="td-trend-resolved"></canvas></div>
+      <div class="td-trend-statline" id="td-trend-resolved-stats"></div>
+    </div>
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.open_title">Open issues over time</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.open_desc">How many items were awaiting action each day. Trending toward zero is the goal.</div>
+      <div class="td-trend-chartwrap"><canvas id="td-trend-open"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── MSP-facing ── -->
+  <div class="td-trend-section-h msp"><span data-i18n="tenant_dashboard.trends.section_msp">What the MSP sees</span></div>
+  <div class="td-trend-grid">
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.ttr_title">Time to resolve</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.ttr_desc">Median hours from an alert firing to its resolution. Your responsiveness, in evidence.</div>
+      <div class="td-trend-kpi" id="td-trend-ttr-kpi"></div>
+      <div class="td-trend-chartwrap short"><canvas id="td-trend-ttr"></canvas></div>
+    </div>
+    <div class="td-trend-card">
+      <h3 data-i18n="tenant_dashboard.trends.volume_title">Alert volume per week</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.volume_desc">New alerts per week, by severity. Is it getting noisier or quieter?</div>
+      <div class="td-trend-chartwrap short"><canvas id="td-trend-volume"></canvas></div>
+    </div>
+  </div>
+  <div class="td-trend-grid" style="margin-top:14px;">
+    <div class="td-trend-card full">
+      <h3 data-i18n="tenant_dashboard.trends.policies_title">Top firing policies</h3>
+      <div class="td-trend-desc" data-i18n="tenant_dashboard.trends.policies_desc">Which policies generate the volume over the last 90 days. The longest bars are your tuning candidates.</div>
+      <div class="td-trend-chartwrap tall"><canvas id="td-trend-policies"></canvas></div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ Per-Tenant Security View (hidden by default) ═══ -->
 <!--

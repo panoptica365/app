@@ -1,0 +1,160 @@
+<!-- ═══ GLOBAL (FLEET) TRENDS DASHBOARD (B4) ═══ -->
+<!--
+  Fleet-wide, longitudinal security + operations charts across MANAGED tenants
+  only. DB-only (GET /api/global-trends) — no Graph at render time. Read-only,
+  all RBAC tiers. Charts drawn by the shared Panoptica.TrendCharts factories
+  (same components as the per-tenant Trends tab + the future report PDFs).
+  Page module: public/js/pages/global-trends.js (init/destroy via PanopticaPage).
+-->
+<style id="gt-style">
+  #gt-view .gt-head { padding: 4px 0 0; }
+  #gt-view .gt-title { font-size: 1.4rem; font-weight: 600; color: var(--p-text); margin: 0; }
+  #gt-view .gt-sub { font-size: 0.85rem; color: var(--p-text-secondary); margin-top: 2px; }
+  #gt-view .gt-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 6px; }
+  #gt-view .gt-range-lbl { font-size: 11.5px; color: var(--p-text-muted); text-transform: uppercase; letter-spacing: .08em; margin-right: 2px; }
+  #gt-view .gt-pill { font-size: 12px; padding: 5px 13px; border-radius: 14px; border: 1px solid var(--p-border-strong); color: var(--p-text-secondary); background: var(--p-surface-alt, var(--p-surface)); cursor: pointer; font-family: inherit; }
+  #gt-view .gt-pill:hover { color: var(--p-text); }
+  #gt-view .gt-pill.active { background: rgba(92,203,244,.14); border-color: var(--p-accent); color: var(--p-accent); }
+  #gt-view .gt-status { margin-left: auto; font-size: 0.85rem; color: var(--p-text-muted); }
+  #gt-view .gt-section-h { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--p-text-muted); margin: 22px 0 10px; display: flex; align-items: center; gap: 10px; }
+  #gt-view .gt-section-h::after { content: ""; flex: 1; height: 1px; background: var(--p-border); }
+  #gt-view .gt-section-h.sec span { color: var(--p-accent); }
+  #gt-view .gt-section-h.ops span { color: var(--p-secondary); }
+  #gt-view .gt-grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { #gt-view .gt-grid { grid-template-columns: 1fr; } }
+  #gt-view .gt-card { background: var(--p-surface); border: 1px solid var(--p-border); border-radius: 10px; padding: 16px 18px 14px; position: relative; }
+  #gt-view .gt-card.hero { border-color: var(--p-accent); box-shadow: inset 0 0 0 1px rgba(92,203,244,.08); }
+  #gt-view .gt-card h3 { font-size: 13.5px; font-weight: 600; color: var(--p-text); margin: 0; }
+  #gt-view .gt-desc { font-size: 11.5px; color: var(--p-text-muted); margin-top: 2px; }
+  #gt-view .gt-kpi { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 2px; min-height: 34px; flex-wrap: wrap; }
+  #gt-view .gt-kpi .big { font-size: 30px; font-weight: 700; font-family: var(--mono, monospace); color: var(--p-text); letter-spacing: -.5px; }
+  #gt-view .gt-kpi .delta { font-size: 13px; font-weight: 600; }
+  #gt-view .gt-kpi .delta.up { color: var(--p-success); }
+  #gt-view .gt-kpi .delta.down { color: var(--p-danger); }
+  #gt-view .gt-kpi .since { font-size: 11.5px; color: var(--p-text-muted); }
+  #gt-view .gt-kpi .bench { font-size: 12px; font-weight: 600; color: var(--p-secondary); background: rgba(183,139,255,.12); border: 1px solid var(--p-secondary); border-radius: 12px; padding: 2px 10px; }
+  #gt-view .gt-kpi .frac { font-size: 18px; color: var(--p-text-muted); font-weight: 600; }
+  #gt-view .gt-chartwrap { position: relative; height: 170px; margin-top: 8px; }
+  #gt-view .gt-chartwrap.hero { height: 250px; }
+  #gt-view .gt-chartwrap.short { height: 140px; }
+  #gt-view .gt-chartwrap.tall { height: 230px; }
+  #gt-view .gt-legend { display: flex; gap: 16px; font-size: 11px; color: var(--p-text-secondary); margin-top: 8px; flex-wrap: wrap; }
+  #gt-view .gt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  #gt-view .gt-legend i.dash { width: 14px; height: 0; border: 0; border-top: 2px dashed var(--p-secondary); border-radius: 0; }
+  #gt-view .gt-legend i.band { background: rgba(92,203,244,.30); }
+  #gt-view .gt-statline { display: flex; gap: 22px; margin-top: 10px; flex-wrap: wrap; }
+  #gt-view .gt-statline .n { font-family: var(--mono, monospace); font-size: 18px; font-weight: 600; color: var(--p-text); }
+  #gt-view .gt-statline .l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--p-text-muted); }
+  #gt-view .gt-note { background: var(--p-surface-alt, var(--p-surface)); border-left: 3px solid var(--p-warn); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: var(--p-text-secondary); margin-top: 10px; }
+  #gt-view .gt-coverage { display: flex; align-items: center; gap: 18px; background: linear-gradient(90deg, rgba(46,232,160,.10), rgba(46,232,160,0)); border: 1px solid var(--p-border); border-left: 3px solid var(--p-success); border-radius: 8px; padding: 11px 16px; margin: 12px 0 4px; flex-wrap: wrap; }
+  #gt-view .gt-coverage .cov-badge { font-family: var(--mono, monospace); font-size: 22px; font-weight: 700; color: var(--p-success); }
+  #gt-view .gt-coverage .cov-text { font-size: 12.5px; color: var(--p-text-secondary); }
+  #gt-view .gt-coverage .cov-text b { color: var(--p-text); }
+  #gt-view .gt-coverage .cov-mini { margin-left: auto; display: flex; gap: 22px; }
+  #gt-view .gt-coverage .cov-mini .n { font-family: var(--mono, monospace); font-size: 17px; font-weight: 600; color: var(--p-text); }
+  #gt-view .gt-coverage .cov-mini .l { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--p-text-muted); }
+  #gt-view .gt-empty { font-size: 13px; color: var(--p-text-muted); padding: 40px 0; text-align: center; }
+</style>
+
+<div id="gt-view">
+  <div class="gt-head">
+    <h1 class="gt-title" data-i18n="global_trends.title">Trends</h1>
+    <div class="gt-sub" data-i18n="global_trends.subtitle">Fleet-wide security and operations across your managed tenants — the story behind the numbers.</div>
+  </div>
+
+  <div class="gt-toolbar">
+    <span class="gt-range-lbl" data-i18n="global_trends.range_label">Range</span>
+    <button class="gt-pill" data-range="7d" data-i18n="global_trends.range_7d">7 d</button>
+    <button class="gt-pill active" data-range="30d" data-i18n="global_trends.range_30d">30 d</button>
+    <button class="gt-pill" data-range="90d" data-i18n="global_trends.range_90d">90 d</button>
+    <button class="gt-pill" data-range="1y" data-i18n="global_trends.range_1y">1 y</button>
+    <button class="btn-secondary" id="gt-refresh-btn" data-i18n="global_trends.refresh_btn">Refresh</button>
+    <span id="gt-status" class="gt-status"></span>
+  </div>
+
+  <!-- Empty-book state (no managed tenants) -->
+  <div id="gt-empty" class="gt-empty" style="display:none;" data-i18n="global_trends.empty">No managed tenants yet — fleet trends appear once tenants are onboarded as managed.</div>
+
+  <div id="gt-body">
+    <!-- Coverage reassurance strip (filled by JS) -->
+    <div class="gt-coverage" id="gt-coverage" style="display:none;"></div>
+
+    <!-- ── Section A: Secure Score & posture ── -->
+    <div class="gt-section-h sec"><span data-i18n="global_trends.section_security">Secure Score &amp; posture</span></div>
+
+    <!-- HERO: fleet Secure Score (avg line + min/max band + benchmark + like-for-like) -->
+    <div class="gt-card hero">
+      <h3 data-i18n="global_trends.secure_title">Fleet Microsoft Secure Score</h3>
+      <div class="gt-desc" data-i18n="global_trends.secure_desc">Average score across managed tenants over time, with the high/low band and Microsoft's similar-size benchmark. Verifiable by hand.</div>
+      <div class="gt-kpi" id="gt-secure-kpi"></div>
+      <div class="gt-chartwrap hero"><canvas id="gt-secure"></canvas></div>
+      <div class="gt-legend" id="gt-secure-legend"></div>
+      <div class="gt-note" id="gt-secure-note" style="display:none;"></div>
+    </div>
+
+    <div class="gt-grid" style="margin-top:14px;">
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.book_title">Book growth — managed tenants</h3>
+        <div class="gt-desc" data-i18n="global_trends.book_desc">How many managed tenants existed each day. Explains the dips in the average above when the book changes.</div>
+        <div class="gt-chartwrap"><canvas id="gt-tenant-count"></canvas></div>
+      </div>
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.recommendations_title">Recommendations outstanding</h3>
+        <div class="gt-desc" data-i18n="global_trends.recommendations_desc">Total Microsoft recommended actions still open across the book. Are we collectively keeping up?</div>
+        <div class="gt-kpi" id="gt-recommendations-kpi"></div>
+        <div class="gt-chartwrap short"><canvas id="gt-recommendations"></canvas></div>
+        <div class="gt-note" id="gt-recommendations-note" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="gt-card" style="margin-top:14px;">
+      <h3 data-i18n="global_trends.category_title">Secure Score by category</h3>
+      <div class="gt-desc" data-i18n="global_trends.category_desc">Fleet-average score by Microsoft category over time — where the whole book is weakest is your campaign target.</div>
+      <div class="gt-chartwrap tall"><canvas id="gt-category"></canvas></div>
+    </div>
+
+    <!-- ── Section B: Alert operations ── -->
+    <div class="gt-section-h ops"><span data-i18n="global_trends.section_ops">Alert operations</span></div>
+
+    <div class="gt-grid">
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.resolved_title">Issues caught &amp; resolved</h3>
+        <div class="gt-desc" data-i18n="global_trends.resolved_desc">Fleet total resolved, by month and severity. How much did the team clear across the book?</div>
+        <div class="gt-chartwrap"><canvas id="gt-resolved"></canvas></div>
+        <div class="gt-statline" id="gt-resolved-stats"></div>
+      </div>
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.open_title">Open issues over time</h3>
+        <div class="gt-desc" data-i18n="global_trends.open_desc">Fleet total items awaiting action each day. Is the team keeping up?</div>
+        <div class="gt-chartwrap"><canvas id="gt-open"></canvas></div>
+      </div>
+    </div>
+
+    <div class="gt-grid" style="margin-top:14px;">
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.ttr_title">Time to resolve</h3>
+        <div class="gt-desc" data-i18n="global_trends.ttr_desc">Fleet median hours per week, with a p90 line (a few noisy tenants skew the mean). SLA evidence.</div>
+        <div class="gt-kpi" id="gt-ttr-kpi"></div>
+        <div class="gt-chartwrap short"><canvas id="gt-ttr"></canvas></div>
+        <div class="gt-legend" id="gt-ttr-legend"></div>
+      </div>
+      <div class="gt-card">
+        <h3 data-i18n="global_trends.volume_title">Alert volume per week</h3>
+        <div class="gt-desc" data-i18n="global_trends.volume_desc">Fleet new alerts per week, by severity. Is it getting noisier?</div>
+        <div class="gt-chartwrap short"><canvas id="gt-volume"></canvas></div>
+      </div>
+    </div>
+
+    <div class="gt-card" style="margin-top:14px;">
+      <h3 data-i18n="global_trends.mix_title">Alert mix by category over time</h3>
+      <div class="gt-desc" data-i18n="global_trends.mix_desc">Fleet new alerts grouped by policy category per week — what kind of work the book generates.</div>
+      <div class="gt-chartwrap tall"><canvas id="gt-alert-mix"></canvas></div>
+    </div>
+
+    <div class="gt-card" style="margin-top:14px;">
+      <h3 data-i18n="global_trends.policies_title">Top firing policies — last 90 days</h3>
+      <div class="gt-desc" data-i18n="global_trends.policies_desc">Which policies are noisiest across everything — your fleet tuning + campaign targets.</div>
+      <div class="gt-chartwrap tall"><canvas id="gt-policies"></canvas></div>
+    </div>
+  </div>
+</div>

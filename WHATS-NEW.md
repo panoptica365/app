@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.2.14 — 2026-06-18
+
+### Your data looks beautiful!
+
+Since the day you onboarded each tenant, Panoptica365 has been quietly recording a daily snapshot of its security. This release turns all of that history into charts — so you can finally *see* security improving over time, not just check where it stands today.
+
+Every tenant dashboard now has a **Trends** tab, right next to **Overview**. It tells that tenant's story over a window you pick — anywhere from 7 days to a full year: its **Microsoft Secure Score** plotted against the benchmark for similar-size businesses, the score broken down **by category**, how many of Microsoft's recommendations you've **addressed** over time, the **issues caught and resolved** each month, how long they took to clear, alert volume per week, and the policies firing most often. It's laid out as *what the customer sees* on top and *what the MSP sees* below — ready to drop straight into a client review.
+
+There's also a brand-new fleet-wide **Trends** page in the sidebar, just after **Heatmap**. It lifts the same idea to your whole book of **managed tenants at once**: a fleet **Secure Score** with a shaded band showing your best and worst tenant each day plus the Microsoft benchmark, how the managed book has grown, recommendations still outstanding across everyone, where the fleet is weakest by category, and the full alert-operations picture — resolved, open, time-to-resolve, volume, and your noisiest policies across all customers. When you onboard tenants partway through the window, a separate line holds your existing customers steady, so a new low-scoring tenant doesn't make it look like everyone slipped.
+
+Both pages read from data Panoptica365 already collects, so they're instant to open and add no load to Microsoft. A freshly-onboarded tenant won't have much of a line yet — give it a few weeks and the picture fills in. A new guide, **Trend dashboards**, under **Learn → Panoptica365 Guides**, walks through every chart on both pages.
+
+---
+
 ## Version 0.2.13 — 2026-06-17
 
 ### Tidier action dialog for tenant-sourced configurations

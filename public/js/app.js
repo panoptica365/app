@@ -26,6 +26,7 @@
     'daily-activity':   { partial: '/partials/daily-activity',   script: '/js/pages/daily-activity.js' },
     'tenants':          { partial: '/partials/tenants',           script: '/js/pages/tenants.js' },
     'heatmap':          { partial: '/partials/heatmap',           script: '/js/pages/heatmap.js' },
+    'global-trends':    { partial: '/partials/global-trends',     script: '/js/pages/global-trends.js' },
     'alerts':           { partial: '/partials/alerts',            script: '/js/pages/alerts.js' },
     'settings':         { partial: '/partials/settings',          script: '/js/pages/settings.js' },
     'tenant-dashboard': { partial: '/partials/tenant-dashboard',  script: '/js/pages/tenant-dashboard.js' },

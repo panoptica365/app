@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.14 — 2026-06-18
+
+### Vos données sont magnifiques!
+
+Depuis le jour où vous avez intégré chaque locataire, Panoptica365 enregistre discrètement un instantané quotidien de sa sécurité. Cette version transforme tout cet historique en graphiques — pour que vous puissiez enfin *voir* la sécurité s'améliorer dans le temps, au lieu de seulement vérifier où elle en est aujourd'hui.
+
+Chaque tableau de bord de locataire a maintenant un onglet **Tendances**, juste à côté de **Vue d'ensemble**. Il raconte l'histoire de ce locataire sur une période que vous choisissez — de 7 jours à une année complète : sa **cote de sécurité Microsoft** comparée à la référence des entreprises de taille comparable, la cote ventilée **par catégorie**, combien des recommandations de Microsoft vous avez **appliquées** au fil du temps, les **problèmes détectés et résolus** chaque mois, le temps qu'il a fallu pour les régler, le volume d'alertes par semaine et les politiques qui se déclenchent le plus souvent. Il est présenté en *ce que le client voit* en haut et *ce que le fournisseur voit* en bas — prêt à insérer directement dans une revue client.
+
+Il y a aussi une toute nouvelle page **Tendances** à l'échelle du parc dans la barre latérale, juste après **Carte thermique**. Elle élargit la même idée à tout votre parc de **locataires gérés d'un coup** : une **cote de sécurité** du parc avec une plage ombrée montrant votre meilleur et votre pire locataire chaque jour ainsi que la référence Microsoft, la croissance du parc géré, les recommandations encore en suspens chez tout le monde, là où le parc est le plus faible par catégorie, et le portrait complet des opérations d'alertes — résolus, ouverts, délai de résolution, volume et vos politiques les plus bruyantes chez tous les clients. Quand vous intégrez des locataires en cours de période, une ligne distincte garde vos clients existants constants, pour qu'un nouveau locataire à faible cote ne donne pas l'impression que tout le monde a régressé.
+
+Les deux pages lisent des données que Panoptica365 collecte déjà; elles sont donc instantanées à ouvrir et n'ajoutent aucune charge à Microsoft. Un locataire fraîchement intégré n'aura pas encore grand-chose à tracer — donnez-lui quelques semaines et le portrait se remplit. Un nouveau guide, **Tableaux de tendances**, sous **Apprendre → Guides Panoptica365**, passe en revue chaque graphique des deux pages.
+
+---
+
 ## Version 0.2.13 — 2026-06-17
 
 ### Boîte de dialogue d'actions plus soignée pour les configurations issues du locataire

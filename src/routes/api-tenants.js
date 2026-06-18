@@ -655,4 +655,307 @@ router.get('/:id/api-health', async (req, res) => {
   }
 });
 
+// ═══════════════════════════════════════════════════════════════════════
+// Trends (Feature B3) — per-tenant posture & operations time series.
+//
+// One round-trip feeding the Trends tab. Read-only; visible to ALL RBAC tiers
+// (router-level requireAuth, deliberately NO requireAdmin). Response keys map
+// 1:1 to the charts, and the same series shapes are reused by the B1/B2 report
+// renderers, so the heavy lifting lives here, not in the page module.
+//
+// Clock discipline (this codebase mixes timezones by table — match each table
+// to the clock it was WRITTEN with, per the api-reports precedent):
+//   • heatmap_posture_daily is written with UTC_DATE()/UTC_TIMESTAMP() → bound
+//     with UTC_DATE().
+//   • alerts (triggered_at/closed_at) + metric_snapshots (captured_at) are
+//     written with NOW()/CURRENT_TIMESTAMP (session = Eastern) → bound with
+//     NOW()/CURDATE(), exactly like src/routes/api-reports.js.
+// `days` comes from a fixed whitelist, so interpolating it into INTERVAL is
+// injection-safe (and sidesteps the prepared-statement `INTERVAL ? DAY` quirk).
+//
+// Data sources (verified 2026-06-17):
+//   posture       heatmap_posture_daily.score_pct (managed-only, history ~v0.1.24)
+//   secure_score  the tenant's OWN Microsoft Secure Score = metric_value.percentage.
+//                 Aggregation only writes daily_agg_secure_score for days OLDER
+//                 than the 7-day raw window, so the recent week lives only in raw
+//                 `secure_score` rows — we UNION the two (raw reduced to one
+//                 reading/day) so the line runs all the way to today.
+//   alerts        resolved alerts are kept forever → deepest history. is_rollup
+//                 rows are excluded from every count; false_positive is excluded
+//                 from the customer-facing "resolved" / TTR series.
+const TRENDS_RANGES = { '7d': 7, '30d': 30, '90d': 90, '1y': 365 };
+
+// Shared trend derivations (also used by the fleet endpoint). Aliased to the
+// historical local names so the call sites below are unchanged.
+const {
+  num: trendNum,
+  median: trendMedian,
+  isoWeekLabel,
+  parseJson: trendParseJson,
+  categoryPct: trendCategoryPct,
+  recommendationsCount: trendRecommendationsCount,
+} = require('../lib/trend-helpers');
+
+router.get('/:id/trends', async (req, res) => {
+  const tenantId = req.params.id;
+  const range = TRENDS_RANGES[req.query.range] ? req.query.range : '30d';
+  const days = TRENDS_RANGES[range];
+  try {
+    const tenant = await db.queryOne('SELECT id FROM tenants WHERE id = ?', [tenantId]);
+    if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
+
+    // 1. Coverage stat (posture, DEMOTED to a number — it saturates at 100% on
+    //    onboarding and flatlines, so it's no longer a chart). Latest posture
+    //    row for the tenant. NULL for audit-only tenants (managed-only table).
+    const covRow = await db.queryOne(
+      `SELECT score_pct, compliant, applicable
+         FROM heatmap_posture_daily
+        WHERE tenant_id = ?
+        ORDER BY snapshot_date DESC
+        LIMIT 1`,
+      [tenantId]
+    );
+    const coverage = (covRow && covRow.score_pct != null)
+      ? { pct: trendNum(covRow.score_pct), compliant: trendNum(covRow.compliant), applicable: trendNum(covRow.applicable) }
+      : null;
+
+    // 2. Secure Score (THE HERO) + its three derived series, all parsed from
+    //    the SAME daily_agg rows. Historical daily aggregates UNION the recent
+    //    raw week (one reading/day) keyed by date, so every series runs to
+    //    today. Each daily_agg row stores the FULL Microsoft payload
+    //    (currentScore, maxScore, percentage, controlScores[],
+    //    averageComparativeScores[]).
+    const ssAgg = await db.queryRows(
+      `SELECT DATE_FORMAT(captured_at, '%Y-%m-%d') AS d, metric_value
+         FROM metric_snapshots
+        WHERE tenant_id = ?
+          AND metric_name = 'daily_agg_secure_score'
+          AND captured_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+        ORDER BY captured_at`,
+      [tenantId]
+    );
+    const ssRawRecent = await db.queryRows(
+      `SELECT DATE_FORMAT(t.captured_at, '%Y-%m-%d') AS d, t.metric_value
+         FROM metric_snapshots t
+         JOIN (
+           SELECT MAX(captured_at) AS last_at
+             FROM metric_snapshots
+            WHERE tenant_id = ? AND metric_name = 'secure_score'
+              AND captured_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+            GROUP BY DATE(captured_at)
+         ) last ON t.captured_at = last.last_at
+        WHERE t.tenant_id = ? AND t.metric_name = 'secure_score'
+        ORDER BY t.captured_at`,
+      [tenantId, tenantId]
+    );
+    const ssByDay = new Map(); // d → full parsed payload (recent raw wins)
+    const collectSs = (row) => { const v = trendParseJson(row.metric_value); if (v) ssByDay.set(row.d, v); };
+    ssAgg.forEach(collectSs);
+    ssRawRecent.forEach(collectSs);
+    const ssDays = [...ssByDay.keys()].sort();
+
+    const secure_score = [];
+    const secure_by_category = [];
+    const recommendations = [];
+    for (const d of ssDays) {
+      const p = ssByDay.get(d);
+      if (p.percentage != null) secure_score.push({ d, pct: trendNum(p.percentage) });
+      const cat = trendCategoryPct(p.controlScores, trendNum(p.maxScore));
+      if (cat) {
+        secure_by_category.push(Object.assign({ d }, cat));
+        const rec = trendRecommendationsCount(p.controlScores);
+        recommendations.push({ d, addressed: rec.addressed, total: rec.total });
+      }
+    }
+
+    // Benchmark + headroom from the latest day's payload (null-safe — TotalSeats
+    // is often the only populated basis; IndustryTypes is null on small tenants).
+    let secure_benchmark = null, points_available = null;
+    if (ssDays.length) {
+      const latest = ssByDay.get(ssDays[ssDays.length - 1]);
+      const acs = Array.isArray(latest.averageComparativeScores) ? latest.averageComparativeScores : [];
+      const totalSeats = acs.find(a => a && a.basis === 'TotalSeats');
+      if (totalSeats && totalSeats.averageScore != null) {
+        secure_benchmark = { basis: 'TotalSeats', pct: Math.round(trendNum(totalSeats.averageScore)) };
+      }
+      if (latest.maxScore != null && latest.currentScore != null) {
+        points_available = Math.max(0, Math.round(trendNum(latest.maxScore) - trendNum(latest.currentScore)));
+      }
+    }
+
+    // 3. Issues resolved by month + severity bucket. "Work done" → status
+    //    'resolved' only (false_positive excluded), bucketed by close month.
+    const resolvedRows = await db.queryRows(
+      `SELECT DATE_FORMAT(closed_at, '%Y-%m') AS m,
+              SUM(severity = 'severe')              AS severe,
+              SUM(severity IN ('high','medium'))    AS high_med,
+              SUM(severity = 'low')                 AS low,
+              SUM(severity = 'info')                AS info
+         FROM alerts
+        WHERE tenant_id = ? AND is_rollup = 0 AND status = 'resolved'
+          AND closed_at IS NOT NULL
+          AND closed_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+        GROUP BY DATE_FORMAT(closed_at, '%Y-%m')
+        ORDER BY m`,
+      [tenantId]
+    );
+    const resolved_by_month = resolvedRows.map(r => ({
+      m: r.m, severe: trendNum(r.severe), high_med: trendNum(r.high_med),
+      low: trendNum(r.low), info: trendNum(r.info),
+    }));
+
+    // 4. Open issues over time — count of alerts still awaiting action at the
+    //    END of each day in range. Reconstructed honestly from triggered_at /
+    //    closed_at (closed_at is set on resolve AND false_positive, NULL on
+    //    reopen). A UTC-free recursive date series keeps the comparison in the
+    //    same session clock the alert timestamps were written with.
+    const openRows = await db.queryRows(
+      `WITH RECURSIVE seq AS (
+         SELECT DATE_SUB(CURDATE(), INTERVAL ${days} DAY) AS d
+         UNION ALL SELECT d + INTERVAL 1 DAY FROM seq WHERE d < CURDATE()
+       )
+       SELECT DATE_FORMAT(seq.d, '%Y-%m-%d') AS d, COUNT(a.id) AS open
+         FROM seq
+         LEFT JOIN alerts a
+           ON a.tenant_id = ?
+          AND a.is_rollup = 0
+          AND a.triggered_at < seq.d + INTERVAL 1 DAY
+          AND (a.closed_at IS NULL OR a.closed_at >= seq.d + INTERVAL 1 DAY)
+        GROUP BY seq.d
+        ORDER BY seq.d`,
+      [tenantId]
+    );
+    const open_over_time = openRows.map(r => ({ d: r.d, open: trendNum(r.open) }));
+
+    // 5. Time to resolve — median hours per ISO week, resolved alerts only.
+    const ttrRows = await db.queryRows(
+      `SELECT YEARWEEK(closed_at, 3) AS yw,
+              TIMESTAMPDIFF(MINUTE, triggered_at, closed_at) AS mins
+         FROM alerts
+        WHERE tenant_id = ? AND is_rollup = 0 AND status = 'resolved'
+          AND closed_at IS NOT NULL AND triggered_at IS NOT NULL
+          AND closed_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)`,
+      [tenantId]
+    );
+    const ttrByWeek = new Map();
+    for (const r of ttrRows) {
+      const mins = trendNum(r.mins);
+      if (mins < 0) continue; // guard against clock-skewed rows
+      if (!ttrByWeek.has(r.yw)) ttrByWeek.set(r.yw, []);
+      ttrByWeek.get(r.yw).push(mins);
+    }
+    const ttr_weekly = [...ttrByWeek.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([yw, mins]) => ({
+        w: isoWeekLabel(yw),
+        median_hours: Math.round((trendMedian(mins) / 60) * 10) / 10,
+      }));
+
+    // 6. Alert volume per ISO week by severity bucket (new alerts fired).
+    const volumeRows = await db.queryRows(
+      `SELECT YEARWEEK(triggered_at, 3) AS yw,
+              SUM(severity = 'severe')           AS severe,
+              SUM(severity IN ('high','medium')) AS high_med,
+              SUM(severity = 'low')              AS low,
+              SUM(severity = 'info')             AS info
+         FROM alerts
+        WHERE tenant_id = ? AND is_rollup = 0
+          AND triggered_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
+        GROUP BY YEARWEEK(triggered_at, 3)
+        ORDER BY YEARWEEK(triggered_at, 3)`,
+      [tenantId]
+    );
+    const volume_weekly = volumeRows.map(r => ({
+      w: isoWeekLabel(r.yw), severe: trendNum(r.severe), high_med: trendNum(r.high_med),
+      low: trendNum(r.low), info: trendNum(r.info),
+    }));
+
+    // 7. Top firing policies — fixed last-90-days window (independent of the
+    //    selected range), human-readable policy name, coloured by the policy's
+    //    dominant severity in that window. Never expose internal policy codes.
+    const polRows = await db.queryRows(
+      `SELECT a.policy_id, p.name AS name, COUNT(*) AS count,
+              SUM(a.severity = 'severe')           AS c_severe,
+              SUM(a.severity IN ('high','medium')) AS c_high_med,
+              SUM(a.severity = 'low')              AS c_low,
+              SUM(a.severity = 'info')             AS c_info
+         FROM alerts a
+         JOIN alert_policies p ON p.id = a.policy_id
+        WHERE a.tenant_id = ? AND a.is_rollup = 0
+          AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+        GROUP BY a.policy_id, p.name
+        ORDER BY count DESC
+        LIMIT 10`,
+      [tenantId]
+    );
+    const top_policies = polRows.map(r => {
+      const buckets = [
+        ['severe', trendNum(r.c_severe)],
+        ['high',   trendNum(r.c_high_med)],
+        ['low',    trendNum(r.c_low)],
+        ['info',   trendNum(r.c_info)],
+      ];
+      buckets.sort((a, b) => b[1] - a[1]);
+      return { name: r.name, count: trendNum(r.count), severity: buckets[0][1] > 0 ? buckets[0][0] : 'info' };
+    });
+
+    // KPI stats — fixed 90-day windows (range-independent), so the headline
+    // numbers don't shrink when the operator narrows the chart range.
+    const statRow = await db.queryOne(
+      `SELECT COUNT(*) AS resolved_90d,
+              SUM(severity IN ('severe','high')) AS severe_high_90d
+         FROM alerts
+        WHERE tenant_id = ? AND is_rollup = 0 AND status = 'resolved'
+          AND closed_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)`,
+      [tenantId]
+    );
+    const openNowRow = await db.queryOne(
+      `SELECT COUNT(*) AS open_now FROM alerts
+        WHERE tenant_id = ? AND is_rollup = 0 AND status IN ('new','investigating')`,
+      [tenantId]
+    );
+
+    // Earliest Secure Score data we hold for this tenant — drives the "since
+    // onboarding" hero label and the honest "collecting…" state when a long
+    // range outruns the data. (Secure Score is the deepest series, back to each
+    // tenant's first poll via the daily aggregate.)
+    const histRow = await db.queryOne(
+      `SELECT DATE_FORMAT(MIN(captured_at), '%Y-%m-%d') AS secure_start
+         FROM metric_snapshots
+        WHERE tenant_id = ? AND metric_name IN ('secure_score','daily_agg_secure_score')`,
+      [tenantId]
+    );
+    const secure_start = histRow?.secure_start || null;
+    const rangeStartRow = await db.queryOne(
+      `SELECT DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL ${days} DAY), '%Y-%m-%d') AS rs`
+    );
+
+    res.json({
+      range,
+      range_start: rangeStartRow?.rs || null,
+      history_start: secure_start,
+      secure_start,
+      coverage,
+      secure_score,
+      secure_benchmark,
+      secure_by_category,
+      recommendations,
+      points_available,
+      resolved_by_month,
+      open_over_time,
+      ttr_weekly,
+      volume_weekly,
+      top_policies,
+      stats: {
+        resolved_90d: trendNum(statRow?.resolved_90d),
+        severe_high_90d: trendNum(statRow?.severe_high_90d),
+        open_now: trendNum(openNowRow?.open_now),
+      },
+    });
+  } catch (err) {
+    console.error('[API] Tenant trends fetch failed:', err.message);
+    res.status(500).json({ error: 'Failed to fetch tenant trends' });
+  }
+});
+
 module.exports = router;

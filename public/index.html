@@ -6,7 +6,11 @@
 <title>Panoptica365 — M365 Monitoring</title>
 <link rel="stylesheet" href="/css/themes/panoptica-dark.css" id="theme-css">
 <link rel="stylesheet" href="/css/panoptica.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Chart.js vendored locally (v4.4.1) — was a cdnjs CDN tag. A commercial
+     product shipped to MSP hosts that may be firewalled/air-gapped from cdnjs
+     would otherwise render zero charts (daily-activity, main-console, Trends)
+     silently. Robust-by-construction: serve our own copy. -->
+<script src="/js/shared/chart.umd.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 </head>
@@ -139,6 +143,7 @@
         <div class="nav-item" data-page="daily-activity"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.daily_activity">Daily Activity</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="alerts"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.alerts">Alerts</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="heatmap"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.heatmap">Heatmap</span><span class="nav-indicator"></span></div>
+        <div class="nav-item" data-page="global-trends"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.global_trends">Trends</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="tenants"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.tenants">Tenants</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="reports"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.reports">Reports</span><span class="nav-indicator"></span></div>
         <div class="nav-item" data-page="sharepoint"><span class="nav-number"></span><span class="nav-label" data-i18n="nav.sharepoint">SharePoint</span><span class="nav-indicator"></span></div>
@@ -443,5 +448,9 @@
   <script src="/js/shared/security-panel.js"></script>
   <!-- Adopt-in-Place — tenant-sourced CA/Intune cards on the CA Policies + Intune tabs. -->
   <script src="/js/shared/adopt.js"></script>
+  <!-- Trends tab — reusable Chart.js render factories (B3). Pure
+       (canvas, series, opts) => Chart functions, also consumed later by the
+       monthly client report (B2) and prospect assessment (B1) PDF renderers. -->
+  <script src="/js/shared/trend-charts.js"></script>
 </body>
 </html>

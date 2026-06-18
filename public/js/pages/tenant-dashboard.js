@@ -21,6 +21,12 @@
   let securityMounted = false;   // Security tab — whether SecurityPanel is currently mounted
   let securityDeepLinkSetting = null;  // heatmap drill-in: setting id to auto-open on first mount
   let securityDeepLinkCategory = null; // heatmap drill-in: category to pre-filter on first mount
+  // Trends tab (B3) — lazy-loaded charts. trendsCharts holds live Chart
+  // instances for teardown; trendsCache memoizes per-range responses so
+  // re-entering a range is instant (Refresh forces a re-pull).
+  let trendsRange = '30d';
+  let trendsCharts = [];
+  const trendsCache = new Map();
 
   // ─── Lifecycle ───
 
@@ -193,11 +199,21 @@
     const arView = el('td-access-review-view');
     if (arView) arView.style.display = 'none';
 
+    const trendsView = el('td-trends-view');
+    if (trendsView) trendsView.style.display = 'none';
+    // Tear down Trend charts whenever we leave the tab so the canvases free
+    // their 2D contexts and the theme observer never redraws a hidden subtree
+    // (mirrors the Security panel unmount discipline above).
+    if (currentView !== 'trends') destroyTrendCharts();
+
     if (currentView === 'overview') {
       grid.style.display = '';
       if (digestCard) digestCard.style.display = '';
       if (askClaude) askClaude.style.display = '';
       if (listPanels) listPanels.style.display = '';
+    } else if (currentView === 'trends') {
+      if (trendsView) trendsView.style.display = 'block';
+      loadTrends();
     } else if (currentView === 'alerts') {
       alertsView.style.display = 'block';
       loadTenantAlerts();
@@ -2456,6 +2472,346 @@
     return Number(n).toLocaleString(_numLocale);
   }
   function esc(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+  // ═══════════════════════════════════════════════════════════════════════
+  // Trends tab (Feature B3) — posture + operations time-series. Read-only, all
+  // RBAC tiers. One GET /api/tenants/:id/trends?range= round-trip feeds seven
+  // charts drawn by the shared, report-reusable Panoptica.TrendCharts factories.
+  // Lazy-loaded on first activation; charts are destroyed on tab leave.
+  // ═══════════════════════════════════════════════════════════════════════
+  function trendT(key, params) { return window.t('tenant_dashboard.trends.' + key, params); }
+
+  function destroyTrendCharts() {
+    if (trendsCharts && trendsCharts.length) {
+      trendsCharts.forEach(c => { try { c.destroy(); } catch (_) {} });
+    }
+    trendsCharts = [];
+  }
+
+  // Cache key includes the tenant — the partial (and this cache) outlive a
+  // tenant switch, so keying by range alone would serve the wrong tenant's data.
+  function trendCacheKey() { return `${tenantId}:${trendsRange}`; }
+
+  function loadTrends() {
+    // Re-wire on every activation with idempotent .onclick assignment: the
+    // dashboard partial is re-injected per navigation, so the pill/refresh
+    // elements are fresh DOM each time (mirrors loadAccessReview's pattern —
+    // a once-only guard would leave the controls dead after a tenant switch).
+    document.querySelectorAll('#td-trends-view .td-trend-pill').forEach(btn => {
+      btn.onclick = () => {
+        const r = btn.dataset.range;
+        if (r === trendsRange) return;
+        trendsRange = r;
+        document.querySelectorAll('#td-trends-view .td-trend-pill').forEach(b =>
+          b.classList.toggle('active', b.dataset.range === r));
+        fetchAndRenderTrends();
+      };
+    });
+    const refresh = el('td-trend-refresh-btn');
+    if (refresh) refresh.onclick = () => fetchAndRenderTrends(true);
+    document.querySelectorAll('#td-trends-view .td-trend-pill').forEach(b =>
+      b.classList.toggle('active', b.dataset.range === trendsRange));
+
+    // Re-resolve chart colours on a light/dark theme switch: PanopticaTheme
+    // swaps the #theme-css stylesheet href; observe it once (window-scoped flag
+    // so navigations never stack observers) and redraw from cache while the tab
+    // is visible (renderTrends re-reads the CSS vars).
+    if (!window.__panTrendThemeObserver && window.MutationObserver) {
+      const themeLink = document.getElementById('theme-css');
+      if (themeLink) {
+        window.__panTrendThemeObserver = new MutationObserver(() => {
+          const tv = el('td-trends-view');
+          if (tv && tv.style.display !== 'none' && trendsCache.has(trendCacheKey())) {
+            renderTrends(trendsCache.get(trendCacheKey()));
+          }
+        });
+        window.__panTrendThemeObserver.observe(themeLink, { attributes: true, attributeFilter: ['href'] });
+      }
+    }
+
+    fetchAndRenderTrends();
+  }
+
+  async function fetchAndRenderTrends(force) {
+    const status = el('td-trend-status');
+    const key = trendCacheKey();
+    if (!force && trendsCache.has(key)) {
+      renderTrends(trendsCache.get(key));
+      return;
+    }
+    if (status) status.textContent = trendT('loading');
+    try {
+      const data = await Panoptica.api(`/api/tenants/${tenantId}/trends?range=${encodeURIComponent(trendsRange)}`);
+      trendsCache.set(key, data);
+      // Guard against a late response landing after the operator left the tab
+      // or switched tenants/range mid-flight.
+      if (currentView === 'trends' && key === trendCacheKey()) {
+        renderTrends(data);
+        if (status) status.textContent = '';
+      }
+    } catch (e) {
+      destroyTrendCharts();
+      if (status) status.textContent = trendT('load_failed');
+    }
+  }
+
+  // ── small formatters (string-based to avoid Date/timezone surprises) ──
+  function trendFmtDay(d) {
+    const p = String(d).split('-');
+    return p.length === 3 ? `${Number(p[1])}/${Number(p[2])}` : String(d);
+  }
+  function trendCurLang() {
+    try { return (window.PanopticaI18n && PanopticaI18n.currentLang && PanopticaI18n.currentLang()) || 'en'; }
+    catch (_) { return 'en'; }
+  }
+  function trendFmtMonth(m) {
+    try {
+      const [y, mo] = String(m).split('-').map(Number);
+      return new Date(Date.UTC(y, mo - 1, 1)).toLocaleDateString(trendCurLang(), { month: 'short', year: '2-digit', timeZone: 'UTC' });
+    } catch (_) { return String(m); }
+  }
+  function trendFmtDate(d) {
+    try {
+      const [y, mo, day] = String(d).split('-').map(Number);
+      return new Date(Date.UTC(y, mo - 1, day)).toLocaleDateString(trendCurLang(), { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+    } catch (_) { return String(d); }
+  }
+  // True when the requested range reaches further back than the data we hold
+  // (more than a few days), i.e. the honest "collecting…" condition.
+  function trendIsCollecting(rangeStart, seriesStart) {
+    if (!rangeStart || !seriesStart) return false;
+    return (Date.parse(seriesStart) - Date.parse(rangeStart)) / 86400000 > 3;
+  }
+
+  function trendSinceLabel(series, rangeStart, seriesStart) {
+    if (!series.length) return '';
+    const first = Math.round(series[0].pct);
+    return trendIsCollecting(rangeStart, seriesStart)
+      ? trendT('kpi_since_onboarding', { pct: first })
+      : trendT('kpi_vs_start', { pct: first });
+  }
+
+  // Coverage reassurance strip (posture demoted to a stat). Hidden if no
+  // posture data (audit-only tenants, or pre-history).
+  function trendSetCoverage(cov, stats) {
+    const node = el('td-trend-coverage');
+    if (!node) return;
+    if (!cov || cov.pct == null) { node.style.display = 'none'; node.innerHTML = ''; return; }
+    node.style.display = '';
+    const s = stats || {};
+    node.innerHTML =
+      `<span class="cov-badge">${Math.round(cov.pct)}%</span>` +
+      `<span class="cov-text"><b>${esc(trendT('coverage_label'))}</b> — ${esc(trendT('coverage_detail', { compliant: Number(cov.compliant) || 0, applicable: Number(cov.applicable) || 0 }))}</span>` +
+      `<span class="cov-mini">` +
+        `<span><span class="n">${Number(s.resolved_90d) || 0}</span><span class="l">${esc(trendT('stat_resolved_90d'))}</span></span>` +
+        `<span><span class="n">${Number(s.open_now) || 0}</span><span class="l">${esc(trendT('stat_open_now'))}</span></span>` +
+      `</span>`;
+  }
+
+  // Secure Score hero KPI: current %, delta since onboarding/range start, and a
+  // peer-benchmark pill (only when the benchmark is present).
+  function trendSetSecureKpi(series, benchmark, sinceLabel) {
+    const node = el('td-trend-secure-kpi');
+    if (!node) return;
+    if (!series.length) { node.innerHTML = `<span class="big">—</span>`; return; }
+    const cur = Math.round(series[series.length - 1].pct);
+    const delta = Math.round((series[series.length - 1].pct - series[0].pct) * 10) / 10;
+    const up = delta >= 0;
+    let html =
+      `<span class="big">${cur}%</span>` +
+      `<span class="delta ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(delta)} ${esc(trendT('unit_pts'))}</span>` +
+      `<span class="since">${esc(sinceLabel)}</span>`;
+    if (benchmark && benchmark.pct != null) {
+      const diff = cur - Math.round(benchmark.pct);
+      html += `<span class="bench">${esc(trendT('benchmark_pill', { pts: (diff >= 0 ? '+' : '') + diff, bench: Math.round(benchmark.pct) }))}</span>`;
+    }
+    node.innerHTML = html;
+  }
+
+  // Static legend under the hero (solid "this tenant" + dashed benchmark).
+  function renderSecureLegend(hasBenchmark) {
+    const node = el('td-trend-secure-legend');
+    if (!node) return;
+    let html = `<span><i style="background:var(--p-secondary)"></i>${esc(trendT('legend_this_tenant'))}</span>`;
+    if (hasBenchmark) html += `<span><i class="dash"></i>${esc(trendT('legend_benchmark'))}</span>`;
+    node.innerHTML = html;
+  }
+
+  // Localise a Microsoft control category (Identity/Data/Device/Apps/…),
+  // falling back to the raw Graph value for any category we haven't keyed.
+  function trendCatLabel(cat) {
+    const slug = String(cat).toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const key = 'tenant_dashboard.trends.cat_' + slug;
+    const api = window.PanopticaI18n;
+    if (api && api.tOrFallback) return api.tOrFallback(key, String(cat));
+    const v = window.t(key);
+    return v === key ? String(cat) : v;
+  }
+
+  // Recommendations KPI: addressed / total, delta, remaining + points available.
+  function trendSetRecKpi(recs, pointsAvailable) {
+    const node = el('td-trend-recommendations-kpi');
+    if (!node) return;
+    const valid = (recs || []).filter(r => r && r.addressed != null);
+    if (!valid.length) { node.innerHTML = `<span class="big">—</span>`; return; }
+    const last = valid[valid.length - 1];
+    const delta = last.addressed - valid[0].addressed;
+    const up = delta >= 0;
+    const remaining = Math.max(0, (last.total || 0) - last.addressed);
+    node.innerHTML =
+      `<span class="big">${last.addressed}<span class="frac">/${last.total}</span></span>` +
+      `<span class="delta ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(delta)}</span>` +
+      `<span class="since">${esc(trendT('rec_remaining', { remaining, pts: pointsAvailable != null ? pointsAvailable : 0 }))}</span>`;
+  }
+
+  // When Secure Score history exists but no control carried scoreInPercentage,
+  // the per-recommendation derivation is unavailable — say so honestly.
+  function trendSetRecNote(recs, secureSeries) {
+    const note = el('td-trend-recommendations-note');
+    if (!note) return;
+    const valid = (recs || []).filter(r => r && r.addressed != null);
+    if (!valid.length && secureSeries.length) {
+      note.textContent = trendT('rec_unavailable');
+      note.style.display = '';
+    } else {
+      note.style.display = 'none';
+      note.textContent = '';
+    }
+  }
+
+  function trendSetTtrKpi(elId, ttr) {
+    const node = el(elId);
+    if (!node) return;
+    if (!ttr.length) { node.innerHTML = `<span class="big">—</span>`; return; }
+    const cur = ttr[ttr.length - 1].median_hours;
+    const first = ttr[0].median_hours;
+    let deltaHtml = '';
+    if (ttr.length > 1 && first > 0) {
+      const improvePct = Math.round(((first - cur) / first) * 100); // lower TTR = better
+      const improving = improvePct >= 0;
+      deltaHtml = `<span class="delta ${improving ? 'up' : 'down'}">${improving ? '▼' : '▲'} ${Math.abs(improvePct)}%</span>`;
+    }
+    node.innerHTML =
+      `<span class="big">${cur}${esc(trendT('unit_hours'))}</span>${deltaHtml}` +
+      `<span class="since">${esc(trendT('kpi_median'))}</span>`;
+  }
+
+  function trendSetResolvedStats(stats) {
+    const node = el('td-trend-resolved-stats');
+    if (!node) return;
+    const s = stats || {};
+    const item = (n, l) => `<div class="stat"><div class="n">${Number(n) || 0}</div><div class="l">${esc(l)}</div></div>`;
+    node.innerHTML =
+      item(s.resolved_90d, trendT('stat_resolved_90d')) +
+      item(s.severe_high_90d, trendT('stat_severe_high')) +
+      item(s.open_now, trendT('stat_open_now'));
+  }
+
+  function trendSetCollectingNote(id, rangeStart, seriesStart) {
+    const note = el(id);
+    if (!note) return;
+    if (trendIsCollecting(rangeStart, seriesStart)) {
+      note.textContent = trendT('collecting_note', { date: trendFmtDate(seriesStart) });
+      note.style.display = '';
+    } else {
+      note.style.display = 'none';
+      note.textContent = '';
+    }
+  }
+
+  function renderTrends(data) {
+    destroyTrendCharts();
+    const TC = window.Panoptica && Panoptica.TrendCharts;
+    if (!TC || !data) return;
+    const C = TC.readColors();
+    const legendLabels = {
+      severe: trendT('legend_severe'), high_med: trendT('legend_high_med'),
+      low: trendT('legend_low'), info: trendT('legend_info'),
+    };
+    const rangeStart = data.range_start;
+
+    // Coverage reassurance strip (posture, demoted to a stat).
+    trendSetCoverage(data.coverage, data.stats);
+
+    // 1. Microsoft Secure Score — HERO: solid score line + dashed flat peer
+    //    benchmark (TotalSeats). Benchmark line/pill omitted when null.
+    const secure = data.secure_score || [];
+    const bench = data.secure_benchmark;
+    const secureLabels = secure.map(p => trendFmtDay(p.d));
+    const lines = [{ label: trendT('legend_this_tenant'), data: secure.map(p => p.pct), color: C.secondary, fill: true, unit: '%', borderWidth: 3 }];
+    if (bench && bench.pct != null) {
+      lines.push({ label: trendT('legend_benchmark'), data: secure.map(() => Math.round(bench.pct)), color: C.secondary, dashed: true, unit: '%' });
+    }
+    trendsCharts.push(TC.multiLine(el('td-trend-secure'), { labels: secureLabels, lines }, { pct: true, beginAtZero: false }));
+    trendSetSecureKpi(secure, bench, trendSinceLabel(secure, rangeStart, data.secure_start));
+    renderSecureLegend(!!(bench && bench.pct != null));
+    trendSetCollectingNote('td-trend-secure-note', rangeStart, data.secure_start);
+
+    // 2. Secure Score by category (stacked area, %-of-score; categories
+    //    data-driven from Microsoft's controlScores, ordered + coloured).
+    const cats = data.secure_by_category || [];
+    const catKeys = [];
+    for (const row of cats) for (const k of Object.keys(row)) if (k !== 'd' && catKeys.indexOf(k) < 0) catKeys.push(k);
+    const CAT_ORDER = ['identity', 'data', 'device', 'apps', 'infrastructure'];
+    catKeys.sort((a, b) => {
+      const ia = CAT_ORDER.indexOf(a.toLowerCase()), ib = CAT_ORDER.indexOf(b.toLowerCase());
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    const CAT_COLORS = { identity: C.accent, data: C.success, device: C.warn, apps: C.secondary, infrastructure: C.info };
+    const palette = [C.accent, C.success, C.warn, C.secondary, C.info];
+    const catDatasets = catKeys.map((k, i) => ({
+      label: trendCatLabel(k),
+      data: cats.map(r => (r[k] != null ? r[k] : 0)),
+      color: CAT_COLORS[k.toLowerCase()] || palette[i % palette.length],
+    }));
+    trendsCharts.push(TC.stackedArea(el('td-trend-category'),
+      { labels: cats.map(r => trendFmtDay(r.d)), datasets: catDatasets }, { pct: true, yMax: 100 }));
+
+    // 3. Security recommendations addressed (count over time).
+    const recsAll = data.recommendations || [];
+    const recs = recsAll.filter(r => r && r.addressed != null);
+    trendsCharts.push(TC.lineTrend(el('td-trend-recommendations'),
+      { labels: recs.map(r => trendFmtDay(r.d)), data: recs.map(r => r.addressed) },
+      { color: C.success, label: trendT('recommendations_title') }));
+    trendSetRecKpi(recsAll, data.points_available);
+    trendSetRecNote(recsAll, secure);
+
+    // 4. Issues resolved by month (stacked severity)
+    const rbm = data.resolved_by_month || [];
+    trendsCharts.push(TC.stackedSeverity(el('td-trend-resolved'), {
+      labels: rbm.map(r => trendFmtMonth(r.m)),
+      severe: rbm.map(r => r.severe), high_med: rbm.map(r => r.high_med),
+      low: rbm.map(r => r.low), info: rbm.map(r => r.info),
+    }, { legendLabels }));
+    trendSetResolvedStats(data.stats);
+
+    // 4. Open issues over time (success/green area)
+    const oot = data.open_over_time || [];
+    trendsCharts.push(TC.lineTrend(el('td-trend-open'),
+      { labels: oot.map(p => trendFmtDay(p.d)), data: oot.map(p => p.open) },
+      { color: C.success, label: trendT('open_title') }));
+
+    // 5. Time to resolve (median hours/week)
+    const ttr = data.ttr_weekly || [];
+    trendsCharts.push(TC.lineTrend(el('td-trend-ttr'),
+      { labels: ttr.map(p => p.w), data: ttr.map(p => p.median_hours) },
+      { color: C.accent, unit: 'h', label: trendT('ttr_title') }));
+    trendSetTtrKpi('td-trend-ttr-kpi', ttr);
+
+    // 6. Alert volume per week (stacked severity)
+    const vol = data.volume_weekly || [];
+    trendsCharts.push(TC.stackedSeverity(el('td-trend-volume'), {
+      labels: vol.map(v => v.w),
+      severe: vol.map(v => v.severe), high_med: vol.map(v => v.high_med),
+      low: vol.map(v => v.low), info: vol.map(v => v.info),
+    }, { legendLabels }));
+
+    // 7. Top firing policies (ranked horizontal, coloured by dominant severity)
+    const pol = data.top_policies || [];
+    trendsCharts.push(TC.rankedBar(el('td-trend-policies'),
+      { labels: pol.map(p => p.name), data: pol.map(p => p.count), severities: pol.map(p => p.severity) },
+      { unitLabel: trendT('policies_unit') }));
+  }
+
   function el(id) { return document.getElementById(id); }
 
   // Backstop for rows polled before the fetcher started writing

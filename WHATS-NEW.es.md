@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.14 — 2026-06-18
+
+### ¡Sus datos se ven hermosos!
+
+Desde el día en que incorporó cada inquilino, Panoptica365 ha estado registrando discretamente una instantánea diaria de su seguridad. Esta versión convierte todo ese historial en gráficos — para que por fin pueda *ver* cómo mejora la seguridad con el tiempo, no solo comprobar dónde está hoy.
+
+Cada panel de inquilino tiene ahora una pestaña **Tendencias**, justo al lado de **Resumen**. Cuenta la historia de ese inquilino durante el período que usted elija — desde 7 días hasta un año completo: su **puntuación de seguridad de Microsoft** comparada con la referencia de las empresas de tamaño similar, la puntuación desglosada **por categoría**, cuántas de las recomendaciones de Microsoft ha **aplicado** con el tiempo, los **problemas detectados y resueltos** cada mes, cuánto tardaron en despejarse, el volumen de alertas por semana y las políticas que más se activan. Está dispuesta como *lo que ve el cliente* arriba y *lo que ve el proveedor* abajo — lista para incluir directamente en una revisión con el cliente.
+
+También hay una página **Tendencias** de toda la cartera, nueva, en la barra lateral, justo después de **Mapa de calor**. Eleva la misma idea a toda su cartera de **inquilinos gestionados a la vez**: una **puntuación de seguridad** de la cartera con una banda sombreada que muestra su mejor y su peor inquilino cada día junto con la referencia de Microsoft, cómo ha crecido la cartera gestionada, las recomendaciones aún pendientes en todos los clientes, dónde es más débil la cartera por categoría y el panorama completo de las operaciones de alertas — resueltos, abiertos, tiempo de resolución, volumen y sus políticas más ruidosas en todos los clientes. Cuando incorpora inquilinos a mitad del período, una línea aparte mantiene constantes a sus clientes existentes, para que un nuevo inquilino con puntuación baja no haga parecer que todos retrocedieron.
+
+Ambas páginas leen datos que Panoptica365 ya recopila, así que se abren al instante y no añaden carga a Microsoft. Un inquilino recién incorporado todavía no tendrá mucha línea que trazar — déle unas semanas y el panorama se completa. Una nueva guía, **Paneles de tendencias**, en **Aprender → Guías de Panoptica365**, recorre cada gráfico de ambas páginas.
+
+---
+
 ## Versión 0.2.13 — 2026-06-17
 
 ### Cuadro de diálogo de acciones más cuidado para las configuraciones de origen del inquilino
