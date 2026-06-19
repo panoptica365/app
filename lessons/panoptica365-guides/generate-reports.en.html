@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generate reports — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Generate reports">
+<meta name="lesson:subtitle" content="Four report types and when to use each: posture for the QBR, documentation for the binder, quick assessment for the prospect.">
+<meta name="lesson:icon" content="file-text">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Generate reports</span></div>
+  <h1>Generate reports</h1>
+  <p class="dek">Four report types and when to use each: posture for the QBR, documentation for the binder, quick assessment for the prospect.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Four report types fan out from Panoptica365: Security Posture, Configuration Documentation, Quick Assessment, and Tenant Snapshot.">
+      <defs>
+        <radialGradient id="grBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="grDoc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="grArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#grBg)"/>
+
+      <!-- source: the data Panoptica365 already holds -->
+      <g transform="translate(150,170)">
+        <circle r="64" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle r="64" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <g stroke="#5CCBF4" stroke-width="2" fill="none" opacity="0.85">
+          <ellipse cx="0" cy="-16" rx="30" ry="11"/>
+          <path d="M-30 -16 V16 a30 11 0 0 0 60 0 V-16"/>
+          <path d="M-30 0 a30 11 0 0 0 60 0"/>
+        </g>
+        <text x="0" y="92" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">PANOPTICA365 DATA</text>
+      </g>
+
+      <!-- fan-out spokes -->
+      <path d="M222 144 H360" stroke="#335F92" stroke-width="2" marker-end="url(#grArr)"/>
+      <path d="M222 162 H360" stroke="#335F92" stroke-width="2" marker-end="url(#grArr)"/>
+      <path d="M222 182 H360" stroke="#335F92" stroke-width="2" marker-end="url(#grArr)"/>
+      <path d="M222 200 H360" stroke="#335F92" stroke-width="2" marker-end="url(#grArr)"/>
+
+      <!-- four outputs -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(392,40)">
+          <rect width="320" height="56" rx="9" fill="url(#grDoc)" stroke="#2A6F9E"/>
+          <text x="20" y="26" fill="#A8E1F8" font-size="15" font-weight="600">Security Posture</text>
+          <text x="20" y="44" fill="#6B85A6" font-size="12">PDF · time range</text>
+          <rect x="280" y="18" width="20" height="20" rx="3" fill="none" stroke="#52708F"/>
+        </g>
+        <g transform="translate(392,108)">
+          <rect width="320" height="56" rx="9" fill="url(#grDoc)" stroke="#2A6F9E"/>
+          <text x="20" y="26" fill="#A8E1F8" font-size="15" font-weight="600">Configuration Documentation</text>
+          <text x="20" y="44" fill="#6B85A6" font-size="12">PDF · point-in-time</text>
+          <rect x="280" y="18" width="20" height="20" rx="3" fill="none" stroke="#52708F"/>
+        </g>
+        <g transform="translate(392,176)">
+          <rect width="320" height="56" rx="9" fill="url(#grDoc)" stroke="#2A6F9E"/>
+          <text x="20" y="26" fill="#A8E1F8" font-size="15" font-weight="600">Quick Assessment</text>
+          <text x="20" y="44" fill="#6B85A6" font-size="12">PDF · findings-first</text>
+          <rect x="280" y="18" width="20" height="20" rx="3" fill="none" stroke="#52708F"/>
+        </g>
+        <g transform="translate(392,244)">
+          <rect width="320" height="56" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="26" fill="#C4D4E8" font-size="15" font-weight="600">Tenant Snapshot</text>
+          <text x="20" y="44" fill="#6B85A6" font-size="12">ZIP · raw data export</text>
+          <rect x="280" y="18" width="20" height="20" rx="3" fill="none" stroke="#52708F"/>
+        </g>
+      </g>
+
+      <!-- branded deliverable -->
+      <g transform="translate(880,170)">
+        <rect x="-66" y="-92" width="132" height="184" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="-66" y="-92" width="132" height="34" rx="10" fill="#102A4C"/>
+        <circle cx="-44" cy="-75" r="8" fill="#5CCBF4"/>
+        <rect x="-28" y="-79" width="60" height="8" rx="4" fill="#2A7FA3"/>
+        <rect x="-46" y="-38" width="92" height="6" rx="3" fill="#274B72"/>
+        <rect x="-46" y="-22" width="92" height="6" rx="3" fill="#274B72"/>
+        <rect x="-46" y="-6" width="64" height="6" rx="3" fill="#274B72"/>
+        <rect x="-46" y="16" width="92" height="40" rx="4" fill="#102A4C" stroke="#2A7FA3"/>
+        <path d="M-40 50 L-22 34 L-6 44 L14 22 L40 38" fill="none" stroke="#2EE8A0" stroke-width="2"/>
+        <rect x="-46" y="68" width="50" height="6" rx="3" fill="#1F3C5C"/>
+        <text x="0" y="116" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">YOUR BRANDING</text>
+      </g>
+    </svg>
+    <figcaption>Four deliverables from the same data — three branded PDFs and a raw export.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Monitoring earns its keep quietly; reports are where the customer <em>sees</em> the work. <strong>Reports</strong> (sidebar) generates branded PDF deliverables from the data Panoptica365 already holds — no screenshot-and-paste.</p>
+  </div>
+
+  <h2>The four types</h2>
+
+  <p><strong>Security Posture Report (PDF).</strong> The flagship customer deliverable: Secure Score and trends, Conditional Access coverage, alert activity over the selected period, charts, and an AI-written analysis of the tenant's posture. Takes a <strong>time range</strong> — last 7, 30, or 90 days. This is your QBR document.</p>
+
+  <p><strong>Configuration Documentation (PDF).</strong> A point-in-time snapshot of the tenant's configuration, organized like the dashboard: identity, access policies, devices, email, collaboration. No time range — it documents <em>now</em>. This is the binder document: onboarding records, audit and insurance evidence, offboarding handovers. When a previous snapshot exists it's loaded for comparison.</p>
+
+  <p><strong>Quick Assessment (PDF).</strong> Built for the audit-only / prospect scenario: a concise, findings-first assessment of a tenant's current state. Before generating, an optional <strong>context box</strong> lets you tell the AI what kind of organization this is — <em>"e.g. 40-person accounting firm"</em> — which sharpens the recommendations considerably. Fill it in; two sentences of context noticeably improve the output. Pairs naturally with audit-only tenants and their 14-day window.</p>
+
+  <p><strong>Tenant Snapshot (ZIP).</strong> The raw data export — for archival, your own tooling, or handing the data itself over.</p>
+
+  <h2>Generating</h2>
+
+  <ol>
+    <li>Pick the <strong>tenant</strong>.</li>
+    <li>Pick the <strong>report type</strong>.</li>
+    <li>Pick the <strong>time range</strong> (Security Posture only — the others are point-in-time and the selector disables itself).</li>
+    <li>Click <strong>Generate Report</strong>.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="The four-step generate flow: pick tenant, pick report type, pick time range, click Generate Report.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="gfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <line x1="56" y1="75" x2="664" y2="75" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <circle cx="100" cy="60" r="17" fill="#0E2640" stroke="#5CCBF4"/><text x="100" y="65" fill="#7DD9F9" font-size="14" font-weight="700">1</text>
+          <text x="100" y="106" fill="#C4D4E8" font-size="13.5" font-weight="600">Tenant</text>
+        </g>
+        <path d="M133 60 H167" stroke="#335F92" stroke-width="2" marker-end="url(#gfArr)"/>
+        <g>
+          <circle cx="260" cy="60" r="17" fill="#0E2640" stroke="#5CCBF4"/><text x="260" y="65" fill="#7DD9F9" font-size="14" font-weight="700">2</text>
+          <text x="260" y="106" fill="#C4D4E8" font-size="13.5" font-weight="600">Report type</text>
+        </g>
+        <path d="M293 60 H327" stroke="#335F92" stroke-width="2" marker-end="url(#gfArr)"/>
+        <g>
+          <circle cx="420" cy="60" r="17" fill="#0E2236" stroke="#52708F"/><text x="420" y="65" fill="#A8E1F8" font-size="14" font-weight="700">3</text>
+          <text x="420" y="106" fill="#C4D4E8" font-size="13.5" font-weight="600">Time range</text>
+          <text x="420" y="126" fill="#6B85A6" font-size="11.5">Posture only</text>
+        </g>
+        <path d="M453 60 H487" stroke="#335F92" stroke-width="2" marker-end="url(#gfArr)"/>
+        <g>
+          <rect x="540" y="44" width="124" height="34" rx="17" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+          <text x="602" y="66" fill="#7DD9F9" font-size="13" font-weight="700">Generate Report</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Tenant, type, time range, generate — the selector greys out itself when it doesn't apply.</figcaption>
+  </figure>
+
+  <p>A progress modal walks the stages — gathering data, fetching CA policies, rendering charts, AI analysis, assembling — typically a minute or two depending on type. Finished reports land in the <strong>history list</strong> below with a download button. The history is per-session: download what you generate; regeneration is cheap anyway.</p>
+
+  <h2>Branding and language</h2>
+
+  <p>Reports carry your branding — company name and logo on the cover and footers — configured once by an Admin in <strong>Settings → Report Branding</strong> (transparent PNG, max 2 MB). Do this before the first customer-facing report goes out.</p>
+
+  <p>Reports are generated in the <strong>tenant's language</strong> (the Language field on the tenant), in all three locales — set a French-speaking customer's tenant to <em>fr</em> once, and every deliverable comes out in French.</p>
+
+  <h2>Choosing, in practice</h2>
+
+  <ul>
+    <li>Prospect, pre-sales: <strong>Quick Assessment</strong> (with context filled in).</li>
+    <li>New customer, end of onboarding: <strong>Configuration Documentation</strong> — the "before" picture.</li>
+    <li>Quarterly review: <strong>Security Posture</strong>, 90 days.</li>
+    <li>Insurance questionnaire or audit: <strong>Configuration Documentation</strong>, generated that day.</li>
+    <li>Offboarding: <strong>Configuration Documentation</strong> + <strong>Tenant Snapshot</strong>, then archive.</li>
+  </ul>
+
+  <p>The quiet win: a documented-configuration deliverable per customer per quarter used to be hours of manual screenshotting. Here it's a dropdown and a minute of progress bar — so actually do it quarterly.</p>
+
+</div>
+</body>
+</html>

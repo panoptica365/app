@@ -1,0 +1,31 @@
+{
+  "card_number": 7,
+  "slug": "the-human-layer",
+  "icon": "heart-handshake",
+  "renderer": "html",
+  "titles": {
+    "en": "The Human Layer",
+    "fr": "La couche humaine",
+    "es": "La capa humana"
+  },
+  "subtitles": {
+    "en": "The people side of the work: attention, trust, communication, burnout, and growth — for the owner and for the team.",
+    "fr": "Le côté humain du métier : l'attention, la confiance, la communication, l'épuisement et la croissance — pour le dirigeant comme pour l'équipe.",
+    "es": "El lado humano del trabajo: atención, confianza, comunicación, agotamiento y crecimiento, tanto para el dueño como para el equipo."
+  },
+  "lessons": [
+    "start-here",
+    "own-your-circle",
+    "first-things-first",
+    "beating-burnout",
+    "say-the-hard-thing",
+    "no-blame",
+    "appreciation-and-recognition",
+    "trust-is-the-real-product",
+    "one-team-not-stars",
+    "why-this-work-matters",
+    "grow-on-purpose",
+    "know-what-enough-looks-like"
+  ],
+  "_note": "renderer:html flags this topic for the dedicated HTML lesson renderer (not the markdown pipeline). EN + FR + ES lesson files present (.en/.fr/.es.html). Topic title/subtitle localized in all three."
+}

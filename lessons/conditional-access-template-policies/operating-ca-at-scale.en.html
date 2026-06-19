@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operating CA at scale — drift, exclusions, lifecycle — Conditional Access template policies</title>
+<meta name="lesson:title" content="Operating CA at scale — drift, exclusions, lifecycle">
+<meta name="lesson:subtitle" content="How CA policies decay over years, and how drift detection and expiring exclusions keep them trustworthy.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Operating CA at scale</span></div>
+  <h1>Operating CA at scale — drift, exclusions, lifecycle</h1>
+  <p class="dek">How CA policies decay over years, and how drift detection and expiring exclusions keep them trustworthy.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A policy deployed in 2022 shown enabled, while underneath it nineteen exclusion entries quietly accumulate over four years.">
+      <defs>
+        <radialGradient id="caBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#13294A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="caFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#52708F"/><stop offset="100%" stop-color="#FFC04D"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#caBg)"/>
+
+      <!-- The policy badge: still "enabled" -->
+      <g transform="translate(150,86)">
+        <rect x="0" y="0" width="320" height="168" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <text x="24" y="40" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Require MFA — all users</text>
+        <g transform="translate(24,62)">
+          <circle cx="7" cy="7" r="7" fill="#2EE8A0"/>
+          <text x="24" y="12" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">ENABLED</text>
+        </g>
+        <text x="24" y="106" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Compliance report: MFA enforced</text>
+        <text x="24" y="128" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">In place since 2022</text>
+      </g>
+
+      <!-- The silent accumulation underneath -->
+      <text x="660" y="74" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">WHAT THE REPORT DOESN'T SHOW</text>
+      <g transform="translate(620,92)">
+        <line x1="20" y1="0" x2="20" y2="180" stroke="#274B72" stroke-width="1.5"/>
+        <!-- 19 exclusion ticks accumulating left (early) to right (recent) -->
+        <g fill="#FFC04D" opacity="0.85">
+          <rect x="44" y="14" width="18" height="18" rx="3"/>
+          <rect x="70" y="14" width="18" height="18" rx="3"/>
+          <rect x="96" y="14" width="18" height="18" rx="3"/>
+          <rect x="122" y="14" width="18" height="18" rx="3"/>
+          <rect x="148" y="14" width="18" height="18" rx="3"/>
+          <rect x="174" y="14" width="18" height="18" rx="3"/>
+          <rect x="200" y="14" width="18" height="18" rx="3"/>
+          <rect x="226" y="14" width="18" height="18" rx="3"/>
+          <rect x="252" y="14" width="18" height="18" rx="3"/>
+          <rect x="278" y="14" width="18" height="18" rx="3"/>
+          <rect x="44" y="40" width="18" height="18" rx="3"/>
+          <rect x="70" y="40" width="18" height="18" rx="3"/>
+          <rect x="96" y="40" width="18" height="18" rx="3"/>
+          <rect x="122" y="40" width="18" height="18" rx="3"/>
+          <rect x="148" y="40" width="18" height="18" rx="3"/>
+          <rect x="174" y="40" width="18" height="18" rx="3"/>
+          <rect x="200" y="40" width="18" height="18" rx="3"/>
+          <rect x="226" y="40" width="18" height="18" rx="3"/>
+          <rect x="252" y="40" width="18" height="18" rx="3"/>
+        </g>
+        <text x="44" y="92" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">19 exclusions</text>
+        <text x="44" y="118" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13">accumulated over four years · a third of the user base</text>
+        <text x="44" y="158" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">3 departed · 2 retired service account · 8 pandemic one-offs</text>
+      </g>
+    </svg>
+    <figcaption>The policy is on. The report says "enforced." Underneath, the exclusions nobody remembers keep stacking up.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>In April 2026, a Calgary MSP discovered that one of their long-time customers — a small accounting firm with thirty users — had been operating with a "Require MFA for all users" policy that had quietly accumulated 19 exclusion entries over four years. Three of the excluded users had left the company. Two were excluded for a service account that had been retired in 2023. Eight were one-time exceptions added during the pandemic and never removed.</p>
+
+  <p>The policy was <em>enabled</em>. The compliance report showed <em>MFA enforced for all users</em>. The audit trail said <em>the policy has been in place since 2022</em>. None of those things told the whole truth. The policy was technically on, but a third of the user base had quietly accumulated exemptions that nobody remembered.</p>
+
+  <p>This is the operational reality of running Conditional Access over years rather than weeks. The eight previous lessons in card 3 explained what each template does and how to deploy it. This lesson is about what happens next — how a CA policy set evolves, decays, and stays trustworthy across years of customer-tenant operation.</p>
+
+  <p>Three subjects: drift, exclusions, and lifecycle. Each deserves its own attention. Each is something Panoptica365 helps with but cannot solve on its own — the operator has to be in the loop.</p>
+  </div>
+
+  <h2>Drift — when a deployed policy stops matching its template</h2>
+
+  <p>A CA policy that you deployed last Tuesday may not be the same policy today. Microsoft can change the underlying schema. A delegated admin user can modify it. A GDAP-using technician at your MSP can adjust it. A customer's other admin (often unknown to your MSP) can edit it. The policy drifts.</p>
+
+  <p>Drift takes a few shapes:</p>
+
+  <p><strong>Schema drift</strong> — Microsoft changes the underlying CA policy schema, adds new fields, deprecates old ones. The policy you deployed two years ago may have fields that no longer exist in the current API, or may be missing fields that are now expected. Schema drift is the slow kind; it accumulates across years.</p>
+
+  <p><strong>State drift</strong> — the policy's state changed (Enabled → Report-only, or vice versa, or Disabled). This can happen accidentally during troubleshooting, intentionally during a maintenance window, or maliciously if an attacker has admin access. State drift is binary and easy to detect.</p>
+
+  <p><strong>Scope drift</strong> — the user/group includes or excludes changed. New users added, departed users removed, new groups in or old groups out. This is the kind of drift that accumulates exclusions. Scope drift is the most consequential because it's the easiest to misread — "the policy is still on, what's the problem?"</p>
+
+  <p><strong>Control drift</strong> — the grant or session controls changed. "Require MFA" might have been changed to "Require MFA OR Compliant device," or the policy might have been weakened by adding a session-frequency override. Control drift is the hardest to detect by eye because the policy still looks correct in the portal.</p>
+
+  <p><strong>Condition drift</strong> — the policy's conditions changed. The trusted-location list, the platform list, the client-app list. Less common but possible.</p>
+
+  <p>Panoptica365's CA drift detector covers all five categories. The detector periodically reads the current state of each deployed policy via Graph API and compares it to the template baseline (or the previous known-good state for customised policies). Differences fire as drift alerts.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The drift detector reads the current policy state via Graph API, compares it to the template baseline, and fires a drift alert on any difference across the five categories.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- current state via Graph -->
+        <rect x="36" y="44" width="180" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="126" y="70" fill="#C4D4E8" font-size="14" font-weight="600">Current policy</text>
+        <text x="126" y="88" fill="#6B85A6" font-size="11.5">read via Graph API</text>
+
+        <!-- template baseline -->
+        <rect x="36" y="150" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="126" y="176" fill="#A8E1F8" font-size="14" font-weight="600">Template baseline</text>
+        <text x="126" y="194" fill="#6B85A6" font-size="11.5">or last known-good</text>
+
+        <!-- comparator -->
+        <rect x="290" y="97" width="150" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="365" y="123" fill="#7DD9F9" font-size="14" font-weight="700">Compare</text>
+        <text x="365" y="141" fill="#6B85A6" font-size="11.5">five categories</text>
+
+        <!-- alert -->
+        <rect x="512" y="97" width="172" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="598" y="123" fill="#C4D4E8" font-size="14" font-weight="600">Drift alert</text>
+        <text x="598" y="141" fill="#6B85A6" font-size="11.5">on any difference</text>
+      </g>
+      <path d="M216 72 H262 Q278 72 278 100 V112" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M216 178 H262 Q278 178 278 150 V138" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M440 125 H512" stroke="#335F92" stroke-width="2" marker-end="url(#dArr)"/>
+      <!-- five categories caption -->
+      <text x="365" y="226" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">schema · state · scope · control · condition</text>
+    </svg>
+    <figcaption>Read the live policy, compare it against the baseline across five categories, alert on any difference.</figcaption>
+  </figure>
+
+  <p>The operator workflow for a drift alert:</p>
+
+  <ol>
+    <li><strong>Acknowledge the alert.</strong> What kind of drift? State, scope, control, condition, schema?</li>
+    <li><strong>Identify the cause.</strong> Look at the audit log: who made the change, when, from what role. Panoptica365 records the full attribution chain.</li>
+    <li><strong>Decide: rollback or accept.</strong> If the change was legitimate (the customer asked for a specific exclusion, a known maintenance), accept and update the template/baseline to match. If the change was unauthorized or unintended, roll back.</li>
+    <li><strong>Document.</strong> Whether you rolled back or accepted, the change is now visible in your operational record. The next operator who looks at this policy can see what happened.</li>
+  </ol>
+
+  <p>The hardest part is step 3 — deciding what's legitimate vs. what's not. In a healthy MSP, every CA change should have a corresponding ticket. If a drift alert fires and there's no ticket explaining it, you have either a documentation gap or an unauthorized change. Both are worth investigating.</p>
+
+  <h2>Exclusions — the silent debt</h2>
+
+  <p>The accounting firm story above is the standard pattern. Exclusions are added one at a time, each with a defensible reason at the moment, none with a sunset date. Over years they accumulate. Eventually, a third of the user base is excluded from a policy you believed was protecting them.</p>
+
+  <p>The mechanic that fixes this:</p>
+
+  <p><strong>Every exclusion has a sunset date.</strong> Panoptica365's exemption system supports this directly. When an operator adds a user to a CA policy's exclusion list (or accepts a drift event that added an exclusion), the system requires a justification and an expiration date. By default the expiration is 180 days from the addition. The operator can shorten or lengthen, but cannot leave it open-ended.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="An exclusion timeline: added with a justification, defaulting to 180 days, a review reminder fires before the sunset date, then the user is renewed or returned to the policy.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <!-- baseline -->
+      <line x1="70" y1="96" x2="650" y2="96" stroke="#274B72" stroke-width="2"/>
+      <path d="M650 96 H664" stroke="#5CCBF4" stroke-width="2" marker-end="url(#eArr)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- added -->
+        <circle cx="120" cy="96" r="9" fill="#5CCBF4"/>
+        <text x="120" y="66" fill="#A8E1F8" font-size="13" font-weight="600">Added</text>
+        <text x="120" y="132" fill="#6B85A6" font-size="11.5">+ justification</text>
+
+        <!-- default 180 -->
+        <rect x="220" y="80" width="180" height="32" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="310" y="101" fill="#C4D4E8" font-size="12.5">default 180 days</text>
+
+        <!-- review reminder -->
+        <circle cx="470" cy="96" r="9" fill="#FFC04D"/>
+        <text x="470" y="66" fill="#FFC04D" font-size="13" font-weight="600">Review</text>
+        <text x="470" y="132" fill="#6B85A6" font-size="11.5">before sunset</text>
+
+        <!-- sunset -->
+        <circle cx="600" cy="96" r="9" fill="none" stroke="#52708F" stroke-width="2.5"/>
+        <text x="600" y="66" fill="#52708F" font-size="13" font-weight="600">Sunset</text>
+        <text x="600" y="132" fill="#52708F" font-size="11.5">renew or return</text>
+      </g>
+    </svg>
+    <figcaption>No exclusion is open-ended: it carries a justification, a default 180-day sunset, and a review reminder before it expires.</figcaption>
+  </figure>
+
+  <p><strong>Every exclusion gets reviewed before expiration.</strong> Before the sunset date, Panoptica365 alerts the responsible operator. They review: is the exclusion still necessary? Should it be renewed (with a fresh justification)? Or should it expire and the user be brought back into the policy's scope? Active review prevents the silent-accumulation pattern.</p>
+
+  <p><strong>Group-based exclusions are auditable.</strong> Many policies exclude an entire group ("Break-glass accounts," "Service accounts"). The membership of those groups can change without the CA policy itself changing — and the new member is now silently excluded. Periodic audits of the <em>membership</em> of exclusion groups are part of the operating discipline.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Honest principle</div>
+    <p>The honest principle: a CA policy with an empty exclusion list is the goal. Every entry on the exclusion list is a known security gap. The list should be auditable, justified, and reviewed on a regular cadence.</p>
+  </div>
+
+  <p>The pattern <em>not</em> to fall into:</p>
+
+  <ul>
+    <li>"We'll add the exclusion for now and revisit it later." (Later never comes.)</li>
+    <li>"Let's just exclude the IT department for convenience." (You've just disabled the policy for everyone with admin access — exactly the wrong shape.)</li>
+    <li>"It's been there for years, must be intentional." (Or it's been there for years because nobody removed it.)</li>
+  </ul>
+
+  <p>Panoptica365's exemption-review workflow exists specifically to prevent these patterns. Use it. The friction of "you have to add a justification and sunset" is the design — it makes the bad patterns harder to commit to than the good ones.</p>
+
+  <h2>Lifecycle — how a CA policy evolves over years</h2>
+
+  <p>A CA policy is not a one-time deployment. It's a configuration that lives alongside the customer's business for as long as the relationship lasts. Over years, the customer changes:</p>
+
+  <ul>
+    <li><strong>They hire and fire.</strong> User population shifts. Groups gain and lose members. Roles change.</li>
+    <li><strong>They acquire other companies.</strong> A new tenant gets merged in (or doesn't). New users arrive en masse with different equipment and different existing CA postures.</li>
+    <li><strong>They open new offices.</strong> New trusted-location entries. New IP ranges. New travel patterns.</li>
+    <li><strong>They adopt new apps.</strong> New apps in the cloud-app list. New OAuth integrations. New service accounts.</li>
+    <li><strong>They upgrade their licensing.</strong> Business Standard → Business Premium → E5. Each upgrade unlocks new CA features (compliant-device CA at Premium, risk-based CA at E5). The CA policy set should evolve to use the new capabilities.</li>
+    <li><strong>They suffer an incident.</strong> Post-incident, the CA posture typically hardens.</li>
+    <li><strong>They face a new regulatory requirement.</strong> Some new compliance obligation requires a new CA policy.</li>
+    <li><strong>They downsize.</strong> User population shrinks. Some users leave. The CA policy needs cleanup.</li>
+  </ul>
+
+  <p>Each of these is a CA-relevant event. The MSP that's running CA well checks in on the CA policy set:</p>
+
+  <ul>
+    <li><strong>Quarterly</strong> — review every policy. Are the conditions still right? Are the exclusions still needed? Is the customer using the licensing they have?</li>
+    <li><strong>At every customer relationship milestone</strong> — onboarding, renewal, major acquisition, downsizing.</li>
+    <li><strong>After any incident</strong> — post-incident reviews surface CA gaps that need closing.</li>
+    <li><strong>When Microsoft ships new CA features</strong> — periodically Microsoft adds new capabilities (Token Protection became GA in 2024; authentication flows condition followed in 2025). New capabilities should trigger a "could this strengthen the CA policy set" review.</li>
+  </ul>
+
+  <p>This is the meta-workload of running CA at scale. The shipped templates are the starting point. The drift detection and the exclusion review keep the deployed policies trustworthy. The lifecycle review keeps the policy set <em>relevant</em> — strong against the current threat landscape, not the threat landscape of 2023.</p>
+
+  <h2>What Panoptica365 does and doesn't do</h2>
+
+  <p>To be clear about the platform's role:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Panoptica365 does</th><th>Panoptica365 does not</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Drift detection on every deployed CA policy. Alerts on state, scope, control, condition, and schema drift.</td>
+          <td>Decide whether a drift event is legitimate or unauthorized. The operator decides.</td>
+        </tr>
+        <tr>
+          <td>The exemption / exclusion review workflow. Justifications, sunsets, reminders, audit trail.</td>
+          <td>Decide whether an exclusion should be renewed or expire. The operator decides.</td>
+        </tr>
+        <tr>
+          <td>Audit logging for every CA-policy mutation (deploy, modify, disable, exclude). Who, when, from what role, with what reason.</td>
+          <td>Generate new CA policies in response to new threats. The operator does (using card 8's import workflow if needed).</td>
+        </tr>
+        <tr>
+          <td>The Daily Activity widget that shows CA-block volume in near-real-time across the MSP fleet.</td>
+          <td>Replace the customer's existing CA admin. If the customer has their own admin who's also modifying policies, Panoptica365 surfaces the changes — but doesn't prevent them.</td>
+        </tr>
+        <tr>
+          <td>Cross-tenant view: see the CA policy state across every customer at a glance.</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="One Panoptica365 console reading the CA policy state across every customer tenant in the MSP fleet at a glance.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <!-- console -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="270" y="26" width="180" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="50" fill="#7DD9F9" font-size="14" font-weight="700">Panoptica365</text>
+        <text x="360" y="68" fill="#6B85A6" font-size="11.5">cross-tenant view</text>
+      </g>
+      <!-- fleet of tenants -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(40,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Tenant A</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(186,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Tenant B</text><circle cx="60" cy="44" r="5" fill="#FFC04D"/></g>
+        <g transform="translate(332,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Tenant C</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(478,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Tenant D</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(600,150)"><rect width="80" height="60" rx="9" fill="#0C2038" stroke="#274B72" stroke-dasharray="3 5"/><text x="40" y="36" fill="#52708F" font-size="14">…</text></g>
+      </g>
+      <!-- links -->
+      <g stroke="#335F92" stroke-width="1.6" fill="none">
+        <path d="M320 82 L100 150" marker-end="url(#fArr)"/>
+        <path d="M340 82 L246 150" marker-end="url(#fArr)"/>
+        <path d="M360 82 V150" marker-end="url(#fArr)"/>
+        <path d="M380 82 L538 150" marker-end="url(#fArr)"/>
+        <path d="M400 82 L630 150" marker-end="url(#fArr)"/>
+      </g>
+      <text x="360" y="122" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">CA policy state, read across the fleet</text>
+    </svg>
+    <figcaption>One console, the whole book of business: the CA policy state across every customer tenant, visible at a glance.</figcaption>
+  </figure>
+
+  <p>The line is: Panoptica365 makes the state of CA across customers <em>visible</em>. The operator's job is to interpret what they see and act on it.</p>
+
+  <h2>The annual CA review — a recommended cadence</h2>
+
+  <p>For each customer, once a year (often timed to the annual renewal conversation), run an explicit CA review:</p>
+
+  <ol>
+    <li><strong>List all deployed CA policies.</strong> What's enabled, what's report-only, what's disabled.</li>
+    <li><strong>For each policy, review the exclusion list.</strong> Every entry: still necessary? Sunset date still appropriate?</li>
+    <li><strong>For each policy, check the drift history over the past year.</strong> Were there any drift events you didn't fully resolve? Any patterns suggesting an unauthorized change history?</li>
+    <li><strong>Compare against the current Panoptica365 template library.</strong> Are there templates that should be deployed but aren't (newly-shipped policies, recently-added imports)?</li>
+    <li><strong>Compare against the customer's current state.</strong> Has anything changed (new licensing, new apps, new regulations) that suggests new policies?</li>
+    <li><strong>Document the review.</strong> The customer's IT director should know that this review happened, what was found, and what was changed.</li>
+  </ol>
+
+  <p>This annual cycle is what keeps CA from becoming a one-time deployment that decays over years. It's also what the customer needs to demonstrate to an auditor, an insurer, or a regulator: "we review our access controls annually, and here's the record."</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways for daily and yearly work.</p>
+
+  <p><strong>Drift alerts are not background noise.</strong> Each one is either an authorized change (acknowledge and accept) or an unauthorized change (investigate and roll back). Both require operator attention. The CA policy set's integrity depends on every drift event being resolved cleanly.</p>
+
+  <p><strong>Exclusion lists should be the smallest possible set.</strong> Every entry is a known security gap. The exemption workflow with sunsets is your tool for keeping the list trim. Resist the impulse to add "permanent" exclusions; nothing is permanent.</p>
+
+  <p><strong>The annual CA review is part of the customer relationship.</strong> It's not optional or "nice to have." It's the operating discipline that keeps the customer's CA posture trustworthy. Bill for it. Document it. Make it visible to the customer.</p>
+
+  <h2>Closing card 3</h2>
+
+  <p>You've now seen the nine Conditional Access templates Panoptica365 ships, plus the platform mechanics (import, drift, exclusions, lifecycle) that turn the template library into an operating system.</p>
+
+  <p>The arc of the card:</p>
+
+  <ol>
+    <li>Pre-flight checklist — before any template, do these five things.</li>
+    <li>Require MFA for all users — the foundation.</li>
+    <li>Block legacy authentication — close the basic-auth bypass.</li>
+    <li>Trusted location OR compliant device — the smart geo-policy.</li>
+    <li>Compliant OR hybrid OR MFA — the trust-signal OR policy, and the strategy choice with #2.</li>
+    <li>Hardening admin access — four admin templates as a coherent set.</li>
+    <li>Disable device code flow — the Storm-2372 defence.</li>
+    <li>Importing your own templates — Panoptica365's customisation superpower.</li>
+    <li>Operating CA at scale — drift, exclusions, lifecycle (this lesson).</li>
+  </ol>
+
+  <p>The card 4 (Intune template settings) starts next. Card 4 covers the device side of the trust-signal pair — the policies and configurations that make the "compliant device" signal in cards 3.4 and 3.5 actually mean something. Without reliable compliance, the OR-condition CA policies degrade to single-condition policies. Card 4 is where compliance gets real.</p>
+
+  <p>For now: read the policies, deploy them with the pre-flight discipline, monitor them with drift detection, and live with them across years using exclusion sunsets and annual reviews. CA at scale is not glamorous, but the customer's security posture lives or dies on it.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Conditional Access policy management and audit logging (<a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-audit-logs" target="_blank" rel="noopener">Microsoft Learn — Audit logs in Entra ID</a>); CA policy versioning and audit trail (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/howto-conditional-access-policies-audit" target="_blank" rel="noopener">Microsoft Learn — Conditional Access change history</a>); Microsoft Graph API for Conditional Access policy state (<a href="https://learn.microsoft.com/en-us/graph/api/resources/conditionalaccesspolicy" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policy resource</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

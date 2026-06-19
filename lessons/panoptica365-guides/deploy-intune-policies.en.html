@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy Intune policies — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Deploy Intune policies">
+<meta name="lesson:subtitle" content="Same template-and-drift model as CA, applied to device configuration: assign, deploy, watch.">
+<meta name="lesson:icon" content="monitor-smartphone">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Deploy Intune policies</span></div>
+  <h1>Deploy Intune policies</h1>
+  <p class="dek">Same template-and-drift model as CA, applied to device configuration: assign, deploy, watch.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The Intune rhythm: onboard a tenant, deploy your standard baseline, then forget it while drift alerts arrive.">
+      <defs>
+        <radialGradient id="inBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="inDev" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="inArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#inBg)"/>
+
+      <!-- step 1: onboard tenant -->
+      <g transform="translate(140,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <circle r="34" fill="none" stroke="#3A6FA0" stroke-width="1.1" stroke-dasharray="3 7"/>
+        <rect x="-20" y="-20" width="40" height="40" rx="7" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="0" cy="-4" r="8" fill="url(#inDev)"/>
+        <rect x="-11" y="8" width="22" height="5" rx="2.5" fill="#2A7FA3"/>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Onboard tenant</text>
+      </g>
+
+      <path d="M232 150 H338" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 2: deploy baseline -->
+      <g transform="translate(430,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <g stroke="#5CCBF4" stroke-width="1.5" fill="#10243B">
+          <rect x="-26" y="-24" width="34" height="22" rx="3"/>
+          <rect x="-6" y="-8" width="34" height="22" rx="3"/>
+          <rect x="-16" y="6" width="34" height="22" rx="3"/>
+        </g>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Deploy baseline</text>
+      </g>
+
+      <path d="M522 150 H628" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 3: forget it -->
+      <g transform="translate(720,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2236" stroke="#33527A" stroke-width="1.6"/>
+        <path d="M-22 0 a22 14 0 0 1 44 0" fill="none" stroke="#52708F" stroke-width="2"/>
+        <line x1="-22" y1="-2" x2="-32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <line x1="22" y1="-2" x2="32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <text x="0" y="6" fill="#6B85A6" font-size="20" font-weight="700">zzz</text>
+        <text x="0" y="98" fill="#A8C2DD" font-size="15" font-weight="600">Forget about it</text>
+      </g>
+
+      <!-- drift alert loops back -->
+      <path d="M720 230 C 720 300, 430 300, 430 224" fill="none" stroke="#FFC04D" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#inArr)"/>
+      <text x="575" y="318" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">drift alert when a deployed policy changes</text>
+
+      <text x="980" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">THE RHYTHM</text>
+    </svg>
+    <figcaption>Onboard, deploy your standard baseline, forget about it — until a drift alert pulls you back.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>If you've read the CA policies guide, this one will feel familiar — deliberately. Intune deployments use the same template-and-drift model: a library you maintain (sidebar → <strong>Intune Policies</strong>), per-tenant deployments, and continuous drift detection on what's live.</p>
+
+  <p>The templates themselves — what settings to pick, what a sane Windows baseline looks like — are covered in the <strong>Intune Template Settings</strong> card in Learn. This guide is the mechanics.</p>
+  </div>
+
+  <h2>Deploying policies to a tenant</h2>
+
+  <ol>
+    <li>Open the tenant dashboard → <strong>Intune Policies</strong> tab. Fresh tenant: <em>"No Intune policy templates assigned to this tenant yet. Click 'Add Policies' to start."</em></li>
+    <li>Click <strong>Add Policies</strong>. The picker lists your Intune template library — settings catalogs, device configurations, compliance policies, admin templates, security baselines.</li>
+    <li>Select the policies to deploy and choose the <strong>assignment target</strong>: <strong>All Users</strong>, <strong>All Devices</strong>, or <strong>None</strong> (deploy unassigned, wire up assignment in the console later).</li>
+    <li>Deploy. Each policy becomes a card showing its name, type, state, assignment target, and a drift badge.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 188" role="img" aria-label="The four-step deploy flow: open the Intune Policies tab, click Add Policies, select policies and an assignment target, then deploy to get a card per policy.">
+      <rect width="720" height="188" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d1Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1 -->
+        <rect x="28" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="98" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="98" y="78" fill="#5CCBF4" font-size="12" font-weight="700">1</text>
+        <text x="98" y="104" fill="#C4D4E8" font-size="12.5">Intune Policies</text>
+        <text x="98" y="121" fill="#6B85A6" font-size="11">tab</text>
+
+        <path d="M168 94 H192" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 2 -->
+        <rect x="200" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="270" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="270" y="78" fill="#5CCBF4" font-size="12" font-weight="700">2</text>
+        <text x="270" y="104" fill="#C4D4E8" font-size="12.5">Add Policies</text>
+        <text x="270" y="121" fill="#6B85A6" font-size="11">pick from library</text>
+
+        <path d="M340 94 H364" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 3 -->
+        <rect x="372" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="442" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="442" y="78" fill="#5CCBF4" font-size="12" font-weight="700">3</text>
+        <text x="442" y="104" fill="#C4D4E8" font-size="12.5">Assignment</text>
+        <text x="442" y="121" fill="#6B85A6" font-size="11">Users / Devices / None</text>
+
+        <path d="M512 94 H536" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 4 -->
+        <rect x="544" y="52" width="148" height="84" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="618" cy="74" r="11" fill="#10243B" stroke="#5CCBF4"/><text x="618" y="78" fill="#7DD9F9" font-size="12" font-weight="700">4</text>
+        <text x="618" y="104" fill="#A8E1F8" font-size="12.5" font-weight="600">Deploy</text>
+        <text x="618" y="121" fill="#6B85A6" font-size="11">a card per policy</text>
+      </g>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DEPLOY FLOW</text>
+    </svg>
+    <figcaption>Four steps from an empty tab to a card per deployed policy.</figcaption>
+  </figure>
+
+  <h2>Drift detection</h2>
+
+  <p>The drift cycle compares each deployed policy against its template, exactly like CA:</p>
+
+  <ul>
+    <li><strong>ok</strong> — live policy matches.</li>
+    <li><strong>drifted</strong> — a setting was changed tenant-side.</li>
+    <li><strong>accepted</strong> — drift reviewed and accepted by an operator.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 132" role="img" aria-label="The three drift states a deployed policy can be in: ok when it matches the template, drifted when a setting was changed tenant-side, and accepted when an operator reviewed the drift.">
+      <rect width="720" height="132" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- ok -->
+        <rect x="36" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <circle cx="74" cy="71" r="9" fill="none" stroke="#2EE8A0" stroke-width="2"/>
+        <path d="M70 71 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <text x="98" y="68" text-anchor="start" fill="#2EE8A0" font-size="14" font-weight="700">ok</text>
+        <text x="98" y="84" text-anchor="start" fill="#6B85A6" font-size="11">matches template</text>
+
+        <!-- drifted -->
+        <rect x="260" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+        <path d="M298 65 l5 9 h-10 z" fill="none" stroke="#FFC04D" stroke-width="2" stroke-linejoin="round"/>
+        <text x="322" y="68" text-anchor="start" fill="#FFC04D" font-size="14" font-weight="700">drifted</text>
+        <text x="322" y="84" text-anchor="start" fill="#6B85A6" font-size="11">changed tenant-side</text>
+
+        <!-- accepted -->
+        <rect x="484" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="522" cy="71" r="9" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M518 71 l3 3 l5 -6" fill="none" stroke="#5CCBF4" stroke-width="2" stroke-linecap="round"/>
+        <text x="546" y="68" text-anchor="start" fill="#7DD9F9" font-size="14" font-weight="700">accepted</text>
+        <text x="546" y="84" text-anchor="start" fill="#6B85A6" font-size="11">reviewed by operator</text>
+      </g>
+      <text x="360" y="28" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DRIFT STATES</text>
+    </svg>
+    <figcaption>Every deployed policy carries one of three drift states.</figcaption>
+  </figure>
+
+  <p>Per-card actions: <strong>Check Drift</strong> (compare now), <strong>Deploy</strong> (re-apply), and <strong>Accept</strong> (open the acceptance modal).</p>
+
+  <h2>Accepting Intune drift</h2>
+
+  <p>The acceptance modal offers the same two paths as CA:</p>
+
+  <ul>
+    <li><strong>Accept with expiry</strong> <em>(recommended)</em> — accepted until the date you pick (180-day default), reason required. The acceptance appears in the <strong>Exemptions</strong> page. Note that Intune exemptions are <strong>policy-wide</strong> — they accept the deployment's current drift as a whole, not a per-user exception.</li>
+    <li><strong>Accept Once, forever</strong> — indefinite; re-fires only if the drift changes shape.</li>
+  </ul>
+
+  <p>When an exemption expires or is revoked, the next Intune drift cycle flags the deployment as drifted again, requiring re-review. Nothing silently stays accepted.</p>
+
+  <div class="callout caution">
+    <div class="clabel">One important caution</div>
+    <p>Avoid editing Panoptica365-deployed policies directly in the Intune console for per-tenant tweaks (extra exclusion groups, one-off setting changes). The platform's job is to converge live policies back to the template — console-side customizations either trigger perpetual drift alerts or get overwritten on a re-deploy. If a tenant genuinely needs a variation, make it explicit: a separate template, or an accepted, documented, time-boxed drift.</p>
+  </div>
+
+  <h2>Adopt existing settings in place (tenant-sourced)</h2>
+
+  <p>Just like CA, you can adopt a tenant's <strong>existing</strong> Intune configurations instead of pushing your templates first. On the <strong>Intune Policies</strong> tab, click <strong>Import existing settings</strong>. Panoptica reads the tenant's live configurations — across the same types your library supports (settings catalogs, device configurations, compliance policies, administrative templates, security baselines) — and creates a <strong>Tenant-sourced</strong> card (red edge + badge) for each one it doesn't already manage. Anything you deployed from a template is matched by object id and skipped, so you never get duplicates; re-clicking is safe.</p>
+
+  <p>Each card is baselined as-found — both the configuration <strong>and its assignments</strong> — and watched for change. A tenant-sourced card's alert reads <em>"changed from as-found."</em> Intune drift is caught on the <strong>daily</strong> sweep: unlike new CA policies, Intune changes aren't in the audit-log stream, so there's no minutes-latency path — the daily reconcile is the backstop.</p>
+
+  <p>Open a card's <strong>Actions</strong> for three choices:</p>
+
+  <ol>
+    <li><strong>Stop monitoring</strong> — removes the card; never touches the tenant.</li>
+    <li><strong>Deactivate in tenant</strong> — Intune has no global "off" switch, so Panoptica <strong>snapshots the full assignment set first</strong>, then removes all assignments so the config applies to no one. <strong>Restore</strong> replays the exact assignments. That pre-snapshot is what makes deactivate reversible — without it, stripping assignments would be a one-way door.</li>
+    <li><strong>Delete from tenant</strong> — permanently removes the configuration; deleting asks you to type your own name to confirm.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="The three Actions on a tenant-sourced card: stop monitoring never touches the tenant; deactivate snapshots the assignment set first then strips assignments, with restore replaying them; delete permanently removes the configuration and asks you to type your own name.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d3Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker></defs>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ACTIONS ON A TENANT-SOURCED CARD</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- stop monitoring -->
+        <rect x="32" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="136" y="86" text-anchor="middle" fill="#C4D4E8" font-size="13.5" font-weight="600">Stop monitoring</text>
+        <line x1="60" y1="100" x2="212" y2="100" stroke="#1F3C5C"/>
+        <text x="136" y="128" text-anchor="middle" fill="#6B85A6" font-size="11.5">removes the card</text>
+        <text x="136" y="148" text-anchor="middle" fill="#2EE8A0" font-size="11.5">never touches tenant</text>
+
+        <!-- deactivate -->
+        <rect x="256" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="360" y="86" text-anchor="middle" fill="#FFC04D" font-size="13.5" font-weight="600">Deactivate in tenant</text>
+        <line x1="284" y1="100" x2="436" y2="100" stroke="#1F3C5C"/>
+        <text x="360" y="124" text-anchor="middle" fill="#C4D4E8" font-size="11.5">1. snapshot assignments</text>
+        <text x="360" y="144" text-anchor="middle" fill="#6B85A6" font-size="11.5">2. strip all assignments</text>
+        <text x="360" y="174" text-anchor="middle" fill="#7DD9F9" font-size="11.5">Restore replays them</text>
+
+        <!-- delete -->
+        <rect x="480" y="56" width="208" height="146" rx="10" fill="#1C0D12" stroke="#FF5A6E" stroke-width="1.3"/>
+        <text x="584" y="86" text-anchor="middle" fill="#FF8A98" font-size="13.5" font-weight="600">Delete from tenant</text>
+        <line x1="508" y1="100" x2="660" y2="100" stroke="#3A2030"/>
+        <text x="584" y="128" text-anchor="middle" fill="#E2A0AA" font-size="11.5">permanently removes</text>
+        <text x="584" y="148" text-anchor="middle" fill="#6B85A6" font-size="11.5">type your name to confirm</text>
+      </g>
+    </svg>
+    <figcaption>Three actions, from harmless to permanent — only delete cannot be undone.</figcaption>
+  </figure>
+
+  <p>All three are recorded in the MSP audit log and the tenant's Change Log. And as with CA, Panoptica watches every tenant for an Intune configuration created <strong>outside Panoptica</strong> and surfaces it as a tenant-sourced card plus an alert.</p>
+
+  <h2>The rhythm</h2>
+
+  <p>Onboard tenant → deploy your standard Intune baseline → forget about it. From then on, drift alerts arrive when someone changes a deployed policy in the customer tenant, and the <strong>Compliant Devices</strong> card on the Overview tab tells you whether devices are actually meeting the bar you set.</p>
+
+</div>
+</body>
+</html>

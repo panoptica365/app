@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abuso del código de dispositivo — la impresora que no era una impresora — Amenazas de identidad y patrones de ataque</title>
+<meta name="lesson:title" content="Abuso del código de dispositivo — la impresora que no era una impresora">
+<meta name="lesson:subtitle" content="Actores estatales (Storm-2372) convierten en arma el flujo legítimo de código de dispositivo para robar tokens sin tocar jamás una contraseña.">
+<meta name="lesson:icon" content="smartphone">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Amenazas de identidad y patrones de ataque</span> <span class="sep">·</span> <span>Abuso del código de dispositivo</span></div>
+  <h1>Abuso del código de dispositivo — la impresora que no era una impresora</h1>
+  <p class="dek">Actores estatales (Storm-2372) convierten en arma el flujo legítimo de código de dispositivo para robar tokens sin tocar jamás una contraseña.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un código de usuario corto en la pantalla de una impresora fluye a un teléfono en microsoft.com/devicelogin — pero el dispositivo que recibe el token es el portátil del atacante, no la impresora.">
+      <defs>
+        <radialGradient id="dcBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="dcSoft"><feGaussianBlur stdDeviation="4"/></filter>
+        <marker id="dcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="dcArrBad" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dcBg)"/>
+
+      <!-- left: printer showing a code -->
+      <g transform="translate(110,96)">
+        <rect x="0" y="0" width="150" height="150" rx="14" fill="#0E2640" stroke="#33527A" stroke-width="1.6"/>
+        <rect x="20" y="22" width="110" height="46" rx="6" fill="#04101E" stroke="#2A6F9E"/>
+        <text x="75" y="51" text-anchor="middle" fill="#A8E1F8" font-family="Geist Mono,Geist,monospace" font-size="20" font-weight="600" letter-spacing="2">B7XK-9MNP</text>
+        <rect x="20" y="86" width="110" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="20" y="104" width="78" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="20" y="124" width="110" height="10" rx="3" fill="#102A4C"/>
+      </g>
+      <text x="185" y="278" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">LA IMPRESORA</text>
+
+      <!-- middle: phone at devicelogin -->
+      <path d="M276 170 H392" stroke="#335F92" stroke-width="2.4" marker-end="url(#dcArr)"/>
+      <text x="334" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">introducir el código</text>
+      <g transform="translate(420,86)">
+        <rect x="0" y="0" width="120" height="168" rx="18" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="14" y="20" width="92" height="128" rx="6" fill="#04101E" stroke="#2A7FA3"/>
+        <text x="60" y="48" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="10.5">devicelogin</text>
+        <circle cx="60" cy="86" r="20" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M51 86 l7 7 l12 -14" fill="none" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="60" y="128" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="9.5">contraseña · MFA</text>
+      </g>
+      <text x="480" y="278" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">EL USUARIO</text>
+
+      <!-- right: token goes to attacker laptop -->
+      <path d="M560 170 H690" stroke="#FF5A6E" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#dcArrBad)"/>
+      <text x="625" y="156" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11.5">token</text>
+      <g transform="translate(720,104)">
+        <rect x="0" y="0" width="220" height="132" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <rect x="22" y="22" width="176" height="74" rx="6" fill="#1A0A0E" stroke="#FF5A6E" opacity="0.7"/>
+        <rect x="6" y="100" width="208" height="10" rx="3" fill="#3A1820"/>
+        <circle cx="110" cy="59" r="20" fill="none" stroke="#FF8A98" stroke-width="2" filter="url(#dcSoft)" opacity="0.85"/>
+        <text x="110" y="65" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">!</text>
+      </g>
+      <text x="830" y="278" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600" letter-spacing="1.5">EL PORTÁTIL DEL ATACANTE</text>
+    </svg>
+    <figcaption>El usuario sí inicia sesión en la página real de Microsoft — pero el dispositivo que se va con el token es el del atacante.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>En algún lugar de la oficina de tu cliente, una impresora inicia sesión en Microsoft 365 para hacer scan-to-email. Esa impresora no puede tener teclado. No puede escribir una contraseña. No puede tocar un teléfono para MFA. Microsoft resolvió esto hace años con el <em>flujo de código de dispositivo</em>: el dispositivo muestra un código alfanumérico corto en su pantalla, el usuario va a <code>microsoft.com/devicelogin</code> en su teléfono o portátil, introduce el código, inicia sesión normalmente, y Microsoft le entrega al dispositivo un token. La impresora ahora puede enviar correo. Nadie tuvo que reescribir una contraseña en un dispositivo sin teclado.</p>
+
+  <p>Es una función legítima e inteligente. También es el vector de ataque detrás de Storm-2372 — un actor de amenazas alineado con Rusia que ha estado corriendo campañas de phishing por código de dispositivo contra objetivos en gobiernos, ONGs, servicios de IT, defensa, telecomunicaciones, salud, educación superior y energía a través de Europa, América del Norte, África y Oriente Medio desde agosto de 2024. En febrero de 2025, Microsoft observó a Storm-2372 evolucionar el ataque para adquirir Primary Refresh Tokens (PRTs) registrando dispositivos controlados por el atacante dentro del tenant de la víctima.</p>
+
+  <p>Esta lección trata sobre cómo una función de autenticación amigable con impresoras se convierte en una herramienta de ataque, y la política única de Acceso Condicional que la cierra para los clientes que no tienen impresoras.</p>
+  </div>
+
+  <h2>El flujo legítimo de código de dispositivo</h2>
+
+  <p>Para entender el ataque, recorre primero la versión legítima.</p>
+
+  <p>Una impresora (o televisión inteligente, dispositivo IoT, sesión de PowerShell en un servidor, automatización por script, etc.) quiere autenticarse como un usuario. No puede presentar una UI de inicio de sesión por sí misma.</p>
+
+  <p><strong>Paso 1: El dispositivo solicita un código.</strong> El dispositivo llama al endpoint <code>/devicecode</code> de Microsoft y recibe de vuelta dos cosas: un corto <em>código de usuario</em> (unos ocho caracteres alfanuméricos como <code>B7XK-9MNP</code>) y un más largo <em>código de dispositivo</em> (una cadena opaca larga que el dispositivo guarda internamente). El dispositivo también recibe una URL — <code>microsoft.com/devicelogin</code>.</p>
+
+  <p><strong>Paso 2: El dispositivo muestra el código de usuario.</strong> La pantalla de la impresora muestra: «Ve a <code>microsoft.com/devicelogin</code> e introduce el código <code>B7XK-9MNP</code> para iniciar sesión.»</p>
+
+  <p><strong>Paso 3: El usuario va a esa URL en su teléfono o portátil.</strong> Se autentica normalmente en Microsoft. Cuando se le pregunta, introduce el código de usuario. Microsoft ahora asocia ese código con la identidad del usuario que ha iniciado sesión.</p>
+
+  <p><strong>Paso 4: El dispositivo sondea el endpoint de tokens de Microsoft.</strong> Una vez que el usuario ha introducido el código, Microsoft le entrega al dispositivo un token. El dispositivo ahora puede iniciar sesión como el usuario.</p>
+
+  <p>Funciona. Es legítimo. Microsoft ha documentado el flujo extensamente. La fisura es que <em>los pasos 2 al 4 no requieren realmente que el dispositivo esté en la misma habitación que el usuario</em>. El «dispositivo» puede ser el portátil del atacante en Bucarest. El «código de usuario» puede enviarse vía WhatsApp. El usuario no tiene forma de saber a qué dispositivo va a autenticar el código.</p>
+
+  <h2>El ataque</h2>
+
+  <p>Ahora la versión de ataque, que es estructuralmente idéntica:</p>
+
+  <p><strong>Paso 1: El portátil del atacante solicita un código de dispositivo.</strong> Llama al endpoint <code>/devicecode</code> de Microsoft con un ID de cliente — típicamente uno de los IDs de aplicación de primera parte bien conocidos de Microsoft (Outlook, Teams, Microsoft Graph PowerShell, Microsoft Authentication Broker). Microsoft devuelve el código de usuario y el código de dispositivo.</p>
+
+  <p><strong>Paso 2: El atacante envía el código de usuario a la víctima.</strong> Vía WhatsApp, Teams, Signal, o correo. Storm-2372 típicamente se hace pasar por una «persona prominente relevante para el objetivo» — un periodista organizando una entrevista, un inversor programando una llamada, un investigador invitando a colaborar. El pretexto culmina en: «He organizado una reunión de Teams para nosotros. Por favor, ve a <code>microsoft.com/devicelogin</code> e introduce el código <code>B7XK-9MNP</code> para unirte.»</p>
+
+  <p><strong>Paso 3: La víctima, esperando un flujo legítimo de invitación a Teams, va a la URL e introduce el código.</strong> Ahora está en la página <em>real</em> de devicelogin de Microsoft. Se autentica normalmente — contraseña, MFA, todo el flujo regular. No hay página falsa de inicio de sesión. No hay proxy. La página es genuinamente la de Microsoft. El código de usuario, sin embargo, es el del atacante.</p>
+
+  <p><strong>Paso 4: Microsoft autoriza al portátil del atacante como ese usuario.</strong> El atacante ahora tiene un token de acceso — emitido legítimamente, por Microsoft, después de que la víctima completara correctamente el MFA. Desde la perspectiva de Microsoft, este es un inicio de sesión completamente válido.</p>
+
+  <p><strong>Paso 5: El atacante lee correo, exfiltra datos, etc.</strong></p>
+
+  <p>La experiencia del usuario es: pensaba que se unía a una reunión de Teams. La reunión no se produjo. Cerró la pestaña. Lo dejaron pelado.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="El flujo legítimo y el flujo de ataque lado a lado: pasos idénticos, pero en el ataque el dispositivo que solicita el código es el portátil del atacante y el código llega a la víctima por mensaje de chat.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="fArrBad" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <line x1="360" y1="50" x2="360" y2="296" stroke="#1F3C5C" stroke-width="1.4" stroke-dasharray="3 6"/>
+      <text x="186" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LEGÍTIMO</text>
+      <text x="534" y="34" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">EL ATAQUE</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- legitimate column -->
+        <g transform="translate(36,52)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">La impresora solicita un código</text>
+        </g>
+        <g transform="translate(36,114)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">Código mostrado en su pantalla</text>
+        </g>
+        <g transform="translate(36,176)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="12">El usuario introduce el código, sesión + MFA</text>
+        </g>
+        <g transform="translate(36,238)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="28" fill="#A8E1F8" font-size="13" font-weight="600">La impresora recibe el token</text>
+        </g>
+        <path d="M186 96 V114" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+        <path d="M186 158 V176" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+        <path d="M186 220 V238" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+
+        <!-- attack column -->
+        <g transform="translate(384,52)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="150" y="28" fill="#FF8A98" font-size="12.5">El portátil del atacante solicita un código</text>
+        </g>
+        <g transform="translate(384,114)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="150" y="28" fill="#E2A0AA" font-size="13">Código enviado por chat a la víctima</text>
+        </g>
+        <g transform="translate(384,176)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="12">La víctima introduce el código, sesión + MFA</text>
+        </g>
+        <g transform="translate(384,238)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/><text x="150" y="28" fill="#FF8A98" font-size="12" font-weight="700">El portátil del atacante recibe el token</text>
+        </g>
+        <path d="M534 96 V114" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+        <path d="M534 158 V176" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+        <path d="M534 220 V238" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+      </g>
+    </svg>
+    <figcaption>Pasos estructuralmente idénticos. Las únicas diferencias: quién solicita el código, y cómo el código llega a la persona que inicia sesión.</figcaption>
+  </figure>
+
+  <h2>Por qué esto derrota a MFA</h2>
+
+  <p>El MFA ocurre entre <em>la víctima y Microsoft</em> en el paso 3. La víctima lo completa correctamente. El prompt de MFA pregunta «¿Aprobar el inicio de sesión desde el dispositivo que inició este flujo?» — pero el dispositivo que inició este flujo es el portátil <em>del atacante</em>. La víctima no puede saber por el prompt que el dispositivo no es el suyo, porque el flujo de código de dispositivo no saca a la superficie información significativa sobre el dispositivo solicitante en la experiencia de MFA del usuario.</p>
+
+  <p>El MFA de Microsoft valida la presencia del usuario y las credenciales correctas. No valida la intención («¿realmente quería este usuario iniciar sesión a esta máquina del atacante?»). El flujo de código de dispositivo usa el MFA tal como se diseñó y aún así produce un compromiso, porque <em>el consentimiento al inicio de sesión</em> y <em>la autenticación del inicio de sesión</em> ocurren en máquinas distintas.</p>
+
+  <p>Este es estructuralmente el mismo problema que AiTM (lección 3): la autenticación es técnicamente correcta pero acaba beneficiando a la parte equivocada. La diferencia es que AiTM intercepta la cookie de sesión del usuario; el phishing por código de dispositivo hace que Microsoft <em>emita legítimamente</em> un token vinculado al atacante. No hay robo. No hay malware. No hay proxy. Todo es oficial.</p>
+
+  <h2>La evolución reciente de Storm-2372</h2>
+
+  <p>En agosto de 2024, Microsoft empezó a rastrear las campañas de código de dispositivo de Storm-2372. Las campañas iniciales fueron directas — hacer phishing de un token de Outlook o Microsoft Graph PowerShell, leer correo.</p>
+
+  <p>El 14 de febrero de 2025, Microsoft observó al actor cambiar a una variante mucho más peligrosa: usar el ID de cliente específico del <strong>Microsoft Authentication Broker</strong>. Cuando el flujo de código de dispositivo se ejecuta contra el Authentication Broker, el token de actualización resultante puede intercambiarse por un token fresco en el <em>servicio de registro de dispositivos</em>, lo que le permite al atacante registrar su propia máquina como un dispositivo en el tenant Entra ID de la víctima.</p>
+
+  <p>Un dispositivo registrado en Entra ID puede solicitar un Primary Refresh Token (PRT) — la credencial que M365 emite a los dispositivos Windows gestionados para mantener al usuario conectado. Con un PRT, el atacante tiene el mismo tipo de acceso que tiene un portátil corporativo completamente inscrito. Puede iniciar sesión en cualquier cosa en M365 sin prompts de MFA adicionales, porque el PRT es lo que <em>reemplaza</em> al MFA para los inicios de sesión de dispositivos gestionados.</p>
+
+  <p>En otras palabras, el atacante convirtió un único phishing por código de dispositivo en un <em>dispositivo inscrito</em> en el tenant del cliente. Pasar de «tengo un token por unas horas» a «tengo una identidad de dispositivo gestionado que va a seguir produciendo tokens» es un salto cualitativo en persistencia — similar a lo que el phishing por consentimiento OAuth (lección 4) le da al atacante, pero conseguido a través de un mecanismo completamente distinto.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 140" role="img" aria-label="La escalada de Storm-2372: un phishing por código de dispositivo contra el Authentication Broker lleva a registrar un dispositivo del atacante, que produce un Primary Refresh Token y acceso persistente.">
+      <rect width="720" height="140" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FFC04D"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(20,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="75" y="22" fill="#A8E1F8" font-size="11.5" font-weight="600">Phishing código</text>
+          <text x="75" y="38" fill="#6B85A6" font-size="10">ID Auth Broker</text>
+        </g>
+        <g transform="translate(206,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#1F1604" stroke="#FFC04D"/>
+          <text x="75" y="22" fill="#FFD27A" font-size="11.5" font-weight="600">Registrar dispositivo</text>
+          <text x="75" y="38" fill="#A98A4A" font-size="10">en el tenant víctima</text>
+        </g>
+        <g transform="translate(392,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#1F1604" stroke="#FFC04D"/>
+          <text x="75" y="22" fill="#FFD27A" font-size="11.5" font-weight="600">Obtener un PRT</text>
+          <text x="75" y="38" fill="#A98A4A" font-size="10">reemplaza el MFA</text>
+        </g>
+        <g transform="translate(550,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="75" y="22" fill="#FF8A98" font-size="11.5" font-weight="700">Acceso persistente</text>
+          <text x="75" y="38" fill="#E2A0AA" font-size="10">produce tokens</text>
+        </g>
+        <path d="M170 72 H206" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+        <path d="M356 72 H392" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+        <path d="M542 72 H550" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+      </g>
+    </svg>
+    <figcaption>La evolución de 2025: un solo phishing se convierte en un dispositivo inscrito, un PRT, y acceso que se renueva solo.</figcaption>
+  </figure>
+
+  <h2>Cómo se ve esto en la telemetría de M365</h2>
+
+  <p>El flujo de código de dispositivo se registra. El registro de inicio de sesión en Entra ID registra:</p>
+
+  <ul>
+    <li><strong>Protocolo de autenticación: Device Code.</strong> Esta es la pista delatora. Muy pocas cargas de trabajo de cliente reales usan el flujo de código de dispositivo como método de inicio de sesión primario.</li>
+    <li><strong>ID de cliente.</strong> Te dice qué aplicación se estaba autorizando. El ID del Microsoft Authentication Broker (<code>29d9ed98-a469-4536-ade2-f981bc1d605e</code>) apareciendo aquí es una señal fuerte — esa es la evolución de Storm-2372.</li>
+    <li><strong>IP de origen.</strong> A menudo un proxy residencial o una geografía hostil conocida.</li>
+    <li><strong>User agent.</strong> A menudo Python por defecto o estilo curl — automatización, no un cliente real.</li>
+  </ul>
+
+  <p>Si haces grep al registro de inicio de sesión de Entra por <code>authenticationProtocol == "deviceCode"</code>, deberías ver casi cero resultados en un tenant sano a menos que haya casos de uso documentados de IoT/automatización. Cada acierto vale la pena investigarlo.</p>
+
+  <p>La actividad de seguimiento — registro súbito de un nuevo dispositivo en el tenant, nuevos métodos de autenticación registrados, cambios de permisos de buzón — es más ruidosa y más fácil de detectar que el propio inicio de sesión por código de dispositivo.</p>
+
+  <h2>Qué hace Defender al respecto</h2>
+
+  <p>Safe Links de Microsoft Defender for Office 365 puede pillar la <em>entrega</em> del mensaje de phishing si es por correo, pero el pretexto de Storm-2372 es típicamente un mensaje de chat en Teams, WhatsApp, o Signal, que Defender for Office 365 no ve.</p>
+
+  <p>Defender XDR puede correlacionar el inicio de sesión por código de dispositivo con anomalías aguas abajo — registro de nuevo dispositivo, consultas sospechosas a Graph, exfiltración de buzón — y asignar confianza de Attack Disruption si el patrón coincide. El equipo de Microsoft Threat Intelligence ha publicado consultas de detección que los clientes con Defender XDR pueden desplegar en advanced hunting para buscar los indicadores específicos de Storm-2372.</p>
+
+  <p>El control defensivo más limpio, sin embargo, es la configuración: evitar que el flujo de código de dispositivo sea usable para la mayoría de los usuarios desde el principio.</p>
+
+  <h2>La política de Acceso Condicional que cierra esto</h2>
+
+  <p>En Acceso Condicional, hay una condición llamada <strong>Flujos de autenticación</strong> (preview hasta 2024, generalmente disponible en 2025). Dentro de esa condición, uno de los interruptores es <strong>Flujo de código de dispositivo</strong>. Puedes escribir una política de AC que diga:</p>
+
+  <blockquote>Bloquear a todos los usuarios de completar el flujo de autenticación por código de dispositivo, con las siguientes excepciones: [cuentas específicas que legítimamente lo necesitan, como la cuenta de servicio de la impresora o la cuenta de helpdesk que corre automatización de PowerShell contra múltiples tenants].</blockquote>
+
+  <p>Esa es la política. Ponla en el tenant del cliente, excluye cualquier cuenta de servicio que legítimamente necesite código de dispositivo (la mayoría de los tenants no tienen ninguna), y todo el manual de Storm-2372 deja de funcionar para ese tenant.</p>
+
+  <p>Esta es una de las políticas de AC únicas con más palanca disponibles en Entra ID P1 (Business Premium en adelante). Microsoft empezó a recomendar públicamente esta política tras la divulgación de Storm-2372 en febrero de 2025, y a partir de mediados de 2026 debería considerarse base de partida para cualquier tenant que no tenga un caso de uso documentado de código de dispositivo.</p>
+
+  <p>La limpieza de seguimiento, si descubres que la política no estaba en su sitio y ocurrió un ataque: revocar los tokens del usuario (cubierto en la sección de respuesta de la lección 3), de-registrar cualquier dispositivo controlado por el atacante de la lista de dispositivos del tenant, auditar y limpiar los métodos de autenticación, y restablecer la contraseña del usuario.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>El pipeline de ingesta de UAL de Panoptica365 incluye señales relacionadas con el código de dispositivo como parte del catálogo de detección más amplio:</p>
+
+  <p><strong>Inicios de sesión sospechosos por código de dispositivo.</strong> Cuando un inicio de sesión se completa con <code>authenticationProtocol == "deviceCode"</code> y el origen no es una cuenta IoT documentada, la alerta puede dispararse — dependiendo de la configuración del tenant.</p>
+
+  <p><strong>Nuevo dispositivo registrado.</strong> Cuando un dispositivo no visto previamente aparece en la lista de dispositivos del tenant (la firma de ataque post-Storm-2372), el evento de registro está en el registro de auditoría de Entra y Panoptica365 lo saca a la superficie.</p>
+
+  <p><strong>Nuevo método de autenticación registrado.</strong> Como con la mayoría de los ataques de identidad, el atacante post-compromiso a menudo añade su propio método MFA. Esta alerta cubre la cadena de ataque por código de dispositivo así como las cadenas de AiTM y credential stuffing.</p>
+
+  <p><strong>La ingesta de Defender XDR</strong> capta los incidentes correlacionados cuando Microsoft ha puntuado la actividad como sospechosa.</p>
+
+  <p>El enfoque de triaje: cuando una alerta de IP extranjera o de nuevo-dispositivo-registrado se dispara, comprueba si el protocolo de autenticación del inicio de sesión fue Device Code. Si lo fue, trátalo como un ataque estilo Storm-2372 hasta que se demuestre lo contrario.</p>
+
+  <h2>Defender al cliente</h2>
+
+  <p>En capas, por orden de impacto:</p>
+
+  <p><strong>Bloquear el flujo de código de dispositivo vía Acceso Condicional para los usuarios que no lo necesiten.</strong> Política única, efecto inmediato. La gran mayoría de los tenants de cliente tienen cero casos de uso legítimos de código de dispositivo. Los pocos que sí (la impresora, la cuenta de automatización de PowerShell) pueden excluirse individualmente. No dejes esto expuesto.</p>
+
+  <p><strong>Para tenants que sí necesitan código de dispositivo (raro), exige que venga de ubicaciones de confianza o dispositivos conformes.</strong> La condición de Acceso Condicional se combina con las otras — puedes exigir «flujo de código de dispositivo solo desde el rango de IP de la oficina» o «solo en dispositivos conformes a Intune». Configuración más pesada pero posible.</p>
+
+  <p><strong>Educa a los usuarios sobre los pretextos basados en chat.</strong> La cadena de ataque de Storm-2372 depende de que el usuario confíe en un mensaje de WhatsApp/Signal/Teams lo suficiente como para seguir instrucciones. Entrena a los usuarios (especialmente ejecutivos y personas en roles como subvenciones, periodismo, investigación, o cualquier función orientada al exterior) que <strong>cualquiera que les pida ir a <code>microsoft.com/devicelogin</code> e introducir un código vía un mensaje de chat es casi con total seguridad un atacante</strong>. No hay razón legítima alguna por la que una parte externa deba enviar nunca un código de dispositivo por chat.</p>
+
+  <p><strong>Monitoriza el protocolo <code>deviceCode</code> en el registro de inicios de sesión.</strong> Esto debería ser una línea base cercana a cero en la mayoría de los tenants. Cualquier cosa no-cero vale la pena examinarla.</p>
+
+  <p><strong>Detecta los indicadores post-compromiso.</strong> Eventos de registro de nuevo dispositivo, nuevos métodos de autenticación, actividad sospechosa de buzón — estas son las señales de seguimiento que se disparan más fuerte que el propio inicio de sesión por código de dispositivo.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>Añade «bloquear el flujo de código de dispositivo» a la lista de comprobación de incorporación de clientes.</strong> Esta es una de las políticas de Acceso Condicional baratas y de alto impacto que debería estar en cada tenant de Business Premium por defecto. La biblioteca de plantillas de AC de Panoptica365 es el sitio correcto para entregar esto; si no está ya en tu biblioteca, añádelo antes de la próxima incorporación de cliente.</p>
+
+  <p><strong>La evolución de Storm-2372 de «robar un token» a «registrar un dispositivo» es el patrón que vigilar.</strong> Cuando los atacantes encuentran nuevas formas de convertir el acceso de corto plazo en acceso persistente, la amenaza se compone. La misma lógica se aplica al phishing por consentimiento (lección 4) y al truco post-AiTM «registrar un nuevo método MFA» (lección 3). Las variantes de persistencia son donde los compromisos simples se convierten en incidentes prolongados.</p>
+
+  <p><strong>El phishing por código de dispositivo se pilla mejor aguas arriba.</strong> Una vez emitido el token, estás persiguiendo el rastro del atacante. La política de AC que evita que el flujo sea usable es <em>la</em> defensa; todo lo demás es limpieza.</p>
+
+  <div class="callout insight">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>La defensa en una línea</div>
+    <p>El flujo de código de dispositivo es una función legítima siendo abusada a escala por un actor sofisticado. La defensa es configuración, no detección. Pon la política de Acceso Condicional. Entrena a tus usuarios para que nunca introduzcan un código de dispositivo desde un mensaje de chat. Vigila el registro de inicios de sesión por el protocolo que no esperas ver.</p>
+  </div>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Compromiso del correo de empresa</b> — donde terminan la mayoría de estos ataques: no en el compromiso dramático en sí, sino en la manipulación tranquila y prolongada de los correos financieros que sigue. BEC es lo que hace rentables para los atacantes los cinco ataques anteriores.</div></div>
+  </div>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Security Blog sobre la campaña de phishing por código de dispositivo de Storm-2372 (<a href="https://www.microsoft.com/en-us/security/blog/2025/02/13/storm-2372-conducts-device-code-phishing-campaign/" target="_blank" rel="noopener">Microsoft Security Blog — Storm-2372 conducts device code phishing campaign, febrero de 2025</a>); referencia técnica del flujo de código de dispositivo (<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code" target="_blank" rel="noopener">Microsoft Learn — OAuth 2.0 device code flow</a>); condición «flujos de autenticación» de Acceso Condicional (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps#authentication-flows" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Authentication flows</a>); evolución de Storm-2372 al robo de Authentication Broker / PRT (<a href="https://www.microsoft.com/en-us/security/blog/2025/02/13/storm-2372-conducts-device-code-phishing-campaign/" target="_blank" rel="noopener">Microsoft Threat Intelligence — Storm-2372 update, febrero de 2025</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importer vos propres modèles Intune — Paramètres des modèles Intune</title>
+<meta name="lesson:title" content="Importer vos propres modèles Intune — quand la bibliothèque incluse ne suffit pas">
+<meta name="lesson:subtitle" content="Comment importer des modèles Intune personnalisés dans Panoptica365 et les déployer sur les tenants clients aux côtés de la bibliothèque incluse.">
+<meta name="lesson:icon" content="upload">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres des modèles Intune</span> <span class="sep">·</span> <span>Importer vos propres modèles</span></div>
+  <h1>Importer vos propres modèles Intune — quand la bibliothèque incluse ne suffit pas</h1>
+  <p class="dek">Comment importer des modèles Intune personnalisés dans Panoptica365 et les déployer sur les tenants clients aux côtés de la bibliothèque incluse.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un modèle exporté depuis un tenant source, généralisé, puis déployé à travers plusieurs tenants clients.">
+      <defs>
+        <radialGradient id="iiBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="iiTpl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="iiArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#iiBg)"/>
+
+      <!-- left: one source tenant -->
+      <g transform="translate(70,108)">
+        <rect x="0" y="0" width="150" height="124" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="22" y="24" width="106" height="14" rx="4" fill="#1F3C5C"/>
+        <rect x="22" y="48" width="106" height="14" rx="4" fill="#1F3C5C"/>
+        <rect x="22" y="72" width="78" height="14" rx="4" fill="#1F3C5C"/>
+      </g>
+      <text x="145" y="258" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">TENANT SOURCE</text>
+
+      <!-- arrow 1: export -->
+      <path d="M232 170 H338" stroke="#335F92" stroke-width="2.5" marker-end="url(#iiArr)"/>
+      <text x="285" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">export</text>
+
+      <!-- middle: generalise -->
+      <g transform="translate(360,98)">
+        <rect x="0" y="0" width="186" height="144" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="28" y="26" width="130" height="12" rx="3" fill="url(#iiTpl)"/>
+        <rect x="28" y="48" width="130" height="12" rx="3" fill="#2A7FA3"/>
+        <!-- crossed-out tenant-specific GUID line -->
+        <rect x="28" y="74" width="130" height="12" rx="3" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1"/>
+        <line x1="28" y1="80" x2="158" y2="80" stroke="#FF5A6E" stroke-width="2"/>
+        <rect x="28" y="98" width="92" height="12" rx="3" fill="#2A7FA3"/>
+        <text x="93" y="132" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600">GÉNÉRALISER</text>
+      </g>
+      <text x="453" y="258" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2" font-weight="600">MODÈLE</text>
+
+      <!-- arrow 2: deploy -->
+      <path d="M558 170 H668" stroke="#335F92" stroke-width="2.5" marker-end="url(#iiArr)"/>
+      <text x="613" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">déployer</text>
+
+      <!-- right: many customer tenants -->
+      <g fill="#0E2236" stroke="#2A6F9E" stroke-width="1.3">
+        <rect x="700" y="64" width="118" height="74" rx="10"/>
+        <rect x="836" y="64" width="118" height="74" rx="10"/>
+        <rect x="972" y="64" width="118" height="74" rx="10"/>
+        <rect x="700" y="156" width="118" height="74" rx="10"/>
+        <rect x="836" y="156" width="118" height="74" rx="10"/>
+        <rect x="972" y="156" width="118" height="74" rx="10"/>
+      </g>
+      <g fill="#5CCBF4" opacity="0.85">
+        <rect x="720" y="86" width="78" height="9" rx="3"/><rect x="720" y="104" width="58" height="9" rx="3"/>
+        <rect x="856" y="86" width="78" height="9" rx="3"/><rect x="856" y="104" width="58" height="9" rx="3"/>
+        <rect x="992" y="86" width="78" height="9" rx="3"/><rect x="992" y="104" width="58" height="9" rx="3"/>
+        <rect x="720" y="178" width="78" height="9" rx="3"/><rect x="720" y="196" width="58" height="9" rx="3"/>
+        <rect x="856" y="178" width="78" height="9" rx="3"/><rect x="856" y="196" width="58" height="9" rx="3"/>
+        <rect x="992" y="178" width="78" height="9" rx="3"/><rect x="992" y="196" width="58" height="9" rx="3"/>
+      </g>
+      <text x="895" y="258" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2" font-weight="600">TENANTS CLIENTS</text>
+    </svg>
+    <figcaption>Un modèle existe quelque part; vous voulez qu'il existe ailleurs. Exporter depuis un tenant, généraliser les bouts spécifiques au tenant, déployer à travers les autres.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La bibliothèque Intune de Panoptica365 livre 14 modèles concentrés sur le durcissement des terminaux Windows, avec des signaux de conformité pour iOS, Android et macOS. C'est délibéré et ça correspond à la réalité PME : la plupart des appareils gérés sont Windows, le mobile est surtout BYOD, macOS est une minorité. Pour le client PME typique, la bibliothèque incluse couvre la surface de configuration critique pour la sécurité.</p>
+  </div>
+
+  <p>Mais « PME typique » n'est pas chaque PME. Certains clients ont :</p>
+
+  <ul>
+    <li>Une grosse flotte Android Enterprise (compagnies de logistique, entreprises de service sur le terrain) qui a besoin de profils de configuration au-delà du signal de conformité.</li>
+    <li>Un environnement majoritairement macOS (agences créatives, ateliers de dev de logiciels) qui a besoin de profils de configuration pour FileVault, gatekeeper, mises à jour de logiciels, déploiement d'apps.</li>
+    <li>Des exigences spécifiques à l'industrie qui ont besoin de profils de configuration sur mesure — modes kiosque d'appareils de santé, verrouillage d'étage de fabrication, durcissement de point de vente au détail.</li>
+    <li>Des modèles de durcissement matures internes au MSP que le chef TI senior a accordés au fil des années et veut déployés à travers toute la base de clients.</li>
+    <li>Des baselines réglementaires (CIS, NIST, spécifiques HIPAA) qui doivent être déployés comme modèles Intune aux côtés de la bibliothèque Panoptica365.</li>
+  </ul>
+
+  <p>Pour tous ces cas, la réponse est la même : <strong>importer vos propres modèles Intune</strong> dans la bibliothèque de Panoptica365, les déployer à travers les tenants clients de la même façon que les modèles inclus se déploient.</p>
+
+  <p>Cette leçon parcourt ce flux — le parallèle de la leçon 8 de la carte 3, adapté pour les particularités spécifiques d'Intune.</p>
+
+  <h2>Quand importer un modèle Intune sur mesure</h2>
+
+  <p>Les mêmes cinq scénarios qui s'appliquaient aux modèles d'AC s'appliquent ici :</p>
+
+  <p><strong>1. Couverture de plateforme que la bibliothèque incluse n'adresse pas.</strong> Profils de configuration Android Enterprise, politiques de configuration d'app iOS, profils de configuration macOS pour FileVault et gatekeeper. Tous existent comme modèles Intune exportables dans n'importe quel tenant où ils ont été construits; ils peuvent être levés dans Panoptica365.</p>
+
+  <p><strong>2. Une configuration de durcissement sur mesure construite chez un client qui devrait être disponible aux autres.</strong> La brillante configuration Windows d'un ingénieur senior pour un secteur d'industrie spécifique (imagerie médicale, gestion de documents légaux, firmes comptables) se fait exporter une fois, généraliser, importer comme modèle, déployer à travers des clients similaires.</p>
+
+  <p><strong>3. Baselines de cadre de conformité.</strong> Mappages CIS Microsoft 365 Foundations Benchmark, contrôles NIST 800-171, durcissement spécifique HIPAA. Ceux-ci existent comme profils de configuration détaillés qui peuvent être déployés via Intune. Construisez-les une fois pour un client qui en a besoin; importez comme modèle; déployez à d'autres clients dans le même panier réglementaire.</p>
+
+  <p><strong>4. Réponse à un incident spécifique ou à un quasi-incident.</strong> Après qu'un client ait vécu un incident de vol d'identifiants, vous construisez un ensemble plus strict de profils de configuration. Vous voudriez ce durcissement disponible pour d'autres clients dans le même profil de risque. L'import, c'est le mécanisme.</p>
+
+  <p><strong>5. Nouvelles menaces qui exigent de nouvelles configurations.</strong> Microsoft annonce une nouvelle technique d'attaque; votre équipe de sécurité construit une configuration Intune qui l'adresse; vous avez besoin de la déployer à travers trente tenants. Construire une fois, importer une fois, déployer trente fois.</p>
+
+  <p>Le patron est identique à l'AC : un modèle existe quelque part, vous voulez qu'il existe ailleurs, Panoptica365 rend le transfert traitable.</p>
+
+  <h2>Comment l'import fonctionne — particularités Intune</h2>
+
+  <p>Le flux de haut niveau est direct et délibérément moins magique que son cousin AC. Mettez les attentes honnêtement : il n'y a pas de généralisation automatique des références spécifiques au tenant qui se passe en arrière-plan. Ce que vous exportez est à peu près ce que vous importez.</p>
+
+  <p><strong>Étape 1 : Pointer Panoptica365 vers un tenant source.</strong> Un opérateur MSP choisit n'importe quel tenant auquel la plateforme a accès et tire la configuration Intune via Microsoft Graph. Le tirage produit une représentation JSON structurée des politiques de configuration, politiques de conformité, profils de configuration et modèles Endpoint Security du tenant source — la même forme que les modèles inclus <code>Panoptica365 - ...</code>, qui ont eux-mêmes été construits en exportant depuis un tenant source, en nettoyant les références spécifiques au tenant, et en empaquetant le résultat.</p>
+
+  <p><strong>Étape 2 : Choisir quoi importer comme modèle.</strong> De la liste des politiques tirées, l'opérateur choisit celles spécifiques à enregistrer comme modèles Panoptica365. La plupart des exports correspondent un à un — une politique à la source devient un modèle dans Panoptica365. Le choix de <em>ce qui vaut la peine de transformer en modèle réutilisable</em> est un jugement; toutes les politiques spécifiques au client ne devraient pas être transformées en modèles.</p>
+
+  <p><strong>Étape 3 : Être conscient de ce qui ne se généralise pas automatiquement.</strong> C'est là qu'Intune est plus douloureux que l'AC. Le flux d'import AC fait la généralisation des emplacements nommés (travail du 23 avril, <code>project_named_location_generalization</code>); le flux d'import Intune <strong>ne fait pas</strong> la généralisation équivalente aujourd'hui. Les références qui ne porteront pas proprement à travers les tenants incluent :</p>
+
+  <ul>
+    <li><strong>Références de groupes</strong> — les assignations et exclusions ciblent les groupes de sécurité Entra par GUID. Un groupe avec le même nom dans le tenant B a un GUID différent du tenant A. Un modèle importé qui référence un GUID de groupe du tenant source ne se déploiera pas proprement ailleurs.</li>
+    <li><strong>Références de certificats</strong> — les profils qui référencent des certificats par numéro de série ou empreinte ne portent pas à travers les tenants.</li>
+    <li><strong>Références de filtres</strong> — les filtres d'assignation par plateforme/modèle/fabricant d'appareil sont spécifiques au tenant par GUID.</li>
+    <li><strong>Références de modèles de notification</strong> — pour les politiques de conformité qui déclenchent des notifications utilisateur.</li>
+  </ul>
+
+  <p>La responsabilité de l'opérateur aujourd'hui, c'est de nettoyer manuellement ces références du modèle importé, ou d'accepter que le modèle aura besoin d'ajustement à chaque tenant de destination avant de pouvoir se déployer.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Les cinq étapes de l'import d'un modèle Intune sur mesure : pointer vers un tenant source, choisir quoi importer, nettoyer les références spécifiques au tenant, nommer, sauvegarder à la bibliothèque.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="iiStep" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <line x1="84" y1="68" x2="636" y2="68" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1 -->
+        <g><circle cx="84" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="84" y="74" fill="#A8E1F8" font-size="15" font-weight="700">1</text>
+          <text x="84" y="116" fill="#C4D4E8" font-size="11.5">Pointer</text><text x="84" y="131" fill="#C4D4E8" font-size="11.5">la source</text></g>
+        <!-- step 2 -->
+        <g><circle cx="222" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="222" y="74" fill="#A8E1F8" font-size="15" font-weight="700">2</text>
+          <text x="222" y="116" fill="#C4D4E8" font-size="11.5">Choisir les</text><text x="222" y="131" fill="#C4D4E8" font-size="11.5">politiques</text></g>
+        <!-- step 3 -->
+        <g><circle cx="360" cy="68" r="22" fill="#10243B" stroke="#FFC04D" stroke-width="1.6"/><text x="360" y="74" fill="#FFC04D" font-size="15" font-weight="700">3</text>
+          <text x="360" y="116" fill="#FFC04D" font-size="11.5">Nettoyer les</text><text x="360" y="131" fill="#FFC04D" font-size="11.5">références</text></g>
+        <!-- step 4 -->
+        <g><circle cx="498" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="498" y="74" fill="#A8E1F8" font-size="15" font-weight="700">4</text>
+          <text x="498" y="116" fill="#C4D4E8" font-size="11.5">Nommer &amp;</text><text x="498" y="131" fill="#C4D4E8" font-size="11.5">décrire</text></g>
+        <!-- step 5 -->
+        <g><circle cx="636" cy="68" r="22" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="636" y="74" fill="#7DD9F9" font-size="15" font-weight="700">5</text>
+          <text x="636" y="116" fill="#7DD9F9" font-size="11.5">Sauver à la</text><text x="636" y="131" fill="#7DD9F9" font-size="11.5">biblio.</text></g>
+      </g>
+      <g><path d="M108 68 H198" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M246 68 H336" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M384 68 H474" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M522 68 H612" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/></g>
+    </svg>
+    <figcaption>L'import en cinq étapes. L'étape 3 — nettoyer les références spécifiques au tenant — est celle que Panoptica365 n'automatise pas pour Intune aujourd'hui; elle revient à l'opérateur.</figcaption>
+  </figure>
+
+  <div class="callout caution">
+    <div class="clabel">Réserve sur les assignations</div>
+    <p>Les assignations et exclusions ciblent les groupes de sécurité Entra par GUID, et un groupe avec le même nom dans le tenant B a un GUID différent du tenant A. Un modèle importé qui référence un GUID de groupe du tenant source ne se déploiera pas proprement ailleurs tant que cette référence n'est pas nettoyée.</p>
+  </div>
+
+  <h2>À quoi ressemble la forme d'export</h2>
+
+  <p>L'export Microsoft Graph qu'Intune produit — et la forme à partir de laquelle les modèles inclus <code>Panoptica365 - ...</code> ont été construits — est du JSON structuré. Chaque politique exportée a :</p>
+
+  <ul>
+    <li>Un champ <code>policyType</code> — <code>deviceCompliancePolicies</code>, <code>configurationPolicies</code>, <code>deviceConfigurations</code>, ou <code>intents</code> — identifiant à quelle famille de politique Intune elle appartient.</li>
+    <li>Un <code>name</code> et une <code>category</code> identifiant le but du modèle.</li>
+    <li>Soit un objet <code>policy</code> (les données de configuration), soit un tableau <code>settings</code> (les configurations par paramètre), selon la famille de politique.</li>
+  </ul>
+
+  <p>Les modèles inclus ont tous été généralisés — ils ne portent pas de GUID de groupes du tenant source, de références de certificats, ou d'autres objets spécifiques au tenant. Ils se déploient proprement à n'importe quel tenant client. Le même travail de généralisation — actuellement manuel — s'applique à tout modèle sur mesure que vous importez.</p>
+
+  <h2>Ce qui peut être exporté portablement et ce qui ne peut pas</h2>
+
+  <p>Vaut la peine d'être explicite sur les limites de portabilité d'Intune :</p>
+
+  <p><strong>Portable proprement :</strong></p>
+  <ul>
+    <li>Politiques de catalogue de paramètres (politiques de configuration) — le format moderne, presque tous les paramètres sont portables.</li>
+    <li>Politiques de conformité — la structure de la politique est portable; certains paramètres référencent des valeurs spécifiques au tenant qui ont besoin de substitution.</li>
+    <li>Modèles Endpoint Security (règles ASR, pare-feu, Defender, Account Protection) — surtout portables; les groupes d'assignation ont besoin de substitution.</li>
+  </ul>
+
+  <p><strong>Surtout portables avec des espaces réservés :</strong></p>
+  <ul>
+    <li>Profils de configuration (Device Configurations) — type de modèle plus ancien; certaines propriétés s'attachent à des réseaux Wi-Fi spécifiques au tenant, des serveurs VPN, des autorités de certification.</li>
+    <li>Politiques de configuration d'app — référencent des apps qui existent comme apps gérées dans le tenant; la référence d'app est portable mais le client doit avoir l'app disponible.</li>
+  </ul>
+
+  <p><strong>Difficile ou impossible à porter portablement :</strong></p>
+  <ul>
+    <li><strong>Politiques de protection d'app (APP/MAM).</strong> Référencent des apps spécifiques; leur comportement dépend de la configuration d'identité spécifique au tenant. Demandent souvent une re-création par tenant plutôt que la création de modèle.</li>
+    <li><strong>Modèles qui déploient des certificats</strong> — les certificats sont par nature par tenant. La structure du modèle porte; le certificat lui-même non.</li>
+    <li><strong>Modèles qui référencent des filtres sur mesure</strong> — les filtres d'assignation doivent être créés au tenant de destination avant que le modèle puisse se déployer.</li>
+    <li><strong>Configurations de déploiement d'app</strong> — assigner une app spécifique à un groupe spécifique est surtout par tenant.</li>
+    <li><strong>N'importe quoi qui dépend de l'état d'accès conditionnel</strong> — certaines configurations Intune interagissent avec les politiques d'AC (p. ex., notifications de politique de conformité routées via AC); ces références ont besoin de re-création.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Trois paliers de portabilité pour les modèles Intune : portable proprement, surtout portable avec des espaces réservés, et difficile ou impossible à porter.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- tier 1: portable cleanly -->
+        <g transform="translate(28,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#2EE8A0"/>
+          <text x="40" y="33" fill="#2EE8A0" font-size="12" font-weight="700">PORTABLE PROPREMENT</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">Catalogue de paramètres</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">Politiques de conformité</text>
+          <text x="22" y="110" fill="#C4D4E8" font-size="12">Modèles Endpoint</text>
+          <text x="22" y="125" fill="#6B85A6" font-size="11">Security</text>
+        </g>
+        <!-- tier 2: mostly portable -->
+        <g transform="translate(256,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#FFC04D"/>
+          <text x="40" y="33" fill="#FFC04D" font-size="11" font-weight="700">AVEC ESPACES RÉSERVÉS</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">Profils de configuration</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">Configuration d'app</text>
+        </g>
+        <!-- tier 3: hard or impossible -->
+        <g transform="translate(484,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#FF5A6E"/>
+          <text x="40" y="33" fill="#FF8A98" font-size="11" font-weight="700">DIFFICILE / IMPOSSIBLE</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">Protection d'app (APP/MAM)</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">Certificats</text>
+          <text x="22" y="110" fill="#C4D4E8" font-size="12">Filtres sur mesure</text>
+          <text x="22" y="134" fill="#C4D4E8" font-size="12">Config dépendant de l'AC</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les trois paliers de portabilité d'Intune. Plus on va vers la droite, plus chaque tenant de destination a besoin de re-création manuelle.</figcaption>
+  </figure>
+
+  <p>Le flux d'import Panoptica365 ne signale pas les éléments non portables pour vous aujourd'hui — ils passent dans le JSON importé et l'opérateur doit les repérer et les nettoyer manuellement avant de se fier au modèle pour le déploiement entre clients. Les modèles inclus <code>Panoptica365 - ...</code> ont subi exactement ce nettoyage manuel quand ils ont été construits; vos imports sur mesure ont besoin de la même discipline.</p>
+
+  <h2>Quand <em>ne pas</em> importer</h2>
+
+  <p>Deux cas spécifiques où importer est le mauvais mouvement pour Intune :</p>
+
+  <p><strong>Le modèle est verrouillé à la plateforme.</strong> Un profil de configuration qui cible <code>windows10</code> seulement n'aide pas un client sans appareils Windows. L'importer ajoute à la bibliothèque mais ne fournit aucune valeur à ce client. Si vous importez pour la réutilisation entre clients, ciblez sur les plateformes que vos clients ont vraiment.</p>
+
+  <p><strong>Le modèle dépend d'une infrastructure spécifique au tenant qui ne se généralise pas.</strong> Une configuration qui référence un domaine Active Directory sur place spécifique, une autorité de certification spécifique qui émet des certificats d'appareils gérés, une infrastructure Wi-Fi sur place spécifique — ceux-ci ne se généralisent pas. Même après nettoyage manuel, le tenant de destination a besoin de l'infrastructure équivalente pour que le modèle soit utile. Si le tenant source a un AD CS corporatif et la destination est infonuagique-seulement, le modèle ne convient pas.</p>
+
+  <p>Pour ces cas, construisez des politiques Intune par tenant directement plutôt que de transformer en modèles.</p>
+
+  <h2>La bibliothèque incluse est le plancher, pas le plafond</h2>
+
+  <p>Le même point qu'à la leçon 8 de la carte 3 : les modèles que Panoptica365 livre sont un point de départ, pas la limite. Le MSP qui prend Intune au sérieux construit ses propres modèles par-dessus la bibliothèque incluse :</p>
+
+  <ul>
+    <li>Modèles pour des industries spécifiques (imagerie médicale, légal, comptabilité).</li>
+    <li>Modèles pour des cadres de conformité spécifiques (CIS, NIST, HIPAA, SOC 2).</li>
+    <li>Modèles pour le durcissement post-incident (déployés après une compromission de client).</li>
+    <li>Modèles que l'ingénieur senior a construits pour sa posture de durcissement préférée.</li>
+  </ul>
+
+  <p>Ces modèles vivent dans l'instance Panoptica365 du MSP, pas dans la distribution du produit Panoptica365. Ils deviennent partie de l'avantage compétitif du MSP — la PI qui distingue un MSP d'un autre.</p>
+
+  <h2>Maintenir les modèles importés</h2>
+
+  <p>Comme les modèles d'AC (leçon 8 de la carte 3), les modèles Intune ont besoin de maintenance :</p>
+
+  <ul>
+    <li><strong>Changements de schéma Microsoft Graph.</strong> Microsoft renomme des propriétés, marque des paramètres comme obsolètes, en ajoute des nouveaux. Les modèles importés peuvent avoir besoin de mise à jour.</li>
+    <li><strong>Changements dans l'environnement client.</strong> La configuration de tenant d'un client évolue; les modèles qui fonctionnaient parfaitement il y a six mois peuvent avoir besoin d'ajustement.</li>
+    <li><strong>Divergence modèle-vs-politique-déployée.</strong> Les ajustements par tenant par les admins individuels font dériver le déploiement de la référence du modèle.</li>
+  </ul>
+
+  <p>Le détecteur de dérive de Panoptica365 couvre les modèles inclus; les modèles sur mesure ont besoin que le MSP vérifie périodiquement. Le coût de maintenance est réel — importer 20 modèles sur mesure veut dire s'engager à maintenir 20 modèles.</p>
+
+  <h2>Déploiement pour un modèle Intune sur mesure</h2>
+
+  <p>Déploiement au groupe pilote, comme les modèles inclus, avec une réserve supplémentaire : les modèles importés sont souvent <strong>moins testés</strong> que ceux inclus. Ils sont venus de l'expérience d'un seul tenant; ils peuvent ne pas avoir été validés à travers la variation d'environnements que les clients représentent.</p>
+
+  <ol>
+    <li><strong>Inspection pré-import.</strong> Auditer le modèle source. Est-il propre? Bien accordé? À jour? Des références codées en dur qui ne transféreront pas? Régler les enjeux à la source.</li>
+    <li><strong>Importer.</strong> Généraliser les références, sauvegarder comme modèle.</li>
+    <li><strong>Premier déploiement à un seul tenant</strong>, avec déploiement au groupe pilote à l'intérieur de ce tenant. Traiter le premier client comme le pilote plus large pour ce modèle.</li>
+    <li><strong>Jours 1 à 14</strong> — vérifier que le modèle se comporte comme attendu. Signaux de conformité corrects, configurations qui s'appliquent, pas d'impact utilisateur inattendu.</li>
+    <li><strong>Jour 14+</strong> — si le premier déploiement client est propre, étendre à plus de tenants clients. Chaque déploiement client subséquent est plus rapide (le modèle est validé).</li>
+  </ol>
+
+  <p>Une fois qu'un modèle sur mesure a été déployé à travers 3 à 5 tenants clients avec succès, traitez-le comme validé en production et continuez à l'utiliser avec une discipline de déploiement normale.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>La bibliothèque incluse est le plancher.</strong> Traitez les 14 modèles Panoptica365 comme le point de départ pour n'importe quel client. Construisez par-dessus avec des imports pour tout ce que le client a besoin que le plancher ne couvre pas.</p>
+
+  <p><strong>Les imports Intune ont plus de types d'espaces réservés que les imports AC.</strong> Références de groupes, références de certificats, références de filtres, modèles de notification. Le travail de généralisation est plus impliqué. Allouez plus de temps pour le premier import de n'importe quel type de modèle donné.</p>
+
+  <p><strong>Validez avant de mettre à l'échelle.</strong> Un mauvais modèle importé déployé à travers trente tenants clients, ce sont trente déploiements brisés. Pilote premier-client, valider, puis étendre.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">11</div><div class="xt"><b>Opérer Intune à l'échelle</b> — le finale. Dérive, exclusions, cycle de vie, le problème de perte d'assignation.</div></div>
+  </div>
+
+  <p>Pour l'instant : le flux d'import est ce qui transforme le module Intune de Panoptica365 de « ce qu'on a livré » à « ce que votre MSP connaît ». Utilisez-le pour les brèches de couverture de plateforme, les modèles de cadre de conformité, le durcissement spécifique à l'industrie, les configurations curées par l'ingénieur senior.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — API Microsoft Graph pour les politiques de configuration Intune (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview" target="_blank" rel="noopener">Microsoft Learn — Intune Graph API reference</a>); export et import de politique de catalogue de paramètres (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/settings-catalog" target="_blank" rel="noopener">Microsoft Learn — Settings catalog</a>); type de ressource de politique de conformité (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-shared-devicecompliancepolicy" target="_blank" rel="noopener">Microsoft Learn — deviceCompliancePolicy</a>); références de modèles de politique Endpoint Security (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-policy" target="_blank" rel="noopener">Microsoft Learn — Endpoint security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

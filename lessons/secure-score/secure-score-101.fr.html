@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secure Score 101 — ce que le chiffre mesure réellement, et ce qu'il ne mesure pas</title>
+<meta name="lesson:title" content="Secure Score 101 — ce que le chiffre mesure réellement, et ce qu'il ne mesure pas">
+<meta name="lesson:subtitle" content="Ce que Microsoft Secure Score mesure vraiment, ce qu'il ne mesure pas, et comment l'utiliser honnêtement avec les clients.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Secure Score 101</span></div>
+  <h1>Secure Score 101 — ce que le chiffre mesure réellement, et ce qu'il ne mesure pas</h1>
+  <p class="dek">Ce que Microsoft Secure Score mesure vraiment, ce qu'il ne mesure pas, et comment l'utiliser honnêtement avec les clients.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une jauge de note passant de 41 pour cent à 82 pour cent sur neuf mois.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ssArc" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FFC04D"/><stop offset="55%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2EE8A0"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- gauge -->
+      <g transform="translate(380,212)">
+        <!-- track -->
+        <path d="M-170 0 A170 170 0 0 1 170 0" fill="none" stroke="#13294A" stroke-width="26" stroke-linecap="round"/>
+        <!-- filled to 82% of the 180-degree sweep -->
+        <path d="M-170 0 A170 170 0 0 1 159.8 -58.2" fill="none" stroke="url(#ssArc)" stroke-width="26" stroke-linecap="round"/>
+        <!-- 41% start marker -->
+        <circle cx="-99.6" cy="-138" r="9" fill="#0E2640" stroke="#FFC04D" stroke-width="2.5"/>
+        <text x="-150" y="-152" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="20" font-weight="700">41 %</text>
+        <text x="-150" y="-130" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">à l'accueil</text>
+        <!-- 82% end marker -->
+        <circle cx="159.8" cy="-58.2" r="9" fill="#0E2236" stroke="#2EE8A0" stroke-width="2.5"/>
+        <text x="178" y="-100" text-anchor="start" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="20" font-weight="700">82 %</text>
+        <text x="178" y="-79" text-anchor="start" fill="#9FB4CE" font-family="Geist,Inter,sans-serif" font-size="11.5">neuf mois plus tard</text>
+        <!-- center label -->
+        <text x="0" y="-26" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">SECURE SCORE</text>
+        <text x="0" y="-2" text-anchor="middle" fill="#EAF7FE" font-family="Geist,Inter,sans-serif" font-size="13.5">un pourcentage de ce que Microsoft recommande</text>
+      </g>
+
+      <!-- arrow to right panel -->
+      <path d="M620 150 H712" stroke="#335F92" stroke-width="2.5" marker-end="url(#ssArr)"/>
+      <defs><marker id="ssArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+
+      <!-- right: the story -->
+      <g transform="translate(740,108)">
+        <rect x="0" y="0" width="320" height="124" rx="12" fill="#0E2236" stroke="#1F3C5C"/>
+        <text x="22" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="1.5">UN CHIFFRE DEVIENT UNE HISTOIRE</text>
+        <text x="22" y="68" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="14.5">Un seul pourcentage est un chiffre.</text>
+        <text x="22" y="94" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="14.5">41 % &#8594; 82 % est une histoire.</text>
+      </g>
+    </svg>
+    <figcaption>Le pourcentage tout seul est un chiffre; c'est le mouvement dans le temps que le client retient.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un MSP accueille un nouveau client en mars. L'ancien fournisseur TI du client avait passé les deux dernières années à lui assurer que son environnement Microsoft 365 était « entièrement sécurisé » — c'était même un argument central de la proposition de renouvellement qui avait maintenu ce fournisseur en place pendant ces deux années. Le client y croyait. Le nouveau MSP, qui reprend le compte, ouvre Panoptica365, ajoute le tenant, laisse la collecte se compléter. La Secure Score revient à <strong>41 %</strong>.</p>
+
+  <p>Le nouveau MSP montre le chiffre au client. Le client est, brièvement, très fâché — contre l'ancien fournisseur, contre lui-même de ne pas avoir posé la question avant, contre la situation au complet. Une fois la réaction immédiate passée, il pose la question que chaque client pose : « ça veut dire quoi exactement, ce chiffre-là? »</p>
+
+  <p>Cette leçon parle de pouvoir répondre à cette question honnêtement. Microsoft Secure Score est la métrique de sécurité la plus citée dans l'écosystème M365 et une des plus mal comprises. Les opérateurs qui savent la lire correctement — qui savent ce que mesure le pourcentage, ce qu'il ne mesure pas, où il colle à la réalité et où il induit en erreur — peuvent s'en servir comme d'un des outils face client les plus puissants du coffre à outils MSP. Les opérateurs qui la traitent comme une boîte noire la sous-estiment (en ignorant un signal utile) ou la surestiment (en vendant un pourcentage au lieu de vendre du vrai travail de sécurité).</p>
+
+  <p>La carte 6, c'est six leçons pour lire la Secure Score honnêtement, mapper notre curriculum sur elle, savoir où elle ment, et s'en servir comme livrable face client qui justifie la ligne de service.</p>
+  </div>
+
+  <h2>Ce qu'est vraiment Microsoft Secure Score</h2>
+
+  <p>Microsoft Secure Score est une métrique de posture de sécurité à l'échelle du tenant que Microsoft calcule quotidiennement pour chaque tenant M365. Elle exprime, en pourcentage, combien des configurations de sécurité recommandées par Microsoft le tenant a implémentées par rapport au total possible.</p>
+
+  <p>Les bases :</p>
+
+  <ul>
+    <li><strong>Le chiffre est un pourcentage</strong>, calculé comme <code>(points obtenus) / (max de points disponibles) × 100</code>. Un client avec 988,2 points sur un maximum possible de 1113,0 a une Secure Score d'environ 88,79 %.</li>
+    <li><strong>Microsoft calcule la note quotidiennement</strong> d'après la configuration du tenant. Vous n'avez pas à vous inscrire; chaque tenant M365 a une Secure Score.</li>
+    <li><strong>La note couvre un ensemble défini de recommandations.</strong> Chaque recommandation a une valeur maximum en points que Microsoft assigne d'après son évaluation de l'impact sécurité de la recommandation. Implémenter une recommandation rapporte les points (ou une fraction, pour les crédits partiels).</li>
+    <li><strong>Les recommandations sont organisées en catégories</strong> — typiquement Identité, Appareils, Applications, Données. La ventilation vous laisse voir quelles zones du tenant sont solides et lesquelles sont faibles.</li>
+    <li><strong>Microsoft publie des comparaisons sectorielles</strong> — la « note moyenne pour les organisations de taille similaire ». Un tenant à 88,79 % pourrait être comparé à une moyenne pour organisations de taille similaire de 46,74 %, ce qui est exactement le genre de comparaison qui transforme le chiffre en visuel de conversation de renouvellement.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="La formule de Secure Score : points obtenus divisés par le max de points disponibles, fois cent.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- fraction -->
+        <text x="172" y="60" fill="#2EE8A0" font-size="16" font-weight="600">points obtenus</text>
+        <text x="172" y="74" fill="#52708F" font-size="13">988,2</text>
+        <line x1="44" y1="86" x2="300" y2="86" stroke="#335F92" stroke-width="2"/>
+        <text x="172" y="112" fill="#A8E1F8" font-size="15" font-weight="600">max de points disponibles</text>
+        <text x="172" y="126" fill="#52708F" font-size="13">1113,0</text>
+        <!-- times 100 -->
+        <text x="346" y="86" fill="#6B85A6" font-size="20">&#215; 100</text>
+        <!-- equals -->
+        <text x="424" y="86" fill="#6B85A6" font-size="22">=</text>
+        <!-- result -->
+        <g>
+          <rect x="470" y="50" width="200" height="64" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="570" y="86" fill="#7DD9F9" font-size="26" font-weight="700">88,79 %</text>
+          <text x="570" y="104" fill="#6B85A6" font-size="11.5">Secure Score</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Le pourcentage, ce sont juste les points obtenus sur les points disponibles — ici, 988,2 sur 1113,0.</figcaption>
+  </figure>
+
+  <p>La note vit dans le <strong>portail Microsoft 365 Defender</strong> (<code>security.microsoft.com</code> → Secure Score). C'est la surface canonique et effectivement la seule chez Microsoft pour la Microsoft Secure Score principale. Pour les opérateurs MSP, le portail est par tenant — chaque client demande d'ouvrir son tenant individuellement. L'agrégation multi-tenant, ce n'est pas quelque chose que Microsoft offre nativement; c'est là que la vue de Panoptica365 (couverte à la leçon 5) devient une surface opérateur qui a vraiment de la valeur.</p>
+
+  <h2>À quoi ressemblent les recommandations</h2>
+
+  <p>Une recommandation dans Secure Score a quelques composantes mobiles :</p>
+
+  <ul>
+    <li><strong>Un titre</strong> qui décrit quoi faire (ex. « Exiger MFA pour les rôles administratifs », « S'assurer que l'audit des boîtes aux lettres est activé pour tous les utilisateurs », « Activer BitLocker pour les disques OS »).</li>
+    <li><strong>Une catégorie</strong> (Identité, Appareils, Applications, Données).</li>
+    <li><strong>Une valeur maximum en points</strong> — combien de points la recommandation contribue si elle est entièrement implémentée.</li>
+    <li><strong>Les points actuellement obtenus</strong> — zéro si non implémentée, le maximum si entièrement implémentée, ou quelque part entre les deux pour un crédit partiel (couvert à la leçon 2).</li>
+    <li><strong>Une exigence de licence</strong> — certaines recommandations ne s'appliquent que si le tenant a une licence spécifique (ex. Entra P2, Defender for Endpoint, fonctionnalités E5). Les recommandations pour lesquelles le tenant n'est pas licencié ne comptent pas dans le max.</li>
+    <li><strong>Une action</strong> — le lien ou les instructions pour vraiment implémenter la recommandation, souvent un lien profond dans le portail Microsoft pertinent.</li>
+  </ul>
+
+  <p>Quand les opérateurs regardent la Secure Score d'un tenant dans le portail, ce qu'ils voient, c'est essentiellement une liste classée de recommandations, triable par catégorie ou par valeur en points, avec le statut d'implémentation visible par recommandation. Le travail de faire bouger la note, c'est le travail de descendre cette liste, d'implémenter d'abord les items à forte valeur, et d'accepter que certains items ne s'appliquent pas à chaque client.</p>
+
+  <h2>L'Identity Secure Score — la cousine Entra qui mérite d'être connue</h2>
+
+  <p>Il y a une deuxième métrique appelée <strong>Identity Secure Score</strong> qui vit dans Entra ID et qui se fait régulièrement confondre avec Microsoft Secure Score. Les opérateurs devraient connaître la distinction.</p>
+
+  <ul>
+    <li><strong>Microsoft Secure Score</strong> — à l'échelle du tenant, couvre Identité / Appareils / Applications / Données. C'est de ça que parle cette leçon. Vit dans le portail Defender.</li>
+    <li><strong>Identity Secure Score</strong> — spécifique à Entra, couvre seulement les recommandations liées à l'identité. Vit dans le centre d'administration Entra. A une méthodologie de notation séparée, focalisée exclusivement sur la posture de sécurité d'Entra ID.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Deux Secure Scores côte à côte : la Microsoft Secure Score à l'échelle du tenant dans le portail Defender, et l'Identity Secure Score limitée à l'identité dans le centre d'administration Entra.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- left: Microsoft Secure Score -->
+        <rect x="32" y="28" width="312" height="164" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="188" y="58" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Microsoft Secure Score</text>
+        <text x="188" y="80" text-anchor="middle" fill="#6B85A6" font-size="11" letter-spacing="0.5">portail Defender · tout le tenant</text>
+        <g text-anchor="middle">
+          <g><rect x="48" y="100" width="66" height="30" rx="15" fill="#10243B" stroke="#2A6F9E"/><text x="81" y="120" fill="#A8E1F8" font-size="11.5">Identité</text></g>
+          <g><rect x="124" y="100" width="66" height="30" rx="15" fill="#10243B" stroke="#2A6F9E"/><text x="157" y="120" fill="#A8E1F8" font-size="11.5">Appareils</text></g>
+          <g><rect x="200" y="100" width="50" height="30" rx="15" fill="#10243B" stroke="#2A6F9E"/><text x="225" y="120" fill="#A8E1F8" font-size="11.5">Apps</text></g>
+          <g><rect x="260" y="100" width="58" height="30" rx="15" fill="#10243B" stroke="#2A6F9E"/><text x="289" y="120" fill="#A8E1F8" font-size="11.5">Données</text></g>
+        </g>
+        <text x="188" y="166" text-anchor="middle" fill="#C4D4E8" font-size="12">le chiffre principal</text>
+
+        <!-- right: Identity Secure Score -->
+        <rect x="376" y="28" width="312" height="164" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="532" y="58" text-anchor="middle" fill="#C4D4E8" font-size="15" font-weight="700">Identity Secure Score</text>
+        <text x="532" y="80" text-anchor="middle" fill="#6B85A6" font-size="11" letter-spacing="0.5">centre d'admin Entra · identité seulement</text>
+        <g text-anchor="middle">
+          <rect x="426" y="100" width="212" height="30" rx="15" fill="#0E2640" stroke="#33527A"/><text x="532" y="120" fill="#A8E1F8" font-size="11.5">Recommandations d'identité</text>
+        </g>
+        <text x="532" y="166" text-anchor="middle" fill="#6B85A6" font-size="12">le drill-down identité</text>
+      </g>
+    </svg>
+    <figcaption>Même nom, deux portails : le chiffre principal à l'échelle du tenant vit dans Defender; le drill-down identité vit dans Entra.</figcaption>
+  </figure>
+
+  <p>Les deux notes se chevauchent (les deux incluent des recommandations d'identité) mais elles sont calculées différemment et apparaissent dans des portails différents. Microsoft Secure Score est la métrique la plus complète et celle à utiliser dans les conversations face client. L'Identity Secure Score est occasionnellement utile pour creuser le portrait spécifique à l'identité, mais ce n'est pas le chiffre principal.</p>
+
+  <p>Quand un client demande « c'est quoi notre note de sécurité? », il veut presque toujours dire Microsoft Secure Score. Si vous vous retrouvez à regarder un chiffre différent de celui auquel vous vous attendiez, vérifiez dans quel portail vous êtes — Entra et Defender affichent tous les deux « Secure Score » sans toujours rendre évident lequel.</p>
+
+  <h2>Ce que la note ne vous dit PAS</h2>
+
+  <p>Voilà le cadrage qui compte plus que la définition. La note est <strong>utile mais limitée</strong>. Les opérateurs qui comprennent les limites s'en servent bien; ceux qui ne les comprennent pas la survendent aux clients (créant des attentes que la note ne peut pas satisfaire) ou la rejettent (ratant ce qu'elle signale utilement).</p>
+
+  <p>Ce que le pourcentage ne mesure <em>pas</em> :</p>
+
+  <ul>
+    <li><strong>Si le tenant a été attaqué ou compromis.</strong> Une note de 95 % sur un tenant qui se fait silencieusement exfiltrer en ce moment par un attaquant équipé d'AiTM reste 95 % jusqu'à ce que les détections Microsoft se déclenchent. La note est un instantané de configuration, pas un état de menace.</li>
+    <li><strong>Si les paramètres configurés sont <em>bien réglés</em> pour le client.</strong> Secure Score donne des points pour « politique anti-hameçonnage activée » — elle ne sait pas si la liste d'utilisateurs protégés contient les bonnes personnes, si la liste d'expéditeurs de confiance est tenue à jour, si les seuils de la politique correspondent au profil de risque réel du client. Deux clients avec des Secure Score identiques peuvent avoir une protection anti-hameçonnage réelle dramatiquement différente selon le réglage spécifique au client en dessous.</li>
+    <li><strong>La discipline opérationnelle.</strong> La détection de dérive, le triage d'alertes, la gestion des exceptions, la revue annuelle — rien de ce travail continu n'est reflété dans la note. Un client dont le MSP a tout configuré correctement il y a deux ans puis a ignoré le compte a la même note qu'un client dont le MSP répond aux alertes de dérive en quelques heures.</li>
+    <li><strong>Les recommandations qui ne sont pas dans la liste de Microsoft.</strong> La publication DMARC (le travail côté DNS de la carte 5 leçon 4) n'est pas notée — Microsoft ne peut pas vérifier de façon fiable les enregistrements DNS externes, donc tout le parcours <code>p=none → p=quarantine → p=reject</code> n'apparaît pas. La publication SPF n'est pareillement pas notée. L'hygiène des règles de flux de courrier, les registres d'exceptions spécifiques au client, la formation à la sensibilisation à la sécurité, la réponse aux incidents hors plateforme — rien de tout ça n'est mesuré.</li>
+    <li><strong>Le paysage de menaces réel du client.</strong> Un petit cabinet comptable et un grand cabinet juridique peuvent avoir des Secure Score identiques tout en faisant face à des profils de menace complètement différents. La note est une base générique contre l'idée que Microsoft se fait de « ce que chaque tenant M365 devrait faire », pas une évaluation de risque adaptée.</li>
+    <li><strong>Si ce qui est <em>configuré</em> correspond à ce qui est <em>appliqué</em>.</strong> Secure Score lit la configuration. Elle ne vérifie pas indépendamment que la configuration fait vraiment ce qu'elle est censée faire à l'exécution.</li>
+  </ul>
+
+  <p>La liste pourrait continuer. Le point n'est pas d'être cynique sur la métrique — elle est vraiment utile. Le point, c'est d'être honnête envers vous-même et envers les clients sur ce que le pourcentage signale et ce qu'il ne signale pas.</p>
+
+  <h2>Pourquoi la note vaut quand même la peine</h2>
+
+  <p>Malgré les limites, Microsoft Secure Score gagne sa place dans le coffre à outils MSP pour trois raisons précises :</p>
+
+  <p><strong>C'est un chiffre quantifiable.</strong> Les clients réagissent aux chiffres. « Votre posture de sécurité s'est améliorée » est vague; « votre Secure Score est passée de 62 % à 84 % en neuf mois » est concret et présentable dans une rencontre de renouvellement.</p>
+
+  <p><strong>Elle est rédigée par un tiers.</strong> C'est Microsoft qui définit les recommandations et assigne les poids. Le MSP ne corrige pas ses propres devoirs — il est évalué contre une base que Microsoft maintient. Cette crédibilité de tiers compte quand les clients se demandent si le MSP n'invente pas juste des métriques qui le font bien paraître.</p>
+
+  <p><strong>Elle est directionnellement honnête au plancher.</strong> Un tenant à 41 % a des recommandations sérieuses non touchées. Un tenant à 88 % a fait l'essentiel de ce que Microsoft recommande. La précision de la note se dégrade dans le haut (la différence entre 88 % et 95 % peut être des recommandations conditionnées à une licence ou des items qui ne s'appliquent pas), mais dans le bas, elle est fiable comme signal « ce client est sous-géré ».</p>
+
+  <p>Le nouveau MSP de l'anecdote d'ouverture se sert du 41 % pour ancrer la conversation avec le client. Pas « votre ancien fournisseur vous a menti » (trop confrontationnel, en plus l'ancien fournisseur croyait peut-être sincèrement que son travail était adéquat), mais « voici la mesure de base; voici ce qu'il y a derrière; voici le plan pour la faire monter ». Neuf mois plus tard, la note est à 82 %. Le client renouvelle. La Secure Score, c'est la métrique qui a rendu le travail visible.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Secure Score est un instantané de configuration, pas une garantie de sécurité.</strong> Une note élevée ne veut pas dire en sécurité; une note basse ne veut pas dire compromis. Traitez-la comme un indicateur de posture utile, pas comme un verdict. Quand les clients demandent « est-ce qu'on est en sécurité? », la note fait partie de la réponse, jamais toute la réponse.</p>
+
+  <p><strong>L'Identity Secure Score est une métrique séparée dans un portail différent.</strong> Ne confondez pas les deux dans les conversations avec les clients. Microsoft Secure Score, c'est le chiffre principal; l'Identity Secure Score, c'est le drill-down pour le travail spécifique à l'identité.</p>
+
+  <p><strong>L'usage le plus puissant de la note, c'est la tendance dans le temps.</strong> Un seul pourcentage de Secure Score est un chiffre. Une Secure Score qui est passée de 41 % à 82 % en neuf mois, c'est une histoire — et les histoires, c'est ce que les clients retiennent au renouvellement. Le travail des cartes 3, 4 et 5 fait directement bouger ce chiffre; le reste de la carte 6 parle de la lire correctement et de bien s'en servir.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <ul>
+    <li><strong>Leçon 2 : Comment la note est calculée.</strong> La mécanique sous le pourcentage — points, poids, crédit partiel, conditionnement par licence, et pourquoi la note bouge toute seule sans que vous changiez quoi que ce soit.</li>
+    <li><strong>Leçon 3 : Mapper le curriculum sur la note.</strong> Comment le travail des cartes 3, 4 et 5 se traduit en recommandations Secure Score précises, et la demi-douzaine à fort impact qui fait le plus bouger la note.</li>
+  </ul>
+
+  <p>Pour l'instant : ouvrez le tableau de bord principal de Panoptica365. Regardez la colonne Secure Score à travers vos tenants clients. Remarquez la fourchette — certains sont dans les 80, d'autres plus bas, le plus bas est celui qui a besoin de la conversation le plus vite. Cliquez dans le plus bas. La note a une histoire. Le reste de la carte 6 parle de la lire et de la raconter.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur l'aperçu de Microsoft Secure Score (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score</a>); méthodologie de calcul de Secure Score (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — How Secure Score is calculated</a>); aperçu de l'Identity Secure Score (<a href="https://learn.microsoft.com/en-us/entra/fundamentals/identity-secure-score" target="_blank" rel="noopener">Microsoft Learn — Identity Secure Score in Entra ID</a>); référence des comparaisons sectorielles pour la moyenne des organisations de taille similaire (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-history-metrics-trends" target="_blank" rel="noopener">Microsoft Learn — Secure Score comparisons</a>); catégories de recommandations et notation conditionnée par licence (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-required-permissions" target="_blank" rel="noopener">Microsoft Learn — Secure Score data</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

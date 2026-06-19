@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managed vs audit-only tenants — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Managed vs audit-only tenants">
+<meta name="lesson:subtitle" content="The one decision you make before consenting: full monitoring forever, or a read-only snapshot that expires.">
+<meta name="lesson:icon" content="scale">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Managed vs audit-only tenants</span></div>
+  <h1>Managed vs audit-only tenants</h1>
+  <p class="dek">The one decision you make before consenting: full monitoring forever, or a read-only snapshot that expires.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Side-by-side comparison: a Managed tenant that monitors, alerts and pushes policies forever, versus an Audit-only tenant that only reads a snapshot and then expires.">
+      <defs>
+        <radialGradient id="mvBg" cx="50%" cy="32%" r="84%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mvBg)"/>
+
+      <!-- left: Managed -->
+      <g transform="translate(80,46)">
+        <rect x="0" y="0" width="430" height="248" rx="16" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="215" y="42" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">Managed</text>
+        <text x="215" y="68" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">FULL FEATURE SET · PERSISTS</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="14.5" fill="#C4D4E8">
+          <circle cx="44" cy="106" r="6" fill="#2EE8A0"/><text x="62" y="111">Scheduled polling</text>
+          <circle cx="44" cy="142" r="6" fill="#2EE8A0"/><text x="62" y="147">Alerts &amp; drift detection</text>
+          <circle cx="44" cy="178" r="6" fill="#2EE8A0"/><text x="62" y="183">Pushes CA / Intune / settings</text>
+          <circle cx="44" cy="214" r="6" fill="#2EE8A0"/><text x="62" y="219">Fleet views &amp; daily briefing</text>
+        </g>
+      </g>
+
+      <!-- divider -->
+      <line x1="560" y1="70" x2="560" y2="270" stroke="#274B72" stroke-width="1.4" stroke-dasharray="3 8"/>
+
+      <!-- right: Audit-only -->
+      <g transform="translate(610,46)">
+        <rect x="0" y="0" width="430" height="248" rx="16" fill="#0E2236" stroke="#FFC04D" stroke-width="1.5"/>
+        <text x="215" y="42" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">Audit-only</text>
+        <text x="215" y="68" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">READ-ONLY SNAPSHOT · EXPIRES</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="14.5" fill="#C4D4E8">
+          <circle cx="44" cy="106" r="6" fill="#5CCBF4"/><text x="62" y="111">Read-only snapshot for export</text>
+          <circle cx="44" cy="142" r="6" fill="#FF5A6E"/><text x="62" y="147">No alerts, no drift, no writes</text>
+          <circle cx="44" cy="178" r="6" fill="#FFC04D"/><text x="62" y="183">Expires 14 days after creation</text>
+          <circle cx="44" cy="214" r="6" fill="#FFC04D"/><text x="62" y="219">Hard-delete 7 days after that</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Two modes, one decision: full monitoring that persists, or a read-only snapshot that expires.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>When you add a tenant, the very first choice — before any consent is granted — is its mode. Get this right up front, because the conversion only works in one direction.</p>
+  </div>
+
+  <h2>Managed</h2>
+
+  <p><strong>Managed</strong> is the normal mode for a paying customer. It gives you the full Panoptica365 feature set:</p>
+
+  <ul>
+    <li>Scheduled polling on the interval you choose.</li>
+    <li>Alerts, drift detection, and AI analysis.</li>
+    <li>The ability to <strong>push</strong> CA policies, Intune policies, and security settings to the tenant.</li>
+    <li>Inclusion in fleet views (Heatmap, Daily Activity) and the daily briefing.</li>
+  </ul>
+
+  <p>A managed tenant persists indefinitely — until an Admin deletes it.</p>
+
+  <h2>Audit-only</h2>
+
+  <p><strong>Audit-only</strong> is built for vulnerability assessments and prospect discovery. Think of it as a time-boxed photograph of a tenant you don't (yet) manage:</p>
+
+  <ul>
+    <li><strong>Read-only snapshot collection for export.</strong> Panoptica365 reads the tenant's configuration so you can review it and generate reports.</li>
+    <li><strong>No alerts, no drift detection, no writes</strong> to the customer tenant. Nothing is pushed, nothing fires at 2 AM.</li>
+    <li><strong>Automatic expiry.</strong> The tenant is scheduled to expire <strong>14 days after creation</strong>, with hard-delete firing <strong>7 days after that</strong>. The Tenants table shows a countdown badge (e.g. <em>AUDIT · 9d left</em>), and the edit modal shows the exact expiry date.</li>
+  </ul>
+
+  <p>This expiry is deliberate: you should not be holding a prospect's configuration data indefinitely without an engagement.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="An audit-only timeline: created at day zero, expires 14 days after creation, then hard-deletes 7 days after that.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="70" y1="78" x2="650" y2="78" stroke="#1F3C5C" stroke-width="2"/>
+      <!-- created -->
+      <circle cx="90" cy="78" r="8" fill="#5CCBF4"/>
+      <text x="90" y="50" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Created</text>
+      <text x="90" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">day 0</text>
+      <!-- expires -->
+      <circle cx="430" cy="78" r="8" fill="#FFC04D"/>
+      <text x="430" y="50" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Expires</text>
+      <text x="430" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">14 days after creation</text>
+      <text x="260" y="70" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">+14 days</text>
+      <!-- hard delete -->
+      <circle cx="630" cy="78" r="8" fill="#FF5A6E"/>
+      <text x="630" y="50" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Hard-delete</text>
+      <text x="630" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">7 days later</text>
+      <text x="530" y="70" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">+7 days</text>
+    </svg>
+    <figcaption>The audit-only clock: expire 14 days after creation, hard-delete 7 days after that.</figcaption>
+  </figure>
+
+  <h2>Converting between modes</h2>
+
+  <ul>
+    <li><strong>Audit-only → Managed: allowed.</strong> The typical story — you ran an assessment, the prospect signed, now you manage them. An Admin opens the tenant's edit modal and switches <strong>Mode</strong> to Managed. The expiry is removed and full monitoring begins.</li>
+    <li><strong>Managed → Audit-only: not allowed.</strong> This is a one-way door. A managed tenant has alert history, deployed templates, baselines and change history that don't make sense in a read-only, expiring container.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 180" role="img" aria-label="Conversion is a one-way door: audit-only converts to managed, but managed cannot convert back to audit-only.">
+      <rect width="720" height="180" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="cvOk" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+        <marker id="cvNo" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <!-- nodes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="60" y="62" width="220" height="56" rx="12" fill="#0E2236" stroke="#FFC04D" stroke-width="1.5"/>
+        <text x="170" y="96" fill="#FFC04D" font-size="16" font-weight="700">Audit-only</text>
+        <rect x="440" y="62" width="220" height="56" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="550" y="96" fill="#7DD9F9" font-size="16" font-weight="700">Managed</text>
+      </g>
+      <!-- allowed -->
+      <path d="M284 78 H436" stroke="#2EE8A0" stroke-width="2.6" marker-end="url(#cvOk)"/>
+      <text x="360" y="62" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">allowed</text>
+      <!-- not allowed -->
+      <path d="M436 104 H288" stroke="#FF5A6E" stroke-width="2.6" stroke-dasharray="6 5" marker-end="url(#cvNo)"/>
+      <text x="360" y="142" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">not allowed (one-way door)</text>
+    </svg>
+    <figcaption>One-way door: audit-only can become managed; managed can never go back.</figcaption>
+  </figure>
+
+  <h2>Practical guidance</h2>
+
+  <ul>
+    <li>Prospect asked for a security assessment? <strong>Audit-only.</strong> Run it, generate a Quick Assessment or Documentation report, and let the data age out (or convert if they sign).</li>
+    <li>New customer under contract? <strong>Managed</strong>, from day one.</li>
+    <li>Not sure? <strong>Audit-only</strong> — you can always upgrade. The reverse requires deleting the tenant and re-onboarding.</li>
+  </ul>
+
+  <p>One more note: deleting a tenant (any mode) permanently removes <strong>all</strong> of its data — alerts, snapshots, security settings, CA assignments, audits and change history. The confirmation modal means it.</p>
+
+</div>
+</body>
+</html>

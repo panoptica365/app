@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importing your own Intune templates — Intune Template Settings</title>
+<meta name="lesson:title" content="Importing your own Intune templates — when the bundled library isn't enough">
+<meta name="lesson:subtitle" content="How to import custom Intune templates into Panoptica365 and deploy them across customer tenants alongside the bundled library.">
+<meta name="lesson:icon" content="upload">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Importing your own templates</span></div>
+  <h1>Importing your own Intune templates — when the bundled library isn't enough</h1>
+  <p class="dek">How to import custom Intune templates into Panoptica365 and deploy them across customer tenants alongside the bundled library.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A template exported from one source tenant, generalised, then deployed across many customer tenants.">
+      <defs>
+        <radialGradient id="iiBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="iiTpl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="iiArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#iiBg)"/>
+
+      <!-- left: one source tenant -->
+      <g transform="translate(70,108)">
+        <rect x="0" y="0" width="150" height="124" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="22" y="24" width="106" height="14" rx="4" fill="#1F3C5C"/>
+        <rect x="22" y="48" width="106" height="14" rx="4" fill="#1F3C5C"/>
+        <rect x="22" y="72" width="78" height="14" rx="4" fill="#1F3C5C"/>
+      </g>
+      <text x="145" y="258" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">SOURCE TENANT</text>
+
+      <!-- arrow 1: export -->
+      <path d="M232 170 H338" stroke="#335F92" stroke-width="2.5" marker-end="url(#iiArr)"/>
+      <text x="285" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">export</text>
+
+      <!-- middle: generalise -->
+      <g transform="translate(360,98)">
+        <rect x="0" y="0" width="186" height="144" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="28" y="26" width="130" height="12" rx="3" fill="url(#iiTpl)"/>
+        <rect x="28" y="48" width="130" height="12" rx="3" fill="#2A7FA3"/>
+        <!-- crossed-out tenant-specific GUID line -->
+        <rect x="28" y="74" width="130" height="12" rx="3" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1"/>
+        <line x1="28" y1="80" x2="158" y2="80" stroke="#FF5A6E" stroke-width="2"/>
+        <rect x="28" y="98" width="92" height="12" rx="3" fill="#2A7FA3"/>
+        <text x="93" y="132" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600">GENERALISE</text>
+      </g>
+      <text x="453" y="258" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2" font-weight="600">TEMPLATE</text>
+
+      <!-- arrow 2: deploy -->
+      <path d="M558 170 H668" stroke="#335F92" stroke-width="2.5" marker-end="url(#iiArr)"/>
+      <text x="613" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">deploy</text>
+
+      <!-- right: many customer tenants -->
+      <g fill="#0E2236" stroke="#2A6F9E" stroke-width="1.3">
+        <rect x="700" y="64" width="118" height="74" rx="10"/>
+        <rect x="836" y="64" width="118" height="74" rx="10"/>
+        <rect x="972" y="64" width="118" height="74" rx="10"/>
+        <rect x="700" y="156" width="118" height="74" rx="10"/>
+        <rect x="836" y="156" width="118" height="74" rx="10"/>
+        <rect x="972" y="156" width="118" height="74" rx="10"/>
+      </g>
+      <g fill="#5CCBF4" opacity="0.85">
+        <rect x="720" y="86" width="78" height="9" rx="3"/><rect x="720" y="104" width="58" height="9" rx="3"/>
+        <rect x="856" y="86" width="78" height="9" rx="3"/><rect x="856" y="104" width="58" height="9" rx="3"/>
+        <rect x="992" y="86" width="78" height="9" rx="3"/><rect x="992" y="104" width="58" height="9" rx="3"/>
+        <rect x="720" y="178" width="78" height="9" rx="3"/><rect x="720" y="196" width="58" height="9" rx="3"/>
+        <rect x="856" y="178" width="78" height="9" rx="3"/><rect x="856" y="196" width="58" height="9" rx="3"/>
+        <rect x="992" y="178" width="78" height="9" rx="3"/><rect x="992" y="196" width="58" height="9" rx="3"/>
+      </g>
+      <text x="895" y="258" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2" font-weight="600">CUSTOMER TENANTS</text>
+    </svg>
+    <figcaption>A template exists somewhere; you want it to exist elsewhere. Export from one tenant, generalise the tenant-specific bits, deploy across the rest.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The Panoptica365 Intune library ships 14 templates focused on Windows endpoint hardening, with compliance signals for iOS, Android, and macOS. That's deliberate and matches the SMB reality: most managed devices are Windows, mobile is mostly BYOD, macOS is a minority. For the typical SMB customer, the bundled library covers the security-critical configuration surface.</p>
+  </div>
+
+  <p>But "typical SMB" isn't every SMB. Some customers have:</p>
+
+  <ul>
+    <li>A heavy Android Enterprise fleet (logistics companies, field-service businesses) that needs configuration profiles beyond the compliance signal.</li>
+    <li>A macOS-majority environment (creative agencies, software dev shops) that needs configuration profiles for FileVault, gatekeeper, software updates, app deployment.</li>
+    <li>Industry-specific requirements that need bespoke configuration profiles — healthcare device kiosk modes, manufacturing-floor lockdown, retail point-of-sale hardening.</li>
+    <li>Mature MSP-internal hardening templates that the senior IT lead has tuned over years and wants deployed across the entire customer base.</li>
+    <li>Regulatory baselines (CIS, NIST, HIPAA-specific) that need to be deployed as Intune templates alongside the Panoptica365 library.</li>
+  </ul>
+
+  <p>For all of these, the answer is the same: <strong>import your own Intune templates</strong> into Panoptica365's library, deploy them across customer tenants the same way the bundled templates deploy.</p>
+
+  <p>This lesson walks through that workflow — the parallel of card 3 lesson 8, adapted for Intune's specific quirks.</p>
+
+  <h2>When to import a custom Intune template</h2>
+
+  <p>The same five scenarios that applied to CA templates apply here:</p>
+
+  <p><strong>1. Platform coverage the bundled library doesn't address.</strong> Android Enterprise configuration profiles, iOS app configuration policies, macOS configuration profiles for FileVault and gatekeeper. These all live as exportable Intune templates in any tenant where they've been built; they can be lifted into Panoptica365.</p>
+
+  <p><strong>2. A custom hardening configuration built at one customer that should be available to others.</strong> A senior engineer's brilliant Windows configuration for a specific industry vertical (healthcare imaging, legal document management, accounting firms) gets exported once, generalised, imported as a template, deployed across similar customers.</p>
+
+  <p><strong>3. Compliance-framework baselines.</strong> CIS Microsoft 365 Foundations Benchmark mappings, NIST 800-171 controls, HIPAA-specific hardening. These exist as detailed configuration profiles that can be deployed via Intune. Build them once for a customer that needs them; import as a template; deploy to other customers in the same regulatory bucket.</p>
+
+  <p><strong>4. Response to a specific incident or near-miss.</strong> After a customer experienced a credential-theft incident, you build a stricter set of configuration profiles. You'd like that hardening available for other customers in the same risk profile. Import is the mechanism.</p>
+
+  <p><strong>5. New threats requiring new configurations.</strong> Microsoft announces a new attack technique; your security team builds an Intune configuration that addresses it; you need it deployed across thirty tenants. Build once, import once, deploy thirty times.</p>
+
+  <p>The pattern is identical to CA: a template exists somewhere, you want it to exist elsewhere, Panoptica365 makes the transfer tractable.</p>
+
+  <h2>How the import works — Intune specifics</h2>
+
+  <p>The high-level workflow is straightforward and deliberately less magical than its CA cousin. Set expectations honestly: there is no automatic generalisation of tenant-specific references happening behind the scenes. What you export is approximately what you import.</p>
+
+  <p><strong>Step 1: Point Panoptica365 at a source tenant.</strong> An MSP operator picks any tenant the platform has access to and pulls the Intune configuration via Microsoft Graph. The pull produces a structured JSON representation of the source tenant's Configuration Policies, Compliance Policies, Configuration Profiles, and Endpoint Security templates — the same shape as the bundled <code>Panoptica365 - ...</code> templates, which were themselves built by exporting from a source tenant, cleaning up tenant-specific references, and bundling the result.</p>
+
+  <p><strong>Step 2: Choose what to import as a template.</strong> From the list of pulled policies, the operator picks the specific ones to register as Panoptica365 templates. Most exports map one-to-one — one policy at the source becomes one template in Panoptica365. The choice of <em>what's worth turning into a reusable template</em> is a judgment call; not every customer-specific policy should be templated.</p>
+
+  <p><strong>Step 3: Be aware of what doesn't generalise automatically.</strong> This is where Intune is more painful than CA. The CA import flow does named-location generalisation (April 23 work, <code>project_named_location_generalization</code>); the Intune import flow does <strong>not</strong> do equivalent generalisation today. References that won't carry cleanly across tenants include:</p>
+
+  <ul>
+    <li><strong>Group references</strong> — assignments and exclusions target Entra security groups by GUID. A group with the same name in tenant B has a different GUID than tenant A. An imported template that references a source-tenant group GUID won't deploy cleanly elsewhere.</li>
+    <li><strong>Certificate references</strong> — profiles that reference certificates by serial number or thumbprint don't carry across tenants.</li>
+    <li><strong>Filter references</strong> — assignment filters by device platform/model/manufacturer are tenant-specific by GUID.</li>
+    <li><strong>Notification template references</strong> — for compliance policies that trigger user notifications.</li>
+  </ul>
+
+  <p>The operator's responsibility today is to manually clean these references from the imported template, or to accept that the template will need adjustment at each destination tenant before it can deploy.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="The five steps of importing a custom Intune template: point at a source tenant, choose what to import, clean tenant-specific references, name it, save to the library.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="iiStep" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <line x1="84" y1="68" x2="636" y2="68" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1 -->
+        <g><circle cx="84" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="84" y="74" fill="#A8E1F8" font-size="15" font-weight="700">1</text>
+          <text x="84" y="116" fill="#C4D4E8" font-size="11.5">Point at</text><text x="84" y="131" fill="#C4D4E8" font-size="11.5">source</text></g>
+        <!-- step 2 -->
+        <g><circle cx="222" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="222" y="74" fill="#A8E1F8" font-size="15" font-weight="700">2</text>
+          <text x="222" y="116" fill="#C4D4E8" font-size="11.5">Choose</text><text x="222" y="131" fill="#C4D4E8" font-size="11.5">policies</text></g>
+        <!-- step 3 -->
+        <g><circle cx="360" cy="68" r="22" fill="#10243B" stroke="#FFC04D" stroke-width="1.6"/><text x="360" y="74" fill="#FFC04D" font-size="15" font-weight="700">3</text>
+          <text x="360" y="116" fill="#FFC04D" font-size="11.5">Clean</text><text x="360" y="131" fill="#FFC04D" font-size="11.5">references</text></g>
+        <!-- step 4 -->
+        <g><circle cx="498" cy="68" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="498" y="74" fill="#A8E1F8" font-size="15" font-weight="700">4</text>
+          <text x="498" y="116" fill="#C4D4E8" font-size="11.5">Name &amp;</text><text x="498" y="131" fill="#C4D4E8" font-size="11.5">describe</text></g>
+        <!-- step 5 -->
+        <g><circle cx="636" cy="68" r="22" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="636" y="74" fill="#7DD9F9" font-size="15" font-weight="700">5</text>
+          <text x="636" y="116" fill="#7DD9F9" font-size="11.5">Save to</text><text x="636" y="131" fill="#7DD9F9" font-size="11.5">library</text></g>
+      </g>
+      <g><path d="M108 68 H198" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M246 68 H336" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M384 68 H474" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/>
+         <path d="M522 68 H612" stroke="#335F92" stroke-width="2" marker-end="url(#iiStep)"/></g>
+    </svg>
+    <figcaption>The five-step import. Step 3 — cleaning tenant-specific references — is the one Panoptica365 doesn't automate for Intune today; it's on the operator.</figcaption>
+  </figure>
+
+  <div class="callout caution">
+    <div class="clabel">Assignment caveat</div>
+    <p>Assignments and exclusions target Entra security groups by GUID, and a group with the same name in tenant B has a different GUID than tenant A. An imported template that references a source-tenant group GUID won't deploy cleanly elsewhere until that reference is cleaned.</p>
+  </div>
+
+  <h2>What the export shape looks like</h2>
+
+  <p>The Microsoft Graph export Intune produces — and the shape the bundled <code>Panoptica365 - ...</code> templates were built from — is structured JSON. Each exported policy has:</p>
+
+  <ul>
+    <li>A <code>policyType</code> field — <code>deviceCompliancePolicies</code>, <code>configurationPolicies</code>, <code>deviceConfigurations</code>, or <code>intents</code> — identifying which Intune policy family it belongs to.</li>
+    <li>A <code>name</code> and <code>category</code> identifying the template's purpose.</li>
+    <li>Either a <code>policy</code> object (the configuration data) or a <code>settings</code> array (the per-setting configurations), depending on the policy family.</li>
+  </ul>
+
+  <p>The bundled templates have all been generalised — they don't carry source-tenant group GUIDs, certificate references, or other tenant-specific objects. They deploy cleanly to any customer tenant. The same generalisation work — currently manual — applies to any custom template you import.</p>
+
+  <h2>What can be exported portably and what can't</h2>
+
+  <p>Worth being explicit about Intune's portability limits:</p>
+
+  <p><strong>Portable cleanly:</strong></p>
+  <ul>
+    <li>Settings Catalog policies (Configuration Policies) — the modern format, almost all settings are portable.</li>
+    <li>Compliance policies — the policy structure is portable; some settings reference tenant-specific values that need substitution.</li>
+    <li>Endpoint Security templates (ASR Rules, Firewall, Defender, Account Protection) — mostly portable; assignment groups need substitution.</li>
+  </ul>
+
+  <p><strong>Mostly portable with placeholders:</strong></p>
+  <ul>
+    <li>Configuration Profiles (Device Configurations) — older template type; some properties tie to tenant-specific Wi-Fi networks, VPN servers, certificate authorities.</li>
+    <li>App Configuration Policies — reference apps that exist as managed apps in the tenant; the app reference is portable but the customer must have the app available.</li>
+  </ul>
+
+  <p><strong>Hard or impossible to port portably:</strong></p>
+  <ul>
+    <li><strong>App Protection Policies (APP/MAM).</strong> Reference specific apps; their behaviour depends on tenant-specific identity configuration. Often need per-tenant re-creation rather than templating.</li>
+    <li><strong>Templates that deploy certificates</strong> — certificates are inherently per-tenant. The template structure ports; the certificate itself doesn't.</li>
+    <li><strong>Templates that reference custom filters</strong> — assignment filters need to be created at the destination tenant before the template can deploy.</li>
+    <li><strong>App deployment configurations</strong> — assigning a specific app to a specific group is mostly per-tenant.</li>
+    <li><strong>Anything depending on Conditional Access state</strong> — some Intune configurations interact with CA policies (e.g., compliance policy notifications routed through CA); those references need re-creation.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Three portability tiers for Intune templates: portable cleanly, mostly portable with placeholders, and hard or impossible to port.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- tier 1: portable cleanly -->
+        <g transform="translate(28,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#2EE8A0"/>
+          <text x="40" y="33" fill="#2EE8A0" font-size="13" font-weight="700">PORTABLE CLEANLY</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">Settings Catalog policies</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">Compliance policies</text>
+          <text x="22" y="110" fill="#C4D4E8" font-size="12">Endpoint Security</text>
+          <text x="22" y="125" fill="#6B85A6" font-size="11">templates</text>
+        </g>
+        <!-- tier 2: mostly portable -->
+        <g transform="translate(256,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#FFC04D"/>
+          <text x="40" y="33" fill="#FFC04D" font-size="13" font-weight="700">WITH PLACEHOLDERS</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">Configuration Profiles</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">App Configuration</text>
+          <text x="22" y="101" fill="#6B85A6" font-size="11">Policies</text>
+        </g>
+        <!-- tier 3: hard or impossible -->
+        <g transform="translate(484,28)">
+          <rect x="0" y="0" width="208" height="144" rx="10" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.4"/>
+          <circle cx="22" cy="28" r="6" fill="#FF5A6E"/>
+          <text x="40" y="33" fill="#FF8A98" font-size="13" font-weight="700">HARD / IMPOSSIBLE</text>
+          <text x="22" y="62" fill="#C4D4E8" font-size="12">App Protection (APP/MAM)</text>
+          <text x="22" y="86" fill="#C4D4E8" font-size="12">Certificates</text>
+          <text x="22" y="110" fill="#C4D4E8" font-size="12">Custom filters</text>
+          <text x="22" y="134" fill="#C4D4E8" font-size="12">CA-dependent config</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Intune's three portability tiers. The further right, the more manual re-creation each destination tenant needs.</figcaption>
+  </figure>
+
+  <p>The Panoptica365 import flow does not flag non-portable elements for you today — they come through in the imported JSON and the operator has to spot and clean them manually before relying on the template for cross-customer deployment. The bundled <code>Panoptica365 - ...</code> templates underwent exactly this manual cleanup when they were built; your custom imports need the same discipline.</p>
+
+  <h2>When <em>not</em> to import</h2>
+
+  <p>Two specific cases where importing is the wrong move for Intune:</p>
+
+  <p><strong>The template is platform-locked.</strong> A configuration profile that targets <code>windows10</code> only doesn't help a customer with no Windows devices. Importing it adds to the library but provides no value to that customer. If you're importing for cross-customer reuse, target it at the platforms your customers actually have.</p>
+
+  <p><strong>The template depends on tenant-specific infrastructure that doesn't generalise.</strong> A configuration that references a specific on-premises Active Directory domain, a specific certificate authority issuing managed-device certs, a specific on-premises Wi-Fi infrastructure — these don't generalise. Even after manual cleanup, the destination tenant needs equivalent infrastructure for the template to be useful. If the source tenant has corporate AD CS and the destination is cloud-only, the template doesn't fit.</p>
+
+  <p>For these cases, build per-tenant Intune policies directly rather than templating.</p>
+
+  <h2>The bundled library is the floor, not the ceiling</h2>
+
+  <p>The same point made in card 3 lesson 8: the templates Panoptica365 ships are a starting point, not the limit. The MSP that takes Intune seriously builds their own templates on top of the bundled library:</p>
+
+  <ul>
+    <li>Templates for specific industries (medical imaging, legal, accounting).</li>
+    <li>Templates for specific compliance frameworks (CIS, NIST, HIPAA, SOC 2).</li>
+    <li>Templates for post-incident hardening (deployed after a customer compromise).</li>
+    <li>Templates the senior engineer has built for their preferred hardening posture.</li>
+  </ul>
+
+  <p>These templates live in the MSP's instance of Panoptica365, not in the Panoptica365 product distribution. They become part of the MSP's competitive advantage — the IP that distinguishes one MSP from the next.</p>
+
+  <h2>Maintaining imported templates</h2>
+
+  <p>Like CA templates (card 3 lesson 8), Intune templates need maintenance:</p>
+
+  <ul>
+    <li><strong>Microsoft Graph schema changes.</strong> Microsoft renames properties, deprecates settings, adds new ones. Imported templates may need updating.</li>
+    <li><strong>Customer environment changes.</strong> A customer's tenant configuration evolves; templates that worked perfectly six months ago may need adjustment.</li>
+    <li><strong>Template-vs-deployed-policy divergence.</strong> Per-tenant tweaks by individual admins drift the deployment from the template reference.</li>
+  </ul>
+
+  <p>The Panoptica365 drift detector covers bundled templates; custom templates need the MSP to verify periodically. The maintenance overhead is real — importing 20 custom templates means committing to maintain 20 templates.</p>
+
+  <h2>Rollout for a custom Intune template</h2>
+
+  <p>Pilot-group deployment, same as the bundled templates, with an extra caveat: imported templates are often <strong>less-tested</strong> than bundled ones. They came from one tenant's experience; they may not have been validated across the variation of environments that customers represent.</p>
+
+  <ol>
+    <li><strong>Pre-import inspection.</strong> Audit the source template. Is it clean? Well-tuned? Up-to-date? Any hardcoded references that won't transfer? Fix issues at the source.</li>
+    <li><strong>Import.</strong> Generalise references, save as template.</li>
+    <li><strong>First deployment to a single tenant</strong>, with pilot-group deployment within that tenant. Treat the first customer as the broader pilot for this template.</li>
+    <li><strong>Days 1–14</strong> — verify the template behaves as expected. Compliance signals correct, configurations applying, no unexpected user impact.</li>
+    <li><strong>Day 14+</strong> — if the first customer deployment is clean, expand to more customer tenants. Each subsequent customer deployment is faster (the template is validated).</li>
+  </ol>
+
+  <p>Once a custom template has been deployed across 3–5 customer tenants successfully, treat it as production-validated and continue using it with normal rollout discipline.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The bundled library is the floor.</strong> Treat the 14 Panoptica365 templates as the starting point for any customer. Build on top of them with imports for whatever the customer needs that the floor doesn't cover.</p>
+
+  <p><strong>Intune imports have more placeholder types than CA imports.</strong> Group references, certificate references, filter references, notification templates. The generalisation work is more involved. Allow more time for the first import of any given template type.</p>
+
+  <p><strong>Validate before you scale.</strong> A bad imported template deployed across thirty customer tenants is thirty broken deployments. First-customer pilot, validate, then expand.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">11</div><div class="xt"><b>Operating Intune at scale</b> — the closer. Drift, exclusions, lifecycle, the assignment-loss problem.</div></div>
+  </div>
+
+  <p>For now: the import workflow is what turns Panoptica365's Intune module from "what we shipped" to "what your MSP knows." Use it for the platform coverage gaps, the compliance-framework templates, the industry-specific hardening, the senior-engineer-curated configurations.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Graph API for Intune configuration policies (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview" target="_blank" rel="noopener">Microsoft Learn — Intune Graph API reference</a>); Settings Catalog policy export and import (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/settings-catalog" target="_blank" rel="noopener">Microsoft Learn — Settings catalog</a>); Compliance policy resource type (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-shared-devicecompliancepolicy" target="_blank" rel="noopener">Microsoft Learn — deviceCompliancePolicy</a>); Endpoint Security policy template references (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-policy" target="_blank" rel="noopener">Microsoft Learn — Endpoint security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add your first tenant — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Add your first tenant">
+<meta name="lesson:subtitle" content="The admin consent flow from start to finish: which account to use, what gets granted, and what happens next.">
+<meta name="lesson:icon" content="building-2">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Add your first tenant</span></div>
+  <h1>Add your first tenant</h1>
+  <p class="dek">The admin consent flow from start to finish: which account to use, what gets granted, and what happens next.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The admin consent round-trip: from the Add Tenant button, out to Microsoft's admin consent page, and back to the Tenants page.">
+      <defs>
+        <radialGradient id="atBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="atGlow" cx="50%" cy="45%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="atArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+        <marker id="atArrBack" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#atBg)"/>
+
+      <!-- left: Panoptica365 / Add Tenant -->
+      <g transform="translate(60,108)">
+        <rect x="0" y="0" width="270" height="124" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="135" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANOPTICA365</text>
+        <rect x="62" y="58" width="146" height="40" rx="20" fill="#10243B" stroke="#5CCBF4" stroke-width="1.5"/>
+        <text x="135" y="83" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="700">Add Tenant</text>
+      </g>
+
+      <!-- center: Microsoft admin consent -->
+      <g transform="translate(560,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="80" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <circle r="46" fill="url(#atGlow)" opacity="0.16"/>
+        <rect x="-58" y="-44" width="116" height="88" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <!-- key glyph: consent -->
+        <circle cx="-12" cy="0" r="15" fill="none" stroke="#A8E1F8" stroke-width="3"/>
+        <path d="M3 0 H34 M22 0 V14 M34 0 V14" stroke="#A8E1F8" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <text x="0" y="78" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Admin consent</text>
+        <text x="0" y="98" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">Microsoft sign-in</text>
+      </g>
+
+      <!-- right: back to Tenants page -->
+      <g transform="translate(790,108)">
+        <rect x="0" y="0" width="270" height="124" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="135" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TENANTS PAGE</text>
+        <rect x="40" y="58" width="190" height="40" rx="9" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="135" y="83" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13.5" font-weight="600">Consent granted</text>
+      </g>
+
+      <!-- arrows -->
+      <path d="M338 170 H440" stroke="#5CCBF4" stroke-width="2.6" marker-end="url(#atArr)"/>
+      <path d="M682 170 H782" stroke="#2EE8A0" stroke-width="2.6" marker-end="url(#atArrBack)"/>
+      <text x="389" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">redirect</text>
+      <text x="732" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">return</text>
+    </svg>
+    <figcaption>One round-trip: click Add Tenant, consent on Microsoft's page, land back on the Tenants page.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Everything in Panoptica365 starts with onboarding a tenant. The flow takes about two minutes of clicking plus a few minutes of background data collection.</p>
+  </div>
+
+  <h2>Before you start</h2>
+
+  <p>You need two things:</p>
+
+  <ul>
+    <li>The <strong>Admin</strong> role in Panoptica365 (the <strong>Add Tenant</strong> button is admin-only).</li>
+    <li>Credentials that can grant admin consent <strong>on the customer tenant</strong> — either a <strong>Global Administrator account in that tenant</strong>, or an account with a <strong>GDAP relationship</strong> that includes sufficient rights to consent on its behalf. The key point: when Microsoft asks you to sign in, use the credentials that have access to the <em>target</em> tenant — not your own MSP tenant, unless that's the one you're onboarding.</li>
+  </ul>
+
+  <h2>Step by step</h2>
+
+  <ol>
+    <li>Go to <strong>Tenants</strong> in the sidebar.</li>
+    <li>Click <strong>Add Tenant</strong> (top right).</li>
+    <li>The <strong>Add Tenant</strong> modal opens and asks you to choose a mode: <strong>Managed</strong> or <strong>Audit-only</strong>. In short: Managed is the full feature set — scheduled polling, alerts, drift detection, the ability to push CA / Intune / security settings — and persists indefinitely. Audit-only is a read-only snapshot for assessments and prospects, and auto-deletes after 14 days plus a 7-day grace period. Choose <strong>before</strong> consenting: an audit-only tenant can be converted to managed later, but a managed tenant can never be converted to audit-only. The next guide covers this decision in detail.</li>
+    <li>Click <strong>Continue to Admin Consent</strong>. You're redirected to Microsoft's admin consent page.</li>
+    <li>Sign in with the Global Admin or GDAP-enabled account for the target tenant and accept the requested permissions. This grants Panoptica365's service principal read access to the tenant's configuration (and the write permissions used by template deployment).</li>
+    <li>You're sent back to the Tenants page with a toast: <em>"Admin consent granted successfully."</em></li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="The six onboarding steps in sequence: open Tenants, click Add Tenant, choose a mode, continue to admin consent, sign in and accept, and return to the Tenants page.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="sArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- step rows -->
+        <g transform="translate(0,28)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">1</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Open <tspan fill="#A8E1F8" font-weight="600">Tenants</tspan> in the sidebar</text>
+        </g>
+        <g transform="translate(0,82)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">2</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Click <tspan fill="#A8E1F8" font-weight="600">Add Tenant</tspan> (top right)</text>
+        </g>
+        <g transform="translate(0,136)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">3</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Choose a mode: <tspan fill="#A8E1F8" font-weight="600">Managed</tspan> or <tspan fill="#A8E1F8" font-weight="600">Audit-only</tspan></text>
+        </g>
+        <g transform="translate(0,190)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">4</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Click <tspan fill="#7DD9F9" font-weight="600">Continue to Admin Consent</tspan> → Microsoft</text>
+        </g>
+        <g transform="translate(0,244)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">5</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Sign in (target tenant) and accept permissions</text>
+        </g>
+        <g transform="translate(0,298)">
+          <circle cx="56" cy="24" r="15" fill="#0E2236" stroke="#2EE8A0"/><text x="56" y="29" text-anchor="middle" fill="#2EE8A0" font-size="13" font-weight="700">6</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.3"/><text x="112" y="29" fill="#C4D4E8" font-size="14.5">Back to Tenants — <tspan fill="#2EE8A0" font-weight="600">consent granted</tspan></text>
+        </g>
+        <!-- connectors -->
+        <path d="M56 56 V66" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 110 V120" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 164 V174" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 218 V228" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 272 V282" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+      </g>
+    </svg>
+    <figcaption>The exact sequence — six steps from the sidebar to a granted-consent toast.</figcaption>
+  </figure>
+
+  <p>Behind the scenes, Panoptica365 also assigns the <strong>Exchange Administrator</strong> and <strong>Compliance Administrator</strong> roles to its service principal in the new tenant — these are needed for the Exchange and compliance readers. This is automatic and best-effort; if it doesn't complete, see Troubleshooting below.</p>
+
+  <h2>What happens next</h2>
+
+  <p>The tenant appears in the list immediately with a generated name (you'll fix that in a second) and an empty <strong>Last Polled</strong> column. The first data collection starts in the background. <strong>Give it a few minutes</strong> — there is no progress bar; when the first poll completes, Last Polled fills in and the tenant's dashboard starts showing real data.</p>
+
+  <p>While you wait, click the tenant's edit (pencil) action and set:</p>
+
+  <ul>
+    <li><strong>Display Name</strong> — the customer name you want to see everywhere.</li>
+    <li><strong>PSA Name</strong> — the company name as it appears in your PSA, used for ticket attribution (you can skip this until you set up the PSA integration).</li>
+    <li><strong>Language</strong> — the language used for this tenant's AI analysis and reports.</li>
+    <li><strong>Polling (min)</strong> — how often the tenant is polled (1–60 minutes).</li>
+  </ul>
+
+  <p>Then click <strong>Save</strong>, head to the <strong>Main Console</strong>, and click your new tenant to open its dashboard.</p>
+
+  <h2>Troubleshooting</h2>
+
+  <p><strong>Consent fails with AADSTS650051.</strong> This is common enough on a <em>first</em> consent attempt that Panoptica365 handles it for you: a modal titled <em>"Consent didn't complete — try once more"</em> appears. It's almost always a temporary hiccup on Microsoft's side — click <strong>Try again</strong> and the second attempt usually completes. If it keeps failing, expand <em>"Show cleanup steps"</em> in that modal for a copy-paste cleanup script.</p>
+
+  <p><strong>Role assignment incomplete.</strong> If you see a toast saying the service principal may still be propagating, wait a minute, then open the tenant's edit modal and click <strong>Re-assign Exchange roles</strong>.</p>
+
+  <p><strong>Wrong account.</strong> If you accidentally consented with credentials for the wrong tenant, you've onboarded the wrong tenant. Delete it (edit modal → <strong>Delete Tenant</strong>) and start over with the right credentials.</p>
+
+</div>
+</body>
+</html>

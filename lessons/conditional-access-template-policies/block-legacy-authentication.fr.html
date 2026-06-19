@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bloquer l'authentification héritée — Politiques modèles d'accès conditionnel</title>
+<meta name="lesson:title" content="Bloquer l'authentification héritée — fermer le contournement par auth de base">
+<meta name="lesson:subtitle" content="Pourquoi IMAP et SMTP AUTH contournent le MFA, et comment une politique d'AC ferme cette faille.">
+<meta name="lesson:icon" content="ban">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Politiques modèles d'accès conditionnel</span> <span class="sep">·</span> <span>Bloquer l'authentification héritée</span></div>
+  <h1>Bloquer l'authentification héritée — fermer le contournement par auth de base</h1>
+  <p class="dek">Pourquoi IMAP et SMTP AUTH contournent le MFA, et comment une politique d'AC ferme cette faille.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Exiger MFA couvre les connexions par auth moderne; Bloquer l'authentification héritée bloque les connexions par auth héritée; ensemble, aucun chemin avec un mot de passe seul.">
+      <defs>
+        <radialGradient id="blBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="blArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="blArrR" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#blBg)"/>
+
+      <!-- left: a single password-only sign-in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="56" y="128" width="184" height="84" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="148" y="166" fill="#C4D4E8" font-size="17" font-weight="600">Connexion</text>
+        <text x="148" y="190" fill="#6B85A6" font-size="13">mot de passe seul</text>
+      </g>
+      <path d="M240 170 H352" stroke="#335F92" stroke-width="2.5" marker-end="url(#blArr)"/>
+
+      <!-- two gates -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- modern auth → Require MFA -->
+        <rect x="360" y="64" width="296" height="84" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.5"/>
+        <text x="508" y="98" fill="#A8E1F8" font-size="16" font-weight="700">Exiger MFA</text>
+        <text x="508" y="120" fill="#7FA6C9" font-size="12.5">connexions par auth moderne</text>
+        <text x="508" y="138" fill="#6B85A6" font-size="12">deuxième facteur exigé</text>
+
+        <!-- legacy auth → Block -->
+        <rect x="360" y="192" width="296" height="84" rx="14" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="508" y="226" fill="#7DD9F9" font-size="15" font-weight="700">Bloquer l'auth héritée</text>
+        <text x="508" y="248" fill="#7FA6C9" font-size="12.5">connexions par auth héritée</text>
+        <text x="508" y="266" fill="#6B85A6" font-size="12">bloquées d'emblée</text>
+      </g>
+      <path d="M280 158 C320 120 330 106 360 106" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <path d="M280 184 C320 222 330 234 360 234" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+
+      <!-- outcome -->
+      <path d="M656 106 C740 130 760 150 800 168" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <path d="M656 234 C740 210 760 190 800 172" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="808" y="128" width="256" height="84" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="936" y="158" fill="#EAF7FE" font-size="14.5" font-weight="700">Aucun chemin mot-de-passe-seul</text>
+        <text x="936" y="184" fill="#7FA6C9" font-size="12.5">MFA ou bloqué — rien d'autre</text>
+      </g>
+    </svg>
+    <figcaption>La paire ferme la surface : toute connexion soit porte du MFA, soit est bloquée d'emblée.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Vous activez Exiger MFA pour tous les utilisateurs un lundi matin. Le mardi après-midi, l'attaquant qui avait déjà le mot de passe d'un utilisateur d'une brèche LinkedIn de 2019 se connecte à la boîte aux lettres de cet utilisateur par IMAP. Pas de prompt MFA. Pas de défi. Pas d'alerte. Juste une connexion réussie à une boîte à laquelle il ne devrait pas avoir accès.</p>
+
+  <p>La politique MFA n'a pas aidé parce que IMAP ne parle pas MFA. Ni POP3, ni SMTP AUTH, ni aucun des demi-douzaine d'autres protocoles d'« authentification héritée » que Microsoft essaie de retirer depuis une décennie. Pour une politique d'AC qui dit « exiger MFA », un client d'auth héritée se connecte <em>comme si le MFA n'avait jamais été demandé</em>. L'utilisateur a les bons identifiants. Il n'y a pas de prompt MFA. La connexion réussit.</p>
+
+  <p>C'est la faille que le modèle Bloquer l'authentification héritée ferme.</p>
+
+  <p><strong>Panoptica365 - Block Legacy Authentication.</strong> Octroi : Aucun (c'est-à-dire bloquer). Utilisateurs : Tous les utilisateurs. Applications : Toutes les applications infonuagiques.</p>
+
+  <p>C'est la politique appariée à la leçon 2. Sans elle, Exiger MFA pour tous les utilisateurs a un trou. Ensemble, elles ferment le chemin d'attaque par vol d'identifiants le plus courant dans M365.</p>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Un client d'auth héritée se connecte avec les bons identifiants par IMAP; aucun prompt MFA n'est demandé; la connexion réussit.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="lgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="84" width="180" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="120" y="110" fill="#C4D4E8" font-size="13.5" font-weight="600">Client d'auth héritée</text>
+        <text x="120" y="130" fill="#6B85A6" font-size="11">IMAP · bon mot de passe</text>
+
+        <rect x="276" y="84" width="168" height="62" rx="10" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="360" y="110" fill="#A8E1F8" font-size="13" font-weight="600">Politique « Exiger MFA »</text>
+        <text x="360" y="130" fill="#6B85A6" font-size="11.5">jamais demandée</text>
+
+        <rect x="516" y="84" width="168" height="62" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="600" y="110" fill="#A8E1F8" font-size="14" font-weight="600">Boîte aux lettres</text>
+        <text x="600" y="130" fill="#7DD9F9" font-size="11.5" font-weight="600">connexion réussit</text>
+      </g>
+      <path d="M210 115 H276" stroke="#5C7796" stroke-width="2" marker-end="url(#lgArr)"/>
+      <path d="M444 115 H516" stroke="#5C7796" stroke-width="2" marker-end="url(#lgArr)"/>
+      <text x="360" y="178" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">pas de prompt MFA · pas de défi · pas d'alerte</text>
+    </svg>
+    <figcaption>IMAP ne parle pas MFA, donc la politique « exiger MFA » n'est jamais demandée — et la connexion passe.</figcaption>
+  </figure>
+
+  <h2>Qu'est-ce que « l'authentification héritée », exactement</h2>
+
+  <p>Le terme couvre tout protocole d'authentification qui ne supporte pas les fonctionnalités modernes comme MFA, l'accès conditionnel ou la liaison de jetons. Les principaux délinquants :</p>
+
+  <ul>
+    <li><strong>Authentification de base</strong> — le protocole nom-d'utilisateur-et-mot-de-passe-sur-HTTP-Basic-Auth. Utilisé historiquement par Outlook pour Mac, Mail.app sur iOS avant iOS 11, envoyeurs SMTP scriptés.</li>
+    <li><strong>IMAP / POP3 / SMTP AUTH</strong> — les protocoles de courriel classiques. Utilisés par des clients de courriel tiers, des appareils scan-vers-courriel, de vieux scripts.</li>
+    <li><strong>Exchange ActiveSync (EAS) auth de base</strong> — la variante d'ActiveSync qui ne supporte pas l'auth moderne. Utilisée par des clients de courriel mobiles plus anciens.</li>
+    <li><strong>MAPI sur HTTP auth de base</strong> — la variante MAPI héritée. Utilisée par des clients Outlook très anciens.</li>
+    <li><strong>Outlook Anywhere (RPC sur HTTP) auth de base</strong> — même famille.</li>
+  </ul>
+
+  <p>Microsoft retire ceux-ci depuis des années. En octobre 2022, ils ont désactivé l'auth de base pour la plupart des protocoles Exchange Online. En 2023 et 2024, ils ont étendu la dépréciation aux chemins hérités restants. À partir de 2026, la surface est significativement plus petite qu'elle ne l'était — mais des poches restent, et toute poche est un trou.</p>
+
+  <p>L'alternative non héritée est l'<strong>authentification moderne</strong> — basée sur OAuth 2.0, supporte MFA, supporte l'accès conditionnel, supporte les contrôles de session basés sur les jetons. Chaque client M365 supporté depuis 2020 parle l'auth moderne.</p>
+
+  <h2>Pourquoi cette politique est encore nécessaire en 2026</h2>
+
+  <p>Si Microsoft a retiré la plupart de l'auth héritée, pourquoi livrer une politique qui la bloque?</p>
+
+  <p>Trois raisons :</p>
+
+  <p><strong>1. La retraite est incomplète.</strong> Microsoft a désactivé l'auth de base pour <em>la plupart</em> des protocoles Exchange Online, mais l'état « désactivé par défaut » ne signifie pas désactivé partout. Certains principaux de service peuvent encore s'authentifier par des chemins hérités. SMTP AUTH est encore disponible (Microsoft l'a réactivé et redésactivé tenant par tenant pendant des années). Des tenants spécifiques qui ont demandé des exceptions pendant la dépréciation peuvent encore avoir l'auth de base activée pour un ou plusieurs protocoles.</p>
+
+  <p><strong>2. Les clients réactivent l'auth de base.</strong> Quand le vieil appareil scan-vers-courriel d'un client cesse de fonctionner, le chemin de moindre résistance est d'appeler le support Microsoft et demander de réactiver l'auth de base pour SMTP. Certains clients l'ont fait. La politique d'AC est ce qui attrape cette décision — et l'empêche d'être prise silencieusement.</p>
+
+  <p><strong>3. Certaines applications non Microsoft l'utilisent encore.</strong> Les applications tierces qui s'intègrent à M365 par IMAP ou SMTP — outils d'automatisation de marketing plus anciens, applications métier avec identifiants codés en dur, le script auto-construit occasionnel — parlent l'auth héritée par conception. La politique d'AC force une conversation : soit moderniser l'intégration, soit documenter l'exclusion.</p>
+
+  <p>La politique d'AC est le filet de sécurité durable. La dépréciation de Microsoft au niveau du protocole peut être inversée au niveau du tenant; une politique d'AC activée et surveillée ne peut pas être inversée silencieusement.</p>
+
+  <h2>Ce qu'elle fait</h2>
+
+  <p>La mécanique de la politique est simple :</p>
+
+  <ul>
+    <li><strong>Octroi : Bloquer.</strong> Les connexions correspondant à la politique sont rejetées d'emblée. Pas de prompt MFA, pas de défi — juste rejetées.</li>
+    <li><strong>Conditions : Applications clientes = Autres clients.</strong> C'est la condition d'AC qui capture tout ce qui <em>n'est pas</em> l'auth moderne : Exchange ActiveSync auth de base, IMAP, POP3, SMTP AUTH, MAPI sur HTTP, et quelques autres. La politique s'applique seulement aux connexions de ces clients hérités; les connexions par auth moderne ne sont pas affectées.</li>
+  </ul>
+
+  <p>Donc un utilisateur qui ouvre Outlook (auth moderne) n'est pas affecté; un vieux script qui essaie SMTP AUTH depuis une boîte Linux est bloqué. L'expérience utilisateur pour la vaste majorité des utilisateurs est <em>aucun changement</em> — ils sont déjà sur l'auth moderne et ne remarquent rien.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="À la porte d'accès conditionnel, une connexion Outlook par auth moderne n'est pas affectée, tandis qu'une connexion SMTP AUTH par « Autres clients » est bloquée.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="caPass" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+        <marker id="caBlk" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <!-- gate column -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="286" y="40" width="148" height="160" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="74" fill="#C4D4E8" font-size="13" font-weight="600">Politique d'AC</text>
+        <text x="360" y="92" fill="#6B85A6" font-size="11">App. clientes =</text>
+        <text x="360" y="108" fill="#6B85A6" font-size="11">Autres clients</text>
+        <line x1="306" y1="124" x2="414" y2="124" stroke="#1F3C5C"/>
+        <text x="360" y="148" fill="#7DD9F9" font-size="11.5" font-weight="700">Octroi : Bloquer</text>
+      </g>
+      <!-- top: modern auth passes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="56" width="178" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="125" y="80" fill="#A8E1F8" font-size="13.5" font-weight="600">Outlook</text>
+        <text x="125" y="98" fill="#6B85A6" font-size="11">auth moderne</text>
+        <rect x="506" y="56" width="178" height="52" rx="10" fill="#0E2640" stroke="#2A7FA3"/>
+        <text x="595" y="86" fill="#A8E1F8" font-size="13.5" font-weight="600">Non affecté</text>
+      </g>
+      <path d="M214 82 H286" stroke="#2A7FA3" stroke-width="2"/>
+      <path d="M434 82 H506" stroke="#2A7FA3" stroke-width="2" marker-end="url(#caPass)"/>
+      <!-- bottom: legacy blocked -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="146" width="178" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="125" y="170" fill="#C4D4E8" font-size="13" font-weight="600">Script SMTP AUTH</text>
+        <text x="125" y="188" fill="#6B85A6" font-size="11">boîte Linux · héritée</text>
+        <rect x="506" y="146" width="178" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="595" y="178" fill="#FF8A98" font-size="13.5" font-weight="700">Bloqué</text>
+      </g>
+      <path d="M214 174 H286" stroke="#5C7796" stroke-width="2"/>
+      <path d="M434 174 H506" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#caBlk)"/>
+    </svg>
+    <figcaption>Même porte, deux résultats : l'auth moderne passe intacte, « Autres clients » est bloqué.</figcaption>
+  </figure>
+
+  <h2>Ce qui peut se briser quand vous l'activez</h2>
+
+  <p>Le pré-déploiement compte ici, parce que le blocage de l'auth héritée est une des politiques les plus susceptibles de faire remonter des intégrations inconnues.</p>
+
+  <p>Bris courants :</p>
+
+  <p><strong>Scan-vers-courriel sur les imprimantes.</strong> Les imprimantes multifonctions plus anciennes ont été configurées il y a des années pour envoyer du courriel via SMTP AUTH avec un compte de service. Quand l'auth héritée est bloquée, l'imprimante ne peut plus envoyer. La solution : soit reconfigurer l'imprimante pour utiliser un relais SMTP moderne (la plupart des imprimantes modernes supportent SMTP OAuth 2.0 maintenant), soit faire passer le scan-vers-courriel par un connecteur qui gère le chemin hérité.</p>
+
+  <p><strong>Vieilles applications métier avec identifiants SMTP codés en dur.</strong> Plusieurs apps internes ont une fonction « envoyer un courriel quand ça arrive » configurée avec des identifiants SMTP codés en dur depuis 2017. Elles échouent silencieusement quand bloquées. Le client le remarque quand un flux de travail qui envoyait des notifications cesse d'envoyer.</p>
+
+  <p><strong>Outils CRM / marketing tiers avec intégration courriel basée sur IMAP.</strong> Vieilles intégrations Salesforce, vieilles configurations HubSpot, outils personnalisés d'analyse de courriel. Certains utilisent encore IMAP par défaut. La plupart des versions modernes supportent IMAP OAuth 2.0, mais les installations héritées peuvent ne pas avoir été mises à niveau.</p>
+
+  <p><strong>Macs qui font tourner de vieilles versions de Mail.app.</strong> Mail.app pré-iOS 11 / pré-macOS 10.14 utilise l'auth de base. Les utilisateurs sur du matériel vraiment vieux ne peuvent pas se connecter. La solution est habituellement « votre ordinateur est trop vieux pour s'authentifier à un système de courriel d'entreprise moderne; voici un budget de 400 $ pour un nouveau ». Cette conversation est inconfortable mais correcte.</p>
+
+  <p><strong>Scripts PowerShell personnalisés qui envoient du courriel.</strong> Scripts internes utilisant <code>Send-MailMessage</code> avec identifiants codés en dur. La solution est de migrer vers <code>Send-MailKitMessage</code> ou d'utiliser l'API Graph.</p>
+
+  <p>Chacun de ceux-ci est un cas d'usage <em>connu</em> d'auth héritée que l'opérateur trouve pendant la fenêtre de rapport uniquement. Aucun n'est une raison de <em>ne pas</em> activer la politique — ce sont des raisons de planifier la transition soigneusement et de migrer les intégrations affectées.</p>
+
+  <h2>Déploiement</h2>
+
+  <p>Ce modèle se déploie à l'état Activé comme les autres, mais avec une différence importante : <strong>les bris d'auth héritée sont plus difficiles à prédire que les bris MFA</strong>. Les comptes de service qui ne s'authentifient qu'une fois par trimestre (pour le rapport de fin d'année, pour le lot de factures récurrent) ne se montrent pas dans l'inventaire pré-déploiement ni dans la première semaine de surveillance. Leur échec se manifeste des mois plus tard.</p>
+
+  <p>Pour cette raison, l'étape manuelle de rapport uniquement dans le portail Entra est <strong>fortement recommandée pour cette politique spécifique peu importe la taille du tenant</strong>, même sur des tenants de petite entreprise où les autres modèles peuvent se déployer à chaud. Déployez via Panoptica365 (crée la politique à l'état Activé), puis basculez immédiatement la politique en rapport uniquement dans le portail Entra, et exécutez une fenêtre de rapport uniquement de <em>14 jours</em>.</p>
+
+  <p>Pendant la fenêtre de rapport uniquement, tirez le journal de connexion filtré sur « Bloqué — Résultat rapport uniquement, Client = Autres clients ». Inventoriez :</p>
+
+  <ul>
+    <li>Quels utilisateurs? (Surtout des comptes de service; quelques vrais utilisateurs sur de vieux clients.)</li>
+    <li>Quels protocoles? (SMTP AUTH est le plus courant.)</li>
+    <li>Quelles IP / appareils? (Imprimantes, scripts, intégrations tierces.)</li>
+  </ul>
+
+  <p>Puis travaillez à travers l'inventaire :</p>
+
+  <ul>
+    <li>Pour chaque cas d'usage légitime, identifiez un chemin de modernisation, ou acceptez que le compte reste sur l'auth héritée et documentez l'exclusion dans Panoptica365 avec une date de coucher de soleil.</li>
+    <li>Pour chaque connexion suspecte ou inconnue, traitez comme compromission potentielle — même manuel que la réponse au credential stuffing dans la leçon 1 de la carte 2.</li>
+  </ul>
+
+  <p>Communiquez aux utilisateurs avec de vieux clients sur le changement à venir. Fournissez des instructions de modernisation. Puis basculez la politique de retour à Activé dans le portail Entra.</p>
+
+  <p>La fenêtre de rapport uniquement de 14 jours pour l'auth héritée est plus longue que pour la plupart des politiques parce que les cas d'usage d'auth héritée se cachent dans des cycles mensuels et trimestriels. Une fenêtre de 3 jours rate trop d'intégrations silencieuses.</p>
+
+  <h2>À surveiller après l'application</h2>
+
+  <p><strong>Tentatives de connexion avec <code>Autres clients</code> qui réussissent.</strong> Devrait être zéro après l'application (la politique les bloque). Toute connexion réussie par des chemins hérités signifie un écart de politique — une exclusion qui est trop large, ou un protocole que la politique ne couvre pas.</p>
+
+  <p><strong>Tentatives de connexion avec <code>Autres clients</code> qui échouent avec un blocage d'AC.</strong> Devrait être le bruit quotidien normal — des attaquants qui sondent, de vieux scripts sur des comptes exclus. Faites attention à la <em>source</em>. Une rafale de tentatives d'auth héritée sur plusieurs comptes depuis une seule IP est du credential stuffing utilisant un botnet qui n'a pas suivi l'auth moderne.</p>
+
+  <p><strong>Dérive sur la politique.</strong> La même détection de dérive qui s'applique à Exiger MFA s'applique ici. Si la politique est désactivée ou sa portée se rétrécit, quelqu'un (l'autre admin du client, un technicien du support Microsoft) a relâché le périmètre.</p>
+
+  <h2>L'ordre compte</h2>
+
+  <p>Bloquer l'Auth Héritée devrait être activé <em>après</em> Exiger MFA, pas avant. Raisonnement :</p>
+
+  <ul>
+    <li>Exiger MFA couvre toutes les connexions par auth moderne. La politique MFA met le deuxième facteur devant le chemin mot-de-passe-seul.</li>
+    <li>Bloquer l'Auth Héritée couvre toutes les connexions par non-auth-moderne. La politique de blocage met un mur devant le chemin mot-de-passe-seul qui <em>ne supporte pas</em> le MFA.</li>
+  </ul>
+
+  <p>Ensemble, elles ferment la surface : toute connexion soit a du MFA (moderne), soit est bloquée d'emblée (héritée). Il n'y a pas de chemin à travers avec seulement un mot de passe.</p>
+
+  <p>Si vous activiez Bloquer l'Auth Héritée <em>en premier</em>, les connexions par auth moderne sans MFA réussiraient encore. Si vous activiez Exiger MFA <em>en premier</em> sans Bloquer l'Auth Héritée, les connexions par auth héritée réussiraient encore. La paire doit être déployée ensemble; l'ordre est « MFA d'abord, puis Bloquer l'Auth Héritée quelques jours plus tard ». La politique MFA peut être activée avec une portée plus large et un risque de bris plus faible; Bloquer l'Auth Héritée ferme ensuite le trou restant.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>La détection réussie des tentatives bloquées par cette politique passe par l'ingestion standard du journal de connexion. Trois signaux qui comptent :</p>
+
+  <ul>
+    <li><strong>Une rafale de blocages d'auth héritée</strong> sur plusieurs comptes depuis une seule IP — credential stuffing par un protocole hérité. Même triage que le patron de credential stuffing par auth moderne.</li>
+    <li><strong>Une connexion réussie inattendue par auth héritée</strong> — quelqu'un a relâché la politique. Enquêtez.</li>
+    <li><strong>Une liste d'exclusions qui a grandi de manière inattendue</strong> — dérive sur la politique elle-même, faite remonter par le détecteur de dérive AC de Panoptica365.</li>
+  </ul>
+
+  <p>L'anneau Activité quotidienne fait remonter le volume de blocages d'AC en quasi-temps-réel, y compris les blocages d'auth héritée. Après l'application, le volume de blocages d'auth héritée devrait être un nombre faible et stable (des attaquants qui sondent) sans pointes.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Bloquer l'Auth Héritée est la compagne d'Exiger MFA, pas un remplacement.</strong> Les deux sont nécessaires. La politique MFA couvre le chemin que les utilisateurs utilisent; la politique Bloquer l'Auth Héritée couvre le chemin que les attaquants préfèrent.</p>
+
+  <p><strong>La fenêtre de rapport uniquement est plus longue ici que pour les autres politiques.</strong> Les cas d'usage d'auth héritée se cachent dans des automatisations mensuelles et trimestrielles qui ne se montrent pas dans un échantillon de rapport uniquement de 3 jours. Budgétez deux semaines.</p>
+
+  <p><strong>Résistez à la pression du client de faire des exclusions larges.</strong> « Notre imprimante a besoin de SMTP AUTH » est vrai; « on doit exclure tout le département IT » ne l'est pas. Chaque exclusion est un compte spécifique sur une IP spécifique avec un cas d'usage documenté et une date de coucher de soleil. Les exclusions larges sont comment cette politique se fait compromettre au ralenti.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Leçon 4 : Emplacement de confiance OU appareil conforme.</b> La prochaine couche d'AC — basée sur l'emplacement avec une soupape de sécurité intelligente pour les appareils conformes.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Leçon 5 : Conforme OU hybride OU MFA.</b> Le chemin de mise à niveau qui utilise les signaux de confiance d'appareil pour réduire la friction sur les connexions par appareil géré.</div></div>
+  </div>
+
+  <p>Pour l'instant : cette politique plus Exiger MFA de la leçon 2 sont la base. Tant que les deux ne sont pas activées et vérifiées sur un tenant client, aucun des travaux d'AC plus sophistiqués des leçons suivantes n'a d'importance — le chemin d'attaque par identifiants seuls est encore ouvert.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur l'authentification héritée et la retraite de l'auth de base (<a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online" target="_blank" rel="noopener">Microsoft Learn — Deprecation of Basic authentication in Exchange Online</a>); référence de la condition d'AC « Autres clients » (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-conditions#client-apps" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Client apps condition</a>); vue d'ensemble de l'authentification moderne (<a href="https://learn.microsoft.com/en-us/microsoft-365/enterprise/modern-auth-for-office-2013-and-2016" target="_blank" rel="noopener">Microsoft Learn — Modern authentication</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

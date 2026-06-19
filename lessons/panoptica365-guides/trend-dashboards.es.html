@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paneles de tendencias — la seguridad a lo largo del tiempo — Guías Panoptica365</title>
+<meta name="lesson:title" content="Paneles de tendencias — la seguridad a lo largo del tiempo">
+<meta name="lesson:subtitle" content="Las dos superficies longitudinales: la pestaña Tendencias de un inquilino y la página Tendencias de la cartera, gráfico por gráfico.">
+<meta name="lesson:icon" content="trending-up">
+<meta name="lesson:last_updated" content="2026-06-18">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Paneles de tendencias</span></div>
+  <h1>Paneles de tendencias — la seguridad a lo largo del tiempo</h1>
+  <p class="dek">Las dos superficies longitudinales: la pestaña Tendencias de un inquilino y la página Tendencias de la cartera, gráfico por gráfico.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Dos superficies de tendencias una al lado de la otra: la pestaña Tendencias de un solo inquilino y la página Tendencias de la cartera, cada una trazando una línea ascendente a lo largo del tiempo con un selector de período.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="tdArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5CCBF4" stop-opacity="0.35"/><stop offset="100%" stop-color="#5CCBF4" stop-opacity="0"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- panel izquierdo: pestaña Tendencias de un inquilino -->
+      <g transform="translate(70,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2236" stroke="#33527A"/>
+        <text x="22" y="34" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Inquilino · Tendencias</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#2A6F9E"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7d 30d 90d 1a</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <path d="M22 160 L100 150 L178 134 L256 120 L334 96 L418 84" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M22 150 L418 128" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <!-- panel derecho: página Tendencias de la cartera -->
+      <g transform="translate(610,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="22" y="34" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Cartera · Tendencias</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7d 30d 90d 1a</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <path d="M22 132 L100 124 L178 110 L256 102 L334 88 L418 78 L418 150 L334 140 L256 144 L178 150 L100 156 L22 160 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+        <path d="M22 146 L100 140 L178 130 L256 123 L334 108 L418 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M22 138 L100 130 L178 116 L256 106 L334 92 L418 82" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M22 140 L418 122" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <text x="290" y="316" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">UN INQUILINO</text>
+      <text x="830" y="316" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">TODA LA CARTERA</text>
+    </svg>
+    <figcaption>Dos superficies longitudinales, una sola idea: las mismas tendencias, trazadas para un solo inquilino y luego para toda la cartera.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La Consola principal y el Resumen de un inquilino responden a <em>«¿cómo van las cosas ahora mismo?»</em>. Los paneles de tendencias responden a la pregunta más difícil: <em>«¿estamos mejorando o empeorando, y cómo lo demuestro?»</em> Hay dos — una <strong>pestaña Tendencias en cada panel de inquilino</strong> y una <strong>página Tendencias de toda la cartera</strong> en la barra lateral. Ambas leen el historial que Panoptica365 acumula con sus sondeos diarios, así que abrirlas no cuesta nada y no añaden carga a Microsoft. Ambas llevan un <strong>selector de período</strong> — 7 d / 30 d / 90 d / 1 a — arriba a la derecha.</p>
+
+  <p>Un inquilino recién incorporado todavía no tendrá mucha línea que trazar. Donde el historial aún se está construyendo, el gráfico lo dice (<em>«La tendencia comienza el…»</em>) en lugar de dibujar una línea plana engañosa. Déle unas semanas.</p>
+  </div>
+
+  <h2>La pestaña Tendencias de un inquilino</h2>
+
+  <p>Abra un inquilino y haga clic en <strong>Tendencias</strong> (la segunda pestaña, junto a Resumen). Se divide en dos mitades — <em>lo que ve el cliente</em> y <em>lo que ve el proveedor</em> — con una franja de estadísticas de cobertura arriba.</p>
+
+  <div class="callout">
+    <div class="clabel">Franja de cobertura</div>
+    <p>Una tranquilidad de una línea: cuántos de los controles recomendados por Microsoft están configurados y sanos para este inquilino. Es la postura como número, no como gráfico, porque un inquilino bien llevado se mantiene al 100 % y una línea plana no le dice nada.</p>
+  </div>
+
+  <p>Lo que ve el cliente:</p>
+
+  <ul>
+    <li><strong>Puntuación de seguridad de Microsoft</strong> (el gráfico principal) — la medida de seguridad canónica de Microsoft para este inquilino a lo largo del tiempo, con una línea discontinua que muestra el promedio de las <strong>empresas de tamaño similar</strong> (la referencia del propio Microsoft). La puntuación se mueve a medida que Microsoft sube el listón; mantener la línea continua por encima de la discontinua es el trabajo. La etiqueta indica cuántos puntos le saca, o le faltan, a los inquilinos comparables.</li>
+    <li><strong>Puntuación de seguridad por categoría</strong> — la misma puntuación desglosada según las categorías de Microsoft (Identidad, Datos, Dispositivos, Aplicaciones, Infraestructura) en áreas apiladas. Muestra <em>de dónde</em> salen los puntos y <em>dónde quedan las brechas</em> — la banda más delgada es su próxima campaña.</li>
+    <li><strong>Recomendaciones de seguridad aplicadas</strong> — cuántas de las acciones recomendadas por Microsoft están realmente en marcha, a lo largo del tiempo. Es el trabajo que nunca termina: Microsoft no deja de añadir recomendaciones, así que una línea plana aquí significa que va al día y una ascendente que está ganando terreno.</li>
+    <li><strong>Problemas detectados y resueltos</strong> — las desviaciones y amenazas que Panoptica detectó y que su equipo despejó, por mes y gravedad. Es el relato del valor: la prueba de que el servicio hace algo.</li>
+    <li><strong>Problemas abiertos a lo largo del tiempo</strong> — cuántos elementos quedaban pendientes de acción cada día. Tender a cero es la meta; una línea que sube significa que el atraso crece más rápido de lo que el equipo lo despeja.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Los gráficos para el cliente en la pestaña Tendencias de un inquilino: una línea de puntuación de seguridad con referencia discontinua, una puntuación por categoría en áreas apiladas, una línea de recomendaciones aplicadas, los problemas detectados y resueltos en barras, y los problemas abiertos a lo largo del tiempo en línea.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LO QUE VE EL CLIENTE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(20,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 56 L60 50 L106 42 L152 30 L202 24" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M14 50 L202 36" fill="none" stroke="#6B85A6" stroke-width="1.4" stroke-dasharray="4 4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">Puntuación de seguridad</text>
+        </g>
+        <g transform="translate(252,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 60 L60 56 L106 52 L152 46 L202 42 L202 64 L14 64 Z" fill="#2A7FA3" fill-opacity="0.5"/>
+          <path d="M14 50 L60 44 L106 40 L152 32 L202 28 L202 42 L152 46 L106 52 L60 56 L14 60 Z" fill="#5CCBF4" fill-opacity="0.45"/>
+          <path d="M14 40 L60 34 L106 30 L152 24 L202 22 L202 28 L152 32 L106 40 L60 44 L14 50 Z" fill="#A8E1F8" fill-opacity="0.4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">Por categoría</text>
+        </g>
+        <g transform="translate(20,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 62 L44 54 L76 56 L108 46 L126 44" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="9.5">Recom. aplicadas</text>
+        </g>
+        <g transform="translate(170,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="20" y="40" width="14" height="24" rx="2" fill="#5CCBF4"/>
+          <rect x="44" y="32" width="14" height="32" rx="2" fill="#5CCBF4"/>
+          <rect x="68" y="46" width="14" height="18" rx="2" fill="#FFC04D"/>
+          <rect x="92" y="28" width="14" height="36" rx="2" fill="#5CCBF4"/>
+          <rect x="116" y="38" width="10" height="26" rx="2" fill="#FF5A6E"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="9.5">Det. y resueltos</text>
+        </g>
+        <g transform="translate(320,130)">
+          <rect width="148" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 36 L48 44 L84 50 L120 56 L136 60" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="9.5">Abiertos en el tiempo</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>La mitad para el cliente de la pestaña Tendencias: la postura y el relato del valor, gráfico por gráfico.</figcaption>
+  </figure>
+
+  <p>Lo que ve el proveedor:</p>
+
+  <ul>
+    <li><strong>Tiempo de resolución</strong> — mediana de horas desde que se dispara una alerta hasta su resolución. Su capacidad de respuesta, con pruebas — útil para las conversaciones sobre acuerdos de servicio.</li>
+    <li><strong>Volumen de alertas por semana</strong> — alertas nuevas por semana, por gravedad. ¿Este inquilino se vuelve más ruidoso o más tranquilo?</li>
+    <li><strong>Políticas que más se activan</strong> — qué políticas generan el volumen en los últimos 90 días, en barras ordenadas. Las barras más largas son sus candidatas de ajuste: una política que se dispara sin parar es o un problema real o una política que hay que ajustar.</li>
+  </ul>
+
+  <h2>La página Tendencias de la cartera</h2>
+
+  <p>Haga clic en <strong>Tendencias</strong> en la barra lateral izquierda (justo después de Mapa de calor). Es la misma idea, elevada a toda la cartera de golpe. Cubre <strong>solo sus inquilinos gestionados</strong> — los inquilinos en modo auditoría no forman parte del relato de postura de la cartera — y se organiza en <em>Puntuación de seguridad y postura</em> y <em>Operaciones de alertas</em>, de nuevo con una franja de cobertura arriba.</p>
+
+  <div class="callout">
+    <div class="clabel">Franja de cobertura de la cartera</div>
+    <p>Cuántos inquilinos gestionados están al 100 % de los controles recomendados, y la cobertura promedio de la cartera. La estrella polar de toda la cartera.</p>
+  </div>
+
+  <p>Puntuación de seguridad y postura:</p>
+
+  <ul>
+    <li><strong>Puntuación de seguridad de Microsoft de la cartera</strong> (el principal) — la puntuación de seguridad promedio de los inquilinos gestionados a lo largo del tiempo. Tres cosas se superponen a la línea de promedio: una <strong>banda máx.–mín.</strong> sombreada que muestra su mejor y su peor inquilino cada día (números reales, sin suavizar — verificables a mano), una <strong>referencia de tamaño similar</strong> discontinua y — solo cuando incorporó inquilinos durante el período — una línea verde de <strong>«inquilinos existentes»</strong> que mantiene constante la misma cohorte. La información emergente le dice sobre cuántos inquilinos se calculó el promedio ese día.</li>
+    <li><strong>Crecimiento de la cartera — inquilinos gestionados</strong> — cuántos inquilinos gestionados existían cada día, con un marcador en los días de incorporación. Este gráfico explica el de arriba: cuando añade un inquilino que parte de bajo, el promedio de la cartera baja — es la cartera que cambia, no sus clientes existentes que empeoran. La línea verde del principal y este gráfico, juntos, le permiten distinguir esos dos relatos.</li>
+    <li><strong>Recomendaciones pendientes</strong> — total de acciones recomendadas por Microsoft aún abiertas en toda la cartera. ¿Van al día de forma colectiva?</li>
+    <li><strong>Puntuación de seguridad por categoría</strong> — la puntuación promedio de la cartera por categoría de Microsoft a lo largo del tiempo. Donde <em>toda la cartera</em> es más débil está el lugar de mayor palanca para lanzar una campaña en todos los clientes a la vez.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="El gráfico principal de la puntuación de seguridad de la cartera: una línea de promedio con una banda máx.–mín. sombreada detrás, una referencia de tamaño similar discontinua, y una línea verde de inquilinos existentes que mantiene constante la misma cohorte.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PUNTUACIÓN DE LA CARTERA (PRINCIPAL)</text>
+      <line x1="40" y1="200" x2="680" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <line x1="40" y1="56" x2="40" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <path d="M40 120 L168 110 L296 96 L424 86 L552 72 L680 64 L680 168 L552 156 L424 162 L296 168 L168 174 L40 178 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+      <path d="M40 150 L168 142 L296 130 L424 122 L552 108 L680 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M40 138 L168 128 L296 114 L424 104 L552 90 L680 80" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M40 142 L680 124" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      <g font-family="Geist,Inter,sans-serif" font-size="11.5">
+        <rect x="420" y="44" width="18" height="3" rx="1.5" fill="#5CCBF4"/>
+        <text x="444" y="50" fill="#A8E1F8">promedio</text>
+        <rect x="420" y="62" width="18" height="3" rx="1.5" fill="#2EE8A0"/>
+        <text x="444" y="68" fill="#A8E1F8">inquilinos existentes</text>
+        <line x1="588" y1="46" x2="606" y2="46" stroke="#6B85A6" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="612" y="50" fill="#6B85A6">referencia</text>
+        <rect x="588" y="60" width="18" height="9" rx="2" fill="#5CCBF4" fill-opacity="0.18"/>
+        <text x="612" y="68" fill="#6B85A6">banda máx.–mín.</text>
+      </g>
+    </svg>
+    <figcaption>El principal de la cartera apila cuatro señales en un gráfico — promedio, banda máx.–mín., referencia y la línea de cohorte constante.</figcaption>
+  </figure>
+
+  <p>Operaciones de alertas:</p>
+
+  <ul>
+    <li><strong>Problemas detectados y resueltos</strong> — total resuelto de la cartera, por mes y gravedad. ¿Cuánto despejó el equipo en todos los clientes?</li>
+    <li><strong>Problemas abiertos a lo largo del tiempo</strong> — total de elementos pendientes de acción cada día en la cartera. ¿El equipo va al día en toda la cartera?</li>
+    <li><strong>Tiempo de resolución</strong> — mediana de horas por semana de la cartera, con una <strong>línea p90</strong> encima. La mediana es el caso típico; el p90 atrapa la cola — unos pocos inquilinos lentos de despejar que la mediana oculta. Evidencia de acuerdo de servicio para toda la cartera.</li>
+    <li><strong>Volumen de alertas por semana</strong> — alertas nuevas de la cartera por semana, por gravedad. ¿Hay más ruido en general?</li>
+    <li><strong>Distribución de alertas por categoría a lo largo del tiempo</strong> — alertas nuevas de la cartera agrupadas por categoría de política (inicios de sesión de riesgo, gestión de amenazas, uso compartido externo, cambios de configuración, permisos, gobernanza de la información) por semana. Le dice <em>qué tipo de trabajo</em> genera la cartera, que es lo que deben seguir la dotación de personal y la formación.</li>
+    <li><strong>Políticas que más se activan — últimos 90 días</strong> — las políticas más ruidosas en todo, ordenadas. Son sus objetivos de ajuste a nivel de cartera — ajuste una política y la silencia para todos los clientes.</li>
+  </ul>
+
+  <h2>Cómo leerlas bien</h2>
+
+  <ul>
+    <li><strong>La puntuación de seguridad se mueve porque Microsoft sube el listón.</strong> Una bajada no siempre significa que algo empeoró de su lado — Microsoft puede haber añadido una recomendación. La línea de referencia es el contexto que le mantiene honesto sobre eso.</li>
+    <li><strong>En el principal de la cartera, vigile la banda, no solo el promedio.</strong> Un promedio sano que oculta un mínimo muy bajo significa que un cliente tira hacia abajo — la banda lo saca a la luz; el promedio lo entierra.</li>
+    <li><strong>Use el período correcto para la pregunta.</strong> 7 d / 30 d para una retrospectiva de incidente o una semana ruidosa; 90 d / 1 a para una revisión de negocio o una diapositiva de junta. El relato cambia con la lente.</li>
+    <li><strong>Las políticas que más se activan son una invitación, no un veredicto.</strong> La barra más larga es o un problema recurrente real en ese cliente o una política demasiado sensible. Ambas merecen acción — una con el inquilino, otra con la política.</li>
+  </ul>
+
+  <blockquote>Los paneles le dicen el estado. Las tendencias le dicen la trayectoria — y la trayectoria es lo que realmente está en juego en una renovación de cliente, una revisión de acuerdo de servicio o una revisión trimestral de negocio.</blockquote>
+
+</div>
+</body>
+</html>

@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.15 — 2026-06-19
+
+### Nouvelle apparence pour les leçons + La couche humaine
+
+Chaque leçon d'**Apprendre** — dans les huit sujets — a été refaite sous forme d'article entièrement conçu, avec diagrammes, encadrés et tableaux, et le carrefour Apprendre les affiche désormais correctement. Ouvrez un sujet et cliquez sur une leçon : elle s'ouvre dans une vue de lecture épurée avec une seule barre de défilement fluide, et elle suit le thème de votre application — leçons claires en mode clair, sombres en mode sombre. (Les diagrammes restent sur leur fond sombre, par choix de conception, pour se lire comme des figures intégrées à la page.) Tout le reste fonctionne comme avant — les pastilles bleues « non lu », les badges *Mis à jour* et le suivi de lecture par utilisateur — et les leçons suivent votre préférence de langue en français, en anglais et en espagnol.
+
+### Un état de santé de la base de données plus clair
+
+La vérification **Taille de la base de données** dans *Santé* n'affiche plus d'avertissement ambre simplement parce que l'historique d'un locataire a grossi — une base de données saine et active est censée grossir. Elle indique maintenant simplement la taille actuelle et les plus grandes tables, à titre de référence, et ne compte jamais dans l'état de santé global.
+
+---
+
 ## Version 0.2.14 — 2026-06-18
 
 ### Vos données sont magnifiques!

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Security Baseline — your curated Windows hardening bundle</title>
+<meta name="lesson:title" content="The Security Baseline — your curated Windows hardening bundle">
+<meta name="lesson:subtitle" content="98 curated Windows hardening settings in one Configuration Profile — an experienced MSP's opinionated baseline, not Microsoft's official one.">
+<meta name="lesson:icon" content="shield-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>The Security Baseline</span></div>
+  <h1>The Security Baseline — your curated Windows hardening bundle</h1>
+  <p class="dek">98 curated Windows hardening settings in one Configuration Profile — an experienced MSP's opinionated baseline, not Microsoft's official one.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="One Configuration Profile holding about 98 curated hardening settings, contrasted with starting from scratch.">
+      <defs>
+        <radialGradient id="sbBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="sbProfile" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <filter id="sbSoft"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#sbBg)"/>
+
+      <!-- left: scattered, raw settings (start from scratch) -->
+      <text x="240" y="56" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">PICK EACH BY HAND</text>
+      <g fill="none" stroke="#33527A" stroke-width="1.4" opacity="0.85">
+        <rect x="120" y="96" width="60" height="22" rx="4"/>
+        <rect x="196" y="84" width="78" height="22" rx="4"/>
+        <rect x="290" y="100" width="52" height="22" rx="4"/>
+        <rect x="138" y="138" width="84" height="22" rx="4"/>
+        <rect x="240" y="142" width="58" height="22" rx="4"/>
+        <rect x="118" y="184" width="66" height="22" rx="4"/>
+        <rect x="200" y="188" width="74" height="22" rx="4"/>
+        <rect x="294" y="184" width="48" height="22" rx="4"/>
+        <rect x="150" y="230" width="56" height="22" rx="4"/>
+        <rect x="222" y="234" width="80" height="22" rx="4"/>
+      </g>
+      <text x="240" y="290" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" font-style="italic">years of scattered guidance</text>
+
+      <!-- arrow -->
+      <path d="M388 170 H482" stroke="#335F92" stroke-width="2.5" marker-end="url(#sbArr)"/>
+      <defs><marker id="sbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+
+      <!-- right: one curated profile -->
+      <text x="800" y="56" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">ONE CONFIGURATION PROFILE</text>
+      <g transform="translate(640,80)">
+        <circle cx="160" cy="118" r="150" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 9"/>
+        <rect x="40" y="6" width="240" height="224" rx="16" fill="url(#sbProfile)" stroke="#5CCBF4" stroke-width="1.6"/>
+        <!-- shield mark -->
+        <path d="M160 30 l46 16 v40 c0 34 -22 56 -46 70 c-24 -14 -46 -36 -46 -70 v-40 Z" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.4" filter="url(#sbSoft)" opacity="0.9"/>
+        <path d="M160 30 l46 16 v40 c0 34 -22 56 -46 70 c-24 -14 -46 -36 -46 -70 v-40 Z" fill="none" stroke="#A8E1F8" stroke-width="1.4"/>
+        <path d="M142 92 l13 13 l24 -28" fill="none" stroke="#2EE8A0" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- stacked setting lines -->
+        <g stroke="#2A6F9E" stroke-width="3" stroke-linecap="round">
+          <line x1="74" y1="180" x2="246" y2="180"/>
+          <line x1="74" y1="196" x2="226" y2="196"/>
+          <line x1="74" y1="212" x2="246" y2="212"/>
+        </g>
+      </g>
+      <text x="800" y="300" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="700">~98 settings · ~20 categories</text>
+    </svg>
+    <figcaption>The biggest single artefact in the Intune library: about 98 hardening settings, curated over years, packaged into one profile.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The Panoptica365 Security Baseline template is the biggest single artefact in the Intune library — about 98 individual settings packaged into one Configuration Profile. It is not Microsoft's official Windows Security Baseline. That distinction matters and we'll get to it. What it is, instead, is a curated bundle of Windows hardening settings collected over years from Microsoft Learn pages, MVP blogs, security researchers' writeups, and real-world hardening lessons learned across customer deployments. Think of it as "the Windows hardening posture an experienced MSP would recommend if you asked them to pick the settings that matter and skip the ones that don't."</p>
+
+  <p>This lesson walks through what's in it, how to think about it when you deploy it, and how to talk about it with customers who ask "is this the Microsoft Security Baseline?"</p>
+  </div>
+
+  <h2>What it is, plainly</h2>
+
+  <p>The template:</p>
+
+  <ul>
+    <li>Applies to <strong>Windows 10 / Windows 11</strong> devices only (<code>platforms: windows10</code>).</li>
+    <li>Uses the <strong>Settings Catalog</strong> template type (<code>configurationPolicies</code>), which means it lives in the Intune portal's Settings Catalog section, not the legacy templates section.</li>
+    <li>Configures <strong>about 98 distinct settings</strong>, organised across roughly 20 setting categories.</li>
+    <li>Touches both <strong>device-scope</strong> and <strong>user-scope</strong> policies — meaning it configures some things at the machine level and some things at the per-user level (e.g., AutoPlay restrictions apply per-user; security options apply to the device).</li>
+  </ul>
+
+  <p>The settings span: local security policies, account behaviour, device lock, AutoPlay, Wi-Fi behaviour, PowerShell, Remote Desktop Services, Remote Management, web threat defense (SmartScreen integration), Chrome Remote Desktop restrictions, MS Security Guide settings, power options, AdmX-migrated GPO settings, and Microsoft Edge configurations.</p>
+
+  <p>What this template <em>does not</em> configure:</p>
+
+  <ul>
+    <li>BitLocker (separate template — lesson 4).</li>
+    <li>Microsoft Defender Antivirus settings (separate template — lesson 5).</li>
+    <li>Windows Defender Firewall (separate template — lesson 6).</li>
+    <li>ASR rules (separate template — lesson 7).</li>
+    <li>Windows Hello / Credential Guard (separate template — lesson 8).</li>
+    <li>Windows Update for Business (not in the library — handled by the MSP's RMM tool).</li>
+  </ul>
+
+  <p>The Security Baseline complements those other templates rather than overlapping with them. Where a setting could plausibly live in either the Security Baseline or a dedicated template (e.g., some Defender-adjacent options), the Panoptica365 library puts it in the dedicated template — keeping the Security Baseline as the "everything else" hardening bundle.</p>
+
+  <h2>It is not Microsoft's official Windows Security Baseline</h2>
+
+  <p>This needs explicit framing because the template name invites confusion. Microsoft ships its own <strong>Windows Security Baselines</strong> — formal, documented, opinionated settings packages that Microsoft updates with each major Windows release. They're published in the Intune portal under Endpoint Security → Security baselines. When you create one of those, Microsoft applies their own curated set of settings.</p>
+
+  <p>The <strong>Panoptica365 Security Baseline template</strong> is <em>not</em> one of those. It's a separate, MSP-curated artefact that:</p>
+
+  <ul>
+    <li>Was assembled by hand based on MVP guidance, MS Learn articles, security blog posts, and real-world experience.</li>
+    <li>Updates on the MSP's schedule, not Microsoft's.</li>
+    <li>May or may not align with Microsoft's official baseline for any given setting.</li>
+    <li>Lives as a Settings Catalog template, not as a Microsoft-shipped baseline.</li>
+  </ul>
+
+  <p>When a customer's CISO asks "is this aligned with Microsoft's Windows Security Baseline?", the honest answer is: <em>not directly. This is an MSP-curated baseline informed by Microsoft's guidance but separately maintained. The intent is the same — harden Windows — but the specific settings are chosen for SMB operability rather than enterprise compliance.</em></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Two distinct baselines that can coexist: the Microsoft-shipped Windows Security Baseline and the separate MSP-curated Panoptica365 template.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Microsoft baseline -->
+        <rect x="40" y="40" width="290" height="170" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="185" y="72" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Microsoft Windows</text>
+        <text x="185" y="92" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Security Baseline</text>
+        <text x="185" y="124" text-anchor="middle" fill="#6B85A6" font-size="12">Microsoft-shipped</text>
+        <text x="185" y="144" text-anchor="middle" fill="#6B85A6" font-size="12">Updated each Windows release</text>
+        <text x="185" y="164" text-anchor="middle" fill="#6B85A6" font-size="12">Aimed at large enterprises</text>
+        <text x="185" y="190" text-anchor="middle" fill="#7DD9F9" font-size="11.5" font-style="italic">takes precedence on conflict</text>
+
+        <!-- Panoptica365 template -->
+        <rect x="390" y="40" width="290" height="170" rx="10" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="535" y="72" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Panoptica365</text>
+        <text x="535" y="92" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Security Baseline</text>
+        <text x="535" y="124" text-anchor="middle" fill="#6B85A6" font-size="12">MSP-curated</text>
+        <text x="535" y="144" text-anchor="middle" fill="#6B85A6" font-size="12">Updated on the MSP's schedule</text>
+        <text x="535" y="164" text-anchor="middle" fill="#6B85A6" font-size="12">Calibrated for SMB</text>
+        <text x="535" y="190" text-anchor="middle" fill="#A8E1F8" font-size="11.5" font-style="italic">Settings Catalog template</text>
+      </g>
+      <text x="360" y="234" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12.5">The two can coexist</text>
+    </svg>
+    <figcaption>Two separate baselines. They can coexist; where settings conflict, Microsoft's baseline takes precedence.</figcaption>
+  </figure>
+
+  <p>The Microsoft baselines are aimed at large enterprises with dedicated security teams. They're sometimes too restrictive for SMB scenarios — they assume specific authentication infrastructure, specific patch cadences, specific endpoint management maturity. The Panoptica365 Security Baseline is calibrated for the SMB context: aggressive enough to actually improve posture, lenient enough not to break common SMB workflows.</p>
+
+  <p>If a customer specifically needs Microsoft's official Windows Security Baseline for compliance reasons (e.g., a contract that names it explicitly), they should deploy that <em>alongside</em> this template. The two can coexist — Microsoft's baseline takes precedence where settings conflict, and many settings won't conflict at all.</p>
+
+  <h2>What's actually in it — the major categories</h2>
+
+  <p>The 98 settings group into about 20 categories. The biggest ones:</p>
+
+  <p><strong>Local Policies / Security Options (11 settings).</strong> Windows local security policy hardening — the things you'd configure in <code>secpol.msc</code> on a domain-joined machine, here delivered via MDM. Examples: minimum NTLM session security, smart card removal behaviour, system anonymous SID enumeration restriction, LSA protection.</p>
+
+  <p><strong>Microsoft Edge configuration (18 settings — 10 device + 8 user).</strong> Edge browser hardening: site isolation, password manager behaviour, autofill restrictions, SmartScreen integration, download protection, sleeping tabs behaviour, profile creation restrictions.</p>
+
+  <p><strong>Device Lock (6 settings).</strong> Screen lock policy: time before lock, lock screen behaviour, picture password disabling, force lock on inactivity.</p>
+
+  <p><strong>Chrome Remote Desktop / Chrome Remote Access (8 settings — 4 device + 4 user).</strong> Specifically restricts Google's Chrome Remote Desktop and related Chrome remote-access features. This is a deliberate hardening move — Chrome Remote Desktop is a legitimate-looking remote access vector that attackers abuse, and most SMB environments have no business case for users running it. Worth knowing this is in here; some customers' IT folks legitimately use it and will need an exception.</p>
+
+  <p><strong>MS Security Guide (4 settings).</strong> Microsoft's older "Security Guide" GPO recommendations — the ones from the SCM (Security Compliance Manager) days, still relevant. Things like SMB hardening, AppLocker prep, kernel mode authentication.</p>
+
+  <p><strong>AdmX (10 settings — 6 user + 4 device).</strong> Settings migrated from traditional Group Policy ADMX templates, delivered through Intune's ADMX support. Mostly screensaver enforcement, lockscreen behaviour, and other GPO-derived hardening.</p>
+
+  <p><strong>AutoPlay (4 settings).</strong> Disable AutoPlay/AutoRun for all media. Closes a classic malware delivery vector — USB stick with autorun payload.</p>
+
+  <p><strong>Web Threat Defense (3 settings).</strong> SmartScreen-adjacent controls — checking downloaded files against threat intelligence, blocking unsafe phishing sites, controlling SmartScreen prompts.</p>
+
+  <p><strong>MSS Legacy (2 settings).</strong> Older "Microsoft Solutions for Security" hardening — IP routing restriction, NetBIOS name release controls. Relevant for older Windows hardening practices.</p>
+
+  <p><strong>Power (2 settings).</strong> Power management hardening — typically blocking sleep on AC power for desktops, blocking wake-on-LAN unless explicitly needed.</p>
+
+  <p><strong>Remote Desktop Services / Remote Management (4 settings).</strong> RDP hardening — restrict remote connections, enable NLA (Network Level Authentication) if not already enforced, disable some legacy RPC behaviours.</p>
+
+  <p><strong>Wi-Fi (2 settings).</strong> Block automatic connection to open networks, restrict Wi-Fi profile sharing.</p>
+
+  <p><strong>Windows PowerShell (2 settings).</strong> PowerShell script block logging and module logging — turns on the detailed logging that's used for incident response. Doesn't restrict PowerShell itself; just makes it auditable.</p>
+
+  <p><strong>Connectivity (2 settings).</strong> Internet Connection Sharing restrictions, Network Bridge restrictions.</p>
+
+  <p>There are more individual settings beyond these categories, but the above covers most of the bulk.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 470" role="img" aria-label="The major setting categories and how many settings each contributes to the baseline.">
+      <rect width="720" height="470" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="36" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">MAJOR CATEGORIES</text>
+      <text x="684" y="34" text-anchor="end" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">SETTINGS</text>
+      <g font-family="Geist,Inter,sans-serif" font-size="13.5">
+        <!-- bar scale: 18 settings -> 420px usable from x=250 to x=670 -->
+        <!-- row template: label at x=36, bar from x=250 -->
+        <g transform="translate(0,58)">
+          <text x="36" y="14" fill="#C4D4E8">Microsoft Edge</text>
+          <rect x="250" y="2" width="380" height="16" rx="4" fill="#5CCBF4"/>
+          <text x="642" y="15" fill="#A8E1F8" font-weight="600">18</text>
+        </g>
+        <g transform="translate(0,90)">
+          <text x="36" y="14" fill="#C4D4E8">Local Policies / Security Options</text>
+          <rect x="250" y="2" width="232" height="16" rx="4" fill="#3F9AC4"/>
+          <text x="494" y="15" fill="#A8E1F8" font-weight="600">11</text>
+        </g>
+        <g transform="translate(0,122)">
+          <text x="36" y="14" fill="#C4D4E8">AdmX (GPO-migrated)</text>
+          <rect x="250" y="2" width="211" height="16" rx="4" fill="#3F9AC4"/>
+          <text x="473" y="15" fill="#A8E1F8" font-weight="600">10</text>
+        </g>
+        <g transform="translate(0,154)">
+          <text x="36" y="14" fill="#C4D4E8">Chrome Remote Desktop</text>
+          <rect x="250" y="2" width="169" height="16" rx="4" fill="#2A7FA3"/>
+          <text x="431" y="15" fill="#A8E1F8" font-weight="600">8</text>
+        </g>
+        <g transform="translate(0,186)">
+          <text x="36" y="14" fill="#C4D4E8">Device Lock</text>
+          <rect x="250" y="2" width="127" height="16" rx="4" fill="#2A7FA3"/>
+          <text x="389" y="15" fill="#A8E1F8" font-weight="600">6</text>
+        </g>
+        <g transform="translate(0,218)">
+          <text x="36" y="14" fill="#C4D4E8">MS Security Guide</text>
+          <rect x="250" y="2" width="84" height="16" rx="4" fill="#2A6F9E"/>
+          <text x="346" y="15" fill="#A8E1F8" font-weight="600">4</text>
+        </g>
+        <g transform="translate(0,250)">
+          <text x="36" y="14" fill="#C4D4E8">AutoPlay</text>
+          <rect x="250" y="2" width="84" height="16" rx="4" fill="#2A6F9E"/>
+          <text x="346" y="15" fill="#A8E1F8" font-weight="600">4</text>
+        </g>
+        <g transform="translate(0,282)">
+          <text x="36" y="14" fill="#C4D4E8">Remote Desktop / Remote Mgmt</text>
+          <rect x="250" y="2" width="84" height="16" rx="4" fill="#2A6F9E"/>
+          <text x="346" y="15" fill="#A8E1F8" font-weight="600">4</text>
+        </g>
+        <g transform="translate(0,314)">
+          <text x="36" y="14" fill="#C4D4E8">Web Threat Defense</text>
+          <rect x="250" y="2" width="63" height="16" rx="4" fill="#274B72"/>
+          <text x="325" y="15" fill="#A8E1F8" font-weight="600">3</text>
+        </g>
+        <g transform="translate(0,346)">
+          <text x="36" y="14" fill="#C4D4E8">MSS Legacy</text>
+          <rect x="250" y="2" width="42" height="16" rx="4" fill="#274B72"/>
+          <text x="304" y="15" fill="#A8E1F8" font-weight="600">2</text>
+        </g>
+        <g transform="translate(0,378)">
+          <text x="36" y="14" fill="#C4D4E8">Power · Wi-Fi · PowerShell · Connectivity</text>
+          <rect x="250" y="2" width="42" height="16" rx="4" fill="#274B72"/>
+          <text x="304" y="15" fill="#A8E1F8" font-weight="600">2 each</text>
+        </g>
+      </g>
+      <line x1="250" y1="424" x2="670" y2="424" stroke="#1F3C5C"/>
+      <text x="360" y="448" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5" font-style="italic">~98 settings across ~20 categories · more individual settings sit beyond these</text>
+    </svg>
+    <figcaption>Where the bulk lives: Edge and the local security policies carry the most settings; the long tail of small categories fills out the ~98 total.</figcaption>
+  </figure>
+
+  <h2>The opinionated choices to know about</h2>
+
+  <p>Three settings in this baseline that are worth knowing about because they affect real customer workflows:</p>
+
+  <p><strong>Chrome Remote Desktop is blocked.</strong> This catches some IT teams off-guard. Chrome Remote Desktop is legitimately useful for some remote-access scenarios and is widely used by small companies who don't pay for a proper RMM tool. Blocking it via this baseline means those workflows stop working. If the customer has a real Chrome Remote Desktop use case, they need an exception. (The alternative — leaving Chrome Remote Desktop unrestricted — opens an attack vector that bypasses the MSP's RMM telemetry.)</p>
+
+  <p><strong>Wi-Fi auto-connect to open networks is blocked.</strong> Standard hardening. Some users will be annoyed by this at coffee shops. Document it in the onboarding communication so it's not a surprise.</p>
+
+  <p><strong>PowerShell script block logging is enabled.</strong> This is logging, not restriction — but it means <em>every PowerShell command run on the device gets logged to the Windows event log</em>. That's a privacy implication for power users who might prefer their PowerShell history not be recorded. It's the right call for security; it's worth knowing so you can answer the question if asked.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Will surface as questions</div>
+    <p>Chrome Remote Desktop blocked, Wi-Fi auto-connect to open networks blocked, and PowerShell script block logging enabled are the three choices that touch real workflows. Have the answers ready before the questions land.</p>
+  </div>
+
+  <p>The other 90+ settings are mostly invisible to users in normal operation. They harden things that the user shouldn't be interacting with directly (system policy, network behaviour, browser internal defaults).</p>
+
+  <h2>Rollout</h2>
+
+  <p>The Security Baseline is the highest-impact-per-template deployment in the library because it touches so many separate Windows behaviours. Run the pilot-group deployment from lesson 1 with more care than for the smaller templates.</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy to a pilot group of 3–5 known-good test devices (IT team devices, a willing power user, maybe one general-population device).</li>
+    <li><strong>Days 1–7</strong> — verify the deployment succeeded (Intune portal shows success counts), and <em>use</em> the pilot devices for normal work. Look for:
+      <ul>
+        <li>Anything that broke. Specific business apps that no longer work, Edge behaviours that changed in user-visible ways, remote-access tools that stopped working (Chrome Remote Desktop is the classic catch).</li>
+        <li>PowerShell scripts that legitimately do unusual things — block-mode logging shouldn't break them, but if a legitimate script does something the baseline blocks, you'll see errors.</li>
+        <li>Power-user complaints. Power users notice baseline deployments first.</li>
+      </ul>
+    </li>
+    <li><strong>Days 7–14</strong> — extend to a wider pilot if the first round was clean. A full department or a subset of the customer's users.</li>
+    <li><strong>Day 14–21</strong> — full deployment if the wider pilot is clean.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 170" role="img" aria-label="The 2 to 3 week rollout: pilot at day 0, verify days 1 to 7, wider pilot days 7 to 14, full deployment day 14 to 21.">
+      <rect width="720" height="170" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="60" y1="64" x2="660" y2="64" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- node 1 -->
+        <circle cx="100" cy="64" r="9" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="100" y="40" fill="#7DD9F9" font-size="12" font-weight="600">Day 0</text>
+        <text x="100" y="98" fill="#C4D4E8" font-size="12">Pilot</text>
+        <text x="100" y="114" fill="#6B85A6" font-size="11">3–5 devices</text>
+        <!-- node 2 -->
+        <circle cx="290" cy="64" r="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="290" y="40" fill="#A8E1F8" font-size="12" font-weight="600">Days 1–7</text>
+        <text x="290" y="98" fill="#C4D4E8" font-size="12">Verify &amp; use</text>
+        <text x="290" y="114" fill="#6B85A6" font-size="11">watch for breakage</text>
+        <!-- node 3 -->
+        <circle cx="480" cy="64" r="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="480" y="40" fill="#A8E1F8" font-size="12" font-weight="600">Days 7–14</text>
+        <text x="480" y="98" fill="#C4D4E8" font-size="12">Wider pilot</text>
+        <text x="480" y="114" fill="#6B85A6" font-size="11">if clean</text>
+        <!-- node 4 -->
+        <circle cx="620" cy="64" r="11" fill="#10243B" stroke="#2EE8A0" stroke-width="1.8"/>
+        <text x="620" y="40" fill="#2EE8A0" font-size="12" font-weight="700">Day 14–21</text>
+        <text x="620" y="98" fill="#C4D4E8" font-size="12">Full deploy</text>
+        <text x="620" y="114" fill="#6B85A6" font-size="11">if clean</text>
+      </g>
+      <text x="360" y="150" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5" font-style="italic">total window 2–3 weeks — longer than most templates because the surface area is so wide</text>
+    </svg>
+    <figcaption>The staged rollout: each gate only opens if the previous round came back clean.</figcaption>
+  </figure>
+
+  <p>The total rollout window is 2–3 weeks, longer than most templates because the surface area is so wide. Trying to rush this template is how an MSP ends up with a Friday-evening "the Security Baseline broke everyone's [thing]" support call.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>Deployment success rate.</strong> The Intune portal shows per-device success/failure for the Security Baseline. Healthy is 98%+ success. Devices showing failures need investigation — usually a conflict with another policy, a non-standard Windows version, or a device that's been offline for too long.</p>
+
+  <p><strong>Settings reported as not applied.</strong> Even on devices showing overall success, individual settings can fail to apply (incompatibility with installed software, locked Registry keys, etc.). Spot-check pilot devices to confirm specific settings are actually in effect.</p>
+
+  <p><strong>User complaints in the first 30 days.</strong> This is when the Chrome Remote Desktop and Wi-Fi-auto-connect cases surface. Document each one. Decide per case: exception via exclusion, or workflow change for the customer.</p>
+
+  <p><strong>Drift on the template itself.</strong> Panoptica365's drift detector applies here. If the deployed template diverges from the bundled Security Baseline, that's drift to investigate. A common cause: a customer's other admin adjusted a specific setting that broke for them, and the divergence didn't propagate back to your reference.</p>
+
+  <h2>When to customise</h2>
+
+  <p>The Security Baseline is the template most likely to need per-customer customisation. Common reasons:</p>
+
+  <ul>
+    <li>A customer's regulatory framework requires specific settings the baseline doesn't include or sets differently.</li>
+    <li>A customer's business application requires a baseline-blocked behaviour (a custom Chrome Remote Desktop deployment, a specific PowerShell pattern).</li>
+    <li>A customer is on a Windows variant (Server, LTSC) where some baseline settings don't apply.</li>
+    <li>A customer's IT maturity has grown — they want stricter settings than the SMB-tuned baseline provides.</li>
+  </ul>
+
+  <p>The right customisation workflow is in lesson 10: export the baseline from a tenant where you've made the customisation, generalise the references, import as a new template, deploy across applicable customers. Don't edit the bundled template directly — that drifts your reference away from the shipped Panoptica365 baseline and makes future updates messy.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The Security Baseline is the biggest single deployment in card 4. Treat it accordingly.</strong> Two- to three-week rollout window, pilot-group discipline, monitor for 30 days. Don't bulk-deploy to all customers in one session.</p>
+
+  <p><strong>Be explicit with customers that this is MSP-curated, not Microsoft-official.</strong> When the question comes up (and it will), the right answer is "this is our hardening baseline informed by Microsoft's guidance, not Microsoft's official baseline. They can coexist if you need both." Document this in the customer's onboarding materials.</p>
+
+  <p><strong>Know the three opinionated choices that affect users.</strong> Chrome Remote Desktop blocked, Wi-Fi auto-connect blocked, PowerShell logging enabled. These will surface as questions; have the answers ready. The other 90+ settings rarely produce user-visible effects.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: BitLocker Settings</b> — Disk encryption — the configuration template that delivers what the Windows compliance policy doesn't require but the hardening posture does demand.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Defender for Endpoint (Win + Mac)</b> — The antivirus / EDR configuration delivered separately from the Security Baseline.</div></div>
+  </div>
+
+  <p>For now: the Security Baseline is the foundation of Windows-side hardening in the Panoptica365 library. Deploy it carefully; monitor it for the first month; customise per customer when their reality diverges from the SMB defaults.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Windows Security Baselines (the official ones) (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/device-management/windows-security-configuration-framework/windows-security-baselines" target="_blank" rel="noopener">Microsoft Learn — Windows security baselines</a>); Settings Catalog reference (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/settings-catalog" target="_blank" rel="noopener">Microsoft Learn — Settings catalog</a>); Microsoft Edge configuration via Intune (<a href="https://learn.microsoft.com/en-us/deployedge/configure-edge-with-intune" target="_blank" rel="noopener">Microsoft Learn — Configure Edge via Intune</a>); ADMX-backed policy delivery (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/administrative-templates-windows" target="_blank" rel="noopener">Microsoft Learn — ADMX-backed policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avant de toucher à un modèle — la liste de vérification pré-déploiement d'AC — Modèles de politiques d'accès conditionnel</title>
+<meta name="lesson:title" content="Avant de toucher à un modèle — la liste de vérification pré-déploiement d'AC">
+<meta name="lesson:subtitle" content="Cinq étapes avant toute politique d'AC : break-glass, inventaire des comptes, rapport uniquement et communication.">
+<meta name="lesson:icon" content="clipboard-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Modèles de politiques d'accès conditionnel</span> <span class="sep">·</span> <span>La liste de vérification pré-déploiement d'AC</span></div>
+  <h1>Avant de toucher à un modèle — la liste de vérification pré-déploiement d'AC</h1>
+  <p class="dek">Cinq étapes avant toute politique d'AC : break-glass, inventaire des comptes, rapport uniquement et communication.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Cinq étapes pré-déploiement formant une porte qu'une politique doit franchir avant de passer de l'état préparé à l'état Activé.">
+      <defs>
+        <radialGradient id="pfBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="pfGate" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E2640"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="pfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#pfBg)"/>
+
+      <!-- left: the template, staged -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="150" height="104" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="18" y="22" width="114" height="9" rx="4.5" fill="#274B72"/>
+        <rect x="18" y="42" width="90" height="9" rx="4.5" fill="#1F3C5C"/>
+        <rect x="18" y="62" width="104" height="9" rx="4.5" fill="#1F3C5C"/>
+        <text x="75" y="-14" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">MODÈLE D'AC</text>
+      </g>
+
+      <path d="M228 170 H306" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#pfArr)"/>
+
+      <!-- center: the five-step gate -->
+      <g transform="translate(330,52)">
+        <rect x="0" y="0" width="430" height="236" rx="16" fill="url(#pfGate)" stroke="#2A6F9E" stroke-width="1.5"/>
+        <text x="215" y="30" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">PRÉ-DÉPLOIEMENT</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="13">
+          <g transform="translate(28,52)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">1</text><text x="40" y="18" fill="#C4D4E8">Compte break-glass</text></g>
+          <g transform="translate(28,88)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">2</text><text x="40" y="18" fill="#C4D4E8">Inventaire des comptes de service</text></g>
+          <g transform="translate(28,124)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">3</text><text x="40" y="18" fill="#C4D4E8">Décision rapport uniquement</text></g>
+          <g transform="translate(28,160)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">4</text><text x="40" y="18" fill="#C4D4E8">Communiquer aux utilisateurs</text></g>
+          <g transform="translate(28,196)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">5</text><text x="40" y="18" fill="#C4D4E8">Définir le succès attendu</text></g>
+        </g>
+      </g>
+
+      <path d="M768 170 H846" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#pfArr)"/>
+
+      <!-- right: enforced -->
+      <g transform="translate(870,108)">
+        <circle cx="90" cy="62" r="78" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="22" y="20" width="136" height="84" rx="12" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.6"/>
+        <path d="M62 62 l18 18 l34 -38" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="90" y="-12" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">ACTIVÉ</text>
+      </g>
+    </svg>
+    <figcaption>Sautez le pré-déploiement et vous livrez un incident un vendredi après-midi. Les cinq étapes sont la porte avant l'application.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un consultant à Calgary a un jour activé une politique d'accès conditionnel « Exiger MFA pour tous les utilisateurs » à 16 h un vendredi. À 16 h 15, les comptes de service du client — ceux qui font la sauvegarde de nuit, l'entretien SQL, le traitement de factures non assisté — étaient tous en échec d'authentification. Aucun d'entre eux n'avait de MFA. Le consultant ne savait pas qu'ils existaient. Le directeur IT du client l'a appris quand le rapport de sauvegarde du lundi matin est arrivé avec zéro travail réussi sur la fin de semaine.</p>
+
+  <p>L'accès conditionnel ne pardonne pas la hâte.</p>
+
+  <p>Cette leçon ne traite d'aucun modèle spécifique de la bibliothèque Panoptica365. C'est la liste de vérification pré-déploiement qui s'exécute avant que vous touchiez à <em>n'importe lequel</em> d'entre eux. Chaque modèle dans la carte 3 — Exiger MFA, Bloquer l'authentification héritée, la politique géo, l'ensemble de durcissement admin — présume que vous avez fait les cinq choses ci-dessous. Sautez le pré-déploiement et vous livrez un incident un vendredi après-midi.</p>
+  </div>
+
+  <h2>Les quatre parties d'une politique d'AC (rappel)</h2>
+
+  <p>La carte 1 leçon 3 a déjà couvert la boucle de conformité et la structure d'une politique d'AC. La version très courte :</p>
+
+  <ul>
+    <li><strong>Qui</strong> — quels utilisateurs ou groupes la politique s'applique (inclure / exclure).</li>
+    <li><strong>Quoi</strong> — quelles applications ou actions (Exchange, SharePoint, « toutes les applications infonuagiques », gestion Azure).</li>
+    <li><strong>Conditions</strong> — contexte : état de l'appareil, emplacement, risque de connexion, risque utilisateur, application cliente, plateforme.</li>
+    <li><strong>Contrôles</strong> — quoi faire quand la politique correspond : bloquer, exiger MFA, exiger un appareil conforme, exiger Hybrid join, appliquer des contrôles de session.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Les quatre parties d'une politique d'AC : Qui, Quoi, Conditions et Contrôles.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(28,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="15" font-weight="700">QUI</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">utilisateurs / groupes</text>
+        </g>
+        <g transform="translate(196,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="15" font-weight="700">QUOI</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">applications / actions</text>
+        </g>
+        <g transform="translate(364,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="14" font-weight="700">CONDITIONS</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">signaux de contexte</text>
+        </g>
+        <g transform="translate(532,70)">
+          <rect x="0" y="0" width="160" height="60" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="80" y="28" fill="#7DD9F9" font-size="14" font-weight="700">CONTRÔLES</text>
+          <text x="80" y="46" fill="#6B85A6" font-size="11">bloquer / exiger / session</text>
+        </g>
+        <path d="M164 100 H196" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+        <path d="M332 100 H364" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+        <path d="M500 100 H532" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      </g>
+    </svg>
+    <figcaption>Chaque modèle d'AC Panoptica365 remplit ces quatre champs; le pré-déploiement les adapte à un client spécifique.</figcaption>
+  </figure>
+
+  <p>Chaque modèle d'AC Panoptica365 remplit ces quatre champs avec des valeurs par défaut sensées. Le pré-déploiement consiste à adapter les valeurs par défaut à la réalité d'un client spécifique avant que vous basculiez la politique dans son état actif.</p>
+
+  <h2>Cinq étapes pré-déploiement, dans l'ordre</h2>
+
+  <h3>1. Identifier le compte break-glass</h3>
+
+  <p>Chaque tenant M365 devrait avoir au moins un (idéalement deux) compte break-glass — des comptes qui existent dans le seul but de regagner l'accès administratif si chaque autre compte admin est compromis, expiré, verrouillé ou autrement inutilisable.</p>
+
+  <p>Les comptes break-glass sont <strong>exclus de chaque politique d'accès conditionnel que vous activez.</strong> Leur MFA n'est pas appliqué via l'AC (ils devraient quand même avoir un MFA résistant à l'hameçonnage inscrit — typiquement une clé FIDO2 stockée physiquement dans une enveloppe scellée dans deux endroits séparés). Ils ne sont pas bloqués par les restrictions géographiques. Ils ne sont pas soumis aux exigences d'appareil conforme.</p>
+
+  <p>La raison est structurelle : si chaque politique d'AC s'applique à chaque compte et qu'une politique d'AC se trompe, <em>personne</em> ne peut se connecter pour la corriger. Le compte break-glass est le canot de sauvetage.</p>
+
+  <p>Avant de toucher à n'importe quel modèle d'AC :</p>
+
+  <ul>
+    <li>Confirmez que le client a au moins un compte break-glass.</li>
+    <li>Confirmez qu'il a un MFA résistant à l'hameçonnage inscrit (passkey, clé FIDO2 ou similaire).</li>
+    <li>Confirmez qu'il est dans la liste d'exclusion de chaque politique d'AC que vous êtes sur le point de déployer.</li>
+    <li>Confirmez que les identifiants sont stockés quelque part où l'équipe légitime de réponse d'urgence peut y accéder — et quelque part où le rançongiciel ne peut pas.</li>
+  </ul>
+
+  <p>Si l'un des quatre manque, <em>arrêtez le déploiement</em>. Réglez l'histoire du break-glass d'abord.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Arrêt absolu</div>
+    <p>Si l'un des quatre manque, arrêtez le déploiement. Réglez l'histoire du break-glass d'abord. Le compte break-glass est le canot de sauvetage — si chaque politique d'AC s'applique à chaque compte et qu'une politique se trompe, personne ne peut se connecter pour la corriger.</p>
+  </div>
+
+  <h3>2. Inventorier les comptes de service et les charges de travail non assistées</h3>
+
+  <p>Les comptes de service sont la cause la plus courante d'incidents d'accès conditionnel un vendredi après-midi. Ils s'authentifient typiquement par mot de passe (sans MFA), souvent depuis une IP fixe qui peut ou non être dans vos emplacements de confiance, souvent en utilisant des protocoles hérités, et ils se brisent bruyamment quand une politique qui n'a pas été conçue pour eux se déclenche sur eux.</p>
+
+  <p>Avant d'activer une politique, tirez la liste des comptes de service dans le tenant. Vérifiez :</p>
+
+  <ul>
+    <li>Quelles applications les utilisent (agents SQL Server, principaux de service de scan-vers-courriel, authentification d'apps métier, etc.).</li>
+    <li>De quelles adresses IP ils se connectent.</li>
+    <li>S'ils utilisent l'authentification moderne ou héritée.</li>
+    <li>Quelles permissions ils détiennent.</li>
+  </ul>
+
+  <p>Puis, pour chaque compte de service, décidez :</p>
+
+  <ul>
+    <li><strong>Migrer vers une identité gérée</strong> si l'application le supporte. Les applications modernes devraient utiliser des principaux de service avec authentification par certificat, pas des comptes utilisateurs avec mots de passe. Là où le client peut se permettre la migration, c'est la bonne réponse.</li>
+    <li><strong>Exclure des politiques d'AC spécifiques</strong> qui le briseraient autrement — typiquement Exiger MFA, Bloquer l'auth héritée, restrictions géo. Documentez l'exclusion et la raison.</li>
+    <li><strong>Planifier un coucher de soleil</strong> pour le compte de service s'il est lié à une app héritée qui devrait être retirée.</li>
+  </ul>
+
+  <p>Le système d'exemption de Panoptica365 supporte ça directement : chaque exclusion de politique d'AC peut porter une justification et une date d'expiration. Quand l'exclusion expire, l'opérateur reçoit une alerte pour la réviser. C'est comme ça qu'on évite le patron « accumulation d'exceptions » de la leçon 6 de la carte 2 — les exclusions ne disparaissent jamais en silence.</p>
+
+  <h3>3. Décidez si vous avez besoin d'un filet de sécurité en mode rapport uniquement</h3>
+
+  <p>Les modèles Panoptica365 se déploient à l'état Activé par défaut. Quand vous cliquez Déployer sur un modèle, la politique est créée dans le tenant du client et commence à s'appliquer immédiatement.</p>
+
+  <p>Pour la plupart des tenants de petite entreprise, c'est le bon comportement. Les étapes de pré-déploiement ci-dessus (exclusion break-glass, inventaire des comptes de service, communication aux utilisateurs) couvrent les préoccupations typiques. Microsoft pousse depuis des années les applications à abandonner les principaux de service avec nom d'utilisateur/mot de passe — les apps modernes sont censées utiliser des inscriptions d'applications / applications d'entreprise avec authentification par certificat ou secret client — donc le mode d'échec « une app héritée se fait verrouiller » est plus rare qu'avant. La plupart des tenants que vous rencontrerez n'ont rien qui se brise à la minute où une politique MFA ou géo s'applique.</p>
+
+  <p>Si vous accueillez un client avec une infrastructure héritée significative — des apps métier anciennes qui utilisent encore des principaux de service avec authentification par nom d'utilisateur/mot de passe, des identifiants SMTP codés en dur dans des scripts, des automatisations personnalisées utilisant des flux d'auth hérités, des environnements matures avec des années d'intégrations accumulées — l'approche déploiement-à-chaud comporte un vrai risque. La politique peut commencer à bloquer des connexions légitimes immédiatement, et les comptes de service affectés vont échouer assez bruyamment pour perturber l'entreprise du client.</p>
+
+  <p>Pour ces tenants, le flux de travail recommandé est :</p>
+
+  <ol>
+    <li>Déployez le modèle via Panoptica365 (crée la politique à l'état Activé).</li>
+    <li>Ouvrez immédiatement le portail Entra et basculez l'état de la politique à <strong>Rapport uniquement</strong>.</li>
+    <li>Exécutez une fenêtre de rapport uniquement de 3 à 7 jours.</li>
+    <li>Tirez le journal de connexion filtré sur le résultat de rapport uniquement de cette politique. Pour chaque correspondance, classez : cas d'usage légitime qui a besoin d'une exclusion, ou cible légitime qui a besoin de migration.</li>
+    <li>Corrigez les exclusions dans Panoptica365 (pour que la piste d'audit capture la raison), modernisez les intégrations héritées là où c'est possible.</li>
+    <li>Basculez la politique de retour à Activé dans le portail Entra.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="Le flux de travail rapport uniquement en six étapes : déployer Activé, basculer en rapport uniquement, exécuter une fenêtre, classer les correspondances, corriger les exclusions, puis rebasculer à Activé.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="roArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- top row left to right -->
+        <g transform="translate(28,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="14" y="26" fill="#A8E1F8" font-size="13" font-weight="700">1 · Déployer</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">créée à l'état Activé</text>
+        </g>
+        <g transform="translate(265,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#1E2A18" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#FFC04D" font-size="13" font-weight="700">2 · Rapport uniquement</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">dans le portail Entra</text>
+        </g>
+        <g transform="translate(502,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#1E2A18" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#FFC04D" font-size="13" font-weight="700">3 · Exécuter la fenêtre</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">3–7 jours, télémétrie seule</text>
+        </g>
+        <!-- bottom row right to left -->
+        <g transform="translate(502,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="14" y="26" fill="#C4D4E8" font-size="13" font-weight="700">4 · Classer les correspondances</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">exclure ou migrer</text>
+        </g>
+        <g transform="translate(265,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="14" y="26" fill="#C4D4E8" font-size="13" font-weight="700">5 · Corriger les exclusions</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">dans Panoptica365 + moderniser</text>
+        </g>
+        <g transform="translate(28,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#2EE8A0" font-size="13" font-weight="700">6 · Rebasculer à Activé</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11">l'application commence</text>
+        </g>
+        <!-- arrows -->
+        <path d="M218 72 H265" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M455 72 H502" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M597 104 V196" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M502 228 H455" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M265 228 H218" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+      </g>
+    </svg>
+    <figcaption>Pour les tenants à infrastructure héritée significative : déployer, préparer en rapport uniquement, observer, corriger, puis appliquer.</figcaption>
+  </figure>
+
+  <p>Le mode rapport uniquement signifie que l'accès conditionnel évalue la politique à chaque connexion pertinente, journalise ce qui <em>se serait</em> passé si la politique avait été appliquée, mais n'applique rien en réalité. La connexion procède comme si la politique n'existait pas. Vous obtenez la télémétrie sans la casse.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Quand sauter le rapport uniquement…</th><th>Quand utiliser le rapport uniquement…</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Tenants de petite entreprise sans infrastructure héritée significative, posture Intune propre, et un inventaire pré-déploiement bien cadré. La plupart des déploiements Panoptica365 entrent dans ce profil.</td>
+          <td>Environnements grands ou complexes avec des intégrations héritées substantielles; durcissement post-incident où le client ne peut tolérer aucun faux positif; premier déploiement d'un modèle personnalisé importé (la leçon 8 couvre ce cas spécifiquement).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Quelques modèles spécifiques dans cette carte — Bloquer l'authentification héritée (leçon 3), la migration de stratégie en leçon 5, et tout modèle importé en leçon 8 — recommandent le rapport uniquement peu importe la taille du tenant, parce que leurs modes de bris sont plus difficiles à prédire à partir de l'inventaire pré-déploiement seul. Chaque leçon le signale.</p>
+
+  <p>Si vous n'êtes pas sûr, penchez vers le rapport uniquement. Le coût de friction est de 3 à 7 jours d'une étape de révision supplémentaire. Le coût d'un déploiement dans la mauvaise direction dans un environnement complexe est une panne client un jour ouvrable.</p>
+
+  <h3>4. Communiquer aux utilisateurs affectés avant l'application</h3>
+
+  <p>L'accès conditionnel change l'expérience utilisateur. Une politique qui exige MFA là où il n'y en avait pas surprendra l'utilisateur. Une politique qui exige un appareil conforme bloque l'accès depuis un portable personnel. Une politique géo peut attraper un vendeur en voyage d'affaires un mardi.</p>
+
+  <p>Avant l'application (pendant la fenêtre de rapport uniquement quand elle s'applique) :</p>
+
+  <ul>
+    <li>Envoyez un avis à l'échelle du tenant expliquant ce qui change, ce que l'utilisateur verra, et quoi faire s'il est bloqué.</li>
+    <li>Briefez le service d'aide sur les alertes à attendre et à quoi ressemble la bonne résolution.</li>
+    <li>Identifiez tout utilisateur à fort impact (dirigeants, voyageurs commerciaux, contractuels) et contactez-les individuellement.</li>
+    <li>Documentez le changement dans le journal de changements du client (Panoptica365 enregistre ça automatiquement quand vous déployez depuis la bibliothèque de modèles).</li>
+  </ul>
+
+  <p>L'objectif est qu'au moment où l'application commence, chaque utilisateur sait à quoi s'attendre. Aucun utilisateur surpris = aucun billet de panique.</p>
+
+  <h3>5. Sachez à quoi ressemble le succès, et comment le surveiller</h3>
+
+  <p>Pour chaque politique d'AC que vous déployez, vous devriez pouvoir répondre à l'avance :</p>
+
+  <ul>
+    <li><strong>Quelles connexions cette politique devrait-elle faire correspondre?</strong> (Par exemple : « toutes les connexions sans MFA depuis l'extérieur de la plage IP de confiance ».)</li>
+    <li><strong>Quelles connexions ne devrait-elle <em>pas</em> faire correspondre?</strong> (Par exemple : « le vendeur en voyage connu avec approbation préalable; comptes de service sur leur IP statique ».)</li>
+    <li><strong>Quel est le volume quotidien attendu de correspondances?</strong> (Approximativement zéro pour un tenant en santé; des correspondances non nulles signifient soit de vraies menaces, soit une mauvaise configuration.)</li>
+    <li><strong>Quels signaux indiquent que la politique est mal configurée?</strong> (Pointe soudaine d'utilisateurs légitimes bloqués; une intégration qui fonctionnait s'arrête.)</li>
+  </ul>
+
+  <p>Le détecteur de dérive AC de Panoptica365 couvre la pièce de surveillance à long terme — il vous dit quand une politique que vous avez déployée hier a l'air différente aujourd'hui. Mais l'opérateur doit quand même définir ce que « l'air correct » veut dire au moment du déploiement. Sans cette base, la détection de dérive n'est que du bruit.</p>
+
+  <h2>La préparation des emplacements nommés</h2>
+
+  <p>Plusieurs modèles Panoptica365 s'appuient sur des emplacements nommés — le modèle « Permettre seulement l'accès depuis le Canada » et toute politique géographique personnalisée importée d'un autre tenant. Avant d'activer n'importe lequel de ceux-là :</p>
+
+  <ul>
+    <li>Confirmez que l'emplacement nommé dans le tenant correspond à la géographie réelle du client. Le modèle Panoptica365 par défaut livre avec le Canada; le tenant d'un client mexicain a besoin que le Mexique soit défini comme l'emplacement de confiance à la place. La leçon 8 couvre le flux de travail de personnalisation.</li>
+    <li>Confirmez que les plages IP dans l'emplacement nommé sont à jour. Les IP de bureau changent. Les bureaux de succursales déménagent. Ne vous fiez pas à un emplacement nommé qui n'a pas été vérifié depuis 6 mois.</li>
+    <li>Confirmez que les « IP de confiance » n'incluent aucune plage IP qui n'est pas réellement de confiance. Une erreur courante est d'inclure la plage VPN d'un fournisseur ou le bureau d'une société mère, ni l'un ni l'autre dont le MSP ne peut se porter garant.</li>
+  </ul>
+
+  <h2>La préparation des forces d'authentification</h2>
+
+  <p>Quelques-unes des politiques dans la carte 3 (spécifiquement les modèles de durcissement admin dans la leçon 6) utilisent des forces d'authentification — une fonctionnalité d'accès conditionnel qui vous permet de spécifier <em>quelle</em> méthode MFA doit être utilisée, pas juste <em>que</em> MFA doit être utilisé. « MFA résistant à l'hameçonnage » est la force d'authentification standard à barre haute; elle accepte les clés FIDO2, les passkeys et Windows Hello Entreprise et rejette SMS, voix et push Authenticator.</p>
+
+  <p>Avant d'activer une politique basée sur la force d'authentification :</p>
+
+  <ul>
+    <li>Confirmez que les utilisateurs affectés ont déjà inscrit la méthode plus forte. Si vous exigez MFA résistant à l'hameçonnage pour les admins le mardi et que les admins utilisent encore push Authenticator, ils sont verrouillés le mardi.</li>
+    <li>Utilisez la fenêtre de rapport uniquement pour vérifier l'inscription. Si la politique aurait bloqué un admin pendant le rapport uniquement parce qu'il n'a pas inscrit, corrigez l'inscription d'abord.</li>
+    <li>Pour les admins spécifiquement, planifiez le déploiement par phases. Commencez avec l'équipe d'opérations IT (ils peuvent se corriger eux-mêmes s'ils se font verrouiller). Puis étendez aux autres rôles d'admin.</li>
+  </ul>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>L'accès conditionnel est la couche où les erreurs sont les plus visibles aux utilisateurs.</strong> Une règle anti-hameçonnage mal configurée laisse silencieusement tomber un courriel; une politique d'AC mal configurée verrouille un département. Traitez chaque déploiement comme un événement de gestion de changement. L'inventaire pré-déploiement est l'essai à blanc typique pour la petite entreprise; le basculement manuel à rapport uniquement dans le portail Entra est l'essai à blanc pour les environnements complexes.</p>
+
+  <p><strong>Le compte break-glass est non négociable.</strong> Chaque conversation avec un client sur l'accès conditionnel commence par « vérifions l'histoire du break-glass ». S'ils n'en ont pas, le premier travail d'AC que vous faites pour eux, c'est d'en créer un. Tout le reste attend.</p>
+
+  <p><strong>Documentez les exclusions avec expiration.</strong> Le système d'exemption de Panoptica365 a été construit spécifiquement pour rendre ça facile. Utilisez-le. Le coût d'une exclusion que vous avez oubliée est une année de fausses alertes positives, une faille de sécurité que quelqu'un d'autre ne connaît pas, et une constatation de conformité quand l'auditeur arrive.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <p>Le reste de la carte 3 parcourt chaque modèle d'AC Panoptica365 à son tour. Au moment où vous finissez :</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Exiger MFA pour tous les utilisateurs</b> — la fondation.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Bloquer l'authentification héritée</b> — fermer le contournement par auth de base.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Emplacement de confiance OU appareil conforme</b> — la politique géo intelligente.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Appareil conforme OU hybride OU MFA</b> — la politique OU de signaux de confiance, et comment elle se rapporte à la politique de la leçon 2 quand les deux sont activées.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Durcir l'accès admin</b> — quatre modèles admin dans une leçon.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Désactiver le flux de code d'appareil</b> — la défense Storm-2372.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Importer vos propres modèles d'AC</b> — le flux de travail de personnalisation de Panoptica365.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Opérer l'AC à l'échelle</b> — dérive, exclusions, cycle de vie.</div></div>
+  </div>
+
+  <p>Chacune de ces leçons présume que vous avez fait les cinq étapes pré-déploiement ci-dessus. Les leçons elles-mêmes ne répètent pas la liste. Elles vont directement à <em>ce que chaque modèle fait et comment le déployer</em>. Le pré-déploiement est la fondation; les modèles sont la mise en œuvre.</p>
+
+  <p>Pour l'instant : lisez les modèles, mais n'en activez aucun sur un tenant client tant que vous n'avez pas fait le pré-déploiement pour ce tenant spécifique. L'accès conditionnel est la seule surface M365 où « faire confiance aux valeurs par défaut » peut mettre un client hors ligne. Le pré-déploiement, c'est l'inoculation.</p>
+
+</div>
+</body>
+</html>

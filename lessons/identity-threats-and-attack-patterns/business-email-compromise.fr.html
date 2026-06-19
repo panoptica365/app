@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compromission de courriel d'entreprise — ce que les attaquants font vraiment une fois dedans — Menaces et patrons d'attaque liés à l'identité</title>
+<meta name="lesson:title" content="Compromission de courriel d'entreprise — ce que les attaquants font vraiment une fois dedans">
+<meta name="lesson:subtitle" content="Le BEC convertit l'accès à une boîte aux lettres en fraude par virement — 2,77 G$ de pertes en 2024; toutes les autres attaques existent pour l'activer.">
+<meta name="lesson:icon" content="mail-warning">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Menaces et patrons d'attaque liés à l'identité</span> <span class="sep">·</span> <span>Compromission de courriel d'entreprise</span></div>
+  <h1>Compromission de courriel d'entreprise — ce que les attaquants font vraiment une fois dedans</h1>
+  <p class="dek">Le BEC convertit l'accès à une boîte aux lettres en fraude par virement — 2,77 G$ de pertes en 2024; toutes les autres attaques existent pour l'activer.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une boîte aux lettres compromise alimente un attaquant silencieux qui transforme un seul courriel de facture frauduleux en virement bancaire.">
+      <defs>
+        <radialGradient id="becBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="becCash" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2EE8A0"/><stop offset="100%" stop-color="#15A877"/></linearGradient>
+        <marker id="becArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="becArrRed" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#becBg)"/>
+
+      <!-- gauche : boîte compromise -->
+      <g transform="translate(150,140)">
+        <rect x="-70" y="-46" width="140" height="100" rx="12" fill="#0E2640" stroke="#33527A" stroke-width="1.6"/>
+        <path d="M-70 -38 L0 16 L70 -38" fill="none" stroke="#52708F" stroke-width="2"/>
+        <circle cx="44" cy="-30" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <path d="M39 -30 h10 M44 -35 v10" stroke="#FF5A6E" stroke-width="2" stroke-linecap="round" transform="rotate(45 44 -30)"/>
+      </g>
+      <text x="150" y="252" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">BOÎTE COMPROMISE</text>
+
+      <!-- milieu : l'attaquant silencieux qui lit le courriel -->
+      <path d="M232 140 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#becArr)"/>
+      <g transform="translate(490,140)">
+        <circle r="118" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle cx="0" cy="-24" r="26" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+        <path d="M-34 44 q34 -46 68 0 z" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-9" cy="-26" r="4" fill="#5CCBF4"/>
+        <circle cx="9" cy="-26" r="4" fill="#5CCBF4"/>
+      </g>
+      <text x="490" y="290" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600" letter-spacing="1.5">SILENCIEUX DES SEMAINES</text>
+
+      <!-- la frappe : un courriel frauduleux -->
+      <path d="M608 140 H770" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#becArrRed)"/>
+      <g transform="translate(848,140)">
+        <rect x="-58" y="-38" width="116" height="80" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <path d="M-58 -30 L0 12 L58 -30" fill="none" stroke="#FF8A98" stroke-width="2"/>
+        <text x="0" y="34" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11">« coordonnées »</text>
+      </g>
+      <text x="848" y="252" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">UN COURRIEL DE FRAPPE</text>
+
+      <!-- encaisser -->
+      <path d="M912 140 H1000" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#becArrRed)"/>
+      <g transform="translate(1050,140)">
+        <rect x="-34" y="-30" width="68" height="60" rx="8" fill="url(#becCash)" opacity="0.9"/>
+        <text x="0" y="8" text-anchor="middle" fill="#06301F" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">$</text>
+      </g>
+      <text x="1050" y="252" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1.5">JOUR DE PAIE</text>
+    </svg>
+    <figcaption>Une boîte compromise, des semaines de lecture patiente, et un seul courriel bien synchronisé deviennent un virement bancaire.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La commis aux comptes payables d'une firme de construction reçoit un courriel du fournisseur régulier de la firme au Québec : « Bonjour Susan, veuillez noter que nos coordonnées bancaires ont changé. Nouvelle information ACH ci-jointe. Veuillez mettre à jour de votre côté pour la prochaine facture. » Le courriel vient de la vraie adresse courriel du fournisseur. La grammaire est bonne. Il y a un courriel de suivi deux jours plus tard demandant l'état de la prochaine facture. Susan met à jour les coordonnées bancaires et traite le paiement de 187 000 $.</p>
+
+  <p>Le fournisseur n'a jamais envoyé ce courriel. Sa boîte aux lettres avait été compromise six semaines plus tôt par une campagne d'hameçonnage AiTM. L'attaquant lisait le courriel du fournisseur depuis plus d'un mois, attendant le prochain cycle de facturation de la firme de construction. L'attaquant a envoyé le message de changement bancaire depuis l'intérieur même de la boîte d'envoi du fournisseur, l'a supprimé des éléments envoyés immédiatement, et a routé tous les courriels de réponse de la firme de construction vers un dossier de boîte de réception caché, de sorte que le fournisseur n'a jamais vu la conversation se dérouler en son nom.</p>
+
+  <p>C'est ça, la compromission de courriel d'entreprise (BEC), et selon le Internet Crime Complaint Center du FBI, elle a coûté aux entreprises américaines <strong>2,77 milliards $ en 2024 seulement</strong>, à travers 21 442 incidents rapportés. Pertes totales BEC 2022–2024 : presque <strong>8,5 milliards $</strong>. Le vrai chiffre est plus élevé — la plupart des incidents BEC ne sont pas rapportés parce que les victimes sont gênées et les assureurs ne paient pas sans preuve.</p>
+
+  <p>Chaque autre attaque de cette carte — credential stuffing, fatigue MFA, AiTM, consentement OAuth, abus du code d'appareil — existe principalement <em>pour permettre le BEC</em>. Le BEC est le jour de paie. Sans BEC à la fin, rien du reste ne vaut le temps de l'attaquant.</p>
+
+  <p>Cette leçon, c'est à quoi ressemble vraiment le BEC à l'intérieur d'une boîte aux lettres compromise, comment les attaquants restent silencieux pendant des semaines, quels signaux spécifiques surveiller, et pourquoi « règle de boîte aux lettres bizarre » compte plus que « connexion bizarre » une fois que la compromission s'est produite.</p>
+  </div>
+
+  <h2>La forme économique du BEC</h2>
+
+  <p>Le BEC fonctionne parce qu'il convertit la compromission d'identité en virements bancaires. La chaîne d'attaque ressemble à :</p>
+
+  <ol>
+    <li><strong>Compromission initiale</strong> d'une identité M365 d'un utilisateur, via n'importe laquelle des méthodes des leçons 1–5.</li>
+    <li><strong>Reconnaissance</strong> à l'intérieur de la boîte aux lettres : qui cet utilisateur paie, qui le paie, quel est le cycle de facturation, qui a l'autorité sur les virements bancaires, où sont stockées les coordonnées bancaires.</li>
+    <li><strong>Manipulation tranquille</strong> : créer des règles de boîte de réception cachées, mettre en place le transfert, parfois enregistrer un domaine homoglyphe qui ressemble au vrai domaine d'un fournisseur (<code>d̲i̲enamex.com</code> vs <code>dienamex.com</code> — <code>i</code> différents).</li>
+    <li><strong>Frapper</strong> : typiquement au moment où une vraie facture est en route, l'attaquant injecte un faux changement de coordonnées bancaires. Les parties légitimes ne voient jamais le courriel l'une de l'autre parce que les règles le suppriment.</li>
+    <li><strong>Encaisser</strong> : l'argent va vers un compte bancaire contrôlé par l'attaquant, souvent en chaîne à travers des mules financières.</li>
+    <li><strong>Nettoyage</strong> : les règles sont retirées, le courriel est supprimé, l'attaquant garde souvent l'accès pour des campagnes de suivi.</li>
+  </ol>
+
+  <p>Le cycle entier de la compromission à l'encaissement peut être de jours, semaines, ou mois. Les temps de séjour les plus longs — six mois ou plus — sont habituellement des compromissions d'adjoint exécutif où l'attaquant surveille patiemment les communications du C-suite en attendant le bon moment.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Les six étapes d'une chaîne d'attaque BEC : compromission initiale, reconnaissance, manipulation tranquille, frappe, encaissement, et nettoyage.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="chArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <line x1="60" y1="78" x2="660" y2="78" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><circle cx="86" cy="78" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="86" y="84" fill="#A8E1F8" font-size="17" font-weight="700">1</text><text x="86" y="124" fill="#6B85A6" font-size="11">Compromission</text></g>
+        <g><circle cx="201" cy="78" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="201" y="84" fill="#A8E1F8" font-size="17" font-weight="700">2</text><text x="201" y="124" fill="#6B85A6" font-size="11">Reconnaissance</text></g>
+        <g><circle cx="316" cy="78" r="22" fill="#0E2640" stroke="#2A6F9E"/><text x="316" y="84" fill="#A8E1F8" font-size="17" font-weight="700">3</text><text x="316" y="124" fill="#6B85A6" font-size="11">Manipulation</text></g>
+        <g><circle cx="431" cy="78" r="24" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/><text x="431" y="84" fill="#FF8A98" font-size="17" font-weight="700">4</text><text x="431" y="124" fill="#FF8A98" font-size="11">Frappe</text></g>
+        <g><circle cx="546" cy="78" r="22" fill="#0E2236" stroke="#2EE8A0"/><text x="546" y="84" fill="#2EE8A0" font-size="17" font-weight="700">5</text><text x="546" y="124" fill="#6B85A6" font-size="11">Encaissement</text></g>
+        <g><circle cx="634" cy="78" r="20" fill="#0E2236" stroke="#33527A"/><text x="634" y="84" fill="#C4D4E8" font-size="15" font-weight="700">6</text><text x="634" y="124" fill="#6B85A6" font-size="11">Nettoyage</text></g>
+      </g>
+      <text x="360" y="32" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">JOURS · SEMAINES · MOIS</text>
+    </svg>
+    <figcaption>Les six étapes, de la compromission initiale au nettoyage — un cycle qui peut durer des jours, des semaines, ou des mois.</figcaption>
+  </figure>
+
+  <h2>Ce qu'un attaquant fait dans la première heure après la compromission</h2>
+
+  <p>Connaître le manuel de l'attaquant aide l'opérateur à trier plus vite quand une compromission est fraîche. Voici l'activité typique de la première heure, dans l'ordre :</p>
+
+  <p><strong>Heure 0, minute 0–5 : Vérifier que l'accès fonctionne.</strong> Se connecter à la boîte aux lettres via le web. Ouvrir Outlook. Lire quelques courriels récents. Confirmer que ce n'est pas un pot de miel ou un piège.</p>
+
+  <p><strong>Minutes 5–15 : Reconnaître la boîte aux lettres.</strong> Chercher dans la boîte des termes comme <code>virement</code>, <code>facture</code>, <code>paiement</code>, <code>ACH</code>, <code>acheminement</code>, <code>banque</code>. Parcourir les contacts. Regarder le calendrier de l'utilisateur pour comprendre avec qui il rencontre. Lire les fils récents avec les fournisseurs et les clients.</p>
+
+  <p><strong>Minutes 15–30 : Mettre en place la persistance.</strong> Trois patrons, souvent en combinaison :</p>
+  <ul>
+    <li><em>Règle de boîte de réception</em> : transférer tout courriel correspondant à « facture OR paiement OR virement » vers un dossier caché (par exemple, un dossier nommé « Flux RSS » que personne n'ouvre). Le déplacer hors de la boîte de réception immédiatement.</li>
+    <li><em>Transfert vers adresse externe</em> : copie de chaque courriel automatiquement transférée vers une adresse Gmail ou Proton contrôlée par l'attaquant.</li>
+    <li><em>Transfert au niveau de la boîte aux lettres</em> (utilisant <code>Set-Mailbox -ForwardingSmtpAddress</code>) : transfère même quand aucune règle de boîte n'existe. Plus difficile à remarquer pour l'utilisateur parce que ce n'est pas dans l'UI des règles.</li>
+  </ul>
+
+  <p><strong>Minutes 30–45 : Enregistrer sa propre méthode MFA.</strong> Pour ne pas avoir à répéter la compromission initiale. Souvent un numéro de téléphone sous son contrôle, parfois un authentificateur logiciel qu'il possède. C'est un des signaux les plus fiables qu'un attaquant est dedans.</p>
+
+  <p><strong>Minutes 45–60 : Se taire.</strong> Arrêter l'activité active. Attendre le trafic naturel de la boîte aux lettres. La configuration est en place; la frappe se passera plus tard.</p>
+
+  <p>À la fin de l'heure 1, l'attaquant a <em>de la persistance, de la reconnaissance, et le contrôle du canal</em>. L'utilisateur n'a rien remarqué.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Une chronologie de la première heure de l'attaquant, découpée en cinq intervalles, de la vérification de l'accès au silence.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="36" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">HEURE 0 — LES 60 PREMIÈRES MINUTES</text>
+      <line x1="64" y1="74" x2="656" y2="74" stroke="#1F3C5C" stroke-width="2"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <circle cx="100" cy="74" r="6" fill="#5CCBF4"/>
+          <text x="100" y="60" fill="#A8E1F8" font-size="12" font-weight="600">0–5</text>
+          <text x="100" y="108" fill="#C4D4E8" font-size="11">Vérifier</text>
+          <text x="100" y="124" fill="#6B85A6" font-size="11">l'accès</text>
+        </g>
+        <g>
+          <circle cx="230" cy="74" r="6" fill="#5CCBF4"/>
+          <text x="230" y="60" fill="#A8E1F8" font-size="12" font-weight="600">5–15</text>
+          <text x="230" y="108" fill="#C4D4E8" font-size="11">Reconnaître</text>
+          <text x="230" y="124" fill="#6B85A6" font-size="11">la boîte</text>
+        </g>
+        <g>
+          <circle cx="360" cy="74" r="6" fill="#5CCBF4"/>
+          <text x="360" y="60" fill="#A8E1F8" font-size="12" font-weight="600">15–30</text>
+          <text x="360" y="108" fill="#C4D4E8" font-size="11">Mettre la</text>
+          <text x="360" y="124" fill="#6B85A6" font-size="11">persistance</text>
+        </g>
+        <g>
+          <circle cx="490" cy="74" r="7" fill="#FFC04D"/>
+          <text x="490" y="60" fill="#FFC04D" font-size="12" font-weight="600">30–45</text>
+          <text x="490" y="108" fill="#FFC04D" font-size="11">Nouvelle</text>
+          <text x="490" y="124" fill="#6B85A6" font-size="11">méthode MFA</text>
+        </g>
+        <g>
+          <circle cx="620" cy="74" r="6" fill="#52708F"/>
+          <text x="620" y="60" fill="#C4D4E8" font-size="12" font-weight="600">45–60</text>
+          <text x="620" y="108" fill="#C4D4E8" font-size="11">Se</text>
+          <text x="620" y="124" fill="#6B85A6" font-size="11">taire</text>
+        </g>
+      </g>
+      <rect x="64" y="166" width="592" height="42" rx="8" fill="#0E2236" stroke="#33527A"/>
+      <text x="360" y="192" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12">Fin de l'heure 1 : persistance · reconnaissance · contrôle du canal — l'utilisateur ne remarque rien</text>
+    </svg>
+    <figcaption>La première heure de l'attaquant : à la minute 60, il a la persistance, la reconnaissance et le contrôle du canal pendant que l'utilisateur ne voit rien.</figcaption>
+  </figure>
+
+  <h2>Ce qu'un attaquant fait sur les deux à six semaines suivantes</h2>
+
+  <p>Si l'attaquant est patient (et ceux à haute valeur le sont toujours), il attend la bonne opportunité. Pendant cette fenêtre, il :</p>
+
+  <ul>
+    <li>Lit le courriel à mesure qu'il arrive via les règles de transfert.</li>
+    <li>Suit les cycles de factures — quand ce client paie-t-il, quel est le montant typique, qui l'approuve, quelle est la formulation des changements de coordonnées bancaires légitimes habituels.</li>
+    <li>Identifie la cible la plus précieuse. Parfois l'utilisateur compromis <em>n'est pas</em> la cible — c'est un point d'entrée vers une plus grande relation. La boîte d'un employé junior peut être précieuse parce qu'elle révèle l'horaire du CFO.</li>
+    <li>Teste les limites. Envoie de petits courriels expérimentaux (parfois des brouillons sauvegardés puis supprimés) pour jauger si quelqu'un remarque une activité inhabituelle de boîte d'envoi.</li>
+    <li>Met en place des domaines homoglyphes pour la frappe éventuelle. Achète parfois des certificats pour que le domaine ait l'air crédible.</li>
+  </ul>
+
+  <p>Quand la frappe vient, c'est souvent <em>un courriel</em>. Le prétexte est bien construit, le moment est exact, la formulation correspond au style normal de l'utilisateur légitime (que l'attaquant étudie depuis des semaines). L'utilisateur légitime ne voit souvent jamais le courriel de frappe parce que ses propres règles le routent ailleurs.</p>
+
+  <h2>Ce qui se fait attraper et ce qui ne se fait pas attraper</h2>
+
+  <p><strong>Ce que la pile Microsoft attrape bien :</strong></p>
+
+  <ul>
+    <li>Transfert automatique au niveau de la boîte aux lettres vers des adresses externes (Exchange Online Protection le bloque par défaut dans plusieurs configurations à partir de 2024).</li>
+    <li>Liens SharePoint partagés anonymement depuis des comptes compromis vers des domaines externes.</li>
+    <li>Enregistrement soudain de nouvelles méthodes MFA (signal du journal d'audit Entra, attrapable).</li>
+    <li>Attack Disruption de Defender XDR pour les incidents BEC à haute confiance (quand corrélés avec des anomalies de connexion).</li>
+  </ul>
+
+  <p><strong>Ce qui est plus difficile à attraper :</strong></p>
+
+  <ul>
+    <li><em>Règles de boîte de réception cachées</em> qui routent le courriel vers des dossiers obscurs à l'intérieur de la boîte sans transférer à l'externe. Du point de vue d'Exchange, c'est l'utilisateur qui organise sa propre boîte. La règle existe dans l'état de la boîte mais ne déclenche pas d'alertes de règle-de-transfert.</li>
+    <li><em>Courriels de domaine homoglyphe envoyés aux contacts de l'utilisateur depuis une boîte d'attaquant externe</em>. Ils ne proviennent pas du compte de l'utilisateur compromis, donc l'audit de boîte aux lettres de l'utilisateur ne les voit pas. Le client du fournisseur voit un courriel « du fournisseur » et agit dessus.</li>
+    <li><em>Les vraies instructions de virement frauduleux</em>. Au moment où le courriel est envoyé, ce n'est qu'un courriel. La fraude est commise dans le compte bancaire, pas dans la boîte aux lettres.</li>
+  </ul>
+
+  <p>C'est pourquoi la détection doit être en couches à travers plusieurs signaux — patron de connexion + activité de règle de boîte + patron de courriel sortant + détection d'anomalie post-paiement.</p>
+
+  <h2>Signaux spécifiques à surveiller</h2>
+
+  <p>Une liste non exhaustive des patrons qui, en combinaison, indiquent presque toujours du BEC :</p>
+
+  <p><strong>Règle de boîte de réception créée avec une action « transférer vers » ou « déplacer vers le dossier » où le dossier est obscur</strong> (Flux RSS, sous-dossiers Archive, Notes). Surtout si les conditions de la règle incluent des mots-clés financiers. Le patron de règle est la signature BEC unique la plus fiable.</p>
+
+  <p><strong>Transfert au niveau de la boîte aux lettres configuré</strong> via <code>Set-Mailbox -ForwardingSmtpAddress</code>. Ça demande PowerShell ou un accès au portail d'admin — la plupart des utilisateurs légitimes ne mettent pas ça eux-mêmes. Panoptica365 surveille ça spécifiquement.</p>
+
+  <p><strong>Une nouvelle méthode MFA enregistrée peu de temps après une connexion d'IP étrangère ou de déplacement impossible.</strong> Signal fort de persistance d'attaquant.</p>
+
+  <p><strong>Une rafale de courriels sortants depuis le compte compromis vers des contacts financiers</strong> (clients, fournisseurs, banques) à des heures inhabituelles ou avec une formulation inhabituelle. L'analyse de comportement d'utilisateur de Defender for Cloud Apps attrape une partie de ça; le reste demande de l'observation directe.</p>
+
+  <p><strong>Attributions suspectes de permissions de boîte aux lettres</strong> — particulièrement <code>FullAccess</code> ou <code>SendAs</code> accordés à un compte inconnu. Les attaquants se donnent parfois accès aux boîtes d'<em>autres</em> utilisateurs via les privilèges admin de l'utilisateur compromis, si l'utilisateur compromis est un admin.</p>
+
+  <p><strong>Recherches dans la boîte aux lettres pour des termes financiers</strong> apparaissant dans le journal de requêtes de recherche. Defender for Cloud Apps peut faire remonter ça; le journal d'audit unifié capture les événements <code>MailItemsAccessed</code> et <code>Search</code>.</p>
+
+  <p><strong>Courriels de changement de coordonnées bancaires envoyés vers ou depuis l'utilisateur qui ne correspondent pas à la formulation ou au formatage des demandes de changement légitimes historiques.</strong> Celui-ci est le plus difficile à automatiser; attrape souvent par revue manuelle par une personne attentive aux finances.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>C'est la catégorie de détection la plus profonde dans le catalogue de Panoptica365. Plusieurs évaluateurs centrés sur EXO dans Panoptica365 existent spécifiquement à cause du BEC :</p>
+
+  <ul>
+    <li><strong>Changements de règles de boîte de réception</strong>, y compris la création de règles avec des actions suspectes (déplacer vers un dossier obscur, transférer à l'externe, supprimer à la réception).</li>
+    <li><strong>Transfert au niveau de la boîte aux lettres configuré</strong> — Panoptica365 surveille la propriété <code>ForwardingSmtpAddress</code> sur chaque boîte aux lettres et émet une alerte lorsqu'une cible de transfert externe apparaît.</li>
+    <li><strong>Attributions de permissions de boîte aux lettres</strong> — quand quelqu'un obtient FullAccess ou SendAs sur une boîte qu'il ne devrait pas avoir.</li>
+    <li><strong>État du préréglage anti-hameçonnage</strong> — s'assurer que les protections anti-hameçonnage de Defender for Office 365 sont toujours activées (les attaquants les abaissent parfois s'ils ont obtenu l'accès admin).</li>
+    <li><strong>Nouvelle méthode MFA enregistrée</strong> — le signal de persistance post-compromission.</li>
+    <li><strong>Connexion réussie depuis IP étrangère</strong> — la connexion en amont qui précède souvent le BEC.</li>
+    <li><strong>Incidents BEC de Defender XDR</strong> ingérés depuis la couche de corrélation Microsoft.</li>
+  </ul>
+
+  <p>Quand plusieurs de ceux-ci se déclenchent sur le même utilisateur dans la même semaine, traitez ça comme une compromission confirmée et exécutez le manuel de réponse ci-dessous.</p>
+
+  <h2>Manuel de réponse pour BEC confirmé</h2>
+
+  <p>Quand vous avez établi que le BEC se produit (ou s'est produit), le nettoyage est impliqué. Les étapes de haut niveau :</p>
+
+  <ol>
+    <li><strong>Isoler l'utilisateur.</strong> Révoquer toutes les sessions, forcer une réinitialisation du mot de passe, désactiver toutes les nouvelles méthodes MFA ajoutées pendant la fenêtre de compromission. Si l'utilisateur a des privilèges d'admin et que vous pensez qu'ils ont été utilisés, auditer et réinitialiser les attributions d'admin.</li>
+    <li><strong>Trouver et retirer les règles.</strong> Règles de boîte de réception (<code>Get-InboxRule</code>), transfert au niveau de la boîte aux lettres (<code>Get-Mailbox -ForwardingSmtpAddress</code>, <code>Set-Mailbox -ForwardingSmtpAddress $null</code>). Obtenir l'historique des règles du journal d'audit unifié si nécessaire — parfois les attaquants créent puis suppriment des règles pour couvrir leurs traces.</li>
+    <li><strong>Identifier qui a reçu des courriels frauduleux envoyés à eux.</strong> Tirer les éléments envoyés de la boîte aux lettres des 4–8 dernières semaines. Le journal d'audit montrera les courriels qui ont été envoyés puis supprimés. Cherchez les courriels vers des contacts financiers qui ressemblent à des demandes de changement bancaire ou des confirmations de paiement de facture.</li>
+    <li><strong>Notifier les destinataires des courriels frauduleux.</strong> C'est la partie que personne n'aime. Toute personne qui a reçu un courriel de l'utilisateur compromis pendant la période de séjour doit le savoir — à la fois parce qu'elle peut avoir agi dessus (besoin d'arrêter un paiement, inverser un virement) et parce que son propre compte peut être le prochain.</li>
+    <li><strong>Coordonner avec la banque du client si un virement a déjà été fait.</strong> La plupart des banques peuvent récupérer les virements bancaires s'ils sont rapportés rapidement (typiquement dans 72 heures). L'IC3 du FBI a aussi un processus de récupération de virement pour les transferts transfrontaliers. La vitesse compte.</li>
+    <li><strong>Auditer les autres utilisateurs dans le même tenant.</strong> Les attaquants pivotent souvent de la victime initiale vers d'autres utilisateurs (surtout les admins). Vérifier les patrons de connexion et les règles de boîte pour tout le monde dans le tenant.</li>
+    <li><strong>Documenter pour l'assurance cyber.</strong> La plupart des réclamations BEC demandent des preuves du vecteur de compromission, de la chronologie, des contrôles qui étaient en place, et des actions de réponse. Le journal d'audit de Panoptica365 et le journal de changements du tenant sont utiles ici. Gardez des dossiers propres.</li>
+    <li><strong>Informer le client sur ce qui a changé et ce qui doit être corrigé structurellement.</strong> C'est la partie qui convertit un incident en posture de sécurité améliorée. Souvent le problème sous-jacent est « pas de MFA sur l'utilisateur compromis » ou « licence Business Standard donc pas d'accès conditionnel » — ce sont de vraies conversations dont l'incident BEC est maintenant votre preuve.</li>
+  </ol>
+
+  <h2>Se défendre contre le BEC structurellement</h2>
+
+  <p>Les défenses pour le BEC sont les défenses cumulatives des leçons 1–5, plus quelques-unes spécifiques au BEC :</p>
+
+  <p><strong>Bloquer le transfert automatique externe</strong> au niveau de la règle de transport Exchange. La plupart des tenants n'ont pas besoin que les utilisateurs transfèrent automatiquement à l'externe; les tenants qui en ont besoin peuvent whitelister des cas d'affaires spécifiques. La posture par-défaut-désactivée élimine une des techniques de persistance favorites de l'attaquant.</p>
+
+  <p><strong>Alerter sur la création de règle de boîte</strong> qui inclut des actions de transfert ou de dossier caché. Panoptica365 fait remonter ça.</p>
+
+  <p><strong>Exiger l'approbation d'admin pour les nouvelles configurations de transfert au niveau de la boîte aux lettres.</strong> Les clients avec des rôles financiers sensibles devraient envisager de l'empêcher complètement.</p>
+
+  <p><strong>Former l'équipe financière spécifiquement.</strong> Les changements de coordonnées bancaires devraient toujours être vérifiés hors-bande — un appel téléphonique à un numéro de dossier, pas à un numéro du courriel. C'est une des rares formations de sécurité qui a sauvé de l'argent mesurable dans de vrais incidents.</p>
+
+  <p><strong>Appliquer l'accès conditionnel pour exiger un MFA résistant à l'hameçonnage pour les utilisateurs financiers à haut risque.</strong> Le même contrôle qui défait l'AiTM défait aussi la plupart des méthodes d'accès initial en amont qui mènent au BEC.</p>
+
+  <p><strong>Déployer les politiques anti-hameçonnage de Defender for Office 365 avec la protection contre l'usurpation d'identité.</strong> Aide à attraper les courriels de domaine homoglyphe avant qu'ils ne soient livrés.</p>
+
+  <p><strong>Surveiller la rétention du journal d'audit de la boîte aux lettres.</strong> Le défaut est 90 jours; pour les clients sensibles, étendre à un an. Quand le BEC est découvert six mois après le fait, vous aurez besoin du journal d'audit plus ancien pour reconstituer ce qui s'est passé.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Quatre points à retenir.</p>
+
+  <p><strong>Le BEC est ce qui rend toutes les attaques précédentes profitables.</strong> Chaque contrôle défensif des leçons 1–5 est, en effet, une atténuation du BEC. Quand vous recommandez un MFA résistant à l'hameçonnage ou un AC d'appareil conforme à un client, le pitch en ascenseur est : « c'est ce qui arrête l'attaque silencieuse de fraude par facture qui a coûté aux entreprises américaines 8,5 milliards $ dans les trois dernières années. »</p>
+
+  <p><strong>Les règles de boîte de réception sont le donneur de BEC.</strong> Quand une alerte de connexion d'IP étrangère atterrit, la prochaine vérification immédiate est les règles de boîte de réception de l'utilisateur. Nouvelle règle avec des actions « transférer vers » ou « déplacer vers Flux RSS » sur des mots-clés financiers? C'est une opération BEC active. Ouvrez le billet en sévérité-élevée et commencez le manuel.</p>
+
+  <p><strong>Le « temps de séjour de quatre-vingt-dix jours » est réel.</strong> Quand vous découvrez du BEC, regardez en arrière au moins trois mois dans le journal d'audit. L'attaquant a souvent été silencieux pendant des semaines. Tout ce que vous voyez dans les 30 derniers jours est la pointe; l'étendue complète va habituellement plus loin en arrière.</p>
+
+  <p><strong>Le BEC est un problème de formation financière autant qu'un problème de technologie de sécurité.</strong> Les contrôles techniques coupent la surface d'attaque; le contrôle culturel (« ne jamais accepter un changement bancaire par courriel; toujours vérifier hors-bande ») coupe l'impact. Assurez-vous que vos engagements clients incluent la conversation avec l'équipe finance, pas juste la conversation avec l'équipe IT.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Leçon 7 : Quand le MSP est la cible.</b> L'attaque en direction inverse. Vos clients dépendent de vous; tout attaquant qui veut leurs données aussi. La compromission de la chaîne d'approvisionnement d'un MSP est une réalité de 2026 vers laquelle toute la carte mène : chaque attaque de cette leçon, multipliée par 30 ou 100 si l'attaquant atteint le MSP en premier.</div></div>
+  </div>
+
+  <p>Pour l'instant : le BEC est l'encaissement, la raison pour laquelle tout le reste existe, et la plus grande catégorie de perte de cybercriminalité dans les livres du FBI depuis les trois dernières années consécutives. La compromission elle-même est <em>le</em> problème commercial contre lequel vous protégez les clients. Traitez chaque alerte dans cette carte avec le dénouement BEC en tête.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — données de perte BEC de l'IC3 du FBI 2024 (<a href="https://www.ic3.gov/AnnualReport/Reports/2024_IC3Report.pdf" target="_blank" rel="noopener">FBI IC3 2024 Annual Report</a>); chiffre agrégé des pertes BEC sur trois ans (<a href="https://www.nacha.org/news/fbis-ic3-finds-almost-85-billion-lost-business-email-compromise-last-three-years" target="_blank" rel="noopener">Nacha — IC3 finds $8.5B BEC losses</a>); Microsoft sur le blocage du transfert externe au niveau boîte aux lettres (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-external-email-forwarding" target="_blank" rel="noopener">Microsoft Learn — Block external email auto-forwarding</a>); Attack Disruption lié au BEC de Defender XDR (<a href="https://learn.microsoft.com/en-us/defender-xdr/automatic-attack-disruption" target="_blank" rel="noopener">Microsoft Learn — Automatic attack disruption</a>); politiques anti-usurpation de Defender for Office 365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-about" target="_blank" rel="noopener">Microsoft Learn — Anti-phishing policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

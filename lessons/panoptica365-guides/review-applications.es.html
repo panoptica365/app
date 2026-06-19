@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revise las aplicaciones — apruebe lo que es de confianza y deje el triaje al resto — Guías Panoptica365</title>
+<meta name="lesson:title" content="Revise las aplicaciones — apruebe lo que es de confianza y deje el triaje al resto">
+<meta name="lesson:subtitle" content="El flujo de la pestaña Aplicaciones: Actualizar, marcar De confianza, Guardar — y dejar que Sonnet haga el triaje de todo lo que no aprobó.">
+<meta name="lesson:icon" content="app-window">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Revise las aplicaciones</span></div>
+  <h1>Revise las aplicaciones — apruebe lo que es de confianza y deje el triaje al resto</h1>
+  <p class="dek">El flujo de la pestaña Aplicaciones: Actualizar, marcar De confianza, Guardar — y dejar que Sonnet haga el triaje de todo lo que no aprobó.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Flujo en tres pasos: un montón de aplicaciones, actualizado y revisado, se convierte en aplicaciones aprobadas con una línea base protegida mientras el resto va a Sonnet para triaje.">
+      <defs>
+        <radialGradient id="raBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="raGood" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="raArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#raBg)"/>
+
+      <!-- izquierda: el montón sin revisar -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="170" y="70" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="3">EL MONTÓN</text>
+        <g stroke="#33527A" stroke-width="1.4" fill="#0E2236">
+          <rect x="92" y="96" width="156" height="30" rx="6"/>
+          <rect x="104" y="134" width="156" height="30" rx="6"/>
+          <rect x="86" y="172" width="156" height="30" rx="6"/>
+          <rect x="110" y="210" width="156" height="30" rx="6"/>
+          <rect x="96" y="248" width="156" height="30" rx="6"/>
+        </g>
+        <g fill="#52708F">
+          <circle cx="108" cy="111" r="4"/><circle cx="120" cy="149" r="4"/><circle cx="102" cy="187" r="4"/><circle cx="126" cy="225" r="4"/><circle cx="112" cy="263" r="4"/>
+        </g>
+        <text x="170" y="306" text-anchor="middle" fill="#52708F" font-size="11.5">aplicaciones y registros</text>
+      </g>
+
+      <!-- flecha + Actualizar -->
+      <path d="M280 188 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#raArr)"/>
+      <text x="336" y="176" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Actualizar</text>
+
+      <!-- centro: revisión + Guardar -->
+      <g transform="translate(560,188)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-66" y="-58" width="132" height="116" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <g stroke="#2A6F9E" stroke-width="1.3" fill="#102A4C">
+          <rect x="-48" y="-40" width="96" height="22" rx="5"/>
+          <rect x="-48" y="-10" width="96" height="22" rx="5"/>
+          <rect x="-48" y="20" width="96" height="22" rx="5"/>
+        </g>
+        <g stroke="#2EE8A0" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-40 -30 l4 5 l8 -10"/>
+          <path d="M-40 0 l4 5 l8 -10"/>
+        </g>
+        <rect x="-44" y="24" width="12" height="12" rx="3" fill="none" stroke="#52708F" stroke-width="1.6"/>
+      </g>
+      <text x="560" y="74" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="3">REVISAR · GUARDAR</text>
+      <text x="560" y="306" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">marque De confianza y Guardar</text>
+
+      <!-- dos flechas salientes -->
+      <path d="M652 158 C 730 120, 770 110, 836 110" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#raArr)"/>
+      <path d="M652 218 C 730 256, 770 266, 836 266" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#raArr)"/>
+
+      <!-- derecha arriba: de confianza + línea base -->
+      <g transform="translate(960,108)">
+        <rect x="-86" y="-40" width="172" height="80" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-60" cy="0" r="13" fill="url(#raGood)"/>
+        <path d="M-66 0 l4 5 l8 -10" stroke="#071221" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="-36" y="-4" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">De confianza</text>
+        <text x="-36" y="16" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">línea base</text>
+      </g>
+
+      <!-- derecha abajo: triaje Sonnet -->
+      <g transform="translate(960,266)">
+        <rect x="-86" y="-32" width="172" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="-60" cy="-4" r="6" fill="#2EE8A0"/>
+        <circle cx="-44" cy="-4" r="6" fill="#FFC04D"/>
+        <circle cx="-28" cy="-4" r="6" fill="#FF5A6E"/>
+        <text x="6" y="-1" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle">Triaje Sonnet</text>
+        <text x="6" y="18" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11" text-anchor="middle">todo lo que no se aprobó</text>
+      </g>
+    </svg>
+    <figcaption>Un montón de aplicaciones se vuelve un inventario revisado: apruebe las de confianza y envíe el resto a Sonnet.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Todo inquilino acumula aplicaciones empresariales y registros de aplicaciones — algunas instaladas a propósito, otras consentidas por usuarios hace años, otras maliciosas. La pestaña <strong>Aplicaciones</strong> del panel del inquilino convierte ese montón en un inventario revisado con una línea base protegida.</p>
+
+  <p>Las aplicaciones propias de Microsoft quedan excluidas automáticamente — usted solo revisa lo que es de terceros o personalizado.</p>
+  </div>
+
+  <h2>El flujo de trabajo</h2>
+
+  <ol>
+    <li>Abra el panel del inquilino → pestaña <strong>Aplicaciones</strong>.</li>
+    <li>Haga clic en <strong>Actualizar</strong> si el inventario no se ha extraído recientemente. Verá <em>«Actualizando desde Microsoft Graph…»</em> mientras obtiene la lista en vivo.</li>
+    <li>Recorra la lista. Para cada aplicación que reconozca y en la que confíe — las que usted instaló, las que el cliente confirma que usa — marque su casilla <strong>De confianza</strong>. Expanda una fila para ver sus permisos delegados y de aplicación, sus credenciales y sus URI de redirección si necesita mirar más de cerca. La marca de <em>Editor verificado</em> y la etiqueta <em>todo el inquilino</em> en los permisos le ayudan a juzgar.</li>
+    <li>Ante la duda, <strong>pregunte al cliente</strong>. «¿Usan algo llamado Acme Sync?» es una llamada de treinta segundos que vale más que adivinar.</li>
+    <li>Haga clic en <strong>Guardar</strong>. Ocurren dos cosas:
+      <ul>
+        <li>Las aplicaciones que marcó quedan <strong>registradas como de confianza</strong> y reciben una <strong>línea base protegida</strong>: se toma una instantánea de su conjunto actual de permisos.</li>
+        <li>Cada aplicación que <em>no</em> marcó se envía a <strong>Sonnet para triaje</strong>. La línea de progreso dice algo como <em>«Guardando… 12 aplicación(es) de confianza; enviando 9 a Sonnet para triaje.»</em></li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Cómo leer los resultados del triaje</h2>
+
+  <p>Cada aplicación no aprobada vuelve con un punto de evaluación de color:</p>
+
+  <ul>
+    <li><strong>Verde — nada alarmante.</strong> Editor, antigüedad, tipo de consentimiento y permisos parecen normales.</li>
+    <li><strong>Amarillo — conviene revisar.</strong> Hay algo lo bastante inusual como para merecer sus ojos.</li>
+    <li><strong>Rojo — investigar.</strong> Revise esta aplicación ahora, con el cliente si hace falta.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Los tres puntos de evaluación que devuelve el triaje: verde nada alarmante, amarillo conviene revisar, rojo investigar.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- verde -->
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="30" cy="34" r="12" fill="#2EE8A0"/>
+          <text x="54" y="39" fill="#C4D4E8" font-size="15" font-weight="700">Verde</text>
+          <text x="20" y="72" fill="#A8E1F8" font-size="12.5">Nada alarmante.</text>
+          <text x="20" y="92" fill="#6B85A6" font-size="11">Editor, antigüedad, tipo de</text>
+          <text x="20" y="108" fill="#6B85A6" font-size="11">consentimiento, permisos: normales.</text>
+        </g>
+        <!-- amarillo -->
+        <g transform="translate(260,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="30" cy="34" r="12" fill="#FFC04D"/>
+          <text x="54" y="39" fill="#C4D4E8" font-size="15" font-weight="700">Amarillo</text>
+          <text x="20" y="72" fill="#FFD98A" font-size="12.5">Conviene revisar.</text>
+          <text x="20" y="92" fill="#6B85A6" font-size="11">Algo lo bastante inusual como</text>
+          <text x="20" y="108" fill="#6B85A6" font-size="11">para merecer sus ojos.</text>
+        </g>
+        <!-- rojo -->
+        <g transform="translate(480,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <circle cx="30" cy="34" r="12" fill="#FF5A6E"/>
+          <text x="54" y="39" fill="#FF8A98" font-size="15" font-weight="700">Rojo</text>
+          <text x="20" y="72" fill="#FF8A98" font-size="12.5">Investigar.</text>
+          <text x="20" y="92" fill="#E2A0AA" font-size="11">Revise esta aplicación ahora,</text>
+          <text x="20" y="108" fill="#E2A0AA" font-size="11">con el cliente si hace falta.</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Tres puntos, tres acciones — use el rojo y el amarillo como lista de trabajo.</figcaption>
+  </figure>
+
+  <p>Tenga presente la advertencia que muestra la interfaz: esto es <em>triaje, no una garantía</em>. El punto refleja lo que Sonnet pudo inferir del editor, la antigüedad, el tipo de consentimiento y los permisos. Solo marcar una aplicación como <strong>De confianza</strong> guarda una línea base protegida. Use los puntos rojos y amarillos como lista de trabajo: investigue, y luego marque la aplicación como de confianza o elimínela del inquilino (el enlace <strong>Eliminar ↗</strong> le lleva al lugar correcto en Entra).</p>
+
+  <h2>Qué le compra la línea base</h2>
+
+  <p>Una vez que una aplicación es de confianza, Panoptica365 la vigila. Si más adelante <strong>gana permisos por encima de su línea base aprobada</strong>, la fila se marca con <em>«Permisos cambiados desde la aprobación»</em> y se dispara una alerta. Las <em>eliminaciones</em> de permisos no disparan nada — solo el crecimiento más allá de lo que usted aprobó. La comparación se ejecuta en cada Actualizar y en un ciclo automático diario.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Una aplicación aprobada con una instantánea de su línea base gana más adelante un permiso por encima de esa línea base, lo que marca la fila y dispara una alerta.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="baArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- línea base aprobada -->
+        <text x="150" y="40" text-anchor="middle" fill="#5CCBF4" font-size="12" letter-spacing="2">LÍNEA BASE APROBADA</text>
+        <rect x="50" y="58" width="200" height="120" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.4"/>
+        <g>
+          <rect x="68" y="78" width="164" height="22" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="80" y="93" fill="#A8E1F8" font-size="11.5">User.Read</text>
+          <rect x="68" y="106" width="164" height="22" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="80" y="121" fill="#A8E1F8" font-size="11.5">Calendars.Read</text>
+        </g>
+        <text x="150" y="160" text-anchor="middle" fill="#6B85A6" font-size="11">instantánea al aprobar</text>
+
+        <!-- flecha -->
+        <path d="M260 118 H342" stroke="#335F92" stroke-width="2.5" marker-end="url(#baArr)"/>
+        <text x="301" y="106" text-anchor="middle" fill="#6B85A6" font-size="11">después</text>
+
+        <!-- permiso ganado -->
+        <text x="560" y="40" text-anchor="middle" fill="#FF8A98" font-size="12" letter-spacing="2">PERMISOS CRECIERON</text>
+        <rect x="460" y="58" width="200" height="120" rx="10" fill="#0E2640" stroke="#33527A"/>
+        <g>
+          <rect x="478" y="74" width="164" height="20" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="490" y="88" fill="#A8E1F8" font-size="11">User.Read</text>
+          <rect x="478" y="98" width="164" height="20" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="490" y="112" fill="#A8E1F8" font-size="11">Calendars.Read</text>
+          <rect x="478" y="122" width="164" height="22" rx="5" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <text x="490" y="137" fill="#FF8A98" font-size="11" font-weight="600">+ Mail.Read</text>
+        </g>
+        <text x="560" y="164" text-anchor="middle" fill="#FF8A98" font-size="11">por encima de la línea base</text>
+
+        <!-- alerta -->
+        <rect x="150" y="192" width="420" height="28" rx="14" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="211" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="600">«Permisos cambiados desde la aprobación» → se dispara una alerta</text>
+      </g>
+    </svg>
+    <figcaption>El crecimiento por encima de la línea base aprobada marca la fila y dispara una alerta; las eliminaciones no.</figcaption>
+  </figure>
+
+  <p>Esta es la defensa contra un patrón de ataque clásico: una aplicación legítima y de confianza desde hace años cuyas credenciales son robadas y que de pronto brota con <code>Mail.Read</code> para todo el inquilino. Usted aprobó lo que era — Panoptica365 le avisa cuando se convierte en otra cosa.</p>
+
+  <h2>Cuándo repetir esto</h2>
+
+  <ul>
+    <li>Tras la incorporación: haga la pasada completa una vez, con la confirmación del cliente donde haga falta.</li>
+    <li>Cuando se dispare una alerta de aplicación nueva o de consentimiento: revise la aplicación y luego apruébela o elimínela. Aprobar una aplicación resuelve automáticamente su alerta de consentimiento abierta.</li>
+    <li>Periódicamente (con una vez por trimestre basta): pulse Actualizar y busque nuevos puntos amarillos o rojos.</li>
+  </ul>
+
+</div>
+</body>
+</html>

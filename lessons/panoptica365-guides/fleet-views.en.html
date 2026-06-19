@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fleet views — Heatmap, Daily Activity and SharePoint — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Fleet views — Heatmap, Daily Activity and SharePoint">
+<meta name="lesson:subtitle" content="The cross-tenant surfaces: posture as a grid, today's authentication weather, and sharing audits.">
+<meta name="lesson:icon" content="layout-grid">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Fleet views</span></div>
+  <h1>Fleet views — Heatmap, Daily Activity and SharePoint</h1>
+  <p class="dek">The cross-tenant surfaces: posture as a grid, today's authentication weather, and sharing audits.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Per-tenant pages on the left give way to three cross-tenant fleet views: a grid of status dots, two donut charts, and a sharing-events list.">
+      <defs>
+        <radialGradient id="fvBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="fvArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#fvBg)"/>
+
+      <!-- left: one tenant -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="150" height="104" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <rect x="18" y="18" width="114" height="9" rx="4.5" fill="#2A7FA3"/>
+        <rect x="18" y="38" width="92" height="7" rx="3.5" fill="#274B72"/>
+        <rect x="18" y="54" width="100" height="7" rx="3.5" fill="#274B72"/>
+        <rect x="18" y="70" width="78" height="7" rx="3.5" fill="#274B72"/>
+        <text x="75" y="-12" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ONE TENANT</text>
+      </g>
+
+      <!-- arrow -->
+      <path d="M250 170 H360" stroke="#335F92" stroke-width="2.5" marker-end="url(#fvArr)"/>
+      <text x="305" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">the fleet</text>
+
+      <!-- right: three fleet views -->
+      <!-- view 1: heatmap grid of dots -->
+      <g transform="translate(400,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">HEATMAP</text>
+        <g>
+          <circle cx="34" cy="40" r="8" fill="#2EE8A0"/><circle cx="73" cy="40" r="8" fill="#FF5A6E"/><circle cx="112" cy="40" r="8" fill="#FFC04D"/><circle cx="151" cy="40" r="8" fill="#2EE8A0"/>
+          <circle cx="34" cy="78" r="8" fill="#FFC04D"/><circle cx="73" cy="78" r="8" fill="#2EE8A0"/><circle cx="112" cy="78" r="8" fill="#2EE8A0"/><circle cx="151" cy="78" r="8" fill="#52708F"/>
+          <circle cx="34" cy="116" r="8" fill="#2EE8A0"/><circle cx="73" cy="116" r="8" fill="#2EE8A0"/><circle cx="112" cy="116" r="8" fill="#FF5A6E"/><circle cx="151" cy="116" r="8" fill="#2EE8A0"/>
+        </g>
+      </g>
+
+      <!-- view 2: two donuts -->
+      <g transform="translate(626,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">DAILY ACTIVITY</text>
+        <g transform="translate(56,84)">
+          <circle r="34" fill="none" stroke="#16314F" stroke-width="14"/>
+          <circle r="34" fill="none" stroke="#5CCBF4" stroke-width="14" stroke-dasharray="120 214" transform="rotate(-90)"/>
+        </g>
+        <g transform="translate(134,84)">
+          <circle r="34" fill="none" stroke="#16314F" stroke-width="14"/>
+          <circle r="34" fill="none" stroke="#A8E1F8" stroke-width="14" stroke-dasharray="78 214" transform="rotate(-90)"/>
+        </g>
+      </g>
+
+      <!-- view 3: sharing events list -->
+      <g transform="translate(852,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">SHAREPOINT</text>
+        <g>
+          <rect x="22" y="32" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="35" width="120" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="62" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="65" width="100" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="92" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="95" width="112" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="122" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="125" width="86" height="8" rx="4" fill="#274B72"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Per-tenant pages answer how one customer is doing; three fleet views answer how the whole fleet is doing.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Per-tenant pages answer "how is this customer doing?". Three pages answer the MSP question: "how is the <em>fleet</em> doing, and where do I spend effort next?"</p>
+  </div>
+
+  <h2>Heatmap</h2>
+
+  <p><strong>Heatmap</strong> (sidebar) is every managed tenant × every monitored security control, as a grid of status dots.</p>
+
+  <p>At the top, the <strong>fleet score</strong> — the percentage of <em>applicable</em> controls that are compliant across managed tenants — with three stat cards: managed tenants, tenants with stale data, and active exemptions. "Applicable" matters: controls a tenant can't have (license-gated, not relevant) count as <em>Not available</em>, not as failures.</p>
+
+  <p>Two strips below are where the leverage is:</p>
+
+  <ul>
+    <li><strong>Movers — biggest 7-day changes.</strong> Which tenants regressed (or improved) most this week. A tenant dropping five points is a conversation to have <em>now</em>.</li>
+    <li><strong>Universally weak — campaign candidates.</strong> Controls that are red or unconfigured at the most tenants. This is your remediation campaign list: one control, fixed everywhere, in one sweep. Click a row for the campaign slideout — affected tenants, the control's details, and deep links straight into each tenant's Security page.</li>
+  </ul>
+
+  <p>The grid itself starts collapsed to categories; click a category header to expand into per-control columns. Dot legend: <strong>Healthy</strong> (green), <strong>Drifted</strong> (red), <strong>Not set up</strong> (yellow), <strong>Not available on this tenant</strong> (gray), <strong>No data</strong> (stale). Click any dot to deep-link to that tenant and control on the Security page.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="The Heatmap layout: a fleet score and three stat cards on top, a Movers strip and a Universally weak strip, then a grid of tenants by control with a five-state dot legend.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- fleet score + stat cards -->
+        <rect x="24" y="20" width="150" height="52" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="99" y="44" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Fleet score</text>
+        <text x="99" y="62" text-anchor="middle" fill="#A8E1F8" font-size="12">% applicable compliant</text>
+        <rect x="188" y="20" width="160" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="268" y="42" text-anchor="middle" fill="#C4D4E8" font-size="12">Managed tenants</text>
+        <text x="268" y="60" text-anchor="middle" fill="#6B85A6" font-size="11">Stale data</text>
+        <rect x="362" y="20" width="160" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="442" y="51" text-anchor="middle" fill="#C4D4E8" font-size="12">Active exemptions</text>
+
+        <!-- two strips -->
+        <rect x="24" y="88" width="320" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="40" y="113" fill="#A8E1F8" font-size="12.5" font-weight="600">Movers — biggest 7-day changes</text>
+        <rect x="356" y="88" width="340" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="372" y="113" fill="#A8E1F8" font-size="12.5" font-weight="600">Universally weak — campaign candidates</text>
+
+        <!-- grid -->
+        <g transform="translate(24,150)">
+          <text x="0" y="-4" fill="#6B85A6" font-size="11" letter-spacing="1.5">TENANTS × CONTROLS</text>
+          <g>
+            <circle cx="22" cy="20" r="9" fill="#2EE8A0"/><circle cx="64" cy="20" r="9" fill="#FF5A6E"/><circle cx="106" cy="20" r="9" fill="#FFC04D"/><circle cx="148" cy="20" r="9" fill="#2EE8A0"/><circle cx="190" cy="20" r="9" fill="#52708F"/><circle cx="232" cy="20" r="9" fill="#2EE8A0"/>
+            <circle cx="22" cy="54" r="9" fill="#FFC04D"/><circle cx="64" cy="54" r="9" fill="#2EE8A0"/><circle cx="106" cy="54" r="9" fill="#2EE8A0"/><circle cx="148" cy="54" r="9" fill="#FF5A6E"/><circle cx="190" cy="54" r="9" fill="#2EE8A0"/><circle cx="232" cy="54" r="9" fill="#2EE8A0"/>
+            <circle cx="22" cy="88" r="9" fill="#2EE8A0"/><circle cx="64" cy="88" r="9" fill="#2EE8A0"/><circle cx="106" cy="88" r="9" fill="#FF5A6E"/><circle cx="148" cy="88" r="9" fill="#2EE8A0"/><circle cx="190" cy="88" r="9" fill="#52708F"/><circle cx="232" cy="88" r="9" fill="#2EE8A0"/>
+          </g>
+        </g>
+
+        <!-- legend -->
+        <g transform="translate(320,168)" font-size="11.5">
+          <circle cx="8" cy="8" r="7" fill="#2EE8A0"/><text x="22" y="12" fill="#C4D4E8">Healthy</text>
+          <circle cx="8" cy="34" r="7" fill="#FF5A6E"/><text x="22" y="38" fill="#C4D4E8">Drifted</text>
+          <circle cx="8" cy="60" r="7" fill="#FFC04D"/><text x="22" y="64" fill="#C4D4E8">Not set up</text>
+          <circle cx="130" cy="8" r="7" fill="#52708F"/><text x="144" y="12" fill="#C4D4E8">Not available</text>
+          <circle cx="130" cy="34" r="7" fill="none" stroke="#52708F" stroke-width="1.5" stroke-dasharray="2 3"/><text x="144" y="38" fill="#C4D4E8">No data</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Fleet score and stat cards on top, the Movers and Universally weak strips, then the tenant × control grid with its five-state legend.</figcaption>
+  </figure>
+
+  <h2>Daily Activity</h2>
+
+  <p><strong>Daily Activity</strong> (sidebar) is today's authentication weather: two donut charts, <strong>Login Failures — Today</strong> and <strong>CA Blocks — Today</strong>, segmented by tenant.</p>
+
+  <p>The useful part is the deviation math: each tenant's legend row shows today's count against its own 7-day rolling average — "avg 12/day" with a deviation percentage. Forty failures is Tuesday for a 200-seat tenant and a password spray for a 12-seat one; the baseline tells them apart. Click a legend row for the event detail: an AI assessment of the pattern, then the event table (time, user, application, IP, location, error, risk level), and click through any event for full sign-in detail.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The Daily Activity layout: two donut charts, Login Failures Today and CA Blocks Today, each segmented by tenant, with a legend row comparing today's count to a 7-day average.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- donut 1 -->
+        <g transform="translate(150,118)">
+          <circle r="56" fill="none" stroke="#16314F" stroke-width="22"/>
+          <circle r="56" fill="none" stroke="#5CCBF4" stroke-width="22" stroke-dasharray="180 352" transform="rotate(-90)"/>
+          <circle r="56" fill="none" stroke="#A8E1F8" stroke-width="22" stroke-dasharray="90 352" stroke-dashoffset="-180" transform="rotate(-90)"/>
+          <text x="0" y="-78" fill="#7DD9F9" font-size="13" font-weight="600">Login Failures — Today</text>
+        </g>
+        <!-- donut 2 -->
+        <g transform="translate(420,118)">
+          <circle r="56" fill="none" stroke="#16314F" stroke-width="22"/>
+          <circle r="56" fill="none" stroke="#5CCBF4" stroke-width="22" stroke-dasharray="120 352" transform="rotate(-90)"/>
+          <circle r="56" fill="none" stroke="#2A7FA3" stroke-width="22" stroke-dasharray="64 352" stroke-dashoffset="-120" transform="rotate(-90)"/>
+          <text x="0" y="-78" fill="#7DD9F9" font-size="13" font-weight="600">CA Blocks — Today</text>
+        </g>
+      </g>
+      <!-- legend row with baseline -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="540" y="78" width="156" height="84" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="558" cy="98" r="6" fill="#5CCBF4"/><text x="572" y="102" fill="#C4D4E8" font-size="12">Tenant A</text>
+        <text x="556" y="126" fill="#EEF4FC" font-size="13" font-weight="600">40 today</text>
+        <text x="556" y="146" fill="#6B85A6" font-size="11.5">avg 12/day</text>
+      </g>
+    </svg>
+    <figcaption>Two donuts segmented by tenant; each legend row weighs today's count against that tenant's own 7-day average.</figcaption>
+  </figure>
+
+  <p>This page is a <em>context</em> surface, not an alarm system — genuine attack patterns (spray, brute force, impossible travel) fire alerts on their own. Use Daily Activity when a briefing line or an alert makes you want to see the shape of today's traffic.</p>
+
+  <h2>SharePoint</h2>
+
+  <p><strong>SharePoint</strong> (sidebar) aggregates sharing-and-access audit events across tenants: anonymous link creation, external sharing events, site admin changes, malware detections in SharePoint/OneDrive, and sharing policy changes. It complements the per-tenant Overview cards (SharePoint Sites, Anonymous Links) with the event-level view — who created that anonymous link, on which site, when.</p>
+
+  <h2>How these fit your week</h2>
+
+  <p>Alerts run your day; fleet views run your week. A reasonable rhythm: Heatmap once a week to pick a campaign (clear one universally-weak control fleet-wide), Movers to catch the regressing tenant, Daily Activity and SharePoint on demand when something makes you curious. All of it stays read-only — these pages tell you where to act; the acting happens in Security, CA, Intune, and the customer conversation.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Rhythm</div>
+    <p>Alerts run your day; fleet views run your week. These pages tell you where to act — the acting happens in Security, CA, Intune, and the customer conversation.</p>
+  </div>
+
+</div>
+</body>
+</html>

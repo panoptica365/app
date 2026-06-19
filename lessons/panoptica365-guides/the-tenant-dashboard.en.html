@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The tenant dashboard — Panoptica365 Guides</title>
+<meta name="lesson:title" content="The tenant dashboard">
+<meta name="lesson:subtitle" content="Six tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>The tenant dashboard</span></div>
+  <h1>The tenant dashboard</h1>
+  <p class="dek">Six tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A tenant dashboard layout: a row of six tabs above two stacked zones — a grid of metric cards and the drill-down panels beneath them.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- six tabs -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="60" y="36" width="158" height="40" rx="8" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="139" y="61" fill="#7DD9F9" font-size="14" font-weight="700">Overview</text></g>
+        <g><rect x="230" y="36" width="138" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="299" y="61" fill="#A8E1F8" font-size="13.5">Alerts</text></g>
+        <g><rect x="380" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="459" y="61" fill="#A8E1F8" font-size="13.5">CA Policies</text></g>
+        <g><rect x="550" y="36" width="172" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="636" y="61" fill="#A8E1F8" font-size="13.5">Intune Policies</text></g>
+        <g><rect x="734" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="813" y="61" fill="#A8E1F8" font-size="13.5">Applications</text></g>
+        <g><rect x="904" y="36" width="156" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="982" y="61" fill="#A8E1F8" font-size="13.5">Change Log</text></g>
+      </g>
+
+      <!-- zone 1: metric cards grid -->
+      <text x="60" y="108" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">METRIC CARDS</text>
+      <g>
+        <rect x="60" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="304" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="548" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="792" y="120" width="268" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <!-- little status dots: triage surface -->
+        <circle cx="276" cy="136" r="5" fill="#2EE8A0"/>
+        <circle cx="520" cy="136" r="5" fill="#FFC04D"/>
+        <circle cx="764" cy="136" r="5" fill="#FF5A6E"/>
+        <circle cx="1044" cy="136" r="5" fill="#2EE8A0"/>
+        <g fill="#52708F">
+          <rect x="74" y="148" width="120" height="7" rx="3.5"/><rect x="74" y="163" width="78" height="6" rx="3"/>
+          <rect x="318" y="148" width="120" height="7" rx="3.5"/><rect x="318" y="163" width="78" height="6" rx="3"/>
+          <rect x="562" y="148" width="120" height="7" rx="3.5"/><rect x="562" y="163" width="78" height="6" rx="3"/>
+          <rect x="806" y="148" width="150" height="7" rx="3.5"/><rect x="806" y="163" width="96" height="6" rx="3"/>
+        </g>
+      </g>
+
+      <!-- zone 2: drill-down panels -->
+      <text x="60" y="216" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DRILL-DOWN PANELS</text>
+      <g>
+        <rect x="60" y="228" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 245 l8 -7 8 7" fill="none" stroke="#5CCBF4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="241" width="220" height="7" rx="3.5" fill="#52708F"/>
+        <rect x="60" y="272" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 286 l8 7 8 -7" fill="none" stroke="#52708F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="285" width="260" height="7" rx="3.5" fill="#52708F"/>
+      </g>
+    </svg>
+    <figcaption>The dashboard's two zones: the metric cards up top for triage, the collapsible drill-down panels beneath for the detail.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Click a tenant on the Main Console and you land on its dashboard. This is the single richest page in Panoptica365 — everything known about one tenant, organized into six tabs:</p>
+  </div>
+
+  <ol>
+    <li><strong>Overview</strong> — the configuration and activity snapshot (this guide).</li>
+    <li><strong>Alerts</strong> — this tenant's alerts, same workflow as the global Alerts page.</li>
+    <li><strong>CA Policies</strong> — Conditional Access templates assigned to this tenant (own guide).</li>
+    <li><strong>Intune Policies</strong> — Intune templates deployed to this tenant (own guide).</li>
+    <li><strong>Applications</strong> — the enterprise app inventory and approval workflow (own guide).</li>
+    <li><strong>Change Log</strong> — the history of every change made to this tenant, both changes Panoptica365 made (deployments, applies) and changes operators logged manually. Drift alerts link back to entries here when a change explains them.</li>
+  </ol>
+
+  <h2>The Overview tab: metric cards</h2>
+
+  <p>The top zone is a grid of at-a-glance cards. What appears depends on what the tenant has, but expect:</p>
+
+  <ul>
+    <li><strong>Secure Score</strong> — with the comparative average for similar-sized tenants.</li>
+    <li><strong>Identity</strong>: Total Users, Licensed Users, <strong>Global Admins</strong> (green at 2 or fewer, red above 5 — count matters), <strong>MFA Registration</strong> percentage (green at 90%+), Risky Users, Inactive Users (90d).</li>
+    <li><strong>Access control</strong>: Conditional Access Policies (enabled/disabled split), Security Defaults on/off.</li>
+    <li><strong>Devices</strong>: Compliant Devices percentage with a trend arrow, Inactive Devices (90d), Entra Connect sync status.</li>
+    <li><strong>Collaboration</strong>: SharePoint Sites, <strong>Anonymous Links</strong> (high severity if any exist), OneDrive Accounts, Teams (public/private split).</li>
+    <li><strong>Email</strong>: Mailboxes, 7-day Mail Activity, <strong>Inbox Rules</strong> — with an external-forwarding indicator, one of the most common compromise signals.</li>
+    <li><strong>Apps and DNS</strong>: Registered Apps, Enterprise Apps, Domains with MX/SPF/DMARC/Autodiscover validation status.</li>
+  </ul>
+
+  <p>Treat the cards as a triage surface: anything red or yellow is a question worth answering.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="A card grid where two metric cards carry colour: Global Admins red when above 5, MFA Registration green at 90 percent or more.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">COLOUR IS THE TRIAGE SIGNAL</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- green card: MFA Registration 90%+ -->
+        <rect x="48" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.6"/>
+        <circle cx="318" cy="90" r="6" fill="#2EE8A0"/>
+        <text x="72" y="100" fill="#C4D4E8" font-size="14">MFA Registration</text>
+        <text x="72" y="158" fill="#2EE8A0" font-size="40" font-weight="700">92%</text>
+        <text x="72" y="190" fill="#6B85A6" font-size="12.5">green at 90% or more</text>
+        <!-- red card: Global Admins above 5 -->
+        <rect x="376" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="646" cy="90" r="6" fill="#FF5A6E"/>
+        <text x="400" y="100" fill="#C4D4E8" font-size="14">Global Admins</text>
+        <text x="400" y="158" fill="#FF8A98" font-size="40" font-weight="700">7</text>
+        <text x="400" y="190" fill="#6B85A6" font-size="12.5">red above 5 — count matters</text>
+      </g>
+    </svg>
+    <figcaption>Two of the cards the text calls out: green when MFA Registration hits 90%+, red when Global Admins climbs above 5.</figcaption>
+  </figure>
+
+  <h2>The Overview tab: drill-down panels</h2>
+
+  <p>Below the cards, collapsible panels carry the detail behind each card: the licensing breakdown, the actual list of global admins, users without MFA, per-policy CA details, the full Intune device table, top mailboxes by storage, anonymous sharing links by site, all inbox rules grouped by user, inactive user and device lists, registered and third-party apps, and DNS records per domain.</p>
+
+  <p>You'll use these panels constantly during assessments and customer conversations — "you have four global admins and two of them are unlicensed accounts nobody owns" comes straight from here.</p>
+
+  <h2>Data freshness</h2>
+
+  <p>Everything on the Overview reflects the <strong>last poll</strong> (the interval you set per tenant, 1–60 minutes, plus slower cycles for heavyweight data). If you've just onboarded the tenant, give the first poll a few minutes; if a card seems stale, check <strong>Last Polled</strong> on the Tenants page.</p>
+
+  <h2>Where to next</h2>
+
+  <p>A sensible first pass over a freshly onboarded tenant: skim the Overview for anything alarming, then work through <strong>Applications</strong> (approve what you trust), then <strong>CA Policies</strong> and <strong>Intune Policies</strong> (deploy your baselines), then <strong>Security</strong> (the tenant-wide settings surface, from the sidebar). The next four guides walk through each.</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">1</div><div class="xt"><b>Applications</b> — approve what you trust.</div></div>
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>CA Policies</b> — deploy your baselines.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Intune Policies</b> — deploy your baselines.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Security</b> — the tenant-wide settings surface, from the sidebar.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

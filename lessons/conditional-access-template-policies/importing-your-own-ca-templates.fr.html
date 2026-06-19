@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importer vos propres modèles d'AC — Politiques modèles d'accès conditionnel</title>
+<meta name="lesson:title" content="Importer vos propres modèles d'AC — le super-pouvoir Panoptica365">
+<meta name="lesson:subtitle" content="Exportez une politique d'AC d'un tenant Entra, ajoutez-la à Panoptica365 et déployez-la sur toute votre flotte.">
+<meta name="lesson:icon" content="upload">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Politiques modèles d'accès conditionnel</span> <span class="sep">·</span> <span>Importer vos propres modèles d'AC</span></div>
+  <h1>Importer vos propres modèles d'AC — le super-pouvoir Panoptica365</h1>
+  <p class="dek">Exportez une politique d'AC d'un tenant Entra, ajoutez-la à Panoptica365 et déployez-la sur toute votre flotte.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une politique d'AC est exportée d'un tenant, généralisée en modèle, et déployée sur de nombreux tenants clients.">
+      <defs>
+        <radialGradient id="ictBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ictTpl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="ictArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="ictArrC" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ictBg)"/>
+
+      <!-- 1: source tenant with a policy -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="158" height="104" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="20" y="22" width="118" height="14" rx="4" fill="#16345A"/>
+        <rect x="20" y="46" width="92" height="11" rx="4" fill="#13294A"/>
+        <rect x="20" y="66" width="104" height="11" rx="4" fill="#13294A"/>
+        <text x="79" y="-14" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Un tenant</text>
+        <text x="79" y="128" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5">une politique d'AC</text>
+      </g>
+      <text x="290" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">EXPORTER</text>
+      <path d="M236 170 H346" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 2: generalised template -->
+      <g transform="translate(360,108)">
+        <rect x="0" y="0" width="178" height="124" rx="12" fill="#0E2640" stroke="url(#ictTpl)" stroke-width="1.8"/>
+        <text x="89" y="-14" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Modèle généralisé</text>
+        <rect x="22" y="24" width="134" height="14" rx="4" fill="#16345A"/>
+        <g font-family="Geist Mono,monospace" font-size="11">
+          <rect x="22" y="50" width="134" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="65" fill="#A8E1F8">{TRUSTED_LOCATION}</text>
+          <rect x="22" y="80" width="100" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="95" fill="#A8E1F8">{GROUP}</text>
+        </g>
+        <text x="89" y="148" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">GUID → placeholders</text>
+      </g>
+      <text x="588" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">DÉPLOYER</text>
+      <path d="M546 170 H636" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 3: the fleet -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="888" y="44" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Chaque tenant client</text>
+        <g transform="translate(656,66)">
+          <rect x="0" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="0" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+        </g>
+        <!-- fan-out from template to fleet -->
+        <g stroke="#2A7FA3" stroke-width="1.6" fill="none" opacity="0.75">
+          <path d="M636 170 C700 150 700 110 725 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 158 800 110 888 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 158 980 110 1052 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C700 190 700 200 725 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 182 800 200 888 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 182 980 200 1052 209" marker-end="url(#ictArrC)"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Toute la fonctionnalité en une ligne : une politique d'un tenant devient un modèle qui se déploie sur la flotte.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La plupart des outils d'aide aux modèles d'AC traitent les modèles comme un cadeau du fournisseur. Le fournisseur livre une bibliothèque; vous déployez ce qui est dans la bibliothèque; si vous voulez quelque chose de différent, vous attendez que le fournisseur l'ajoute. Le client au Mexique ne peut pas utiliser un modèle verrouillé sur le Canada. L'ingénieur senior qui a construit une politique d'AC brillante au tenant d'un client ne peut pas la partager facilement avec le reste du MSP. La bibliothèque de modèles est un catalogue fermé.</p>
+
+  <p>Panoptica365 est construit différemment. Toute politique d'accès conditionnel qui existe dans tout tenant Entra — le tenant de votre propre MSP, le tenant d'un client spécifique, le tenant d'un partenaire — peut être exportée et importée dans Panoptica365 comme modèle personnalisé. De là, elle se déploie à chaque tenant client de votre flotte de la même manière que les modèles livrés.</p>
+
+  <p>C'est la fonctionnalité de plateforme qui transforme la bibliothèque de modèles d'AC de « ce que Panoptica365 a pensé » à « ce que votre MSP et vos ingénieurs seniors savent de vos clients ». C'est aussi le mécanisme qui rend possible la personnalisation géographique de la leçon 4 — le MSP mexicain n'attend pas que Panoptica365 livre un modèle Mexique; ils en construisent un et l'importent.</p>
+
+  <p>Cette leçon est le flux de travail pour ça — quand l'utiliser, comment ça fonctionne, ce qu'il faut surveiller.</p>
+  </div>
+
+  <h2>Quand importer un modèle personnalisé</h2>
+
+  <p>Cinq scénarios où l'importation a du sens :</p>
+
+  <p><strong>1. Personnalisation géographique.</strong> Le modèle « Permettre l'accès seulement depuis le Canada » de la leçon 4 doit devenir « Permettre l'accès seulement depuis le Mexique » pour un MSP basé au Mexique, « Permettre l'accès seulement depuis la France / UE » pour un MSP français, etc. Le patron de condition OU reste le même; l'emplacement nommé change. L'importation est le mécanisme de personnalisation.</p>
+
+  <p><strong>2. Une politique personnalisée que vous avez construite quelque part et voulez réutiliser partout.</strong> Un ingénieur senior du MSP a construit une politique d'AC astucieuse pour un client — disons, une politique qui exige un MFA résistant à l'hameçonnage spécifiquement pour les utilisateurs du département Finance, avec des exclusions soigneusement ajustées pour l'appareil mobile du commis aux comptes payables. Plutôt que de reconstruire cette politique à la main pour chaque tenant client, exportez depuis l'original, importez comme modèle, déployez à travers la flotte.</p>
+
+  <p><strong>3. Une exigence réglementaire qui demande une politique non par défaut.</strong> Un client dans une industrie réglementée (santé, finance, sous-traitance gouvernementale) peut avoir besoin de politiques d'AC que la bibliothèque standard n'inclut pas — une politique de fréquence de session spécifique pour accéder aux IIP, par exemple, ou une politique qui applique une force d'authentification particulière à des apps spécifiques. Construisez-la une fois pour le client réglementé, importez-la comme modèle, déployez à travers d'autres clients similaires.</p>
+
+  <p><strong>4. Une réponse à une compromission spécifique ou un quasi-incident.</strong> Après qu'un client ait eu un incident AiTM, vous avez serré sa politique d'AC pour exiger un appareil conforme + MFA résistant à l'hameçonnage pour les apps sensibles. Vous aimeriez la même posture durcie pour d'autres clients de la même industrie. L'importation est le mécanisme pour ce flux de travail « répandre une bonne politique ».</p>
+
+  <p><strong>5. Une nouvelle menace qui demande une nouvelle politique.</strong> Microsoft annonce une nouvelle technique d'attaque, votre équipe de sécurité conçoit une politique d'AC qui l'adresse, vous la construisez une fois et avez besoin de la déployer à travers trente tenants. L'importation est plus rapide que de la recréer trente fois.</p>
+
+  <p>Le patron dans les cinq : une politique existe quelque part, vous voulez qu'elle existe ailleurs, la plateforme rend le transfert trivial.</p>
+
+  <h2>Comment fonctionne l'importation</h2>
+
+  <p>Le flux de travail à haut niveau :</p>
+
+  <ol>
+    <li><strong>Exporter depuis un tenant source.</strong> Dans le module AC de Panoptica365, sélectionnez le tenant source et choisissez d'exporter les politiques d'accès conditionnel. Panoptica365 lit les politiques depuis Entra ID via l'API Graph et produit une représentation JSON structurée.</li>
+
+    <li><strong>Choisir quelles politiques importer.</strong> L'exportation contient typiquement chaque politique d'AC sur le tenant source. Vous sélectionnez les politiques spécifiques que vous voulez amener comme modèles — typiquement une ou deux, pas toutes.</li>
+
+    <li><strong>Généraliser les GUID spécifiques au tenant.</strong> C'est l'étape techniquement intéressante. Les politiques d'accès conditionnel référencent les utilisateurs, groupes et emplacements nommés par GUID — et ces GUID sont uniques au tenant source. Une politique « Bloquer hors du Canada » dans le tenant A référence le GUID d'emplacement nommé <code>abc-123</code> pour « Canada »; le tenant B a un GUID différent pour le même emplacement nommé. Si vous importiez la politique telle quelle, elle référencerait un GUID inexistant dans le tenant B et l'importation échouerait ou produirait une politique brisée.
+
+   <br><br>Panoptica365 gère ça en substituant des jetons placeholder au moment de l'importation. Les GUID spécifiques au tenant dans l'exportation source sont remplacés par des placeholders comme <code>{NAMED_LOCATION_CANADA}</code>. Quand le modèle est plus tard déployé au tenant B, Panoptica365 résout le placeholder contre les GUID d'emplacement nommé réels du tenant B. Si le tenant B a un emplacement nommé correspondant au placeholder, le déploiement procède; sinon, l'opérateur est invité à en créer un ou à remapper vers un emplacement existant.</li>
+
+    <li><strong>Nommer et décrire le modèle.</strong> Donnez-lui un nom et une description d'une ligne style Panoptica365. La convention de nommage utilisée par les modèles livrés est <code>Panoptica365 - &lt;nom descriptif&gt;</code> — les modèles personnalisés devraient suivre un patron similaire (<code>AcmeMSP - &lt;nom descriptif&gt;</code> ou <code>&lt;nom du MSP&gt; - &lt;nom descriptif&gt;</code>) pour qu'ils soient distinguables des livrés dans la liste de politiques sur les tenants clients.</li>
+
+    <li><strong>Enregistrer comme modèle dans la bibliothèque Panoptica365.</strong> À partir de ce point, le modèle se comporte comme n'importe lequel des modèles livrés — il est disponible pour le déploiement à n'importe quel tenant client, supporte le déploiement Rapport-uniquement-puis-Activé, et apparaît dans le détecteur de dérive.</li>
+  </ol>
+
+  <h2>La généralisation d'emplacements nommés, spécifiquement</h2>
+
+  <p>L'exemple du MSP mexicain de la leçon 4 est le cas canonique. Marchez à travers ce qui se passe mécaniquement :</p>
+
+  <p>Le MSP exporte le modèle « Permettre l'accès seulement depuis le Canada » depuis l'un de leurs tenants clients canadiens (ou depuis la vue des modèles livrés de Panoptica365, selon le chemin d'exportation). La politique référence le GUID d'emplacement nommé <code>xyz-canada-789</code> et le code de pays <code>CA</code>.</p>
+
+  <p>Dans le flux d'importation de Panoptica365, la référence d'emplacement nommé est convertie en placeholder. Le modèle contient maintenant quelque chose comme :</p>
+
+  <pre><code>condition.locations.include = ["{TRUSTED_LOCATION}"]</code></pre>
+
+  <p>Le MSP nomme ce modèle personnalisé « AcmeMSP - Permettre l'accès seulement depuis le Mexique » et l'enregistre.</p>
+
+  <p>Pour chaque tenant client mexicain, le MSP crée d'abord un emplacement nommé appelé « Mexique » avec le code de pays Mexique. Puis ils déploient le modèle AcmeMSP. Au moment du déploiement, Panoptica365 résout <code>{TRUSTED_LOCATION}</code> contre les emplacements nommés du client et utilise le GUID pour l'entrée « Mexique ». La politique est créée dans le tenant du client avec la bonne référence d'emplacement.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="Au déploiement, le placeholder TRUSTED_LOCATION est résolu contre les emplacements nommés du tenant de destination; si aucun ne correspond, l'opérateur est invité à en créer un.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- template placeholder -->
+        <rect x="22" y="92" width="202" height="48" rx="10" fill="#0E2640" stroke="#5CCBF4"/>
+        <text x="123" y="113" fill="#7DD9F9" font-size="11.5" font-weight="700" font-family="Geist Mono,monospace">{TRUSTED_LOCATION}</text>
+        <text x="123" y="131" fill="#6B85A6" font-size="11">placeholder du modèle</text>
+        <text x="123" y="74" fill="#6B85A6" font-size="11" letter-spacing="1">AU DÉPLOIEMENT</text>
+
+        <!-- resolve box -->
+        <rect x="262" y="84" width="176" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="350" y="110" fill="#C4D4E8" font-size="12.5" font-weight="600">Résoudre contre les</text>
+        <text x="350" y="129" fill="#C4D4E8" font-size="12.5" font-weight="600">emplacements nommés</text>
+
+        <!-- match branch -->
+        <rect x="498" y="38" width="200" height="58" rx="10" fill="#0C2A1E" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="598" y="61" fill="#2EE8A0" font-size="13" font-weight="700">Correspondance</text>
+        <text x="598" y="79" fill="#8FE6C4" font-size="11">utiliser ce GUID, déployer</text>
+
+        <!-- no-match branch -->
+        <rect x="498" y="136" width="200" height="64" rx="10" fill="#2B210C" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="598" y="159" fill="#FFC04D" font-size="13" font-weight="700">Aucune</text>
+        <text x="598" y="177" fill="#E6CD96" font-size="11">inviter l'opérateur : créer</text>
+        <text x="598" y="192" fill="#E6CD96" font-size="11">ou remapper l'emplacement</text>
+      </g>
+      <path d="M224 116 H258" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M438 106 C470 92 470 74 496 66" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+      <path d="M438 126 C470 142 470 158 496 164" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+    </svg>
+    <figcaption>Le placeholder se résout en un vrai GUID quand l'emplacement nommé existe — et n'échoue jamais silencieusement quand ce n'est pas le cas.</figcaption>
+  </figure>
+
+  <p>Si un tenant client n'a pas encore d'emplacement nommé « Mexique », le déploiement invite l'opérateur à en créer un (ou à mapper le placeholder vers un autre emplacement nommé existant). Le système n'échoue pas silencieusement ou ne crée pas une politique brisée.</p>
+
+  <p>C'est la fonctionnalité de plateforme qui fait fonctionner la leçon 4 à travers les géographies. Le même mécanisme s'applique à toute autre référence spécifique au tenant dans un modèle importé — groupes d'utilisateurs, emplacements d'accès conditionnel, noms de force d'authentification, etc.</p>
+
+  <h2>Ce qui est exporté et ce qui ne l'est pas</h2>
+
+  <p>Ça vaut la peine d'être explicite : tous les aspects d'une politique d'AC ne sont pas portables.</p>
+
+  <p><strong>Choses qui s'exportent proprement :</strong></p>
+  <ul>
+    <li>Nom et état de la politique (Activé, Rapport uniquement, Désactivé).</li>
+    <li>Inclusions/exclusions d'utilisateurs et de groupes (par référence; le mécanisme de placeholder gère la traduction GUID).</li>
+    <li>Cibles d'app (par ID d'app; les ID d'app de première partie Microsoft sont universels à travers les tenants).</li>
+    <li>Conditions : emplacements (via placeholders), apps clientes, plateformes, niveaux de risque de connexion, niveaux de risque utilisateur.</li>
+    <li>Contrôles d'octroi et contrôles de session.</li>
+    <li>Références de force d'authentification (par nom, qui est cohérent à travers les tenants).</li>
+  </ul>
+
+  <p><strong>Choses qui ne s'exportent pas portablement :</strong></p>
+  <ul>
+    <li><em>Exclusions spécifiques à un utilisateur</em> par ID d'utilisateur individuel (l'utilisateur n'existe pas dans le tenant de destination). L'exportation capture le <em>groupe</em> contenant l'utilisateur, mais les exclusions utilisateur-par-GUID individuelles sont typiquement enlevées ou marquées comme non transférables.</li>
+    <li><em>Attributs de sécurité personnalisés</em> qui n'existent que sur le tenant source.</li>
+    <li><em>Historique de résultats rapport uniquement</em> — c'est un artefact d'exécuter la politique sur le tenant source, pas une partie du modèle.</li>
+  </ul>
+
+  <p>Le flux d'importation Panoptica365 fait remonter tout élément non portable pendant l'étape d'importation. L'opérateur décide s'il faut l'enlever, le généraliser, ou accepter la limitation.</p>
+
+  <h2>Quand <em>ne pas</em> importer</h2>
+
+  <p>Quelques mises en garde honnêtes — l'importation n'est pas toujours le bon mouvement :</p>
+
+  <p><strong>La politique est brisée ou mal ajustée à la source.</strong> Si la politique originale a accumulé des résidus (exclusions oubliées, cibles dépassées, méthodes d'authentification dépréciées), l'importer répand les résidus à chaque tenant client. Le bon mouvement est de nettoyer la politique source d'abord, <em>puis</em> d'exporter et importer.</p>
+
+  <p><strong>La politique est trop spécifique au client.</strong> Certaines politiques d'AC sont profondément spécifiques à l'environnement d'un client — leurs groupes d'utilisateurs spécifiques, leurs apps spécifiques, leur état de conformité spécifique. Essayer de généraliser une telle politique en modèle peut produire quelque chose qui ne fonctionne pas tout à fait pour le nouveau client et demande des bricolages par déploiement. Si la personnalisation par déploiement est substantielle, le modèle ajoute moins de valeur que simplement déployer ad hoc.</p>
+
+  <p><strong>La politique dépend de fonctionnalités E5 seulement et le tenant de destination est Business Premium.</strong> L'AC basé sur le risque, les forces d'authentification avec exigences résistantes à l'hameçonnage, et les politiques conscientes de PIM présument souvent un tenant E5. Importer celles-ci dans un tenant client Business Premium produit une politique qui ne s'applique pas comme prévu (parce que le signal sous-jacent n'est pas disponible).</p>
+
+  <p><strong>La politique est dans la liste d'exclusions du tenant source pour une raison évidente.</strong> Si la politique à la source est actuellement désactivée ou a une exclusion large parce que quelque chose n'a pas fonctionné, c'est une information sur si la politique est assez mature pour se répandre. Importer une politique que le client source a désactivée parce qu'elle brisait des choses ne fait que répandre le bris.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Le principe honnête</div>
+    <p>Importez des politiques qui ont été validées, sont propres, sont portables, et que l'opérateur comprend bien. Les modèles importés héritent de la réputation de votre MSP. Les mauvais modèles coûtent plus que les bonnes politiques ne sauvent.</p>
+  </div>
+
+  <h2>Maintenir les modèles personnalisés</h2>
+
+  <p>Un modèle personnalisé a besoin de maintenance continue — Microsoft change des choses, l'environnement du client change, la politique peut avoir besoin d'évoluer. Le MSP qui a importé le modèle possède maintenant son cycle de vie :</p>
+
+  <ul>
+    <li><strong>Changements de schéma Microsoft Graph.</strong> Microsoft renomme parfois des propriétés d'AC ou change le schéma JSON. Les modèles importés peuvent avoir besoin de mise à jour pour suivre les changements de schéma. Le détecteur de dérive AC de Panoptica365 couvre les modèles livrés; les modèles personnalisés ont besoin que le MSP vérifie périodiquement.</li>
+
+    <li><strong>Divergence spécifique au client.</strong> Quand l'environnement d'un client change (il ajoute Intune, il fusionne une filiale, il s'étend à une nouvelle région), le modèle qui fonctionnait parfaitement il y a six mois peut avoir besoin d'ajustement. Le patron est le même que pour les modèles livrés — la détection de dérive fait remonter les différences, l'opérateur les adresse.</li>
+
+    <li><strong>Divergence modèle-vs-politique-déployée.</strong> Avec le temps, les déploiements individuels chez les clients peuvent dévier du modèle (un admin fait un ajustement par tenant). Le détecteur de dérive Panoptica365 le signale; le MSP décide s'il faut (a) mettre à jour le modèle pour correspondre à la divergence, ou (b) ramener la politique du client pour correspondre au modèle, ou (c) accepter la divergence comme personnalisation spécifique au client.</li>
+  </ul>
+
+  <p>Le coût de maintenance est réel. Importer 15 modèles personnalisés signifie s'engager à maintenir 15 modèles. La plupart des MSP bénéficient d'un petit nombre de modèles personnalisés soigneusement organisés plutôt que d'une grande collection non maintenue.</p>
+
+  <h2>La proposition de valeur MSP</h2>
+
+  <p>La ligne unique qui capture pourquoi ça compte : <em>la meilleure politique d'AC de chaque client peut devenir la politique d'AC de base de chaque client</em>. La politique brillante de l'ingénieur senior ne reste pas verrouillée dans le tenant d'un client; le durcissement réglementaire ne se fait pas reconstruire trente fois; la réponse post-incident n'a pas à être inventée deux fois.</p>
+
+  <blockquote>Le mécanique de la plateforme — exporter, généraliser, importer, déployer — est la différence entre « le catalogue Panoptica365 » et « le catalogue de votre MSP, construit par-dessus les fondations Panoptica365 ». Pour un MSP qui prend l'AC au sérieux, c'est une des fonctionnalités produit à plus haut levier. C'est pourquoi les sept modèles livrés dans la carte 3 ne sont pas le plafond — ce sont le plancher, et le MSP construit par-dessus.</blockquote>
+
+  <h2>Déploiement pour un modèle personnalisé</h2>
+
+  <p>Identique à n'importe quel modèle livré, avec deux différences. D'abord, une étape d'inspection pré-importation explicite. Ensuite, <strong>l'étape manuelle de rapport uniquement dans le portail Entra est fortement recommandée pour le premier déploiement de n'importe quel modèle personnalisé, peu importe la taille du tenant</strong> — les modèles importés ne sont pas pré-validés, et l'opérateur n'a pas vu cette politique spécifique appliquée avant.</p>
+
+  <ol start="0">
+    <li><strong>Inspection pré-importation.</strong> Avant d'importer, auditez la politique source. Est-elle propre? Est-elle bien ajustée? Est-elle la version de cette politique que le client utilise présentement (et avec laquelle il est satisfait), ou est-elle un brouillon plus ancien? Toutes les références sont-elles portables, ou y a-t-il des exclusions utilisateur-par-GUID codées en dur qui ne se transféreront pas? Corrigez tout problème dans la source avant d'importer.</li>
+    <li><strong>Importer.</strong> Tirez la politique du tenant source. Résolvez les placeholders. Enregistrez comme modèle.</li>
+    <li><strong>Pré-déploiement sur chaque tenant de destination.</strong> Identique aux modèles livrés (leçon 1). Confirmez que les emplacements nommés existent, le break-glass est exclu, etc.</li>
+    <li><strong>Jour 0</strong> — déployez via Panoptica365 (crée la politique à l'état Activé). Ouvrez immédiatement le portail Entra et basculez la politique en rapport uniquement.</li>
+    <li><strong>Jours 1–N</strong> — révision rapport uniquement. N est plus long pour des politiques plus complexes; budgétez 7 à 14 jours pour un modèle personnalisé substantiel.</li>
+    <li><strong>Jour N+1</strong> — basculez la politique de retour à Activé dans le portail Entra.</li>
+  </ol>
+
+  <p>La plus longue fenêtre rapport uniquement pour les modèles personnalisés reflète l'incertitude supplémentaire. Un modèle livré a été validé contre plusieurs tenants; un modèle importé n'a été validé que contre le tenant source. La fenêtre de vérification attrape les différences entre les environnements source et destination.</p>
+
+  <p>Une fois qu'un modèle personnalisé a été déployé à plusieurs tenants clients et vérifié comme fonctionnant proprement, les déploiements subséquents peuvent suivre le flux de modèle livré (déployer directement, sauter le basculement manuel à rapport uniquement) — la validation s'est accumulée.</p>
+
+  <h2>À surveiller après l'application</h2>
+
+  <p>Même surveillance que pour les modèles livrés, plus une spécifique :</p>
+
+  <p><strong>Dérive de modèle à travers la flotte MSP.</strong> Quand plusieurs clients ont le même modèle personnalisé déployé, la divergence individuelle crée une question de dérive à l'échelle de la flotte — le modèle devrait-il être mis à jour pour correspondre à la forme de déploiement la plus courante, ou les clients aberrants devraient-ils être réalignés au modèle? Panoptica365 fait remonter les deux types de dérive.</p>
+
+  <div class="callout insight">
+    <div class="clabel">État permanent en santé</div>
+    <p>L'état permanent en santé est une <em>divergence proche de zéro</em> entre le modèle et les politiques déployées. Une divergence substantielle indique soit (a) que le modèle a besoin de mise à jour, soit (b) que les déploiements sont modifiés par client de façons que le modèle ne capture pas.</p>
+  </div>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Les modèles livrés sont le plancher, pas le plafond.</strong> Traitez les sept modèles Panoptica365 comme le point de départ pour n'importe quel client. Construisez les propres modèles du MSP par-dessus ce plancher pour tout besoin régional, réglementaire ou spécifique au client.</p>
+
+  <p><strong>Validez avant de répandre.</strong> Un mauvais modèle importé multiplié à travers trente tenants clients est trente politiques brisées. L'étape d'inspection pré-importation est l'étape la plus importante dans le flux de travail.</p>
+
+  <p><strong>Les modèles personnalisés sont un investissement, pas une victoire gratuite.</strong> Chacun que vous importez demande une maintenance continue. Mieux vaut avoir cinq modèles personnalisés bien maintenus que cinquante périmés.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Leçon 9 : Opérer l'AC à l'échelle.</b> Le closer méta. Comment un ensemble de politiques d'AC évolue avec les années, comment fonctionne la détection de dérive, comment retirer les exclusions proprement, comment le journal d'audit de Panoptica365 rend l'opération à long terme tractable.</div></div>
+  </div>
+
+  <p>Pour l'instant : le flux de travail d'importation de modèles est ce qui transforme le module AC de Panoptica365 d'une bibliothèque de fournisseur en bibliothèque de votre MSP. C'est la différence entre déployer ce qu'on a livré et déployer ce que vos ingénieurs seniors savent de vos clients. Utilisez-le.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — référence d'API Microsoft Graph pour l'exportation/importation de politiques d'accès conditionnel (<a href="https://learn.microsoft.com/en-us/graph/api/resources/conditionalaccesspolicy" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policy resource type</a>); emplacements nommés d'accès conditionnel comme objets référencés (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Locations</a>); ID d'objets Microsoft Graph à travers les tenants (<a href="https://learn.microsoft.com/en-us/graph/best-practices-concept" target="_blank" rel="noopener">Microsoft Learn — Object IDs and properties</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

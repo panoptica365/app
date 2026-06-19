@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Políticas antiphishing — la brecha de suplantación que Microsoft deja abierta por defecto — Ajustes de seguridad de correo</title>
+<meta name="lesson:title" content="Políticas antiphishing — la brecha de suplantación que Microsoft deja abierta por defecto">
+<meta name="lesson:subtitle" content="Protección contra suplantación de usuario, ajuste del antispoofing y patrones BEC que los valores por defecto de Microsoft no detectan.">
+<meta name="lesson:icon" content="fish">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de seguridad de correo</span> <span class="sep">·</span> <span>Políticas antiphishing</span></div>
+  <h1>Políticas antiphishing — la brecha de suplantación que Microsoft deja abierta por defecto</h1>
+  <p class="dek">Protección contra suplantación de usuario, ajuste del antispoofing y patrones BEC que los valores por defecto de Microsoft no detectan.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una bandeja de entrada en el móvil mostrando el nombre para mostrar de confianza «James Wilson, CEO» sobre la dirección de envío real oculta james.wilson.ceo@gmail.com.">
+      <defs>
+        <radialGradient id="apBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="apPhone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E2640"/><stop offset="100%" stop-color="#0B1E36"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#apBg)"/>
+
+      <!-- phone frame -->
+      <rect x="120" y="40" width="300" height="260" rx="26" fill="url(#apPhone)" stroke="#335F92" stroke-width="2"/>
+      <rect x="120" y="40" width="300" height="48" rx="26" fill="#0B2038"/>
+      <rect x="120" y="64" width="300" height="24" fill="#0B2038"/>
+      <text x="146" y="72" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">ENTRADA</text>
+      <circle cx="396" cy="64" r="4" fill="#52708F"/>
+      <!-- the message row, what the eye trusts -->
+      <rect x="140" y="108" width="260" height="80" rx="10" fill="#10243B" stroke="#2A6F9E"/>
+      <circle cx="170" cy="148" r="16" fill="#1A5F87"/>
+      <text x="170" y="153" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">JW</text>
+      <text x="198" y="138" fill="#EEF4FC" font-family="Geist,Inter,sans-serif" font-size="14.5" font-weight="600">James Wilson, CEO</text>
+      <text x="198" y="160" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">Confidencial — pago</text>
+      <text x="198" y="176" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">necesario hoy</text>
+      <text x="270" y="246" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">Lo que ve en el móvil</text>
+
+      <!-- magnifier / reveal -->
+      <path d="M470 170 H560" stroke="#335F92" stroke-width="2.5" marker-end="url(#apArr)"/>
+      <defs><marker id="apArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="515" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">toca y mira</text>
+
+      <!-- the truth underneath -->
+      <g transform="translate(600,96)">
+        <rect x="0" y="0" width="430" height="150" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="24" y="40" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="1.5">REMITENTE REAL</text>
+        <text x="24" y="78" fill="#FF8A98" font-family="Geist Mono,monospace" font-size="18" font-weight="500">james.wilson.ceo@gmail.com</text>
+        <line x1="24" y1="98" x2="406" y2="98" stroke="#5C2630" stroke-width="1"/>
+        <text x="24" y="124" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13">no el dominio del cliente · ni de lejos</text>
+      </g>
+      <text x="815" y="276" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">46 000 $ transferidos</text>
+    </svg>
+    <figcaption>El nombre para mostrar decía lo correcto. La dirección real — visible solo si tocas y miras con cuidado — era una cuenta de Gmail.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La interventora de una empresa fabricante de 40 personas recibe un correo de su director general un martes por la tarde. Asunto: «Confidencial — pago necesario hoy». Cuerpo: «Por favor paga la factura adjunta de nuestro nuevo proveedor de equipos. Datos para la transferencia adjuntos. No metas a contabilidad todavía — te lo explico el jueves». Firmado con el bloque de despedida real del director, con el formato exacto en que se ven sus correos reales.</p>
+
+  <p>La interventora lee el correo en el móvil. El nombre para mostrar dice «James Wilson, CEO» — igual que cualquier otro correo del director general. Toca el adjunto, ve lo que parece una factura legítima con datos bancarios, e inicia la transferencia. 46 000 $.</p>
+
+  <p>La dirección de envío real — visible solo si tocas el nombre para mostrar y miras con cuidado — era <code>james.wilson.ceo@gmail.com</code>. No el dominio del cliente. Ni de lejos. Pero en el móvil, en la vista de bandeja de entrada, ves el nombre para mostrar. El nombre para mostrar decía lo correcto.</p>
+
+  <p>Este es el patrón de BEC más habitual en 2026 y el que la política antiphishing por defecto de Microsoft no pilla. El antispoofing sobre el propio dominio del cliente funciona bien — el atacante no está haciendo spoofing del dominio del cliente, está usando Gmail. La defensa que <em>sí</em> habría pillado esto es la <strong>protección contra la suplantación de identidad de usuario</strong>, y Microsoft la entrega apagada.</p>
+
+  <p>Esta lección trata de cerrar esa brecha.</p>
+  </div>
+
+  <h2>Las cuatro capas del antiphishing de M365 — y cuáles están encendidas</h2>
+
+  <p>La protección antiphishing de Microsoft 365 son cuatro mecanismos distintos viviendo bajo el mismo paraguas de política. La mayoría de los operadores los tratan como una sola funcionalidad. No lo son. Saber cuál es cuál es la clave del juego.</p>
+
+  <p><strong>Antispoofing.</strong> Pilla correo que <em>afirma venir del propio dominio del cliente</em> pero que falló la autenticación SPF / DKIM / DMARC. Por defecto: <strong>encendido</strong>. Este es el suelo básico — si alguien envía un mensaje falsificado afirmando ser <code>ceo@cliente.com</code> desde un servidor que no tiene nada que pintar enviando por <code>cliente.com</code>, el antispoofing lo pilla. Los valores por defecto de Microsoft son razonables aquí.</p>
+
+  <p><strong>Mailbox intelligence.</strong> Usa el ML de Microsoft sobre el historial de comunicación del destinatario. Si un usuario nunca ha recibido correo de un remitente concreto, pero la identidad del remitente se parece a la de alguien con quien SÍ se comunica habitualmente, la mailbox intelligence lo marca. Por defecto: <strong>encendido con consejo de seguridad de primer contacto</strong>, pero las <em>acciones de aplicación</em> (mover a correo no deseado, cuarentena) normalmente están configuradas en posición de <strong>Apagado</strong> hasta que afines la política.</p>
+
+  <p><strong>Protección contra la suplantación de identidad de usuario.</strong> Especificas «usuarios protegidos» — típicamente el director general, el director financiero, la interventora, cualquiera a quien plausiblemente se le pueda pedir transferir dinero. La política entonces marca el correo de remitentes cuyo nombre para mostrar coincide estrechamente con uno de esos usuarios protegidos <em>pero cuya dirección de envío no</em>. Por defecto: <strong>apagado</strong>. Esta es la brecha de la historia inicial.</p>
+
+  <p><strong>Protección contra la suplantación de dominio.</strong> Especificas «dominios protegidos» — típicamente el dominio o los dominios del propio cliente y cualquier dominio de socios o proveedores con los que el cliente transacciona rutinariamente. La política marca dominios parecidos (<code>trilogiam.com</code> vs <code>trilogiam-corp.com</code>, <code>cliente.com</code> vs <code>cliente.co</code>, los clásicos ataques de homoglifo donde una «а» cirílica reemplaza una «a» latina). Por defecto: <strong>apagado</strong>.</p>
+
+  <p>Dos de cuatro. Encendidas por defecto: las dos que pillan los ataques fáciles. Apagadas por defecto: las dos que pillan los ataques en los que los clientes de pequeña empresa realmente caen.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Los cuatro mecanismos antiphishing y su estado por defecto: antispoofing encendido, mailbox intelligence encendido con aplicación apagada, suplantación de usuario apagada, suplantación de dominio apagada.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">MECANISMO</text>
+      <text x="520" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DEFECTO</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- antispoofing: on -->
+        <g transform="translate(0,52)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Antispoofing</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">falsificado «de tu propio dominio»</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#0C2A22" stroke="#2EE8A0"/>
+          <circle cx="536" cy="25" r="5" fill="#2EE8A0"/>
+          <text x="550" y="30" fill="#2EE8A0" font-size="12" font-weight="700">ENCENDIDO</text>
+        </g>
+        <!-- mailbox intelligence: on, enforcement off -->
+        <g transform="translate(0,116)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Mailbox intelligence</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">ML sobre el historial del destinatario</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A2210" stroke="#FFC04D"/>
+          <circle cx="536" cy="25" r="5" fill="#FFC04D"/>
+          <text x="550" y="30" fill="#FFC04D" font-size="10.5" font-weight="700">ENCENDIDO · apl. OFF</text>
+        </g>
+        <!-- user impersonation: off -->
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">Suplantación de usuario</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">la brecha BEC de la historia inicial</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="538" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="552" y="30" fill="#FF8A98" font-size="12.5" font-weight="700">APAGADO</text>
+        </g>
+        <!-- domain impersonation: off -->
+        <g transform="translate(0,244)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">Suplantación de dominio</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">dominios parecidos &amp; homoglifos</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="538" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="552" y="30" fill="#FF8A98" font-size="12.5" font-weight="700">APAGADO</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Dos de cuatro encendidas por defecto — las que pillan los ataques fáciles. Las dos en las que cae la pequeña empresa se entregan apagadas.</figcaption>
+  </figure>
+
+  <h2>El patrón de remitentes de confianza — lo que los clientes piden de verdad</h2>
+
+  <p>Vas a recibir este ticket. Probablemente esta semana:</p>
+
+  <blockquote>«Para de que vuestro antiphishing nos bloquee los correos de nuestro socio ABC Corp. Necesitamos que nos lleguen sus facturas».</blockquote>
+
+  <p><strong>Antes de tocar un solo ajuste, comprueba la autenticación del correo del remitente.</strong> En el correo hace falta bailar de dos en dos — y la mayor parte de las veces, la pareja de baile lleva pasos perdidos.</p>
+
+  <p>Abre una herramienta de consulta DNS. La que recomendamos para este tipo de trabajo es <a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">DomainGuardian</a> — un comprobador visual y limpio construido por un colega de la comunidad de ciberseguridad de Quebec. Pega un dominio, obtienes un desglose codificado por colores de SPF, DKIM, DMARC, MX y registros relacionados con banderas claras sobre lo que está bien y lo que está roto. Diseñado para técnicos de nivel L1 que no deberían tener que memorizar la sintaxis de <code>dig</code> para hacer su trabajo. (Los operadores de línea de comandos pueden seguir tirando de <code>dig</code> o <code>nslookup</code> si para ellos es más rápido.)</p>
+
+  <p>Comprueba <code>abccorp.com</code> para:</p>
+
+  <ul>
+    <li><strong>SPF.</strong> ¿Hay un registro TXT que empieza con <code>v=spf1</code>? ¿Incluye las IPs o servicios desde los que ABC Corp realmente envía? Fallo habitual: SPF existe pero termina en <code>~all</code> (soft-fail) o <code>+all</code> (permitir todo — básicamente roto).</li>
+    <li><strong>DKIM.</strong> ¿Hay un registro de selector DKIM publicado? Prueba selectores habituales (<code>default._domainkey</code>, <code>selector1._domainkey</code>, <code>s1._domainkey</code>, además de los selectores específicos para Microsoft 365, Google Workspace, Mailchimp o lo que sea por lo que envíen de verdad).</li>
+    <li><strong>DMARC.</strong> ¿Hay un registro TXT en <code>_dmarc.abccorp.com</code>? ¿Cuál es la política — <code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>? ¿Están puestos <code>aspf</code> y <code>adkim</code>?</li>
+  </ul>
+
+  <p>En una buena parte de estos tickets — cómodamente la mayoría del correo de pequeña empresa a pequeña empresa — el remitente tiene SPF configurado (a menudo medio configurado), nada de DKIM y nada de DMARC. Desde la perspectiva de Microsoft, el correo se parece exactamente al tipo de correo que enviaría un atacante: mal autenticado, a veces fallando la alineación, sin política del dominio del remitente que diga a los receptores qué hacer con él. La cuarentena no es un bug — es Microsoft haciendo exactamente lo que quieres que haga.</p>
+
+  <p>El primer movimiento es la conversación, no la excepción:</p>
+
+  <blockquote>«La autenticación de correo de ABC Corp está mal configurada — concretamente, no tienen DKIM ni DMARC publicados. Por eso sus correos se están marcando. El arreglo está en <em>su</em> lado: su equipo de IT necesita publicar firma DKIM y un registro DMARC. Una vez que lo hagan, Microsoft confiará en su correo y no nos hará falta excepción ninguna. ¿Puedes contactar con tu contacto en ABC Corp y pedirle que su IT mire esto?».</blockquote>
+
+  <p>La mitad de las veces esta conversación resuelve el problema limpiamente dentro de una semana — el IT de ABC Corp publica DKIM y DMARC, Microsoft empieza a confiar en el correo, el cliente nunca te vuelve a preguntar por esto, y el ecosistema más amplio del correo gana un escalón de salud. La otra mitad de las veces ABC Corp no puede o no quiere arreglar su autenticación (proveedor pequeño sin IT, el MSP del proveedor se encoge de hombros, el «contacto» del cliente no tiene capital político para empujar), el cliente vuelve a reportar, y <em>entonces</em> recurres a uno de dos patrones de excepción: uno correcto, uno tentador.</p>
+
+  <p><strong>La forma tentadora.</strong> Abre el centro de administración de Exchange. Crea una regla de flujo de correo que omita el filtrado de spam para todo el correo de <code>*@abccorp.com</code>. El ticket del cliente se cierra. Mañana, el dominio de ABC Corp se compromete por un ataque de phishing y los atacantes envían facturas con malware a la interventora del cliente. La regla de flujo de correo que creaste alegremente omite cada defensa que Microsoft aplicaría de otro modo. La interventora abre el adjunto. Tú pasas el fin de semana en respuesta a incidentes.</p>
+
+  <p><strong>La forma correcta.</strong> Abre la política antiphishing. Añade <code>abccorp.com</code> a la lista de remitentes de confianza a <em>nivel de política antiphishing</em>, acotado a <em>esa protección específica</em> (típicamente suplantación de identidad de usuario y mailbox intelligence). La entrada de remitentes de confianza le dice a la política antiphishing «los mensajes de este dominio no deberían disparar marcas de suplantación». El filtrado de spam, el escaneo de malware, Safe Links, Safe Attachments — todo eso sigue aplicándose. Si el dominio de ABC Corp se compromete mañana, el malware en sus facturas lo pilla Safe Attachments antes de que llegue a la bandeja de la interventora.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 290" role="img" aria-label="Dos patrones de excepción para un remitente de confianza: una regla de flujo de correo omite cada defensa, mientras que una entrada de remitentes de confianza en la política antiphishing mantiene el filtrado de spam, el escaneo de malware, Safe Links y Safe Attachments en vigor.">
+      <rect width="720" height="290" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- tempting column -->
+        <text x="190" y="38" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">La forma tentadora</text>
+        <text x="190" y="58" text-anchor="middle" fill="#52708F" font-size="11.5">Bypass por regla de flujo</text>
+        <rect x="40" y="74" width="300" height="180" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <g fill="#E2A0AA" font-size="13">
+          <text x="62" y="108">Filtrado de spam</text><text x="320" y="108" text-anchor="end" fill="#FF8A98">omitido</text>
+          <text x="62" y="140">Escaneo de malware</text><text x="320" y="140" text-anchor="end" fill="#FF8A98">omitido</text>
+          <text x="62" y="172">Safe Links</text><text x="320" y="172" text-anchor="end" fill="#FF8A98">omitido</text>
+          <text x="62" y="204">Safe Attachments</text><text x="320" y="204" text-anchor="end" fill="#FF8A98">omitido</text>
+        </g>
+        <text x="190" y="236" text-anchor="middle" fill="#FF8A98" font-size="11">dominio comprometido → expuesto</text>
+
+        <!-- right column -->
+        <text x="530" y="38" text-anchor="middle" fill="#2EE8A0" font-size="14" font-weight="700">La forma correcta</text>
+        <text x="530" y="58" text-anchor="middle" fill="#52708F" font-size="11">Remitentes de confianza en la política</text>
+        <rect x="380" y="74" width="300" height="180" rx="10" fill="#0C2A22" stroke="#2EE8A0" stroke-width="1.4"/>
+        <g fill="#C4D4E8" font-size="13">
+          <text x="402" y="108">Filtrado de spam</text><text x="660" y="108" text-anchor="end" fill="#2EE8A0">activo</text>
+          <text x="402" y="140">Escaneo de malware</text><text x="660" y="140" text-anchor="end" fill="#2EE8A0">activo</text>
+          <text x="402" y="172">Safe Links</text><text x="660" y="172" text-anchor="end" fill="#2EE8A0">activo</text>
+          <text x="402" y="204">Safe Attachments</text><text x="660" y="204" text-anchor="end" fill="#2EE8A0">activo</text>
+        </g>
+        <text x="530" y="236" text-anchor="middle" fill="#2EE8A0" font-size="11">solo se suprimen las marcas de suplantación</text>
+      </g>
+    </svg>
+    <figcaption>Ambas cierran el ticket. Solo una mantiene en pie cada otra defensa cuando el remitente de confianza luego se ve comprometido.</figcaption>
+  </figure>
+
+  <p>La diferencia entre los dos enfoques es el radio de impacto cuando el remitente de confianza luego se ve comprometido. Los clientes no piensan en esa parte. Tú tienes que pensarla.</p>
+
+  <h2>Configurando la protección contra la suplantación de identidad de usuario — la parte práctica</h2>
+
+  <p>Para un cliente típico de pequeña empresa, la configuración es directa y la disciplina está en saber <em>a quién</em> proteger.</p>
+
+  <p><strong>A quién proteger.</strong> Cualquiera en una posición en la que suplantarlo llevaría a un destinatario a enviar dinero, compartir credenciales o conceder acceso. Lista real:</p>
+
+  <ul>
+    <li>El director general, el director financiero y cualquier nivel C</li>
+    <li>La interventora, el jefe de finanzas, el jefe de contabilidad</li>
+    <li>El jefe de RR. HH. (estafas de W-2 / nómina)</li>
+    <li>El jefe de IT (peticiones de credenciales y acceso)</li>
+    <li>El propietario / fundador / socio (empresas pequeñas)</li>
+  </ul>
+
+  <p>Una empresa de 40 personas puede tener entre 5 y 8 usuarios protegidos. Una empresa de 200 personas puede tener entre 12 y 20. No intentes proteger a todo el mundo — la política se vuelve ruidosa y el equipo de operadores pierde señal.</p>
+
+  <p>Para cada usuario protegido, la política necesita:</p>
+
+  <ul>
+    <li>El nombre para mostrar del usuario (exactamente como aparece en Entra ID)</li>
+    <li>La dirección de correo del usuario (típicamente <code>nombre.apellido@cliente.com</code>)</li>
+  </ul>
+
+  <p>La política marca cualquier mensaje entrante cuyo nombre para mostrar del remitente coincida estrechamente con un nombre para mostrar protegido O cuya dirección del remitente coincida estrechamente con una dirección protegida — pero el remitente no es en realidad ese usuario. La anécdota inicial (<code>james.wilson.ceo@gmail.com</code> con nombre para mostrar «James Wilson, CEO») se pilla porque el nombre para mostrar coincide con un usuario protegido pero la dirección no.</p>
+
+  <p><strong>Qué hacer cuando se marca.</strong> Tres opciones: mover a correo no deseado, cuarentena o «entregar y añadir consejo de seguridad». Para clientes de pequeña empresa, <strong>cuarentena</strong> suele ser la opción correcta. La opción del consejo de seguridad asume que los usuarios leen los consejos de seguridad; muchos no lo hacen. Correo no deseado deja al usuario liberar el mensaje él mismo; para marcas de suplantación de alta confianza, no quieres que el usuario tome esa decisión. La cuarentena enruta por el flujo del operador.</p>
+
+  <h2>Configurando la protección contra la suplantación de dominio</h2>
+
+  <p>Misma idea, acotada a dominios.</p>
+
+  <p><strong>Dominios a proteger:</strong></p>
+
+  <ul>
+    <li>El dominio de correo primario del cliente (siempre)</li>
+    <li>Cualquier otro dominio de correo que el cliente use activamente</li>
+    <li>Los dominios clave de socios/proveedores con los que transacciona el cliente (los 10–20 principales por volumen de transacción)</li>
+  </ul>
+
+  <p>La política marca el correo entrante de dominios visualmente similares a uno de los dominios protegidos. El caso clásico: el cliente es <code>acme.com</code>, el atacante registra <code>acne.com</code> o <code>acrne.com</code> (donde la «r» y la «n» juntas se ven como una «m» en la pantalla del móvil) o <code>аcme.com</code> (con una «а» cirílica). Los tres se pillan.</p>
+
+  <p>La elección de la acción al marcar (mover a correo no deseado, cuarentena, consejo de seguridad) sigue la misma lógica que la suplantación de usuario. Cuarentena suele ser lo correcto para pequeña empresa.</p>
+
+  <h2>Spoof intelligence — la cola manejable</h2>
+
+  <p>La spoof intelligence de Microsoft es la inversa de la protección contra suplantación. Donde la suplantación pilla remitentes <em>ilegítimos</em> intentando parecerse a <em>legítimos</em>, la spoof intelligence se ocupa de los remitentes <em>legítimos</em> que fallan la autenticación por razones aburridas de infraestructura.</p>
+
+  <p>El caso más habitual: el cliente usa un servicio de terceros (una plataforma de marketing, un emisor de correos de una herramienta de RR. HH., un proveedor de encuestas) que envía «desde» el dominio del cliente pero no tiene la autorización SPF / DKIM adecuada. El antispoofing de Microsoft quiere bloquear esto; la spoof intelligence te permite revisar los remitentes, permitir los legítimos y bloquear los que son realmente atacantes.</p>
+
+  <p>Esto es la superficie de «Tenant Allow/Block Lists» en el portal de Defender. La disciplina del operador:</p>
+
+  <ul>
+    <li>Revisar mensualmente la información de spoof intelligence</li>
+    <li>Para cada remitente no-autenticado-pero-legítimo (plataforma de marketing, proveedor de nóminas, etc.), añadir una entrada de permitir explícita</li>
+    <li>Para cada remitente no-autenticado-e-ilegítimo, añadir un bloqueo explícito</li>
+    <li>Decir al equipo de marketing del cliente que arregle su configuración de SPF / DKIM para no tener que seguir añadiendo permisos</li>
+  </ul>
+
+  <h2>La alternativa de las políticas de seguridad preestablecidas</h2>
+
+  <p>Para clientes en los que no quieres afinar a mano la política antiphishing, las <strong>políticas de seguridad preestablecidas</strong> de Microsoft (Standard y Strict, cubiertas en detalle en la lección 10) incluyen reglas antiphishing preconfiguradas. La preestablecida Standard habilita la protección contra suplantación de identidad de usuario con valores por defecto sensatos; la Strict sube las perillas.</p>
+
+  <p>El compromiso del enfoque preestablecido: obtienes la configuración curada de Microsoft, pierdes control granular sobre umbrales y listas de remitentes de confianza. Para la mayoría de los clientes de pequeña empresa, este es el compromiso correcto. Para clientes con necesidades específicas de suplantación (muchos usuarios protegidos, excepciones complejas de remitentes de confianza), una política personalizada te da la flexibilidad.</p>
+
+  <p>En la práctica: despliega una preestablecida (Standard para la mayoría; Strict para clientes de mayor riesgo como despachos contables o bufetes) como <em>fundamento</em>, luego pon encima una política antiphishing personalizada <em>con prioridad más alta</em> para los usuarios protegidos específicos del cliente y los remitentes de confianza. Este patrón mantiene los valores por defecto curados por Microsoft como suelo y te deja personalizar donde importa.</p>
+
+  <h2>Qué se puede romper</h2>
+
+  <p><strong>El correo del ejecutivo del cliente hacia sí mismo se va a cuarentena.</strong> Cuando el director envía un correo a su propia asistente desde su Gmail personal y el nombre para mostrar coincide con la lista de usuarios protegidos, la protección contra suplantación lo pilla. El arreglo es o bien añadir la dirección personal del ejecutivo a la lista de remitentes de confianza o bien que el ejecutivo use su cuenta de trabajo para el correo de trabajo (la respuesta correcta).</p>
+
+  <p><strong>Proveedores legítimos con mala higiene de correo se bloquean.</strong> Un proveedor pequeño sin DMARC, SPF descuadrado y la manía de enviar desde direcciones IP aleatorias va a tropezar con varios chequeos antiphishing. Añadirlos a remitentes de confianza lo resuelve; idealmente el proveedor arregla su autenticación, pero esa es una conversación lenta.</p>
+
+  <p><strong>Plataformas de marketing enviando bajo el dominio del cliente.</strong> Si el equipo de marketing del cliente usa HubSpot, Mailchimp, Marketo o similares para enviar bajo el dominio del cliente sin la autorización SPF / DKIM adecuada, esos correos fallan el antispoofing y los pilla la suplantación cuando el nombre para mostrar coincide con un usuario protegido. El arreglo es o bien configuración de autenticación en la plataforma de marketing (respuesta correcta) o bien entradas de remitentes de confianza (workaround).</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>El estado de la política antiphishing es uno de los ajustes de seguridad que Panoptica365 monitoriza por tenant. Concretamente:</p>
+
+  <ul>
+    <li><strong>Deriva en la habilitación de la política de seguridad preestablecida.</strong> Si la política de seguridad preestablecida de Microsoft (Standard o Strict) se deshabilita en el tenant de un cliente — alguien abre el portal de Defender y la apaga, por error o como respuesta a una queja — el detector de deriva dispara una alerta. El operador puede revertir, reaplicar o aceptar.</li>
+    <li><strong>Evaluadores del motor de alertas sobre eventos relacionados con phishing.</strong> Cuando Defender XDR detecta un incidente con patrón de phishing en el tenant de un cliente, la alerta fluye al motor de alertas de Panoptica365, donde aparece junto a las demás alertas de seguridad con atribución al cliente.</li>
+  </ul>
+
+  <p>Lo que Panoptica365 no expone hoy: el volumen de marcas de suplantación por usuario, los umbrales por política, la lista de información de spoof intelligence ni ninguna postura de phishing por buzón. Eso vive en el portal de Microsoft 365 Defender — entra ahí cuando necesites la vista de diagnóstico profundo.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <div class="callout insight">
+    <div class="clabel">La brecha de suplantación es la brecha de BEC</div>
+    <p>El antispoofing por defecto de Microsoft pilla los ataques fáciles; la protección contra suplantación pilla los que los clientes de pequeña empresa realmente caen. Si haces una cosa por el cliente este trimestre, enciende la suplantación de identidad de usuario y de dominio con acción de cuarentena y una lista pensada de usuarios protegidos.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Comprueba primero la autenticación del remitente</div>
+    <p>Cuando un cliente te pide «dejar pasar a X», hace falta bailar de dos en dos — y la mayoría de las quejas de cuarentena se trazan al DKIM y al DMARC que le faltan al remitente, no a un filtrado demasiado agresivo del lado receptor. Empuja la conversación al remitente primero. Cuando aun así se necesite una excepción, enrútala por la lista de remitentes de confianza de la política antiphishing, acotada a la protección específica — nunca un bypass por regla de flujo de correo. El filtrado de spam, Safe Links, Safe Attachments siguen vigentes.</p>
+  </div>
+
+  <div class="callout">
+    <div class="clabel">La preestablecida es el suelo, la personalización es el valor</div>
+    <p>La política preestablecida es un default defendible; la personalización es donde está el valor. Despliega una preestablecida (Standard o Strict) como suelo; pon encima una política antiphishing personalizada con los usuarios protegidos y los remitentes de confianza específicos del cliente. Esto te da el afinado curado de Microsoft más la defensa específica del cliente que necesitas.</p>
+  </div>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Safe Links y Safe Attachments</b> — las funcionalidades de Defender for Office 365 P1 que el cliente pagó y no está usando. Dónde pillan ataques reales y dónde se quedan cortas.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>SPF, DKIM, DMARC</b> — el trío de autenticación que cierra el lado del spoofing de la brecha — la mitad que el antiphishing no pilla.</div></div>
+  </div>
+
+  <p>Por ahora: abre la política antiphishing del cliente. Enciende la suplantación de identidad de usuario. Lista los usuarios protegidos. Enciende la suplantación de dominio. Lista los dominios protegidos. Pon la acción en cuarentena. Pon encima una lista personalizada de remitentes de confianza para los socios legítimos. Este único cambio de configuración cierra el vector de BEC más habitual en pequeña empresa — el que cayó la interventora de la historia inicial.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la configuración de la política antiphishing (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-about" target="_blank" rel="noopener">Microsoft Learn — Anti-phishing policies in EOP and MDO</a>); protección contra la suplantación de identidad de usuario (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-mdo-configure" target="_blank" rel="noopener">Microsoft Learn — Impersonation protection in anti-phishing</a>); spoof intelligence y las Tenant Allow/Block Lists (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-spoofing-spoof-intelligence" target="_blank" rel="noopener">Microsoft Learn — Spoof intelligence insight</a>); mailbox intelligence (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-mdo-impersonation-insight" target="_blank" rel="noopener">Microsoft Learn — Mailbox intelligence</a>); políticas de seguridad preestablecidas (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

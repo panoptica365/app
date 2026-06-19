@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>When the MSP is the target — Identity threats &amp; attack patterns</title>
+<meta name="lesson:title" content="When the MSP is the target">
+<meta name="lesson:subtitle" content="Compromising one MSP unlocks every client at once — why you are the highest-value target in the room and what to harden today.">
+<meta name="lesson:icon" content="crosshair">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Identity threats &amp; attack patterns</span> <span class="sep">·</span> <span>When the MSP is the target</span></div>
+  <h1>When the MSP is the target</h1>
+  <p class="dek">Compromising one MSP unlocks every client at once — why you are the highest-value target in the room and what to harden today.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="One compromised MSP at the centre, its delegated access fanning out to many client tenants at once.">
+      <defs>
+        <radialGradient id="mtBg" cx="32%" cy="42%" r="90%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="mtCore" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#FFB0BA"/><stop offset="55%" stop-color="#FF5A6E"/><stop offset="100%" stop-color="#8E2230"/></radialGradient>
+        <filter id="mtGlow"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mtBg)"/>
+
+      <!-- fan-out lines from MSP core to client tenants -->
+      <g stroke="#FF5A6E" stroke-width="1.6" opacity="0.5">
+        <line x1="300" y1="170" x2="720" y2="56"/>
+        <line x1="300" y1="170" x2="720" y2="104"/>
+        <line x1="300" y1="170" x2="720" y2="152"/>
+        <line x1="300" y1="170" x2="720" y2="200"/>
+        <line x1="300" y1="170" x2="720" y2="248"/>
+        <line x1="300" y1="170" x2="720" y2="296"/>
+      </g>
+
+      <!-- the MSP core -->
+      <g transform="translate(300,170)">
+        <circle r="118" fill="none" stroke="#33527A" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="76" fill="none" stroke="#7A2B38" stroke-width="1.1" opacity="0.7"/>
+        <circle r="46" fill="url(#mtCore)" filter="url(#mtGlow)" opacity="0.92"/>
+        <circle r="30" fill="#2A0F16" stroke="#FF8A98" stroke-width="1.6"/>
+        <!-- crosshair, echoing the lesson icon -->
+        <g stroke="#FFB0BA" stroke-width="2" stroke-linecap="round">
+          <line x1="-16" y1="0" x2="-7" y2="0"/><line x1="7" y1="0" x2="16" y2="0"/>
+          <line x1="0" y1="-16" x2="0" y2="-7"/><line x1="0" y1="7" x2="0" y2="16"/>
+        </g>
+        <circle r="6" fill="#FFB0BA"/>
+      </g>
+      <text x="300" y="312" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="3">ONE MSP</text>
+
+      <!-- the client tenants -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(720,56)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <g transform="translate(720,104)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <g transform="translate(720,152)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <g transform="translate(720,200)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <g transform="translate(720,248)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <g transform="translate(720,296)"><rect x="0" y="-16" width="64" height="32" rx="7" fill="#0E2640" stroke="#2A6F9E"/><circle cx="32" cy="0" r="4" fill="#5CCBF4"/></g>
+        <text x="860" y="160" fill="#7DD9F9" font-size="13" font-weight="600" letter-spacing="3">EVERY CLIENT</text>
+        <text x="860" y="184" fill="#52708F" font-size="12">tenant at once</text>
+      </g>
+    </svg>
+    <figcaption>The whole pyramid hangs from credentials inside one tenant — yours. Compromise the MSP and the access fans out to every client at once.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>You are reading this lesson inside your own MSP's Panoptica365 instance. The "operator" we keep addressing in this curriculum is <em>you</em>. The "customer tenant" we keep talking about belongs to one of <em>your</em> clients. The privileged credentials that hold the whole pyramid together — the GDAP relationships, the multi-tenant app registration, the PSA admin account, the RMM master account — sit, in many MSPs, inside one tenant. Yours.</p>
+
+  <p>If you have spent the last six lessons learning how to protect customers from credential stuffing, MFA fatigue, AiTM, OAuth consent, device-code abuse, and BEC, the closing lesson of this card is the one that asks you to apply all of it to <em>your own</em> organisation.</p>
+
+  <p>Because here's the unwelcome reality: in 2026, sophisticated attackers do not target your customers one at a time. They target <em>you</em>. And if they get in, they get all of you.</p>
+
+  <p>This lesson is why MSPs are economically attractive targets, what the canonical attacks look like, what the MSP's specific attack surface is, and the hardening that should be in place inside your own Panoptica365 admin account <em>before</em> tomorrow morning.</p>
+  </div>
+
+  <h2>The economic shape</h2>
+
+  <p>Attackers think in terms of return per unit of effort. An average ransomware compromise against an SMB might yield $50,000 in ransom paid (often less). The same effort spent compromising one MSP that manages 50 SMBs yields <em>50 times</em> the potential extortion surface, plus an enormous data exfiltration prize, plus the option to deploy ransomware downstream simultaneously across the entire customer base.</p>
+
+  <div class="callout insight">
+    <div class="clabel">The multiplier</div>
+    <p>One average SMB ransom ≈ $50,000. The same effort against one MSP managing 50 SMBs yields 50× the extortion surface — plus mass data exfiltration, plus simultaneous downstream ransomware.</p>
+  </div>
+
+  <p>This is the multiplier. It is the single reason MSPs are now ranked among the highest-value targets in cybercrime economics, alongside healthcare networks and critical infrastructure. The Five Eyes intelligence agencies (CISA, NCSC-UK, ACSC, CCCS, NCSC-NZ) issued a joint advisory in mid-2022 explicitly naming MSPs as a critical target category and warning that attacks were increasing. The volume hasn't slowed since.</p>
+
+  <p>The attackers running these operations are not amateurs. They include nation-state actors (Storm-2372 / Russia, Volt Typhoon / China, others), criminal affiliate networks operating under ransomware-as-a-service brands (LockBit successors, ALPHV/BlackCat, Akira), and increasingly specialized "initial access broker" groups whose entire business is selling MSP-level compromises to whoever pays the most.</p>
+
+  <p>You are competing for their attention with about a hundred peer MSPs in your region. You will not always be the one they choose, but every quarter a few MSPs somewhere in North America do get chosen, and the consequences are catastrophic.</p>
+
+  <h2>The canonical case: Kaseya 2021</h2>
+
+  <p>On July 2, 2021, the REvil ransomware group exploited a zero-day vulnerability in Kaseya VSA — a remote monitoring and management (RMM) platform widely used by MSPs. About 60 managed service providers were compromised. Through those 60 MSPs, the attackers deployed REvil ransomware to over 1,000 downstream customer companies. The attackers demanded $70 million for a universal decryption key.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="The Kaseya supply-chain chain: one RMM tool to about 60 MSPs to over 1,000 downstream customers.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="kArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#7A2B38"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- one RMM tool -->
+        <rect x="34" y="78" width="150" height="64" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="109" y="106" fill="#FF8A98" font-size="14" font-weight="700">1 RMM tool</text>
+        <text x="109" y="126" fill="#E2A0AA" font-size="11.5">zero-day in Kaseya VSA</text>
+
+        <!-- about 60 MSPs -->
+        <rect x="285" y="78" width="150" height="64" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="100" fill="#A8E1F8" font-size="16" font-weight="700">~60</text>
+        <text x="360" y="122" fill="#C4D4E8" font-size="13">MSPs compromised</text>
+
+        <!-- over 1000 customers -->
+        <rect x="536" y="78" width="150" height="64" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="611" y="100" fill="#A8E1F8" font-size="16" font-weight="700">1,000+</text>
+        <text x="611" y="122" fill="#C4D4E8" font-size="13">customers encrypted</text>
+
+        <path d="M184 110 H285" stroke="#7A2B38" stroke-width="2.4" marker-end="url(#kArr)"/>
+        <path d="M435 110 H536" stroke="#7A2B38" stroke-width="2.4" marker-end="url(#kArr)"/>
+
+        <text x="360" y="182" fill="#FFC04D" font-size="12.5" font-weight="600">$70M demanded for a universal decryption key</text>
+      </g>
+    </svg>
+    <figcaption>The exact multiplier, in action: one RMM compromise cascaded through about 60 MSPs to over 1,000 end customers, all within a few hours.</figcaption>
+  </figure>
+
+  <p>The Kaseya incident is the canonical case study because it demonstrated the <em>exact</em> multiplier in action: a single supply-chain compromise of one RMM tool → 60 MSPs → 1,000+ end customers, all encrypted simultaneously, all within a few hours of the initial push. CISA and the FBI issued joint guidance for affected MSPs in the days that followed.</p>
+
+  <p>Kaseya was a software-supply-chain attack — exploiting a vulnerability in the RMM tool itself. But the same multiplier applies to attacks against the MSP's <em>own M365 tenant</em>, the MSP's <em>credential vault</em>, or any account inside the MSP that has GDAP / delegated access to customer environments. Those attacks don't require a zero-day; they require any of the methods from lessons 1–6 applied against the MSP instead of the MSP's customers.</p>
+
+  <h2>What sits inside your MSP, ranked by attacker value</h2>
+
+  <p>Walk through your MSP's environment from an attacker's perspective. The crown jewels:</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 470" role="img" aria-label="Seven MSP assets ranked one to seven by value to an attacker, from Global Admin accounts down to shared mailboxes.">
+      <rect width="720" height="470" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CROWN JEWELS · RANKED BY ATTACKER VALUE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- row template: rank chip + label -->
+        <g transform="translate(0,52)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#2A0F16" stroke="#FF5A6E"/><text x="68" y="29" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">1</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">M365 tenant Global Admin accounts</text>
+        </g>
+        <g transform="translate(0,108)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#2A0F16" stroke="#FF5A6E"/><text x="68" y="29" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">2</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">Partner Center / GDAP relationships</text>
+        </g>
+        <g transform="translate(0,164)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#10243B" stroke="#5CCBF4"/><text x="68" y="29" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">3</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">RMM tool master account</text>
+        </g>
+        <g transform="translate(0,220)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#10243B" stroke="#5CCBF4"/><text x="68" y="29" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">4</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">PSA admin account</text>
+        </g>
+        <g transform="translate(0,276)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#10243B" stroke="#5CCBF4"/><text x="68" y="29" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">5</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">Credential management tool</text>
+        </g>
+        <g transform="translate(0,332)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#102A4C" stroke="#2A7FA3"/><text x="68" y="29" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">6</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">Documentation system</text>
+        </g>
+        <g transform="translate(0,388)">
+          <rect x="40" y="0" width="640" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="68" cy="24" r="13" fill="#102A4C" stroke="#2A7FA3"/><text x="68" y="29" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">7</text>
+          <text x="96" y="29" fill="#C4D4E8" font-size="14">Shared mailboxes — billing, support, alerts</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Each item is a single-point-of-multiple-customer-failure — and deserves hardening you would never let a customer skip.</figcaption>
+  </figure>
+
+  <p><strong>1. Your M365 tenant's Global Admin accounts.</strong> If the attacker compromises a Global Admin in your tenant, they typically also gain access to all the multi-tenant app registrations you use to access customer tenants (including Panoptica365's app). Game over.</p>
+
+  <p><strong>2. Your Partner Center / GDAP relationships.</strong> If you're a Cloud Solution Provider (CSP) or use Granular Delegated Admin Privileges (GDAP) to access customer tenants, the credentials that authorise those relationships sit in <em>your</em> tenant. Compromise of an MSP admin who has GDAP roles converts directly into customer-tenant access at the role level the GDAP grants.</p>
+
+  <p><strong>3. Your RMM tool's master account.</strong> ConnectWise Automate, Datto RMM, NinjaOne, Kaseya VSA, Atera — all of these can push scripts to managed endpoints across your entire customer base. An attacker with master-account access to your RMM is one click away from deploying malware to every customer device you manage.</p>
+
+  <p><strong>4. Your PSA's admin account.</strong> Autotask, Halo PSA, ConnectWise Manage. PSA tickets contain enormous quantities of sensitive customer information — passwords in plaintext (still, in 2026, more often than you'd hope), customer financial details, network diagrams, escalation contacts. A compromised PSA is an exfiltration goldmine.</p>
+
+  <p><strong>5. Your credential management tool.</strong> IT Glue, Hudu, Passportal, Keeper, LastPass, 1Password Teams. If your team stores customer passwords here — which most MSPs do — compromise of this system is functionally equivalent to compromise of every customer. The LastPass 2022 breach was specifically devastating to MSPs because so many of them used LastPass as their primary credential vault.</p>
+
+  <p><strong>6. Your documentation system.</strong> Same vault category as above, even if you don't use it for passwords specifically. Network topology, IP ranges, VPN configs, AV exclusions, business-hour windows. Everything an attacker would want to plan a targeted operation against your customers.</p>
+
+  <p><strong>7. Your shared mailboxes — billing, support, alerts.</strong> Often configured with weak authentication ("we share the password among the team"). Often have access to customer-side automation and webhook endpoints. Often missed in MFA enforcement audits.</p>
+
+  <p>Each of these is a single-point-of-multiple-customer-failure. Each deserves the level of hardening you would never let a customer skip.</p>
+
+  <h2>The MSP's attack surface, by initial-access vector</h2>
+
+  <p>An attacker targeting your MSP can come at you through any of the methods in lessons 1–6, plus a few specific to the MSP business model:</p>
+
+  <p><strong>Credential stuffing (lesson 1) against MSP staff accounts.</strong> Your techs are humans with the same password-reuse habits as their customers' staff. MFA enforcement on every MSP staff account, including service accounts, is non-negotiable.</p>
+
+  <p><strong>MFA fatigue (lesson 2) against an on-call engineer at 3 AM.</strong> Your on-call engineer is <em>exactly</em> the kind of fatigued, distracted, authority-figure-deferring user that fatigue attacks target. The Uber incident hit a contractor at home in the evening; the same playbook against your own staff would work the same way.</p>
+
+  <p><strong>AiTM phishing (lesson 3) targeting MSP admins.</strong> An attacker who's done their homework can craft a phishing email specifically for an MSP admin — pretexts like "Microsoft Partner Center authorisation review" or "Customer Compliance Alert" land harder when the target's job is precisely this kind of work.</p>
+
+  <p><strong>OAuth consent phishing (lesson 4) against MSP staff.</strong> A malicious "PSA Productivity Plus" app sent to your techs. Some of them will consent. Then the attacker has read access to mailboxes that contain customer credentials and customer escalation patterns.</p>
+
+  <p><strong>Device-code phishing (lesson 5) via a "demo meeting".</strong> Recent Storm-2372 campaigns have specifically targeted IT-services companies, which is to say <em>MSPs</em>. The pretext often involves a vendor demo or a Microsoft Partner program touch-point.</p>
+
+  <p><strong>Software supply chain.</strong> Like Kaseya. Compromise of a tool you use → compromise of you → compromise of your customers. Defence here is largely outside your control (you're at the mercy of your vendors), but the operational responses — segmenting RMM access, requiring MFA on all RMM logins, monitoring RMM activity logs — are within your control.</p>
+
+  <p><strong>Phishing of your customers' staff that then asks for MSP access.</strong> Less direct but increasingly common: attacker compromises an end-customer user, then poses as that user to send an email to your help desk requesting password resets, group memberships, or app installations. Your help desk needs verification procedures that don't just trust email.</p>
+
+  <h2>Hardening the MSP — the actual checklist</h2>
+
+  <p>This is the practical core of the lesson. Read it once, then audit your own MSP against it.</p>
+
+  <h3>Identity and authentication:</h3>
+
+  <ol>
+    <li><strong>Every MSP staff account on phishing-resistant MFA.</strong> Passkeys or FIDO2 keys. No exceptions for "convenience." Lesson 3 explained why; if you have not done this for your own organisation by mid-2026, you are on borrowed time.</li>
+    <li><strong>Conditional Access policies on the MSP's tenant</strong>, requiring compliant device for all access to admin portals and to any tenant management surfaces. The same controls you set on customer tenants — applied to yourself.</li>
+    <li><strong>Block device code flow</strong> for all but documented service accounts. Storm-2372 has been specifically targeting IT services since 2024. The CA policy from lesson 5 applies inside your own tenant first.</li>
+    <li><strong>Privileged Identity Management (PIM) for Global Admin and other privileged roles</strong>, if you're on E5. Just-in-time elevation, not permanent assignment. If you're not on E5, <em>you should be</em> — the MSP is exactly the kind of customer that justifies E5 because the security stakes are higher than they would be for the typical SMB.</li>
+    <li><strong>Break-glass accounts with FIDO2 keys stored physically</strong> (not in your password manager). Two of them, separated. Audited. Tested quarterly. Documented who has access.</li>
+  </ol>
+
+  <h3>Tooling and credentials:</h3>
+
+  <ol start="6">
+    <li><strong>MFA on every MSP-side tool</strong>: RMM, PSA, credential vault, documentation system, any backup or DR tool, monitoring tools, the Microsoft Partner Center, your domain registrar, your DNS provider, your hosting provider, your code repository if you have one. Anywhere the attacker can get into and pivot.</li>
+    <li><strong>Credential vault hygiene.</strong> Every secret stored has an owner, a creation date, and a rotation policy. Customer passwords stored only when they have to be (and even then, with per-customer access controls). The vault itself has FIDO2-required MFA and audit logging. If your vault is a wiki page, fix that this week.</li>
+    <li><strong>RMM access segmented by customer or customer-group.</strong> An average tech does not need master credentials to every customer's RMM. Restrict the blast radius. Most modern RMMs support per-customer role assignment.</li>
+    <li><strong>PSA access tied to job role.</strong> Helpdesk staff don't need access to billing data; billing staff don't need access to remote-management tools. The same RBAC discipline you've been applying to customer tenants applies inside your own organisation.</li>
+  </ol>
+
+  <h3>Partner Center and customer access:</h3>
+
+  <ol start="10">
+    <li><strong>GDAP relationships scoped to least privilege.</strong> When you set up a GDAP relationship with a customer, you can choose which roles you receive. Don't take Global Admin if you only need Helpdesk Admin. The over-broad GDAP relationships are what turn an MSP compromise into a customer compromise.</li>
+    <li><strong>GDAP relationships expire.</strong> Set realistic expirations (often 2 years maximum, less if the customer is sensitive). Renew explicitly.</li>
+    <li><strong>Customer-side delegated-admin notifications.</strong> Make sure each customer is notified when GDAP roles are assigned, used, or modified. The customer's tenant logs show GDAP activity; their security team should be subscribing to the alerts.</li>
+  </ol>
+
+  <h3>Detection and monitoring:</h3>
+
+  <ol start="13">
+    <li><strong>Your own MSP tenant runs Panoptica365.</strong> Yes, this sounds self-serving in a Panoptica365 curriculum, but the point is broader: every tool, every detection capability, every alert pipeline you sell to your customers should be running first against your own tenant. Eat your own dog food.</li>
+    <li><strong>Defender XDR Attack Disruption enabled</strong> on the MSP tenant, with the same posture you apply to customers. If anything, the MSP tenant should have <em>more</em> sensitive Disruption thresholds than the average customer.</li>
+    <li><strong>Audit logs retained longer than the default.</strong> 90 days isn't enough for an MSP. Extend mailbox auditing to a year. If you can afford Sentinel, log everything for two years.</li>
+    <li><strong>Quarterly review of OAuth grants in the MSP tenant.</strong> Same review you should be doing for customers, applied to yourself. Remove anything you don't recognise.</li>
+  </ol>
+
+  <h3>Incident response readiness:</h3>
+
+  <ol start="17">
+    <li><strong>A written incident-response plan for the MSP itself.</strong> Not just "what we do when a customer gets compromised." What happens if <em>we</em> get compromised. Who decides to notify customers; what the legal obligation is; how cyber insurance is engaged; what the customer-communication plan is in the first 24 hours; whether the MSP keeps operating or pauses to investigate.</li>
+    <li><strong>Cyber insurance specifically covering MSP / supply-chain risk.</strong> Generic small-business cyber insurance often excludes downstream-customer losses. MSP-specific policies (Coalition, At-Bay, Resilience, others) explicitly cover this scenario. Read your policy.</li>
+    <li><strong>Tabletop exercises with the leadership team.</strong> Not just IT. Run a "what if our RMM gets compromised tonight" exercise once a year. The first time you have to make those decisions should not be when it's real.</li>
+    <li><strong>Customer communication plan.</strong> Most MSPs don't have a pre-written customer-notification template for "we've been breached." Write one. Have it lawyer-reviewed. Have your insurance carrier review it.</li>
+  </ol>
+
+  <h2>The honest acknowledgement</h2>
+
+  <p>Some of the items above are uncomfortable. Some are expensive. Some require organisational changes inside the MSP that don't ladder up to billable hours. The conversation with your own leadership team about <em>why we have to spend money on our own security</em> is one of the harder conversations in this industry, because the immediate revenue benefit is zero.</p>
+
+  <p>The argument is the same one you make to customers: the cost of <em>not</em> doing this, when the incident happens, is multiplicative. An MSP that suffers a public supply-chain compromise loses customers, gets sued, pays out of pocket for incident response, often goes out of business. The post-Kaseya MSP landscape included multiple MSPs that simply did not survive — not because they were destroyed by the attack itself, but because they couldn't rebuild customer trust in time to keep the lights on.</p>
+
+  <blockquote>Your MSP's security is your business continuity. Treat it accordingly.</blockquote>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways specifically for you, the person reading this inside your own MSP:</p>
+
+  <p><strong>The same controls you sell to customers should be running inside your MSP first.</strong> Phishing-resistant MFA, Conditional Access, Token Protection, PIM, audit logging. If your customers have it and you don't, you have inverted the security posture exactly backwards.</p>
+
+  <p><strong>GDAP scope is one of the highest-leverage controls in your business.</strong> When you renew or set up GDAP relationships, take only the roles you need. Most MSPs over-grant out of convenience. Tightening this is the difference between "an attacker who compromises one of our admins can read mail in 30 customer tenants" and "an attacker who compromises one of our admins can read mail in 30 customer tenants <em>and</em> deploy ransomware to 30 customer endpoint estates."</p>
+
+  <p><strong>Document your own incident-response plan before you need it.</strong> When the MSP itself is the target and something is going wrong at 2 AM, the team that thrives is the team that has practiced the response. The team that improvises in the moment is the team that ends up on a podcast as the cautionary tale.</p>
+
+  <h2>Closing card 2</h2>
+
+  <p>You've now seen six attack patterns plus the meta-pattern of how those attacks apply to the MSP itself. By the end of this card, every alert in your Panoptica365 queue should map to one of these seven mental models:</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="Seven mental models for classifying an alert: boring, social, technical, persistent, sneaky, money, and multiplier.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CLASSIFY EVERY ALERT AS ONE OF SEVEN</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- six standard patterns in two rows -->
+        <g transform="translate(40,52)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Boring</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">credential stuffing / spray</text></g>
+        <g transform="translate(257,52)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Social</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">MFA fatigue</text></g>
+        <g transform="translate(474,52)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Technical</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">AiTM phishing</text></g>
+        <g transform="translate(40,112)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Persistent</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">OAuth consent phishing</text></g>
+        <g transform="translate(257,112)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Sneaky</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">device-code abuse</text></g>
+        <g transform="translate(474,112)"><rect width="206" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="16" y="22" fill="#7DD9F9" font-size="13" font-weight="700">Money</text><text x="16" y="40" fill="#9FB6D2" font-size="11.5">business email compromise</text></g>
+        <!-- the multiplier, the meta-pattern -->
+        <g transform="translate(40,184)"><rect width="640" height="80" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="20" y="34" fill="#FF8A98" font-size="14" font-weight="700">Multiplier</text>
+          <text x="20" y="58" fill="#E2A0AA" font-size="12">the MSP supply-chain attack that turns any of the above</text>
+          <text x="20" y="74" fill="#E2A0AA" font-size="12">into all of the customers simultaneously</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Six attack patterns, plus the meta-pattern: when one of the six lands on the MSP, it becomes all of the customers at once.</figcaption>
+  </figure>
+
+  <ol>
+    <li><em>Boring</em> — credential stuffing or password spray.</li>
+    <li><em>Social</em> — MFA fatigue.</li>
+    <li><em>Technical</em> — AiTM phishing.</li>
+    <li><em>Persistent</em> — OAuth consent phishing.</li>
+    <li><em>Sneaky</em> — device-code abuse.</li>
+    <li><em>Money</em> — business email compromise.</li>
+    <li><em>Multiplier</em> — the MSP supply-chain attack that turns any of the above into all of the customers simultaneously.</li>
+  </ol>
+
+  <p>When a new alert lands, your first move is to classify it. Once you've classified it, the response playbook from the corresponding lesson kicks in.</p>
+
+  <p>The next three cards (Conditional Access, Intune, Email Hardening) shift from threat narrative to control configuration — how to build the defences that prevent these attacks, in detail. Then card 6 (Secure Score) gives you the measurement layer. After that, Panoptica365 itself becomes the daily operational surface that surfaces the attacks above as they happen, in your own MSP and across your customers' tenants.</p>
+
+  <p>For now: the MSP is the target. Protect it like you would protect your largest customer, because if you fail at that, you've failed every customer at once.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Kaseya VSA supply-chain ransomware attack (<a href="https://www.cisa.gov/news-events/news/kaseya-ransomware-attack-guidance-affected-msps-and-their-customers" target="_blank" rel="noopener">CISA — Kaseya VSA Supply-Chain Ransomware Attack guidance</a>); Kaseya incident scale and REvil attribution (<a href="https://en.wikipedia.org/wiki/Kaseya_VSA_ransomware_attack" target="_blank" rel="noopener">Wikipedia — Kaseya VSA ransomware attack</a>); Five Eyes joint advisory on MSP targeting (<a href="https://www.cisa.gov/news-events/cybersecurity-advisories/aa22-131a" target="_blank" rel="noopener">CISA — Joint advisory on cyber threats to MSPs</a>); Microsoft GDAP technical reference (<a href="https://learn.microsoft.com/en-us/partner-center/gdap-introduction" target="_blank" rel="noopener">Microsoft Learn — Granular Delegated Admin Privileges</a>); MSP-targeted ransomware trends 2024-2025 (<a href="https://therecord.media/managed-service-providers-cyberattacks-warning-five-eyes" target="_blank" rel="noopener">The Record — Cyberattacks on MSPs warning</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage exemptions — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Manage exemptions">
+<meta name="lesson:subtitle" content="Documented, time-boxed exceptions: how they're created from CA, Intune and alerts, and how to keep them honest.">
+<meta name="lesson:icon" content="shield-off">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Manage exemptions</span></div>
+  <h1>Manage exemptions</h1>
+  <p class="dek">Documented, time-boxed exceptions: how they're created from CA, Intune and alerts, and how to keep them honest.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The exemption lifecycle: accepted in context with a reason, runs for a default of 180 days suppressing matching alerts, then expires for re-review.">
+      <defs>
+        <radialGradient id="exBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="exTrack" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="exArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#exBg)"/>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- 1. Accept in context -->
+        <g transform="translate(170,170)">
+          <circle r="74" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+          <circle r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8" transform="scale(1.34)"/>
+          <text y="-8" fill="#A8E1F8" font-size="15" font-weight="700">Accepted</text>
+          <text y="14" fill="#8FB4D6" font-size="12.5">in context</text>
+        </g>
+        <text x="170" y="284" fill="#52708F" font-size="12.5">scope · reason · owner</text>
+
+        <!-- arrow -->
+        <path d="M268 170 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+
+        <!-- 2. Active for 180 days -->
+        <g transform="translate(560,170)">
+          <circle r="92" fill="none" stroke="#1F3C5C" stroke-width="14"/>
+          <path d="M560 78 A92 92 0 1 1 472 188" fill="none" stroke="url(#exTrack)" stroke-width="14" stroke-linecap="round" transform="translate(-560,-170)"/>
+          <text y="-8" fill="#7DD9F9" font-size="22" font-weight="700">180</text>
+          <text y="16" fill="#8FB4D6" font-size="12.5">days · default</text>
+        </g>
+        <text x="560" y="296" fill="#52708F" font-size="12.5">matching alerts suppressed, accountably</text>
+
+        <!-- arrow -->
+        <path d="M662 170 H786" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+
+        <!-- 3. Expire / re-review -->
+        <g transform="translate(950,170)">
+          <circle r="74" fill="#0E2236" stroke="#FFC04D" stroke-width="1.6"/>
+          <text y="-8" fill="#FFC04D" font-size="15" font-weight="700">Expires</text>
+          <text y="14" fill="#C9A86A" font-size="12.5">re-review</text>
+        </g>
+        <text x="950" y="284" fill="#52708F" font-size="12.5">&#8220;is this still true?&#8221;</text>
+      </g>
+    </svg>
+    <figcaption>An exemption is accepted in context, runs for a default of 180 days, then expires so the question gets asked again.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Every fleet has legitimate exceptions: the service account that can't do MFA yet, the deployment that intentionally differs at one customer, the user whose weird-but-real sign-in pattern keeps tripping an evaluator. Exemptions are how Panoptica365 records those exceptions <strong>explicitly</strong> — with a scope, a reason, an owner, and an expiry — instead of letting them live as reflexively-resolved alerts.</p>
+  </div>
+
+  <h2>Where exemptions come from</h2>
+
+  <p>You don't create exemptions on the Exemptions page. They're created in context, at the moment you accept an exception:</p>
+
+  <ul>
+    <li><strong>CA drift acceptance</strong> — accepting CA policy drift <em>with expiry</em> lifts the excluded principals (users or groups) into exemptions. Scope: per-principal.</li>
+    <li><strong>Intune drift acceptance</strong> — same flow; scope is <strong>policy-wide</strong> for that deployment.</li>
+    <li><strong>Alert exemptions</strong> — from an alert's slideout, exempting a recurring pattern: a user, optionally constrained by country and/or IP range. Scope: the pattern.</li>
+  </ul>
+
+  <p>The default expiry is <strong>180 days</strong>. Accepting requires Operator role or up, and a reason is always required.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Three sources feed exemptions: CA drift acceptance with per-principal scope, Intune drift acceptance with policy-wide scope, and alert exemptions with pattern scope.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="srcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- sources -->
+        <g transform="translate(0,28)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">CA drift acceptance</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">scope: per-principal</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,94)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Intune drift acceptance</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">scope: policy-wide</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,160)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Alert exemptions</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">scope: the pattern</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <!-- registry -->
+        <rect x="454" y="56" width="230" height="128" rx="11" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="569" y="108" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Exemptions</text>
+        <text x="569" y="132" text-anchor="middle" fill="#8FB4D6" font-size="12">scope · reason</text>
+        <text x="569" y="150" text-anchor="middle" fill="#8FB4D6" font-size="12">owner · expiry</text>
+      </g>
+    </svg>
+    <figcaption>Exemptions aren't authored on a page — each is created in context, carrying the scope of where it came from.</figcaption>
+  </figure>
+
+  <h2>What an exemption actually does</h2>
+
+  <p>While active, matching alert evaluations are suppressed — and importantly, they're suppressed <em>accountably</em>. Alerts resolved by an exemption rule are stamped as such, never reach your PSA, and are excluded from the daily briefing. For CA exemptions, the <strong>suppression count</strong> column shows how many alerts each exemption has absorbed — expand the row to see exactly which events were suppressed, when, and for whom.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Insight</div>
+    <p>That count is your tuning feedback: an exemption that suppressed 47 alerts this month is carrying real weight; one that suppressed zero may no longer be needed.</p>
+  </div>
+
+  <h2>The Exemptions page</h2>
+
+  <p><strong>Exemptions</strong> (sidebar → System) is the registry. Filter by tenant, by source (CA / Intune / Alert rules), and optionally include revoked and expired entries. Each row shows the source badge, tenant, template, scope (principal, policy-wide, or user-pattern), the <strong>reason</strong>, who accepted it, when, and the expiry with a days-left countdown — bold red under 7 days, orange under 30.</p>
+
+  <p><strong>Revoke</strong> (Operator and up) ends an exemption immediately. The confirmation spells out the consequence: on the next drift cycle the principal or deployment will be flagged again, or future matching alerts will fire normally.</p>
+
+  <h2>Keeping the registry honest</h2>
+
+  <ul>
+    <li><strong>Reasons are for the next person.</strong> "Per ticket #4321 — CFO travel exception, reviewed with client" beats "ok per client". You'll read these a year later in an audit.</li>
+    <li><strong>Let expiries expire.</strong> The 180-day default is a re-review trigger, not a nuisance. When an exemption lapses and the alert re-fires, that's the system asking <em>"is this still true?"</em> — answer it, don't just re-accept on autopilot.</li>
+    <li><strong>Prefer narrow scopes.</strong> One user with country constraint beats policy-wide; policy-wide beats turning a policy off. Use the narrowest tool that stops the noise.</li>
+    <li><strong>Sweep quarterly.</strong> Filter to active, sort through anything with no recent suppressions or an owner who's left — revoke what's stale.</li>
+  </ul>
+
+  <p>Exemptions are the difference between <em>"we ignore that alert"</em> (indefensible) and <em>"we accepted that risk, documented it, and it expires in March"</em> (professional). Use them generously and keep them clean.</p>
+
+</div>
+</body>
+</html>

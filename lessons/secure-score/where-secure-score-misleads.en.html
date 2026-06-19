@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Secure Score misleads — Secure Score</title>
+<meta name="lesson:title" content="Where Secure Score misleads — the 92%-and-got-BEC'd story and the gaming trap">
+<meta name="lesson:subtitle" content="A 92% score didn't prevent a $94k BEC. The blind spots, the gaming trap, and the security work that never shows up in any number.">
+<meta name="lesson:icon" content="triangle-alert">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Where Secure Score misleads</span></div>
+  <h1>Where Secure Score misleads — the 92%-and-got-BEC'd story and the gaming trap</h1>
+  <p class="dek">A 92% score didn't prevent a $94k BEC. The blind spots, the gaming trap, and the security work that never shows up in any number.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A 92% Secure Score gauge sits next to a $94,000 wire that went out anyway — the score never moved.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ssGood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- left: the 92% gauge -->
+      <g transform="translate(250,180)">
+        <circle r="110" fill="none" stroke="#1F3C5C" stroke-width="18"/>
+        <!-- 92% arc: 0.92 of full circle, starting at top -->
+        <circle r="110" fill="none" stroke="url(#ssGood)" stroke-width="18" stroke-linecap="round"
+                stroke-dasharray="636 56" transform="rotate(-90)"/>
+        <text x="0" y="6" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="56" font-weight="700">92%</text>
+        <text x="0" y="36" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">SECURE SCORE</text>
+      </g>
+      <text x="250" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">DIDN'T MOVE</text>
+
+      <!-- middle: "and yet" connector -->
+      <path d="M400 170 H660" stroke="#335F92" stroke-width="2.5" marker-end="url(#ssArr)"/>
+      <defs><marker id="ssArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="530" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" font-style="italic">and yet</text>
+
+      <!-- right: the wire that went out -->
+      <g transform="translate(840,180)">
+        <rect x="-130" y="-66" width="260" height="132" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-18" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="38" font-weight="700">$94,000</text>
+        <text x="0" y="14" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="15">wire redirected</text>
+        <text x="0" y="40" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">BEC</text>
+      </g>
+      <text x="840" y="318" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">CONFIGURATION ≠ SECURITY</text>
+    </svg>
+    <figcaption>The tenant stayed at 92%. None of the recommendations prevented the attack.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A 60-person logistics company is at a 92% Microsoft Secure Score. The MSP managing the tenant is proud of the number. The customer's executive team has seen the score in their quarterly review and is satisfied. The previous year's number was 79%; the work to move it up showed up in the renewal proposal and the renewal closed cleanly. By any conventional measure of how an MSP demonstrates value, this tenant is in the top quartile.</p>
+
+  <p>On a Tuesday morning in November, the controller forwards a $94,000 wire to what she believes is the customer's new logistics partner. The wire instructions came in an email that looked exactly like the partner's normal communication style. The email passed SPF and DKIM authentication — it really did come from the partner's domain. The partner's email had been compromised by an AiTM-equipped attacker two days earlier. The attacker had read the in-progress logistics deal conversation and inserted themselves with a wire-redirect message at the perfect moment.</p>
+
+  <p>The Secure Score doesn't move. The MSP's tenant configuration is still at 92%. Microsoft's recommendations are still implemented. None of them prevented this attack.</p>
+
+  <p>The customer's lawyer wants to understand. The insurance underwriter wants to understand. The MSP's senior consultant has to explain the gap between "92% Secure Score" and "got BEC'd for $94,000." This lesson is about that gap.</p>
+  </div>
+
+  <h2>What the score measures vs what it doesn't</h2>
+
+  <p>The score measures <strong>whether the customer's tenant has configurations that Microsoft recommends.</strong> Each configuration has been chosen by Microsoft because it's a useful baseline defence. Implementing them all moves the tenant from "default factory settings" to "Microsoft-recommended baseline." That's genuine security value.</p>
+
+  <p>The score does <em>not</em> measure:</p>
+
+  <ul>
+    <li>Whether the configurations are well-tuned for the customer's actual risk profile</li>
+    <li>Whether the customer has been attacked</li>
+    <li>Whether the operator responds quickly when something drifts</li>
+    <li>Whether the customer's vendors and partners have basic email security</li>
+    <li>Whether the customer's users have been trained to recognise sophisticated phishing</li>
+    <li>Whether the off-platform incident response capability exists</li>
+    <li>Whether the customer's DMARC enforcement is in place</li>
+    <li>Whether the customer's exception ledger has been reviewed recently</li>
+    <li>Whether MailTips actually reach users (some users disable them at the mailbox level)</li>
+    <li>Whether the operator audits transport rules quarterly</li>
+    <li>Whether the operator catches anomalous sign-in patterns inside the response window</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="A single configuration snapshot is scored; the ongoing work between snapshots — tuning, response, partner hygiene, DMARC, incident response — is not.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- scored snapshot -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="44" width="200" height="162" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="74" fill="#5CCBF4" font-size="12" letter-spacing="2">SCORED</text>
+        <text x="140" y="110" fill="#A8E1F8" font-size="14">Configuration</text>
+        <text x="140" y="132" fill="#A8E1F8" font-size="14">snapshot</text>
+        <text x="140" y="170" fill="#6B85A6" font-size="11.5">is the setting on?</text>
+        <text x="140" y="188" fill="#6B85A6" font-size="11.5">(binary, verifiable)</text>
+      </g>
+      <!-- divider -->
+      <line x1="280" y1="44" x2="280" y2="206" stroke="#1F3C5C" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <!-- unscored work -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="480" y="74" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="2">UNSCORED · BETWEEN SNAPSHOTS</text>
+        <g fill="#C4D4E8" font-size="12.5">
+          <text x="320" y="106">• tuning to the customer's risk</text>
+          <text x="320" y="128">• drift triage &amp; alert response</text>
+          <text x="320" y="150">• DMARC / SPF publication</text>
+          <text x="320" y="172">• partner email hygiene</text>
+          <text x="320" y="194">• incident-response capability</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The score measures the snapshot. The work that keeps the customer safe happens between snapshots — and goes unscored.</figcaption>
+  </figure>
+
+  <p>The logistics company at 92% had a perfectly-configured tenant by Microsoft's recommendation set. The attack came in through a vector the recommendation set doesn't address — a compromised partner's email, used to insert a redirect message into an in-progress conversation. The score had nothing to say about the partner's email hygiene, the customer's wire-verification process, or the operator's response time when the attack landed. The score wasn't <em>wrong</em>; it just wasn't <em>complete</em>.</p>
+
+  <h2>The gaming trap — when the score lies because the operator helped it</h2>
+
+  <p>There are honest ways for a Secure Score to climb (implement the recommendations) and dishonest ways. Operators sometimes — under pressure, under time, or because the customer is watching the number — drift into the dishonest ways. This is the gaming trap, and recognising it in your own work is part of professional discipline.</p>
+
+  <p>The three most common gaming patterns:</p>
+
+  <p><strong>1. "Resolved through third party" with no third party.</strong> Lesson 2 introduced the option: when a non-Microsoft tool genuinely covers the same security function, you can mark a recommendation as resolved and get the points. Some operators apply this to recommendations they simply don't want to implement, claiming "third party" coverage that doesn't exist or doesn't actually cover the function. The score goes up. The security doesn't. The audit risk is the same.</p>
+
+  <p><strong>2. Marking implementation "complete" when it's not.</strong> Some Secure Score recommendations check tenant configuration that Microsoft can verify automatically (binary: is the setting on or off?). Others require operator self-attestation — "yes, we've completed this." When an operator marks something complete without actually completing it, the score reflects the attestation, not the reality. This is genuinely fraud in some compliance contexts.</p>
+
+  <p><strong>3. Risk-Accepting recommendations to clear the visual noise.</strong> Recommendations sitting at zero points drag the percentage down. Risk-Accepting them doesn't move the points but does change the visual presentation in the portal. An operator who Risk-Accepts everything they can't or won't implement is being honest. An operator who Risk-Accepts items that <em>should</em> be implemented — because doing so makes the dashboard look cleaner — is gaming. The line between hygiene (Risk-Accept what's genuinely not applicable) and gaming (Risk-Accept what's inconvenient) is the operator's professional judgment.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>The renewal-meeting test</div>
+    <p>The honest test for any of these: would you be comfortable showing the recommendation and the action taken to the customer in a renewal meeting? "We marked Customer Lockbox as Risk Accepted because the tenant doesn't have E5 licensing and we documented the alternatives we use instead" — that's defensible. "We marked Defender for Identity as Resolved through third party because... uh... well, the score number looks better" — that's not.</p>
+  </div>
+
+  <h2>Recommendations that are scored but operationally painful</h2>
+
+  <p>A separate trap: some Secure Score recommendations are configured to award points for settings that, when implemented blindly, hurt customer operations. Implementing them correctly requires the customer-specific tuning the score doesn't measure.</p>
+
+  <p>Examples:</p>
+
+  <p><strong>"Enable Controlled Folder Access in Block mode."</strong> Card 4 lesson 7 covered this directly. Microsoft awards more Secure Score points for CFA set to Block than to Audit — Block actually prevents protected-folder writes by non-allowlisted apps, while Audit only logs them. But Block mode without a customer-specific app allowlist generates a flood of help-desk tickets on day one: backup tools writing to user documents, sync clients (Dropbox, Google Drive, OneDrive variants), creative apps writing to Documents, productivity tools auto-saving. The Panoptica365 ASR template ships CFA in Audit mode specifically because Block-out-of-the-gate is operationally untenable. Flipping CFA to Block purely for Secure Score points, without the audit-log review and allowlist build, breaks legitimate workflows. The right operator pattern is lesson 7's: ship in Audit, watch for two to four weeks, build the allowlist from the audit-mode write attempts, then flip to Block. Score moves at the end, not the beginning.</p>
+
+  <p><strong>"Block legacy authentication."</strong> Card 3 lesson 3 already covered this — and it's the right call. But if you implement it without first identifying the legacy printers, the legacy LOB apps, and the legacy MFA-incompatible workflow the customer has, you break things. The score moves; the help desk floods. The right operator pattern is the pre-flight audit followed by the deployment, not the deployment alone.</p>
+
+  <p><strong>"Designate more than one global admin."</strong> Microsoft rewards having multiple global admins (resilience against any one losing access). Some customers have only one — often deliberately, often for good reasons (smaller threat surface, simpler audit). Implementing the recommendation by adding more global admins without thought adds attack surface for the score. The Card 3 lesson 6 admin-hardening discipline is the right answer here.</p>
+
+  <p>These recommendations aren't bad recommendations. They're recommendations that require operator judgment about <em>how</em> to implement, not just <em>whether</em> to implement. The score doesn't reward judgment; it rewards configuration state.</p>
+
+  <h2>The recommendations the score doesn't track at all</h2>
+
+  <p>This is the heart of the lesson. A meaningful fraction of the security work a competent MSP does is invisible to Microsoft Secure Score. Not because Microsoft doesn't think it matters — but because the score can only measure what Microsoft can programmatically verify in the tenant.</p>
+
+  <p><strong>DMARC and SPF publication and enforcement.</strong> The full SPF / DKIM / DMARC journey from <code>p=none</code> to <code>p=reject</code> matters enormously for inbound email-spoofing protection. <strong>DKIM enablement</strong> (the tenant-side toggle in the M365 admin centre) is scored — Microsoft can verify it. <strong>SPF and DMARC publication are not</strong> — they're external DNS records Microsoft can't reliably verify at the scale of every M365 tenant in the world, so the score doesn't include them. Customers who've done the full email-authentication work look the same in Secure Score as customers who've only enabled DKIM. The work matters; the score doesn't measure it.</p>
+
+  <p><strong>Operational discipline.</strong> Drift triage time. Alert response time. Exception ledger maintenance. Annual review completion. The discipline of <em>actually doing the work between snapshots</em> — that's the whole operational thesis of Cards 4 and 5, and none of it shows up in the score. A tenant whose MSP responds to drift alerts within an hour has the same score as a tenant whose MSP responds within a week, given identical current configuration.</p>
+
+  <p><strong>Customer-specific tuning.</strong> Anti-phishing protected-users lists. Trusted-senders lists scoped to specific business partners. Per-customer Remote Domain auto-forward exceptions. Mail flow rule audit. All Card 5 content. The preset security policy enablement is scored; the customer-specific tuning underneath isn't.</p>
+
+  <p><strong>Incident response capability.</strong> Does the MSP have a written BEC response runbook? Has it been tested? Is there an after-hours contact path for the customer? Can the operator team execute a credential reset / session revocation / inbox-rule audit within 30 minutes when an alert fires? None of this is scored. None of it is part of Microsoft's recommendation set.</p>
+
+  <p><strong>Vendor and partner email hygiene.</strong> The 92%-from-the-opener attack came through a compromised vendor. Whether the customer's vendors have proper email authentication, whether they've been compromised recently, whether the customer's wire-verification process treats vendor-sourced messages with appropriate scepticism — all unscored.</p>
+
+  <p><strong>User security awareness.</strong> Phishing simulation completion rates. Trained-vs-untrained ratios. Reporter-rate per user. None of this is directly in Microsoft Secure Score (Attack Simulation Training is E5-only, and even that scores the configuration of the simulation tool, not the customer's user-training outcomes).</p>
+
+  <p>The list could continue. The pattern: <strong>anything that requires human judgment, ongoing operational work, or visibility into things Microsoft can't programmatically verify about the customer's environment is unscored.</strong> The Secure Score measures the configuration snapshot. The unscored work is what keeps the customer safe in the moments between snapshots.</p>
+
+  <h2>Why chasing 100% is the wrong goal</h2>
+
+  <p>A 100% Secure Score is achievable in principle but rarely correct in practice. Reasons:</p>
+
+  <ul>
+    <li><strong>Some recommendations don't fit some customers.</strong> A small accounting firm doesn't need Insider Risk Management. Forcing the recommendation to "complete" status with a fake third-party attribution is gaming.</li>
+    <li><strong>License-gated recommendations require license upgrades.</strong> A Business Premium customer can't honestly implement E5-only features. Risk-Accepting them and accepting a lower percentage is more honest than gaming the workaround.</li>
+    <li><strong>Some recommendations conflict with customer operational realities.</strong> Outbound spam policy set to its strictest restrict-and-block action without tuning for the customer's legitimate high-volume senders (sales people on a campaign day, communications people sending the annual employee letter). Multiple global admins on a single-owner business. Legacy auth block on a tenant with critical legacy LOB apps that haven't been modernised yet.</li>
+    <li><strong>The marginal points above ~88% require diminishing returns.</strong> Each remaining recommendation contributes less; the operational cost to implement is often disproportionate to the security gain.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .9 1.6h6.2c.1-.6.4-1.2.9-1.6A7 7 0 0 0 12 2z"/></svg>The right target</div>
+    <p>The right Secure Score goal, for Business Premium customers running the full ecosystem, is <strong>80% or above with honest Risk Accepted decisions documented for everything below</strong>. High 80s is achievable for customers where the operator has done the full implementation work. 90%+ requires customer-specific factors aligning (no E5-only recommendations applicable, no operational constraints) and rarely comes from incremental score-chasing.</p>
+  </div>
+
+  <p>Lesson 6 covers the target framing in operational detail. For this lesson, the principle: a 100% target distorts the work. An 80%-with-discipline target focuses it.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Secure Score measures configuration, not security.</strong> The 92%-and-got-BEC'd story is the cautionary case every operator needs in their head. A high score is a configuration achievement; it's not a security guarantee. Use it as one of several signals, not as the headline conclusion.</p>
+
+  <p><strong>Recognise the gaming patterns in your own work.</strong> "Resolved through third party" with no third party. Self-attestation without follow-through. Risk-Accepting to clear visual noise rather than to document genuine non-applicability. These are easy to slide into under pressure. The honest test: would you defend the action to the customer in a renewal meeting? If not, don't take it.</p>
+
+  <p><strong>The unscored work is what keeps the customer safe.</strong> DMARC publication, drift triage, exception ledger maintenance, customer-specific tuning, incident response capability, vendor email-hygiene awareness — none of this scores, all of it matters. The operator's professional value is largely in the unscored work. Communicate that to customers explicitly; don't let them mistake the score for the whole story.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Customer-facing Secure Score</b> — how to use the percentage in customer conversations honestly: the renewal narrative, the trend over time, the baseline-at-onboarding story.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Operating Secure Score at scale + closing the curriculum</b> — the quarterly review cadence, the 80%+ target framing, and the closing argument for the curriculum.</div></div>
+  </div>
+
+  <p>For now: pick the customer with the highest Secure Score in your book. Look at their recommendation list. For each recommendation marked "Resolved through third party," can you name the third-party tool and confirm it actually covers the function? For each "Risk Accepted," can you defend the acceptance reason? The gaming patterns are usually quiet — finding them in your own work is the discipline. Find them before a customer or auditor does.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Secure Score limitations and what the metric measures (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score overview</a>); recommendation status options including third-party and Risk Accepted (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — Track recommendation completion</a>); BEC and AiTM attack pattern context (<a href="https://www.cisa.gov/topics/cyber-threats-and-advisories/business-email-compromise-bec" target="_blank" rel="noopener">CISA — Business Email Compromise</a>); Controlled Folder Access modes (Audit vs Block) and operational considerations (<a href="https://learn.microsoft.com/en-us/defender-endpoint/controlled-folders" target="_blank" rel="noopener">Microsoft Learn — Controlled Folder Access</a>); global admin best-practice guidance (<a href="https://learn.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/protect-global-admin" target="_blank" rel="noopener">Microsoft Learn — Protect admin accounts</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

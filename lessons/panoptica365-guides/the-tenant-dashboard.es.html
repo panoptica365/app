@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El panel del inquilino — Guías de Panoptica365</title>
+<meta name="lesson:title" content="El panel del inquilino">
+<meta name="lesson:subtitle" content="Seis pestañas, dos zonas: las tarjetas de métricas, los paneles de detalle y dónde vive cada flujo de trabajo.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>El panel del inquilino</span></div>
+  <h1>El panel del inquilino</h1>
+  <p class="dek">Seis pestañas, dos zonas: las tarjetas de métricas, los paneles de detalle y dónde vive cada flujo de trabajo.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La disposición del panel de un inquilino: una fila de seis pestañas sobre dos zonas apiladas — una cuadrícula de tarjetas de métricas y los paneles de detalle debajo.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- six tabs -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="60" y="36" width="158" height="40" rx="8" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="139" y="61" fill="#7DD9F9" font-size="14" font-weight="700">Resumen</text></g>
+        <g><rect x="230" y="36" width="138" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="299" y="61" fill="#A8E1F8" font-size="13.5">Alertas</text></g>
+        <g><rect x="380" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="459" y="61" fill="#A8E1F8" font-size="13.5">Directivas de CA</text></g>
+        <g><rect x="550" y="36" width="172" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="636" y="61" fill="#A8E1F8" font-size="12">Directivas de Intune</text></g>
+        <g><rect x="734" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="813" y="61" fill="#A8E1F8" font-size="13.5">Aplicaciones</text></g>
+        <g><rect x="904" y="36" width="156" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="982" y="61" fill="#A8E1F8" font-size="13.5">Registro</text></g>
+      </g>
+
+      <!-- zone 1: metric cards grid -->
+      <text x="60" y="108" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TARJETAS DE MÉTRICAS</text>
+      <g>
+        <rect x="60" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="304" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="548" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="792" y="120" width="268" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <!-- little status dots: triage surface -->
+        <circle cx="276" cy="136" r="5" fill="#2EE8A0"/>
+        <circle cx="520" cy="136" r="5" fill="#FFC04D"/>
+        <circle cx="764" cy="136" r="5" fill="#FF5A6E"/>
+        <circle cx="1044" cy="136" r="5" fill="#2EE8A0"/>
+        <g fill="#52708F">
+          <rect x="74" y="148" width="120" height="7" rx="3.5"/><rect x="74" y="163" width="78" height="6" rx="3"/>
+          <rect x="318" y="148" width="120" height="7" rx="3.5"/><rect x="318" y="163" width="78" height="6" rx="3"/>
+          <rect x="562" y="148" width="120" height="7" rx="3.5"/><rect x="562" y="163" width="78" height="6" rx="3"/>
+          <rect x="806" y="148" width="150" height="7" rx="3.5"/><rect x="806" y="163" width="96" height="6" rx="3"/>
+        </g>
+      </g>
+
+      <!-- zone 2: drill-down panels -->
+      <text x="60" y="216" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANELES DE DETALLE</text>
+      <g>
+        <rect x="60" y="228" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 245 l8 -7 8 7" fill="none" stroke="#5CCBF4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="241" width="220" height="7" rx="3.5" fill="#52708F"/>
+        <rect x="60" y="272" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 286 l8 7 8 -7" fill="none" stroke="#52708F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="285" width="260" height="7" rx="3.5" fill="#52708F"/>
+      </g>
+    </svg>
+    <figcaption>Las dos zonas del panel: las tarjetas de métricas arriba para el triaje, los paneles de detalle plegables debajo para el detalle.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Haga clic en un inquilino en la Consola principal y aterrizará en su panel. Es la página más rica de Panoptica365 — todo lo que se sabe de un inquilino, organizado en seis pestañas:</p>
+  </div>
+
+  <ol>
+    <li><strong>Resumen</strong> — la instantánea de configuración y actividad (esta guía).</li>
+    <li><strong>Alertas</strong> — las alertas de este inquilino, con el mismo flujo de trabajo que la página global de Alertas.</li>
+    <li><strong>Directivas de CA</strong> — las plantillas de Acceso Condicional asignadas a este inquilino (tiene guía propia).</li>
+    <li><strong>Directivas de Intune</strong> — las plantillas de Intune desplegadas en este inquilino (guía propia).</li>
+    <li><strong>Aplicaciones</strong> — el inventario de aplicaciones empresariales y el flujo de aprobación (guía propia).</li>
+    <li><strong>Registro de cambios</strong> — el historial de cada cambio hecho en este inquilino, tanto los que hizo Panoptica365 (despliegues, aplicaciones de configuración) como los que los operadores registraron a mano. Las alertas de deriva enlazan a entradas de aquí cuando un cambio las explica.</li>
+  </ol>
+
+  <h2>La pestaña Resumen: tarjetas de métricas</h2>
+
+  <p>La zona superior es una cuadrícula de tarjetas de un vistazo. Lo que aparece depende de lo que tenga el inquilino, pero espere:</p>
+
+  <ul>
+    <li><strong>Puntuación de seguridad</strong> — con la media comparativa de inquilinos de tamaño similar.</li>
+    <li><strong>Identidad</strong>: Usuarios totales, Con licencia, <strong>Admins globales</strong> (verde con 2 o menos, rojo por encima de 5 — la cantidad importa), porcentaje de <strong>MFA registrada</strong> (verde a partir del 90 %), Usuarios en riesgo, Inactivos (90 d).</li>
+    <li><strong>Control de acceso</strong>: Políticas AC (desglose habilitadas/deshabilitadas), Valores predeterminados de seguridad activados o no.</li>
+    <li><strong>Dispositivos</strong>: porcentaje de Dispositivos que cumplen con flecha de tendencia, Dispositivos inactivos (90 d), estado de sincronización de Entra Connect.</li>
+    <li><strong>Colaboración</strong>: Sitios SP, <strong>Enlaces anónimos</strong> (gravedad alta si existe alguno), cuentas de OneDrive, Teams (desglose públicos/privados).</li>
+    <li><strong>Correo</strong>: Buzones, actividad de Correo (7 d), <strong>Reglas de bandeja</strong> — con un indicador de reenvío externo, una de las señales de compromiso más comunes.</li>
+    <li><strong>Aplicaciones y DNS</strong>: Apps registradas, Apps empresariales, Dominios con el estado de validación de MX/SPF/DMARC/Autodiscover.</li>
+  </ul>
+
+  <p>Trate las tarjetas como una superficie de triaje: cualquier cosa en rojo o amarillo es una pregunta que merece respuesta.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Una cuadrícula de tarjetas donde dos tarjetas llevan color: Admins globales en rojo por encima de 5, MFA registrada en verde a partir del 90 %.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">EL COLOR ES LA SEÑAL DE TRIAJE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- green card: MFA Registration 90%+ -->
+        <rect x="48" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.6"/>
+        <circle cx="318" cy="90" r="6" fill="#2EE8A0"/>
+        <text x="72" y="100" fill="#C4D4E8" font-size="14">MFA registrada</text>
+        <text x="72" y="158" fill="#2EE8A0" font-size="40" font-weight="700">92 %</text>
+        <text x="72" y="190" fill="#6B85A6" font-size="12.5">verde a partir del 90 %</text>
+        <!-- red card: Global Admins above 5 -->
+        <rect x="376" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="646" cy="90" r="6" fill="#FF5A6E"/>
+        <text x="400" y="100" fill="#C4D4E8" font-size="14">Admins globales</text>
+        <text x="400" y="158" fill="#FF8A98" font-size="40" font-weight="700">7</text>
+        <text x="400" y="190" fill="#6B85A6" font-size="12.5">rojo por encima de 5 — la cantidad importa</text>
+      </g>
+    </svg>
+    <figcaption>Dos de las tarjetas que señala el texto: verde cuando la MFA registrada alcanza el 90 %, rojo cuando los Admins globales superan 5.</figcaption>
+  </figure>
+
+  <h2>La pestaña Resumen: paneles de detalle</h2>
+
+  <p>Debajo de las tarjetas, paneles plegables contienen el detalle que hay detrás de cada tarjeta: el desglose de licencias, la lista real de administradores globales, los usuarios sin MFA, el detalle de cada política de CA, la tabla completa de dispositivos de Intune, los principales buzones por almacenamiento, los enlaces anónimos por sitio, todas las reglas de bandeja agrupadas por usuario, las listas de usuarios y dispositivos inactivos, las aplicaciones registradas y de terceros, y los registros DNS de cada dominio.</p>
+
+  <p>Usará estos paneles constantemente en evaluaciones y conversaciones con clientes — «tienen cuatro administradores globales y dos son cuentas sin licencia que nadie reclama» sale directamente de aquí.</p>
+
+  <h2>Frescura de los datos</h2>
+
+  <p>Todo lo que ve en el Resumen refleja el <strong>último sondeo</strong> (el intervalo que configuró por inquilino, de 1 a 60 minutos, más ciclos más lentos para los datos pesados). Si acaba de incorporar el inquilino, dele unos minutos al primer sondeo; si una tarjeta parece desactualizada, compruebe <strong>Último sondeo</strong> en la página de Inquilinos.</p>
+
+  <h2>Adónde ir desde aquí</h2>
+
+  <p>Una primera pasada sensata sobre un inquilino recién incorporado: ojee el Resumen en busca de algo alarmante, luego trabaje <strong>Aplicaciones</strong> (apruebe lo que sea de confianza), después <strong>Directivas de CA</strong> y <strong>Directivas de Intune</strong> (despliegue sus líneas base) y por último <strong>Seguridad</strong> (la superficie de configuración a nivel de inquilino, desde la barra lateral). Las cuatro guías siguientes recorren cada una.</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">1</div><div class="xt"><b>Aplicaciones</b> — apruebe lo que sea de confianza.</div></div>
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Directivas de CA</b> — despliegue sus líneas base.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Directivas de Intune</b> — despliegue sus líneas base.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Seguridad</b> — la superficie de configuración a nivel de inquilino, desde la barra lateral.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

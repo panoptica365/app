@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tune alert policies — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Tune alert policies">
+<meta name="lesson:subtitle" content="Severity, routing, on/off, and notification limits — make the alert stream match how your shop actually works.">
+<meta name="lesson:icon" content="list-checks">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Tune alert policies</span></div>
+  <h1>Tune alert policies</h1>
+  <p class="dek">Severity, routing, on/off, and notification limits — make the alert stream match how your shop actually works.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A raw stream of alerts passing through four tuning dials — severity, routing, on/off, and a daily notification limit — into an alert stream the team trusts.">
+      <defs>
+        <radialGradient id="taBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="taTrust" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#2EE8A0"/></linearGradient>
+        <marker id="taArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#taBg)"/>
+
+      <!-- left: raw alerts in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="150" y="58" fill="#52708F" font-size="13" letter-spacing="3">RAW ALERTS</text>
+        <g fill="#0E2640" stroke="#33527A">
+          <rect x="70" y="84" width="160" height="30" rx="6"/>
+          <rect x="86" y="128" width="160" height="30" rx="6"/>
+          <rect x="60" y="172" width="160" height="30" rx="6"/>
+          <rect x="92" y="216" width="160" height="30" rx="6"/>
+          <rect x="74" y="260" width="160" height="30" rx="6"/>
+        </g>
+        <g fill="#5CCBF4"><circle cx="86" cy="99" r="4"/><circle cx="102" cy="143" r="4"/><circle cx="76" cy="187" r="4"/></g>
+        <g fill="#FFC04D"><circle cx="108" cy="231" r="4"/></g>
+        <g fill="#FF5A6E"><circle cx="90" cy="275" r="4"/></g>
+      </g>
+
+      <!-- arrow into the dials -->
+      <path d="M268 187 H352" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- centre: four tuning dials -->
+      <g transform="translate(560,170)">
+        <rect x="-190" y="-118" width="380" height="236" rx="18" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="0" y="-92" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="3">ALERT POLICIES</text>
+        <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+          <!-- four dials -->
+          <g transform="translate(-120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="18" y2="-22" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Severity</text>
+          </g>
+          <g transform="translate(-40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="-20" y2="-18" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Routing</text>
+          </g>
+          <g transform="translate(40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="0" y2="-26" stroke="#2EE8A0" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">On / Off</text>
+          </g>
+          <g transform="translate(120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="22" y2="14" stroke="#FFC04D" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Limit</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- arrow out to trusted stream -->
+      <path d="M768 187 H852" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- right: trusted stream -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="970" y="58" fill="#2EE8A0" font-size="13" letter-spacing="3" font-weight="600">A STREAM YOU TRUST</text>
+        <g fill="#0E2640" stroke="url(#taTrust)" stroke-width="1.6">
+          <rect x="892" y="96" width="156" height="32" rx="7"/>
+          <rect x="892" y="140" width="156" height="32" rx="7"/>
+          <rect x="892" y="184" width="156" height="32" rx="7"/>
+        </g>
+        <g fill="#2EE8A0"><circle cx="908" cy="112" r="4"/><circle cx="908" cy="156" r="4"/><circle cx="908" cy="200" r="4"/></g>
+      </g>
+    </svg>
+    <figcaption>Four controls turn the default alert stream into one your team actually trusts.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Out of the box, Panoptica365 ships dozens of alert policies with sensible defaults. <strong>Alert Policies</strong> (sidebar) is where you adapt them to your shop — and the difference between an alert stream your team trusts and one they ignore is twenty minutes on this page.</p>
+  </div>
+
+  <h2>The layout</h2>
+
+  <p>Policies are grouped into collapsible categories:</p>
+
+  <ul>
+    <li><strong>Risky Sign-ins</strong> — impossible travel, unfamiliar locations, risk detections.</li>
+    <li><strong>Threat Mgmt</strong> — Defender incidents, malware, phishing signals.</li>
+    <li><strong>Permissions</strong> — role changes, consent grants, app permission growth.</li>
+    <li><strong>Configuration changes</strong> — drift and settings changes, including Message Center items.</li>
+    <li><strong>External Sharing</strong> — anonymous links, external access events.</li>
+    <li><strong>Info Governance</strong> — DLP and compliance-adjacent events.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="The six collapsible alert-policy categories: Risky Sign-ins, Threat Mgmt, Permissions, Configuration changes, External Sharing, and Info Governance.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">COLLAPSIBLE CATEGORIES</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">Risky Sign-ins</text>
+        </g>
+        <g transform="translate(380,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">Threat Mgmt</text>
+        </g>
+        <g transform="translate(40,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">Permissions</text>
+        </g>
+        <g transform="translate(380,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">Configuration changes</text>
+        </g>
+        <g transform="translate(40,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">External Sharing</text>
+        </g>
+        <g transform="translate(380,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="14">Info Governance</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Six categories group every policy; matching sections expand automatically when you search.</figcaption>
+  </figure>
+
+  <p>A search bar filters across names and descriptions; matching sections expand automatically. Each policy row carries the <strong>graduation-cap icon</strong> — the same five-section explainer you get on a live alert, so you can understand a policy before deciding what to do with it.</p>
+
+  <h2>What you can change per policy</h2>
+
+  <ul>
+    <li><strong>Severity</strong> — info / low / medium / high / severe. Severity drives sorting, the daily briefing threshold, and PSA ticket priority mapping. If your team treats a particular alert type as drop-everything, rate it that way.</li>
+    <li><strong>Routing</strong> — none / personal / support / both. <em>Personal</em> goes to your notification recipients (email); <em>support</em> goes to your PSA (ticket, or PSA email fallback); <em>both</em> does both. Route customer-actionable work to the PSA and operator-awareness items to email.</li>
+    <li><strong>On / Off toggle</strong> — disabled policies don't evaluate at all. Turning a policy off is honest when you genuinely don't care about that signal; resolving its alerts forever while leaving it on is not.</li>
+    <li><strong>Notification limit</strong> (edit modal, Admin) — a per-day cap on notifications from this policy, your brake against a runaway alert flooding inboxes or the PSA board.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="The four routing destinations: none, personal goes to email recipients, support goes to the PSA, and both goes to email and the PSA.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ROUTING</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- none -->
+        <g transform="translate(96,108)">
+          <circle r="40" fill="#0E2236" stroke="#52708F" stroke-width="1.4"/>
+          <text y="-2" fill="#6B85A6" font-size="13" font-weight="600">none</text>
+          <text y="62" fill="#52708F" font-size="11">no notify</text>
+        </g>
+        <!-- personal -->
+        <g transform="translate(272,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">personal</text>
+          <text y="62" fill="#6B85A6" font-size="11">Email</text>
+        </g>
+        <!-- support -->
+        <g transform="translate(448,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">support</text>
+          <text y="62" fill="#6B85A6" font-size="11">PSA</text>
+        </g>
+        <!-- both -->
+        <g transform="translate(624,108)">
+          <circle r="40" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text y="-2" fill="#7DD9F9" font-size="13" font-weight="700">both</text>
+          <text y="62" fill="#6B85A6" font-size="11">Email + PSA</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Routing decides where each policy's alerts land: nowhere, your email, your PSA, or both.</figcaption>
+  </figure>
+
+  <div class="callout caution">
+    <div class="clabel">Global, not per-tenant</div>
+    <p>Changes here are global — they apply to all tenants. Per-tenant exceptions belong in <strong>exemptions</strong> (next guide), not in policy toggles.</p>
+  </div>
+
+  <h2>A tuning method that works</h2>
+
+  <ol>
+    <li><strong>Run the defaults for two weeks.</strong> Don't pre-tune against imagined noise.</li>
+    <li><strong>Look at what you actually resolved as false positive.</strong> Each recurring false positive is either an exemption candidate (one user, one pattern, one tenant) or a severity/routing mismatch (signal is real but doesn't deserve a ticket).</li>
+    <li><strong>Promote what burned you.</strong> If something turned into an incident and its alert was rated low, raise it.</li>
+    <li><strong>Mind the briefing threshold.</strong> The daily summary has its own minimum-severity setting (Settings → Daily Summary). Severity here and threshold there together decide what your 6 AM email contains.</li>
+  </ol>
+
+  <div class="callout insight">
+    <div class="clabel">Tuning is accountable</div>
+    <p>All edits on this page are recorded in the MSP audit log — severity changes, toggles, routing changes. Tuning is accountable work, and it should be.</p>
+  </div>
+
+</div>
+</body>
+</html>

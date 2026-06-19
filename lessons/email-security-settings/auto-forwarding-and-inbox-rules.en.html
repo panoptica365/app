@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto-forwarding and inbox rules — the post-compromise indicator pair — Email security settings</title>
+<meta name="lesson:title" content="Auto-forwarding and inbox rules — the post-compromise indicator pair">
+<meta name="lesson:subtitle" content="How attackers use auto-forwarding and hidden inbox rules to persist after compromise — and the outbound-transport controls that stop them.">
+<meta name="lesson:icon" content="forward">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Auto-forwarding &amp; inbox rules</span></div>
+  <h1>Auto-forwarding and inbox rules — the post-compromise indicator pair</h1>
+  <p class="dek">How attackers use auto-forwarding and hidden inbox rules to persist after compromise — and the outbound-transport controls that stop them.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A compromised mailbox: an attacker's hidden inbox rule silently moves the supplier's replies to RSS Subscriptions, marks them read and deletes them, while the legitimate user sees nothing.">
+      <defs>
+        <radialGradient id="afBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="afArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker>
+        <marker id="afArrRed" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#afBg)"/>
+
+      <!-- left: inbound reply from supplier -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="128" width="190" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="135" y="160" fill="#C4D4E8" font-size="15" font-weight="600">Supplier's reply</text>
+        <text x="135" y="182" fill="#6B85A6" font-size="12">incoming mail</text>
+      </g>
+      <path d="M230 170 H332" stroke="#5C7796" stroke-width="2.5" marker-end="url(#afArr)"/>
+
+      <!-- centre: the hidden rule -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="340" y="106" width="240" height="128" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="460" y="138" fill="#FF8A98" font-size="15" font-weight="700">Hidden inbox rule</text>
+        <text x="460" y="160" fill="#E2A0AA" font-size="13">named</text>
+        <rect x="446" y="170" width="28" height="22" rx="5" fill="#3A1620" stroke="#FF5A6E"/>
+        <text x="460" y="186" fill="#FF8A98" font-size="15" font-weight="700">.</text>
+        <text x="460" y="214" fill="#E2A0AA" font-size="11.5">move · mark read · delete</text>
+      </g>
+
+      <!-- down to obscure folder -->
+      <path d="M460 234 V274" stroke="#FF5A6E" stroke-width="2.5" stroke-dasharray="5 5" marker-end="url(#afArrRed)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="356" y="280" width="208" height="44" rx="10" fill="#0E2236" stroke="#52708F"/>
+        <text x="460" y="307" fill="#8FA6C2" font-size="13">RSS Subscriptions</text>
+      </g>
+
+      <!-- right top: legitimate user sees nothing -->
+      <path d="M580 142 H700" stroke="#274B72" stroke-width="2" stroke-dasharray="3 6"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="706" y="106" width="180" height="72" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="796" y="136" fill="#C4D4E8" font-size="14" font-weight="600">Legitimate user</text>
+        <text x="796" y="158" fill="#6B85A6" font-size="12">sees nothing</text>
+      </g>
+
+      <!-- right bottom: the attacker reads the mail -->
+      <path d="M580 196 C 660 240, 760 250, 880 230" stroke="#FF5A6E" stroke-width="2.5" fill="none" marker-end="url(#afArrRed)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="906" y="200" width="178" height="76" rx="12" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="995" y="232" fill="#7DD9F9" font-size="14" font-weight="700">Attacker</text>
+        <text x="995" y="254" fill="#A8E1F8" font-size="12">reads the thread</text>
+      </g>
+    </svg>
+    <figcaption>The reply arrives, the rule files it out of sight, and the mailbox owner never sees a trace — while the attacker reads on.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A customer's accountant phones in a panic on a Tuesday morning. "My contact at our supplier just called. He said he replied to my email about the wire transfer last week and never heard back, then sent two follow-ups, and finally called. I never got any of his emails. I never sent him any wire transfer email. He's looking at three messages in his sent folder from me."</p>
+
+  <p>You log into the accountant's mailbox. In Outlook on the web, you check rules. There's one you didn't create:</p>
+
+  <ul>
+    <li><strong>Rule name:</strong> <code>.</code> (a single period)</li>
+    <li><strong>Condition:</strong> subject contains "wire" or "payment" or "supplier" or "transfer"</li>
+    <li><strong>Action:</strong> move to the <code>RSS Subscriptions</code> folder; mark as read; delete</li>
+  </ul>
+
+  <p>You check Forwarding settings. Not configured. You check the Unified Audit Log. The rule was created at 3:42 AM the previous Wednesday from an IP in a country the accountant has never visited, using a session that authenticated successfully — meaning either the attacker had a stolen session cookie (AiTM) or they'd previously phished the credential and used a method that bypassed MFA somehow.</p>
+
+  <p>The attacker has been reading the accountant's mail for six days. They sent three wire instructions to the supplier, intercepted the supplier's replies (the rule moved them to RSS Subscriptions and marked them read), and harvested at least one successful $52,000 wire. The accountant never saw a single inbound or outbound trace of the attack.</p>
+
+  <p>This is the textbook post-compromise email scenario, and it relies on two things almost every attacker does after taking over a mailbox:</p>
+
+  <ol>
+    <li><strong>Inbox rules</strong> to hide the activity from the legitimate user.</li>
+    <li><strong>Auto-forwarding</strong> (sometimes) to make sure the attacker gets a copy of every incoming message without staying continuously connected to the compromised account.</li>
+  </ol>
+
+  <p>This lesson is about closing both vectors, the limits of what's possible to close, and what Panoptica365's monitoring surfaces give you.</p>
+  </div>
+
+  <h2>Two distinct controls, two different stories</h2>
+
+  <p>Operators conflate "forwarding" and "inbox rules" because they look similar in the user interface. They're different, and they need different controls.</p>
+
+  <p><strong>Auto-forwarding to external domains</strong> is a mailbox-level (or tenant-level) feature that copies every inbound message to an external email address. Configurable in the mailbox's settings or via an inbox rule with a "forward to" action. Microsoft tightened the default behaviour in 2020 — new tenants block external auto-forwarding by default. Older tenants, and tenants where previous admins explicitly allowed forwarding for some reason, can still have it enabled.</p>
+
+  <p><strong>Inbox rules</strong> are user-level filters that act on incoming mail: move, delete, mark as read, mark as important, forward, redirect, set categories, run scripts (in legacy clients), and so on. Users create them legitimately for organisational reasons all the time. Attackers create them post-compromise to hide their tracks.</p>
+
+  <p>Auto-forwarding is the noisier signal — easier to block tenant-wide, easier to detect, harder for attackers to use without getting caught. Inbox rules are the subtler signal — impossible to block (legitimate users need them), only detectable by watching for anomalous patterns.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Two controls compared: auto-forwarding is the noisier signal that can be blocked tenant-wide; inbox rules are the subtler signal that can only be detected.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- left: auto-forwarding -->
+        <rect x="36" y="34" width="300" height="132" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="186" y="64" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Auto-forwarding</text>
+        <text x="186" y="92" text-anchor="middle" fill="#7DD9F9" font-size="12.5">the noisier signal</text>
+        <line x1="64" y1="108" x2="308" y2="108" stroke="#1F3C5C"/>
+        <text x="186" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">block tenant-wide</text>
+        <text x="186" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">easier to detect</text>
+        <!-- right: inbox rules -->
+        <rect x="384" y="34" width="300" height="132" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="534" y="64" text-anchor="middle" fill="#C4D4E8" font-size="15" font-weight="700">Inbox rules</text>
+        <text x="534" y="92" text-anchor="middle" fill="#8FA6C2" font-size="12.5">the subtler signal</text>
+        <line x1="412" y1="108" x2="656" y2="108" stroke="#1F3C5C"/>
+        <text x="534" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">cannot be blocked</text>
+        <text x="534" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">detect anomalies only</text>
+      </g>
+    </svg>
+    <figcaption>One you can block tenant-wide; the other you can only watch — different controls for different vectors.</figcaption>
+  </figure>
+
+  <h2>Auto-forwarding — the tenant-wide block</h2>
+
+  <p>The control surface to know is <strong>Remote Domains</strong> in the Exchange admin centre (Mail flow → Remote Domains; PowerShell: <code>Set-RemoteDomain Default -AutoForwardEnabled $false</code>). Each Remote Domain entry defines mail-flow behaviour for messages leaving your tenant to a specific external domain. The <strong>Default</strong> entry is the catch-all — every external domain you haven't explicitly configured falls under its rules. Setting Default's auto-forward property to <strong>disabled</strong> blocks external auto-forwarding tenant-wide except for domains you've explicitly allowed via per-domain Remote Domain entries (covered in "What can break" below).</p>
+
+  <p>The Panoptica365 security setting "Disable Automatic Forwarding to External Domains" operates exactly here: it pushes the Default Remote Domain to AutoForwardEnabled=$false on the customer's tenant and watches that value for drift. Somebody opening the Exchange admin centre and flipping it back to enabled — typically in response to a customer ticket like "my user can't forward their work email to their personal Gmail anymore" — fires a drift alert. You revert (or, if there's a genuine business need, apply the per-domain exception workflow below) and talk to the customer about why the block exists.</p>
+
+  <p>Microsoft exposes a related but separate control in the <strong>outbound spam policy</strong> (Defender portal → Threat policies → Anti-spam → Outbound spam) — three values, Automatic / On / Off, controlling auto-forwarding policy-wide. Some MSPs use this as belt-and-suspenders alongside the Remote Domain Default block. Panoptica365 doesn't operate on or monitor this surface today; the Remote Domain Default is the canonical control for the security setting.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>One exception worth knowing</div>
+    <p>Mail flow rules (transport rules) that redirect or BCC mail to external addresses are <em>not</em> auto-forwarding from this control's perspective. They have their own settings and their own monitoring. Lesson 8 covers mail flow rules; for now, know that the auto-forwarding controls don't catch transport-rule-based forwarding.</p>
+  </div>
+
+  <h2>Inbox rules — why they can't be disabled</h2>
+
+  <p>Users need inbox rules. The accountant in the opening story has half a dozen legitimate ones — filtering newsletters to a folder, marking emails from her boss as important, auto-categorising client emails by project. Inbox rules are part of how email actually works as a productivity tool.</p>
+
+  <p>There's no tenant-wide control to disable inbox rules. There can't be — disabling them would break the legitimate productivity use case.</p>
+
+  <p>What there <em>is</em>:</p>
+
+  <ul>
+    <li><strong>Unified Audit Log entries</strong> when inbox rules are created, modified, or deleted. Operation names include <code>New-InboxRule</code>, <code>Set-InboxRule</code>, <code>Remove-InboxRule</code>, and <code>UpdateInboxRules</code> (for Outlook desktop's rule management).</li>
+    <li><strong>Microsoft Defender alerts</strong> when an inbox rule matches suspicious patterns. Microsoft's ML flags rules that look like attacker behaviour — single-character names, redirect-to-external actions, filter-on-finance-keywords, delete-and-mark-read combinations.</li>
+    <li><strong>Per-mailbox enumeration</strong> via <code>Get-InboxRule -Mailbox user@domain.com</code> in Exchange Online PowerShell. Operators can run this manually; Panoptica365 surfaces it for the whole tenant.</li>
+  </ul>
+
+  <p>The defensive posture for inbox rules is <strong>detection, not prevention</strong>. You can't stop users from creating rules. You can monitor for the rules attackers create.</p>
+
+  <h2>The attacker rule patterns to watch for</h2>
+
+  <p>After a decade of M365 BEC investigations, the same rule shapes show up across thousands of incidents. Train yourself and your operator team to spot them.</p>
+
+  <p><strong>The single-character name.</strong> Rules named <code>.</code> (period), <code>,</code> (comma), <code>..</code> (two periods), <code> </code> (single space), or a Unicode zero-width character. The attacker doesn't want the user to notice the rule exists in their rules list. The shorter and weirder the name, the higher the suspicion.</p>
+
+  <p><strong>The keyword filter on finance terms.</strong> Conditions checking for <code>wire</code>, <code>payment</code>, <code>transfer</code>, <code>invoice</code>, <code>account</code>, <code>bank</code>, <code>supplier</code>, <code>vendor</code>, plus the names of specific people in the finance chain (CFO, controller, accounting). Combined with a hide-from-user action, this is the BEC follow-on rule.</p>
+
+  <p><strong>The hide-action combination.</strong> Actions that move messages to obscure folders (<code>RSS Subscriptions</code>, <code>Junk</code>, <code>Conversation History</code>, <code>Notes</code>, <code>Sync Issues</code>), mark them read, and/or delete them. Legitimate rules rarely combine "move to obscure folder" with "mark as read" with "delete after a few days." Attacker rules do.</p>
+
+  <p><strong>The external redirect.</strong> Inbox rules with a "forward to" or "redirect to" action where the destination is an external email address. This is auto-forwarding via inbox rule, and the Remote Domain Default block above mostly catches it. But some attackers use redirect-with-modification (e.g., redirect via a mail flow rule) to evade the block.</p>
+
+  <p><strong>The "delete bounce notifications" rule.</strong> Conditions that match common Non-Delivery Report sender patterns or subject lines like "Undeliverable" or "Mail Delivery Failure." The attacker is sending wire-fraud emails and doesn't want bounce-backs reaching the legitimate user.</p>
+
+  <p><strong>The CEO / controller reply suppressor.</strong> Rules that move incoming messages from specific high-value senders (the CEO, the customer's primary contact, the finance director) to obscure folders. Used when the attacker has hijacked an outbound thread and wants to prevent the legitimate user from seeing the recipient's responses.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Six attacker inbox-rule patterns to watch for: single-character name, finance-keyword filter, hide-action combination, external redirect, delete bounce notifications, and high-value reply suppressor.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ATTACKER RULE PATTERNS</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- row 1 -->
+        <g transform="translate(36,56)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">Single-character name</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">. , .. space — invisible in the list</text>
+        </g>
+        <g transform="translate(372,56)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">Finance-keyword filter</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">wire · payment · invoice · supplier</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(36,124)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">Hide-action combination</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">move to obscure · mark read · delete</text>
+        </g>
+        <g transform="translate(372,124)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">External redirect</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">forward / redirect to external address</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(36,192)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">Delete bounce notifications</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">Undeliverable · Mail Delivery Failure</text>
+        </g>
+        <g transform="translate(372,192)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13.5" font-weight="600">Reply suppressor</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11.5">CEO / controller mail to obscure folder</text>
+        </g>
+      </g>
+      <text x="360" y="296" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">If one appears and the user can't explain it — treat the mailbox as compromised.</text>
+    </svg>
+    <figcaption>The six shapes that recur across thousands of BEC incidents. Calibrate your eyes to them.</figcaption>
+  </figure>
+
+  <p>When any of these patterns appears in a customer's mailbox rules and the user can't explain it, treat the mailbox as compromised. Reset credentials, revoke sessions, audit recent sent items, check the Unified Audit Log for the past 14 days, and start a proper incident-response workflow.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>The Inbox Rules monitoring is one of Panoptica365's most useful surfaces on the Exchange side. It's also deliberately simple — just enough structure to make the rules scannable, no extra ceremony.</p>
+
+  <p><strong>The Inbox Rules panel.</strong> One panel, two collapsible sections:</p>
+
+  <ul>
+    <li><strong>Forwarding Rules (Forward or Redirect Mail).</strong> A flat table showing every rule in the tenant that forwards or redirects mail. Columns: User, Rule name, Target (the destination address), Type (EXTERNAL or Internal). External targets are visually flagged. Count badge in the section header shows the total. This is the high-signal view — every row is worth a look, because external forwarding is rare in legitimate workflows and EXTERNAL targets specifically are the ones attackers create.</li>
+    <li><strong>All Inbox Rules (Every Enabled Rule, By User).</strong> A flat table grouped by mailbox owner, showing every enabled inbox rule across the tenant. Columns: User, Rule name, Actions (a short description like "Move to folder · Stop processing" or "FORWARD → external <code>address</code>"). Count badge shows the total. This is the scroll-and-scan view — most rows are mundane productivity rules, and what you're looking for is the suspicious ones (single-character names, finance keywords, hide-action combinations).</li>
+  </ul>
+
+  <p>There's no sorting, no filtering, no search box. The workflow is to scroll through the lists with eyes calibrated for the attacker patterns above. The trade-off Panoptica365 makes here: instead of a feature-heavy data explorer that operators would have to learn, it's a simple readable list optimised for human-eye scanning.</p>
+
+  <p><strong>Drift on the "Disable Automatic Forwarding to External Domains" security setting.</strong> Panoptica365 watches the Default Remote Domain's AutoForwardEnabled property. If someone flips it from disabled back to enabled — typically via the Exchange admin centre's Remote Domains UI — the drift detector fires.</p>
+
+  <p><strong>UAL-based alert evaluators.</strong> Panoptica365's alert engine includes evaluators that watch the Unified Audit Log for suspicious inbox rule creation patterns. When a match fires, the alert flows through the standard pipeline (dashboard, email notification, attribution to the customer).</p>
+
+  <div class="callout">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Not in the dashboard</div>
+    <p>What Panoptica365 does <em>not</em> surface in the dashboard: per-mailbox rule history (deltas over time), per-mailbox forwarding-state history, the raw UAL events themselves, sort/filter/search on the inbox rules tables. For deeper forensic work, drill into the Microsoft 365 Defender portal's audit log search or the Exchange admin centre.</p>
+  </div>
+
+  <h2>What can break</h2>
+
+  <p><strong>Legitimate forwarding to specific business partners.</strong> Real business workflows do involve forwarding to named external domains — a customer routing finance-related emails to their external accountant's company, a customer forwarding certain support requests to a third-party vendor, a customer mirroring specific themed mail to a consultant's firm. The discipline is not to weaken the tenant-wide block; it's to add a <strong>per-domain exception via Remote Domain rules</strong> in Exchange.</p>
+
+  <p>In Exchange admin centre: Mail flow → Remote Domains. The Default entry catches everything you haven't explicitly configured — leave its auto-forward setting off (this is what the Panoptica365 security setting pushes). Then create a specific Remote Domain entry for each external domain where the customer has a documented forwarding workflow — <code>accountant-firm.com</code>, <code>vendor-name.com</code>, <code>consultant-co.com</code> — and enable auto-forwarding for those named domains only.</p>
+
+  <p>Critical distinction: per-domain exceptions are for <strong>specific named business-partner domains</strong>, never for generic consumer providers. A user who wants to forward their work email to their personal Gmail / Hotmail / Outlook.com / Yahoo / iCloud account is the exact case the tenant-wide block exists to prevent. That's not a business workflow; it's a personal convenience that puts corporate data in attacker-reachable inboxes and breaks both the BEC defence and most data-residency expectations. Route those users to delegated access, a shared mailbox, or signing into their work email on their phone's Outlook app instead — not a Remote Domain entry for gmail.com.</p>
+
+  <p>Same discipline as the trusted-senders pattern in lesson 2: per-named-partner exceptions are tractable; blanket-domain exceptions are foot-cannons.</p>
+
+  <p><strong>Helpful inbox rules getting flagged as suspicious.</strong> A user creates a perfectly legitimate rule to clean up newsletter clutter, and the Panoptica365 alert engine flags it because it matches a generic "hide messages" pattern. Triage these as you would any false positive: confirm the rule with the user, document it, move on. Over time, the alert engine's evaluators get tuned to the customer's normal.</p>
+
+  <p><strong>Legacy connector-based mail flows.</strong> Some customers have legacy Exchange Online connectors that route mail through a third-party gateway. Those gateways occasionally inject forwarding-like behaviour. Auditing connectors during pre-flight (lesson 1) catches most of this; if a connector-based forward pattern surfaces later, the fix is at the connector, not the mailbox.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Block external auto-forwarding tenant-wide; make per-domain exceptions where they're justified.</strong> Disabling auto-forward on the Default Remote Domain is the single highest-leverage control on the post-compromise blast radius. When a customer has a real business reason to forward to a named partner — accountant, consultant, vendor — add a per-domain Remote Domain entry for that specific external domain. When the request is for forwarding to a consumer provider (gmail.com, hotmail.com, etc.), route the user to delegated access, a shared mailbox, or signing into their work email on their phone instead — not a Remote Domain exception.</p>
+
+  <p><strong>You can't disable inbox rules, only watch for the attacker patterns.</strong> The single-character names, the finance-keyword filters, the hide-action combinations — train your operator team to recognise these on sight. By the time you see them, the mailbox is already compromised; the speed of detection determines whether you contain the attack at $10K or $100K.</p>
+
+  <p><strong>Panoptica365's Inbox Rules panel is the daily operator surface.</strong> Two sections (Forwarding Rules, All Inbox Rules) in one view. Scan them when a customer reports anything unusual (a missing email, a denied delivery, a confused supplier). The patterns are visible if you look. The cost of looking is low. The cost of not looking is the wire-fraud incident in the opening story.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Mailbox auditing</b> — the Strict mailbox audit posture, the new-mailbox drift example, and what mailbox audit gives you for post-incident forensics.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Quarantine policies and user release</b> — who can release what; the BEC follow-on risk of self-released phishing.</div></div>
+  </div>
+
+  <p>For now: open the customer's Inbox Rules panel in Panoptica365. Read down the list. Look for the patterns. If anything matches, drop into the mailbox in Exchange admin centre, confirm with the user, and start the incident-response workflow if the user can't explain it. The accountant in the opening story would have lost less money if her MSP had been doing this every Monday morning.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Remote Domain auto-forward settings reference (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-remotedomain" target="_blank" rel="noopener">Microsoft Learn — Set-RemoteDomain</a>); blocking external auto-forwarding overview (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-external-email-forwarding" target="_blank" rel="noopener">Microsoft Learn — External email forwarding</a>); outbound spam policy auto-forwarding controls (Microsoft's related surface) (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Outbound spam policies</a>); inbox rule manipulation as a post-compromise indicator (<a href="https://learn.microsoft.com/en-us/defender-xdr/alert-grading-suspicious-inbox-manipulation-rules" target="_blank" rel="noopener">Microsoft Learn — Detect and respond to suspicious inbox rules</a>); Unified Audit Log inbox rule operation names (<a href="https://learn.microsoft.com/en-us/purview/audit-log-search" target="_blank" rel="noopener">Microsoft Learn — UAL search</a>); Microsoft Graph messageRules resource type (<a href="https://learn.microsoft.com/en-us/graph/api/resources/messagerule" target="_blank" rel="noopener">Microsoft Learn — messageRules</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

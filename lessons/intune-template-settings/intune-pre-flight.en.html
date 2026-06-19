@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Before you touch an Intune template — the pre-flight checklist</title>
+<meta name="lesson:title" content="Before you touch an Intune template — the pre-flight checklist">
+<meta name="lesson:subtitle" content="What to verify before deploying any Intune template: platform coverage, template-type families, and the assignment-loss risk.">
+<meta name="lesson:icon" content="clipboard-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune template settings</span> <span class="sep">·</span> <span>Pre-flight checklist</span></div>
+  <h1>Before you touch an Intune template — the pre-flight checklist</h1>
+  <p class="dek">What to verify before deploying any Intune template: platform coverage, template-type families, and the assignment-loss risk.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A five-step pre-flight sequence before deploying an Intune template, ending at a guarded deploy gate.">
+      <defs>
+        <radialGradient id="pfBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="pfRail" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="pfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#pfBg)"/>
+
+      <text x="60" y="58" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">PRE-FLIGHT</text>
+
+      <!-- the rail -->
+      <line x1="120" y1="170" x2="900" y2="170" stroke="url(#pfRail)" stroke-width="3" marker-end="url(#pfArr)"/>
+
+      <!-- five check stops -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(160,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">1</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Inventory</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">devices</text>
+        </g>
+        <g transform="translate(310,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">2</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Compliance</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">loop</text>
+        </g>
+        <g transform="translate(460,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">3</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Assignment</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">scope</text>
+        </g>
+        <g transform="translate(610,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">4</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Pilot</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">group</text>
+        </g>
+        <g transform="translate(760,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">5</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Document</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">expected</text>
+        </g>
+      </g>
+
+      <!-- the deploy gate -->
+      <g transform="translate(960,170)">
+        <rect x="-52" y="-58" width="104" height="116" rx="14" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.8"/>
+        <path d="M-22 -6 l16 18 l30 -34" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text y="44" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">DEPLOY</text>
+      </g>
+    </svg>
+    <figcaption>Five checks stand between a finished template and a tenant — clear them all before you push.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>An MSP technician we know once tested a new Intune Configuration Profile by deploying it to a single test device, confirming it worked, and then bulk-deploying it to all 47 of their managed customer tenants over the next hour. By the end of the next day, eight customer tenants had reported assignment-related issues — the bulk deployment had triggered Intune's delete-and-recreate behaviour, which silently dropped the per-tenant exclusion groups those customers had configured. Devices that were supposed to be excluded from the policy were now in scope. Devices that had been carefully exempted from a specific compliance check were suddenly failing it.</p>
+
+  <p>The technician had done everything right by the standards of CA-template deployment. But Intune is not CA. The pre-flight discipline for Intune templates is different.</p>
+
+  <p>This lesson is the pre-flight you run before deploying any Intune template in card 4. It's distinct from the CA pre-flight in card 3 because Intune's failure modes are different — and because Intune has historical baggage CA doesn't carry.</p>
+  </div>
+
+  <h2>Why Intune deserves its own pre-flight</h2>
+
+  <p>Three structural differences between Intune and CA that matter for deployment:</p>
+
+  <p><strong>Intune is platform-specific.</strong> A CA policy applies to "all cloud apps" or "Exchange Online" — abstract universal targets. An Intune profile applies to Windows 10/11, or to iOS, or to Android Enterprise, or to macOS. The same template can't span platforms. Deploying without confirming the customer actually has devices on that platform produces a policy with no targets — silent, harmless, but also doing nothing.</p>
+
+  <p><strong>Intune has three different template-type families in active use.</strong> Microsoft has shipped three generations of Intune policy infrastructure and never fully retired the older ones. In the Panoptica365 library you'll see all three:</p>
+
+  <ul>
+    <li><strong>Settings Catalog</strong> (<code>configurationPolicies</code>) — the modern, granular settings interface. Most of the Panoptica365 Windows templates use this: ASR Rules, Block Microsoft Consumer Accounts, Block mshta.exe, Defender Settings (Windows + macOS), Firewall Settings, Security Baseline. This is what new Microsoft documentation uses.</li>
+    <li><strong>Intents / Endpoint Security templates</strong> (<code>intents</code>) — the older endpoint-security template style. The Panoptica365 Account Protection Settings template uses this. Microsoft hasn't deprecated it; it still exists alongside Settings Catalog. The Intune portal renders it differently than Settings Catalog policies.</li>
+    <li><strong>Device Configurations</strong> (<code>deviceConfigurations</code>) — the oldest style. The BitLocker Settings and Windows Health Monitoring templates use this. The UI for these in the Intune portal sits in a separate blade from the other two.</li>
+  </ul>
+
+  <p>When an operator opens the Intune portal looking for a deployed Panoptica365 template, the template may be in any of three different sections of the UI. The template lives in whichever section matches its underlying type. There's no Panoptica365-doctored unification — Microsoft chose the structure, and the templates follow it.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The three Intune template-type families, the templates that use each, and their update behaviour.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Settings Catalog -->
+        <g transform="translate(24,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Settings Catalog</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">configurationPolicies</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">Most Windows templates</text>
+          <text x="20" y="106" fill="#C4D4E8" font-size="12">ASR · Firewall · Defender</text>
+          <text x="20" y="128" fill="#C4D4E8" font-size="12">Security Baseline · Block MSA</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#2EE8A0" font-size="12" font-weight="600">In-place update</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">assignments preserved</text>
+        </g>
+        <!-- Intents -->
+        <g transform="translate(252,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Intents / Endpoint Sec.</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">intents</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">Account Protection</text>
+          <text x="20" y="106" fill="#6B85A6" font-size="11.5">older style, not deprecated</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#FF5A6E" font-size="12" font-weight="600">Delete-and-recreate</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">assignments lost</text>
+        </g>
+        <!-- Device Configurations -->
+        <g transform="translate(480,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Device Configurations</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">deviceConfigurations</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">BitLocker Settings</text>
+          <text x="20" y="106" fill="#C4D4E8" font-size="12">Windows Health Monitoring</text>
+          <text x="20" y="124" fill="#6B85A6" font-size="11.5">oldest style</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#2EE8A0" font-size="12" font-weight="600">In-place update</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">typically preserved</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Three template-type families, each with its own portal blade and its own update behaviour.</figcaption>
+  </figure>
+
+  <p><strong>Intune deployments don't have a clean "Report-only" mode.</strong> CA has Report-only as a first-class state. Intune doesn't. The closest equivalents are:</p>
+
+  <ul>
+    <li><em>Audit mode</em> for ASR rules (a per-rule choice between Audit, Block, or Warn — covered in lesson 7).</li>
+    <li><em>Compliance policy in Report-only assignment</em> (you can deploy a compliance policy to a small pilot group first, evaluate, then expand assignment).</li>
+    <li><em>Configuration profile deployed to a small pilot group</em> (same pattern — deploy to a few devices, verify, expand).</li>
+  </ul>
+
+  <p>None of these is exactly like CA's Report-only. The operator has to use pilot-group deployment as their dry-run, not a policy-level toggle.</p>
+
+  <h2>The five pre-flight steps</h2>
+
+  <h3>1. Inventory devices by platform and by management state</h3>
+
+  <p>Before you deploy any Intune template, pull the device inventory. You need to know:</p>
+
+  <ul>
+    <li><strong>How many devices on each platform?</strong> The Panoptica365 library is Windows-heavy (10 of the 14 templates are Windows-only) and that matches the SMB reality — most managed devices are Windows workstations. If a customer has zero Windows devices, half of card 4's templates are irrelevant. If they have all Windows except one stray Mac, the macOS templates target one device.</li>
+    <li><strong>How many devices in each management state?</strong> Devices can be Intune-managed (fully enrolled MDM), Entra-registered (lighter — known to Entra but not managed), or unenrolled (BYOD with no MDM presence). Templates apply to MDM-enrolled devices; unenrolled devices ignore the deployment entirely.</li>
+    <li><strong>What is the BYOD mix?</strong> Most SMB tenants you'll work with are heavily BYOD on mobile — users use their personal iPhones and Android devices. Those devices are typically not enrolled in MDM at all. The Panoptica365 mobile compliance templates assume MDM enrolment; without it, they don't apply. Setting customer expectations on "we don't manage personal mobile devices through this template" is important.</li>
+  </ul>
+
+  <p>You'll pull this data from the Intune portal directly today — Panoptica365 surfaces the device list and OS breakdown on the customer dashboard, but the deeper inventory work (management state per device, BYOD vs corp-owned, enrolment age) happens in Microsoft's console.</p>
+
+  <h3>2. Confirm the compliance loop is wired</h3>
+
+  <p>Card 1 lesson 3 covered the compliance loop: Intune evaluates device state → writes compliance status to the Entra device record → Conditional Access reads that status at sign-in. If the loop is broken anywhere, the compliance signal is useless even when the Intune template deploys correctly.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="The compliance loop: Intune evaluates device state, writes status to the Entra device record, and Conditional Access reads it at sign-in.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="clArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="125" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Intune</text>
+        <text x="125" y="92" fill="#6B85A6" font-size="11">evaluates device state</text>
+
+        <rect x="275" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Entra device record</text>
+        <text x="360" y="92" fill="#6B85A6" font-size="11">compliance status written</text>
+
+        <rect x="510" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="595" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Conditional Access</text>
+        <text x="595" y="92" fill="#6B85A6" font-size="11">reads status at sign-in</text>
+      </g>
+      <path d="M210 76 H275" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+      <path d="M445 76 H510" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="2">THE COMPLIANCE LOOP</text>
+      <text x="360" y="130" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11">break it anywhere and the signal is useless</text>
+    </svg>
+    <figcaption>Three hops. Break any one and the compliance signal lies — even when the template deployed fine.</figcaption>
+  </figure>
+
+  <p>Common breakages:</p>
+
+  <ul>
+    <li><strong>Device not yet synced.</strong> Newly-enrolled devices can take 1–8 hours to complete their first compliance evaluation cycle. During that window, they show as "Not yet evaluated" in the compliance state. CA treats "Not yet evaluated" differently depending on policy configuration — sometimes as non-compliant, sometimes as inconclusive.</li>
+    <li><strong>Compliance evaluation cadence too slow.</strong> The default Intune check-in interval is every 8 hours for Windows. A device that becomes non-compliant at noon may still show compliant in the Entra record at 4 PM because the check-in hasn't happened yet.</li>
+    <li><strong>Entra device registration broken.</strong> If the device is enrolled in Intune but its Entra device object is in a bad state (orphaned, duplicated, broken sync from on-prem AD in hybrid environments), the compliance signal can't write back to Entra. Common in tenants that have grown through acquisitions or had AD Connect issues.</li>
+  </ul>
+
+  <p>Before deploying a compliance template, verify the loop is working on a known-good test device. If the loop is broken, fix the loop before deploying — otherwise the templates produce false "compliant" or "non-compliant" states.</p>
+
+  <h3>3. Choose the right assignment scope</h3>
+
+  <p>Intune templates support several assignment models:</p>
+
+  <ul>
+    <li><strong>All devices.</strong> Applies to every Intune-enrolled device.</li>
+    <li><strong>All users.</strong> Applies to devices owned by any user in the tenant.</li>
+    <li><strong>Specific group (include).</strong> Applies only to devices/users in the named group.</li>
+    <li><strong>Specific group (exclude).</strong> Applies to everyone except devices/users in the named group.</li>
+  </ul>
+
+  <p>Most Panoptica365 templates ship with "All devices" or "All users" as the assignment default. That's the right choice for foundational hardening. The exception is when the customer has specific device categories that need to be excluded — kiosk devices, lab workstations, point-of-sale terminals — which usually live in their own Entra group and get excluded from the standard templates.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Common mistake</div>
+    <p>An operator includes the customer's break-glass admin account in the "All users" scope without intending to. The break-glass admin's device gets the same Intune configuration as everyone else, which may include restrictions the break-glass workflow depends on bypassing. Card 3 lesson 1's break-glass discipline applies here too: exclude the break-glass account from any device-management-state-affecting Intune templates.</p>
+  </div>
+
+  <h3>4. Plan the pilot-group deployment</h3>
+
+  <p>Since Intune doesn't have CA's Report-only mode, the operator's dry-run is a pilot-group deployment. The standard cadence:</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy the template assigned to a pilot group (typically 1–3 known-good test devices, or the IT team's own devices).</li>
+    <li><strong>Days 1–3</strong> — verify the template deployed successfully to the pilot devices. Check the Intune portal for deployment success counts. Spot-check a pilot device to confirm the expected settings are actually applied (sometimes settings deploy successfully according to the portal but don't apply on the device — sync timing, conflicting policies).</li>
+    <li><strong>Days 3–7</strong> — verify the customer experience on pilot devices. Did anything break? Are users complaining? Are any business apps affected?</li>
+    <li><strong>Day 7</strong> — expand assignment from pilot group to full scope.</li>
+  </ol>
+
+  <p>This window is longer for templates that change user experience (Security Baseline, ASR Rules, BitLocker) and shorter for templates that are pure-monitoring (Compliance policies, Windows Health Monitoring).</p>
+
+  <h3>5. Document what you expect and how you'll verify</h3>
+
+  <p>Before deployment, write down (in the ticket, in the change log, somewhere):</p>
+
+  <ul>
+    <li>What this template does at a customer level.</li>
+    <li>Which devices it applies to.</li>
+    <li>What you expect to see in the Intune portal 24 hours after deployment.</li>
+    <li>What success looks like on a pilot device (specific Registry values, specific UI behaviour, specific compliance state).</li>
+    <li>What to do if it breaks.</li>
+  </ul>
+
+  <p>Panoptica365 records the deployment event automatically in the Tenant Change Log. The operator's job is to make the <em>expected outcome</em> part of the record, not just the deployment event itself. Future operators reading the audit trail need to know what should have happened, not just what was deployed.</p>
+
+  <h2>The assignment-loss gotcha — explicitly named</h2>
+
+  <p>This is the failure mode the opening story described. It deserves explicit naming because it's specific to Intune and operators get bitten by it repeatedly.</p>
+
+  <p>When you update an existing Intune template (change a setting, modify a configuration), the deployment mechanism in some Intune template types is <em>delete-and-recreate</em> rather than in-place update. Specifically:</p>
+
+  <ul>
+    <li><strong>Settings Catalog policies (most templates):</strong> in-place update. Safe. The policy ID stays the same; assignments are preserved.</li>
+    <li><strong>Device Configurations (BitLocker, Health Monitoring):</strong> also typically in-place update.</li>
+    <li><strong>Intents / Endpoint Security templates (Account Protection):</strong> <em>delete-and-recreate.</em> The old policy is removed and a new one created. Any per-tenant assignment exclusions configured against the old policy ID are not transferred to the new one — they're silently lost.</li>
+  </ul>
+
+  <p>The operator's discipline for working around this:</p>
+
+  <ul>
+    <li><strong>Before updating an Intents-style template, capture the current assignments per tenant</strong> by opening each customer's Intune portal and noting the assignment + exclusion groups on the relevant policy.</li>
+    <li><strong>After the update, verify assignments are still correct on each tenant</strong> — again, per-customer in the Intune portal.</li>
+    <li><strong>If any are missing, restore them manually.</strong></li>
+  </ul>
+
+  <p>This is annoying and genuinely tedious across many tenants. It's a Microsoft-imposed constraint at the API layer — until Microsoft replaces the delete-recreate behaviour with a reliable in-place update for Intents-style templates (which they've been working on slowly), the manual assignment-replay step is the only safe path.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Intune is more error-prone at deployment than CA.</strong> The platform-specificity, the three template-type families, the assignment-loss gotcha, the absence of a Report-only mode — all of these increase the failure surface. Treat Intune deployments with more pre-flight discipline than CA deployments, not less.</p>
+
+  <p><strong>The pilot-group deployment is the operator's dry-run.</strong> Use it. Skipping it is the same kind of mistake as skipping CA's Report-only mode — except the consequences land on user devices rather than on the cloud sign-in path. Easier to recover from a CA mis-deployment than from an Intune mis-deployment that pushed a bad configuration to 500 endpoints.</p>
+
+  <p><strong>Document the expected outcome, not just the action.</strong> Panoptica365's audit trail captures the deployment event automatically. The operator captures the expected outcome and the verification steps. Future operators need both to operate the customer's Intune posture safely.</p>
+
+  <h2>What's next</h2>
+
+  <p>The rest of card 4 walks through each Panoptica365 Intune template:</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Compliance policies</b> — Windows, iOS, Android, macOS combined.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>The Security Baseline</b> — the 60KB curated Windows hardening bundle.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>BitLocker Settings</b> — disk encryption posture.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Defender for Endpoint (Win + Mac)</b> — antivirus / EDR configuration.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Firewall Settings (Windows)</b> — host firewall.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>ASR Rules + Block mshta.exe</b> — attack surface reduction.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Account Protection + Block MSA</b> — Windows Hello, Credential Guard, MSA block.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>The compliance loop in production</b> — drift detection and signal flow.</div></div>
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Importing your own Intune templates</b> — customisation workflow.</div></div>
+    <div class="xl"><div class="xnum">11</div><div class="xt"><b>Operating Intune at scale</b> — drift, exclusions, lifecycle.</div></div>
+  </div>
+
+  <p>Each lesson assumes you've done the pre-flight above. The lessons themselves don't repeat the checklist. They get straight to <em>what each template does and how to roll it out</em>.</p>
+
+  <p>For now: pre-flight is the inoculation. Intune deployments without it are how customer devices end up misconfigured at 4 PM on a Friday.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Intune compliance evaluation cadence (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Compliance policies</a>); Microsoft Learn on the three Intune policy types (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/settings-catalog" target="_blank" rel="noopener">Microsoft Learn — Settings Catalog vs Templates</a>); Intune assignment behaviour reference (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/device-profile-assign" target="_blank" rel="noopener">Microsoft Learn — Assign user and device profiles</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

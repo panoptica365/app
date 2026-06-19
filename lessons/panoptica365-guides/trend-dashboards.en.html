@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trend dashboards — security over time — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Trend dashboards — security over time">
+<meta name="lesson:subtitle" content="The two longitudinal surfaces: a tenant's Trends tab and the fleet-wide Trends page, chart by chart.">
+<meta name="lesson:icon" content="trending-up">
+<meta name="lesson:last_updated" content="2026-06-18">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Trend dashboards</span></div>
+  <h1>Trend dashboards — security over time</h1>
+  <p class="dek">The two longitudinal surfaces: a tenant's Trends tab and the fleet-wide Trends page, chart by chart.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Two trend surfaces side by side: a single tenant's Trends tab and the fleet-wide Trends page, each drawing a rising line over time with a range selector.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="tdArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5CCBF4" stop-opacity="0.35"/><stop offset="100%" stop-color="#5CCBF4" stop-opacity="0"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- left panel: tenant Trends tab -->
+      <g transform="translate(70,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2236" stroke="#33527A"/>
+        <text x="22" y="34" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Tenant · Trends</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#2A6F9E"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7d 30d 90d 1y</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <!-- solid rising line -->
+        <path d="M22 160 L100 150 L178 134 L256 120 L334 96 L418 84" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <!-- dashed benchmark line -->
+        <path d="M22 150 L418 128" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <!-- right panel: fleet Trends page -->
+      <g transform="translate(610,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="22" y="34" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Fleet · Trends</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7d 30d 90d 1y</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <!-- high-low band -->
+        <path d="M22 132 L100 124 L178 110 L256 102 L334 88 L418 78 L418 150 L334 140 L256 144 L178 150 L100 156 L22 160 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+        <!-- average line -->
+        <path d="M22 146 L100 140 L178 130 L256 123 L334 108 L418 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <!-- existing-tenants green line -->
+        <path d="M22 138 L100 130 L178 116 L256 106 L334 92 L418 82" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <!-- dashed benchmark -->
+        <path d="M22 140 L418 122" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <text x="290" y="316" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">ONE TENANT</text>
+      <text x="830" y="316" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">THE WHOLE BOOK</text>
+    </svg>
+    <figcaption>Two longitudinal surfaces, one idea: the same trends, drawn for a single tenant and then for the whole book.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The Main Console and a tenant's Overview answer <em>"how are things right now?"</em>. Trend dashboards answer the harder question: <em>"are we getting better or worse, and how do I prove it?"</em> There are two of them — a <strong>Trends tab on each tenant dashboard</strong>, and a <strong>fleet-wide Trends page</strong> in the sidebar. Both read from history Panoptica365 has been accumulating from its daily polls, so they cost nothing to open and add no load to Microsoft. Both carry a <strong>range selector</strong> — 7 d / 30 d / 90 d / 1 y — in the top-right.</p>
+
+  <p>A freshly-onboarded tenant won't have much of a line yet. Where history is still building, the chart says so (<em>"Trend begins …"</em>) rather than drawing a misleading flat line. Give it a few weeks.</p>
+  </div>
+
+  <h2>The tenant Trends tab</h2>
+
+  <p>Open any tenant, then click <strong>Trends</strong> (the second tab, next to Overview). It's split into two halves — <em>what the customer sees</em> and <em>what the MSP sees</em> — with a coverage stat strip across the top.</p>
+
+  <div class="callout">
+    <div class="clabel">Coverage strip</div>
+    <p>A one-line reassurance: how many of Microsoft's recommended controls are set up and healthy for this tenant. This is posture as a number, not a chart, because a well-run tenant sits at 100% and a flat line tells you nothing.</p>
+  </div>
+
+  <p>What the customer sees:</p>
+
+  <ul>
+    <li><strong>Microsoft Secure Score</strong> (the hero chart) — Microsoft's canonical security measure for this tenant over time, with a dashed line showing the average for <strong>similar-size businesses</strong> (Microsoft's own benchmark). The score moves as Microsoft raises the bar; keeping the solid line above the dashed one is the job. The pill shows how many points you're ahead of, or behind, comparable tenants.</li>
+    <li><strong>Secure Score by category</strong> — the same score broken into Microsoft's categories (Identity, Data, Device, Apps, Infrastructure) as a stacked area. It shows <em>where</em> the points come from and <em>where the gaps remain</em> — the thinnest band is your next campaign.</li>
+    <li><strong>Security recommendations addressed</strong> — how many of Microsoft's recommended actions are actually in place, over time. This is the work that never finishes: Microsoft keeps adding recommendations, so a flat line here means you're keeping pace and a rising one means you're gaining ground.</li>
+    <li><strong>Issues caught &amp; resolved</strong> — drift and threats Panoptica caught and your team cleared, by month and severity. This is the value story: proof the service is doing something.</li>
+    <li><strong>Open issues over time</strong> — how many items were awaiting action each day. Trending toward zero is the goal; a rising line means the backlog is growing faster than the team clears it.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="The customer-facing charts on the tenant Trends tab: a Secure Score line with a dashed benchmark, a stacked-area score by category, a recommendations-addressed line, issues caught and resolved as bars, and open issues over time as a line.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">WHAT THE CUSTOMER SEES</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- card 1: Secure Score line + dashed benchmark -->
+        <g transform="translate(20,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 56 L60 50 L106 42 L152 30 L202 24" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M14 50 L202 36" fill="none" stroke="#6B85A6" stroke-width="1.4" stroke-dasharray="4 4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">Secure Score</text>
+        </g>
+        <!-- card 2: stacked area by category -->
+        <g transform="translate(252,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 60 L60 56 L106 52 L152 46 L202 42 L202 64 L14 64 Z" fill="#2A7FA3" fill-opacity="0.5"/>
+          <path d="M14 50 L60 44 L106 40 L152 32 L202 28 L202 42 L152 46 L106 52 L60 56 L14 60 Z" fill="#5CCBF4" fill-opacity="0.45"/>
+          <path d="M14 40 L60 34 L106 30 L152 24 L202 22 L202 28 L152 32 L106 40 L60 44 L14 50 Z" fill="#A8E1F8" fill-opacity="0.4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">By category</text>
+        </g>
+        <!-- card 3: recommendations addressed line -->
+        <g transform="translate(20,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 62 L44 54 L76 56 L108 46 L126 44" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10.5">Recs addressed</text>
+        </g>
+        <!-- card 4: issues caught & resolved bars -->
+        <g transform="translate(170,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="20" y="40" width="14" height="24" rx="2" fill="#5CCBF4"/>
+          <rect x="44" y="32" width="14" height="32" rx="2" fill="#5CCBF4"/>
+          <rect x="68" y="46" width="14" height="18" rx="2" fill="#FFC04D"/>
+          <rect x="92" y="28" width="14" height="36" rx="2" fill="#5CCBF4"/>
+          <rect x="116" y="38" width="10" height="26" rx="2" fill="#FF5A6E"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10.5">Caught &amp; resolved</text>
+        </g>
+        <!-- card 5: open issues over time line -->
+        <g transform="translate(320,130)">
+          <rect width="148" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 36 L48 44 L84 50 L120 56 L136 60" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10.5">Open over time</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The customer-facing half of the tenant Trends tab: posture and the value story, chart by chart.</figcaption>
+  </figure>
+
+  <p>What the MSP sees:</p>
+
+  <ul>
+    <li><strong>Time to resolve</strong> — median hours from an alert firing to its resolution. Your responsiveness, in evidence — useful for SLA conversations.</li>
+    <li><strong>Alert volume per week</strong> — new alerts per week, by severity. Is this tenant getting noisier or quieter?</li>
+    <li><strong>Top firing policies</strong> — which policies generate the volume over the last 90 days, as a ranked bar. The longest bars are your tuning candidates: a policy that fires constantly is either a real problem or a policy that needs adjusting.</li>
+  </ul>
+
+  <h2>The fleet Trends page</h2>
+
+  <p>Click <strong>Trends</strong> in the left sidebar (just after Heatmap). This is the same idea, lifted to the whole book at once. It covers your <strong>managed tenants only</strong> — audit-only tenants aren't part of the fleet posture story — and is organized into <em>Secure Score &amp; posture</em> and <em>Alert operations</em>, again with a coverage strip on top.</p>
+
+  <div class="callout">
+    <div class="clabel">Fleet coverage strip</div>
+    <p>How many managed tenants are sitting at 100% of recommended controls, and the fleet-average coverage. The "north star" for the whole book.</p>
+  </div>
+
+  <p>Secure Score &amp; posture:</p>
+
+  <ul>
+    <li><strong>Fleet Microsoft Secure Score</strong> (the hero) — the average Secure Score across managed tenants over time. Three things ride on top of the average line: a shaded <strong>high–low band</strong> showing your best and worst tenant on each day (real numbers, not smoothed — you can verify them by hand), a dashed <strong>similar-size benchmark</strong>, and — only when you onboarded tenants during the window — a green <strong>"existing tenants" line</strong> that holds the same cohort constant. The tooltip tells you how many tenants the average was taken across that day.</li>
+    <li><strong>Book growth — managed tenants</strong> — how many managed tenants existed each day, with a marker on onboarding days. This chart is the explainer for the one above it: when you add a tenant that starts low, the fleet average dips — that's the book changing, not your existing customers getting worse. The green line on the hero and this chart together let you tell those two stories apart.</li>
+    <li><strong>Recommendations outstanding</strong> — total Microsoft recommended actions still open across the entire book. Are you collectively keeping up?</li>
+    <li><strong>Secure Score by category</strong> — the fleet-average score by Microsoft category over time. Wherever the <em>whole book</em> is weakest is the highest-leverage place to run a campaign across every customer at once.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="The fleet Secure Score hero chart: an average line with a shaded high-low band behind it, a dashed similar-size benchmark, and a green existing-tenants line that holds the same cohort constant.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">FLEET SECURE SCORE (HERO)</text>
+      <line x1="40" y1="200" x2="680" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <line x1="40" y1="56" x2="40" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <!-- high-low band -->
+      <path d="M40 120 L168 110 L296 96 L424 86 L552 72 L680 64 L680 168 L552 156 L424 162 L296 168 L168 174 L40 178 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+      <!-- average line -->
+      <path d="M40 150 L168 142 L296 130 L424 122 L552 108 L680 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- existing-tenants green line -->
+      <path d="M40 138 L168 128 L296 114 L424 104 L552 90 L680 80" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- dashed benchmark -->
+      <path d="M40 142 L680 124" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      <!-- legend -->
+      <g font-family="Geist,Inter,sans-serif" font-size="12">
+        <rect x="430" y="44" width="18" height="3" rx="1.5" fill="#5CCBF4"/>
+        <text x="454" y="50" fill="#A8E1F8">average</text>
+        <rect x="430" y="62" width="18" height="3" rx="1.5" fill="#2EE8A0"/>
+        <text x="454" y="68" fill="#A8E1F8">existing tenants</text>
+        <line x1="568" y1="46" x2="586" y2="46" stroke="#6B85A6" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="592" y="50" fill="#6B85A6">benchmark</text>
+        <rect x="568" y="60" width="18" height="9" rx="2" fill="#5CCBF4" fill-opacity="0.18"/>
+        <text x="592" y="68" fill="#6B85A6">high–low band</text>
+      </g>
+    </svg>
+    <figcaption>The fleet hero stacks four signals on one chart — average, high–low band, benchmark, and the constant-cohort line.</figcaption>
+  </figure>
+
+  <p>Alert operations:</p>
+
+  <ul>
+    <li><strong>Issues caught &amp; resolved</strong> — fleet total resolved, by month and severity. How much did the team clear across everyone?</li>
+    <li><strong>Open issues over time</strong> — fleet total items awaiting action each day. Is the team keeping up across the book?</li>
+    <li><strong>Time to resolve</strong> — fleet median hours per week, with a <strong>p90 line</strong> above it. The median is the typical case; p90 catches the tail — a few slow-to-clear tenants that the median hides. SLA evidence for the whole fleet.</li>
+    <li><strong>Alert volume per week</strong> — fleet new alerts per week, by severity. Is it getting noisier overall?</li>
+    <li><strong>Alert mix by category over time</strong> — fleet new alerts grouped by policy category (risky sign-ins, threat management, external sharing, configuration changes, permissions, information governance) per week. It tells you <em>what kind of work</em> the book generates, which is what staffing and training should follow.</li>
+    <li><strong>Top firing policies — last 90 days</strong> — the noisiest policies across everything, ranked. These are your fleet-level tuning targets — adjust one policy and you quiet it for every customer.</li>
+  </ul>
+
+  <h2>Reading them well</h2>
+
+  <ul>
+    <li><strong>Secure Score moves because Microsoft moves the bar.</strong> A dip doesn't always mean something got worse on your side — Microsoft may have added a recommendation. The benchmark line is the context that keeps you honest about that.</li>
+    <li><strong>On the fleet hero, watch the band, not just the average.</strong> A healthy average hiding a very low minimum means one customer is dragging — the band surfaces that; the average buries it.</li>
+    <li><strong>Use the right range for the question.</strong> 7 d / 30 d for an incident retrospective or a noisy week; 90 d / 1 y for a QBR or a board slide. The story changes with the lens.</li>
+    <li><strong>Top firing policies are an invitation, not a verdict.</strong> The longest bar is either a real recurring problem at that customer or a policy that's too sensitive. Both are worth acting on — one with the tenant, one with the policy.</li>
+  </ul>
+
+  <blockquote>The dashboards tell you the state. The trends tell you the trajectory — and the trajectory is what a customer renewal, an SLA review, or a quarterly business review is actually about.</blockquote>
+
+</div>
+</body>
+</html>

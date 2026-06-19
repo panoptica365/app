@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Before you touch a template — the CA pre-flight checklist — Conditional Access Template Policies</title>
+<meta name="lesson:title" content="Before you touch a template — the CA pre-flight checklist">
+<meta name="lesson:subtitle" content="Five steps before any CA policy: verify break-glass, inventory service accounts, decide report-only, and prep users.">
+<meta name="lesson:icon" content="clipboard-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access Template Policies</span> <span class="sep">·</span> <span>The CA pre-flight checklist</span></div>
+  <h1>Before you touch a template — the CA pre-flight checklist</h1>
+  <p class="dek">Five steps before any CA policy: verify break-glass, inventory service accounts, decide report-only, and prep users.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Five pre-flight steps forming a gate that a policy must pass before moving from staged to Enabled enforcement.">
+      <defs>
+        <radialGradient id="pfBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="pfGate" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E2640"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="pfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#pfBg)"/>
+
+      <!-- left: the template, staged -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="150" height="104" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="18" y="22" width="114" height="9" rx="4.5" fill="#274B72"/>
+        <rect x="18" y="42" width="90" height="9" rx="4.5" fill="#1F3C5C"/>
+        <rect x="18" y="62" width="104" height="9" rx="4.5" fill="#1F3C5C"/>
+        <text x="75" y="-14" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">CA TEMPLATE</text>
+      </g>
+
+      <path d="M228 170 H306" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#pfArr)"/>
+
+      <!-- center: the five-step gate -->
+      <g transform="translate(330,52)">
+        <rect x="0" y="0" width="430" height="236" rx="16" fill="url(#pfGate)" stroke="#2A6F9E" stroke-width="1.5"/>
+        <text x="215" y="30" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">PRE-FLIGHT</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="14">
+          <g transform="translate(28,52)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">1</text><text x="40" y="18" fill="#C4D4E8">Break-glass account</text></g>
+          <g transform="translate(28,88)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">2</text><text x="40" y="18" fill="#C4D4E8">Service-account inventory</text></g>
+          <g transform="translate(28,124)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">3</text><text x="40" y="18" fill="#C4D4E8">Report-only decision</text></g>
+          <g transform="translate(28,160)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">4</text><text x="40" y="18" fill="#C4D4E8">Communicate to users</text></g>
+          <g transform="translate(28,196)"><circle cx="13" cy="13" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="13" y="18" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">5</text><text x="40" y="18" fill="#C4D4E8">Define what success looks like</text></g>
+        </g>
+      </g>
+
+      <path d="M768 170 H846" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#pfArr)"/>
+
+      <!-- right: enforced -->
+      <g transform="translate(870,108)">
+        <circle cx="90" cy="62" r="78" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="22" y="20" width="136" height="84" rx="12" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.6"/>
+        <path d="M62 62 l18 18 l34 -38" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="90" y="-12" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">ENABLED</text>
+      </g>
+    </svg>
+    <figcaption>Skip the pre-flight and you ship a Friday-afternoon incident. The five steps are the gate before enforcement.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A consultant in Calgary once enabled a "Require MFA for all users" Conditional Access policy at 4 PM on a Friday. By 4:15 PM, the customer's service accounts — the ones that run the overnight backup, the SQL maintenance, the unattended invoice processor — were all failing authentication. None of them had MFA. The consultant didn't know they existed. The customer's IT director found out when the Monday morning backup report came in showing zero successful jobs over the weekend.</p>
+
+  <p>Conditional Access does not forgive haste.</p>
+
+  <p>This lesson is not about any specific template in the Panoptica365 library. It's the pre-flight checklist that runs before you touch <em>any</em> of them. Every template in card 3 — Require MFA, Block Legacy Authentication, the geo-policy, the admin-hardening set — assumes you've done the five things below. Skip the pre-flight and you ship a Friday-afternoon incident.</p>
+  </div>
+
+  <h2>The four parts of a CA policy (refresher)</h2>
+
+  <p>Card 1 lesson 3 already covered the compliance loop and the structure of a CA policy. The very short version:</p>
+
+  <ul>
+    <li><strong>Who</strong> — which users or groups the policy applies to (include / exclude).</li>
+    <li><strong>What</strong> — which apps or actions (Exchange, SharePoint, "all cloud apps", Azure management).</li>
+    <li><strong>Conditions</strong> — context: device state, location, sign-in risk, user risk, client app, platform.</li>
+    <li><strong>Controls</strong> — what to do when the policy matches: block, require MFA, require compliant device, require Hybrid join, apply session controls.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="The four parts of a CA policy: Who, What, Conditions, and Controls.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(28,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="15" font-weight="700">WHO</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">users / groups</text>
+        </g>
+        <g transform="translate(196,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="15" font-weight="700">WHAT</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">apps / actions</text>
+        </g>
+        <g transform="translate(364,70)">
+          <rect x="0" y="0" width="136" height="60" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="68" y="28" fill="#A8E1F8" font-size="15" font-weight="700">CONDITIONS</text>
+          <text x="68" y="46" fill="#6B85A6" font-size="11">context signals</text>
+        </g>
+        <g transform="translate(532,70)">
+          <rect x="0" y="0" width="160" height="60" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="80" y="28" fill="#7DD9F9" font-size="15" font-weight="700">CONTROLS</text>
+          <text x="80" y="46" fill="#6B85A6" font-size="11">block / require / session</text>
+        </g>
+        <path d="M164 100 H196" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+        <path d="M332 100 H364" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+        <path d="M500 100 H532" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      </g>
+    </svg>
+    <figcaption>Every Panoptica365 CA template fills in these four fields; the pre-flight adapts them to a specific customer.</figcaption>
+  </figure>
+
+  <p>Every Panoptica365 CA template fills in those four fields with sensible defaults. The pre-flight is about adapting the defaults to a specific customer's reality before you flip the policy from Report-only to On.</p>
+
+  <h2>Five pre-flight steps, in order</h2>
+
+  <h3>1. Identify the break-glass account</h3>
+
+  <p>Every M365 tenant should have at least one (ideally two) break-glass accounts — accounts that exist for the sole purpose of regaining administrative access if every other admin account is compromised, expired, locked out, or otherwise unusable.</p>
+
+  <p>Break-glass accounts are <strong>excluded from every Conditional Access policy you enable.</strong> They don't have MFA enforced via CA (they should still have phishing-resistant MFA enrolled — typically a FIDO2 key stored physically in a sealed envelope in two separate locations). They aren't blocked by geo-restrictions. They aren't subject to compliant-device requirements.</p>
+
+  <p>The reason is structural: if every CA policy applies to every account and a CA policy goes wrong, <em>nobody</em> can sign in to fix it. The break-glass account is the lifeboat.</p>
+
+  <p>Before you touch any CA template:</p>
+
+  <ul>
+    <li>Confirm the customer has at least one break-glass account.</li>
+    <li>Confirm it has phishing-resistant MFA enrolled (passkey, FIDO2 key, or similar).</li>
+    <li>Confirm it's in the exclusion list of every CA policy you're about to deploy.</li>
+    <li>Confirm the credentials are stored somewhere the legitimate emergency response team can access — and somewhere ransomware can't.</li>
+  </ul>
+
+  <p>If any of those four is missing, <em>stop the deployment</em>. Fix the break-glass story first.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Hard stop</div>
+    <p>If any of those four is missing, stop the deployment. Fix the break-glass story first. The break-glass account is the lifeboat — if every CA policy applies to every account and a policy goes wrong, nobody can sign in to fix it.</p>
+  </div>
+
+  <h3>2. Inventory the service accounts and unattended workloads</h3>
+
+  <p>Service accounts are the most common cause of Friday-afternoon Conditional Access incidents. They typically authenticate via password (no MFA), often from a fixed IP that may or may not be in your trusted locations, often using legacy protocols, and they break loudly when a policy that wasn't designed for them fires on them.</p>
+
+  <p>Before you enable any policy, pull the list of service accounts in the tenant. Check:</p>
+
+  <ul>
+    <li>Which apps use them (SQL Server agents, scan-to-email service principals, line-of-business app authentication, etc.).</li>
+    <li>Which IP addresses they sign in from.</li>
+    <li>Whether they use modern or legacy authentication.</li>
+    <li>Which permissions they hold.</li>
+  </ul>
+
+  <p>Then, for each service account, decide:</p>
+
+  <ul>
+    <li><strong>Migrate to a managed identity</strong> if the app supports it. Modern apps should use service principals with certificate-based authentication, not user accounts with passwords. Where the customer can afford the migration, this is the right answer.</li>
+    <li><strong>Exclude from the specific CA policies</strong> that would otherwise break it — typically Require MFA, Block Legacy Auth, geo-restrictions. Document the exclusion and the reason.</li>
+    <li><strong>Plan a sunset</strong> for the service account if it's tied to a legacy app that should be retired.</li>
+  </ul>
+
+  <p>Panoptica365's exemption system supports this directly: every CA-policy exclusion can carry a justification and an expiration date. When the exclusion expires, the operator gets an alert to review it. This is how you avoid the "exception sprawl" pattern from card 2's lesson 6 — exclusions never disappear silently.</p>
+
+  <h3>3. Decide whether you need a Report-only safety net</h3>
+
+  <p>Panoptica365 templates deploy in Enabled state by default. When you click Deploy on a template, the policy gets created in the customer's tenant and starts enforcing immediately.</p>
+
+  <p>For most small-business tenants, this is the right behaviour. The pre-flight steps above (break-glass exclusion, service-account inventory, user communication) cover the typical concerns. Microsoft has been steering applications away from username/password service principals for years — modern apps are expected to use app registrations / enterprise apps with certificate or client-secret authentication — so the "legacy app gets locked out" failure mode is rarer than it used to be. Most tenants you'll encounter don't have anything that breaks the moment an MFA or geo-policy enforces.</p>
+
+  <p>If you're onboarding a customer with significant legacy infrastructure — older line-of-business apps still using service principals with username/password authentication, hardcoded SMTP credentials in scripts, custom automations using legacy auth flows, mature environments with years of accumulated integrations — the deploy-hot approach carries real risk. The policy may start blocking legitimate sign-ins immediately, and the affected service accounts will fail loudly enough to disrupt the customer's business.</p>
+
+  <p>For those tenants, the recommended workflow is:</p>
+
+  <ol>
+    <li>Deploy the template via Panoptica365 (creates the policy in Enabled state).</li>
+    <li>Immediately open the Entra portal and flip the policy's state to <strong>Report-only</strong>.</li>
+    <li>Run a 3–7 day Report-only window.</li>
+    <li>Pull the sign-in log filtered to this policy's Report-only result. For each match, classify: legitimate use case that needs an exclusion, or legitimate target that needs migration.</li>
+    <li>Fix exclusions in Panoptica365 (so the audit trail captures the reason), modernise legacy integrations where possible.</li>
+    <li>Flip the policy back to Enabled in the Entra portal.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="The six-step Report-only workflow: deploy Enabled, flip to Report-only, run a window, classify matches, fix exclusions, then flip back to Enabled.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="roArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- top row left to right -->
+        <g transform="translate(28,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="14" y="26" fill="#A8E1F8" font-size="13" font-weight="700">1 · Deploy</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">created in Enabled state</text>
+        </g>
+        <g transform="translate(265,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#1E2A18" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#FFC04D" font-size="13" font-weight="700">2 · Flip to Report-only</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">in the Entra portal</text>
+        </g>
+        <g transform="translate(502,40)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#1E2A18" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#FFC04D" font-size="13" font-weight="700">3 · Run window</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">3–7 days, telemetry only</text>
+        </g>
+        <!-- bottom row right to left -->
+        <g transform="translate(502,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="14" y="26" fill="#C4D4E8" font-size="13" font-weight="700">4 · Classify matches</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">exclude or migrate</text>
+        </g>
+        <g transform="translate(265,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="14" y="26" fill="#C4D4E8" font-size="13" font-weight="700">5 · Fix exclusions</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">in Panoptica365 + modernise</text>
+        </g>
+        <g transform="translate(28,196)">
+          <rect x="0" y="0" width="190" height="64" rx="10" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.4"/>
+          <text x="14" y="26" fill="#2EE8A0" font-size="13" font-weight="700">6 · Flip to Enabled</text>
+          <text x="14" y="46" fill="#6B85A6" font-size="11.5">enforcement begins</text>
+        </g>
+        <!-- arrows -->
+        <path d="M218 72 H265" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M455 72 H502" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M597 104 V196" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M502 228 H455" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+        <path d="M265 228 H218" stroke="#335F92" stroke-width="2" marker-end="url(#roArr)"/>
+      </g>
+    </svg>
+    <figcaption>For tenants with significant legacy infrastructure: deploy, stage to Report-only, observe, fix, then enforce.</figcaption>
+  </figure>
+
+  <p>Report-only mode means Conditional Access evaluates the policy on every relevant sign-in, logs what <em>would</em> have happened if the policy were enforced, but doesn't actually enforce anything. The sign-in proceeds as if the policy didn't exist. You get the telemetry without the breakage.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Skip Report-only when…</th><th>Use Report-only when…</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Small-business tenants with no significant legacy infrastructure, a clean Intune posture, and a well-scoped pre-flight inventory. Most Panoptica365 deployments fit this profile.</td>
+          <td>Large or complex environments with substantial legacy integrations; post-incident hardening where the customer can't tolerate any false positives; first-time deployment of an imported custom template (lesson 8 covers this case specifically).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>A few specific templates in this card — Block Legacy Authentication (lesson 3), the strategy migration in lesson 5, and any imported template in lesson 8 — recommend Report-only regardless of tenant size, because their breakage modes are harder to predict from the pre-flight inventory alone. Each lesson calls this out.</p>
+
+  <p>If you're not sure, lean toward Report-only. The friction cost is 3–7 days of an additional review step. The cost of a wrong-direction deployment in a complex environment is a customer outage on a workday.</p>
+
+  <h3>4. Communicate to affected users before enforcement</h3>
+
+  <p>Conditional Access changes the user experience. A policy that requires MFA where there was none before will surprise the user. A policy that requires a compliant device blocks personal-laptop access. A geo-policy may catch a salesperson on a Tuesday business trip.</p>
+
+  <p>Before enforcement (during the Report-only window):</p>
+
+  <ul>
+    <li>Send a tenant-wide notice explaining what's changing, what the user will see, and what to do if they get blocked.</li>
+    <li>Brief the help desk on what alerts to expect and what the right resolution looks like.</li>
+    <li>Identify any high-impact users (executives, sales travelers, contractors) and reach out individually.</li>
+    <li>Document the change in the customer's change log (Panoptica365 records this automatically when you deploy from the template library).</li>
+  </ul>
+
+  <p>The goal is that when enforcement starts, every user knows what to expect. No surprised users = no panic tickets.</p>
+
+  <h3>5. Know what success looks like, and how to monitor it</h3>
+
+  <p>For every CA policy you deploy, you should be able to answer in advance:</p>
+
+  <ul>
+    <li><strong>What sign-ins should this policy match?</strong> (e.g., "All non-MFA'd sign-ins from outside the trusted IP range.")</li>
+    <li><strong>What sign-ins should it <em>not</em> match?</strong> (e.g., "The salesperson on a known trip with prior approval; service accounts on their static IP.")</li>
+    <li><strong>What's the expected daily volume of matches?</strong> (Roughly zero for a healthy tenant; non-zero matches mean either real threats or misconfiguration.)</li>
+    <li><strong>What signals indicate the policy is misconfigured?</strong> (Sudden surge of legitimate users being blocked; a previously-working integration starts failing.)</li>
+  </ul>
+
+  <p>Panoptica365's CA drift detector covers the long-term monitoring piece — it tells you when a policy you deployed yesterday looks different today. But the operator still needs to define what "looks right" means at deployment time. Without that baseline, drift detection is just noise.</p>
+
+  <h2>The named-location prep work</h2>
+
+  <p>Several Panoptica365 templates rely on named locations — the "Only allow access from Canada" template and any custom geographic policies imported from another tenant. Before enabling any of those:</p>
+
+  <ul>
+    <li>Confirm the named location in the tenant matches the customer's actual geography. The default Panoptica365 template ships with Canada; a Mexican customer's tenant needs Mexico defined as the trusted location instead. Lesson 8 covers the customization workflow.</li>
+    <li>Confirm the IP ranges in the named location are current. Office IPs change. Branch offices move. Don't rely on a named location that hasn't been verified in the last 6 months.</li>
+    <li>Confirm that "trusted IPs" doesn't include any IP range that's not actually trusted. A common mistake is including a vendor's VPN range or a parent company's office, neither of which the MSP can vouch for.</li>
+  </ul>
+
+  <h2>The authentication-strength prep work</h2>
+
+  <p>A few of the policies in card 3 (specifically the admin-hardening templates in lesson 6) use authentication strengths — a Conditional Access feature that lets you specify <em>which</em> MFA method must be used, not just <em>that</em> MFA must be used. "Phishing-resistant MFA" is the standard high-bar authentication strength; it accepts FIDO2 keys, passkeys, and Windows Hello for Business and rejects SMS, voice, and Authenticator push.</p>
+
+  <p>Before enabling an authentication-strength-based policy:</p>
+
+  <ul>
+    <li>Confirm the affected users have already enrolled the stronger method. If you require phishing-resistant MFA for admins on Tuesday and the admins are still using Authenticator push, they're locked out Tuesday.</li>
+    <li>Use the Report-only window to verify enrolment. If the policy would have blocked an admin during Report-only because they haven't enrolled, fix the enrolment first.</li>
+    <li>For admins specifically, plan the rollout in phases. Start with the IT operations team (they can fix themselves if they get locked out). Then expand to other admin roles.</li>
+  </ul>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Conditional Access is the layer where mistakes are most visible to users.</strong> A misconfigured anti-phishing rule silently drops one email; a misconfigured CA policy locks out a department. Treat every deployment as a change-management event. The pre-flight inventory is the typical small-business dry run; the manual Report-only flip in the Entra portal is the dry run for complex environments.</p>
+
+  <p><strong>The break-glass account is non-negotiable.</strong> Every conversation with a customer about Conditional Access starts with "let's verify the break-glass story." If they don't have one, the first CA work you do for them is creating it. Everything else waits.</p>
+
+  <p><strong>Document exclusions with expiration.</strong> Panoptica365's exemption system was built specifically to make this easy. Use it. The cost of an exclusion you forgot about is a year of false-positive alerts, a security gap somebody else doesn't know about, and a compliance finding when the auditor arrives.</p>
+
+  <h2>What's next</h2>
+
+  <p>The rest of card 3 walks through each Panoptica365 CA template in turn. By the time you finish:</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Require MFA for all users</b> — the foundation.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Block legacy authentication</b> — closing the basic-auth bypass.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Trusted location OR compliant device</b> — the smart geo-policy.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Compliant device OR hybrid OR MFA</b> — the trust-signal OR policy, and how it relates to lesson 2's policy when both are enabled.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Hardening admin access</b> — four admin templates in one lesson.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Disable device code flow</b> — the Storm-2372 defence.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Importing your own CA templates</b> — Panoptica365's customisation workflow.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Operating CA at scale</b> — drift, exclusions, lifecycle.</div></div>
+  </div>
+
+  <p>Each of those lessons assumes you've done the five pre-flight steps above. The lessons themselves don't repeat the checklist. They get straight to <em>what each template does and how to roll it out</em>. The pre-flight is the foundation; the templates are the implementation.</p>
+
+  <p>For now: read the templates, but don't enable any of them on a customer tenant until you've done the pre-flight for that specific tenant. Conditional Access is the one M365 surface where "trust the defaults" can put a customer offline. Pre-flight is the inoculation.</p>
+
+</div>
+</body>
+</html>

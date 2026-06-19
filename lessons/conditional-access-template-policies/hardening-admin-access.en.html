@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hardening admin access — stronger MFA, shorter sessions — Conditional Access template policies</title>
+<meta name="lesson:title" content="Hardening admin access — stronger MFA, shorter sessions">
+<meta name="lesson:subtitle" content="Four CA templates: phishing-resistant MFA, capped session lifetime, and admin portal protection for privileged accounts.">
+<meta name="lesson:icon" content="user-lock">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Hardening admin access</span></div>
+  <h1>Hardening admin access — stronger MFA, shorter sessions</h1>
+  <p class="dek">Four CA templates: phishing-resistant MFA, capped session lifetime, and admin portal protection for privileged accounts.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A privileged admin identity protected from four directions: MFA for admins, MFA at admin portals, MFA for Azure management, and disabled persistent browser sessions.">
+      <defs>
+        <radialGradient id="haBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="haCore" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="haSoft"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#haBg)"/>
+
+      <!-- center: the privileged admin identity -->
+      <g transform="translate(560,170)">
+        <circle r="150" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 9"/>
+        <circle r="112" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.6"/>
+        <circle r="64" fill="url(#haCore)" filter="url(#haSoft)" opacity="0.85"/>
+        <circle r="40" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="0" cy="-9" r="13" fill="#EAF7FE"/>
+        <path d="M-19 19 q19 -20 38 0" fill="none" stroke="#EAF7FE" stroke-width="3.4" stroke-linecap="round"/>
+      </g>
+      <text x="560" y="318" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">PRIVILEGED ADMIN</text>
+
+      <!-- four protections, one per side -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- top-left: MFA for admins -->
+        <g>
+          <rect x="92" y="58" width="232" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="208" y="86" fill="#A8E1F8" font-size="14.5" font-weight="600">MFA for admins</text>
+          <path d="M324 92 L470 150" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- top-right: MFA at admin portals -->
+        <g>
+          <rect x="796" y="58" width="232" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="912" y="86" fill="#A8E1F8" font-size="14.5" font-weight="600">MFA at admin portals</text>
+          <path d="M796 92 L650 150" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- bottom-left: MFA for Azure mgmt -->
+        <g>
+          <rect x="92" y="236" width="232" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="208" y="264" fill="#A8E1F8" font-size="14.5" font-weight="600">MFA for Azure mgmt</text>
+          <path d="M324 248 L470 190" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- bottom-right: no persistent sessions -->
+        <g>
+          <rect x="796" y="236" width="232" height="46" rx="11" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="912" y="264" fill="#7DD9F9" font-size="14.5" font-weight="700">No persistent sessions</text>
+          <path d="M796 248 L650 190" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+      </g>
+      <defs><marker id="haArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+    </svg>
+    <figcaption>Four templates harden the same admin accounts from four angles — three strengthen MFA, one shortens the session.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>In 2024, Microsoft's Defender team analysed compromise events across thousands of customer tenants and found a pattern that hadn't changed since 2020: the most damaging compromises invariably involved an account with administrative privileges. The breach that started with a phished marketing intern is bad. The breach that started with a phished Global Admin is catastrophic.</p>
+
+  <p>The protections that work for "users in general" don't always work for admins specifically. A Global Admin who completes Authenticator push every morning has technically MFA'd, but they're also exactly the user an AiTM phishing kit is most willing to invest effort against. A privileged user signed in with persistent-browser sessions can keep that session active for days, giving an attacker who compromises their machine days of access. The admin attack surface deserves its own attention.</p>
+
+  <p>This lesson covers four Panoptica365 CA templates that, together, harden the admin attack surface from four different angles. Each template stands alone, but in practice they're deployed together for the same set of admin accounts.</p>
+  </div>
+
+  <ul>
+    <li><strong>Panoptica365 - Require MFA for admins</strong> — MFA always required, for admin accounts, on every app.</li>
+    <li><strong>Panoptica365 - Require MFA challenge Admin Portals</strong> — MFA required to access admin portals, for all users (not just admins).</li>
+    <li><strong>Panoptica365 - Require MFA for Azure management</strong> — MFA required to access Azure management endpoints, for all users.</li>
+    <li><strong>Panoptica365 - Disable persistent browser sessions for Admins</strong> — Admin browser sessions don't survive browser close.</li>
+  </ul>
+
+  <p>The first three add a stronger MFA bar to admin-related activity. The fourth shortens the admin session lifetime. Together, they apply four-pronged hardening to the most consequential identities in the tenant.</p>
+
+  <h2>The four templates, in detail</h2>
+
+  <h3>Require MFA for admins</h3>
+
+  <p>Description: <em>All admin must use MFA.</em> Grant: Require MFA. Users: Specific users/groups (the admin group). Apps: All cloud apps.</p>
+
+  <p>This is the admin-equivalent of the Require MFA for all users template from lesson 2. The Lesson 2 template covers everyone; this one ensures that even if Lesson 2 is somehow not enabled, admin accounts still have MFA enforced. It's the belt-and-suspenders policy for the highest-value accounts.</p>
+
+  <p>The "Specific users/groups" scope typically points to a security group named something like "Tenant Admins" or "Privileged Identities" — whatever the customer uses to identify admin accounts in their directory. The group should include everyone with directory-level admin roles (Global Admin, User Admin, Helpdesk Admin, Exchange Admin, SharePoint Admin, etc.).</p>
+
+  <p>When this template is deployed alongside lesson 2's "Require MFA for all users," the admin policy is mostly redundant for normal sign-ins (lesson 2 already covers admin accounts because admins are users). But the admin policy provides a critical defence-in-depth check: if lesson 2 is ever disabled, weakened, or has an exclusion list that grows to include admin accounts by mistake, this template still catches them.</p>
+
+  <h3>Require MFA challenge Admin Portals</h3>
+
+  <p>Description: <em>Require MFA challenge for Admins accessing admin portals.</em> Grant: Require MFA. Users: All users. Apps: 1 app (Microsoft Admin Portals).</p>
+
+  <p>This template attacks the problem from a different angle: instead of restricting <em>who</em> must MFA (the admin user group), it restricts <em>what</em> must MFA (the admin portals). The "Microsoft Admin Portals" service in Entra ID represents the cluster of admin-facing portals — Entra admin centre, Intune admin centre, Microsoft 365 admin centre, Exchange admin centre, etc.</p>
+
+  <p>Why this matters: a sign-in to a regular cloud app and a sign-in to the admin portal are <em>different sign-ins</em> from Microsoft's perspective. A user could have already completed MFA an hour ago when they opened Outlook, and then click into the Entra admin centre without being re-challenged. The previously-completed MFA satisfies the lesson 2 / lesson 5 policy because they're already MFA'd in the session.</p>
+
+  <p>This template forces a <em>fresh</em> MFA prompt specifically when accessing admin portals — even if the user is already signed in with MFA elsewhere. The intent is to ensure that the user demonstrates current presence specifically at the moment they're about to perform an admin-level action. An attacker who stole a session cookie an hour ago doesn't have current MFA; the policy catches them when they try to elevate.</p>
+
+  <p>The "Users: All users" scope is deliberate. Normal users shouldn't be accessing admin portals at all, but if a misconfigured guest or a delegated GDAP user clicks in, they need to MFA. Admins who already MFA'd recently will see one additional MFA prompt; the friction cost is small, the security benefit is large.</p>
+
+  <h3>Require MFA for Azure management</h3>
+
+  <p>Description: <em>Azure management requires MFA.</em> Grant: Require MFA. Users: All users. Apps: 1 app (Microsoft Azure Management).</p>
+
+  <p>Same structural logic as the admin-portals template, but specifically for Azure management endpoints — Azure portal, Azure CLI, Azure PowerShell, ARM REST API, the lot. Azure management is a particularly sensitive surface because resources there often have implicit trust to other parts of the customer's infrastructure (managed identities, role assignments).</p>
+
+  <p>The reason for a separate template (vs. covering it via the admin-portals policy): Azure management is tracked as a distinct application in Entra. Microsoft's M365 admin centre and Microsoft's Azure management surface are separate apps, even though they both feel like "admin stuff." If you want both covered, you need both templates.</p>
+
+  <p>If a customer doesn't use Azure at all (no Azure subscriptions, just M365), this template is technically unnecessary. It's also harmless to enable — it just doesn't fire for any sign-ins. Deploy it anyway for forward-compatibility; the day the customer adds an Azure subscription, the policy is already in place.</p>
+
+  <h3>Disable persistent browser sessions for Admins</h3>
+
+  <p>Description: <em>Admins will be required to authenticate after closing their browsers.</em> Grant: None. Users: Specific users/groups (the admin group). Apps: All cloud apps. Session: Persistent browser session = Never persistent.</p>
+
+  <p>This is a session control, not an authentication control. The three policies above govern <em>whether</em> MFA happens. This policy governs <em>how long</em> a sign-in stays valid.</p>
+
+  <p>By default, when a user signs in and clicks "Yes, keep me signed in" or when the browser keeps a session cookie, the session can persist across browser restarts. Close the browser at 5 PM, open it at 9 AM the next day, you're still signed in — no re-authentication needed.</p>
+
+  <p>For admins, that's too long. An attacker who compromises an admin's laptop after hours has a window of opportunity that lasts until the next time the admin's session expires naturally — which could be days. Disabling persistent browser sessions for admins means each browser-close terminates the session; the admin signs in again fresh when they reopen their browser.</p>
+
+  <p>The friction cost is real (admins sign in more often). The security benefit is also real: the window during which a stolen device or a misappropriated session can be used shrinks dramatically. For admin-level accounts, the trade-off favours security.</p>
+
+  <p>This policy is the closest thing to "sign-in frequency = every session" Microsoft offers. The mechanism is slightly different (it disables session persistence rather than capping session lifetime) but the effective outcome is similar.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 380" role="img" aria-label="The four admin-hardening templates by scope and control: who they apply to, which apps, and whether the control is a grant or a session control.">
+      <rect width="720" height="380" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="36" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">TEMPLATE</text>
+        <text x="396" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">SCOPED BY</text>
+        <text x="556" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">CONTROL</text>
+        <line x1="36" y1="44" x2="684" y2="44" stroke="#1F3C5C" stroke-width="1.2"/>
+
+        <!-- row 1 -->
+        <g transform="translate(0,56)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">Require MFA for admins</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">all cloud apps</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">User group</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Grant: MFA</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(0,128)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">MFA challenge Admin Portals</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">Microsoft Admin Portals</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Application</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Grant: MFA</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(0,200)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">MFA for Azure management</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">Microsoft Azure Management</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Application</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Grant: MFA</text>
+        </g>
+        <!-- row 4 -->
+        <g transform="translate(0,272)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="56" y="26" fill="#7DD9F9" font-size="14" font-weight="700">Disable persistent sessions</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">all cloud apps</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">User group</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#0E2236" stroke="#5CCBF4"/>
+          <text x="620" y="34" fill="#7DD9F9" font-size="12" text-anchor="middle">Session</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Three templates scope differently and govern MFA; the fourth is a session control — which is why they don't fold into one policy.</figcaption>
+  </figure>
+
+  <h2>Why four templates, not one big "harden admins" policy</h2>
+
+  <p>A reasonable question: why not combine all four into a single template?</p>
+
+  <p>Three reasons:</p>
+
+  <p><strong>Scope differences.</strong> Lesson 6.1 (Require MFA for admins) scopes by <em>user group</em> — it applies to admins regardless of which app they're using. Lesson 6.2 (Admin Portals) and 6.3 (Azure management) scope by <em>application</em> — they apply to anyone accessing those portals. Lesson 6.4 (Disable persistent browser) scopes by user group and applies a <em>session control</em> rather than a grant control. These different scoping models don't combine cleanly into a single CA policy.</p>
+
+  <p><strong>Independent enforcement.</strong> Each template provides defence at a different layer. Admin-MFA covers identity. Portal-MFA covers fresh presence. Azure-MFA covers a specific high-risk app. Browser-session covers session persistence. If one is misconfigured or has an exclusion that grows over time, the others still provide coverage. Splitting them keeps the failure modes independent.</p>
+
+  <p><strong>Operational clarity.</strong> Each template has its own name, its own description, its own audit trail. When the Panoptica365 drift detector flags a change, the operator knows exactly which protection moved. A monolithic "harden admins" template would obscure which specific protection changed.</p>
+
+  <h2>What "admin" means for these templates</h2>
+
+  <p>The admin user group is a customer-specific definition. For most tenants, it should include:</p>
+
+  <ul>
+    <li><strong>Global Administrator</strong> — full directory control. Everyone in this role.</li>
+    <li><strong>Privileged Role Administrator</strong> — can manage role assignments. High-value target.</li>
+    <li><strong>Conditional Access Administrator</strong> — can change CA policies. Particularly dangerous if compromised because they can disable other policies.</li>
+    <li><strong>Security Administrator, Security Reader</strong> — handles security alerts and configurations.</li>
+    <li><strong>Exchange Administrator, SharePoint Administrator, Teams Administrator</strong> — control specific services.</li>
+    <li><strong>User Administrator, Helpdesk Administrator</strong> — can reset passwords and manage MFA registration.</li>
+    <li><strong>Authentication Administrator</strong> — can manage MFA methods.</li>
+  </ul>
+
+  <p>The customer's specific list depends on their structure. A small tenant may have only two admins. A larger one may have a dozen distinct roles. The right group membership is "anyone who, if compromised, could cause significant damage." This usually maps to anyone with a directory-level admin role plus anyone with permissions to manage privileged resources (Azure subscriptions, SharePoint sites with sensitive data, etc.).</p>
+
+  <div class="callout">
+    <div class="clabel">PIM-enabled tenants</div>
+    <p><strong>Privileged Identity Management (PIM)</strong> — available only in E5 — changes this conversation. With PIM, users don't have permanent admin roles; they activate roles temporarily when needed. The admin user group in a PIM-enabled tenant might be empty for most of the day, populated only when a user activates a role.</p>
+    <p>For tenants with PIM, the admin-hardening templates should still target the <em>pool</em> of users <em>eligible</em> to activate admin roles, not just the currently-active admins. The protection needs to be in place before the user activates, not after.</p>
+  </div>
+
+  <h2>Authentication strengths — when to upgrade from MFA to phishing-resistant</h2>
+
+  <p>The templates above all use "Require MFA" without specifying which MFA method. By default, this accepts any MFA method the user has enrolled — Authenticator push, SMS, voice, hardware token, etc.</p>
+
+  <p>For admins, the right bar is <em>phishing-resistant MFA</em> — FIDO2 keys, passkeys, or Windows Hello for Business. Push notifications are vulnerable to fatigue (card 2 lesson 2). SMS is vulnerable to SIM swap. Voice is vulnerable to social engineering. Only phishing-resistant methods are immune to the AiTM attack pattern from card 2 lesson 3.</p>
+
+  <p>In Entra ID, this is configured via <strong>authentication strengths</strong> — Conditional Access policies can specify which authentication strength is required. Microsoft ships several authentication strengths:</p>
+
+  <ul>
+    <li><em>Multifactor authentication</em> (any MFA method)</li>
+    <li><em>Passwordless MFA</em> (any passwordless method, including Windows Hello and Authenticator passwordless)</li>
+    <li><em>Phishing-resistant MFA</em> (FIDO2, passkeys, certificate-based, Windows Hello for Business only)</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Three authentication strengths in increasing order: multifactor authentication accepts any method; passwordless MFA accepts passwordless methods; phishing-resistant MFA accepts only FIDO2, passkeys, certificate-based, and Windows Hello for Business.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- step 1 -->
+        <g transform="translate(40,168)">
+          <rect x="0" y="0" width="200" height="58" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="100" y="26" text-anchor="middle" fill="#C4D4E8" font-size="13.5" font-weight="600">Multifactor</text>
+          <text x="100" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">any MFA method</text>
+        </g>
+        <!-- step 2 -->
+        <g transform="translate(258,94)">
+          <rect x="0" y="0" width="200" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="13.5" font-weight="600">Passwordless MFA</text>
+          <text x="100" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">passwordless methods</text>
+        </g>
+        <!-- step 3 -->
+        <g transform="translate(476,20)">
+          <rect x="0" y="0" width="204" height="58" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="102" y="26" text-anchor="middle" fill="#7DD9F9" font-size="13.5" font-weight="700">Phishing-resistant</text>
+          <text x="102" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">FIDO2 · passkeys · WHfB</text>
+        </g>
+        <!-- ascending connectors -->
+        <path d="M240 174 L262 152" stroke="#335F92" stroke-width="2" marker-end="url(#asArr)"/>
+        <path d="M458 100 L480 78" stroke="#5CCBF4" stroke-width="2" marker-end="url(#asArr)"/>
+        <text x="360" y="240" text-anchor="middle" fill="#6B85A6" font-size="11.5">stronger admin bar &#8594;</text>
+      </g>
+      <defs><marker id="asArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+    </svg>
+    <figcaption>The three shipped authentication strengths, weakest to strongest — admins belong at the phishing-resistant rung.</figcaption>
+  </figure>
+
+  <p>The shipped Panoptica365 admin-MFA templates use the default "Require MFA" grant, which accepts any MFA method. For customers who want to upgrade to phishing-resistant for admins, the customisation is:</p>
+
+  <ol>
+    <li>Open the deployed Require MFA for admins policy in the Entra portal.</li>
+    <li>Under Grant controls, change "Require multi-factor authentication" to "Require authentication strength: Phishing-resistant MFA."</li>
+    <li>Verify (in Report-only or by checking admin authentication-methods registrations) that affected admins have FIDO2 keys or passkeys enrolled.</li>
+    <li>Apply the change.</li>
+  </ol>
+
+  <p>The same upgrade can be applied to the Admin Portals and Azure management templates if the customer wants to require phishing-resistant MFA specifically for those high-value sign-ins.</p>
+
+  <p>When to push this upgrade:</p>
+
+  <ul>
+    <li>Customers who have already been compromised once (the post-incident hardening).</li>
+    <li>Customers with regulated data (finance, healthcare, government contractors).</li>
+    <li>Customers with sufficient Intune coverage to issue managed devices with Windows Hello for Business.</li>
+    <li>Customers willing to provide FIDO2 keys for admin staff (typically a $40-$60 hardware investment per admin).</li>
+  </ul>
+
+  <p>For tenants without those drivers, the default "Require MFA" is the right starting point. The phishing-resistant upgrade is a credible path forward when the customer's security posture matures.</p>
+
+  <h2>Rollout</h2>
+
+  <p>The four admin templates deploy together. They all deploy in Enabled state.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Pre-flight</div>
+    <p>Pre-flight: confirm the admin user group is well-defined, break-glass account is excluded from all four templates, admins know what's coming. Most critically, <strong>verify every admin has phishing-resistant MFA registered</strong> (or at least Authenticator push). If an admin doesn't have MFA enrolled, they're locked out the moment the policy enforces.</p>
+  </div>
+
+  <p>For small-business tenants with a small, well-known admin group and verified MFA enrolment, deploy and monitor closely. For larger tenants with many admins, mixed MFA enrolment, or complex existing CA policies, the manual Report-only step in the Entra portal is recommended. Deploy via Panoptica365 (creates in Enabled), then in the Entra portal flip all four policies to Report-only. Run a 3–7 day window.</p>
+
+  <p>During the verification window (whether Report-only or live monitoring after deployment), check each template's matches:</p>
+
+  <ul>
+    <li>Require MFA for admins: should match every admin sign-in.</li>
+    <li>Admin Portals: should match every admin-portal access (admin or non-admin).</li>
+    <li>Azure management: should match Azure portal / CLI accesses.</li>
+    <li>Persistent browser session: should match every admin browser session.</li>
+  </ul>
+
+  <p>For each template: are the matches what you expect? Any unexpected non-admin users hitting the portal policies? Any admins with no recent admin-portal activity? Investigate anomalies.</p>
+
+  <p>After enforcement, monitor for two weeks:</p>
+
+  <ul>
+    <li>Admin sign-ins should complete MFA more frequently (the admin-portals and Azure-mgmt policies will fire even when the admin is already MFA'd in their general session).</li>
+    <li>Admins reopening their browsers should see fresh sign-in prompts (persistent-browser-session policy).</li>
+    <li>No admins should be locked out — verify after deployment that every admin has signed in successfully.</li>
+  </ul>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>Failed admin MFA challenges.</strong> Bursts of failed MFA on admin accounts are the highest-priority alerts in your queue. Even more than for regular users, this is the pattern that precedes a serious compromise. Treat with maximum urgency.</p>
+
+  <p><strong>Admin sign-ins from unexpected locations.</strong> Foreign-IP or impossible-travel alerts on admin accounts are not "trip with the family" events — they're either pre-planned admin work or attempted compromise. Verify before resolving.</p>
+
+  <p><strong>Drift on any of the four templates.</strong> Any change to the admin policies — scope change, control change, disable — should be audit-logged and reviewed. Panoptica365's CA drift detector covers this. Admin-policy drift is the highest-severity drift category.</p>
+
+  <p><strong>New methods added to admin authentication.</strong> When an admin adds a new MFA method, the post-compromise attacker pattern (card 2 lesson 3 — register-a-new-MFA-method after AiTM) applies double for admins. Treat new admin auth-method registrations as confirmation-required events.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>The Daily Activity widget shows admin MFA challenge volume; the CA-block count rises with the admin templates enforcing. Specifically:</p>
+
+  <ul>
+    <li>Admin MFA prompts (challenges) — should be steady at a few per admin per day.</li>
+    <li>CA blocks on admin templates — should be rare; each one is an admin or non-admin trying to access an admin surface without MFA. Investigate every block.</li>
+    <li>Drift alerts on any of the four templates — fire as part of the CA drift detection pipeline.</li>
+  </ul>
+
+  <p>The Panoptica365 alert engine treats admin-account alerts at a higher severity than regular-user alerts by default. An admin MFA-disabled alert (one of these templates getting disabled) is a high-severity event; an admin foreign-IP sign-in is high-severity; an admin new-auth-method registration is high-severity.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Four takeaways for daily work.</p>
+
+  <p><strong>Deploy these four templates as a set.</strong> They protect different angles of the same problem. Deploying just one or two leaves gaps in the admin attack surface.</p>
+
+  <p><strong>Define the admin group carefully.</strong> Anyone with directory-level admin roles, plus anyone with privileged access to high-value resources. PIM-enabled tenants should target the <em>eligible-admin</em> pool, not just currently-active admins.</p>
+
+  <p><strong>The friction cost is real but worth it.</strong> Admins will see more MFA prompts, more frequent sign-ins. This is the intended trade-off. The alternative — looser admin sign-in policies for the sake of convenience — is exactly the gap attackers exploit.</p>
+
+  <p><strong>Plan the upgrade to phishing-resistant MFA.</strong> The default "Require MFA" admin policies should be upgraded to "Require phishing-resistant MFA" when admins have FIDO2 keys or passkeys enrolled. This is the highest-leverage single security upgrade for any customer's admin posture.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Lesson 7: Disable device code flow</b> — The Storm-2372 defence, as a dedicated CA template.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Lesson 8: Importing your own CA templates</b> — How to customise the admin-hardening templates (or anything else) for an MSP's own preferences.</div></div>
+  </div>
+
+  <p>For now: these four templates are the foundation of admin security in M365. A customer who has all four deployed has materially better protection against the most consequential class of compromise. A customer who only has "Require MFA for all users" enabled is still exposed at the admin layer because the admin-specific paths (portal access, Azure management, session persistence) aren't covered. Deploy the four templates together.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Conditional Access for admin protection (<a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/best-practices" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policies and admins</a>); Microsoft Admin Portals as a CA target (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps#microsoft-admin-portals" target="_blank" rel="noopener">Microsoft Learn — Microsoft Admin Portals app</a>); authentication strengths overview (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-strengths" target="_blank" rel="noopener">Microsoft Learn — Conditional Access authentication strengths</a>); session control reference for persistent browser sessions (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-session" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Session controls</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

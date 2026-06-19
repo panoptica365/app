@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fatigue MFA — l'histoire d'Uber — Menaces et schémas d'attaque sur l'identité</title>
+<meta name="lesson:title" content="Fatigue MFA — l'histoire d'Uber">
+<meta name="lesson:subtitle" content="Comment les attaquants inondent les utilisateurs de notifications push jusqu'à ce qu'ils en approuvent une — et pourquoi le MFA par push est ingénierable.">
+<meta name="lesson:icon" content="bell-ring">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Menaces et schémas d'attaque sur l'identité</span> <span class="sep">·</span> <span>Fatigue MFA</span></div>
+  <h1>Fatigue MFA — l'histoire d'Uber</h1>
+  <p class="dek">Comment les attaquants inondent les utilisateurs de notifications push jusqu'à ce qu'ils en approuvent une — et pourquoi le MFA par push est ingénierable.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un attaquant réutilise un mot de passe volé pour lancer une rafale de notifications push Authenticator sur le téléphone d'un utilisateur fatigué jusqu'à ce qu'une soit approuvée.">
+      <defs>
+        <radialGradient id="mfBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="mfPhone" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#0E2236"/></radialGradient>
+        <marker id="mfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mfBg)"/>
+
+      <!-- left: attacker with stolen password -->
+      <g transform="translate(150,170)">
+        <circle r="120" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-58" y="-30" width="116" height="60" rx="10" fill="#0E2640" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-4" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">ATTAQUANT</text>
+        <text x="0" y="16" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12">a le mot de passe</text>
+      </g>
+      <text x="150" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">login.microsoftonline.com</text>
+
+      <!-- middle: a burst of repeated push notifications -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(400,86)"><rect x="-90" y="-17" width="180" height="34" rx="17" fill="#0E2236" stroke="#52708F"/><text x="0" y="5" fill="#6B85A6" font-size="12">Approuver / Refuser?</text></g>
+        <g transform="translate(400,132)"><rect x="-90" y="-17" width="180" height="34" rx="17" fill="#0E2236" stroke="#52708F"/><text x="0" y="5" fill="#6B85A6" font-size="12">Approuver / Refuser?</text></g>
+        <g transform="translate(400,178)"><rect x="-90" y="-17" width="180" height="34" rx="17" fill="#0E2236" stroke="#52708F"/><text x="0" y="5" fill="#6B85A6" font-size="12">Approuver / Refuser?</text></g>
+        <g transform="translate(400,224)"><rect x="-90" y="-17" width="180" height="34" rx="17" fill="#0E2236" stroke="#6B85A6"/><text x="0" y="5" fill="#8FA6C2" font-size="12">Approuver / Refuser?</text></g>
+      </g>
+      <text x="400" y="296" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">cinq · dix · vingt pushs</text>
+      <path d="M270 155 H306" stroke="#52708F" stroke-width="2" marker-end="url(#mfArr)"/>
+
+      <!-- right: tired user's phone, one approved -->
+      <g transform="translate(880,170)">
+        <circle r="122" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-52" y="-92" width="104" height="184" rx="18" fill="url(#mfPhone)" stroke="#335F92" stroke-width="1.6"/>
+        <rect x="-40" y="-72" width="80" height="120" rx="6" fill="#081829" stroke="#1F3C5C"/>
+        <circle cx="0" cy="68" r="9" fill="none" stroke="#335F92" stroke-width="1.5"/>
+        <!-- the one approved prompt -->
+        <rect x="-34" y="-58" width="68" height="40" rx="7" fill="#10243B" stroke="#2EE8A0" stroke-width="1.6"/>
+        <path d="M-12 -38 l8 8 l16 -18" fill="none" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="0" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">2 h</text>
+      </g>
+      <text x="880" y="318" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">UNE APPROUVÉE</text>
+    </svg>
+    <figcaption>L'attaquant a déjà le mot de passe; il ne reste qu'à faire vibrer le téléphone jusqu'à ce qu'un prompt soit approuvé.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Le 15 septembre 2022, un contractuel de 18 ans chez Uber a tapé « Approuver » sur une notification push Microsoft Authenticator à la maison, tard en soirée, après que son téléphone ait vibré pendant environ une heure. Il n'était pas en train de se connecter à quoi que ce soit. L'attaquant à l'autre bout du prompt lui a ensuite envoyé un message WhatsApp prétendant être de Uber IT, lui disant que les notifications push allaient s'arrêter s'il en approuvait juste une.</p>
+
+  <p>Il a approuvé.</p>
+
+  <p>Le matin venu, l'attaquant — identifié plus tard comme faisant partie du groupe Lapsus$ — était passé de cette unique approbation de push à un accès en lecture sur le Slack interne d'Uber, la console AWS, l'admin Google Workspace, la plateforme de bug bounty HackerOne, et le code source de la compagnie. L'intrusion est devenue publique quand l'attaquant a commencé à poster des captures d'écran dans les canaux Slack d'ingénierie d'Uber pour annoncer qu'il était là.</p>
+
+  <p>Ça, c'est la fatigue MFA. L'incident Uber est l'étude de cas canonique, et le patron d'attaque est bien vivant en 2026.</p>
+
+  <p>Cette leçon, c'est pourquoi le MFA basé sur push est socialement ingénierable, ce que font (et ne font pas) le number matching et le contexte additionnel, et comment pousser les clients vers des méthodes d'authentification qui ne peuvent pas être fatiguées.</p>
+  </div>
+
+  <h2>Ce qui se passe vraiment</h2>
+
+  <p>La fatigue MFA (aussi appelée « bombardement MFA » ou « push bombing ») demande que l'attaquant ait déjà le mot de passe de l'utilisateur. Souvent ça vient d'un dump d'identifiants (leçon 1). Le prompt MFA est la seule chose entre l'attaquant et le compte.</p>
+
+  <p>La mécanique de l'attaque est embarrassante de simplicité :</p>
+
+  <ol>
+    <li>L'attaquant a un nom d'utilisateur + mot de passe. Les entre dans <code>login.microsoftonline.com</code>.</li>
+    <li>Entra ID demande le MFA — envoie une notification push au téléphone de l'utilisateur via Microsoft Authenticator.</li>
+    <li>L'utilisateur voit le prompt, sait qu'il n'a pas essayé de se connecter, le rejette.</li>
+    <li>L'attaquant entre le mot de passe à nouveau. Un autre push.</li>
+    <li>L'attaquant répète. Cinq pushs. Dix. Vingt. L'utilisateur dort à 2 h du matin, ou est en réunion, ou est juste épuisé.</li>
+    <li>Éventuellement, l'utilisateur soit clique « Approuver » par erreur au lieu de « Refuser », soit abandonne et approuve pour faire taire les vibrations, soit l'attaquant ajoute une couche d'ingénierie sociale (« Salut, c'est IT, le système buggue, approuve juste pour qu'on puisse finir le test »).</li>
+    <li>L'attaquant est dedans.</li>
+  </ol>
+
+  <p>Toute l'attaque n'a <em>aucune sophistication technique</em>. Elle fonctionne parce que les humains se fatiguent et s'énervent, et parce que le binaire rejeter-ou-approuver ne communique aucun contexte.</p>
+
+  <h2>Pourquoi ça marche spécifiquement contre les notifications push</h2>
+
+  <p>Trois saveurs de MFA existent dans M365, et l'attaque de fatigue marche sur exactement une d'elles.</p>
+
+  <p><strong>MFA par SMS / appel téléphonique.</strong> Pas vulnérable à la fatigue de la même façon — l'attaquant peut composer le numéro de l'utilisateur une fois par tentative, mais des appels répétés rapides déclenchent la détection d'abus au niveau de l'opérateur et ne sont pas gratuits. Le SMS a <em>d'autres</em> problèmes (échange de SIM, interception) qui en font la méthode MFA la plus faible en général, mais la fatigue n'en fait pas partie.</p>
+
+  <p><strong>MFA par notification push (le défaut Authenticator).</strong> Vulnérable. Pousser une notification est gratuit pour Microsoft, donc un attaquant peut en lancer des douzaines par minute. L'utilisateur voit <code>Approuver / Refuser</code> avec peut-être un nom d'utilisateur et un nom d'application. On lui demande de prendre une décision oui/non basée sur près-de-zéro contexte.</p>
+
+  <p><strong>Number matching + contexte additionnel.</strong> Notifications push, mais l'utilisateur doit taper un nombre à deux chiffres montré sur l'écran de connexion dans l'application Authenticator, et le prompt montre maintenant le nom de l'application demandant l'accès plus la localisation géographique de la tentative de connexion. <em>C'est maintenant le défaut Microsoft</em> pour Authenticator et ça l'est depuis 2023.</p>
+
+  <p><strong>MFA résistant à l'hameçonnage (clés FIDO2, passkeys, Windows Hello for Business, basé sur certificat).</strong> Pas vulnérable à la fatigue du tout. L'utilisateur doit physiquement toucher la clé, présenter son visage, ou insérer une carte à puce. Il n'y a pas de « taper pour approuver » — l'opération cryptographique demande une présence. On va passer la leçon 3 de cette carte à montrer pourquoi le MFA résistant à l'hameçonnage compte aussi pour l'AiTM.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Quatre saveurs de MFA classées par exposition à l'attaque de fatigue : le MFA par SMS et le MFA résistant à l'hameçonnage ne sont pas vulnérables, la notification push est vulnérable, et le number matching est plus difficile mais encore possible.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">SAVEUR DE MFA</text>
+      <text x="600" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">EXPOSÉ À LA FATIGUE?</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(0,52)">
+          <rect x="40" y="0" width="430" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="28" fill="#C4D4E8" font-size="14.5">SMS / appel téléphonique</text>
+          <rect x="496" y="6" width="184" height="32" rx="16" fill="#10243B" stroke="#2EE8A0"/><text x="588" y="27" text-anchor="middle" fill="#2EE8A0" font-size="12" font-weight="600">Pas de cette façon</text>
+        </g>
+        <g transform="translate(0,108)">
+          <rect x="40" y="0" width="430" height="44" rx="9" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/><text x="60" y="28" fill="#FF8A98" font-size="14.5" font-weight="600">Notification push (défaut)</text>
+          <rect x="496" y="6" width="184" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/><text x="588" y="27" text-anchor="middle" fill="#FF8A98" font-size="12.5" font-weight="700">Vulnérable</text>
+        </g>
+        <g transform="translate(0,164)">
+          <rect x="40" y="0" width="430" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="28" fill="#C4D4E8" font-size="14.5">Number matching + contexte</text>
+          <rect x="496" y="6" width="184" height="32" rx="16" fill="#2C2410" stroke="#FFC04D"/><text x="588" y="27" text-anchor="middle" fill="#FFC04D" font-size="11.5" font-weight="600">Plus dur, pas impossible</text>
+        </g>
+        <g transform="translate(0,220)">
+          <rect x="40" y="0" width="430" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="60" y="28" fill="#A8E1F8" font-size="14.5" font-weight="600">Résistant à l'hameçonnage</text>
+          <rect x="496" y="6" width="184" height="32" rx="16" fill="#10243B" stroke="#2EE8A0"/><text x="588" y="27" text-anchor="middle" fill="#2EE8A0" font-size="12.5" font-weight="600">Pas du tout</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>L'attaque de fatigue marche sur exactement une saveur — la notification push — et le number matching ne fait que la rendre plus difficile.</figcaption>
+  </figure>
+
+  <h2>Le number matching résout-il vraiment ça?</h2>
+
+  <p>Le number matching rend l'attaque plus difficile, pas impossible. Trois choses changent :</p>
+
+  <p><strong>L'utilisateur doit activement lire un nombre de l'écran de connexion et le taper dans son application Authenticator.</strong> Cliquer « Approuver » par erreur ne marche plus — il n'y a plus de bouton Approuver à mal cliquer. L'utilisateur doit faire quelque chose <em>d'intentionnel</em>. Ça tue le mode d'échec « j'étais tourné dans mon lit et j'ai tapé Oui ».</p>
+
+  <p><strong>Le contexte additionnel montre le nom de l'application et la localisation géographique.</strong> « Connexion depuis Microsoft Outlook à Bucarest, Roumanie » devrait sonner l'alarme même pour un utilisateur fatigué à Montréal. (Si ça le fait vraiment dépend de l'attention de l'utilisateur à 2 h 14 du matin, mais au moins l'information est là.)</p>
+
+  <p><strong>L'attaquant doit maintenant une couche d'ingénierie sociale.</strong> Sans number matching, l'attaque est purement mécanique — push, répéter, attendre. Avec number matching, l'attaquant doit <em>parler</em> à l'utilisateur pour le faire taper le nombre. Ça veut généralement dire un message WhatsApp, un message Teams, ou un appel téléphonique prétendant être de IT.</p>
+
+  <p>Donc le number matching convertit la fatigue MFA d'une attaque d'agacement pure en une qui demande de l'ingénierie sociale. C'est une vraie amélioration. C'est aussi pourquoi chaque campagne en 2025 et 2026 qui frappe un tenant avec number matching arrive empaquetée avec un prétexte d'ingénierie sociale — exactement ce qui est arrivé à Uber.</p>
+
+  <p>Ce que le number matching ne fait <em>pas</em> : rendre l'utilisateur immunisé à un pitch d'ingénierie sociale convaincant. Si l'attaquant peut simuler un appel d'aide IT assez bien pour que l'utilisateur tape activement le code à deux chiffres, l'attaque marche encore. Le number matching élève la barre; il n'élimine pas la classe.</p>
+
+  <h2>À quoi ça ressemble dans la télémétrie M365</h2>
+
+  <p>Quand la fatigue MFA est en cours, Microsoft voit :</p>
+
+  <ul>
+    <li><strong>Une rafale de tentatives de connexion échouées sur un compte</strong>, toutes avec le bon mot de passe (parce que l'attaquant a le mot de passe) mais sans complétion MFA. Ça apparaît dans le journal de connexion Entra avec le résultat « Défi MFA requis, non complété ».</li>
+    <li><strong>Une connexion réussie immédiatement après la rafale</strong>, quand l'utilisateur finit par approuver.</li>
+    <li><strong>Souvent, de l'activité de suivi depuis un nouvel appareil</strong> — l'attaquant se connecte maintenant depuis sa propre machine en utilisant la session approuvée par MFA.</li>
+  </ul>
+
+  <p>Entra ID Protection (P2 seulement, E5) peut noter ce patron comme suspect et déclencher des contrôles d'AC basés sur le risque. À Business Premium (P1), le patron de rafale-de-MFA-échoués ne génère pas automatiquement une alerte Microsoft à haute confiance, mais la connexion <em>réussie</em> depuis un nouveau pays ou un nouvel appareil devrait quand même déclencher les détecteurs d'IP étrangère et de déplacement impossible de Panoptica365.</p>
+
+  <p>Defender XDR peut aussi plier ces signaux en un incident si l'utilisateur va faire quelque chose de bruyant après — enregistrer un nouvel appareil MFA, créer une règle de boîte, s'envoyer un courriel à une adresse Gmail. C'est le patron BEC de la leçon 6.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>Trois signaux de la fatigue MFA :</p>
+
+  <p><strong>La rafale de tentatives de connexion échouées en quasi-temps-réel</strong> via le widget Activité quotidienne sur le tableau de bord du tenant. Le graphique en anneau se rafraîchit à peu près toutes les 15 minutes et montre la répartition des résultats de connexion — authentifications réussies, authentifications échouées, et blocages d'accès conditionnel. Pendant une attaque de fatigue MFA, la tranche authentifications-échouées de l'anneau gonfle visiblement. Surveillez les pointes soudaines concentrées sur <em>un utilisateur ou un petit groupe</em> — c'est le patron de fatigue MFA. Distribué-sur-plusieurs-utilisateurs, c'est le credential stuffing (leçon 1); concentré-sur-un-utilisateur, c'est la fatigue MFA ou une attaque ciblée d'identifiants.</p>
+
+  <p><strong>La connexion réussie elle-même.</strong> Quand l'utilisateur finit par approuver et que l'attaquant entre — typiquement depuis une IP étrangère ou en proximité de déplacement impossible avec l'utilisateur légitime — l'alerte se déclenche dans votre file.</p>
+
+  <p><strong>L'activité de suivi.</strong> Création de règles de boîte, transfert de boîte, accords de permission de boîte, parfois nouvelles attributions de rôle d'admin — ces actions post-compromission sont typiquement plus bruyantes que l'événement de connexion lui-même. La leçon 6 sur le BEC les couvre en détail.</p>
+
+  <p>Distinguer la fatigue MFA du credential stuffing et de l'AiTM compte pour le rapport d'incident du client. Dans la fatigue MFA, le journal de connexion Entra va montrer une rafale de défis MFA qui n'ont pas été complétés, suivis d'un qui l'a été — et l'anneau Activité quotidienne de Panoptica365 aura déjà montré la pointe d'authentifications-échouées en quasi-temps-réel. Dans le credential stuffing, le mot de passe a fonctionné sans que le MFA soit requis (parce que l'utilisateur n'avait pas de MFA inscrit). Dans l'AiTM (leçon 3), le MFA <em>a été</em> complété par l'utilisateur, juste sur un faux site. La remédiation est similaire dans les trois; les leçons apprises sont différentes.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Trois attaques comparées par ce que montre le journal de connexion Entra : le credential stuffing se complète sans MFA, la fatigue MFA montre une rafale de défis MFA incomplets puis un complété, l'AiTM montre un MFA complété sur un faux site.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="200" height="180" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="100" y="32" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Credential stuffing</text>
+          <line x1="20" y1="48" x2="180" y2="48" stroke="#1F3C5C"/>
+          <text x="100" y="86" text-anchor="middle" fill="#8FA6C2" font-size="12">le mot de passe</text>
+          <text x="100" y="106" text-anchor="middle" fill="#8FA6C2" font-size="12">marche, sans MFA</text>
+          <text x="100" y="150" text-anchor="middle" fill="#6B85A6" font-size="11">(pas de MFA inscrit)</text>
+        </g>
+        <g transform="translate(260,40)">
+          <rect x="0" y="0" width="200" height="180" rx="10" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="100" y="32" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">Fatigue MFA</text>
+          <line x1="20" y1="48" x2="180" y2="48" stroke="#3A1B22"/>
+          <text x="100" y="86" text-anchor="middle" fill="#E2A0AA" font-size="12">rafale de défis</text>
+          <text x="100" y="106" text-anchor="middle" fill="#E2A0AA" font-size="12">MFA non</text>
+          <text x="100" y="126" text-anchor="middle" fill="#E2A0AA" font-size="12">complétés,</text>
+          <text x="100" y="156" text-anchor="middle" fill="#2EE8A0" font-size="12" font-weight="600">puis un l'est</text>
+        </g>
+        <g transform="translate(480,40)">
+          <rect x="0" y="0" width="200" height="180" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="100" y="32" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="600">AiTM</text>
+          <line x1="20" y1="48" x2="180" y2="48" stroke="#1F3C5C"/>
+          <text x="100" y="86" text-anchor="middle" fill="#8FA6C2" font-size="12">MFA complété</text>
+          <text x="100" y="106" text-anchor="middle" fill="#8FA6C2" font-size="12">par l'utilisateur —</text>
+          <text x="100" y="126" text-anchor="middle" fill="#8FA6C2" font-size="12">sur un faux site</text>
+          <text x="100" y="156" text-anchor="middle" fill="#6B85A6" font-size="11">(leçon 3)</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les trois attaques laissent des traces différentes dans le journal de connexion Entra — c'est ce sur quoi repose le rapport d'incident du client.</figcaption>
+  </figure>
+
+  <h2>Défendre contre la fatigue MFA</h2>
+
+  <p>Défenses, classées par impact :</p>
+
+  <p><strong>Migrer les utilisateurs vers un MFA résistant à l'hameçonnage.</strong> Passkeys, clés de sécurité FIDO2, Windows Hello for Business. Aucun de ceux-là ne peut être fatigué — ils demandent une interaction physique que l'attaquant ne peut pas répliquer. La migration est graduelle (les utilisateurs doivent inscrire des passkeys), mais chaque utilisateur qui passe est entièrement retiré de la surface d'attaque. C'est aussi la bonne réponse pour le problème AiTM de la leçon 3, donc le travail se cumule.</p>
+
+  <p><strong>S'assurer que le number matching est activé</strong> pour tout tenant qui utilise encore le push Authenticator. C'est le défaut Microsoft depuis 2023, mais les tenants plus vieux ou les tenants avec politiques personnalisées peuvent l'avoir désactivé. Vérifier via la politique de méthodes d'authentification Entra ID. Le moteur de paramètres de sécurité de Panoptica365 surveille ça.</p>
+
+  <p><strong>Former les utilisateurs des clients à <em>ne jamais</em> approuver un prompt qu'ils n'ont pas initié.</strong> Ça sonne évident. Ça ne l'est pas. La version la plus efficace de cette formation, c'est une feuille d'une page qui inclut la ligne « Microsoft ne vous appellera jamais pour vous demander d'approuver un prompt de connexion. » Mettez ça dans l'accueil des nouveaux utilisateurs. Rafraîchissez trimestriellement.</p>
+
+  <p><strong>Configurer des alertes pour les événements inhabituels d'enregistrement MFA.</strong> Quand un attaquant fatigue avec succès un utilisateur, la prochaine chose qu'il fait souvent, c'est <em>enregistrer son propre appareil MFA</em> — pour ne pas avoir à fatiguer l'utilisateur de nouveau plus tard. Le journal d'audit Entra capture ça comme un événement « Méthode d'authentification enregistrée ». C'est un des signaux à plus haute valeur pour attraper une compromission <em>pendant que l'attaquant n'a encore qu'un point d'appui</em>.</p>
+
+  <p><strong>Sur les clients réglementés, exiger un MFA résistant à l'hameçonnage via des politiques de force d'authentification d'accès conditionnel.</strong> « Exiger un MFA résistant à l'hameçonnage pour l'accès aux systèmes financiers » est une politique d'AC disponible dans Entra ID P1 (Business Premium et au-dessus). C'est comme ça qu'on protège les utilisateurs à haute valeur sans forcer tout le tenant à passer aux passkeys du jour au lendemain.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Une connexion réussie qui suit une rafale de tentatives MFA échouées est une compromission.</strong> Traitez-la comme telle. Désactivez les sessions actuelles de l'utilisateur, forcez une réinitialisation de mot de passe, exigez un nouvel enregistrement MFA, auditez l'activité récente de la boîte aux lettres. N'attendez pas que le patron BEC se développe avant de répondre.</p>
+
+  <p><strong>L'application Authenticator, c'est bon. Les notifications push via l'application Authenticator sont plus faibles que les passkeys.</strong> C'est une distinction réelle et signifiante, et vous devriez être à l'aise de la faire dans les conversations avec les clients. Le client qui insiste qu'il « a déjà du MFA, tout le monde utilise l'app » surestime la protection. Le number matching aide; les méthodes résistantes à l'hameçonnage résolvent.</p>
+
+  <p><strong>Les comptes de service n'ont presque jamais besoin de mitigation de fatigue MFA, parce que les comptes de service n'ont presque jamais de MFA du tout.</strong> C'est son propre problème (couvert dans la leçon 1, en passant). Les comptes de service compromis via credential stuffing ne se font pas fatiguer; ils se font juste utiliser. Mais la leçon liée est la même : partout où il y a un compte sans authentification résistante à l'hameçonnage, la fatigue MFA (ou pire) est sur la table.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Leçon 3 : Hameçonnage AiTM.</b> Le contournement technique du MFA. Là où la fatigue trompe l'utilisateur en lui faisant approuver un vrai prompt, l'AiTM trompe l'utilisateur en lui faisant approuver un prompt sur un <em>faux site qui fait office de proxy de la vraie connexion Microsoft</em>. L'attaquant capture le cookie de session au lieu de combattre le MFA du tout.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Leçon 6 : BEC.</b> Le dénouement de toute compromission réussie des leçons 1, 2 et 3 — ce que l'attaquant fait vraiment une fois qu'il est dedans.</div></div>
+  </div>
+
+  <p>Pour l'instant : la fatigue MFA est le contournement par ingénierie sociale du MFA. Elle fonctionne parce que les notifications push sont conçues pour être tapées rapidement. Le number matching la rend plus difficile mais pas impossible. La vraie réponse, ce sont les méthodes résistantes à l'hameçonnage, et le travail pour migrer les clients vers elles commence le jour où vous prenez cette leçon au sérieux.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — aperçu de l'incident Uber de septembre 2022 (<a href="https://www.uber.com/newsroom/security-update/" target="_blank" rel="noopener">Uber Newsroom — Security update</a>); attribution Lapsus$ et analyse du modus operandi (<a href="https://www.microsoft.com/en-us/security/blog/2022/03/22/dev-0537-criminal-actor-targeting-organizations-for-data-exfiltration-and-destruction/" target="_blank" rel="noopener">Microsoft Security Blog — DEV-0537 / Lapsus$</a>); déploiement par défaut du number matching Microsoft Authenticator (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/how-to-mfa-number-match" target="_blank" rel="noopener">Microsoft Learn — Number matching for Microsoft Authenticator</a>); politiques de force d'authentification Entra ID (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-strengths" target="_blank" rel="noopener">Microsoft Learn — Conditional Access authentication strengths</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

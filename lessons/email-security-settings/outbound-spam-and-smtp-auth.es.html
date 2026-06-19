@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spam saliente y SMTP AUTH — controlando el radio de impacto cuando el cliente es el atacante — Ajustes de seguridad de correo</title>
+<meta name="lesson:title" content="Spam saliente y SMTP AUTH — controlando el radio de impacto cuando el cliente es el atacante">
+<meta name="lesson:subtitle" content="Límites de envío saliente, respuesta automática de Restricted Users y desactivación de SMTP AUTH para contener rápido un buzón comprometido.">
+<meta name="lesson:icon" content="send">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de seguridad de correo</span> <span class="sep">·</span> <span>Spam saliente &amp; SMTP AUTH</span></div>
+  <h1>Spam saliente y SMTP AUTH — controlando el radio de impacto cuando el cliente es el atacante</h1>
+  <p class="dek">Límites de envío saliente, respuesta automática de Restricted Users y desactivación de SMTP AUTH para contener rápido un buzón comprometido.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Dos desenlaces a partir de un solo buzón comprometido: un radio de impacto acotado de unos 1 800 mensajes frente a uno sin acotar de 18 000.">
+      <defs>
+        <radialGradient id="osBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="osCap" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="osArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#osBg)"/>
+
+      <!-- source: the compromised mailbox -->
+      <g transform="translate(150,170)">
+        <rect x="-58" y="-46" width="116" height="80" rx="12" fill="#0E2640" stroke="#FF5A6E" stroke-width="1.6"/>
+        <path d="M-58 -38 L0 6 L58 -38" fill="none" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="40" cy="-40" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="40" y="-35" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">!</text>
+      </g>
+      <text x="150" y="262" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600" letter-spacing="1.5">BUZÓN COMPROMETIDO</text>
+
+      <!-- top path: contained -->
+      <path d="M250 144 C 360 96, 470 96, 560 100" stroke="#52708F" stroke-width="2" fill="none" marker-end="url(#osArr)"/>
+      <g transform="translate(700,96)">
+        <rect x="-130" y="-44" width="260" height="88" rx="14" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="0" y="-12" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">ACOTADO</text>
+        <text x="0" y="20" text-anchor="middle" fill="#EEF4FC" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">~1 800</text>
+        <text x="0" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">mensajes enviados</text>
+      </g>
+      <!-- the cap on the contained path -->
+      <g transform="translate(478,100)">
+        <circle r="32" fill="none" stroke="#5CCBF4" stroke-width="1" stroke-dasharray="3 6"/>
+        <rect x="-22" y="-22" width="44" height="44" rx="10" fill="url(#osCap)" opacity="0.92"/>
+        <path d="M-11 0 L-3 9 L13 -10" fill="none" stroke="#071221" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="478" y="160" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11" font-weight="600">límite + Restringir</text>
+
+      <!-- bottom path: uncontained -->
+      <path d="M250 200 C 360 256, 470 256, 560 252" stroke="#52708F" stroke-width="2" fill="none" marker-end="url(#osArr)"/>
+      <g transform="translate(700,252)">
+        <rect x="-130" y="-44" width="260" height="88" rx="14" fill="#1A0B11" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-12" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">SIN ACOTAR</text>
+        <text x="0" y="20" text-anchor="middle" fill="#FFFFFF" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">18 000</text>
+        <text x="0" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">mensajes enviados</text>
+      </g>
+      <text x="478" y="244" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5" font-style="italic">sin límite</text>
+    </svg>
+    <figcaption>Un solo buzón comprometido, dos desenlaces: el límite saliente es el tope que convierte 18 000 en unos 1 800.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La socia senior de un pequeño despacho contable cae en un phishing a las 7:14 AM de un miércoles. Estilo AiTM: inicia sesión en lo que parece la página de Microsoft en el móvil antes del primer café. A las 7:22, el atacante tiene la cookie de sesión y está dentro de su buzón.</p>
+
+  <p>A las 7:35 el atacante empieza a enviar. El script es automatizado y ambicioso. La socia tiene 1 847 contactos en su libreta de direcciones — clientes, proveedores, colegas, amigos, familia, listas de distribución de la red contable. El atacante envía a cada uno un mensaje idéntico: «Disculpa la urgencia — por favor revisa este archivo confidencial: [enlace a una captura de credenciales con marca del despacho]». 1 847 mensajes salientes a lo largo de unos noventa minutos.</p>
+
+  <p>A las 8:53 AM el atacante alcanza un límite de mensajes salientes. El tenant del cliente cambia la cuenta de la socia al estado Restricted Users. El correo saliente de su buzón se para. Un correo de alerta llega al contacto IT del cliente (el MSP) diciendo «El usuario X ha sido restringido de enviar correo saliente por sospecha de compromiso».</p>
+
+  <p>El de guardia del MSP ve la alerta a las 8:54 AM. A las 9:10 ha revocado sesiones, restablecido credenciales, confirmado el compromiso, bloqueado la cuenta y arrancado la respuesta a incidentes. El daño en este punto: aproximadamente 1 800 correos de phishing enviados. Malo — pero acotado. Aproximadamente 150 de los destinatarios hicieron clic en el enlace (tasa típica de clic de phishing); aproximadamente 25 introdujeron credenciales (tasa típica de seguimiento). El MSP pasa un miércoles largo corriendo respuesta a incidentes complementaria con las organizaciones y los equipos de IT de esos destinatarios.</p>
+
+  <p>Ahora imagina el mismo escenario sin el límite de salida. El atacante sigue enviando. Cuando alguien lo nota — quizá esa noche, cuando la socia vuelve de sus reuniones con clientes de la mañana y comprueba su carpeta de enviados — el atacante ha enviado 18 000 mensajes. El dominio primario del cliente ha sido listado en tres listas de bloqueo de spam importantes. Microsoft ha suspendido el correo saliente para toda la organización a nivel tenant. El MSP pasa la siguiente semana sacando al cliente de listas de bloqueo, restaurando la entregabilidad para todo el tenant, y explicando a los equipos de IT de los 18 000 destinatarios por qué fueron phisheados desde un dominio ahora contaminado.</p>
+
+  <p>Este es el problema del radio de impacto post-compromiso, y la política de spam saliente es el tope.</p>
+  </div>
+
+  <h2>La política de spam saliente de Microsoft — qué controla</h2>
+
+  <p>La política de spam saliente en Defender (Threat policies → Anti-spam → Outbound spam) gobierna lo que pasa cuando un buzón en el tenant está enviando más correo saliente del que su línea base debería producir. Tres controles de umbral:</p>
+
+  <ul>
+    <li><strong>Límite de mensajes externos por hora.</strong> Cuántos mensajes a destinatarios fuera de la organización puede enviar un solo buzón en una hora. El valor por defecto de Microsoft es 500. La mayoría de los buzones legítimos nunca lo alcanzan; los buzones comprometidos corriendo scripts de phishing lo alcanzan en veinte minutos.</li>
+    <li><strong>Límite de mensajes internos por hora.</strong> Cuántos mensajes a destinatarios internos por hora. Por defecto 1000.</li>
+    <li><strong>Límite diario de mensajes por buzón.</strong> Total de mensajes por día entre internos y externos. Por defecto 10 000 para la mayoría de los tenants.</li>
+  </ul>
+
+  <p>Tres opciones de acción cuando se excede un límite:</p>
+
+  <ul>
+    <li><strong>Solo alertar a admins.</strong> Las notificaciones salen; el usuario sigue enviando. Útil para configuraciones de solo-visibilidad; inútil como control del radio de impacto.</li>
+    <li><strong>Restringir al usuario de enviar correo.</strong> El usuario se añade a una lista de Restricted Users. El correo saliente de su buzón se bloquea a nivel tenant. Aún puede recibir correo; aún puede iniciar sesión; simplemente no puede enviar.</li>
+    <li><strong>Sin acción.</strong> El valor por defecto de algunos tenants más antiguos. Microsoft endureció esto en tenants más nuevos pero las configuraciones heredadas aún pueden estar en Sin acción.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Las tres acciones cuando se excede un límite saliente: solo alertar, restringir al usuario, o sin acción.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CUANDO SE EXCEDE UN LÍMITE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- alert only -->
+        <g transform="translate(36,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.3"/>
+          <text x="100" y="34" text-anchor="middle" fill="#FFC04D" font-size="13" font-weight="700">Solo alertar a admins</text>
+          <text x="100" y="74" text-anchor="middle" fill="#B0C4DF" font-size="11.5">el usuario sigue enviando</text>
+          <text x="100" y="110" text-anchor="middle" fill="#6B85A6" font-size="11">sin tope al daño</text>
+        </g>
+        <!-- restrict -->
+        <g transform="translate(260,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.6"/>
+          <text x="100" y="34" text-anchor="middle" fill="#2EE8A0" font-size="13" font-weight="700">Restringir al usuario</text>
+          <text x="100" y="74" text-anchor="middle" fill="#EEF4FC" font-size="11.5">correo saliente bloqueado</text>
+          <text x="100" y="110" text-anchor="middle" fill="#7DD9F9" font-size="11">el tope del radio</text>
+        </g>
+        <!-- no action -->
+        <g transform="translate(484,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2236" stroke="#33527A" stroke-width="1.3"/>
+          <text x="100" y="34" text-anchor="middle" fill="#C4D4E8" font-size="13" font-weight="700">Sin acción</text>
+          <text x="100" y="74" text-anchor="middle" fill="#B0C4DF" font-size="11.5">defecto de tenant antiguo</text>
+          <text x="100" y="110" text-anchor="middle" fill="#6B85A6" font-size="11">riesgo heredado</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Solo una de las tres acciones pone tope al daño: restringir al usuario de enviar.</figcaption>
+  </figure>
+
+  <p>El ajuste protector es <strong>Restringir al usuario de enviar correo</strong>, con alertas yendo al contacto IT del cliente (típicamente el buzón compartido del MSP). Cuando se dispara, la alerta es la señal de aviso temprano de que es probable que una cuenta esté comprometida; la restricción es el tope sobre cuánto daño se hace antes de que el operador pueda responder.</p>
+
+  <h2>La autoliberación a 24 horas — fricción por diseño</h2>
+
+  <p>Cuando un usuario está restringido, se queda restringido hasta que pase una de dos cosas:</p>
+
+  <ol>
+    <li><strong>Un admin lo quita manualmente de la lista de Restricted Users</strong> (portal de Defender → Email &amp; collaboration → Review → Restricted users; o vía PowerShell con <code>Remove-BlockedSenderAddress</code>).</li>
+    <li><strong>La autoliberación a 24 horas se dispara</strong> y Microsoft lo quita automáticamente.</li>
+  </ol>
+
+  <p>La autoliberación a 24 horas es la red de seguridad para los falsos positivos. Si un remitente legítimo de alto volumen alcanza el límite, no se queda fuera de línea para siempre — espera hasta el día siguiente. Para compromisos genuinos, la restricción aguanta el tiempo que el MSP necesita para investigar; para falsos positivos, se autorresuelve.</p>
+
+  <p>El ajuste de seguridad de Panoptica365 «Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts)» empuja esta configuración: la acción puesta en «Restringir al usuario», destinatarios de alerta apuntados a la dirección correcta, la autoliberación a 24 horas activada. El detector de deriva vigila si la acción se mantiene en Restringir. Que alguien la cambie a «Solo alertar a admins» — típicamente en respuesta a un ticket de falso positivo — dispara la alerta de deriva.</p>
+
+  <h2>Afinado de umbrales — la conversación sobre volumen legítimo</h2>
+
+  <p>Los umbrales por defecto (500 externos/hora, 1000 internos/hora, 10000 diarios) son generosos para la mayoría de los tenants de pequeña empresa. Algunos remitentes legítimos sí los alcanzan, no obstante, y el afinado necesita ser una conversación deliberada:</p>
+
+  <ul>
+    <li><strong>Remitentes de marketing / listas de distribución.</strong> El CRM del cliente o la plataforma de marketing enviando campañas legítimas de alto volumen desde un buzón del tenant.</li>
+    <li><strong>Automatización de atención al cliente.</strong> Autorrespondedores, notificaciones de tickets, confirmaciones de cuenta enviadas desde un buzón de servicio.</li>
+    <li><strong>Boletines internos.</strong> Un equipo de comunicaciones enviando una actualización semanal a todo el personal a 500 destinatarios internos.</li>
+  </ul>
+
+  <p>Para cada uno, la respuesta correcta normalmente <em>no</em> es «sube el umbral global». Es o bien:</p>
+
+  <ul>
+    <li><strong>Mover al remitente legítimo de alto volumen a un mecanismo de transporte diferente</strong> (Microsoft tiene servicios dedicados de correo masivo; una plataforma de correo de terceros vía conector autenticado; etc.) para que el buzón del tenant no sea el que envía.</li>
+    <li><strong>Crear una política de spam saliente personalizada</strong> acotada al buzón específico (o grupo) con umbrales más altos, mientras se mantiene la política por defecto estricta para todos los demás.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">Precaución</div>
+    <p>No subas el umbral para todo el tenant solo porque un buzón tenga un caso de uso legítimo. Eso hace el tope del radio de impacto inútil para los otros 31 buzones del tenant.</p>
+  </div>
+
+  <h2>Envío SMTP AUTH — la puerta trasera heredada</h2>
+
+  <p>Aparte de la política de spam saliente, M365 tiene otro vector que vale la pena cerrar: el <strong>envío SMTP AUTH</strong>.</p>
+
+  <p>El envío SMTP AUTH es el protocolo que deja a una aplicación o dispositivo autenticarse a <code>smtp.office365.com:587</code> con un usuario y contraseña y enviar correo a través de M365 como ese usuario. Lleva existiendo desde siempre. Las impresoras multifunción heredadas lo usan para escanear-a-correo. Las aplicaciones de línea de negocio viejas lo usan para enviar notificaciones. Los scripts personalizados lo usan para enviar correos de informe.</p>
+
+  <p>También es un sueño de credential stuffing. El envío SMTP AUTH usa <strong>autenticación básica</strong> — usuario y contraseña, sin MFA, sin Acceso Condicional en la mayoría de las configuraciones. Un atacante con la contraseña del usuario (de una lista de credential stuffing o de un phishing que no pilló la cookie de sesión) puede autenticarse a SMTP AUTH y enviar correo como el usuario, saltándose todas las defensas de auth modernas.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="El envío SMTP AUTH usa autenticación básica, sin MFA y sin Acceso Condicional, dejando que una contraseña robada se salte las defensas de auth modernas.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="smArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- attacker with password -->
+        <rect x="34" y="96" width="160" height="58" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="114" y="122" fill="#FF8A98" font-size="13" font-weight="700">Contraseña robada</text>
+        <text x="114" y="140" fill="#E2A0AA" font-size="11">sin cookie de sesión</text>
+
+        <!-- modern defences wall, bypassed -->
+        <g transform="translate(360,40)">
+          <rect x="-86" y="0" width="172" height="62" rx="9" fill="#0E2236" stroke="#33527A" stroke-dasharray="5 5"/>
+          <text x="0" y="26" fill="#6B85A6" font-size="12.5" font-weight="600">MFA</text>
+          <text x="0" y="48" fill="#6B85A6" font-size="12.5" font-weight="600">Acceso Condicional</text>
+        </g>
+        <text x="360" y="120" fill="#FFC04D" font-size="11">auth básica — sin MFA, sin CA</text>
+
+        <!-- SMTP AUTH endpoint -->
+        <rect x="526" y="96" width="160" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="606" y="122" fill="#A8E1F8" font-size="13.5" font-weight="600">SMTP AUTH</text>
+        <text x="606" y="140" fill="#6B85A6" font-size="11">smtp.office365.com:587</text>
+
+        <!-- outcome -->
+        <rect x="350" y="194" width="220" height="40" rx="10" fill="#1A0B11" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="460" y="219" fill="#FF8A98" font-size="12" font-weight="700">Envía correo como el usuario</text>
+      </g>
+      <!-- flows -->
+      <path d="M194 125 H522" stroke="#5C7796" stroke-width="2" marker-end="url(#smArr)"/>
+      <!-- the bypass arc, around the defences wall -->
+      <path d="M280 110 C 300 78, 420 78, 440 110" stroke="#FFC04D" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+      <path d="M606 154 C 606 178, 520 186, 480 192" stroke="#FF5A6E" stroke-width="2" fill="none" marker-end="url(#smArr)"/>
+    </svg>
+    <figcaption>La auth básica en el envío SMTP AUTH rodea MFA y Acceso Condicional — una contraseña sola envía correo.</figcaption>
+  </figure>
+
+  <p>Microsoft lleva años deprecando Basic Auth en todos los protocolos heredados (IMAP, POP, EWS, MAPI/RPC, Remote PowerShell). El envío SMTP AUTH fue el último reducto porque tantos dispositivos y apps heredadas dependen de él. A partir de 2025–2026, Microsoft ha estado deshabilitando el envío SMTP AUTH por defecto para tenants nuevos, pero los tenants más antiguos y los tenants que lo habilitaron explícitamente aún pueden tenerlo activo.</p>
+
+  <p>El ajuste de seguridad de Panoptica365 «Disable Basic Auth for SMTP AUTH Submission» empuja <code>Set-TransportConfig -SmtpClientAuthenticationDisabled $true</code> a nivel tenant. El detector de deriva vigila si se mantiene deshabilitado.</p>
+
+  <h2>La conversación sobre el caso de uso heredado</h2>
+
+  <p>Cuando empujas el bloqueo a nivel tenant, puedes romper flujos legítimos. Encuéntralos durante el chequeo previo (el trabajo de «auditar el estado actual» de la lección 1), no después del despliegue.</p>
+
+  <p>Usuarios habituales de SMTP AUTH heredados:</p>
+
+  <ul>
+    <li><strong>Impresoras multifunción</strong> configuradas hace años para escanear-a-correo. El arreglo suele ser reconfigurar la impresora para usar el mecanismo de <em>direct send</em> de Microsoft (SMTP no autenticado desde la IP interna de la impresora vía un conector del tenant) o actualizar el firmware de la impresora para soportar auth moderna.</li>
+    <li><strong>Aplicaciones LOB heredadas</strong> enviando notificaciones por correo. El arreglo depende del proveedor — las versiones modernas suelen soportar envío SMTP basado en OAuth vía Microsoft Graph; las versiones más antiguas pueden necesitar una contraseña por aplicación (menos seguro) o un reemplazo.</li>
+    <li><strong>Scripts personalizados.</strong> El arreglo es reescribir para usar la API <code>sendMail</code> de Microsoft Graph o Azure Communication Services. Los scripts suelen ser puntuales y fáciles de actualizar.</li>
+    <li><strong>Buzones de servicio específicos que el cliente no puede migrar fácilmente.</strong> Como último recurso, el envío SMTP AUTH puede habilitarse por buzón mientras permanece deshabilitado a nivel tenant (<code>Set-CASMailbox &lt;usuario&gt; -SmtpClientAuthenticationDisabled $false</code>). Documenta la excepción; revísala anualmente; planifica la eventual migración.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">Precaución</div>
+    <p>Evita el atajo tentador de dejar SMTP AUTH habilitado a nivel tenant solo porque una impresora lo necesita. Eso reabre la puerta trasera para todos. La anulación por buzón existe exactamente para este caso.</p>
+  </div>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>Dos ajustes de seguridad en la lista de la categoría Exchange:</p>
+
+  <p><strong>«Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts)».</strong> Panoptica365 vigila la propiedad de acción de la política de spam saliente. El valor recomendado es «Restringir al usuario de enviar correo» con la autoliberación a 24 horas activada. La deriva se dispara si la acción cambia o las alertas se deshabilitan.</p>
+
+  <p><strong>«Disable Basic Auth for SMTP AUTH Submission».</strong> Panoptica365 vigila la propiedad <code>SmtpClientAuthenticationDisabled</code> de la config de transporte del tenant. El valor recomendado es <code>$true</code> (deshabilitado). La deriva se dispara si SMTP AUTH se vuelve a habilitar a nivel tenant.</p>
+
+  <p>Más allá de la deriva, el <strong>motor de alertas</strong> ingiere los eventos de restricción de spam saliente de Microsoft cuando se disparan — un evento de usuario-restringido es uno de los indicadores de compromiso de mayor señal que Microsoft expone, y Panoptica365 lo reenvía por el pipeline estándar de alertas para que no se pierda en la avalancha de notificaciones de Microsoft.</p>
+
+  <p>Lo que Panoptica365 <em>no</em> expone en el panel: historial de actividad SMTP AUTH por buzón, un navegador de Restricted Users, un historial de límite de tasa saliente por buzón. Eso vive en la superficie de revisión de restricted users del portal de Defender y en los registros de auditoría de Microsoft.</p>
+
+  <h2>Qué se puede romper</h2>
+
+  <p><strong>Un remitente legítimo alcanza el límite saliente y se le restringe.</strong> El comercial en un día de campaña grande; la persona de marketing enviando un boletín puntual desde su propio buzón; la persona de comunicaciones enviando la carta anual del empleado. El usuario llama en pánico. El arreglo es o bien quitarlo de Restricted Users manualmente (y avisarle sobre el mecanismo apropiado de correo masivo) o esperar a que pase la autoliberación a 24 horas. Afina para los patrones de volumen legítimo del cliente durante la incorporación.</p>
+
+  <p><strong>La impresora deja de escanear-a-correo tras deshabilitar SMTP AUTH.</strong> Habitual. El arreglo es direct-send vía conector del tenant (preferido), actualización de firmware de la impresora a auth moderna (funciona para modelos más nuevos), o anulación SMTP AUTH por buzón para la cuenta de servicio de la impresora como último recurso.</p>
+
+  <p><strong>Las notificaciones por correo de trabajos de copia de seguridad dejan de funcionar.</strong> Algún software de copia de seguridad heredado usa SMTP AUTH para correos de estado. Moderniza vía SMTP basado en OAuth (si el proveedor lo soporta) o migra el mecanismo de notificación.</p>
+
+  <p><strong>Restricción de falso positivo durante un pico legítimo.</strong> Un lanzamiento de producto nuevo, un anuncio importante al cliente, una comunicación de emergencia — estos pueden parecer brevemente comportamiento de cuenta comprometida. Pon el escenario específico en lista blanca, quita manualmente de Restricted Users, documenta en el runbook para el año siguiente.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>El límite saliente es el tope del radio de impacto.</strong> Cuando ocurra un compromiso — y eventualmente ocurrirá en cada cliente — la diferencia entre 1 800 phishing salientes y 18 000 es la acción Restringir de la política de spam saliente. Ponla. Confirma que las alertas se enrutan a tu buzón compartido. La autoliberación a 24 horas es tu red de seguridad para falsos positivos; no es razón para debilitar la acción.</p>
+
+  <p><strong>El envío SMTP AUTH es el camino de auth heredado que sobrevivió a los otros — deshabilítalo.</strong> La auth moderna ha sido el estándar durante años; SMTP AUTH es el último agujero. Deshabilítalo a nivel tenant, identifica los flujos heredados que necesitan excepciones durante el chequeo previo, arréglalos como toca (direct send, envío OAuth, modernización de apps), y mantén las anulaciones por buzón documentadas y acotadas en el tiempo.</p>
+
+  <p><strong>La alerta de Restricted Users es el indicador de compromiso de mayor señal que Microsoft expone.</strong> Cuando se dispara, trátala como compromiso creíble hasta que se demuestre lo contrario. Revoca sesiones, restablece credenciales, audita la actividad reciente, comprueba las reglas de bandeja de entrada y las transport rules, mira la carpeta de enviados, identifica qué se envió. La socia del despacho contable de la historia inicial mantiene sus relaciones con los clientes porque su MSP respondió dentro de la ventana de 30 minutos que compró la restricción.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Lección 10: Políticas de seguridad preestablecidas y operar el correo a escala.</b> Los paquetes Standard / Strict que unen la mayoría de los controles de la tarjeta 5 en una configuración, el modelo de detección de deriva en toda la tarjeta, y la cadencia de revisión anual.</div></div>
+  </div>
+
+  <p>Por ahora: abre la política de spam saliente del cliente en el portal de Defender. Verifica que la acción está puesta en «Restringir al usuario de enviar correo» con alertas de admin habilitadas. Verifica que el envío SMTP AUTH está deshabilitado a nivel tenant (<code>Get-TransportConfig | Select SmtpClientAuthenticationDisabled</code> debería devolver <code>True</code>). Identifica y arregla cualquier excepción SMTP AUTH por buzón que no esté documentada. La socia de la historia inicial no tiene su teléfono sonando todo el día un miércoles por la tarde porque el tope aguantó.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre políticas de spam saliente y límites de mensajes (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Outbound spam policies</a>); flujo de revisión y eliminación de Restricted Users (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-restore-restricted-users" target="_blank" rel="noopener">Microsoft Learn — Restricted users</a>); visión general y deprecación del envío SMTP AUTH (<a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission" target="_blank" rel="noopener">Microsoft Learn — Authenticated SMTP submission</a>); referencia de Set-TransportConfig SmtpClientAuthenticationDisabled (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-transportconfig" target="_blank" rel="noopener">Microsoft Learn — Set-TransportConfig</a>); direct send para impresoras y escáneres (<a href="https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365#option-2-send-mail-directly-from-your-printer-or-application-to-microsoft-365-or-office-365-direct-send-recommended" target="_blank" rel="noopener">Microsoft Learn — Submitting email using direct send</a>); anulación SMTP AUTH por buzón con Set-CASMailbox (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-casmailbox" target="_blank" rel="noopener">Microsoft Learn — Set-CASMailbox</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

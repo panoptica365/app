@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transfert automatique et règles de boîte de réception — la paire d'indicateurs post-compromission — Paramètres de sécurité courriel</title>
+<meta name="lesson:title" content="Transfert automatique et règles de boîte de réception — la paire d'indicateurs post-compromission">
+<meta name="lesson:subtitle" content="Comment les attaquants utilisent le transfert automatique et les règles cachées pour persister après une compromission — et les contrôles qui les arrêtent.">
+<meta name="lesson:icon" content="forward">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres de sécurité courriel</span> <span class="sep">·</span> <span>Transfert automatique &amp; règles de boîte de réception</span></div>
+  <h1>Transfert automatique et règles de boîte de réception — la paire d'indicateurs post-compromission</h1>
+  <p class="dek">Comment les attaquants utilisent le transfert automatique et les règles cachées pour persister après une compromission — et les contrôles qui les arrêtent.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une boîte aux lettres compromise : la règle cachée de l'attaquant déplace silencieusement les réponses du fournisseur vers RSS Subscriptions, les marque comme lues et les supprime, pendant que l'utilisateur légitime ne voit rien.">
+      <defs>
+        <radialGradient id="afBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="afArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker>
+        <marker id="afArrRed" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#afBg)"/>
+
+      <!-- left: inbound reply from supplier -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="128" width="190" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="135" y="160" fill="#C4D4E8" font-size="14" font-weight="600">Réponse du fournisseur</text>
+        <text x="135" y="182" fill="#6B85A6" font-size="12">courrier entrant</text>
+      </g>
+      <path d="M230 170 H332" stroke="#5C7796" stroke-width="2.5" marker-end="url(#afArr)"/>
+
+      <!-- centre: the hidden rule -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="340" y="106" width="240" height="128" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="460" y="138" fill="#FF8A98" font-size="14" font-weight="700">Règle cachée</text>
+        <text x="460" y="160" fill="#E2A0AA" font-size="13">nommée</text>
+        <rect x="446" y="170" width="28" height="22" rx="5" fill="#3A1620" stroke="#FF5A6E"/>
+        <text x="460" y="186" fill="#FF8A98" font-size="15" font-weight="700">.</text>
+        <text x="460" y="214" fill="#E2A0AA" font-size="11">déplacer · lu · supprimer</text>
+      </g>
+
+      <!-- down to obscure folder -->
+      <path d="M460 234 V274" stroke="#FF5A6E" stroke-width="2.5" stroke-dasharray="5 5" marker-end="url(#afArrRed)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="356" y="280" width="208" height="44" rx="10" fill="#0E2236" stroke="#52708F"/>
+        <text x="460" y="307" fill="#8FA6C2" font-size="13">RSS Subscriptions</text>
+      </g>
+
+      <!-- right top: legitimate user sees nothing -->
+      <path d="M580 142 H700" stroke="#274B72" stroke-width="2" stroke-dasharray="3 6"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="706" y="106" width="184" height="72" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="798" y="136" fill="#C4D4E8" font-size="13.5" font-weight="600">Utilisateur légitime</text>
+        <text x="798" y="158" fill="#6B85A6" font-size="12">ne voit rien</text>
+      </g>
+
+      <!-- right bottom: the attacker reads the mail -->
+      <path d="M580 196 C 660 240, 760 250, 880 230" stroke="#FF5A6E" stroke-width="2.5" fill="none" marker-end="url(#afArrRed)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="906" y="200" width="178" height="76" rx="12" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="995" y="232" fill="#7DD9F9" font-size="14" font-weight="700">Attaquant</text>
+        <text x="995" y="254" fill="#A8E1F8" font-size="12">lit le fil</text>
+      </g>
+    </svg>
+    <figcaption>La réponse arrive, la règle la classe hors de vue, et le propriétaire de la boîte ne voit aucune trace — pendant que l'attaquant continue de lire.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La comptable d'un client appelle paniquée un mardi matin. « Mon contact chez notre fournisseur vient d'appeler. Il a dit qu'il avait répondu à mon courriel sur le virement la semaine dernière et n'avait jamais eu de nouvelles, puis avait envoyé deux relances, et finalement appelé. Je n'ai jamais reçu aucun de ses courriels. Je ne lui ai jamais envoyé de courriel sur un virement. Il regarde trois messages dans son dossier d'envois de ma part. »</p>
+
+  <p>Vous vous connectez à la boîte aux lettres de la comptable. Dans Outlook sur le web, vous vérifiez les règles. Il y en a une que vous n'avez pas créée :</p>
+
+  <ul>
+    <li><strong>Nom de règle :</strong> <code>.</code> (un point seul)</li>
+    <li><strong>Condition :</strong> le sujet contient « wire » ou « payment » ou « supplier » ou « transfer »</li>
+    <li><strong>Action :</strong> déplacer vers le dossier <code>RSS Subscriptions</code>; marquer comme lu; supprimer</li>
+  </ul>
+
+  <p>Vous vérifiez les paramètres de Forwarding. Pas configuré. Vous vérifiez le Unified Audit Log. La règle a été créée à 3 h 42 du matin le mercredi précédent depuis une IP dans un pays que la comptable n'a jamais visité, en utilisant une session qui s'est authentifiée avec succès — ce qui veut dire que soit l'attaquant avait un cookie de session volé (AiTM), soit il avait précédemment hameçonné l'identifiant et utilisé une méthode qui contournait le MFA d'une façon ou d'une autre.</p>
+
+  <p>L'attaquant lit le courriel de la comptable depuis six jours. Il a envoyé trois instructions de virement au fournisseur, intercepté les réponses du fournisseur (la règle les a déplacées vers RSS Subscriptions et marquées comme lues), et récolté au moins un virement réussi de 52 000 $. La comptable n'a jamais vu une seule trace entrante ou sortante de l'attaque.</p>
+
+  <p>C'est le scénario courriel post-compromission de manuel, et il s'appuie sur deux choses que presque chaque attaquant fait après avoir pris le contrôle d'une boîte aux lettres :</p>
+
+  <ol>
+    <li><strong>Règles de boîte de réception</strong> pour cacher l'activité à l'utilisateur légitime.</li>
+    <li><strong>Transfert automatique</strong> (parfois) pour s'assurer que l'attaquant reçoit une copie de chaque message entrant sans rester continuellement connecté au compte compromis.</li>
+  </ol>
+
+  <p>Cette leçon vise à fermer les deux vecteurs, les limites de ce qu'on peut fermer, et ce que les surfaces de surveillance de Panoptica365 vous donnent.</p>
+  </div>
+
+  <h2>Deux contrôles distincts, deux histoires différentes</h2>
+
+  <p>Les opérateurs confondent « transfert » et « règles de boîte de réception » parce qu'elles se ressemblent dans l'interface utilisateur. Elles sont différentes, et elles ont besoin de contrôles différents.</p>
+
+  <p><strong>Le transfert automatique vers domaines externes</strong> est une fonctionnalité au niveau boîte aux lettres (ou tenant) qui copie chaque message entrant vers une adresse courriel externe. Configurable dans les paramètres de la boîte aux lettres ou via une règle de boîte de réception avec une action « transférer à ». Microsoft a resserré le comportement par défaut en 2020 — les nouveaux tenants bloquent le transfert automatique externe par défaut. Les tenants plus anciens, et les tenants où des admins précédents ont explicitement permis le transfert pour une raison ou une autre, peuvent encore l'avoir activé.</p>
+
+  <p><strong>Les règles de boîte de réception</strong> sont des filtres au niveau utilisateur qui agissent sur le courrier entrant : déplacer, supprimer, marquer comme lu, marquer comme important, transférer, rediriger, mettre des catégories, lancer des scripts (dans les clients hérités), et ainsi de suite. Les utilisateurs en créent légitimement pour des raisons organisationnelles tout le temps. Les attaquants en créent post-compromission pour cacher leurs traces.</p>
+
+  <p>Le transfert automatique est le signal plus bruyant — plus facile à bloquer à l'échelle du tenant, plus facile à détecter, plus difficile à utiliser pour les attaquants sans se faire attraper. Les règles de boîte de réception sont le signal plus subtil — impossible à bloquer (les utilisateurs légitimes en ont besoin), détectable seulement en surveillant les patrons anormaux.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Deux contrôles comparés : le transfert automatique est le signal plus bruyant qu'on peut bloquer à l'échelle du tenant; les règles de boîte de réception sont le signal plus subtil qu'on peut seulement détecter.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- left: auto-forwarding -->
+        <rect x="36" y="34" width="300" height="132" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="186" y="64" text-anchor="middle" fill="#A8E1F8" font-size="14.5" font-weight="700">Transfert automatique</text>
+        <text x="186" y="92" text-anchor="middle" fill="#7DD9F9" font-size="12.5">le signal plus bruyant</text>
+        <line x1="64" y1="108" x2="308" y2="108" stroke="#1F3C5C"/>
+        <text x="186" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">bloquer à l'échelle du tenant</text>
+        <text x="186" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">plus facile à détecter</text>
+        <!-- right: inbox rules -->
+        <rect x="384" y="34" width="300" height="132" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="534" y="64" text-anchor="middle" fill="#C4D4E8" font-size="14.5" font-weight="700">Règles de boîte</text>
+        <text x="534" y="92" text-anchor="middle" fill="#8FA6C2" font-size="12.5">le signal plus subtil</text>
+        <line x1="412" y1="108" x2="656" y2="108" stroke="#1F3C5C"/>
+        <text x="534" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">impossible à bloquer</text>
+        <text x="534" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">détecter les anomalies</text>
+      </g>
+    </svg>
+    <figcaption>L'un se bloque à l'échelle du tenant; l'autre, on peut seulement le surveiller — des contrôles différents pour des vecteurs différents.</figcaption>
+  </figure>
+
+  <h2>Transfert automatique — le blocage à l'échelle du tenant</h2>
+
+  <p>La surface de contrôle à connaître, c'est <strong>Remote Domains</strong> dans le centre d'administration Exchange (Mail flow → Remote Domains; PowerShell : <code>Set-RemoteDomain Default -AutoForwardEnabled $false</code>). Chaque entrée Remote Domain définit le comportement de flux de courrier pour les messages quittant votre tenant vers un domaine externe spécifique. L'entrée <strong>Default</strong> est le fourre-tout — chaque domaine externe que vous n'avez pas explicitement configuré tombe sous ses règles. Mettre la propriété d'auto-transfert de Default à <strong>disabled</strong> bloque le transfert automatique externe à l'échelle du tenant sauf pour les domaines que vous avez explicitement permis via des entrées Remote Domain par domaine (couvert dans « Ce qui peut briser » plus bas).</p>
+
+  <p>Le paramètre de sécurité Panoptica365 « Disable Automatic Forwarding to External Domains » opère exactement ici : il pousse le Remote Domain Default à AutoForwardEnabled=$false sur le tenant du client et surveille cette valeur pour la dérive. Quelqu'un qui ouvre le centre d'administration Exchange et la rebascule à activé — typiquement en réponse à un ticket client genre « mon utilisateur ne peut plus transférer son courriel de travail vers son Gmail personnel » — déclenche une alerte de dérive. Vous revenez en arrière (ou, s'il y a un vrai besoin d'affaires, vous appliquez le flux d'exception par domaine ci-dessous) et vous parlez au client pour expliquer pourquoi le blocage existe.</p>
+
+  <p>Microsoft expose un contrôle connexe mais séparé dans la <strong>politique anti-pourriel sortant</strong> (portail Defender → Threat policies → Anti-spam → Outbound spam) — trois valeurs, Automatic / On / Off, contrôlant la politique de transfert automatique à l'échelle de la politique. Certains MSP utilisent ça comme bretelles-et-ceinture à côté du blocage Remote Domain Default. Panoptica365 n'opère pas sur cette surface ni ne la surveille aujourd'hui; le Remote Domain Default est le contrôle canonique pour le paramètre de sécurité.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Une exception qui mérite d'être connue</div>
+    <p>Les règles de flux de courrier (transport rules) qui redirigent ou BCC du courrier vers des adresses externes ne sont <em>pas</em> du transfert automatique du point de vue de ce contrôle. Elles ont leurs propres paramètres et leur propre surveillance. La leçon 8 couvre les règles de flux de courrier; pour l'instant, sachez que les contrôles de transfert automatique n'attrapent pas le transfert basé sur règle de transport.</p>
+  </div>
+
+  <h2>Règles de boîte de réception — pourquoi on ne peut pas les désactiver</h2>
+
+  <p>Les utilisateurs ont besoin de règles de boîte de réception. La comptable dans l'histoire d'ouverture en a une demi-douzaine de légitimes — filtrer les infolettres vers un dossier, marquer comme importants les courriels de son patron, auto-catégoriser les courriels clients par projet. Les règles de boîte de réception font partie de la façon dont le courriel fonctionne vraiment comme outil de productivité.</p>
+
+  <p>Il n'y a aucun contrôle à l'échelle du tenant pour désactiver les règles de boîte de réception. Il ne peut pas y en avoir — les désactiver briserait le cas d'usage légitime de productivité.</p>
+
+  <p>Ce qu'il y a <em>par contre</em> :</p>
+
+  <ul>
+    <li><strong>Des entrées au Unified Audit Log</strong> quand des règles de boîte de réception sont créées, modifiées, ou supprimées. Les noms d'opérations incluent <code>New-InboxRule</code>, <code>Set-InboxRule</code>, <code>Remove-InboxRule</code>, et <code>UpdateInboxRules</code> (pour la gestion des règles d'Outlook bureau).</li>
+    <li><strong>Des alertes Microsoft Defender</strong> quand une règle de boîte de réception correspond à des patrons suspects. L'apprentissage machine de Microsoft signale les règles qui ressemblent à du comportement d'attaquant — noms à un caractère, actions de redirection externe, filtrer-sur-mots-clés-de-finance, combinaisons supprimer-et-marquer-lu.</li>
+    <li><strong>Énumération par boîte aux lettres</strong> via <code>Get-InboxRule -Mailbox user@domain.com</code> dans Exchange Online PowerShell. Les opérateurs peuvent lancer ça manuellement; Panoptica365 le fait remonter pour tout le tenant.</li>
+  </ul>
+
+  <p>La posture défensive pour les règles de boîte de réception, c'est <strong>détection, pas prévention</strong>. Vous ne pouvez pas empêcher les utilisateurs de créer des règles. Vous pouvez surveiller pour les règles que les attaquants créent.</p>
+
+  <h2>Les patrons de règles d'attaquant à surveiller</h2>
+
+  <p>Après une décennie d'investigations BEC M365, les mêmes formes de règles apparaissent à travers des milliers d'incidents. Entraînez-vous et entraînez votre équipe d'opérateurs à les repérer.</p>
+
+  <p><strong>Le nom à un caractère.</strong> Règles nommées <code>.</code> (point), <code>,</code> (virgule), <code>..</code> (deux points), <code> </code> (espace seul), ou un caractère Unicode de largeur zéro. L'attaquant ne veut pas que l'utilisateur remarque que la règle existe dans sa liste de règles. Plus le nom est court et bizarre, plus la suspicion est haute.</p>
+
+  <p><strong>Le filtre de mots-clés sur des termes financiers.</strong> Conditions qui vérifient <code>wire</code>, <code>payment</code>, <code>transfer</code>, <code>invoice</code>, <code>account</code>, <code>bank</code>, <code>supplier</code>, <code>vendor</code>, plus les noms de personnes spécifiques dans la chaîne financière (directeur financier, contrôleur, comptabilité). Combiné avec une action cacher-de-l'utilisateur, c'est la règle de suivi BEC.</p>
+
+  <p><strong>La combinaison d'action de masquage.</strong> Actions qui déplacent les messages vers des dossiers obscurs (<code>RSS Subscriptions</code>, <code>Junk</code>, <code>Conversation History</code>, <code>Notes</code>, <code>Sync Issues</code>), les marquent comme lus, et/ou les suppriment. Les règles légitimes combinent rarement « déplacer vers dossier obscur » avec « marquer comme lu » avec « supprimer après quelques jours ». Les règles d'attaquant le font.</p>
+
+  <p><strong>La redirection externe.</strong> Règles de boîte de réception avec une action « transférer à » ou « rediriger à » où la destination est une adresse courriel externe. C'est du transfert automatique via règle de boîte de réception, et le blocage Remote Domain Default ci-dessus l'attrape la plupart du temps. Mais certains attaquants utilisent la redirection-avec-modification (p. ex., rediriger via une règle de flux de courrier) pour évader le blocage.</p>
+
+  <p><strong>La règle « supprimer les notifications de rebond ».</strong> Conditions qui correspondent aux patrons d'expéditeurs de rapport de non-livraison communs ou aux lignes de sujet comme « Undeliverable » ou « Mail Delivery Failure ». L'attaquant envoie des courriels de fraude par virement et ne veut pas que les rebonds atteignent l'utilisateur légitime.</p>
+
+  <p><strong>Le suppresseur de réponses PDG / contrôleur.</strong> Règles qui déplacent les messages entrants d'expéditeurs spécifiques à haute valeur (le PDG, le contact principal du client, le directeur des finances) vers des dossiers obscurs. Utilisé quand l'attaquant a détourné un fil sortant et veut empêcher l'utilisateur légitime de voir les réponses du destinataire.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Six patrons de règles de boîte de réception d'attaquant à surveiller : nom à un caractère, filtre de mots-clés financiers, combinaison d'action de masquage, redirection externe, supprimer les notifications de rebond, et suppresseur de réponses à haute valeur.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PATRONS DE RÈGLES D'ATTAQUANT</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- row 1 -->
+        <g transform="translate(36,56)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Nom à un caractère</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">. , .. espace — invisible dans la liste</text>
+        </g>
+        <g transform="translate(372,56)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Filtre mots-clés financiers</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">wire · payment · invoice · supplier</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(36,124)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Action de masquage</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">dossier obscur · lu · supprimer</text>
+        </g>
+        <g transform="translate(372,124)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Redirection externe</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">transférer / rediriger vers externe</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(36,192)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Supprimer les rebonds</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">Undeliverable · Mail Delivery Failure</text>
+        </g>
+        <g transform="translate(372,192)">
+          <rect x="0" y="0" width="312" height="56" rx="9" fill="#1A0C12" stroke="#7A2A38"/>
+          <text x="18" y="26" fill="#FF8A98" font-size="13" font-weight="600">Suppresseur de réponses</text>
+          <text x="18" y="46" fill="#C9939C" font-size="11">PDG / contrôleur vers dossier obscur</text>
+        </g>
+      </g>
+      <text x="360" y="296" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">Si l'un apparaît et que l'utilisateur ne peut l'expliquer — traitez la boîte comme compromise.</text>
+    </svg>
+    <figcaption>Les six formes qui reviennent à travers des milliers d'incidents BEC. Calibrez vos yeux pour elles.</figcaption>
+  </figure>
+
+  <p>Quand n'importe lequel de ces patrons apparaît dans les règles de boîte aux lettres d'un client et que l'utilisateur ne peut pas l'expliquer, traitez la boîte aux lettres comme compromise. Réinitialisez les identifiants, révoquez les sessions, auditez les éléments envoyés récents, vérifiez le Unified Audit Log pour les 14 derniers jours, et commencez un vrai flux de réponse à incident.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>La surveillance des règles de boîte de réception est l'une des surfaces les plus utiles de Panoptica365 du côté Exchange. C'est aussi délibérément simple — juste assez de structure pour que les règles soient scannables, sans cérémonie supplémentaire.</p>
+
+  <p><strong>Le panneau Règles de boîte de réception.</strong> Un panneau, deux sections repliables :</p>
+
+  <ul>
+    <li><strong>Règles de transfert (transférer ou rediriger le courrier).</strong> Un tableau plat montrant chaque règle dans le tenant qui transfère ou redirige du courrier. Colonnes : Utilisateur, Nom de règle, Cible (l'adresse destinataire), Type (EXTERNAL ou Internal). Les cibles externes sont visuellement signalées. Le badge de compte dans l'en-tête de section montre le total. C'est la vue à signal élevé — chaque ligne mérite un coup d'œil, parce que le transfert externe est rare dans les flux légitimes et que les cibles EXTERNAL sont spécifiquement celles que les attaquants créent.</li>
+    <li><strong>Toutes les règles de boîte de réception (chaque règle activée, par utilisateur).</strong> Un tableau plat groupé par propriétaire de boîte aux lettres, montrant chaque règle de boîte de réception activée à travers le tenant. Colonnes : Utilisateur, Nom de règle, Actions (une courte description comme « Move to folder · Stop processing » ou « FORWARD → external <code>address</code> »). Le badge de compte montre le total. C'est la vue défiler-et-scanner — la plupart des lignes sont des règles de productivité banales, et ce que vous cherchez, ce sont les suspectes (noms à un caractère, mots-clés financiers, combinaisons d'action de masquage).</li>
+  </ul>
+
+  <p>Il n'y a aucun tri, aucun filtrage, aucune boîte de recherche. Le flux de travail, c'est de défiler à travers les listes avec des yeux calibrés pour les patrons d'attaquant ci-dessus. Le compromis que Panoptica365 fait ici : au lieu d'un explorateur de données lourd de fonctionnalités que les opérateurs devraient apprendre, c'est une liste simple et lisible optimisée pour la lecture humaine.</p>
+
+  <p><strong>Dérive sur le paramètre de sécurité « Disable Automatic Forwarding to External Domains ».</strong> Panoptica365 surveille la propriété AutoForwardEnabled du Remote Domain Default. Si quelqu'un la bascule de désactivée à activée — typiquement via l'interface Remote Domains du centre d'administration Exchange — le détecteur de dérive se déclenche.</p>
+
+  <p><strong>Évaluateurs d'alertes basés sur UAL.</strong> Le moteur d'alertes de Panoptica365 inclut des évaluateurs qui surveillent le Unified Audit Log pour les patrons de création de règles de boîte de réception suspectes. Quand une correspondance se déclenche, l'alerte coule à travers le pipeline standard (tableau de bord, notification courriel, attribution au client).</p>
+
+  <div class="callout">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>Pas dans le tableau de bord</div>
+    <p>Ce que Panoptica365 ne fait <em>pas</em> remonter dans le tableau de bord : l'historique des règles par boîte aux lettres (deltas dans le temps), l'historique d'état de transfert par boîte aux lettres, les événements UAL bruts eux-mêmes, le tri/filtrage/recherche sur les tableaux de règles de boîte de réception. Pour le travail forensique plus profond, plongez dans la recherche d'audit log du portail Microsoft 365 Defender ou le centre d'administration Exchange.</p>
+  </div>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p><strong>Transfert légitime vers des partenaires d'affaires spécifiques.</strong> De vrais flux de travail d'affaires impliquent du transfert vers des domaines externes nommés — un client qui route des courriels liés aux finances vers la compagnie de son comptable externe, un client qui transfère certaines demandes de support à un fournisseur tiers, un client qui copie du courrier thématique spécifique à la firme d'un consultant. La discipline, ce n'est pas d'affaiblir le blocage à l'échelle du tenant; c'est d'ajouter une <strong>exception par domaine via les règles Remote Domain</strong> dans Exchange.</p>
+
+  <p>Dans le centre d'administration Exchange : Mail flow → Remote Domains. L'entrée Default attrape tout ce que vous n'avez pas explicitement configuré — laissez son paramètre d'auto-transfert désactivé (c'est ce que pousse le paramètre de sécurité Panoptica365). Puis créez une entrée Remote Domain spécifique pour chaque domaine externe où le client a un flux de transfert documenté — <code>accountant-firm.com</code>, <code>vendor-name.com</code>, <code>consultant-co.com</code> — et activez le transfert automatique pour ces domaines nommés seulement.</p>
+
+  <p>Distinction critique : les exceptions par domaine sont pour <strong>des domaines de partenaires d'affaires nommés spécifiquement</strong>, jamais pour des fournisseurs grand public génériques. Un utilisateur qui veut transférer son courriel de travail vers son compte Gmail / Hotmail / Outlook.com / Yahoo / iCloud personnel est exactement le cas que le blocage à l'échelle du tenant existe pour prévenir. Ce n'est pas un flux d'affaires; c'est une commodité personnelle qui met les données corporatives dans des boîtes accessibles aux attaquants et brise à la fois la défense BEC et la plupart des attentes de résidence des données. Routez ces utilisateurs vers un accès délégué, une boîte aux lettres partagée, ou la connexion à leur courriel de travail sur l'app Outlook de leur téléphone à la place — pas une entrée Remote Domain pour gmail.com.</p>
+
+  <p>Même discipline que le patron d'expéditeurs de confiance dans la leçon 2 : les exceptions par-partenaire-nommé sont tractables; les exceptions générales-de-domaine sont des canons à pied.</p>
+
+  <p><strong>Des règles de boîte de réception utiles se font signaler comme suspectes.</strong> Un utilisateur crée une règle parfaitement légitime pour nettoyer son fouillis d'infolettres, et le moteur d'alertes de Panoptica365 la signale parce qu'elle correspond à un patron générique « cacher des messages ». Triez-les comme vous le feriez pour n'importe quel faux positif : confirmez la règle avec l'utilisateur, documentez-la, passez. Avec le temps, les évaluateurs du moteur d'alertes se règlent à la normale du client.</p>
+
+  <p><strong>Flux de courrier basés sur connecteurs hérités.</strong> Certains clients ont des connecteurs Exchange Online hérités qui routent le courrier à travers une passerelle tierce. Ces passerelles injectent parfois un comportement de type transfert. L'audit des connecteurs pendant le pré-vol (leçon 1) attrape la plupart de ça; si un patron de transfert basé sur connecteur émerge plus tard, la correction est au connecteur, pas à la boîte aux lettres.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Bloquez le transfert automatique externe à l'échelle du tenant; faites des exceptions par domaine là où elles sont justifiées.</strong> Désactiver l'auto-transfert sur le Remote Domain Default est le contrôle à plus fort levier sur le rayon d'impact post-compromission. Quand un client a une vraie raison d'affaires de transférer vers un partenaire nommé — comptable, consultant, fournisseur — ajoutez une entrée Remote Domain par domaine pour ce domaine externe spécifique. Quand la demande est pour du transfert vers un fournisseur grand public (gmail.com, hotmail.com, etc.), routez l'utilisateur vers un accès délégué, une boîte aux lettres partagée, ou la connexion à son courriel de travail sur son téléphone à la place — pas une exception Remote Domain.</p>
+
+  <p><strong>Vous ne pouvez pas désactiver les règles de boîte de réception, seulement surveiller les patrons d'attaquant.</strong> Les noms à un caractère, les filtres de mots-clés financiers, les combinaisons d'actions de masquage — entraînez votre équipe d'opérateurs à les reconnaître à vue. Le temps que vous les voyiez, la boîte aux lettres est déjà compromise; la vitesse de détection détermine si vous contenez l'attaque à 10 000 $ ou à 100 000 $.</p>
+
+  <p><strong>Le panneau Règles de boîte de réception de Panoptica365 est la surface quotidienne de l'opérateur.</strong> Deux sections (Règles de transfert, Toutes les règles de boîte de réception) dans une vue. Scannez-les quand un client rapporte quoi que ce soit d'inhabituel (un courriel manquant, une livraison refusée, un fournisseur confus). Les patrons sont visibles si vous regardez. Le coût de regarder est faible. Le coût de ne pas regarder, c'est l'incident de fraude par virement de l'histoire d'ouverture.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Audit de boîte aux lettres</b> — la posture d'audit Strict de boîte aux lettres, l'exemple de dérive de nouvelle boîte aux lettres, et ce que l'audit de boîte aux lettres vous donne pour la forensique post-incident.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Politiques de quarantaine et libération par l'utilisateur</b> — qui peut libérer quoi; le risque de suivi BEC d'hameçonnage libéré par soi-même.</div></div>
+  </div>
+
+  <p>Pour l'instant : ouvrez le panneau Règles de boîte de réception du client dans Panoptica365. Lisez la liste de haut en bas. Cherchez les patrons. Si quoi que ce soit correspond, plongez dans la boîte aux lettres dans le centre d'administration Exchange, confirmez avec l'utilisateur, et démarrez le flux de réponse à incident si l'utilisateur ne peut pas l'expliquer. La comptable dans l'histoire d'ouverture aurait perdu moins d'argent si son MSP avait fait ça chaque lundi matin.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — référence des paramètres d'auto-transfert Remote Domain (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-remotedomain" target="_blank" rel="noopener">Microsoft Learn — Set-RemoteDomain</a>); vue d'ensemble du blocage de transfert automatique externe (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-external-email-forwarding" target="_blank" rel="noopener">Microsoft Learn — External email forwarding</a>); contrôles d'auto-transfert de la politique anti-pourriel sortant (surface connexe de Microsoft) (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Outbound spam policies</a>); manipulation des règles de boîte de réception comme indicateur post-compromission (<a href="https://learn.microsoft.com/en-us/defender-xdr/alert-grading-suspicious-inbox-manipulation-rules" target="_blank" rel="noopener">Microsoft Learn — Detect and respond to suspicious inbox rules</a>); noms d'opérations de règle de boîte de réception du Unified Audit Log (<a href="https://learn.microsoft.com/en-us/purview/audit-log-search" target="_blank" rel="noopener">Microsoft Learn — UAL search</a>); type de ressource messageRules Microsoft Graph (<a href="https://learn.microsoft.com/en-us/graph/api/resources/messagerule" target="_blank" rel="noopener">Microsoft Learn — messageRules</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

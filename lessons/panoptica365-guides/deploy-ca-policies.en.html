@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy Conditional Access policies — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Deploy Conditional Access policies">
+<meta name="lesson:subtitle" content="Assign templates from your library, deploy them to the tenant, and let drift detection guard them afterward.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Deploy Conditional Access policies</span></div>
+  <h1>Deploy Conditional Access policies</h1>
+  <p class="dek">Assign templates from your library, deploy them to the tenant, and let drift detection guard them afterward.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The Conditional Access lifecycle in Panoptica365: a template library, assigned to a tenant, deployed live, then watched forever for drift.">
+      <defs>
+        <radialGradient id="caBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="caShield" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="caArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#caBg)"/>
+
+      <!-- 1: template library -->
+      <g transform="translate(72,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="14" y="14" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="44" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="74" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="150" text-anchor="middle" fill="#6B85A6" font-size="13" letter-spacing="2">TEMPLATE LIBRARY</text>
+      </g>
+      <path d="M204 170 H300" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="252" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">assign</text>
+
+      <!-- 2: tenant -->
+      <g transform="translate(316,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 24 L92 44 V94 H26 V44 Z" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="44" y="66" width="30" height="28" fill="#102A4C" stroke="#2A7FA3"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="13" letter-spacing="2">TENANT</text>
+      </g>
+      <path d="M448 170 H544" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="496" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">deploy</text>
+
+      <!-- 3: live policy as shield -->
+      <g transform="translate(620,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 16 L94 30 V62 C94 88 78 104 59 112 C40 104 24 88 24 62 V30 Z" fill="url(#caShield)" opacity="0.92"/>
+        <path d="M44 60 L55 72 L76 46" fill="none" stroke="#071221" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="13" letter-spacing="2">LIVE POLICY</text>
+      </g>
+      <path d="M752 170 H848" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="800" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">watch</text>
+
+      <!-- 4: drift watch (eye + radar ring, forever) -->
+      <g transform="translate(984,170)">
+        <circle r="80" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="56" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <path d="M-44 0 C-22 -34 22 -34 44 0 C22 34 -22 34 -44 0 Z" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle r="15" fill="url(#caShield)"/>
+        <circle r="6" fill="#EAF7FE"/>
+        <text x="0" y="106" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">DRIFT WATCH</text>
+      </g>
+    </svg>
+    <figcaption>The CA lifecycle in Panoptica365: a template from your library, assigned to a tenant, deployed live, then watched for drift — forever.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Conditional Access is where Panoptica365 stops being a camera and becomes a guardrail. You maintain a <strong>template library</strong> of CA policies (sidebar → <strong>CA Policies</strong>), assign templates to tenants, deploy them, and Panoptica365 then watches the live policies for drift — forever.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Before you deploy</div>
+    <p>Before your first real deployment, read the <em>pre-flight checklist</em> lesson in the Conditional Access card of Learn. Break-glass accounts and service-account inventory are not optional. A CA policy deployed in haste can lock an entire customer out.</p>
+  </div>
+
+  <h2>Assigning templates to a tenant</h2>
+
+  <ol>
+    <li>Open the tenant dashboard → <strong>CA Policies</strong> tab. On a fresh tenant you'll see <em>"No CA policy templates assigned to this tenant yet."</em></li>
+    <li>Click <strong>Assign Template</strong>. A picker lists your template library (minus anything already assigned).</li>
+    <li>Check the templates you want — or <strong>Select All</strong> — and confirm.</li>
+  </ol>
+
+  <p>Each assignment becomes a card on the tab showing the template name, a drift status badge, the <strong>Grant</strong> controls, target <strong>Users</strong> and <strong>Apps</strong>, an <strong>Alerts</strong> routing dropdown (email, PSA, both, or none — per assignment), and <strong>Last Checked</strong>.</p>
+
+  <h2>Deploying</h2>
+
+  <p>An assigned template isn't live yet. On the assignment card:</p>
+
+  <ul>
+    <li><strong>Deploy</strong> — creates the live policy in the tenant from the template. Tenant-specific placeholders (like named locations) are resolved at deploy time.</li>
+    <li><strong>Check Drift</strong> — compares the live policy against the template right now, on demand (the scheduled drift cycle also does this continuously).</li>
+  </ul>
+
+  <p>Deploy to <strong>report-only first</strong> when the template is set up that way, watch sign-in impact, then switch to On — that discipline is covered in the CA lessons.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="The deployment discipline: deploy to report-only first, watch sign-in impact, then switch to On.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="44" width="180" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="126" y="71" fill="#A8E1F8" font-size="14" font-weight="600">Report-only first</text>
+
+        <rect x="270" y="44" width="180" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="71" fill="#C4D4E8" font-size="14">Watch sign-in impact</text>
+
+        <rect x="504" y="44" width="180" height="44" rx="22" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="594" y="71" fill="#7DD9F9" font-size="14" font-weight="700">Switch to On</text>
+      </g>
+      <path d="M216 66 H270" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+      <path d="M450 66 H504" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+    </svg>
+    <figcaption>The deployment discipline when a template is set up for it: report-only first, watch, then enable.</figcaption>
+  </figure>
+
+  <h2>Drift: the badges</h2>
+
+  <p>Each assignment card carries a status badge:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Badge</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ok</strong></td><td>live policy matches the template.</td></tr>
+        <tr><td><strong>drifted</strong></td><td>something changed in the tenant; the policy no longer matches.</td></tr>
+        <tr><td><strong>accepted</strong></td><td>drift exists, but an operator reviewed and accepted it.</td></tr>
+        <tr><td><strong>missing</strong></td><td>the policy doesn't exist in the tenant (deleted, or never deployed).</td></tr>
+        <tr><td><strong>unchecked</strong></td><td>not yet compared.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>When drift is detected you also get an <strong>alert</strong> through the routing you chose, with AI analysis attached. The drift log on the card shows the timeline: which field changed, expected vs actual, disable/delete events, and remediations.</p>
+
+  <h2>Responding to drift</h2>
+
+  <p>You have three honest options:</p>
+
+  <ol>
+    <li><strong>Push Template</strong> (also shown as <strong>Remediate</strong>) — overwrite the live policy with the template. <strong>Warning, and the button means it:</strong> this wipes per-tenant <code>excludeUsers</code> / <code>excludeGroups</code> that were added directly in the tenant. If those exclusions are legitimate, they should live in the template or as exemptions, not as console-side edits.</li>
+    <li><strong>Accept the drift.</strong> Clicking a drifted policy opens <strong>Accept CA Policy Drift</strong>, showing expected vs actual per field, with two paths:
+      <ul>
+        <li><strong>Accept with expiry</strong> <em>(recommended)</em> — the drift is accepted until a date you choose (180 days by default), a <strong>reason is required</strong>, and excluded principals are lifted into the <strong>Exemptions</strong> table so alert evaluators skip them until expiry. Time-boxed, documented, auditable.</li>
+        <li><strong>Accept Once, forever</strong> — accepted indefinitely; re-fires only if the drift signature changes. Use sparingly.</li>
+      </ul>
+    </li>
+    <li><strong>Update the template</strong> — if the change is actually right for every tenant, fix it at the source in the CA Policies library.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="The three options when responding to drift: push the template, accept the drift, or update the template.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- push template -->
+        <rect x="28" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="131" y="70" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Push Template</text>
+        <text x="131" y="92" text-anchor="middle" fill="#6B85A6" font-size="11.5">overwrite live with</text>
+        <text x="131" y="108" text-anchor="middle" fill="#6B85A6" font-size="11.5">the template</text>
+        <text x="131" y="136" text-anchor="middle" fill="#FF8A98" font-size="11.5">wipes tenant-added</text>
+        <text x="131" y="151" text-anchor="middle" fill="#FF8A98" font-size="11.5">exclusions</text>
+
+        <!-- accept drift -->
+        <rect x="257" y="40" width="206" height="120" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="70" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="600">Accept the drift</text>
+        <text x="360" y="96" text-anchor="middle" fill="#2EE8A0" font-size="11.5">with expiry — reason</text>
+        <text x="360" y="111" text-anchor="middle" fill="#2EE8A0" font-size="11.5">required, time-boxed</text>
+        <text x="360" y="137" text-anchor="middle" fill="#6B85A6" font-size="11.5">or once, forever</text>
+        <text x="360" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">(use sparingly)</text>
+
+        <!-- update template -->
+        <rect x="486" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="589" y="70" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Update the template</text>
+        <text x="589" y="96" text-anchor="middle" fill="#6B85A6" font-size="11.5">right for every tenant?</text>
+        <text x="589" y="120" text-anchor="middle" fill="#6B85A6" font-size="11.5">fix it at the source in</text>
+        <text x="589" y="135" text-anchor="middle" fill="#6B85A6" font-size="11.5">the CA Policies library</text>
+      </g>
+    </svg>
+    <figcaption>Three honest responses to a drifted policy — each documented in the audit log.</figcaption>
+  </figure>
+
+  <h2>Adopt existing settings in place (tenant-sourced)</h2>
+
+  <p>Sometimes you onboard a tenant that <strong>already has</strong> its own Conditional Access policies — ones you didn't push from your library. You don't have to impose your templates on day one. <strong>Import existing settings</strong> lets you adopt what's already there and watch it for change first — a deliberate "monitor what's here, don't impose yet" stage.</p>
+
+  <p>On the <strong>CA Policies</strong> tab, click <strong>Import existing settings</strong>. Panoptica reads the tenant's live CA policies and creates a card for each one it doesn't already manage, marked <strong>Tenant-sourced</strong> (a red left edge and a badge) so you can tell them apart from your deployed templates. It snapshots each policy's current state as the baseline and watches for changes from there.</p>
+
+  <p>A few things worth knowing:</p>
+
+  <ul>
+    <li><strong>No duplicates.</strong> Policies you already deployed from a template are matched by their object id and skipped — even if you renamed them in the tenant. The button stays available, and re-clicking is safe: it only adopts settings that are genuinely new.</li>
+    <li><strong>Microsoft-managed policies</strong> are adopted too, flagged as such. Where Microsoft refuses a change, the action degrades gracefully ("managed by Microsoft, cannot be changed here") instead of failing. <strong>Security Defaults</strong> is <em>not</em> a policy — it's shown as a simple on/off indicator, never a card.</li>
+    <li><strong>Drift from as-found.</strong> A tenant-sourced card's alert reads <em>"changed from as-found"</em> — not "deviates from your standard," because there's no template behind it yet. The daily sweep catches changes; a brand-new CA policy created directly in the console is caught within minutes.</li>
+  </ul>
+
+  <h3>What you can do with a tenant-sourced card</h3>
+
+  <p>Open a card's <strong>Actions</strong> for three distinct choices:</p>
+
+  <ol>
+    <li><strong>Stop monitoring</strong> — removes the card and stops watching it. <strong>This never changes the tenant</strong> — it's a Panoptica-only action.</li>
+    <li><strong>Deactivate in tenant</strong> — reversibly turns the policy off (sets it to <em>disabled</em>). The card stays, marked Inactive, and <strong>Restore</strong> puts it back exactly. By default a deactivated card only alerts if someone re-enables it outside Panoptica.</li>
+    <li><strong>Delete from tenant</strong> — permanently removes the policy from the tenant. Friction scales with the blast radius: deleting asks you to type your own name to confirm.</li>
+  </ol>
+
+  <p>Every one of these is recorded in the audit log and the tenant's Change Log, with your name and the policy name.</p>
+
+  <h3>Watching for what appears later</h3>
+
+  <p>Adoption aside, Panoptica watches <strong>every</strong> tenant — templated or not — for a CA policy that appears <strong>outside Panoptica</strong> (created directly in the Entra console). When one shows up it becomes a tenant-sourced card and fires a <em>"configuration created outside Panoptica"</em> alert, so a change made around your process doesn't slip by. As you later roll out your own standards, you can deactivate or delete the messy native policies — or just keep monitoring them.</p>
+
+  <h2>Operating note</h2>
+
+  <div class="callout insight">
+    <div class="clabel">Operating note</div>
+    <p>Drift on a CA policy is one of the highest-value alerts the platform produces. A helpdesk tech "temporarily" excluding a user from MFA is exactly how breaches start — and exactly what this catches. Don't train yourself to accept drift reflexively; every acceptance should have a reason you'd be comfortable reading in the audit log a year later.</p>
+  </div>
+
+</div>
+</body>
+</html>

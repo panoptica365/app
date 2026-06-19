@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configure notifications — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Configure notifications">
+<meta name="lesson:subtitle" content="SMTP, recipients, the 6 AM briefing, and mute periods — how alerts reach humans, reliably.">
+<meta name="lesson:icon" content="mail">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Configure notifications</span></div>
+  <h1>Configure notifications</h1>
+  <p class="dek">SMTP, recipients, the 6 AM briefing, and mute periods — how alerts reach humans, reliably.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="An alert flows through Settings, which point the channels, and Alert Policies, which decide what travels down each channel, reaching an operator inbox and a PSA inbox.">
+      <defs>
+        <radialGradient id="cnBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="cnBolt" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="cnSoft"><feGaussianBlur stdDeviation="4"/></filter>
+        <marker id="cnArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#cnBg)"/>
+
+      <!-- left: the alert -->
+      <g transform="translate(150,170)">
+        <circle r="58" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle cx="0" cy="0" r="30" fill="url(#cnBolt)" filter="url(#cnSoft)" opacity="0.85"/>
+        <path d="M6 -22 L-12 4 H2 L-6 24 L16 -4 H0 Z" fill="#EAF7FE"/>
+      </g>
+      <text x="150" y="276" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">AN ALERT</text>
+
+      <path d="M222 168 H322" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+
+      <!-- middle: two layers stacked -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="332" y="108" width="248" height="56" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="456" y="132" fill="#A8E1F8" font-size="15" font-weight="600">Settings</text>
+        <text x="456" y="151" fill="#6B85A6" font-size="11.5">where the channels point</text>
+
+        <rect x="332" y="176" width="248" height="56" rx="11" fill="#0E2236" stroke="#33527A"/>
+        <text x="456" y="200" fill="#C4D4E8" font-size="15" font-weight="600">Alert Policies</text>
+        <text x="456" y="219" fill="#6B85A6" font-size="11.5">what flows down each channel</text>
+      </g>
+
+      <path d="M580 136 H700" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+      <path d="M580 204 H700" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+
+      <!-- right: two inboxes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="708" y="108" width="262" height="56" rx="11" fill="#0E2236" stroke="#5CCBF4"/>
+        <text x="839" y="132" fill="#7DD9F9" font-size="15" font-weight="600">Operator inbox</text>
+        <text x="839" y="151" fill="#6B85A6" font-size="11.5">personal · both</text>
+
+        <rect x="708" y="176" width="262" height="56" rx="11" fill="#0E2236" stroke="#5CCBF4"/>
+        <text x="839" y="200" fill="#7DD9F9" font-size="15" font-weight="600">PSA inbox</text>
+        <text x="839" y="219" fill="#6B85A6" font-size="11.5">support · both</text>
+      </g>
+    </svg>
+    <figcaption>Settings says where the channels point; Alert Policies says what flows down each channel.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>An alert nobody receives didn't happen. This guide wires up the delivery side — it's all in <strong>Settings</strong> (Admin role required), and it's worth doing carefully once.</p>
+  </div>
+
+  <h2>SMTP — the foundation</h2>
+
+  <p><strong>Settings → SMTP Settings.</strong> Host, port, username, password, and the From address. Save, then use <strong>Send Test Email</strong> — actually do this; the test catches the auth typo or blocked port <em>now</em> rather than during your first real incident. Every email feature in the platform (alert notifications, daily briefing, report-adjacent mail) rides on this configuration.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Do the test</div>
+    <p>Send Test Email catches the auth typo or blocked port <em>now</em> rather than during your first real incident.</p>
+  </div>
+
+  <h2>Recipients and routing</h2>
+
+  <p><strong>Settings → Notification Settings</strong> holds three fields:</p>
+
+  <ul>
+    <li><strong>Recipient Email Addresses</strong> — the comma-separated list of <em>personal</em> recipients: your operators. Alerts whose policy routes to <strong>personal</strong> (or <strong>both</strong>) go here.</li>
+    <li><strong>PSA Email Address</strong> — where <strong>support</strong>-routed alerts go when they travel by email: your PSA's email-to-ticket intake. Once the native PSA integration is connected (next guide), support-routed alerts become real API tickets and this address becomes the fallback — keep it set either way.</li>
+    <li><strong>Attribution String</strong> — the first line of PSA-bound emails, supporting the <code>${PSA_NAME}</code> placeholder so your PSA can auto-route tickets to the right company board.</li>
+  </ul>
+
+  <p>Which alerts go where is decided per alert policy (routing: none / personal / support / both — see <em>Tune alert policies</em>). The mental model: <strong>Settings says where the channels point; Alert Policies says what flows down each channel.</strong></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The four per-policy routing values — none, personal, support, both — and where each one delivers.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="150" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">POLICY ROUTING</text>
+      <text x="560" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">GOES TO</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- routing chips -->
+        <rect x="56" y="56" width="188" height="36" rx="18" fill="#0E2236" stroke="#33527A"/><text x="150" y="79" fill="#9FB4CE" font-size="13.5" font-weight="600">none</text>
+        <rect x="56" y="100" width="188" height="36" rx="18" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="123" fill="#A8E1F8" font-size="13.5" font-weight="600">personal</text>
+        <rect x="56" y="144" width="188" height="36" rx="18" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="167" fill="#A8E1F8" font-size="13.5" font-weight="600">support</text>
+        <rect x="56" y="188" width="188" height="36" rx="18" fill="#10243B" stroke="#5CCBF4"/><text x="150" y="211" fill="#7DD9F9" font-size="13.5" font-weight="700">both</text>
+
+        <!-- destinations -->
+        <rect x="476" y="92" width="200" height="44" rx="10" fill="#0E2236" stroke="#5CCBF4"/><text x="576" y="119" fill="#7DD9F9" font-size="13.5" font-weight="600">Recipient list</text>
+        <rect x="476" y="156" width="200" height="44" rx="10" fill="#0E2236" stroke="#5CCBF4"/><text x="576" y="183" fill="#7DD9F9" font-size="13.5" font-weight="600">PSA email</text>
+      </g>
+      <!-- flows -->
+      <path d="M244 118 H476" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M244 162 H476" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M244 206 C360 206 360 130 476 124" stroke="#3A6FA0" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+      <path d="M244 206 C360 206 360 182 476 180" stroke="#3A6FA0" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+    </svg>
+    <figcaption>Each policy's routing — none, personal, support, or both — decides which channel an alert travels down.</figcaption>
+  </figure>
+
+  <p>Each recipient gets email in <strong>their own language</strong> — recipients with a Panoptica365 user profile receive alert mail in the language set in their preferences.</p>
+
+  <h2>The daily briefing</h2>
+
+  <p>Every morning at 6, Panoptica365 emails a Claude-written summary of the last day across the fleet. <strong>Settings → Daily Summary</strong> sets the minimum severity that makes it in: from <em>Info — include everything (default)</em> up to <em>Severe only</em>. Alerts resolved by exemption rules are excluded automatically — the footer notes what was filtered. If your briefing reads like noise, raise the threshold before you stop reading it; a briefing you skim daily at any threshold beats a complete one you ignore.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Threshold over silence</div>
+    <p>If your briefing reads like noise, raise the threshold before you stop reading it — a briefing you skim daily at any threshold beats a complete one you ignore.</p>
+  </div>
+
+  <h2>Mute periods</h2>
+
+  <p>Going on vacation? Any user can mute alerts <strong>to their own email</strong>: click your mute control, set From / To (up to 60 days), and optionally a reason. The mute auto-expires; you can cancel it early.</p>
+
+  <p>Two honest details:</p>
+
+  <ul>
+    <li>Muting only affects <em>your</em> delivery. If your address isn't on any recipient list, the UI tells you the mute has no effect.</li>
+    <li><strong>The failsafe:</strong> if every configured recipient is muted simultaneously, Panoptica365 overrides the mutes and delivers to an Admin anyway, with a <em>Failsafe delivery</em> banner on the email. There is no configuration in which a severe alert silently reaches no one. Admins can review all active mutes in Settings.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="When every configured recipient is muted, the alert is still delivered to an Admin with a Failsafe delivery banner.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- muted recipients -->
+        <rect x="40" y="68" width="210" height="74" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="145" y="100" fill="#9FB4CE" font-size="14" font-weight="600">Every recipient</text>
+        <text x="145" y="122" fill="#6B85A6" font-size="12">muted simultaneously</text>
+        <!-- mute glyph -->
+        <g transform="translate(70,96)" stroke="#6B85A6" stroke-width="2" fill="none">
+          <path d="M0 -6 H6 L14 -13 V13 L6 6 H0 Z" fill="#0E2236"/>
+          <line x1="-3" y1="-13" x2="20" y2="13" stroke="#FFC04D"/>
+        </g>
+
+        <!-- override -->
+        <rect x="300" y="80" width="120" height="50" rx="25" fill="#1E1606" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="360" y="103" fill="#FFC04D" font-size="13" font-weight="700">override</text>
+        <text x="360" y="120" fill="#C9A85A" font-size="10.5">the mutes</text>
+
+        <!-- admin delivery -->
+        <rect x="470" y="68" width="210" height="74" rx="10" fill="#0E2640" stroke="#5CCBF4"/>
+        <text x="575" y="100" fill="#A8E1F8" font-size="14" font-weight="600">Admin</text>
+        <text x="575" y="122" fill="#7DD9F9" font-size="11.5">Failsafe delivery banner</text>
+      </g>
+      <path d="M250 105 H300" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+      <path d="M420 105 H470" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+      <text x="360" y="178" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">No configuration leaves a severe alert reaching no one.</text>
+    </svg>
+    <figcaption>The failsafe: if everyone is muted, an Admin still gets the alert — flagged Failsafe delivery.</figcaption>
+  </figure>
+
+  <h2>The checklist</h2>
+
+  <ol>
+    <li>SMTP configured and <strong>test email received</strong>.</li>
+    <li>Operator emails in Recipient list; PSA email set.</li>
+    <li>Daily Summary threshold chosen.</li>
+    <li>Alert policy routing reviewed (<em>Tune alert policies</em>).</li>
+    <li>A real test: trip something harmless, confirm it arrives where you expect.</li>
+  </ol>
+
+  <p>Fifteen minutes, once — and then the alert-driven model actually works, because delivery is trustworthy.</p>
+
+</div>
+</body>
+</html>

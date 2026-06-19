@@ -4281,7 +4281,6 @@
       "label": "Tamaño de la base de datos",
       "summary": {
         "ok": "La base de datos ocupa {gb} GB en {tables} tablas",
-        "warn": "La base de datos ocupa {gb} GB — por encima del umbral de atención de {warnGb} GB",
         "unknown": "No se pudo leer el tamaño de la base de datos"
       },
       "table_table": "Tabla",

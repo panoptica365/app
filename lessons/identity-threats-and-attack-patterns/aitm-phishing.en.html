@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AiTM phishing — the king of 2026 — Identity threats &amp; attack patterns</title>
+<meta name="lesson:title" content="AiTM phishing — the king of 2026">
+<meta name="lesson:subtitle" content="Adversary-in-the-middle reverse proxies steal fully MFA'd session cookies — standard push-based MFA is no defence.">
+<meta name="lesson:icon" content="fish">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Identity threats &amp; attack patterns</span> <span class="sep">·</span> <span>AiTM phishing</span></div>
+  <h1>AiTM phishing — the king of 2026</h1>
+  <p class="dek">Adversary-in-the-middle reverse proxies steal fully MFA'd session cookies — standard push-based MFA is no defence.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A reverse proxy sits between the user and Microsoft, forwarding every request and response while capturing the session cookie.">
+      <defs>
+        <radialGradient id="atBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="atFwd" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+        <marker id="atSteal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#atBg)"/>
+
+      <!-- left: the user -->
+      <g transform="translate(150,170)">
+        <circle r="78" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-52" y="-44" width="104" height="74" rx="9" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <circle cx="0" cy="-12" r="13" fill="#52708F"/>
+        <path d="M-20 14 a20 18 0 0 1 40 0" fill="#52708F"/>
+      </g>
+      <text x="150" y="296" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">User</text>
+      <text x="150" y="316" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">types password · completes MFA</text>
+
+      <!-- middle: the proxy / operator -->
+      <g transform="translate(560,170)">
+        <circle r="104" fill="none" stroke="#5A2230" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-78" y="-50" width="156" height="100" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.7"/>
+        <text x="0" y="-24" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="16" font-weight="700">Reverse proxy</text>
+        <text x="0" y="-3" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12.5">fake page</text>
+        <text x="0" y="16" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12.5">forwards both ways</text>
+        <text x="0" y="35" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12.5">hears everything</text>
+      </g>
+      <text x="560" y="312" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">ADVERSARY IN THE MIDDLE</text>
+
+      <!-- right: Microsoft -->
+      <g transform="translate(970,170)">
+        <circle r="78" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-56" y="-46" width="112" height="92" rx="10" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.5"/>
+        <rect x="-34" y="-26" width="68" height="9" rx="3" fill="#2A7FA3"/>
+        <rect x="-34" y="-9" width="50" height="8" rx="3" fill="#1F3C5C"/>
+        <rect x="-34" y="9" width="60" height="8" rx="3" fill="#1F3C5C"/>
+      </g>
+      <text x="970" y="296" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Microsoft</text>
+      <text x="970" y="316" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">real sign-in · MFA · session cookie</text>
+
+      <!-- flows user <-> proxy <-> microsoft -->
+      <path d="M250 150 H452" stroke="#52708F" stroke-width="2.4" marker-end="url(#atFwd)"/>
+      <path d="M452 196 H250" stroke="#52708F" stroke-width="2.4" marker-end="url(#atFwd)"/>
+      <path d="M668 150 H872" stroke="#52708F" stroke-width="2.4" marker-end="url(#atFwd)"/>
+      <path d="M872 196 H668" stroke="#52708F" stroke-width="2.4" marker-end="url(#atFwd)"/>
+      <text x="360" y="138" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">forwards every request &amp; response</text>
+
+      <!-- the steal -->
+      <path d="M560 74 V20" stroke="#FF5A6E" stroke-width="2.4" stroke-dasharray="4 4" marker-end="url(#atSteal)"/>
+      <text x="560" y="14" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">captures the session cookie</text>
+    </svg>
+    <figcaption>The user and Microsoft each think they are talking directly to each other. The proxy in the middle hears everything — and keeps the cookie.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>If MFA fatigue is the social engineer's bypass of MFA, AiTM is the engineer's bypass. It doesn't ask the user to make a bad decision — it just lets them make a perfectly correct decision on a perfectly convincing fake. The user types their password, completes the MFA prompt, and walks away thinking nothing happened. Meanwhile the attacker now holds a fully MFA'd session cookie and can log in to M365 as that user from anywhere, on any device, until the cookie expires.</p>
+
+  <p>Microsoft tracked a <strong>146% increase in AiTM attacks in 2024</strong> and the curve has not bent down since. The phishing kits that automate this attack — Evilginx, Muraena, Modlishka — are free, open-source, and easy to deploy. The cost barrier to running an AiTM campaign has effectively gone to zero. Standard push-based MFA is no defence.</p>
+
+  <p>This is the deepest, longest lesson in the card because AiTM is the highest-impact identity attack of the moment. Read slowly.</p>
+  </div>
+
+  <h2>What "adversary in the middle" actually means</h2>
+
+  <p>Imagine you have a phone call routed through an operator who can listen, take notes, and disconnect at any time. Both ends think they're talking to each other. The operator hears everything.</p>
+
+  <p>Now make the operator a website. The user types <code>outlook.office.com</code> into the browser. Or, more accurately, the user <em>clicks a link in an email</em> that looks like <code>outlook-office.com.signin-microsoft.help</code> (a domain registered six hours ago). That domain is the operator — a reverse proxy. It forwards every HTTP request to the <em>real</em> Microsoft sign-in service, and forwards every response back to the user. From the user's screen, everything looks normal. Microsoft's actual login page. Microsoft's actual MFA prompt. Microsoft's actual "Stay signed in?" question.</p>
+
+  <p>The only thing different is the URL bar. And nobody reads the URL bar.</p>
+
+  <p>What the operator-in-the-middle is capturing is not the password (although it does get the password). It's the <strong>session cookie</strong> — the thing Microsoft sends back after a successful sign-in to say "this browser is now authenticated until 4 PM on Friday." Once the AiTM site has that cookie, the attacker can paste it into their own browser, and they <em>are</em> the user. No more password needed. No more MFA needed. The token is the prize.</p>
+
+  <p>This is why the rest of this card and the next two cards keep coming back to <em>session protection</em> as the real game. The password is incidental; the session is what matters.</p>
+
+  <h2>Step by step</h2>
+
+  <p>Walking through a real AiTM attack:</p>
+
+  <p><strong>Step 1: The phishing email arrives.</strong> "Action required: Your DocuSign envelope is awaiting your review." The link looks like <code>secure-docusign.helpfile-portal.com/?eid=ABC...</code>. The user clicks.</p>
+
+  <p><strong>Step 2: The user lands on what looks like a Microsoft sign-in page.</strong> Pixel-perfect. URL bar shows the attacker's domain but the user doesn't look. They type their email address.</p>
+
+  <p><strong>Step 3: The AiTM proxy forwards that email address to <code>login.microsoftonline.com</code>.</strong> Microsoft, helpfully, returns the <em>actual tenant branding</em> for that user's company — the customer's logo, custom welcome text, the works. The proxy forwards all of that back to the user. The page now looks even more legitimate, because it <em>is</em> the legitimate page, just routed.</p>
+
+  <p><strong>Step 4: User types password.</strong> Proxy captures it, forwards to Microsoft. Microsoft replies with "MFA challenge required." Proxy forwards the MFA prompt to the user.</p>
+
+  <p><strong>Step 5: User completes MFA.</strong> Microsoft Authenticator number-matching, FIDO2 key tap, whatever the user's configured method is — all of it gets forwarded faithfully through the proxy. The user is doing exactly what they normally do.</p>
+
+  <p><strong>Step 6: Microsoft returns a session cookie.</strong> This is the prize. The proxy captures it before forwarding to the user. The user's browser now has a working session and lands on the real Outlook. They believe they have signed in successfully. As far as Microsoft is concerned, they have.</p>
+
+  <p><strong>Step 7: The attacker imports the captured cookie into their own browser.</strong> They are now signed in as the user. No password challenge. No MFA prompt. Microsoft sees a browser presenting a valid, MFA'd session token and grants access.</p>
+
+  <p><strong>Step 8: The attacker does whatever they came for.</strong> Read mail, set up forwarding rules, search for "wire transfer" or "invoice" in the user's inbox, register a new MFA device for themselves (so they don't need to do this whole dance again), maybe pivot laterally. The session cookie expires after some hours, but by then the attacker has either persistence elsewhere or has finished their work.</p>
+
+  <p>The entire flow takes minutes. The user often never knows it happened — they completed sign-in, saw their mail, closed the tab, went on with their day.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 470" role="img" aria-label="The eight steps of an AiTM attack, in order, from the phishing email to the attacker acting on the stolen session.">
+      <rect width="720" height="470" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="stArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- spine -->
+        <line x1="44" y1="46" x2="44" y2="424" stroke="#1F3C5C" stroke-width="2"/>
+
+        <!-- step 1 -->
+        <g transform="translate(0,40)">
+          <circle cx="44" cy="14" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#FF8A98" font-size="12" font-weight="700">1</text>
+          <text x="74" y="11" fill="#C4D4E8" font-size="14" font-weight="600">Phishing email arrives</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">user clicks the link</text>
+        </g>
+        <!-- step 2 -->
+        <g transform="translate(0,94)">
+          <circle cx="44" cy="14" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#FF8A98" font-size="12" font-weight="700">2</text>
+          <text x="74" y="11" fill="#C4D4E8" font-size="14" font-weight="600">Lands on a fake sign-in page</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">pixel-perfect · types email address</text>
+        </g>
+        <!-- step 3 -->
+        <g transform="translate(0,148)">
+          <circle cx="44" cy="14" r="13" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#A8E1F8" font-size="12" font-weight="700">3</text>
+          <text x="74" y="11" fill="#C4D4E8" font-size="14" font-weight="600">Proxy forwards email to Microsoft</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">real tenant branding comes back</text>
+        </g>
+        <!-- step 4 -->
+        <g transform="translate(0,202)">
+          <circle cx="44" cy="14" r="13" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#A8E1F8" font-size="12" font-weight="700">4</text>
+          <text x="74" y="11" fill="#C4D4E8" font-size="14" font-weight="600">User types password</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">proxy captures it · Microsoft asks for MFA</text>
+        </g>
+        <!-- step 5 -->
+        <g transform="translate(0,256)">
+          <circle cx="44" cy="14" r="13" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#A8E1F8" font-size="12" font-weight="700">5</text>
+          <text x="74" y="11" fill="#C4D4E8" font-size="14" font-weight="600">User completes MFA</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">forwarded faithfully through the proxy</text>
+        </g>
+        <!-- step 6 -->
+        <g transform="translate(0,310)">
+          <circle cx="44" cy="14" r="13" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="44" y="19" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="700">6</text>
+          <text x="74" y="11" fill="#7DD9F9" font-size="14" font-weight="700">Microsoft returns a session cookie</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">the proxy captures it — the prize</text>
+        </g>
+        <!-- step 7 -->
+        <g transform="translate(0,364)">
+          <circle cx="44" cy="14" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#FF8A98" font-size="12" font-weight="700">7</text>
+          <text x="74" y="11" fill="#FF8A98" font-size="14" font-weight="700">Attacker imports the cookie</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">no password · no MFA · signed in as the user</text>
+        </g>
+        <!-- step 8 -->
+        <g transform="translate(0,418)">
+          <circle cx="44" cy="14" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="44" y="19" text-anchor="middle" fill="#FF8A98" font-size="12" font-weight="700">8</text>
+          <text x="74" y="11" fill="#FF8A98" font-size="14" font-weight="700">Attacker does what they came for</text>
+          <text x="74" y="29" fill="#6B85A6" font-size="12">forwarding rules · new MFA device · lateral move</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The whole flow takes minutes. The user completes a real sign-in; the attacker walks away with the session.</figcaption>
+  </figure>
+
+  <h2>Why MFA doesn't help</h2>
+
+  <p>This is the part that confuses people who came up in security ten years ago. MFA was supposed to be the answer. Why doesn't it stop this?</p>
+
+  <p>Because MFA proves <em>the user is present at the sign-in moment</em>. It does not prove <em>the sign-in is going to the right place</em>. The AiTM proxy puts itself between the user and Microsoft, and MFA validates correctly with the proxy in the middle. The user proves they're present; the proxy steals the result.</p>
+
+  <p>This is the structural flaw that token theft exploits in general, and AiTM exploits in particular. The defence has to be something that <em>binds the authentication to a specific destination</em>, not just to the user.</p>
+
+  <p>That's what phishing-resistant MFA does — and why it actually matters.</p>
+
+  <h2>Phishing-resistant MFA: what's different</h2>
+
+  <p><strong>FIDO2 security keys, passkeys, and Windows Hello for Business</strong> use a cryptographic technique called <em>origin binding</em>. When the user registers a passkey for <code>login.microsoftonline.com</code>, the passkey is mathematically tied to that specific domain. When the user later signs in, the browser tells the passkey what domain it's authenticating against. If the domain is <code>outlook-office.com.signin-microsoft.help</code> instead of <code>login.microsoftonline.com</code>, the passkey <em>refuses to sign</em>.</p>
+
+  <p>The user can't override this. The proxy can't proxy around it, because the cryptographic signature includes the domain as a signed field. There is no way to fool a passkey into signing for the wrong site.</p>
+
+  <p>That is the meaningful technical defence against AiTM, and it is the <em>only</em> defence that works at the authentication moment itself. Everything else in this lesson is mitigation that happens after the token is captured.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Push-based MFA validates through the proxy, but a passkey checks the domain and refuses to sign for the fake site.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="360" y1="20" x2="360" y2="230" stroke="#1F3C5C" stroke-width="1.4" stroke-dasharray="3 6"/>
+      <defs>
+        <marker id="pxArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+      </defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- left: push MFA -->
+        <text x="180" y="38" fill="#6B85A6" font-size="12.5" letter-spacing="1.5">PUSH-BASED MFA</text>
+        <rect x="46" y="62" width="116" height="46" rx="9" fill="#0E2236" stroke="#33527A"/><text x="104" y="90" fill="#C4D4E8" font-size="13.5">User</text>
+        <rect x="200" y="62" width="116" height="46" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/><text x="258" y="84" fill="#FF8A98" font-size="13" font-weight="700">Fake page</text><text x="258" y="100" fill="#E2A0AA" font-size="10.5">proxy</text>
+        <path d="M162 85 H200" stroke="#52708F" stroke-width="2" marker-end="url(#pxArr)"/>
+        <text x="180" y="156" fill="#FF8A98" font-size="12.5" font-weight="600">validates through the proxy</text>
+        <text x="180" y="176" fill="#6B85A6" font-size="11.5">user is present — result is stolen</text>
+      </g>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- right: passkey -->
+        <text x="540" y="38" fill="#7DD9F9" font-size="12.5" letter-spacing="1.5">PASSKEY · ORIGIN BINDING</text>
+        <rect x="406" y="62" width="116" height="46" rx="9" fill="#0E2236" stroke="#33527A"/><text x="464" y="83" fill="#C4D4E8" font-size="13.5">Passkey</text><text x="464" y="99" fill="#6B85A6" font-size="10.5">checks domain</text>
+        <rect x="560" y="62" width="116" height="46" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/><text x="618" y="84" fill="#FF8A98" font-size="13" font-weight="700">Fake domain</text><text x="618" y="100" fill="#E2A0AA" font-size="10.5">wrong origin</text>
+        <path d="M560 85 H522" stroke="#FF5A6E" stroke-width="2"/>
+        <line x1="535" y1="76" x2="547" y2="94" stroke="#FF5A6E" stroke-width="2.4"/>
+        <line x1="547" y1="76" x2="535" y2="94" stroke="#FF5A6E" stroke-width="2.4"/>
+        <text x="540" y="156" fill="#2EE8A0" font-size="12.5" font-weight="700">refuses to sign</text>
+        <text x="540" y="176" fill="#6B85A6" font-size="11.5">domain is a signed field — cannot be fooled</text>
+      </g>
+    </svg>
+    <figcaption>Push-based MFA happily validates through the proxy. A passkey checks the domain it is signing for — and refuses the fake.</figcaption>
+  </figure>
+
+  <p>Three phishing-resistant methods you'll see in the field, with their tradeoffs:</p>
+
+  <p><strong>Passkeys</strong> — store the private key on the user's phone (sync passkeys) or device (device-bound passkeys). Best UX. Most universal. Microsoft has been pushing passkey adoption hard since late 2024.</p>
+
+  <p><strong>FIDO2 security keys</strong> — hardware token (YubiKey, etc). Best security posture; requires physical possession. Slightly more friction (carry a key, plug it in). Right for high-value users — admins, finance, executives.</p>
+
+  <p><strong>Windows Hello for Business</strong> — biometric or PIN tied to a TPM-backed credential on a managed Windows device. Excellent UX if the user is on a managed Windows endpoint. Doesn't extend to mobile or non-Windows.</p>
+
+  <p>If the customer is on Business Premium or above, all three are configurable. The migration is gradual but the work compounds: every user who switches becomes immune to AiTM, MFA fatigue, and credential stuffing simultaneously.</p>
+
+  <h2>What else helps (the secondary mitigations)</h2>
+
+  <p>Phishing-resistant MFA is the core defence. The rest of the controls in this list are <em>risk reduction</em> — they shrink the blast radius of an AiTM compromise, or they raise the chance of detection.</p>
+
+  <p><strong>Conditional Access: require compliant device.</strong> If the captured session cookie is replayed from a device that isn't enrolled in Intune and marked compliant, Microsoft rejects it. The attacker stole the cookie but can't use it. This control is enforceable from Business Premium up. It's one of the strongest practical defences for tenants that can't get to passkeys overnight.</p>
+
+  <p><strong>Conditional Access: require Microsoft Entra hybrid join.</strong> Variant of the above for tenants with hybrid AD. Same idea — token only usable from a known device.</p>
+
+  <p><strong>Token Protection</strong> (preview-to-GA evolution in 2024-2026). A Microsoft feature that cryptographically binds the issued token to the device that requested it. Without the device's secret, the bound token is useless to an attacker who stole the cookie. Currently supports Exchange Online, SharePoint Online, and Teams; not yet universal. Available in Entra ID P1 (Business Premium and above) via Conditional Access session controls. Worth turning on where supported.</p>
+
+  <p><strong>Continuous Access Evaluation (CAE).</strong> Real-time revocation of tokens when user conditions change. If the user is detected as compromised, or if their group membership changes, or if their location changes mid-session, tokens get revoked within minutes rather than at expiry. Available across most M365 SKUs. Enable it.</p>
+
+  <p><strong>Microsoft Defender SmartScreen + web content filtering.</strong> SmartScreen flags known phishing domains in real time. Defender for Endpoint's web content filtering can block newly-registered domains entirely (most AiTM domains are days or hours old). Neither is a complete defence — first-day domains aren't flagged yet — but together they meaningfully reduce hit rate.</p>
+
+  <p><strong>Defender for Office 365 Safe Links.</strong> URL rewriting and time-of-click checks. When the user clicks a link in their email, Defender for Office 365 re-checks the URL against current threat intelligence before redirecting. Catches links that became known-malicious between when the email was sent and when the user clicked.</p>
+
+  <h2>What Defender XDR does about it (Attack Disruption)</h2>
+
+  <p>The single most useful thing Microsoft has built for AiTM in the last three years is <strong>Attack Disruption</strong> — the auto-action capability covered in card 1, lesson 4. It applies specifically to AiTM (and BEC, and HumOR, and password spray).</p>
+
+  <p>When Defender XDR correlates a high-confidence AiTM incident — typically detected via the combination of a Defender for Office 365 alert (user clicked an AiTM phishing site), a Defender for Cloud Apps anomaly (stolen session token being used), and an Entra ID Protection risk signal — it doesn't wait for an operator. It disables the user account in Entra ID, revokes all active sessions including the stolen cookie, and (if the attacker's device can be identified) contains it.</p>
+
+  <p>This is the modern "after-the-fact" defence. The attack happened; the token was stolen; the attacker briefly had access. Attack Disruption cut the access off before the damage spread. The operator sees the closed incident in the morning with a "compromised account disabled automatically" note.</p>
+
+  <p>Two practical notes:</p>
+
+  <p><strong>Verify before re-enabling.</strong> When Attack Disruption fires, the operator will get a customer support call ("I'm locked out!"). Resist the urge to re-enable the user immediately. First verify that the AiTM was real (look at the source IP, the geographic anomaly, the timing), reset the user's password, kill any new authentication methods the attacker may have registered, <em>then</em> re-enable. Disrupting and re-enabling without forensics defeats the protection.</p>
+
+  <p><strong>Attack Disruption requires the right product mix.</strong> Defender for Endpoint in active mode, Defender for Cloud Apps connected, Defender for Identity for on-prem signals if you have it, Defender for Office 365 P1 minimum. Most modern Business Premium tenants have the prerequisites; some don't. Check before you assume Attack Disruption is on.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Several alert categories in Panoptica365 are AiTM-triggered:</p>
+
+  <p><strong>Foreign-IP successful sign-in.</strong> When a user who normally signs in from one country suddenly has a successful sign-in from another, the alert fires. Most AiTM attackers proxy their replay through the same infrastructure used to host the phishing kit, which is rarely in the user's normal geography.</p>
+
+  <p><strong>Impossible-travel sign-in.</strong> Two successful sign-ins from the same user separated by physical impossibility (Toronto, then Bucharest, 90 minutes apart). Classic post-AiTM signal — the user is in Toronto, the attacker replayed their cookie from Bucharest.</p>
+
+  <p><strong>New authentication method registered.</strong> Attackers like to add their own MFA method after a successful AiTM so they don't have to repeat the whole dance. This shows up in the Entra audit log and Panoptica surfaces it as an alert.</p>
+
+  <p><strong>Suspicious mailbox forwarding rule created.</strong> The user wouldn't be creating a rule that forwards all <code>invoice OR payment OR wire</code> mail to a Gmail address. That's an attacker. Forwarding-rule and inbox-rule alerts come up frequently in AiTM follow-on activity.</p>
+
+  <p><strong>Defender XDR AiTM incidents</strong> ingested directly. When Microsoft has scored an incident as AiTM and either disrupted it or alerted, that arrives in Panoptica365 as a high-severity alert with the original Microsoft severity and analysis preserved.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Triage</div>
+    <p>The triage approach: when you see <em>any</em> of these alerts on a user, assume AiTM until you can prove otherwise. Pull the Entra sign-in log for the user, look for the sign-in that immediately preceded the suspicious activity, check the source IP and the user-agent. A successful sign-in from a residential IP in a country the user has never been to, with a default browser user-agent, on the same day as a foreign-IP alert — that's the pattern. Treat it as a compromise.</p>
+  </div>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Four takeaways for daily work.</p>
+
+  <p><strong>AiTM is the single most important threat to design defences against in 2026.</strong> It is the attack that defeats the MFA most customers think is protecting them. Every conversation you have about identity hardening should reach passkeys / FIDO2 / Hybrid join / compliant-device CA before it reaches anything else.</p>
+
+  <p><strong>Push-based MFA is no longer adequate for high-value users.</strong> Admins, finance, executives, anyone with access to sensitive data — these users should be on phishing-resistant methods. Use Conditional Access authentication strength policies to <em>require</em> phishing-resistant MFA for sensitive apps even when the user's default method is still push.</p>
+
+  <p><strong>Token Protection and CAE are not optional.</strong> Turn them on for every Business Premium and above tenant. They don't prevent AiTM at the authentication moment, but they shrink the window during which a stolen token is useful.</p>
+
+  <p><strong>Trust Attack Disruption, then verify.</strong> When Defender XDR fires Attack Disruption on a user, the right operator workflow is: confirm the action looks correct, gather forensics, fix the underlying compromise (new auth methods, mailbox rules, etc.), then re-enable. Not the other way around.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: OAuth consent phishing.</b> The attack that survives a password reset. AiTM is loud; consent phishing is quiet, and it lasts.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Device-code abuse.</b> Microsoft's device-code flow misused. Closer to AiTM in mechanic, but with a different payload.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Lesson 6: BEC.</b> The economic endgame. What the attacker actually does with the AiTM-acquired session.</div></div>
+  </div>
+
+  <p>For now: AiTM is the attack that taught the industry MFA-alone is not enough. The defences exist. The work is operational — migrate to phishing-resistant methods, enable Token Protection and CAE, configure Attack Disruption, train customers' users to never trust the URL bar. It's tractable. It's just not done yet.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Defender Threat Intelligence on AiTM attack rise (<a href="https://www.microsoft.com/en-us/security/blog/2022/07/12/from-cookie-theft-to-bec-attackers-use-aitm-phishing-sites-as-entry-point-to-further-financial-fraud/" target="_blank" rel="noopener">Microsoft Security Blog — Defeating adversary-in-the-middle</a>); 2026 AiTM technique landscape (<a href="https://jeffreyappel.nl/" target="_blank" rel="noopener">Jeffrey Appel — AiTM/MFA phishing 2026 edition</a>); Token Protection mechanics (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-token-protection" target="_blank" rel="noopener">Microsoft Learn — Token protection in Conditional Access</a>); Continuous Access Evaluation (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-continuous-access-evaluation" target="_blank" rel="noopener">Microsoft Learn — Continuous access evaluation</a>); Attack Disruption configuration (<a href="https://learn.microsoft.com/en-us/defender-xdr/configure-attack-disruption" target="_blank" rel="noopener">Microsoft Learn — Configure automatic attack disruption</a>); FIDO2 / passkey origin binding (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-passwordless" target="_blank" rel="noopener">Microsoft Learn — Passwordless authentication</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

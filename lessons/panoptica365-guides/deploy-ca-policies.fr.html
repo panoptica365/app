@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déployez des stratégies d'accès conditionnel — Guides Panoptica365</title>
+<meta name="lesson:title" content="Déployez des stratégies d'accès conditionnel">
+<meta name="lesson:subtitle" content="Affectez des modèles de votre bibliothèque, déployez-les sur le locataire, et laissez la détection de dérive les garder par la suite.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Déployez des stratégies d'accès conditionnel</span></div>
+  <h1>Déployez des stratégies d'accès conditionnel</h1>
+  <p class="dek">Affectez des modèles de votre bibliothèque, déployez-les sur le locataire, et laissez la détection de dérive les garder par la suite.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Le cycle de vie de l'accès conditionnel dans Panoptica365 : une bibliothèque de modèles, affectée à un locataire, déployée, puis surveillée pour toujours.">
+      <defs>
+        <radialGradient id="caBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="caShield" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="caArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#caBg)"/>
+
+      <!-- 1: bibliotheque de modeles -->
+      <g transform="translate(72,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="14" y="14" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="44" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="74" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="148" text-anchor="middle" fill="#6B85A6" font-size="11.5" letter-spacing="1">BIBLIOTHÈQUE DE MODÈLES</text>
+      </g>
+      <path d="M204 170 H300" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="252" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">affecter</text>
+
+      <!-- 2: locataire -->
+      <g transform="translate(316,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 24 L92 44 V94 H26 V44 Z" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="44" y="66" width="30" height="28" fill="#102A4C" stroke="#2A7FA3"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="13" letter-spacing="2">LOCATAIRE</text>
+      </g>
+      <path d="M448 170 H544" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="496" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">déployer</text>
+
+      <!-- 3: stratégie active comme bouclier -->
+      <g transform="translate(620,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 16 L94 30 V62 C94 88 78 104 59 112 C40 104 24 88 24 62 V30 Z" fill="url(#caShield)" opacity="0.92"/>
+        <path d="M44 60 L55 72 L76 46" fill="none" stroke="#071221" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="12.5" letter-spacing="1">STRATÉGIE ACTIVE</text>
+      </g>
+      <path d="M752 170 H848" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="800" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">surveiller</text>
+
+      <!-- 4: surveillance de dérive -->
+      <g transform="translate(984,170)">
+        <circle r="80" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="56" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <path d="M-44 0 C-22 -34 22 -34 44 0 C22 34 -22 34 -44 0 Z" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle r="15" fill="url(#caShield)"/>
+        <circle r="6" fill="#EAF7FE"/>
+        <text x="0" y="106" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600" letter-spacing="1">SURVEILLANCE DÉRIVE</text>
+      </g>
+    </svg>
+    <figcaption>Le cycle de vie AC dans Panoptica365 : un modèle de votre bibliothèque, affecté à un locataire, déployé, puis surveillé pour la dérive — pour toujours.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>L'accès conditionnel est l'endroit où Panoptica365 cesse d'être une caméra pour devenir un garde-fou. Vous maintenez une <strong>bibliothèque de modèles</strong> de stratégies AC (barre latérale → <strong>Stratégies AC</strong>), vous affectez des modèles aux locataires, vous les déployez, et Panoptica365 surveille ensuite les stratégies actives pour détecter toute dérive — pour toujours.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Avant de déployer</div>
+    <p>Avant votre premier vrai déploiement, lisez la leçon sur la <em>liste de vérification pré-déploiement</em> dans la carte Accès conditionnel d'Apprendre. Les comptes bris de glace et l'inventaire des comptes de service ne sont pas optionnels. Une stratégie AC déployée à la hâte peut verrouiller un client entier dehors.</p>
+  </div>
+
+  <h2>Affecter des modèles à un locataire</h2>
+
+  <ol>
+    <li>Ouvrez le tableau de bord du locataire → onglet <strong>Stratégies AC</strong>. Sur un locataire neuf, vous verrez <em>« Aucun modèle de stratégie CA assigné à ce locataire pour le moment. »</em></li>
+    <li>Cliquez sur <strong>Affecter un modèle</strong>. Un sélecteur liste votre bibliothèque de modèles (moins tout ce qui est déjà affecté).</li>
+    <li>Cochez les modèles voulus — ou <strong>Tout sélectionner</strong> — et confirmez.</li>
+  </ol>
+
+  <p>Chaque affectation devient une carte sur l'onglet montrant le nom du modèle, un badge d'état de dérive, les contrôles <strong>Octroi</strong>, les cibles <strong>Utilisateurs</strong> et <strong>Applications</strong>, une liste déroulante d'acheminement des <strong>Alertes</strong> (courriel, PSA, les deux ou aucun — par affectation), et <strong>Dernière vérification</strong>.</p>
+
+  <h2>Déployer</h2>
+
+  <p>Un modèle affecté n'est pas encore actif. Sur la carte d'affectation :</p>
+
+  <ul>
+    <li><strong>Déployer</strong> — crée la stratégie active dans le locataire à partir du modèle. Les espaces réservés propres au locataire (comme les emplacements nommés) sont résolus au moment du déploiement.</li>
+    <li><strong>Vérifier la dérive</strong> — compare la stratégie active au modèle immédiatement, sur demande (le cycle de dérive planifié le fait aussi en continu).</li>
+  </ul>
+
+  <p>Déployez d'abord en <strong>mode rapport seul</strong> quand le modèle est conçu ainsi, observez l'impact sur les connexions, puis basculez à Activé — cette discipline est couverte dans les leçons AC.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="La discipline de déploiement : déployer en mode rapport seul d'abord, observer l'impact sur les connexions, puis basculer à Activé.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="44" width="192" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="126" y="71" fill="#A8E1F8" font-size="13" font-weight="600">Mode rapport seul</text>
+
+        <rect x="264" y="44" width="192" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="71" fill="#C4D4E8" font-size="12.5">Observer les connexions</text>
+
+        <rect x="498" y="44" width="192" height="44" rx="22" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="594" y="71" fill="#7DD9F9" font-size="13" font-weight="700">Basculer à Activé</text>
+      </g>
+      <path d="M222 66 H264" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+      <path d="M456 66 H498" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+    </svg>
+    <figcaption>La discipline de déploiement quand le modèle le permet : rapport seul d'abord, observer, puis activer.</figcaption>
+  </figure>
+
+  <h2>La dérive : les badges</h2>
+
+  <p>Chaque carte d'affectation porte un badge d'état :</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Badge</th><th>Signification</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ok</strong></td><td>la stratégie active correspond au modèle.</td></tr>
+        <tr><td><strong>en dérive</strong></td><td>quelque chose a changé dans le locataire; la stratégie ne correspond plus.</td></tr>
+        <tr><td><strong>acceptée</strong></td><td>une dérive existe, mais un opérateur l'a examinée et acceptée.</td></tr>
+        <tr><td><strong>manquante</strong></td><td>la stratégie n'existe pas dans le locataire (supprimée, ou jamais déployée).</td></tr>
+        <tr><td><strong>non vérifiée</strong></td><td>pas encore comparée.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Quand une dérive est détectée, vous recevez aussi une <strong>alerte</strong> par l'acheminement que vous avez choisi, avec l'analyse IA jointe. Le journal de dérive sur la carte montre la chronologie : quel champ a changé, attendu vs réel, événements de désactivation ou de suppression, et remédiations.</p>
+
+  <h2>Répondre à une dérive</h2>
+
+  <p>Vous avez trois options honnêtes :</p>
+
+  <ol>
+    <li><strong>Pousser le modèle</strong> (aussi affiché comme <strong>Corriger</strong>) — écrase la stratégie active avec le modèle. <strong>Avertissement, et le bouton est sérieux :</strong> ceci efface les <code>excludeUsers</code> / <code>excludeGroups</code> propres au locataire qui ont été ajoutés directement dans le locataire. Si ces exclusions sont légitimes, elles doivent vivre dans le modèle ou comme exemptions, pas comme modifications faites côté console Microsoft.</li>
+    <li><strong>Accepter la dérive.</strong> Cliquer sur une stratégie en dérive ouvre <strong>Accepter la dérive de la stratégie CA</strong>, qui montre attendu vs réel par champ, avec deux chemins :
+      <ul>
+        <li><strong>Accepter avec expiration</strong> <em>(recommandé)</em> — la dérive est acceptée jusqu'à la date de votre choix (180 jours par défaut), un <strong>motif est obligatoire</strong>, et les principaux exclus sont transférés dans la table des <strong>Exemptions</strong> pour que les évaluateurs d'alertes les ignorent jusqu'à l'expiration. Limité dans le temps, documenté, vérifiable.</li>
+        <li><strong>Accepter une fois, pour toujours</strong> — accepté indéfiniment; ne se redéclenche que si la signature de la dérive change. À utiliser avec parcimonie.</li>
+      </ul>
+    </li>
+    <li><strong>Mettre à jour le modèle</strong> — si le changement est en fait le bon pour tous les locataires, corrigez à la source dans la bibliothèque Stratégies AC.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Les trois options pour répondre à une dérive : pousser le modèle, accepter la dérive, ou mettre à jour le modèle.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- pousser le modele -->
+        <rect x="28" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="131" y="70" text-anchor="middle" fill="#C4D4E8" font-size="13.5" font-weight="600">Pousser le modèle</text>
+        <text x="131" y="92" text-anchor="middle" fill="#6B85A6" font-size="11.5">écrase l'active avec</text>
+        <text x="131" y="108" text-anchor="middle" fill="#6B85A6" font-size="11.5">le modèle</text>
+        <text x="131" y="136" text-anchor="middle" fill="#FF8A98" font-size="11.5">efface les exclusions</text>
+        <text x="131" y="151" text-anchor="middle" fill="#FF8A98" font-size="11.5">propres au locataire</text>
+
+        <!-- accepter la derive -->
+        <rect x="257" y="40" width="206" height="120" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="70" text-anchor="middle" fill="#A8E1F8" font-size="13.5" font-weight="600">Accepter la dérive</text>
+        <text x="360" y="96" text-anchor="middle" fill="#2EE8A0" font-size="11.5">avec expiration — motif</text>
+        <text x="360" y="111" text-anchor="middle" fill="#2EE8A0" font-size="11.5">obligatoire, limité</text>
+        <text x="360" y="137" text-anchor="middle" fill="#6B85A6" font-size="11.5">ou une fois, pour toujours</text>
+        <text x="360" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">(avec parcimonie)</text>
+
+        <!-- mettre a jour le modele -->
+        <rect x="486" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="589" y="70" text-anchor="middle" fill="#C4D4E8" font-size="13" font-weight="600">Mettre à jour le modèle</text>
+        <text x="589" y="96" text-anchor="middle" fill="#6B85A6" font-size="11.5">bon pour tous les</text>
+        <text x="589" y="111" text-anchor="middle" fill="#6B85A6" font-size="11.5">locataires ? corrigez à la</text>
+        <text x="589" y="126" text-anchor="middle" fill="#6B85A6" font-size="11.5">source dans la</text>
+        <text x="589" y="141" text-anchor="middle" fill="#6B85A6" font-size="11.5">bibliothèque Stratégies AC</text>
+      </g>
+    </svg>
+    <figcaption>Trois réponses honnêtes à une stratégie en dérive — chacune consignée dans le journal d'audit.</figcaption>
+  </figure>
+
+  <h2>Adopter les paramètres existants sur place (issus du locataire)</h2>
+
+  <p>Il arrive que vous intégriez un locataire qui possède <strong>déjà</strong> ses propres stratégies d'accès conditionnel — des stratégies que vous n'avez pas poussées depuis votre bibliothèque. Vous n'êtes pas obligé d'imposer vos modèles dès le premier jour. <strong>Importer les paramètres existants</strong> vous permet d'adopter ce qui est déjà là et de le surveiller d'abord — une étape délibérée « surveiller ce qui est ici, ne rien imposer pour l'instant ».</p>
+
+  <p>Sous l'onglet <strong>Stratégies AC</strong>, cliquez sur <strong>Importer les paramètres existants</strong>. Panoptica lit les stratégies AC en vigueur dans le locataire et crée une carte pour chacune qu'il ne gère pas déjà, marquée <strong>Issu du locataire</strong> (bordure gauche rouge et badge) afin de les distinguer de vos modèles déployés. Il enregistre l'état actuel de chaque stratégie comme état initial et surveille les changements à partir de là.</p>
+
+  <p>Quelques points à savoir :</p>
+
+  <ul>
+    <li><strong>Aucun doublon.</strong> Les stratégies que vous avez déjà déployées à partir d'un modèle sont reconnues par leur identifiant d'objet et ignorées — même si vous les avez renommées dans le locataire. Le bouton reste disponible, et recliquer est sans risque : seuls les paramètres réellement nouveaux sont adoptés.</li>
+    <li><strong>Les stratégies gérées par Microsoft</strong> sont aussi adoptées, signalées comme telles. Là où Microsoft refuse une modification, l'action se dégrade proprement (« géré par Microsoft, ne peut pas être modifié ici ») au lieu d'échouer. Les <strong>paramètres de sécurité par défaut</strong> ne sont <em>pas</em> une stratégie — ils sont affichés comme un simple indicateur activé/désactivé, jamais comme une carte.</li>
+    <li><strong>Dérive par rapport à l'état initial.</strong> L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em> — et non « s'écarte de votre standard », car il n'y a pas encore de modèle derrière. La surveillance quotidienne détecte les changements; une toute nouvelle stratégie AC créée directement dans la console est détectée en quelques minutes.</li>
+  </ul>
+
+  <h3>Ce que vous pouvez faire avec une carte issue du locataire</h3>
+
+  <p>Ouvrez les <strong>Actions</strong> d'une carte pour trois choix distincts :</p>
+
+  <ol>
+    <li><strong>Arrêter la surveillance</strong> — retire la carte et cesse de la surveiller. <strong>Cela ne modifie jamais le locataire</strong> — c'est une action propre à Panoptica.</li>
+    <li><strong>Désactiver dans le locataire</strong> — désactive la stratégie de façon réversible (la met à <em>désactivée</em>). La carte demeure, marquée Inactive, et <strong>Restaurer</strong> la remet exactement en place. Par défaut, une carte désactivée n'alerte que si quelqu'un la réactive en dehors de Panoptica.</li>
+    <li><strong>Supprimer du locataire</strong> — retire définitivement la stratégie du locataire. La confirmation est proportionnée au risque : la suppression vous demande de saisir votre propre nom.</li>
+  </ol>
+
+  <p>Chacune de ces actions est consignée dans le journal d'audit et dans le journal des modifications du locataire, avec votre nom et le nom de la stratégie.</p>
+
+  <h3>Surveiller ce qui apparaît plus tard</h3>
+
+  <p>Au-delà de l'adoption, Panoptica surveille <strong>chaque</strong> locataire — avec ou sans modèles — pour détecter une stratégie AC qui apparaît <strong>en dehors de Panoptica</strong> (créée directement dans la console Entra). Lorsqu'elle surgit, elle devient une carte issue du locataire et déclenche une alerte <em>« configuration créée en dehors de Panoptica »</em>, afin qu'un changement effectué hors de votre processus ne passe pas inaperçu. À mesure que vous déployez ensuite vos propres standards, vous pouvez désactiver ou supprimer les stratégies natives encombrantes — ou simplement continuer à les surveiller.</p>
+
+  <h2>Note d'exploitation</h2>
+
+  <div class="callout insight">
+    <div class="clabel">Note d'exploitation</div>
+    <p>La dérive sur une stratégie AC est l'une des alertes les plus précieuses que la plateforme produit. Un technicien de centre d'assistance qui exclut « temporairement » un utilisateur de l'AMF, c'est exactement comme ça que les brèches commencent — et exactement ce que ceci attrape. Ne vous entraînez pas à accepter les dérives par réflexe; chaque acceptation devrait avoir un motif que vous seriez à l'aise de relire dans le journal d'audit un an plus tard.</p>
+  </div>
+
+</div>
+</body>
+</html>

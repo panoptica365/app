@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travaillez les alertes — Guides Panoptica365</title>
+<meta name="lesson:title" content="Travaillez les alertes">
+<meta name="lesson:subtitle" content="Votre véritable quotidien : le triage, le panneau de détail, l'analyse IA, la chronologie de l'identité, et résoudre avec discipline.">
+<meta name="lesson:icon" content="bell-ring">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Travaillez les alertes</span></div>
+  <h1>Travaillez les alertes</h1>
+  <p class="dek">Votre véritable quotidien : le triage, le panneau de détail, l'analyse IA, la chronologie de l'identité, et résoudre avec discipline.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Le cycle de vie d'une alerte : une nouvelle alerte passe en investigation, puis à résolue ou à faux positif.">
+      <defs>
+        <radialGradient id="waBg" cx="50%" cy="32%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="waBell" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="waArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#waBg)"/>
+
+      <!-- left: the bell / incoming alert -->
+      <g transform="translate(150,170)">
+        <circle r="96" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="66" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <g transform="translate(0,-6)">
+          <path d="M0 -42 C26 -42 38 -22 38 4 L46 22 H-46 L-38 4 C-38 -22 -26 -42 0 -42 Z" fill="url(#waBell)" opacity="0.92"/>
+          <path d="M-12 30 a12 12 0 0 0 24 0 Z" fill="#5CCBF4"/>
+          <circle cx="0" cy="-48" r="6" fill="#EAF7FE"/>
+        </g>
+      </g>
+      <text x="150" y="306" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">UNE SEULE FILE</text>
+
+      <!-- pipeline of states -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(330,150)">
+          <rect x="0" y="0" width="150" height="56" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="75" y="34" fill="#7DD9F9" font-size="16" font-weight="700">Nouvelle</text>
+        </g>
+        <path d="M488 178 H560" stroke="#335F92" stroke-width="2.5" marker-end="url(#waArr)"/>
+        <g transform="translate(566,150)">
+          <rect x="0" y="0" width="174" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="87" y="34" fill="#A8E1F8" font-size="16" font-weight="600">En investigation</text>
+        </g>
+        <path d="M748 178 H820" stroke="#335F92" stroke-width="2.5" marker-end="url(#waArr)"/>
+
+        <g transform="translate(826,108)">
+          <rect x="0" y="0" width="178" height="50" rx="12" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="89" y="31" fill="#2EE8A0" font-size="15" font-weight="600">Résolue</text>
+        </g>
+        <g transform="translate(826,182)">
+          <rect x="0" y="0" width="178" height="50" rx="12" fill="#0E2236" stroke="#52708F"/>
+          <text x="89" y="31" fill="#A8C0D8" font-size="15" font-weight="600">Faux positif</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Une seule file, un seul cycle de vie : chaque alerte passe de Nouvelle à En investigation, puis à Résolue ou Faux positif.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Tout le reste de Panoptica365 existe pour alimenter cette page. Les alertes sont la façon dont la plateforme vous parle : dérives, connexions à risque, événements du journal d'audit, incidents Defender, modifications de configuration — le tout normalisé dans une seule file avec l'analyse IA jointe.</p>
+  </div>
+
+  <h2>La file</h2>
+
+  <p><strong>Alertes</strong> (barre latérale) montre toutes les alertes du parc; l'onglet <strong>Alertes</strong> d'un tableau de bord de locataire montre la même chose limitée à un locataire. La barre de filtres couvre le locataire, la gravité, l'état, la catégorie, et l'affichage ou non des alertes résolues.</p>
+
+  <ul>
+    <li><strong>Gravités</strong> : info, faible, moyenne, élevée, sévère.</li>
+    <li><strong>États</strong> : <strong>Nouvelle</strong> → <strong>En investigation</strong> → <strong>Résolue</strong> ou <strong>Faux positif</strong>.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 110" role="img" aria-label="Les cinq gravités, de info à sévère.">
+      <rect width="720" height="110" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="40" y="40" width="116" height="40" rx="20" fill="#0E2236" stroke="#33527A"/><text x="98" y="65" fill="#A8C0D8" font-size="14" font-weight="600">info</text></g>
+        <g><rect x="168" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="226" y="65" fill="#A8E1F8" font-size="14" font-weight="600">faible</text></g>
+        <g><rect x="296" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#5CCBF4"/><text x="354" y="65" fill="#7DD9F9" font-size="14" font-weight="600">moyenne</text></g>
+        <g><rect x="424" y="40" width="116" height="40" rx="20" fill="#231408" stroke="#FFC04D"/><text x="482" y="65" fill="#FFC04D" font-size="14" font-weight="600">élevée</text></g>
+        <g><rect x="552" y="40" width="116" height="40" rx="20" fill="#2A0F16" stroke="#FF5A6E"/><text x="610" y="65" fill="#FF8A98" font-size="14" font-weight="700">sévère</text></g>
+      </g>
+    </svg>
+    <figcaption>Les cinq gravités offertes par la barre de filtres, de la plus faible à la plus élevée.</figcaption>
+  </figure>
+
+  <p>Chaque ligne montre le badge de gravité, le locataire (ou <em>Ensemble du parc</em> pour les alertes au niveau du parc comme les éléments du Centre de messages), le message, la catégorie, l'heure, un compteur de récurrence et la pastille d'état.</p>
+
+  <h2>Le triage, y compris en lot</h2>
+
+  <p>Sélectionnez des alertes avec les cases à cocher et utilisez la barre d'actions groupées : <strong>Marquer en investigation</strong>, <strong>Marquer comme résolue</strong>, <strong>Marquer comme faux positif</strong> ou <strong>Fusionner</strong>. Fusionner regroupe 2 alertes liées ou plus d'un même locataire en une alerte parente — utile quand un incident bruyant a produit une douzaine de petites sœurs. Un titre sensé vous est proposé et vous pouvez écrire le vôtre.</p>
+
+  <p>Quand vous résolvez des alertes liées à des billets PSA, une seule fenêtre pose la question une fois : <em>fermer aussi les billets liés, ou les laisser ouverts?</em> — et applique votre choix à tout le lot.</p>
+
+  <h2>Le panneau de détail : là où se fait l'investigation</h2>
+
+  <p>Cliquez sur une ligne et le panneau de détail s'ouvre :</p>
+
+  <ul>
+    <li><strong>Détails</strong> — les faits structurés de l'événement.</li>
+    <li><strong>Analyse IA</strong> — la lecture de Claude : ce qui s'est probablement passé, à quel point c'est grave, et quoi vérifier. C'est votre point de départ, pas votre conclusion.</li>
+    <li><strong>Données brutes</strong> — la charge utile de l'événement sous-jacent quand vous avez besoin de la vérité terrain.</li>
+    <li><strong>Chronologie</strong> — les récurrences de cette alerte dans le temps.</li>
+    <li><strong>Changement opérateur lié</strong> — si un changement consigné dans le Journal des changements du locataire explique cette alerte (à l'intérieur de la fenêtre d'attribution), il est lié ici. « Dérive détectée » plus « Jacques a déployé un modèle mis à jour 40 minutes plus tôt », c'est un dossier classé.</li>
+    <li><strong>Notes</strong> — vos notes d'investigation, conservées avec l'alerte.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Les six panneaux du panneau de détail : Détails, Analyse IA, Données brutes, Chronologie, Changement opérateur lié et Notes.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANNEAU DE DÉTAIL</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(0,56)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="60" y="30" fill="#A8E1F8" font-size="15" font-weight="600">Détails</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/><text x="394" y="30" fill="#7DD9F9" font-size="15" font-weight="600">Analyse IA</text>
+        </g>
+        <g transform="translate(0,118)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="15">Données brutes</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="394" y="30" fill="#C4D4E8" font-size="15">Chronologie</text>
+        </g>
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="14">Changement opérateur lié</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="394" y="30" fill="#C4D4E8" font-size="15">Notes</text>
+        </g>
+        <g transform="translate(0,242)">
+          <rect x="40" y="0" width="640" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <g transform="translate(64,26)">
+            <path d="M0 -7 L13 -12 L26 -7 L13 -2 Z" fill="#5CCBF4"/>
+            <path d="M21 -5 V3 a8 4 0 0 1 -16 0 V-5" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          </g>
+          <text x="98" y="31" fill="#C4D4E8" font-size="14">Explicateur d'alertes — <tspan fill="#A8E1F8" font-style="italic">À propos de cette alerte</tspan>, près du nom de la stratégie</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les panneaux du panneau de détail, plus l'explicateur d'alertes (chapeau de diplômé) à côté du nom de la stratégie.</figcaption>
+  </figure>
+
+  <p>À côté du nom de la stratégie, vous trouverez l'<strong>icône de mortier (chapeau de diplômé)</strong> — l'explicateur d'alertes. Il ouvre <em>À propos de cette alerte</em> : ce qu'est ce type d'alerte, pourquoi il compte, les vecteurs d'attaque derrière, quoi faire, et un scénario d'exemple. Dans votre langue, écrit pour le technicien de niveau 1 à qui vous déléguez.</p>
+
+  <h2>La chronologie de l'identité</h2>
+
+  <p>Pour toute alerte rattachée à un utilisateur, ouvrez la <strong>chronologie de l'identité</strong> depuis le panneau de détail. Elle assemble, pour cet utilisateur, une chronologie unique à partir de quatre sources — connexions, événements du journal d'audit unifié, incidents Defender et alertes associées — sur une fenêtre de 24 heures ou de 7 jours, puis demande à Claude de la corréler : <em>compromission possible, force brute, pulvérisation de mots de passe, tentatives échouées seulement</em> ou <em>non concluant</em>, avec le raisonnement.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Quatre sources — connexions, journal d'audit unifié, incidents Defender et alertes associées — alimentent une chronologie unique que Claude corrèle.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="itArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- quatre sources -->
+        <g transform="translate(36,40)"><rect width="156" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="78" y="28" fill="#C4D4E8" font-size="13.5">Connexions</text></g>
+        <g transform="translate(36,96)"><rect width="156" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="78" y="28" fill="#C4D4E8" font-size="11.5">Journal d'audit unifié</text></g>
+        <g transform="translate(36,152)"><rect width="156" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="78" y="28" fill="#C4D4E8" font-size="12.5">Incidents Defender</text></g>
+        <g transform="translate(244,124)"><rect width="156" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="78" y="28" fill="#C4D4E8" font-size="13">Alertes associées</text></g>
+
+        <!-- timeline assembly node -->
+        <g transform="translate(436,86)"><rect width="118" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="59" y="34" fill="#A8E1F8" font-size="13.5" font-weight="600">Chronologie</text></g>
+        <!-- claude correlate -->
+        <g transform="translate(566,86)"><rect width="114" height="58" rx="10" fill="#10243B" stroke="#5CCBF4"/><text x="57" y="30" fill="#7DD9F9" font-size="13.5" font-weight="700">Claude</text><text x="57" y="48" fill="#A8E1F8" font-size="11.5">corrèle</text></g>
+      </g>
+      <!-- arrows from sources into timeline -->
+      <path d="M192 62 C300 62 326 110 436 112" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M192 118 H436" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M192 174 C300 174 326 124 436 120" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M400 146 C418 138 422 130 436 124" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M554 115 H566" stroke="#5CCBF4" stroke-width="2" marker-end="url(#itArr)"/>
+    </svg>
+    <figcaption>Quatre sources assemblées en une chronologie par utilisateur, puis corrélées par Claude.</figcaption>
+  </figure>
+
+  <p>Elle est délibérément prudente — elle ne racontera pas une compromission que les événements ne soutiennent pas. Des liens directs vous amènent à l'utilisateur dans Entra et à l'incident dans Defender; <strong>Réanalyser</strong> (rôle Opérateur et plus) relance la corrélation quand les choses ont changé.</p>
+
+  <h2>La discipline de résolution</h2>
+
+  <p>Deux habitudes font la différence entre un système bien réglé et un système bruyant :</p>
+
+  <ol>
+    <li><strong>Faux positif est un signal, pas un haussement d'épaules.</strong> Si un type d'alerte produit sans cesse des faux positifs pour un schéma connu et légitime, arrêtez de les résoudre un par un — créez une exemption ou ajustez la stratégie (les deux prochains guides).</li>
+    <li><strong>Résolvez avec le billet.</strong> Si vous utilisez un PSA, laissez la synchronisation bidirectionnelle faire son travail : fermer le billet Autotask résout l'alerte, et vice versa. Un seul dossier de travail, pas deux demi-dossiers.</li>
+  </ol>
+
+</div>
+</body>
+</html>

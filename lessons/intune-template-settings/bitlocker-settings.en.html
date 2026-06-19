@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BitLocker Settings — disk encryption posture — Intune Template Settings</title>
+<meta name="lesson:title" content="BitLocker Settings — disk encryption posture">
+<meta name="lesson:subtitle" content="Enforcing full-disk encryption on Windows devices via Intune — what the template configures, recovery key handling, and TPM dependencies.">
+<meta name="lesson:icon" content="hard-drive">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>BitLocker Settings</span></div>
+  <h1>BitLocker Settings — disk encryption posture</h1>
+  <p class="dek">Enforcing full-disk encryption on Windows devices via Intune — what the template configures, recovery key handling, and TPM dependencies.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A stolen laptop on the left whose data is readable; the same laptop on the right with an encrypted, locked volume that gives up nothing.">
+      <defs>
+        <radialGradient id="blBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="blDisk" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#blBg)"/>
+
+      <!-- left: unencrypted, data readable -->
+      <g transform="translate(240,150)">
+        <!-- laptop -->
+        <rect x="-86" y="-58" width="172" height="108" rx="8" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <rect x="-72" y="-46" width="144" height="84" rx="3" fill="#102A4C"/>
+        <!-- readable lines (data spilling out) -->
+        <g stroke="#FF8A98" stroke-width="3" stroke-linecap="round" opacity="0.9">
+          <line x1="-58" y1="-26" x2="34" y2="-26"/>
+          <line x1="-58" y1="-8" x2="56" y2="-8"/>
+          <line x1="-58" y1="10" x2="20" y2="10"/>
+          <line x1="-58" y1="28" x2="48" y2="28"/>
+        </g>
+        <rect x="-98" y="50" width="196" height="12" rx="3" fill="#0E2236" stroke="#33527A"/>
+      </g>
+      <text x="240" y="266" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">UNENCRYPTED · DATA READABLE</text>
+
+      <!-- arrow -->
+      <path d="M430 165 H650" stroke="#335F92" stroke-width="2.5" marker-end="url(#blArr)"/>
+      <defs><marker id="blArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="540" y="150" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">BitLocker</text>
+
+      <!-- right: encrypted, locked -->
+      <g transform="translate(820,150)">
+        <rect x="-86" y="-58" width="172" height="108" rx="8" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="-72" y="-46" width="144" height="84" rx="3" fill="url(#blDisk)"/>
+        <!-- scrambled / ciphertext blocks -->
+        <g fill="#2A7FA3" opacity="0.85">
+          <rect x="-58" y="-30" width="14" height="10" rx="2"/><rect x="-40" y="-30" width="22" height="10" rx="2"/><rect x="-14" y="-30" width="12" height="10" rx="2"/><rect x="2" y="-30" width="26" height="10" rx="2"/>
+          <rect x="-58" y="-14" width="24" height="10" rx="2"/><rect x="-30" y="-14" width="12" height="10" rx="2"/><rect x="-14" y="-14" width="28" height="10" rx="2"/>
+          <rect x="-58" y="2" width="14" height="10" rx="2"/><rect x="-40" y="2" width="30" height="10" rx="2"/><rect x="-6" y="2" width="16" height="10" rx="2"/>
+        </g>
+        <!-- padlock -->
+        <g transform="translate(0,18)">
+          <path d="M-12 0 v-9 a12 12 0 0 1 24 0 v9" fill="none" stroke="#A8E1F8" stroke-width="3.5"/>
+          <rect x="-18" y="0" width="36" height="26" rx="5" fill="#5CCBF4"/>
+          <circle cx="0" cy="11" r="4" fill="#071221"/>
+          <rect x="-1.6" y="11" width="3.2" height="9" rx="1.6" fill="#071221"/>
+        </g>
+        <rect x="-98" y="50" width="196" height="12" rx="3" fill="#0E2236" stroke="#33527A"/>
+      </g>
+      <text x="820" y="266" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">ENCRYPTED · LEAVES WITH THE LAPTOP</text>
+    </svg>
+    <figcaption>Stolen unencrypted, the data is on the internet within a week. Stolen encrypted, the data leaves with the laptop.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>If a managed laptop is stolen from a parked car at 2 AM and the thief is a generic opportunist, the thief gets a laptop they can wipe and sell for a few hundred dollars. If the laptop's disk is encrypted, the customer's data leaves with the laptop. If it isn't, the customer's data is now somewhere on the internet within a week, depending on who the thief sold it to and what they did with the original drive.</p>
+
+  <p>BitLocker is the difference between those two outcomes on Windows devices. The Panoptica365 BitLocker Settings template is the configuration that enforces it.</p>
+
+  <p>This lesson covers what the BitLocker Settings template actually configures, why some choices were made the way they were, and how to handle the operational realities — recovery keys, TPM dependencies, the upgrade-vs-clean-install distinction.</p>
+  </div>
+
+  <h2>What the template configures</h2>
+
+  <p>The Panoptica365 BitLocker Settings template uses the older <strong>Device Configurations</strong> template type (<code>windows10EndpointProtectionConfiguration</code>). That's the same template family Microsoft uses for legacy endpoint-protection settings. It deploys via MDM to Windows 10/11 devices.</p>
+
+  <p>The core BitLocker configurations:</p>
+
+  <p><strong>BitLocker enabled and enforced.</strong></p>
+
+  <ul>
+    <li><code>bitLockerEncryptDevice: true</code> — devices must be encrypted.</li>
+    <li><code>bitLockerAllowStandardUserEncryption: true</code> — standard (non-admin) users are allowed to initiate encryption.</li>
+    <li><code>bitLockerDisableWarningForOtherDiskEncryption: true</code> — suppresses warnings when third-party disk encryption is also present.</li>
+  </ul>
+
+  <p><strong>System drive policy (the OS drive — typically C:):</strong></p>
+
+  <ul>
+    <li>Encryption method: <strong>XTS-AES 256-bit</strong>. This is the modern, recommended cipher for Windows 10 1511 and later. Stronger than the older AES-CBC variants.</li>
+    <li>Startup authentication required (TPM-protected by default).</li>
+    <li>TPM startup PIN usage allowed.</li>
+    <li>Block startup authentication without a TPM (no PIN-only mode — TPM is required).</li>
+    <li>Recovery options configured: BitLocker recovery key can be stored to Microsoft Entra ID; data recovery agent allowed; recovery password usage allowed.</li>
+  </ul>
+
+  <p><strong>Fixed drives (data drives that aren't the OS drive — typically D:, E:, etc.):</strong></p>
+
+  <ul>
+    <li>Encryption method: <strong>XTS-AES 256-bit</strong> (same as system drive).</li>
+    <li>Encryption not required for write access (<code>requireEncryptionForWriteAccess: false</code>) — devices can still write to unencrypted fixed drives. This is the lenient choice; the strict version would refuse write access.</li>
+    <li>Recovery options similar to system drive.</li>
+  </ul>
+
+  <p><strong>Removable drives (USB sticks, external HDDs):</strong></p>
+
+  <ul>
+    <li>Encryption method: <strong>AES-CBC 128-bit</strong>. Note the difference from system/fixed drives — removable drives use the older AES-CBC cipher because XTS-AES is incompatible with older Windows versions that the customer or their partners might still be reading the drive on. AES-CBC 128 is still modern-enough; the choice trades off some encryption strength for compatibility.</li>
+    <li>Encryption not required for write access — same lenient pattern as fixed drives.</li>
+    <li>Cross-organisation write access not blocked.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="A table comparing the encryption method and write-access requirement the template sets for system, fixed, and removable drives.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- header row -->
+        <text x="44" y="42" fill="#6B85A6" font-size="12" letter-spacing="2">DRIVE CLASS</text>
+        <text x="320" y="42" fill="#5CCBF4" font-size="12" letter-spacing="2">ENCRYPTION METHOD</text>
+        <text x="560" y="42" fill="#5CCBF4" font-size="12" letter-spacing="2">ENCRYPT TO WRITE?</text>
+        <line x1="44" y1="56" x2="676" y2="56" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- system -->
+        <g transform="translate(0,72)">
+          <text x="44" y="22" fill="#C4D4E8" font-size="15" font-weight="600">System drive</text>
+          <text x="44" y="42" fill="#6B85A6" font-size="11.5">OS drive · C:</text>
+          <rect x="320" y="4" width="166" height="32" rx="16" fill="#10243B" stroke="#5CCBF4"/><text x="403" y="25" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">XTS-AES 256</text>
+          <text x="560" y="26" fill="#A8E1F8" font-size="14" font-weight="600">required</text>
+        </g>
+        <line x1="44" y1="142" x2="676" y2="142" stroke="#1F3C5C" stroke-width="1"/>
+
+        <!-- fixed -->
+        <g transform="translate(0,142)">
+          <text x="44" y="32" fill="#C4D4E8" font-size="15" font-weight="600">Fixed drives</text>
+          <text x="44" y="52" fill="#6B85A6" font-size="11.5">data drives · D:, E:</text>
+          <rect x="320" y="14" width="166" height="32" rx="16" fill="#10243B" stroke="#5CCBF4"/><text x="403" y="35" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">XTS-AES 256</text>
+          <text x="560" y="36" fill="#52708F" font-size="14">not required</text>
+        </g>
+        <line x1="44" y1="212" x2="676" y2="212" stroke="#1F3C5C" stroke-width="1"/>
+
+        <!-- removable -->
+        <g transform="translate(0,212)">
+          <text x="44" y="32" fill="#C4D4E8" font-size="15" font-weight="600">Removable drives</text>
+          <text x="44" y="52" fill="#6B85A6" font-size="11.5">USB · external HDD</text>
+          <rect x="320" y="14" width="166" height="32" rx="16" fill="#0E2640" stroke="#2A6F9E"/><text x="403" y="35" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="700">AES-CBC 128</text>
+          <text x="560" y="36" fill="#52708F" font-size="14">not required</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Three drive classes, three policies: stronger XTS-AES on system and fixed drives, the more-compatible AES-CBC on removable, and write-to-encrypt only enforced on the system drive.</figcaption>
+  </figure>
+
+  <p><strong>Beyond BitLocker — the template also configures a few endpoint-hardening settings:</strong></p>
+
+  <p>The Device Configurations template type bundles BitLocker with other endpoint protection settings in the same JSON. The Panoptica365 template only configures BitLocker explicitly; everything else is set to <code>notConfigured</code> or <code>userDefined</code>, which means "this template doesn't take a position." A few non-BitLocker settings <em>are</em> explicitly set:</p>
+
+  <ul>
+    <li><code>lanManagerAuthenticationLevel: lmAndNltm</code> — accepts both LM and NTLM authentication (relatively permissive — stricter would be <code>ntlmV2Only</code>).</li>
+    <li><code>localSecurityOptionsMinimumSessionSecurityForNtlmSspBasedClients: none</code> — no minimum NTLM session security (very permissive).</li>
+    <li><code>localSecurityOptionsMinimumSessionSecurityForNtlmSspBasedServers: none</code> — same.</li>
+    <li><code>localSecurityOptionsSmartCardRemovalBehavior: noAction</code> — nothing happens when a smart card is removed.</li>
+    <li><code>xboxServicesAccessoryManagementServiceStartupMode: manual</code> (and three other Xbox services set to manual) — these Xbox-related services don't auto-start on boot, removing some attack surface on devices that aren't gaming PCs.</li>
+  </ul>
+
+  <p>The Xbox services choices are <em>interesting</em>. Most managed Windows fleet devices aren't gaming PCs, but the Xbox services are present in standard Windows installs and auto-start by default. Setting them to manual removes background services that nothing in a corporate environment uses. Low-leverage hardening, but free.</p>
+
+  <p>The LM Manager / NTLM session security choices are <em>permissive</em> and worth knowing — they're not enforcing modern NTLM hardening. If a customer needs strict NTLM (regulated industries, hardened-baseline requirements), those settings should be hardened via the Security Baseline (lesson 3) or via customisation.</p>
+
+  <h2>TPM dependency</h2>
+
+  <p>The Panoptica365 BitLocker template requires startup authentication to use the TPM (Trusted Platform Module). Specifically:</p>
+
+  <ul>
+    <li><code>startupAuthenticationRequired: true</code> (must have startup auth)</li>
+    <li><code>startupAuthenticationBlockWithoutTpmChip: true</code> (TPM required — no PIN-only fallback)</li>
+  </ul>
+
+  <p>Almost every Windows device manufactured in the last decade has a TPM 2.0 chip. Windows 11 <em>requires</em> TPM 2.0 for installation, so any Windows 11 device by definition has one. Windows 10 devices may or may not, depending on age and configuration.</p>
+
+  <p>For devices without TPM (or with TPM disabled in BIOS — sometimes the case on cheap hardware where BIOS defaults turned it off):</p>
+
+  <ul>
+    <li>BitLocker encryption with this template <em>will fail to start</em> — the policy demands TPM, the device doesn't have one or it's disabled, and the encryption can't initiate.</li>
+    <li>The fix is either to enable TPM in BIOS (often possible on devices where it was disabled by default) or to replace the device.</li>
+  </ul>
+
+  <p>In practice this rarely matters for SMB tenants because TPM-equipped hardware has been standard since the early-2010s. But occasionally an older device surfaces in inventory — usually a desktop tower that someone bought cheap years ago — and that device fails BitLocker deployment. Handle case-by-case.</p>
+
+  <h2>Recovery key management — the part that matters most</h2>
+
+  <p>BitLocker is only useful if you can recover encrypted data when something goes wrong. Recovery scenarios:</p>
+
+  <ul>
+    <li>User forgets their PIN (if PIN authentication is configured).</li>
+    <li>Hardware changes trigger BitLocker recovery prompt (motherboard replacement, sometimes RAM upgrade, occasionally a BIOS update).</li>
+    <li>Device boot configuration becomes inconsistent (Windows feature update, sometimes a Linux dual-boot attempt).</li>
+    <li>Device is reset and the recovery key is the only way to unlock the prior installation's data.</li>
+  </ul>
+
+  <p>The Panoptica365 BitLocker template stores recovery keys in <strong>Microsoft Entra ID</strong> (the modern cloud-based location). When a Windows device joins Entra and BitLocker initialises, the recovery key is uploaded to Entra automatically. Operators can retrieve it from the Entra admin portal under the device's properties.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="A Windows device joins Entra, BitLocker initialises, and the recovery key is uploaded to Microsoft Entra ID, where an operator can retrieve it.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rkArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- device -->
+        <rect x="40" y="78" width="170" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="125" y="106" fill="#C4D4E8" font-size="14" font-weight="600">Windows device</text>
+        <text x="125" y="126" fill="#6B85A6" font-size="11.5">BitLocker initialises</text>
+
+        <!-- entra -->
+        <rect x="510" y="78" width="170" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="595" y="106" fill="#A8E1F8" font-size="14" font-weight="600">Microsoft Entra ID</text>
+        <text x="595" y="126" fill="#6B85A6" font-size="11.5">recovery key stored</text>
+
+        <!-- key in transit -->
+        <g transform="translate(345,98)">
+          <circle cx="0" cy="0" r="12" fill="none" stroke="#7DD9F9" stroke-width="3"/>
+          <rect x="6" y="-2.5" width="26" height="5" rx="2.5" fill="#7DD9F9"/>
+          <rect x="26" y="2.5" width="4" height="8" rx="2" fill="#7DD9F9"/>
+          <rect x="20" y="2.5" width="4" height="6" rx="2" fill="#7DD9F9"/>
+        </g>
+        <!-- arrow device -> entra -->
+        <path d="M210 110 H320" stroke="#5CCBF4" stroke-width="2" marker-end="url(#rkArr)"/>
+        <path d="M400 110 H510" stroke="#5CCBF4" stroke-width="2" marker-end="url(#rkArr)"/>
+        <text x="360" y="78" fill="#52708F" font-size="11">recovery key uploaded automatically</text>
+
+        <!-- operator retrieval -->
+        <text x="595" y="186" fill="#6B85A6" font-size="11.5">operator retrieves from admin portal</text>
+        <path d="M595 142 V168" stroke="#335F92" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#rkArr)"/>
+      </g>
+    </svg>
+    <figcaption>On Entra join, the key is uploaded automatically — and that is the only copy an operator can reliably reach later.</figcaption>
+  </figure>
+
+  <p>Three operational realities to understand:</p>
+
+  <p><strong>Recovery keys <em>must</em> land in Entra, not just on the device.</strong> Pre-Intune-managed devices that initialised BitLocker before enrolment might have recovery keys stored locally on the device or in a hybrid-AD recovery location. The Panoptica365 template doesn't backfill those keys. After deployment, run a recovery key audit per customer — confirm that every encrypted device has its key uploaded to Entra. Devices missing recovery keys in Entra are devices that will be impossible to recover if the user gets a recovery prompt.</p>
+
+  <p><strong>Recovery keys are per-OS-installation, not per-device.</strong> If a device is wiped and re-installed, the new installation generates a new recovery key. The old key is still in Entra but it's useless for the new installation. Cleanup of stale recovery keys is a separate maintenance task; for now, treat the existence of multiple keys per device serial as a clue that the device has been re-installed.</p>
+
+  <p><strong>The recovery key is a customer-data-classification concern.</strong> A recovery key in the wrong hands unlocks an encrypted device. Customer admins with Entra read permissions can see recovery keys for any device. This is sometimes a privacy issue (HR-managed devices encrypted with personal-PIN customisation, devices in regulated industries with chain-of-custody requirements). Document who has access to recovery keys per customer tenant. Audit access via the Entra audit log.</p>
+
+  <h2>What can break</h2>
+
+  <p>BitLocker deployment is mostly safe but not entirely. Watch for:</p>
+
+  <p><strong>Slow first-time encryption on older devices.</strong> When BitLocker initialises on a device that's been in use for years, the first encryption pass can take 4–8 hours and significantly degrade performance during that time. Schedule first-time encryption for off-hours where possible.</p>
+
+  <p><strong>Conflicts with third-party encryption.</strong> A customer who already has Symantec Endpoint Encryption, McAfee Drive Encryption, or another full-disk-encryption product installed will produce conflicts. The Panoptica365 template's <code>bitLockerDisableWarningForOtherDiskEncryption: true</code> suppresses the <em>warning</em>, but the conflict can still manifest as failed encryption or boot issues. Before deploying, confirm no other FDE is in play.</p>
+
+  <p><strong>BIOS / firmware updates can trigger recovery prompts.</strong> When a Windows Update or vendor utility updates the BIOS or TPM firmware, BitLocker may detect the change and demand the recovery key on next boot. The user sees a scary blue screen asking for a 48-digit numeric key. If the recovery key is in Entra, the help desk can retrieve it and walk the user through. If the recovery key is missing from Entra, the user is locked out. This is why the Entra recovery key audit (above) matters so much.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Where the recovery audit pays off</div>
+    <p>A BIOS or TPM firmware update can demand the 48-digit recovery key on next boot. If that key is in Entra, the help desk walks the user through it. If it's missing from Entra, the user is locked out. The audit is the only thing standing between those two outcomes.</p>
+  </div>
+
+  <p><strong>BitLocker on removable drives is annoying for cross-org sharing.</strong> A user encrypts a USB stick with BitLocker, takes it to a partner organisation, and the partner's machine can't read it (BitLocker-to-Go requires the password on each access). For SMB customers, removable-drive encryption sometimes gets pushed back on by users — they want their thumb drives to work everywhere. The template doesn't <em>require</em> encryption for write access to removable drives (<code>requireEncryptionForWriteAccess: false</code>), so this is a soft enforcement; users can still use unencrypted thumb drives. The template's intent is "if you encrypt, use this cipher" — not "you must encrypt."</p>
+
+  <h2>Rollout</h2>
+
+  <p>Standard pilot-group deployment from lesson 1:</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy to 3–5 pilot Windows devices. Choose devices that are <em>not</em> in active production use overnight (the first encryption pass is slow).</li>
+    <li><strong>Days 1–2</strong> — verify pilot devices completed encryption (Intune portal shows BitLocker compliance). Confirm recovery keys appear in Entra for each pilot device.</li>
+    <li><strong>Day 3–7</strong> — observe pilot devices in normal use. Anything weird? Recovery prompts triggered? Performance complaints?</li>
+    <li><strong>Day 7</strong> — broader deployment if pilot is clean. Schedule deployment for the customer's fleet to land on a Friday afternoon so the encryption pass completes over the weekend.</li>
+  </ol>
+
+  <p>Special case: a customer fleet that's never had BitLocker enforced before will see a noticeable performance hit during the first 48 hours as all devices encrypt in parallel. Communicate this to the customer in advance. After the initial encryption pass, ongoing BitLocker overhead is essentially zero.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>BitLocker compliance per device.</strong> Should be near 100% on Windows devices after the initial encryption window. Devices showing non-compliance need per-device investigation — usually TPM disabled, hardware too old, or BIOS settings preventing encryption.</p>
+
+  <p><strong>Recovery keys in Entra.</strong> Every BitLocker-encrypted device should have a recovery key in Entra. Run a quarterly audit: device list with BitLocker enabled vs. Entra recovery key list. Discrepancies are devices that will be unrecoverable.</p>
+
+  <p><strong>Recovery prompts triggered.</strong> Spike in recovery prompts (user calls help desk for the 48-digit key) usually correlates with a Windows update, BIOS update, or hardware change wave. Track the source.</p>
+
+  <p><strong>Encryption method drift.</strong> If a device shows BitLocker enabled but with an older cipher (e.g., AES-CBC 128 on a system drive that should be XTS-AES 256), the device was probably encrypted <em>before</em> the template enforced the current standard. The fix is to decrypt and re-encrypt with the right method, which is annoying and slow. Catch this during deployment, not later.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>The honest answer: not much, specifically about BitLocker. Panoptica365 does not currently surface per-device BitLocker state, encryption-method-per-device, or recovery-key inventory anywhere in the dashboard — none of those things live in the product today, and per-device anything isn't part of the platform's read model at all.</p>
+
+  <p>What Panoptica365 <em>does</em> surface that's BitLocker-relevant:</p>
+
+  <ul>
+    <li><strong>Drift detection on the BitLocker Settings template.</strong> If the deployed template at a customer tenant diverges from the Panoptica365 reference — somebody opens the Intune console and changes a setting — drift detector fires an alert. The operator can revert to the template, reapply, or accept the drift, same workflow as CA drift.</li>
+    <li><strong>The overall device compliance count.</strong> BitLocker isn't a hard compliance check in the Panoptica365 Windows compliance policy (see lesson 2 — <code>bitLockerEnabled: false</code>), so a BitLocker-off device won't drop out of the compliant count by itself. But if a customer's MSP-tuned compliance policy <em>does</em> require BitLocker, those failures show up in the compliant/non-compliant ratio.</li>
+  </ul>
+
+  <p>For per-device BitLocker visibility — which device is encrypted with which cipher, where the recovery key lives — operators drill into the Intune portal or the Entra device blade. That's the workflow today.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <div class="callout insight">
+    <div class="clabel">The three takeaways</div>
+    <p><strong>BitLocker is foundational — but the recovery story is what matters most.</strong> Encryption protects against theft. Recovery-key management protects against locking out your own customers. A BitLocker deployment without a recovery-key audit story is one BIOS update away from a help-desk crisis.</p>
+    <p><strong>TPM dependency is real but usually invisible.</strong> Most modern Windows hardware has TPM 2.0. Failed BitLocker deployments are almost always hardware-too-old or TPM-disabled-in-BIOS. Document the per-device exceptions; don't ignore them.</p>
+    <p><strong>Removable drive policy is permissive on purpose.</strong> The template specifies the cipher for removable drives but doesn't require encryption. Users keep their thumb drives working. If a customer needs stricter (data classification requirements, healthcare, finance), customise that template via lesson 10.</p>
+  </div>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Defender for Endpoint (Win + Mac)</b> — the antivirus / EDR configuration — what makes Defender protect what BitLocker now keeps encrypted.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Firewall Settings (Windows)</b> — host firewall configuration.</div></div>
+  </div>
+
+  <p>For now: BitLocker first because nothing else matters if a customer's laptop walks out the door unencrypted. Deploy it, audit the recovery keys, and move on.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on BitLocker management via Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/encrypt-devices" target="_blank" rel="noopener">Microsoft Learn — Manage BitLocker with Intune</a>); BitLocker encryption method reference (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/bitlocker-overview" target="_blank" rel="noopener">Microsoft Learn — BitLocker encryption methods</a>); recovery key storage in Entra ID (<a href="https://learn.microsoft.com/en-us/entra/identity/devices/device-management-azure-portal#view-bitlocker-keys" target="_blank" rel="noopener">Microsoft Learn — BitLocker recovery in Entra ID</a>); TPM requirements (<a href="https://learn.microsoft.com/en-us/windows/security/hardware-security/tpm/tpm-fundamentals" target="_blank" rel="noopener">Microsoft Learn — TPM and BitLocker</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

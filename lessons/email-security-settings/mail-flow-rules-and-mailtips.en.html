@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mail flow rules and MailTips — the surgical tools and the warning lights — Email security settings</title>
+<meta name="lesson:title" content="Mail flow rules and MailTips — the surgical tools and the warning lights">
+<meta name="lesson:subtitle" content="Using Exchange transport rules to enforce policy in mail flow, and MailTips to surface risk warnings before users click Send.">
+<meta name="lesson:icon" content="scroll-text">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Mail flow rules &amp; MailTips</span></div>
+  <h1>Mail flow rules and MailTips — the surgical tools and the warning lights</h1>
+  <p class="dek">Using Exchange transport rules to enforce policy in mail flow, and MailTips to surface risk warnings before users click Send.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A message flows through a transport rule: a condition matches the sender, the action silently BCCs a copy to an external address while the message continues to its recipient.">
+      <defs>
+        <radialGradient id="trBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="trArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+        <marker id="trArrD" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#trBg)"/>
+
+      <!-- inbound message -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="44" y="138" width="150" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="119" y="166" fill="#C4D4E8" font-size="15" font-weight="600">Message</text>
+        <text x="119" y="187" fill="#6B85A6" font-size="12">in mail flow</text>
+      </g>
+      <path d="M194 170 H276" stroke="#5CCBF4" stroke-width="2.5" marker-end="url(#trArr)"/>
+
+      <!-- the rule engine -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="288" y="96" width="300" height="148" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <text x="438" y="126" fill="#5CCBF4" font-size="12" letter-spacing="2">TRANSPORT RULE</text>
+        <rect x="312" y="142" width="252" height="38" rx="9" fill="#0C2038" stroke="#335F92"/>
+        <text x="438" y="166" fill="#A8E1F8" font-size="13.5"><tspan font-weight="700">IF</tspan>  sender matches</text>
+        <rect x="312" y="190" width="252" height="38" rx="9" fill="#0C2038" stroke="#335F92"/>
+        <text x="438" y="214" fill="#A8E1F8" font-size="13.5"><tspan font-weight="700">THEN</tspan>  take action</text>
+      </g>
+
+      <!-- continues to recipient -->
+      <path d="M588 154 H716" stroke="#5CCBF4" stroke-width="2.5" marker-end="url(#trArr)"/>
+      <text x="652" y="142" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">delivered</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="726" y="120" width="156" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="804" y="148" fill="#C4D4E8" font-size="15" font-weight="600">Recipient</text>
+        <text x="804" y="169" fill="#6B85A6" font-size="12">sees nothing odd</text>
+      </g>
+
+      <!-- silent BCC branch -->
+      <path d="M520 244 V288 H716" stroke="#FF5A6E" stroke-width="2.5" stroke-dasharray="5 5" marker-end="url(#trArrD)"/>
+      <text x="612" y="280" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11.5">silent BCC</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="726" y="258" width="186" height="60" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="819" y="284" fill="#FF8A98" font-size="14" font-weight="700">External address</text>
+        <text x="819" y="304" fill="#E2A0AA" font-size="11.5">attacker-controlled</text>
+      </g>
+    </svg>
+    <figcaption>One condition, one action. The recipient sees nothing — the copy goes out the side door.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A customer's IT manager gets phished on a Friday afternoon. He's a global admin in the tenant. The attacker uses his credentials to sign into the M365 admin centre. MFA is enabled, but the attacker has captured the session cookie via Evilginx2 — the cookie satisfies the MFA-already-completed claim. The attacker has a one-hour window before the session would normally expire.</p>
+
+  <p>In that hour the attacker creates two transport rules:</p>
+
+  <ul>
+    <li><strong>Rule one</strong> — condition: sender is <code>controller@customer.com</code>; action: BCC every message to <code>archive-helper@protonmail.com</code>. The attacker is going to silently read every outbound message the controller sends.</li>
+    <li><strong>Rule two</strong> — condition: any inbound message from outside the organisation; action: set message header <code>X-MS-Exchange-Organization-SkipSafeLinksProcessing</code> to bypass Safe Links wrapping. The attacker is going to send unwrapped phishing links to the controller from now on.</li>
+  </ul>
+
+  <p>The session cookie expires. The MFA challenge fires on the next sign-in attempt and the attacker can't satisfy it. The user gets back into his account. The credentials work fine. Nothing looks wrong on the user-visible surface.</p>
+
+  <p>The transport rules stay in place. They're tenant-level objects. Password resets, session revocations, and MFA re-enrolments don't touch them. The controller's outbound mail gets BCC'd to protonmail.com for the next three weeks. The customer is paying the attacker to silently read everything the finance director writes, and the customer doesn't know it.</p>
+
+  <p>This is the abuse pattern that makes transport rules a special concern. Inbox rules are per-mailbox, visible to the user, visible in the Panoptica365 Inbox Rules panel (lesson 5). Transport rules are <em>tenant-level</em>, invisible to end users, and require a deliberate operator scan to surface.</p>
+
+  <p>This lesson is about what transport rules can legitimately do, the abuse patterns to watch for, and the MailTips configuration that gives users the moment-of-truth warning before they send something they'd regret.</p>
+  </div>
+
+  <h2>What mail flow rules can do — the legitimate use cases</h2>
+
+  <p>Transport rules (Microsoft's branding for mail flow rules) are condition-action policies that run on every message flowing through the tenant. They live in Exchange admin centre → Mail flow → Rules and can also be managed via PowerShell (<code>New-TransportRule</code>, <code>Get-TransportRule</code>, <code>Set-TransportRule</code>, <code>Remove-TransportRule</code>).</p>
+
+  <p>Conditions can match on essentially anything: sender, recipient, subject, body content, message headers, attachment names or types, message size, sender's domain, whether the recipient is internal or external, time of day. Actions are similarly broad: block, redirect, BCC, forward, modify headers, prepend the subject, add a disclaimer, apply a compliance label, set the message classification, route through a specific connector.</p>
+
+  <p>For SMB operators, the legitimate use cases cluster into a small number of patterns:</p>
+
+  <p><strong>External-sender warnings.</strong> A rule that prepends <code>[EXTERNAL]</code> to the subject of any inbound message from outside the organisation, or that adds a yellow disclaimer banner at the top of the body. The "your colleague sent this from outside" warning. Worth deploying for most customers; it's the cheapest user-visible signal that a message isn't from the trusted internal directory.</p>
+
+  <p><strong>Executable attachment blocks.</strong> Even with Safe Attachments in place, some customers want a hard block on specific high-risk file extensions (<code>.exe</code>, <code>.bat</code>, <code>.scr</code>, <code>.js</code>, <code>.vbs</code>). A transport rule that rejects messages with those attachments is a defence-in-depth layer on top of Safe Attachments' sandbox.</p>
+
+  <p><strong>Tenant blocklist enforcement.</strong> Specific sender domains that should never reach the tenant — known scam patterns, vendors who've gone rogue, ex-employees attempting impersonation. A rule that drops or quarantines messages from those domains.</p>
+
+  <p><strong>Disclaimer / footer for compliance.</strong> Some regulated industries require specific text on outbound mail (legal disclaimers, confidentiality notices). Transport rules add the disclaimer at the gateway, so users don't have to remember.</p>
+
+  <p><strong>Internal-only distribution lists.</strong> A rule that blocks external senders from delivering to specific distribution groups (e.g., <code>all-employees@customer.com</code> shouldn't be reachable from outside).</p>
+
+  <p><strong>Auto-classification for sensitivity labels.</strong> Rules that match certain keywords or attachment patterns and apply Microsoft Information Protection labels for downstream DLP.</p>
+
+  <p>Each is legitimate. None of these should make the customer reflexively turn on Microsoft's defences elsewhere — they're additive controls.</p>
+
+  <h2>The attacker abuse patterns — what to watch for</h2>
+
+  <p>The opening anecdote covered two patterns. The full taxonomy is wider.</p>
+
+  <p><strong>The BCC-out rule.</strong> Condition: sender is a high-value mailbox (CFO, CEO, finance director, legal). Action: BCC to an external attacker-controlled address. Silent persistent exfiltration. Survives password resets.</p>
+
+  <p><strong>The header-strip rule.</strong> Action: modify or set a message header to bypass downstream controls. Stripping <code>X-MS-Exchange-Organization-SkipSafeLinksProcessing</code> to evade Safe Links wrapping; modifying authentication-related headers; suppressing spam scoring; adding fake SCL (Spam Confidence Level) overrides.</p>
+
+  <p><strong>The bounce-suppression rule.</strong> Condition: subject contains "Undeliverable" or <code>Mail Delivery Failure</code> patterns; action: silently delete. The attacker is sending wire-fraud emails from the compromised mailbox and doesn't want bounce-backs reaching the user.</p>
+
+  <p><strong>The redirect-all rule.</strong> Condition: any inbound mail to a specific recipient; action: redirect to an attacker-controlled mailbox. More aggressive than BCC because the original recipient never sees the message at all.</p>
+
+  <p><strong>The selective deletion rule.</strong> Condition: sender matches a high-value partner (the customer's biggest client, an oversight body, a specific vendor); action: delete from delivery or move to a folder. Used to suppress communications the attacker doesn't want surfaced.</p>
+
+  <p><strong>The slow-walk rule.</strong> Condition: sender matches a specific person; action: delay delivery by N hours. Used to delay the legitimate owner's emails so the attacker's spoofed messages arrive first.</p>
+
+  <p><strong>The Safe Links / Safe Attachments bypass.</strong> Conditions that match specific inbound senders and actions that set the message to bypass MDO scanning. The attacker is sending malicious content from a specific external address and wants to evade the defences.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 376" role="img" aria-label="Seven attacker abuse patterns for transport rules: BCC-out, header-strip, bounce-suppression, redirect-all, selective deletion, slow-walk, and Safe Links / Safe Attachments bypass — all invisible to the user and surviving credential resets.">
+      <rect width="720" height="376" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ATTACKER ABUSE PATTERNS</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- row 1 -->
+        <g transform="translate(36,54)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">BCC-out</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">copy to external address</text>
+        </g>
+        <g transform="translate(372,54)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Header-strip</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">set header to bypass controls</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(36,108)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Bounce-suppression</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">delete delivery failures</text>
+        </g>
+        <g transform="translate(372,108)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Redirect-all</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">recipient never sees it</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(36,162)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Selective deletion</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">suppress one partner</text>
+        </g>
+        <g transform="translate(372,162)">
+          <rect x="0" y="0" width="312" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Slow-walk</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">delay delivery N hours</text>
+        </g>
+        <!-- row 4: full width -->
+        <g transform="translate(36,216)">
+          <rect x="0" y="0" width="648" height="44" rx="9" fill="#1A0C12" stroke="#FF5A6E" stroke-width="1.2"/>
+          <text x="16" y="20" fill="#FF8A98" font-size="13.5" font-weight="700">Safe Links / Safe Attachments bypass</text>
+          <text x="16" y="37" fill="#C4D4E8" font-size="11.5">message set to skip MDO scanning</text>
+        </g>
+      </g>
+      <!-- shared characteristic banner -->
+      <g transform="translate(36,284)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="0" width="648" height="68" rx="10" fill="#0E2236" stroke="#335F92"/>
+        <text x="20" y="26" fill="#5CCBF4" font-size="11.5" letter-spacing="1.5">SHARED CHARACTERISTIC</text>
+        <text x="20" y="48" fill="#C4D4E8" font-size="13">Invisible to the user · survives credential resets</text>
+      </g>
+    </svg>
+    <figcaption>Seven shapes, one tell: each one is invisible to the targeted user and survives a credential reset.</figcaption>
+  </figure>
+
+  <p>The shared characteristic: the attacker is using transport rules to make their post-compromise activity <em>invisible to the user</em> and <em>survivable across credential resets</em>. The defence is detection — periodic operator review of the transport rules in the tenant, plus alerting on suspicious rule creation events.</p>
+
+  <h2>The hygiene work — auditing existing rules</h2>
+
+  <p>Most customer tenants accumulate transport rule cruft. Three years of changes from previous admins, migrations that brought in rules from acquired domains, vendor-specific rules created for problems that no longer exist. The pre-flight inventory work from lesson 1 includes "audit existing transport rules"; this is the section that walks through the audit.</p>
+
+  <p>For each existing transport rule, ask:</p>
+
+  <ul>
+    <li><strong>What does it do?</strong> Read the conditions and actions carefully. Plain-English summary in one line.</li>
+    <li><strong>Why does it exist?</strong> Look at the rule's notes, the creation date, the modifying admin. If the rule has no notes, no recent modification, and was created by an admin who's no longer at the customer, that's a red flag for a stale rule.</li>
+    <li><strong>Is it still needed?</strong> Test what happens if it's disabled (most tenants let you put a rule into audit mode or disable temporarily). If nothing breaks for a week, the rule is dead weight.</li>
+    <li><strong>Does it weaken any defence?</strong> Rules that bypass Safe Links, bypass anti-spam, bypass anti-phishing, or BCC anywhere external need explicit justification.</li>
+  </ul>
+
+  <p>Document each surviving rule with its purpose. Remove the cruft. Going forward, every new transport rule should have a documented purpose, a creation reason in the rule notes, and an owner who can speak to why it exists.</p>
+
+  <h2>MailTips — the warning lights</h2>
+
+  <p>Separately from transport rules, M365 has <strong>MailTips</strong> — the small infobar warnings Outlook shows users when they're composing or replying to a message. The most consequential for BEC defence is the <strong>External Recipients</strong> tip, the yellow bar that says "You're sending this email to recipients outside your organisation" with the external domain listed.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="An Outlook compose window showing the yellow External Recipients MailTip warning that the message is going to recipients outside the organisation, with the external domain listed, as a moment of pause before Send.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- compose window frame -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="60" y="30" width="600" height="190" rx="10" fill="#0C2038" stroke="#335F92"/>
+        <text x="80" y="58" fill="#6B85A6" font-size="12.5">To:</text>
+        <text x="120" y="58" fill="#C4D4E8" font-size="12.5">recipient@external-domain.com</text>
+        <line x1="80" y1="72" x2="640" y2="72" stroke="#1F3C5C" stroke-width="1"/>
+        <!-- yellow MailTip bar -->
+        <rect x="80" y="86" width="560" height="42" rx="7" fill="#3A2E10" stroke="#FFC04D" stroke-width="1.4"/>
+        <circle cx="104" cy="107" r="9" fill="none" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="104" y="112" text-anchor="middle" fill="#FFC04D" font-size="13" font-weight="700">!</text>
+        <text x="124" y="104" fill="#FFD27A" font-size="12.5" font-weight="600">You're sending this email to recipients outside your organisation</text>
+        <text x="124" y="121" fill="#C9A95A" font-size="11.5">external-domain.com</text>
+        <!-- body + send -->
+        <text x="80" y="160" fill="#52708F" font-size="12.5">…</text>
+        <rect x="540" y="174" width="100" height="32" rx="7" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="590" y="195" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Send</text>
+      </g>
+      <text x="360" y="240" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">the moment of pause before Send</text>
+    </svg>
+    <figcaption>The External Recipients tip: a free, user-visible yellow bar naming the outside domain before the message goes.</figcaption>
+  </figure>
+
+  <p>For a user about to wire-fraud-respond to a forged "CEO" email coming from a Gmail-with-display-name attacker, that yellow bar is sometimes the moment of pause that prevents the wire. Not always. But it's free, it's user-visible, and it costs nothing operationally.</p>
+
+  <p>Other MailTips include:</p>
+
+  <ul>
+    <li><strong>Out-of-office</strong> — recipient has an auto-responder set.</li>
+    <li><strong>Mailbox full</strong> — recipient's mailbox can't receive new mail.</li>
+    <li><strong>Large audience</strong> — the recipient list exceeds a configurable threshold.</li>
+    <li><strong>Moderated recipient</strong> — the message will require moderation before delivery.</li>
+    <li><strong>Restricted recipient</strong> — the recipient is configured to reject certain senders.</li>
+    <li><strong>Reply-all to large audience</strong> — pressing Reply All would send to many people.</li>
+  </ul>
+
+  <p>For a typical SMB customer, the right configuration is <strong>all tips enabled, including the External Recipients tip</strong>. The Panoptica365 security setting "Enable MailTips (All Tips + External Recipients)" pushes this configuration and watches for drift. If a customer's admin disables MailTips — sometimes done in response to a "the yellow bar is annoying" user complaint — the drift signal is the early warning. You re-enable, talk to the user about why the warning exists, and move on.</p>
+
+  <p>The PowerShell underneath: <code>Set-OrganizationConfig -MailTipsAllTipsEnabled $true -MailTipsExternalRecipientsTipsEnabled $true</code>. The threshold for the large-audience tip can be adjusted (<code>MailTipsLargeAudienceThreshold</code>) — Microsoft's default of 25 is usually fine for SMB.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p><strong>Drift on the "Enable MailTips (All Tips + External Recipients)" security setting.</strong> Panoptica365 watches the organisation configuration's MailTips properties. Disabling MailTips at the tenant level fires the drift alert; reapply restores the configuration.</p>
+
+  <p><strong>Defender XDR alerts on suspicious transport rule creation.</strong> When MDO surfaces a high-severity event related to a transport rule being created with characteristics matching attacker patterns (external BCC, header bypass, Safe Links bypass), the alert flows into Panoptica365's alert engine through the standard pipeline.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Out of scope</div>
+    <p>What Panoptica365 does <em>not</em> surface in the dashboard: a per-tenant transport rule browser, a rule-by-rule diff viewer, a hygiene-audit workflow. The audit work happens in the Exchange admin centre or via PowerShell. Panoptica365's role here is the drift on the MailTips setting and the alert pipeline for suspicious rule creation; the rule-by-rule audit is operator territory.</p>
+  </div>
+
+  <h2>What can break</h2>
+
+  <p><strong>Customer-created transport rules that conflict with Panoptica365-pushed settings.</strong> A customer has an old rule that disables MailTips for a specific mailbox (maybe an automation account). When Panoptica365 enforces MailTips tenant-wide, the customer's old behaviour breaks. The fix is to identify the legitimate need (if any) and update the rule explicitly; not to weaken the tenant-wide MailTips configuration.</p>
+
+  <p><strong>External-sender disclaimer banners getting double-stamped.</strong> Some customer tenants already have an external-sender rule and add another one without disabling the first. Users see two yellow banners. The fix is to consolidate into one rule.</p>
+
+  <p><strong>Legitimate executable attachments getting blocked by extension rules.</strong> A vendor sends a <code>.exe</code> installer for a specific tool the customer uses. The transport rule blocks it. The fix is a sender-scoped exception (allow <code>.exe</code> from <code>vendor.com</code> only) rather than removing the executable block entirely.</p>
+
+  <p><strong>MailTips disabled per-user.</strong> Some users have MailTips disabled at their mailbox level (overriding the tenant default). Audit per-user OWA mailbox policies during pre-flight to catch this.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Transport rules are the most powerful and least-visible configuration object in M365.</strong> They're tenant-level, they survive password resets, they can bypass downstream defences, and most users have no way to see them. Audit them on every customer onboarding. Document every surviving rule with its purpose. Treat new transport rule creation as a higher-trust action than creating a user mailbox.</p>
+
+  <p><strong>The attacker patterns are recognisable.</strong> External BCC, header bypass, bounce suppression, selective deletion — train your operator team to spot these in customer rule lists. The shared characteristic is that the rule's effect is invisible to the user being targeted. Anything matching that shape gets investigated.</p>
+
+  <p><strong>MailTips are free, user-visible, and worth enabling everywhere.</strong> The External Recipients tip is the moment-of-truth warning that pauses a user about to send to an attacker domain. Enable all tips at the tenant level. Push back gently when users complain about the yellow bar — it's protecting them from the wire fraud you don't want to spend Saturday handling.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Outbound spam and SMTP AUTH</b> — the post-compromise blast radius controls — what happens when a customer's mailbox becomes the one sending the phish.</div></div>
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Preset security policies and operating email at scale</b> — the Standard / Strict bundles, the drift-detection model across all of card 5, and the annual review cadence.</div></div>
+  </div>
+
+  <p>For now: open the customer's transport rules in the Exchange admin centre. Read every rule. Note what each one does and why. Remove the cruft. While you're there, verify MailTips is enabled tenant-wide (or check Panoptica365's drift state on the setting). The customer's IT manager in the opening story doesn't get the BCC rule planted on his watch.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Exchange Online transport rules (<a href="https://learn.microsoft.com/en-us/exchange/security-and-compliance/mail-flow-rules/mail-flow-rules" target="_blank" rel="noopener">Microsoft Learn — Mail flow rules in Exchange Online</a>); New-TransportRule and rule conditions / actions reference (<a href="https://learn.microsoft.com/en-us/exchange/security-and-compliance/mail-flow-rules/mail-flow-rule-actions" target="_blank" rel="noopener">Microsoft Learn — Mail flow rule actions</a>); Safe Links bypass via X-MS-Exchange-Organization-SkipSafeLinksProcessing header (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-links-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Skip Safe Links via mail flow rules</a>); MailTips overview and tenant configuration (<a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/mailtips/mailtips" target="_blank" rel="noopener">Microsoft Learn — MailTips in Exchange Online</a>); Set-OrganizationConfig MailTips parameters reference (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-organizationconfig" target="_blank" rel="noopener">Microsoft Learn — Set-OrganizationConfig</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

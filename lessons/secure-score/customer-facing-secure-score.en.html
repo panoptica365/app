@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer-facing Secure Score — the deliverable, the trend, the renewal narrative</title>
+<meta name="lesson:title" content="Customer-facing Secure Score — the deliverable, the trend, the renewal narrative">
+<meta name="lesson:subtitle" content="How to turn Secure Score into a customer-facing deliverable that anchors renewal conversations and makes the MSP's security work visible.">
+<meta name="lesson:icon" content="presentation">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Customer-facing Secure Score</span></div>
+  <h1>Customer-facing Secure Score — the deliverable, the trend, the renewal narrative</h1>
+  <p class="dek">How to turn Secure Score into a customer-facing deliverable that anchors renewal conversations and makes the MSP's security work visible.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A rising Secure Score trend line moving from 47% at onboarding to 84% today, well above a similar-size average of about 46%.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ssFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5CCBF4" stop-opacity="0.30"/><stop offset="100%" stop-color="#5CCBF4" stop-opacity="0"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- axes -->
+      <line x1="150" y1="60" x2="150" y2="278" stroke="#274B72" stroke-width="1.5"/>
+      <line x1="150" y1="278" x2="1010" y2="278" stroke="#274B72" stroke-width="1.5"/>
+
+      <!-- similar-size average baseline -->
+      <line x1="150" y1="206" x2="1010" y2="206" stroke="#52708F" stroke-width="1.6" stroke-dasharray="6 7"/>
+      <text x="1000" y="198" text-anchor="end" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="14">Similar size avg ~46%</text>
+
+      <!-- area under the trend -->
+      <path d="M210 222 L1000 96 L1000 278 L210 278 Z" fill="url(#ssFill)"/>
+      <!-- the rising trend line -->
+      <path d="M210 222 L1000 96" stroke="#5CCBF4" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+
+      <!-- onboarding point -->
+      <circle cx="210" cy="222" r="7" fill="#0E2640" stroke="#A8E1F8" stroke-width="2.4"/>
+      <text x="210" y="252" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">47%</text>
+      <text x="210" y="300" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1.5">ONBOARDING</text>
+
+      <!-- today point -->
+      <circle cx="1000" cy="96" r="9" fill="#10243B" stroke="#5CCBF4" stroke-width="2.6"/>
+      <text x="1000" y="76" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="20" font-weight="700">84%</text>
+      <text x="1000" y="300" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600" letter-spacing="1.5">TODAY</text>
+
+      <!-- span label -->
+      <text x="605" y="324" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">FOURTEEN MONTHS</text>
+    </svg>
+    <figcaption>The trend is the story: a 47%-to-84% climb, well above a similar-size average of around 46%.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A renewal meeting. The MSP's account manager opens the laptop, navigates to Panoptica365's customer dashboard for the customer they're meeting, and shows the Secure Score tile: <strong>84.1%</strong> today, up from <strong>47%</strong> when the relationship started fourteen months ago. The "Similar size avg" comparison underneath reads 46%. The customer's CFO looks at the screen for a few seconds.</p>
+
+  <p>"So we went from below average to almost double the average."</p>
+
+  <p>"Yes. We've worked our way through Microsoft's recommended baseline. Most customers your size haven't done this work; you have."</p>
+
+  <p>"And this is what we've been paying for."</p>
+
+  <p>"This and the unscored work, yeah. The score is the part that's easy to see."</p>
+
+  <p>The renewal closes in under an hour. The customer signs for another two years and asks if the MSP can take on their sister company.</p>
+
+  <p>This is the most-valuable conversation in the curriculum, and Microsoft Secure Score is the artefact that makes it possible. Not because the number is the whole story — lessons 1 and 4 made clear that it isn't — but because customers respond to measurable improvement, and a 47%-to-84% trend is measurable. The number does what no amount of MSP self-description ever does: it externalises the work, third-party-authored, into something the customer's CFO can put on a slide for the board.</p>
+
+  <p>This lesson is about how to use Secure Score in customer conversations — what to show, when to show it, how to frame it, and where in Panoptica365 the surfaces actually live.</p>
+  </div>
+
+  <h2>The trend, not the snapshot</h2>
+
+  <p>Operators new to the Secure Score conversation often lead with the current percentage: "you're at 84%." That's the wrong frame. The current percentage by itself answers no question the customer is actually asking. <em>Is that good? Compared to what? Is it normal? What's it doing?</em></p>
+
+  <p>The right frame is the trend over time. "Your Secure Score has moved from 47% at onboarding to 84% today, an improvement of 37 percentage points over fourteen months. The industry average for similar-size organisations is around 46%. You're now in the top quartile of M365 tenants by configuration posture."</p>
+
+  <p>The trend tells a story. The snapshot is a statistic. Customers — especially the business stakeholders who don't operate the tenant day-to-day — respond to stories.</p>
+
+  <p>This applies even when the current score is low:</p>
+
+  <ul>
+    <li><strong>A customer at 41% with no trend yet</strong> is the onboarding conversation. "This is our starting point. Here's the plan to move it. We expect to be at 70% by the next quarter and 80%+ within nine months."</li>
+    <li><strong>A customer at 65% trending up</strong> is the mid-relationship conversation. "Here's what we've done; here's what's next; here's the expected trajectory."</li>
+    <li><strong>A customer at 88% trending flat</strong> is the steady-state conversation. "We're at the configuration ceiling for what makes sense at your tier. The work now is maintenance — drift response, exception management, vendor email-hygiene awareness, the unscored items we covered last quarter."</li>
+    <li><strong>A customer at 88% trending <em>down</em></strong> is the diagnostic conversation. "Something has drifted. Let's look at what's moved." (Often the MDVM vulnerability detection cause from lesson 2.)</li>
+  </ul>
+
+  <p>Every conversation has a frame based on the trend. The current number is one data point in that frame; never the whole conversation.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Four trend shapes, each mapping to a different customer conversation: 41% with no trend is the onboarding conversation, 65% trending up is the mid-relationship conversation, 88% flat is the steady-state conversation, 88% trending down is the diagnostic conversation.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="2">THE TREND SETS THE CONVERSATION</text>
+
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- cell 1: 41% no trend -->
+        <g transform="translate(40,58)">
+          <rect width="290" height="92" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="34" cy="56" r="6" fill="#0E2640" stroke="#A8E1F8" stroke-width="2"/>
+          <text x="34" y="32" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">41%</text>
+          <text x="74" y="40" fill="#C4D4E8" font-size="13.5" font-weight="600">No trend yet</text>
+          <text x="74" y="62" fill="#6B85A6" font-size="12">Onboarding</text>
+          <text x="74" y="79" fill="#6B85A6" font-size="12">conversation</text>
+        </g>
+        <!-- cell 2: 65% up -->
+        <g transform="translate(390,58)">
+          <rect width="290" height="92" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <path d="M22 70 L58 40" stroke="#2EE8A0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <text x="40" y="32" text-anchor="middle" fill="#2EE8A0" font-size="16" font-weight="700">65%</text>
+          <text x="80" y="40" fill="#C4D4E8" font-size="13.5" font-weight="600">Trending up</text>
+          <text x="80" y="62" fill="#6B85A6" font-size="12">Mid-relationship</text>
+          <text x="80" y="79" fill="#6B85A6" font-size="12">conversation</text>
+        </g>
+        <!-- cell 3: 88% flat -->
+        <g transform="translate(40,162)">
+          <rect width="290" height="92" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <path d="M22 54 L58 54" stroke="#5CCBF4" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <text x="40" y="32" text-anchor="middle" fill="#5CCBF4" font-size="16" font-weight="700">88%</text>
+          <text x="80" y="40" fill="#C4D4E8" font-size="13.5" font-weight="600">Trending flat</text>
+          <text x="80" y="62" fill="#6B85A6" font-size="12">Steady-state</text>
+          <text x="80" y="79" fill="#6B85A6" font-size="12">conversation</text>
+        </g>
+        <!-- cell 4: 88% down -->
+        <g transform="translate(390,162)">
+          <rect width="290" height="92" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <path d="M22 40 L58 70" stroke="#FF5A6E" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+          <text x="40" y="32" text-anchor="middle" fill="#FF8A98" font-size="16" font-weight="700">88%</text>
+          <text x="80" y="40" fill="#C4D4E8" font-size="13.5" font-weight="600">Trending down</text>
+          <text x="80" y="62" fill="#6B85A6" font-size="12">Diagnostic</text>
+          <text x="80" y="79" fill="#6B85A6" font-size="12">conversation</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The same number can mean four different things — the trend decides which conversation you're having.</figcaption>
+  </figure>
+
+  <h2>The baseline at onboarding — captured automatically</h2>
+
+  <p>When you onboard a new customer in Panoptica365, the first Secure Score poll happens automatically as soon as the tenant is connected. That first reading goes into the database. Every subsequent poll is stored alongside it, day after day, for as long as the relationship lasts. By the customer's first renewal twelve months later, the system already has roughly 365 daily readings behind the score on screen. The baseline isn't something the operator has to remember to capture — it's the first row of the history table.</p>
+
+  <p>This matters for two operator workflows:</p>
+
+  <p><strong>The renewal conversation has data behind it automatically.</strong> Six months in, when the customer asks "are we actually safer now?", you have a verifiable answer because the data is in the database: "Your Secure Score was 39% the day we onboarded; it's 71% today." You assemble the trajectory from milestone notes and your record of work done; the underlying numbers are queryable from Panoptica365's stored history when you need to verify them.</p>
+
+  <p><strong>Customer expectations get anchored over time.</strong> Customers sometimes forget how unconfigured their tenant was at onboarding. By month 12 they've come to expect MFA, Safe Links, mailbox auditing, and CA policies as baseline. The 39%-to-71% movement reminds them this wasn't always the case — <em>you did this for them</em>.</p>
+
+  <p>For the operator, the continuous capture means the <em>record</em> is always there even if the surfaced visualisation isn't (yet) — the database holds the history; what the dashboard surfaces is the current tile. Operators piece the trend together from documentation and operator notes for now.</p>
+
+  <h2>Where Panoptica365 shows the score</h2>
+
+  <p>Panoptica365's Secure Score surface is one of the platform's more developed views. Three places to know:</p>
+
+  <p><strong>The main console dashboard — the cross-tenant view.</strong> When you sign in to Panoptica365, the main dashboard includes a <strong>Tenants panel</strong> listing every customer tenant with their current Secure Score in a colour-coded column (green for high scores, red for low). The panel has a filter box so you can search by tenant name across a large book. The Status column shows polling state; the Last Polled column shows when the score was last refreshed from Microsoft. Below the Tenants panel sits a <strong>Secure Score &amp; Alert Overview</strong> showing three donut graphs side by side: the <strong>Average</strong> Secure Score across all your managed tenants, the <strong>Highest</strong> tenant (with the tenant name displayed), and the <strong>Lowest</strong> tenant (with the name). This three-donut overview is the genuine cross-tenant aggregation view that doesn't exist anywhere in Microsoft's portals — it's a meaningful Panoptica365 differentiator.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The cross-tenant overview: three donut graphs side by side showing the Average, Highest, and Lowest Secure Score across managed tenants.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="2">SECURE SCORE &amp; ALERT OVERVIEW</text>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Average donut -->
+        <g transform="translate(150,130)">
+          <circle r="52" fill="none" stroke="#13294A" stroke-width="14"/>
+          <circle r="52" fill="none" stroke="#5CCBF4" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="245 327" transform="rotate(-90)"/>
+          <text y="6" fill="#7DD9F9" font-size="22" font-weight="700">AVG</text>
+          <text x="0" y="86" fill="#C4D4E8" font-size="13" font-weight="600">Average</text>
+        </g>
+        <!-- Highest donut -->
+        <g transform="translate(360,130)">
+          <circle r="52" fill="none" stroke="#13294A" stroke-width="14"/>
+          <circle r="52" fill="none" stroke="#2EE8A0" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="300 327" transform="rotate(-90)"/>
+          <text y="6" fill="#2EE8A0" font-size="20" font-weight="700">HIGH</text>
+          <text x="0" y="86" fill="#C4D4E8" font-size="13" font-weight="600">Highest tenant</text>
+        </g>
+        <!-- Lowest donut -->
+        <g transform="translate(570,130)">
+          <circle r="52" fill="none" stroke="#13294A" stroke-width="14"/>
+          <circle r="52" fill="none" stroke="#FF5A6E" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="130 327" transform="rotate(-90)"/>
+          <text y="6" fill="#FF8A98" font-size="20" font-weight="700">LOW</text>
+          <text x="0" y="86" fill="#C4D4E8" font-size="13" font-weight="600">Lowest tenant</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The three-donut cross-tenant view — Average, Highest, Lowest — that Microsoft's portals don't offer.</figcaption>
+  </figure>
+
+  <p><strong>The per-tenant Secure Score tile.</strong> When you click into a specific customer's dashboard, the Secure Score tile is among the first things you see. The tile shows the headline percentage in large type (e.g., <strong>88.79%</strong>), the raw points / max underneath (<code>988.2 / 1113.0</code>), and the <strong>Similar size avg</strong> comparison Microsoft publishes (e.g., <code>Similar size avg: 46.74%</code>). The tile is colour-coded — green for healthy scores, transitioning to amber and red as the score drops.</p>
+
+  <p><strong>Stored score history — not yet surfaced as a chart.</strong> Panoptica365 polls the Secure Score continuously and stores every reading in the database. The historical data is there from day one of the customer relationship. What the dashboard does <em>not</em> currently include is a surfaced trend visualisation — there's no chart in Panoptica365's UI that an operator can open to see "this customer's score over the last twelve months." For now, the trend story is assembled manually: from operator notes captured at meaningful milestones (deployments, quarterly reviews), from screenshots saved at key moments, and from operator memory of the work done.</p>
+
+  <p>What Panoptica365 does <em>not</em> surface in the dashboard: a recommendation-by-recommendation drill-down (that's in the Microsoft Defender portal, lesson 1 covered this), a per-recommendation action button to apply the fix (Microsoft owns the action surface), a generated PDF report for customers (those are exported manually or built from the tile's data), and the trend chart described above.</p>
+
+  <h2>The renewal conversation — using the surfaces</h2>
+
+  <p>A pattern that works well for an annual review or contract renewal:</p>
+
+  <ol>
+    <li><strong>Open Panoptica365's main dashboard</strong> with the customer's tenant filtered or scrolled into view. Show the Tenants panel briefly — the customer sees their score in context of your other customers (without naming the others), which signals "we have a book of similar customers and we benchmark against them."</li>
+    <li><strong>Click into the customer's tenant.</strong> The Secure Score tile is right there. Read the three numbers aloud: the percentage, the points / max, the similar-size-avg comparison. "You're at 88.79%; the average for similar-size companies is 46.74%; you're roughly double the average."</li>
+    <li><strong>Walk the trend.</strong> From your customer documentation — the milestone notes, the screenshots taken at deployment points, your record of what was done when — narrate the trajectory. "Your baseline at onboarding was 47%. We hit 62% after deploying the CA templates in March. We hit 74% after the Intune deployment in May. We're at 84% today." Each movement ties to specific work the customer paid for and that you delivered.</li>
+    <li><strong>Acknowledge the unscored work.</strong> "And here's what the number doesn't show — DMARC enforcement is now at p=reject, your mail flow rules have been audited and cleaned up, your exception ledger has 14 documented decisions reviewed in the last quarter. Microsoft doesn't score any of this, but it's where most of the actual security value lives."</li>
+    <li><strong>Set the next-quarter target.</strong> "Our goal for the next 12 months is to keep the score in the high 80s while we work the unscored discipline. We're at the ceiling of what makes sense for Business Premium without crossing into E5 features that don't pay for themselves at your size."</li>
+  </ol>
+
+  <p>The conversation lasts 15-20 minutes. It's anchored on visible numbers and tied to specific work. By the end, the customer understands what they're paying for in a way they didn't before they sat down.</p>
+
+  <h2>How to talk about a low score</h2>
+
+  <p>Low scores happen — newly onboarded customers, customers who joined under previous mismanagement, customers who didn't have an MSP at all. The conversation needs to thread between "this is bad and we have to act" (urgency) and "this isn't your fault and we're not blaming you" (relationship preservation).</p>
+
+  <p>A workable structure:</p>
+
+  <ul>
+    <li><strong>Lead with the trajectory, not the indictment.</strong> "Your starting point is a 41% Secure Score. Most customers we onboard start somewhere between 35 and 55%; you're in the middle of that range. We have a clear path to move this number." Not: "Your previous provider missed a lot."</li>
+    <li><strong>Identify the half-dozen</strong> (lesson 3) as the visible improvement plan. Walk through which items will be implemented and the expected score impact of each.</li>
+    <li><strong>Set realistic timeline expectations.</strong> Going from 41% to 80%+ is typically a six-to-nine-month journey for the operator team. Don't promise faster; faster usually means cutting corners on customer-specific tuning.</li>
+    <li><strong>Show the unscored work that runs in parallel.</strong> "While we're moving the score, we're also doing the DMARC enforcement work, the mail flow rule audit, the exception documentation. These don't show up in the number but they're a meaningful part of the security improvement."</li>
+  </ul>
+
+  <p>A 41% customer who sees a 47% reading three weeks later, an 58% reading at three months, and a 78% reading at nine months stays a customer. A 41% customer who's been told "we'll get you to 100% next month" and ends up at 62% feels lied to.</p>
+
+  <h2>How to talk about a high score</h2>
+
+  <p>The opposite problem: customers seeing a 92% number sometimes conclude they're done. They've won. They're "secure." The MSP's job at that point is to gently re-anchor.</p>
+
+  <p>A workable framing:</p>
+
+  <ul>
+    <li><strong>Acknowledge the score honestly.</strong> "Your Secure Score is in the top decile of M365 tenants. The Microsoft-recommended baseline is implemented end-to-end for your tier."</li>
+    <li><strong>Remind them of the limits.</strong> Reference lesson 4's framing. "The score measures configuration. It doesn't measure whether your vendors have good email hygiene, whether your users would recognise a sophisticated phishing attack, whether our incident response would catch a compromise within the window that matters. Most of the actual security work between now and next year is in those areas — not in the number."</li>
+    <li><strong>Use the renewal to redirect to discipline.</strong> "We're not going to focus on moving the score from 92% to 95% — that would mean either gaming the metric or implementing recommendations that don't fit your business. We're going to focus on the unscored work: drift response, vendor awareness, user training, exception ledger review. That's what keeps the 92% from being false comfort."</li>
+  </ul>
+
+  <p>The conversation prevents the customer from disengaging because they think the security work is done. It's never done; the score just doesn't tell you that.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 268" role="img" aria-label="What to say versus what not to over-claim with Secure Score: lead with the trend, acknowledge the unscored work, and set realistic expectations — never claim the work is done, never promise 100% next month, never let the number mean security is finished.">
+      <rect width="720" height="268" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="360" y1="52" x2="360" y2="244" stroke="#1F3C5C" stroke-width="1.5"/>
+
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Say column -->
+        <text x="40" y="36" fill="#2EE8A0" font-size="12.5" font-weight="700" letter-spacing="2">SAY THIS</text>
+        <g transform="translate(40,56)" fill="#C4D4E8" font-size="13.5">
+          <g><circle cx="8" cy="14" r="6" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M5 14 l2.5 3 l4.5 -6" stroke="#2EE8A0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="19">Lead with the trend</text></g>
+          <g transform="translate(0,42)"><circle cx="8" cy="14" r="6" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M5 14 l2.5 3 l4.5 -6" stroke="#2EE8A0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="19">Acknowledge unscored work</text></g>
+          <g transform="translate(0,84)"><circle cx="8" cy="14" r="6" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M5 14 l2.5 3 l4.5 -6" stroke="#2EE8A0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="19">Set realistic expectations</text></g>
+          <g transform="translate(0,126)"><circle cx="8" cy="14" r="6" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M5 14 l2.5 3 l4.5 -6" stroke="#2EE8A0" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="19">Tie each move to work done</text></g>
+        </g>
+
+        <!-- Don't over-claim column -->
+        <text x="400" y="36" fill="#FF8A98" font-size="12.5" font-weight="700" letter-spacing="2">DON'T OVER-CLAIM</text>
+        <g transform="translate(400,56)" fill="#C4D4E8" font-size="13.5">
+          <g><circle cx="8" cy="14" r="6" fill="none" stroke="#FF5A6E" stroke-width="2"/><path d="M5 11 l6 6 M11 11 l-6 6" stroke="#FF5A6E" stroke-width="2" stroke-linecap="round"/><text x="26" y="19">"The work is done"</text></g>
+          <g transform="translate(0,42)"><circle cx="8" cy="14" r="6" fill="none" stroke="#FF5A6E" stroke-width="2"/><path d="M5 11 l6 6 M11 11 l-6 6" stroke="#FF5A6E" stroke-width="2" stroke-linecap="round"/><text x="26" y="19">"100% next month"</text></g>
+          <g transform="translate(0,84)"><circle cx="8" cy="14" r="6" fill="none" stroke="#FF5A6E" stroke-width="2"/><path d="M5 11 l6 6 M11 11 l-6 6" stroke="#FF5A6E" stroke-width="2" stroke-linecap="round"/><text x="26" y="19">Lead with the snapshot</text></g>
+          <g transform="translate(0,126)"><circle cx="8" cy="14" r="6" fill="none" stroke="#FF5A6E" stroke-width="2"/><path d="M5 11 l6 6 M11 11 l-6 6" stroke="#FF5A6E" stroke-width="2" stroke-linecap="round"/><text x="26" y="19">Score = "secure"</text></g>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Present the trend and the unscored work; never let the number stand in for "the security work is finished."</figcaption>
+  </figure>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The trend is the customer conversation; the snapshot is just the data point.</strong> Lead with the trajectory. The 47%-to-84% movement is the story; the 84% today is the line on the chart. Customers remember stories.</p>
+
+  <p><strong>The day-one baseline is captured automatically — make sure your customer documentation references it.</strong> Panoptica365 records the first Secure Score poll the moment a tenant connects, and every poll thereafter. The data is in the database; what the dashboard surfaces today is the current tile. Operators piece the trend together from their own records — milestone notes, screenshots saved at deployments, the documentation captured at each major step. Day-one is the most-cited number you'll reference about a customer; the discipline is keeping the milestone record alongside the automatic capture.</p>
+
+  <p><strong>Use Panoptica365's cross-tenant view as the genuine differentiator.</strong> The Tenants panel + three-donut overview shows the customer (when appropriate) that you operate a real book of similar customers. Microsoft's portal can't do this. The customer's CFO who sees "average across our managed customers is 85.8%" and "you're at 88.79%" gets two messages at once: you have peers, and you're ahead of them.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Lesson 6: Operating Secure Score at scale + closing the curriculum.</b> The quarterly review cadence, the 80%+ target framing, what to do when scores trend in concerning directions across the book, and the closing argument for what good MSP security looks like.</div></div>
+  </div>
+
+  <p>For now: pick the customer whose annual review is coming up. Open Panoptica365's main dashboard. Take a screenshot of their score tile and the cross-tenant context. Pull together the trend from their history. Walk into the renewal meeting with a story, not a statistic. The 47%-to-84% story is the story you want to tell — and the customer to hear.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Secure Score history and trend tracking (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-history-metrics-trends" target="_blank" rel="noopener">Microsoft Learn — Track Secure Score history</a>); Secure Score industry comparisons and similar-size organisation averaging (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — Secure Score comparisons</a>); Secure Score overview and tile data structure (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score</a>); Secure Score API for programmatic access to the data Panoptica365 surfaces (<a href="https://learn.microsoft.com/en-us/graph/api/resources/securescore" target="_blank" rel="noopener">Microsoft Learn — Secure Score API in Graph</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

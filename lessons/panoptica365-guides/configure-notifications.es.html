@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configure las notificaciones — Guías Panoptica365</title>
+<meta name="lesson:title" content="Configure las notificaciones">
+<meta name="lesson:subtitle" content="SMTP, destinatarios, el resumen de las 6 de la mañana y los periodos de silencio — cómo las alertas llegan a personas, de forma fiable.">
+<meta name="lesson:icon" content="mail">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Configure las notificaciones</span></div>
+  <h1>Configure las notificaciones</h1>
+  <p class="dek">SMTP, destinatarios, el resumen de las 6 de la mañana y los periodos de silencio — cómo las alertas llegan a personas, de forma fiable.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una alerta atraviesa Configuración, que dice adónde apuntan los canales, y Directivas de alerta, que dice qué fluye por cada canal, hasta llegar a una bandeja de operador y una bandeja PSA.">
+      <defs>
+        <radialGradient id="cnBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="cnBolt" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="cnSoft"><feGaussianBlur stdDeviation="4"/></filter>
+        <marker id="cnArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#cnBg)"/>
+
+      <!-- left: the alert -->
+      <g transform="translate(150,170)">
+        <circle r="58" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle cx="0" cy="0" r="30" fill="url(#cnBolt)" filter="url(#cnSoft)" opacity="0.85"/>
+        <path d="M6 -22 L-12 4 H2 L-6 24 L16 -4 H0 Z" fill="#EAF7FE"/>
+      </g>
+      <text x="150" y="276" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">UNA ALERTA</text>
+
+      <path d="M222 168 H322" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+
+      <!-- middle: two layers stacked -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="332" y="108" width="248" height="56" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="456" y="132" fill="#A8E1F8" font-size="14.5" font-weight="600">Configuración</text>
+        <text x="456" y="151" fill="#6B85A6" font-size="11">adónde apuntan los canales</text>
+
+        <rect x="332" y="176" width="248" height="56" rx="11" fill="#0E2236" stroke="#33527A"/>
+        <text x="456" y="200" fill="#C4D4E8" font-size="14" font-weight="600">Directivas de alerta</text>
+        <text x="456" y="219" fill="#6B85A6" font-size="11">qué fluye por cada canal</text>
+      </g>
+
+      <path d="M580 136 H700" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+      <path d="M580 204 H700" stroke="#335F92" stroke-width="2.5" marker-end="url(#cnArr)"/>
+
+      <!-- right: two inboxes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="708" y="108" width="262" height="56" rx="11" fill="#0E2236" stroke="#5CCBF4"/>
+        <text x="839" y="132" fill="#7DD9F9" font-size="14.5" font-weight="600">Bandeja del operador</text>
+        <text x="839" y="151" fill="#6B85A6" font-size="11.5">Correo · Ambos</text>
+
+        <rect x="708" y="176" width="262" height="56" rx="11" fill="#0E2236" stroke="#5CCBF4"/>
+        <text x="839" y="200" fill="#7DD9F9" font-size="14.5" font-weight="600">Bandeja PSA</text>
+        <text x="839" y="219" fill="#6B85A6" font-size="11.5">PSA · Ambos</text>
+      </g>
+    </svg>
+    <figcaption>Configuración dice adónde apuntan los canales; Directivas de alerta dice qué fluye por cada canal.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Una alerta que nadie recibe no ocurrió. Esta guía conecta el lado de la entrega — todo está en <strong>Configuración</strong> (requiere el rol de Administrador), y vale la pena hacerlo con cuidado una sola vez.</p>
+  </div>
+
+  <h2>SMTP — los cimientos</h2>
+
+  <p><strong>Configuración → Configuración SMTP.</strong> Host, puerto, nombre de usuario, contraseña y la dirección de origen. Guarde, y luego use <strong>Enviar correo de prueba</strong> — hágalo de verdad; la prueba atrapa el error de autenticación o el puerto bloqueado <em>ahora</em> y no durante su primer incidente real. Toda función de correo de la plataforma (notificaciones de alerta, resumen diario, correo asociado a informes) viaja sobre esta configuración.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Haga la prueba</div>
+    <p>Enviar correo de prueba atrapa el error de autenticación o el puerto bloqueado <em>ahora</em> y no durante su primer incidente real.</p>
+  </div>
+
+  <h2>Destinatarios y enrutamiento</h2>
+
+  <p><strong>Configuración → Configuración de notificaciones</strong> contiene tres campos:</p>
+
+  <ul>
+    <li><strong>Direcciones de correo destinatarias</strong> — la lista, separada por comas, de destinatarios <em>personales</em>: sus operadores. Las alertas cuya directiva enruta a <strong>Correo</strong> (o <strong>Ambos</strong>) llegan aquí.</li>
+    <li><strong>Dirección de correo PSA</strong> — adonde van las alertas enrutadas a <strong>PSA</strong> cuando viajan por correo: la entrada correo-a-ticket de su PSA. Una vez conectada la integración nativa con el PSA (siguiente guía), las alertas enrutadas al PSA se convierten en tickets reales por API y esta dirección pasa a ser el respaldo — manténgala configurada en cualquier caso.</li>
+    <li><strong>Cadena de atribución</strong> — la primera línea de los correos dirigidos al PSA, con soporte para el marcador <code>${PSA_NAME}</code>, de modo que su PSA pueda enrutar los tickets automáticamente al tablero de la empresa correcta.</li>
+  </ul>
+
+  <p>Qué alertas van adónde se decide por directiva de alerta (enrutamiento: Ninguno / Correo / PSA / Ambos — vea <em>Ajuste las directivas de alerta</em>). El modelo mental: <strong>Configuración dice adónde apuntan los canales; Directivas de alerta dice qué fluye por cada canal.</strong></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Los cuatro valores de enrutamiento por directiva — Ninguno, Correo, PSA, Ambos — y adónde entrega cada uno.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="150" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">ENRUTAMIENTO</text>
+      <text x="560" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">VA A</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- routing chips -->
+        <rect x="56" y="56" width="188" height="36" rx="18" fill="#0E2236" stroke="#33527A"/><text x="150" y="79" fill="#9FB4CE" font-size="13.5" font-weight="600">Ninguno</text>
+        <rect x="56" y="100" width="188" height="36" rx="18" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="123" fill="#A8E1F8" font-size="13.5" font-weight="600">Correo</text>
+        <rect x="56" y="144" width="188" height="36" rx="18" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="167" fill="#A8E1F8" font-size="13.5" font-weight="600">PSA</text>
+        <rect x="56" y="188" width="188" height="36" rx="18" fill="#10243B" stroke="#5CCBF4"/><text x="150" y="211" fill="#7DD9F9" font-size="13.5" font-weight="700">Ambos</text>
+
+        <!-- destinations -->
+        <rect x="466" y="92" width="220" height="44" rx="10" fill="#0E2236" stroke="#5CCBF4"/><text x="576" y="119" fill="#7DD9F9" font-size="13" font-weight="600">Lista de destinatarios</text>
+        <rect x="466" y="156" width="220" height="44" rx="10" fill="#0E2236" stroke="#5CCBF4"/><text x="576" y="183" fill="#7DD9F9" font-size="13" font-weight="600">Correo PSA</text>
+      </g>
+      <!-- flows -->
+      <path d="M244 118 H466" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M244 162 H466" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M244 206 C355 206 355 130 466 124" stroke="#3A6FA0" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+      <path d="M244 206 C355 206 355 182 466 180" stroke="#3A6FA0" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+    </svg>
+    <figcaption>El enrutamiento de cada directiva — Ninguno, Correo, PSA o Ambos — decide por qué canal viaja una alerta.</figcaption>
+  </figure>
+
+  <p>Cada destinatario recibe el correo en <strong>su propio idioma</strong> — los destinatarios con perfil de usuario en Panoptica365 reciben los correos de alerta en el idioma definido en sus preferencias.</p>
+
+  <h2>El resumen diario</h2>
+
+  <p>Cada mañana a las 6, Panoptica365 envía por correo un resumen escrito por Claude del último día en todo el parque. <strong>Configuración → Resumen diario</strong> define la gravedad mínima que entra: desde <em>Info — incluir todo (predeterminado)</em> hasta <em>Solo severas</em>. Las alertas resueltas por reglas de exención se excluyen automáticamente — el pie indica qué se filtró. Si su resumen suena a ruido, suba el umbral antes de dejar de leerlo; un resumen que usted ojea a diario con cualquier umbral vale más que uno completo que ignora.</p>
+
+  <div class="callout insight">
+    <div class="clabel">El umbral antes que el silencio</div>
+    <p>Si su resumen suena a ruido, suba el umbral antes de dejar de leerlo — un resumen que usted ojea a diario con cualquier umbral vale más que uno completo que ignora.</p>
+  </div>
+
+  <h2>Periodos de silencio</h2>
+
+  <p>¿Se va de vacaciones? Cualquier usuario puede silenciar las alertas <strong>hacia su propio correo</strong>: haga clic en su control de silencio, defina Desde / Hasta (hasta 60 días) y, si quiere, un motivo. El silencio caduca solo; puede cancelarlo antes.</p>
+
+  <p>Dos detalles honestos:</p>
+
+  <ul>
+    <li>Silenciar solo afecta a <em>su</em> entrega. Si su dirección no está en ninguna lista de destinatarios, la interfaz le avisa de que el silencio no tiene efecto.</li>
+    <li><strong>El mecanismo de seguridad:</strong> si todos los destinatarios configurados están silenciados a la vez, Panoptica365 anula los silencios y entrega de todos modos a un Administrador, con un banner de <em>Entrega de respaldo</em> en el correo. No existe configuración alguna en la que una alerta severa no llegue a nadie en silencio. Los administradores pueden revisar todos los silencios activos en Configuración.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Cuando todos los destinatarios configurados están silenciados, la alerta se entrega igualmente a un Administrador con un banner de Entrega de respaldo.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- muted recipients -->
+        <rect x="34" y="68" width="224" height="74" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="146" y="100" fill="#9FB4CE" font-size="13.5" font-weight="600">Todos los destinatarios</text>
+        <text x="146" y="122" fill="#6B85A6" font-size="11.5">silenciados a la vez</text>
+        <!-- mute glyph -->
+        <g transform="translate(64,96)" stroke="#6B85A6" stroke-width="2" fill="none">
+          <path d="M0 -6 H6 L14 -13 V13 L6 6 H0 Z" fill="#0E2236"/>
+          <line x1="-3" y1="-13" x2="20" y2="13" stroke="#FFC04D"/>
+        </g>
+
+        <!-- override -->
+        <rect x="304" y="80" width="116" height="50" rx="25" fill="#1E1606" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="362" y="103" fill="#FFC04D" font-size="13" font-weight="700">anula</text>
+        <text x="362" y="120" fill="#C9A85A" font-size="10">los silencios</text>
+
+        <!-- admin delivery -->
+        <rect x="466" y="68" width="220" height="74" rx="10" fill="#0E2640" stroke="#5CCBF4"/>
+        <text x="576" y="100" fill="#A8E1F8" font-size="14" font-weight="600">Administrador</text>
+        <text x="576" y="122" fill="#7DD9F9" font-size="10.5">banner Entrega de respaldo</text>
+      </g>
+      <path d="M258 105 H304" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+      <path d="M420 105 H466" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+      <text x="360" y="178" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">Ninguna configuración deja una alerta severa sin llegar a nadie.</text>
+    </svg>
+    <figcaption>El mecanismo de seguridad: si todos están silenciados, un Administrador recibe igualmente la alerta — marcada Entrega de respaldo.</figcaption>
+  </figure>
+
+  <h2>La lista de verificación</h2>
+
+  <ol>
+    <li>SMTP configurado y <strong>correo de prueba recibido</strong>.</li>
+    <li>Correos de los operadores en la lista de destinatarios; correo del PSA configurado.</li>
+    <li>Umbral del Resumen diario elegido.</li>
+    <li>Enrutamiento de las directivas de alerta revisado (<em>Ajuste las directivas de alerta</em>).</li>
+    <li>Una prueba real: dispare algo inofensivo y confirme que llega adonde espera.</li>
+  </ol>
+
+  <p>Quince minutos, una sola vez — y entonces el modelo basado en alertas funciona de verdad, porque la entrega es digna de confianza.</p>
+
+</div>
+</body>
+</html>

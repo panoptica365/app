@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trusted location OR compliant device — the smart geo-policy — Conditional Access Template Policies</title>
+<meta name="lesson:title" content="Trusted location OR compliant device — the smart geo-policy">
+<meta name="lesson:subtitle" content="Replace the brittle country-block with a geo-policy that grants access based on device trust, not location.">
+<meta name="lesson:icon" content="map-pin">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access Template Policies</span> <span class="sep">·</span> <span>Trusted location OR compliant device</span></div>
+  <h1>Trusted location OR compliant device — the smart geo-policy</h1>
+  <p class="dek">Replace the brittle country-block with a geo-policy that grants access based on device trust, not location.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A sign-in is allowed if it comes from a trusted location OR from a compliant device; failing both is blocked.">
+      <defs>
+        <radialGradient id="tlBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="tlGrant" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="tlArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tlBg)"/>
+
+      <!-- two trust signals on the left -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(170,86)">
+          <rect x="-130" y="0" width="260" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="-92" cy="32" r="15" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+          <path d="M-92 24 a8 8 0 0 1 0 16 a8 8 0 0 1 0 -16 M-92 32 l0 8" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="22" y="28" fill="#C4D4E8" font-size="15" font-weight="600">Trusted location</text>
+          <text x="22" y="48" fill="#6B85A6" font-size="12">office IPs / country</text>
+        </g>
+        <g transform="translate(170,190)">
+          <rect x="-130" y="0" width="260" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <rect x="-104" y="16" width="24" height="34" rx="4" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+          <path d="M-98 33 l5 6 l9 -12" fill="none" stroke="#2EE8A0" stroke-width="2.2"/>
+          <text x="20" y="28" fill="#C4D4E8" font-size="15" font-weight="600">Compliant device</text>
+          <text x="20" y="48" fill="#6B85A6" font-size="12">enrolled in Intune</text>
+        </g>
+      </g>
+
+      <!-- OR node -->
+      <g transform="translate(490,170)">
+        <circle r="46" fill="#10243B" stroke="#5CCBF4" stroke-width="1.8"/>
+        <text x="0" y="9" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="24" font-weight="700" letter-spacing="2">OR</text>
+      </g>
+      <path d="M300 118 Q400 134 448 160" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#tlArr)"/>
+      <path d="M300 222 Q400 206 448 180" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#tlArr)"/>
+
+      <!-- either true -> grant -->
+      <path d="M538 158 H700" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#tlArr)"/>
+      <g transform="translate(870,158)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-104" y="-36" width="208" height="72" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-66" cy="0" r="17" fill="url(#tlGrant)"/>
+        <path d="M-73 0 l5 6 l10 -13" fill="none" stroke="#071221" stroke-width="2.4"/>
+        <text x="26" y="-2" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="16" font-weight="600">Access</text>
+        <text x="26" y="20" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="16" font-weight="600">granted</text>
+      </g>
+
+      <!-- both false -> blocked -->
+      <path d="M490 216 V272 H700" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="5 5" fill="none" marker-end="url(#tlArr)"/>
+      <text x="600" y="294" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13">fail both → blocked</text>
+    </svg>
+    <figcaption>Either signal is enough. A sign-in that fails both — trusted location and compliant device — is the one the policy denies.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>An MSP we recently audited had a Conditional Access policy on a customer's tenant that read, plainly, "block sign-in from outside Canada." It had been deployed two years ago. The exclusion list had grown to thirty-eight entries.</p>
+
+  <p>Spain (for the controller's vacation in 2023).<br>
+  The United States (for the salesman who travels to trade shows).<br>
+  France (for the executive's family visit, set up a year ago).<br>
+  Mexico (for the accountant's winter trip).<br>
+  Italy (still active from two summers ago, when the CFO visited family for three weeks).</p>
+
+  <p>Most of those exclusions were obsolete. The salesman hadn't been to a US trade show in eight months but the US exception was still in force. The Spain exclusion was for a contractor who no longer worked there. The Italy exclusion existed because nobody remembered to remove it.</p>
+
+  <p>Every exclusion was a hole in the geo-policy. Together, they amounted to "the geo-policy is on, but the entire western hemisphere plus most of Europe is excluded for various users for unknown durations." Whatever security the policy was supposed to provide had been quietly traded away one helpdesk ticket at a time.</p>
+
+  <p>This lesson is the policy that doesn't accumulate that kind of debt.</p>
+  </div>
+
+  <div class="callout">
+    <div class="clabel">The template</div>
+    <p><strong>Panoptica365 - Only allow access from Canada.</strong> Description: <em>Logins only from Canada or from Compliant devices.</em> Grant: None (block). Users: All users. Apps: All cloud apps. Conditions: Locations = 1 location (the named "Canada" location).</p>
+  </div>
+
+  <p>The lesson title says "Canada" because that's the default; in practice this is the template for <em>any</em> trusted-location-plus-compliant-device pattern. We'll cover the geographic customisation later in the lesson.</p>
+
+  <h2>The OR pattern is the entire point</h2>
+
+  <p>Most MSP-security tools ship a "block outside trusted location" template that looks straightforward: define a named location, and block sign-ins from anywhere else. Simple, defensible, fits the security model.</p>
+
+  <p>It also creates the exception-sprawl problem. Every traveller is an exception. Every contractor is an exception. Every executive's vacation is an exception. The exceptions accumulate, never get removed, and the policy quietly becomes a paper-thin defence.</p>
+
+  <p>The Panoptica365 template doesn't use that pattern. It uses <strong>(location-trusted) OR (device-compliant)</strong>. The grant control is configured so that a sign-in satisfies the policy if <em>either</em> condition is true:</p>
+
+  <ul>
+    <li>The sign-in is from a trusted named location (the office IPs, the country range, whatever you've defined), OR</li>
+    <li>The user's device is marked as compliant in Intune.</li>
+  </ul>
+
+  <p>Both conditions prove the same underlying intent — the user has demonstrated they're operating from a trustworthy context — and either is sufficient. Failing both means the policy denies the sign-in.</p>
+
+  <p>The consequence: travellers on managed laptops don't trip the policy, because their device satisfies the OR. Travellers on personal devices <em>do</em> trip the policy. The distinction the policy enforces is no longer "Canadian or not"; it's "trustworthy context or not." That's the right distinction.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="The naive geo-block accumulates exceptions; the OR-pattern needs none.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="360" y1="40" x2="360" y2="276" stroke="#1F3C5C" stroke-width="1"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- left: naive geo-block -->
+        <text x="180" y="36" text-anchor="middle" fill="#E2A0AA" font-size="13" font-weight="700" letter-spacing="1">NAIVE GEO-BLOCK</text>
+        <rect x="40" y="56" width="280" height="40" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="180" y="81" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="600">Block outside location</text>
+        <g fill="#0E2236" stroke="#33527A">
+          <rect x="60" y="112" width="240" height="26" rx="6"/>
+          <rect x="60" y="146" width="240" height="26" rx="6"/>
+          <rect x="60" y="180" width="240" height="26" rx="6"/>
+          <rect x="60" y="214" width="240" height="26" rx="6"/>
+        </g>
+        <g font-size="12" fill="#6B85A6">
+          <text x="74" y="129">+ exception: Spain</text>
+          <text x="74" y="163">+ exception: United States</text>
+          <text x="74" y="197">+ exception: France</text>
+          <text x="74" y="231">+ exception: Italy …</text>
+        </g>
+        <text x="180" y="262" text-anchor="middle" fill="#E2A0AA" font-size="12" font-style="italic">exceptions accumulate</text>
+
+        <!-- right: OR-pattern -->
+        <text x="540" y="36" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700" letter-spacing="1">OR-PATTERN</text>
+        <rect x="400" y="56" width="280" height="40" rx="9" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <text x="540" y="81" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="600">Location OR compliant device</text>
+        <g transform="translate(0,150)">
+          <rect x="430" y="0" width="220" height="36" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="540" y="23" text-anchor="middle" fill="#A8E1F8" font-size="13">Travellers on managed laptops pass</text>
+        </g>
+        <g transform="translate(0,200)">
+          <rect x="430" y="0" width="220" height="36" rx="8" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="540" y="23" text-anchor="middle" fill="#9FF2D2" font-size="13" font-weight="600">no exception list</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Same intent, two designs: one grows an exception list one ticket at a time, the other needs none.</figcaption>
+  </figure>
+
+  <h2>What this means in practice</h2>
+
+  <p>A salesperson on a Tuesday trip to Chicago:</p>
+
+  <ul>
+    <li>Naive geo-policy: blocked. Help desk call. Exception added for the US. Exception forgotten in six weeks.</li>
+    <li>Panoptica365 template: not blocked if their managed laptop is enrolled in Intune and compliant. No exception needed. No help desk call.</li>
+  </ul>
+
+  <p>A user on their personal phone trying to sign in to Outlook while visiting family in Paris:</p>
+
+  <ul>
+    <li>Naive geo-policy: blocked. Help desk call. Exception added for France. Exception forgotten.</li>
+    <li>Panoptica365 template: blocked (because personal phone is not compliant). User can fall back to the managed laptop, or wait until they're back home. <em>No exception added; no security debt accumulated.</em></li>
+  </ul>
+
+  <p>A new attacker trying to sign in to a user's account from Eastern Europe:</p>
+
+  <ul>
+    <li>Naive geo-policy: blocked. Successfully.</li>
+    <li>Panoptica365 template: blocked (attacker's device is not compliant; attacker's location is not trusted). Successfully.</li>
+  </ul>
+
+  <p>The policy enforces the same security boundary the customer wanted — sign-ins are restricted to trustworthy contexts — without the operations debt.</p>
+
+  <h2>What the template assumes</h2>
+
+  <p>For the OR-condition pattern to work, <strong>Intune compliance must be in place and reliable.</strong> If the customer doesn't have Intune (Business Standard or below), or has Intune but hasn't enrolled devices or configured compliance policies, then the "device-compliant" path of the OR is effectively empty. Every sign-in falls through to the location check, the policy behaves like a naive geo-block, and the exception sprawl returns.</p>
+
+  <p>So the prerequisites:</p>
+
+  <ul>
+    <li><strong>Intune Plan 1 or above</strong> (Business Premium baseline).</li>
+    <li><strong>Compliance policies configured</strong> for the device platforms the customer uses (Windows, iOS, Android, macOS).</li>
+    <li><strong>Devices enrolled</strong> — a meaningful fraction of the user base on managed devices.</li>
+    <li><strong>Compliance evaluation working</strong> — devices reporting compliant when they should be.</li>
+  </ul>
+
+  <p>Card 4 (Intune template settings) covers the compliance side in detail. For the CA template here, the operator needs to verify that compliance is reliable before flipping the policy from Report-only to On. The pre-flight (lesson 1) covers this.</p>
+
+  <h2>The Canada default is just a default — customise per customer</h2>
+
+  <p>The shipped template names "Canada" because Panoptica365 was originally built in a Canadian MSP context. For non-Canadian customers, the named location needs to be customised:</p>
+
+  <ul>
+    <li>An MSP serving customers in Mexico defines a "Mexico" named location with the relevant IP ranges and country code, and imports a customised version of this template with that location selected.</li>
+    <li>A French MSP defines "France" or "EU" depending on travel patterns.</li>
+    <li>A multi-region MSP with US and Canadian customers may have separate templates per region.</li>
+  </ul>
+
+  <p>The mechanics of customising are covered in lesson 8 (Importing your own CA templates). For now: the template <em>concept</em> is portable. The location is parameterised. The OR-condition pattern stays the same regardless of geography.</p>
+
+  <h2>What the operator decides at deployment</h2>
+
+  <p>When deploying this template, the operator answers four questions:</p>
+
+  <h3>1. What's the trusted location?</h3>
+
+  <p>For most customers, it's their country, defined as the country code (Microsoft maintains the country-to-IP mappings). For customers with specific office locations only, it's the office IP ranges as separate named locations. For multi-region customers, multiple named locations.</p>
+
+  <p>The trusted location should be the place where the <em>vast majority</em> of legitimate sign-ins originate. If your customer does business in multiple countries, define each one. If they have remote workers who genuinely work from anywhere, the location-based path is less useful and you lean harder on the compliant-device path.</p>
+
+  <h3>2. Who's covered?</h3>
+
+  <p>Default: all users. Same logic as Require MFA for all users (lesson 2). Real users are covered; service accounts are excluded by name with documented justification.</p>
+
+  <h3>3. What are the apps?</h3>
+
+  <p>Default: all cloud apps. The policy applies to every sign-in regardless of app. There's no good reason to scope it narrower for most customers.</p>
+
+  <h3>4. Is Intune compliance actually working?</h3>
+
+  <p>If the answer is "yes," deploy the template as-shipped.</p>
+
+  <p>If the answer is "no, but it will be soon," deploy with Intune compliance still being rolled out and accept that until compliance is in place, the OR-path is empty and the policy behaves as a strict geo-block. Set a calendar reminder to verify after the Intune rollout.</p>
+
+  <p>If the answer is "no, and it won't be soon" (because the customer hasn't bought Intune licensing), then this template is the wrong choice for this customer. Use Require MFA for all users (lesson 2) and accept that geographic context isn't enforced.</p>
+
+  <h2>Rollout</h2>
+
+  <p>This template deploys in Enabled state. For small-business tenants with no executives who travel internationally and a reliable Intune compliance posture, deploy and monitor closely — the pre-flight inventory should have caught the typical exceptions.</p>
+
+  <p>For tenants with frequent international travellers or where Intune compliance is still being rolled out, the manual Report-only step in the Entra portal is recommended. The reason: travel patterns hide in monthly and quarterly cycles. A 3-day window misses the executive who visits family every six weeks. Budget a 14-day Report-only window if you take that route.</p>
+
+  <p>During the verification window (whether Report-only or live monitoring after deployment), look for blocks and classify each one:</p>
+
+  <ul>
+    <li>Trip outside trusted location on a compliant device → policy would <em>not</em> have blocked them (good — the OR-pattern is doing its job).</li>
+    <li>Trip outside trusted location on a non-compliant device → blocked. Was this a legitimate trip? If yes, the user needs to be on a managed device, or this user is an exclusion candidate. If the trip pattern is rare, plan to handle via exemption with a sunset date; if it's frequent, this user needs an Intune-enrolled device.</li>
+    <li>Sign-in from outside trusted location, no good explanation → potential attacker. Investigate.</li>
+  </ul>
+
+  <p>Fix exclusions for legitimate non-managed-device travellers (with sunset dates in Panoptica365). Address device compliance issues for users who should be on managed devices but aren't.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>Sign-ins blocked by this policy.</strong> Should be rare in steady state. Each block is an opportunity to ask: was this a real attack, or a legitimate user without a compliant device? The Daily Activity donut surfaces CA blocks near-real-time.</p>
+
+  <p><strong>The exclusion list.</strong> Should be stable. New entries appearing without your knowledge mean somebody — another admin, a help-desk technician, a delegated GDAP user — is adding exceptions. Investigate. The Panoptica365 audit trail surfaces who, when, and why for every policy mutation.</p>
+
+  <p><strong>Trusted-location IP changes.</strong> If the customer's office IP changes (ISP migration, branch office opens), the named-location definition needs updating. Until it is, legitimate sign-ins from the new IP will be treated as untrusted-location. The first complaint after an office move is usually this.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Three signal categories:</p>
+
+  <p><strong>Foreign-IP successful sign-ins</strong> — when the policy's location-trusted path failed but the compliant-device path succeeded. Not a problem (it's the policy working), but it's a signal worth knowing — the user is travelling.</p>
+
+  <p><strong>Foreign-IP blocked sign-ins</strong> — Daily Activity donut shows the CA-block count. Steady-state low; a sudden spike suggests credential-stuffing attempt against this customer.</p>
+
+  <p><strong>Drift on the named-location definition.</strong> If the named-location IP list or country list changes unexpectedly, Panoptica365 alerts. This is a quiet way to attack a policy — broaden the trusted location until the attacker's IP fits inside it.</p>
+
+  <h2>The retired pattern, named explicitly</h2>
+
+  <p>Many MSPs (us included, in earlier iterations of this template) shipped a naive geo-block template. We don't anymore, for the reasons above. The audit anecdote from the opening of this lesson is real, recent, and not unusual. If you're inheriting a customer who has the older pattern in place — a strict geo-block with a long exclusion list — the right move is:</p>
+
+  <ol>
+    <li>Inventory the existing exclusions.</li>
+    <li>Identify which were never necessary in the first place (long-departed users, completed projects).</li>
+    <li>For the remaining legitimate ones, verify Intune coverage and migrate those users to compliant devices.</li>
+    <li>Replace the naive geo-block with this template.</li>
+    <li>Retire the exclusion list — it should be empty after the migration, except for documented service accounts.</li>
+  </ol>
+
+  <p>This is one of the higher-leverage cleanups you can do on an inherited tenant. The before/after security posture is dramatically different even though the <em>intent</em> of both policies is the same.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The OR-condition is the lesson.</strong> Whenever you see a policy that has a single binary check (location only, device only, MFA only), ask whether an OR-condition would serve the same security intent with less operations burden. Often it will. This lesson's template is the canonical example; the same pattern appears in lesson 5.</p>
+
+  <p><strong>Don't add geographic exclusions to this template.</strong> If a user is genuinely travelling and they're on a non-compliant device, the right answer is "your device needs to be compliant," not "let me add Italy to the exception list." The whole point of the OR-condition is to make exclusions unnecessary. Adding exclusions undoes the design.</p>
+
+  <p><strong>Verify Intune compliance is real before deploying.</strong> If compliance isn't working, this template degrades to a naive geo-block. Lesson 1's pre-flight covers the Intune verification; don't skip it.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Compliant device OR hybrid OR MFA.</b> The broader application of the OR-condition pattern — three trust-signals as alternative paths. Same design principle, larger scope.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Lesson 8: Importing your own CA templates.</b> How an MSP outside Canada customises this template's named location for their own geography.</div></div>
+  </div>
+
+  <p>For now: this is the template that replaces the exception-sprawl pattern. Inherit a tenant with a naive geo-block, migrate it to this template, and the customer's CA posture quietly becomes more secure <em>and</em> less work to operate. Both things matter.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on named locations in Conditional Access (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Locations</a>); Conditional Access OR-grant semantics (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Grant</a>); Intune device compliance signal in Conditional Access (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Device compliance</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

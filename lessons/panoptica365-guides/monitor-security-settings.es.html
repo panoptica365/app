@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supervise la configuración de seguridad — Guías Panoptica365</title>
+<meta name="lesson:title" content="Supervise la configuración de seguridad">
+<meta name="lesson:subtitle" content="La superficie de deriva a nivel de inquilino: configuración de M365, Entra, Exchange, Teams y SharePoint — leída, comparada y custodiada.">
+<meta name="lesson:icon" content="sliders-horizontal">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Supervise la configuración de seguridad</span></div>
+  <h1>Supervise la configuración de seguridad</h1>
+  <p class="dek">La superficie de deriva a nivel de inquilino: configuración de M365, Entra, Exchange, Teams y SharePoint — leída, comparada y custodiada.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Los interruptores dispersos del inquilino se leen en un estado deseado; un interruptor que cambia se detecta como deriva y dispara una alerta.">
+      <defs>
+        <radialGradient id="msBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="msArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="msArrDanger" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#msBg)"/>
+
+      <!-- left: scattered switches across surfaces -->
+      <text x="170" y="50" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">INTERRUPTORES DISPERSOS</text>
+      <g font-family="Geist,Inter,sans-serif" font-size="12.5" fill="#A8E1F8">
+        <g transform="translate(60,76)">
+          <rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="14" y="11" width="22" height="12" rx="6" fill="#102A4C" stroke="#2A6F9E"/><circle cx="30" cy="17" r="5" fill="#5CCBF4"/>
+          <text x="48" y="22">Exchange</text>
+        </g>
+        <g transform="translate(60,120)">
+          <rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="14" y="11" width="22" height="12" rx="6" fill="#102A4C" stroke="#2A6F9E"/><circle cx="30" cy="17" r="5" fill="#5CCBF4"/>
+          <text x="48" y="22">Identidad / Entra</text>
+        </g>
+        <g transform="translate(60,164)">
+          <rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="14" y="11" width="22" height="12" rx="6" fill="#102A4C" stroke="#2A6F9E"/><circle cx="30" cy="17" r="5" fill="#5CCBF4"/>
+          <text x="48" y="22">SharePoint</text>
+        </g>
+        <g transform="translate(60,208)">
+          <rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="14" y="11" width="22" height="12" rx="6" fill="#102A4C" stroke="#2A6F9E"/><circle cx="30" cy="17" r="5" fill="#5CCBF4"/>
+          <text x="48" y="22">Teams</text>
+        </g>
+        <g transform="translate(60,252)">
+          <rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="14" y="11" width="22" height="12" rx="6" fill="#102A4C" stroke="#2A6F9E"/><circle cx="30" cy="17" r="5" fill="#5CCBF4"/>
+          <text x="48" y="22">Cumplimiento</text>
+        </g>
+      </g>
+
+      <!-- read arrow -->
+      <path d="M300 165 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#msArr)"/>
+      <text x="346" y="155" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">lectura</text>
+
+      <!-- center: desired-state baseline -->
+      <g transform="translate(408,108)">
+        <rect width="200" height="124" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="100" y="34" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">ESTADO DESEADO</text>
+        <line x1="24" y1="50" x2="176" y2="50" stroke="#1F3C5C"/>
+        <g font-family="Geist,Inter,sans-serif" font-size="12">
+          <circle cx="34" cy="72" r="6" fill="#2EE8A0"/><text x="50" y="76" fill="#C4D4E8">coincide → OK</text>
+          <circle cx="34" cy="98" r="6" fill="#2EE8A0"/><text x="50" y="102" fill="#C4D4E8">coincide → OK</text>
+        </g>
+      </g>
+
+      <!-- compare arrow -->
+      <path d="M628 170 H720" stroke="#335F92" stroke-width="2.5" marker-end="url(#msArr)"/>
+      <text x="674" y="160" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">comparación</text>
+
+      <!-- right: a switch flips -> drift -> alert -->
+      <g transform="translate(736,96)">
+        <rect width="210" height="80" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <rect x="20" y="30" width="30" height="16" rx="8" fill="#3A1620" stroke="#FF5A6E"/><circle cx="38" cy="38" r="6" fill="#FF5A6E"/>
+        <text x="64" y="35" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Un interruptor cambia</text>
+        <text x="64" y="55" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12">Deriva detectada</text>
+      </g>
+      <path d="M841 176 V214" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#msArrDanger)"/>
+      <g transform="translate(736,220)">
+        <rect width="210" height="56" rx="12" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="105" y="26" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="700">Alerta de deriva de seguridad</text>
+        <text x="105" y="44" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">canal normal de alertas</text>
+      </g>
+    </svg>
+    <figcaption>Panoptica365 lee los interruptores dispersos en un estado deseado, los compara en cada sondeo y dispara una alerta de deriva cuando uno cambia.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Las directivas de CA e Intune son objetos que usted despliega. Pero la postura de seguridad de un inquilino también vive en docenas de interruptores dispersos: configuración de transporte de Exchange, acceso externo de Teams, uso compartido de SharePoint, valores predeterminados de Entra, directivas antiphishing. La página <strong>Seguridad</strong> (barra lateral → Directivas → <strong>Seguridad</strong>) es donde Panoptica365 lee esos interruptores en todos los inquilinos y le avisa cuando uno cambia.</p>
+  </div>
+
+  <h2>Qué ve</h2>
+
+  <p>Elija un inquilino y obtendrá la configuración supervisada, agrupada por categoría, con chips de filtro:</p>
+
+  <ul>
+    <li><strong>Categoría</strong>: Todos / Exchange / Identidad / SharePoint / Teams / Cumplimiento.</li>
+    <li><strong>Prioridad</strong>: Todos / Crítico / Alto / Medio / Bajo.</li>
+  </ul>
+
+  <p>Cada fila de configuración muestra su nombre, el valor actual en vivo (interpretado en lenguaje llano, no la salida cruda de la API), la licencia que requiere si la hay, y un estado:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Estado</th><th>Qué significa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Supervisado — OK</strong></td><td>el valor en vivo coincide con el estado deseado que usted configuró.</td></tr>
+        <tr><td><strong>Deriva detectada</strong></td><td>el valor en vivo ya no coincide. Esto también dispara una alerta de deriva de seguridad por el canal normal de alertas.</td></tr>
+        <tr><td><strong>No aplicado</strong></td><td>aún no ha definido un estado deseado para esta configuración en este inquilino.</td></tr>
+        <tr><td><strong>Error de sondeo</strong></td><td>el lector no pudo obtener el valor (a menudo por licencia o permisos).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Haga clic en una configuración para ver el detalle: qué hace, por qué importa, el impacto en los usuarios al cambiarla, notas para el operador, y los valores esperado vs. real cuando hay deriva.</p>
+
+  <h2>Aplicar y coincidir</h2>
+
+  <p>Dos verbos cubren el flujo de trabajo:</p>
+
+  <ul>
+    <li><strong>Aplicar</strong> — envía al inquilino el valor deseado configurado. Las aplicaciones se ejecutan <strong>de forma asíncrona</strong>: el trabajo se pone en cola, un worker lo ejecuta y la fila se actualiza cuando termina (con una comprobación de refresco poco después para confirmar que el valor quedó fijado). Puede seguir trabajando mientras se ejecuta.</li>
+    <li><strong>Coincidir</strong> — adopta el valor actual en vivo del inquilino como estado deseado. Úselo cuando la configuración existente del inquilino es correcta y solo quiere que quede <em>custodiada</em> de ahora en adelante.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Dos verbos llegan al mismo estado final: Aplicar envía el valor deseado a un inquilino descuidado, Coincidir adopta el valor en vivo de un inquilino bien configurado; ambos terminan en un valor deseado custodiado.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="vArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+
+      <!-- Apply row -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="34" y="34" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="124" y="58" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Aplicar</text>
+        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11.5">inquilino descuidado</text>
+        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11">envía el valor deseado</text>
+        <path d="M214 62 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
+      </g>
+
+      <!-- Match row -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="34" y="130" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Coincidir</text>
+        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">inquilino bien configurado</text>
+        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11">adopta el valor en vivo</text>
+        <path d="M214 158 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
+      </g>
+
+      <!-- shared end state -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="408" y="72" width="278" height="76" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">Valor deseado custodiado</text>
+        <text x="547" y="126" text-anchor="middle" fill="#A8E1F8" font-size="11.5">desviación futura → alerta de deriva</text>
+      </g>
+    </svg>
+    <figcaption>Aplicar y Coincidir llegan al mismo lugar — un valor deseado custodiado, donde cualquier desviación futura genera una alerta de deriva.</figcaption>
+  </figure>
+
+  <p>Esa distinción importa durante la incorporación: en un inquilino bien configurado usará sobre todo Coincidir (capturar la realidad como línea base), y en uno descuidado usará sobre todo Aplicar (imponer su estándar). En ambos casos, el estado final es el mismo — cada configuración tiene un valor deseado, y cualquier desviación futura produce una alerta de deriva.</p>
+
+  <h2>Configuraciones de solo auditoría</h2>
+
+  <p>Algunas configuraciones son deliberadamente de <strong>solo auditoría</strong> — Panoptica365 las lee pero no las escribe, normalmente porque la escritura está limitada por licencia o es demasiado delicada para automatizarla (la configuración de DLP es el ejemplo canónico). Para estas, usted <strong>captura una línea base</strong> de la configuración actual; a partir de ahí, cualquier cambio genera una alerta: <em>«Línea base capturada. Panoptica365 alertará sobre cualquier cambio de configuración DLP en adelante.»</em> La remediación, cuando hace falta, se hace a mano en el portal de Microsoft.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Solo auditoría</div>
+    <p>Panoptica365 lee estas configuraciones pero no las escribe — a menudo porque la escritura está limitada por licencia o es demasiado delicada para automatizarla. Usted captura una línea base; cualquier cambio posterior genera una alerta, y la remediación se hace a mano en el portal de Microsoft.</p>
+  </div>
+
+  <h2>Valores recomendados</h2>
+
+  <p>Las vistas de detalle describen la postura recomendada, pero «lo más seguro» no es «lo universalmente correcto» — algunas configuraciones varían legítimamente según el modelo de negocio del cliente (el uso compartido externo en una empresa que colabora con sus clientes en SharePoint, por ejemplo). El texto de recomendación dice <em>para quién</em> se recomienda un valor. Léalo antes de aplicar nada en masa.</p>
+
+  <h2>Dónde más aparece esto</h2>
+
+  <p>El <strong>Mapa de calor</strong> (vea <em>Vistas de parque</em>) se construye exactamente con estos datos — cada inquilino × cada control supervisado, como puntos de colores. Un control en rojo o sin configurar en la mayoría del parque se convierte en una campaña de remediación; el mapa de calor le entregará esa lista.</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">→</div><div class="xt"><b>Vistas de parque — el Mapa de calor</b> — cada inquilino × cada control supervisado como puntos de colores, construido exactamente con estos datos de deriva.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

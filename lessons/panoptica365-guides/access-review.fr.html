@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revue des accès — qui est administrateur, qui est dormant, et votre voie de secours — Guides Panoptica365</title>
+<meta name="lesson:title" content="Revue des accès — qui est administrateur, qui est dormant, et votre voie de secours">
+<meta name="lesson:subtitle" content="Examinez chaque détenteur de rôle privilégié, désactivez ou supprimez les comptes inactifs, et configurez des comptes d'urgence qui contournent l'accès conditionnel et alertent dès qu'on les utilise.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-13">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Revue des accès</span></div>
+  <h1>Revue des accès — qui est administrateur, qui est dormant, et votre voie de secours</h1>
+  <p class="dek">Examinez chaque détenteur de rôle privilégié, désactivez ou supprimez les comptes inactifs, et configurez des comptes d'urgence qui contournent l'accès conditionnel et alertent dès qu'on les utilise.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="L'onglet Revue des accès se trouve entre Sécurité et Applications, et contient deux tableaux et un flux pour les comptes d'urgence.">
+      <defs>
+        <radialGradient id="arBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="arKey" cx="50%" cy="45%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="arSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="arArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#arBg)"/>
+
+      <!-- tab strip: Sécurité · Revue des accès · Applications -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="92" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="182" y="76" fill="#6B85A6" font-size="15">Sécurité</text></g>
+        <g><rect x="296" y="44" width="216" height="52" rx="11" fill="#10243B" stroke="#5CCBF4" stroke-width="1.8"/><text x="404" y="76" fill="#7DD9F9" font-size="15" font-weight="700">Revue des accès</text></g>
+        <g><rect x="536" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="626" y="76" fill="#6B85A6" font-size="15">Applications</text></g>
+      </g>
+
+      <!-- two tables -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(150,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="13.5" font-weight="600">Tableau 1 · Rôles d'admin</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+        <g transform="translate(414,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="13.5" font-weight="600">Tableau 2 · Tous les comptes</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+      </g>
+
+      <!-- break-glass workflow on the right -->
+      <g transform="translate(880,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="82" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <rect x="-30" y="-58" width="60" height="36" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <line x1="-30" y1="-40" x2="30" y2="-40" stroke="#FF5A6E" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <circle cx="0" cy="14" r="26" fill="url(#arKey)" filter="url(#arSoft)" opacity="0.9"/>
+        <circle cx="0" cy="6" r="9" fill="#0E2640"/>
+        <rect x="-3" y="10" width="6" height="26" rx="2" fill="#0E2640"/>
+        <rect x="2" y="26" width="10" height="5" rx="2" fill="#0E2640"/>
+        <rect x="2" y="34" width="8" height="5" rx="2" fill="#0E2640"/>
+      </g>
+      <text x="880" y="312" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">COMPTE D'URGENCE</text>
+    </svg>
+    <figcaption>Un onglet entre Sécurité et Applications : deux tableaux à lire, et le compte d'urgence que vous gardez pour les imprévus.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>L'onglet <strong>Revue des accès</strong> du tableau de bord du locataire répond à trois questions que vous devriez pouvoir trancher pour n'importe quel client : <em>qui détient des rôles d'administration, quels comptes sont du poids mort, et que se passe-t-il si une stratégie d'accès conditionnel verrouille tout le monde dehors.</em> Il se trouve entre <strong>Sécurité</strong> et <strong>Applications</strong>, et se compose de deux tableaux et d'un flux pour les comptes d'urgence.</p>
+
+  <p>Tout ce qui écrit dans le locataire ici est déclenché par l'opérateur, confirmé et audité — Panoptica365 ne désactive ni ne supprime jamais un compte de lui-même.</p>
+  </div>
+
+  <h2>Tableau 1 — Comptes détenant des rôles d'administration</h2>
+
+  <p>C'est une liste <strong>en lecture seule</strong> de chaque compte détenant un rôle privilégié surveillé, regroupée par palier (les rôles de sommet comme administrateur général d'abord, puis élevé, puis moyen). Pour chaque compte, vous voyez son nom (lié à sa fiche utilisateur dans Entra), son UPN, les rôles qu'il détient, s'il est activé, si la <strong>MFA</strong> est enregistrée, et sa dernière activité.</p>
+
+  <p>Deux choses à lire attentivement :</p>
+
+  <ul>
+    <li><strong>MFA enregistré</strong> affiche <em>Oui</em>, <em>Non</em>, ou un tiret. Un tiret signifie <em>nous n'avons pas pu lire d'enregistrement pour ce compte</em> — ce n'est <strong>pas</strong> la même chose que « pas de MFA ». N'agissez pas sur un tiret ; agissez sur un <em>Non</em> clair.</li>
+    <li>Le <strong>palier de sommet</strong> mérite votre attention. Un administrateur général sans MFA, ou trois administrateurs généraux de plus que ceux que vous vous souvenez d'avoir créés, c'est la situation que ce tableau existe pour révéler.</li>
+  </ul>
+
+  <p>Il n'y a aucun bouton d'action sur ce tableau — c'est une posture que vous lisez, puis sur laquelle vous agissez ailleurs (dans Entra, ou via le tableau 2 pour les comptes non privilégiés).</p>
+
+  <h2>Tableau 2 — Tous les comptes d'utilisateurs</h2>
+
+  <p>Chaque compte du locataire, avec des filtres : <strong>Tous</strong>, <strong>Membres</strong>, <strong>Invités</strong>, <strong>Inactifs</strong>. Les colonnes sont compte + UPN, type, activé, dernière activité, et actions.</p>
+
+  <p>L'<strong>inactivité</strong> est calculée à partir des rapports d'usage de Microsoft 365, et non des journaux de connexion de l'annuaire — ce qui veut dire qu'elle <strong>fonctionne sur Business Standard</strong>, où les journaux de connexion ne sont pas accessibles faute de licence. La colonne de dernière activité affiche la date la plus récente où le compte a fait quoi que ce soit dans Exchange, SharePoint, OneDrive ou Teams ; si c'est plus ancien que le seuil (90 jours par défaut), la date passe au rouge et la ligne est marquée <strong>Inactif</strong>. Un invité qui a été convié mais n'a jamais accepté est étiqueté <strong>Jamais accepté</strong> — le candidat à la suppression le plus net qui soit.</p>
+
+  <p>Si le locataire a activé <em>Afficher les noms masqués d'utilisateurs, de groupes et de sites</em>, le rapport d'usage revient anonymisé et nous ne pouvons pas associer l'activité aux comptes. Plutôt que de vous montrer du charabia, une note apparaît au-dessus du tableau avec un lien pour désactiver le réglage.</p>
+
+  <h2>Désactiver et supprimer des comptes</h2>
+
+  <p><strong>Désactiver</strong>, <strong>Activer</strong> et <strong>Supprimer</strong> sont des actions de l'opérateur sur le tableau 2. Chacune ouvre une boîte de confirmation qui nomme le compte, indique ce qui va se passer, et rappelle que l'action est consignée dans le journal d'audit. La suppression vous indique aussi que le compte est <strong>récupérable dans Entra pendant 30 jours</strong> avant que le retrait ne devienne définitif.</p>
+
+  <p>Les garde-fous sont appliqués côté serveur, et pas seulement masqués dans l'interface :</p>
+
+  <ul>
+    <li><strong>La suppression est refusée pour tout compte détenant un rôle d'administration.</strong> Retirez d'abord ses rôles dans Entra — cet outil ne vous laissera pas effacer un admin par accident.</li>
+    <li><strong>La désactivation du dernier administrateur général activé est bloquée.</strong> C'est le seul clic qui verrouille un locataire hors de lui-même.</li>
+    <li>Un <strong>compte d'urgence</strong> exige une confirmation supplémentaire avant de pouvoir être désactivé ou supprimé.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Garde-fous côté serveur sur les actions désactiver, activer et supprimer : la suppression est refusée pour les admins, la désactivation du dernier administrateur général est bloquée, et les comptes d'urgence exigent une confirmation supplémentaire.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">APPLIQUÉS CÔTÉ SERVEUR</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- guard 1 -->
+        <g transform="translate(36,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="14" font-weight="700">Supprimer un admin</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Refusé</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">retirez d'abord ses rôles</text>
+        </g>
+        <!-- guard 2 -->
+        <g transform="translate(260,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="13" font-weight="700">Désactiver dernier AG</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Bloqué</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">verrouille le locataire</text>
+        </g>
+        <!-- guard 3 -->
+        <g transform="translate(484,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#10243B" stroke="#FFC04D" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FFC04D" font-size="14" font-weight="700">Compte d'urgence</text>
+          <text x="100" y="88" fill="#FFC04D" font-size="16" font-weight="700">Confirmation</text>
+          <text x="100" y="110" fill="#FFC04D" font-size="16" font-weight="700">supplémentaire</text>
+          <text x="100" y="138" fill="#D8C49A" font-size="11">avant désactiver / supprimer</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Trois garde-fous vivent sur le serveur, pas seulement dans l'interface — un clic négligent ne peut donc pas isoler un locataire.</figcaption>
+  </figure>
+
+  <p>Chaque désactivation, activation et suppression est écrite dans le journal d'audit MSP <strong>et</strong> dans le journal des changements du locataire, avec l'opérateur, l'UPN cible, l'action et le résultat — de sorte qu'une action négligente ou hostile soit toujours attribuable après coup.</p>
+
+  <h2>Comptes d'urgence — un accès de secours bien fait</h2>
+
+  <p>Un compte d'urgence (« break-glass ») est l'identifiant que vous sortez quand quelque chose a mal tourné : une stratégie d'accès conditionnel mal configurée a verrouillé dehors tous les administrateurs normaux, ou votre fournisseur de MFA est en panne. Son rôle unique est de <strong>contourner les stratégies d'accès conditionnel</strong> pour qu'un humain puisse toujours revenir et réparer les choses.</p>
+
+  <p>Panoptica365 procède comme Microsoft le recommande — avec un <strong>groupe</strong> dédié, et non des modifications compte par compte. Ouvrez <strong>Comptes d'urgence</strong> depuis l'onglet Revue des accès. La première fois, vous serez guidé.</p>
+
+  <h3>Avant de commencer</h3>
+
+  <p>Créez d'abord le compte d'urgence dans Entra :</p>
+
+  <ul>
+    <li><strong>Administrateur général</strong>, <strong>sans licence</strong>, infonuagique uniquement, sur le domaine <strong>.onmicrosoft.com</strong>.</li>
+    <li>Donnez-lui un <strong>nom générique</strong> — jamais « break glass », « urgence » ou « admin ». Un nom évident est un repère pour un attaquant qui prend pied ; choisissez quelque chose d'anodin (un opérateur utilise <em>facturation</em>). Nommez aussi le groupe de façon générique, et n'y gardez que vos comptes d'urgence.</li>
+    <li>Microsoft recommande de conserver <strong>au moins deux</strong> comptes d'urgence.</li>
+  </ul>
+
+  <h3>Indiquez le groupe à Panoptica365</h3>
+
+  <p>Choisissez votre groupe de sécurité dédié dans le sélecteur — nous affichons le nom mais nous nous appuyons sur l'identifiant immuable du groupe, de sorte qu'un changement de nom ultérieur ne casse rien. Il y a ici un garde-fou strict : si vous choisissez un groupe comptant plus que quelques membres, Panoptica365 vous arrête, car exclure ce groupe de l'accès conditionnel exempterait <em>tous ses membres</em> — pointer par erreur sur « Tout le personnel » exempterait toute votre entreprise. Il vérifie aussi qu'il s'agit d'un groupe de sécurité attribué, et non dynamique (on ne peut pas ajouter de membres à un groupe dynamique).</p>
+
+  <p>À la confirmation, Panoptica365 <strong>exclut le groupe de chaque stratégie d'accès conditionnel</strong> et vous montre le résultat stratégie par stratégie — exclu, déjà exclu, ou échec. Si une écriture échoue, il vous le dit, plutôt que de prétendre au succès — parce que « exclu de 5 stratégies sur 7 » signifie encore que le compte peut être verrouillé dehors par les deux autres. Dès lors, désigner un compte revient simplement à <strong>l'ajouter au groupe</strong>, et l'état de couverture affiche <em>« Exclu de N stratégies sur N. »</em></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Flux de configuration des comptes d'urgence : un groupe dédié est exclu de chaque stratégie d'accès conditionnel, et une connexion déclenche une alerte sévère.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1: groupe dédié -->
+        <rect x="34" y="76" width="168" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="102" fill="#A8E1F8" font-size="14" font-weight="600">Groupe dédié</text>
+        <text x="118" y="121" fill="#6B85A6" font-size="11">comptes d'urgence seulement</text>
+
+        <!-- step 2: exclu de chaque stratégie d'AC -->
+        <rect x="276" y="76" width="168" height="58" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="102" fill="#7DD9F9" font-size="13" font-weight="700">Exclu de chaque</text>
+        <text x="360" y="121" fill="#7DD9F9" font-size="13" font-weight="700">stratégie d'AC</text>
+
+        <!-- step 3: connexion -> alerte sévère -->
+        <rect x="518" y="76" width="168" height="58" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="602" y="102" fill="#FF8A98" font-size="14" font-weight="700">Connexion</text>
+        <text x="602" y="121" fill="#FF8A98" font-size="12.5" font-weight="600">alerte SÉVÈRE</text>
+      </g>
+      <path d="M202 105 H276" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <path d="M444 105 H518" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <text x="360" y="170" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">désigner un compte = l'ajouter au groupe</text>
+    </svg>
+    <figcaption>Réglez le groupe une fois ; dès lors, un compte d'urgence n'est qu'un membre du groupe — et toute connexion est bruyante.</figcaption>
+  </figure>
+
+  <p>Si le locataire est encore sous les <strong>paramètres de sécurité par défaut</strong> (sans accès conditionnel), l'exclusion est impossible — ces paramètres imposent la MFA à tout le monde, sans exclusion. Panoptica365 le dit clairement et suggère de passer à l'accès conditionnel. Vous pouvez tout de même désigner et surveiller le compte ; l'alerte de connexion ci-dessous fonctionne dans tous les cas.</p>
+
+  <h3>L'alerte de connexion</h3>
+
+  <p>Dès qu'un compte d'urgence <strong>se connecte</strong>, Panoptica365 déclenche une alerte <strong>SÉVÈRE</strong> — courriel et billet PSA si vous en avez un de branché. Une vraie connexion d'urgence signifie presque toujours que quelque chose s'est cassé ou que quelqu'un est là où il ne devrait pas, donc elle se veut bruyante. La détection s'appuie sur le journal d'audit unifié : elle <strong>fonctionne sans licence Premium</strong>, et s'appuie sur l'identité stable du compte — elle se déclenche donc même si vous avez changé le domaine du compte.</p>
+
+  <p>Une seule connexion produit une seule alerte (et non une par enregistrement d'audit) ; les connexions répétées le même jour incrémentent son compteur de récurrence jusqu'à ce que vous la résolviez.</p>
+
+  <h3>La couverture reste garantie</h3>
+
+  <p>De nouvelles stratégies d'accès conditionnel sont créées au fil du temps, et une exclusion peut être retirée. Panoptica365 vérifie continuellement que votre groupe d'urgence reste exclu de <strong>chaque</strong> stratégie et déclenche une alerte si une brèche s'ouvre — une nouvelle stratégie sans l'exclusion, ou une exclusion qui a été retirée. Et parce que l'exclusion est quelque chose que <em>vous</em> avez appliqué, Panoptica365 la considère comme attendue : il ne signalera pas votre propre exclusion d'urgence comme une dérive d'accès conditionnel.</p>
+
+  <h3>La seule chose qui a changé pour les comptes d'urgence</h3>
+
+  <p>Microsoft impose désormais la <strong>MFA aux connexions des portails d'administration au niveau de la plateforme — indépendamment de l'accès conditionnel.</strong> Exclure le compte de toutes les stratégies d'AC ne supprime plus l'invite de MFA, et l'ancien modèle « pas de MFA, juste un mot de passe en coffre » a disparu. Enregistrez une méthode <strong>résistante à l'hameçonnage</strong> sur le compte — une <strong>clé de sécurité FIDO2</strong> — et conservez-la dans le coffre avec le mot de passe. C'est en fait <em>mieux</em> pour un compte d'urgence : une clé matérielle ne dépend pas de l'application d'authentification ni d'un signal téléphonique, elle fonctionne donc encore quand c'est justement le chemin de MFA normal qui est en panne.</p>
+
+  <h2>Quand utiliser ceci</h2>
+
+  <ul>
+    <li><strong>À l'intégration :</strong> examinez la liste des administrateurs, signalez tout admin sans MFA, et configurez deux comptes d'urgence avec un groupe dédié.</li>
+    <li><strong>Périodiquement :</strong> balayez le tableau 2 à la recherche de comptes inactifs et d'invités jamais acceptés ; désactivez ou supprimez avec l'accord du client.</li>
+    <li><strong>Chaque fois qu'une alerte d'urgence se déclenche :</strong> confirmez qu'il s'agissait d'une utilisation planifiée. Sinon, vous venez de prendre quelque chose sur le fait.</li>
+    <li><strong>Après avoir créé de nouvelles stratégies d'AC :</strong> vérifiez l'état de couverture des comptes d'urgence (ou attendez l'alerte de brèche) et réappliquez au besoin.</li>
+  </ul>
+
+</div>
+</body>
+</html>

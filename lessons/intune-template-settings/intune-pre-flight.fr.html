@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avant de toucher à un modèle Intune — la liste de vérification pré-déploiement</title>
+<meta name="lesson:title" content="Avant de toucher à un modèle Intune — la liste de vérification pré-déploiement">
+<meta name="lesson:subtitle" content="Ce qu'il faut vérifier avant de déployer un modèle Intune : couverture de plateforme, familles de types et risque de perte d'assignation.">
+<meta name="lesson:icon" content="clipboard-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres des modèles Intune</span> <span class="sep">·</span> <span>Liste pré-déploiement</span></div>
+  <h1>Avant de toucher à un modèle Intune — la liste de vérification pré-déploiement</h1>
+  <p class="dek">Ce qu'il faut vérifier avant de déployer un modèle Intune : couverture de plateforme, familles de types et risque de perte d'assignation.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une séquence pré-déploiement en cinq étapes avant de déployer un modèle Intune, se terminant à une porte de déploiement gardée.">
+      <defs>
+        <radialGradient id="pfBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="pfRail" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="pfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#pfBg)"/>
+
+      <text x="60" y="58" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">PRÉ-DÉPLOIEMENT</text>
+
+      <!-- the rail -->
+      <line x1="120" y1="170" x2="900" y2="170" stroke="url(#pfRail)" stroke-width="3" marker-end="url(#pfArr)"/>
+
+      <!-- five check stops -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(160,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">1</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Inventaire</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">appareils</text>
+        </g>
+        <g transform="translate(310,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">2</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Boucle de</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">conformité</text>
+        </g>
+        <g transform="translate(460,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">3</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Portée</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">d'assignation</text>
+        </g>
+        <g transform="translate(610,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">4</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Groupe</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">pilote</text>
+        </g>
+        <g transform="translate(760,170)">
+          <circle r="34" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text y="6" fill="#A8E1F8" font-size="22" font-weight="700">5</text>
+          <text y="68" fill="#C4D4E8" font-size="13">Documenter</text>
+          <text y="86" fill="#6B85A6" font-size="11.5">l'attendu</text>
+        </g>
+      </g>
+
+      <!-- the deploy gate -->
+      <g transform="translate(960,170)">
+        <rect x="-52" y="-58" width="104" height="116" rx="14" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.8"/>
+        <path d="M-22 -6 l16 18 l30 -34" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text y="44" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">DÉPLOYER</text>
+      </g>
+    </svg>
+    <figcaption>Cinq vérifications séparent un modèle terminé d'un tenant — franchissez-les toutes avant de pousser.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un technicien MSP qu'on connaît a déjà testé un nouveau profil de configuration Intune en le déployant sur un seul appareil de test, en confirmant qu'il fonctionnait, puis en le déployant en lot sur ses 47 tenants clients gérés au cours de l'heure suivante. À la fin du lendemain, huit tenants clients avaient signalé des problèmes liés aux assignations — le déploiement en lot avait déclenché le comportement de suppression-et-recréation d'Intune, ce qui avait silencieusement abandonné les groupes d'exclusion par tenant que ces clients avaient configurés. Les appareils qui devaient être exclus de la politique étaient maintenant dans la portée. Les appareils qui avaient été soigneusement exemptés d'une vérification de conformité spécifique échouaient maintenant à cette vérification.</p>
+
+  <p>Le technicien avait fait tout ce qu'il fallait selon les standards du déploiement de modèles AC. Mais Intune n'est pas l'AC. La discipline pré-déploiement pour les modèles Intune est différente.</p>
+
+  <p>Cette leçon, c'est le pré-déploiement que vous exécutez avant de déployer n'importe quel modèle Intune de la carte 4. Elle est distincte du pré-déploiement AC de la carte 3 parce que les modes d'échec d'Intune sont différents — et parce qu'Intune traîne un bagage historique que l'AC n'a pas.</p>
+  </div>
+
+  <h2>Pourquoi Intune mérite son propre pré-déploiement</h2>
+
+  <p>Trois différences structurelles entre Intune et l'AC qui comptent pour le déploiement :</p>
+
+  <p><strong>Intune est spécifique à la plateforme.</strong> Une politique d'AC s'applique à « toutes les applications infonuagiques » ou à « Exchange Online » — des cibles universelles abstraites. Un profil Intune s'applique à Windows 10/11, ou à iOS, ou à Android Enterprise, ou à macOS. Le même modèle ne peut pas couvrir plusieurs plateformes. Déployer sans confirmer que le client a vraiment des appareils sur cette plateforme produit une politique sans cibles — silencieuse, inoffensive, mais aussi ne faisant rien.</p>
+
+  <p><strong>Intune a trois familles différentes de types de modèles en usage actif.</strong> Microsoft a livré trois générations d'infrastructure de politique Intune et n'a jamais complètement retiré les anciennes. Dans la bibliothèque Panoptica365, vous verrez les trois :</p>
+
+  <ul>
+    <li><strong>Catalogue de paramètres</strong> (<code>configurationPolicies</code>) — l'interface moderne et granulaire des paramètres. La plupart des modèles Windows de Panoptica365 utilisent ça : règles ASR, Block Microsoft Consumer Accounts, Block mshta.exe, Defender Settings (Windows + macOS), Firewall Settings, Security Baseline. C'est ce que la nouvelle documentation Microsoft utilise.</li>
+    <li><strong>Intents / Modèles Endpoint Security</strong> (<code>intents</code>) — l'ancien style de modèle Endpoint Security. Le modèle Account Protection Settings de Panoptica365 utilise celui-ci. Microsoft ne l'a pas marqué comme obsolète; il existe toujours en parallèle du catalogue de paramètres. Le portail Intune l'affiche différemment des politiques du catalogue de paramètres.</li>
+    <li><strong>Device Configurations</strong> (<code>deviceConfigurations</code>) — le plus vieux style. Les modèles BitLocker Settings et Windows Health Monitoring utilisent ça. L'interface pour ceux-ci dans le portail Intune se trouve dans une section séparée des deux autres.</li>
+  </ul>
+
+  <p>Quand un opérateur ouvre le portail Intune pour chercher un modèle Panoptica365 déployé, le modèle peut se trouver dans n'importe laquelle de trois sections différentes de l'interface. Le modèle vit dans la section qui correspond à son type sous-jacent. Il n'y a pas d'unification truquée par Panoptica365 — Microsoft a choisi la structure, et les modèles la suivent.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Les trois familles de types de modèles Intune, les modèles qui utilisent chacune, et leur comportement de mise à jour.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Settings Catalog -->
+        <g transform="translate(24,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Catalogue de param.</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">configurationPolicies</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">Plupart des modèles Windows</text>
+          <text x="20" y="106" fill="#C4D4E8" font-size="12">ASR · Firewall · Defender</text>
+          <text x="20" y="128" fill="#C4D4E8" font-size="12">Security Baseline · Block MSA</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#2EE8A0" font-size="12" font-weight="600">Mise à jour sur place</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">assignations préservées</text>
+        </g>
+        <!-- Intents -->
+        <g transform="translate(252,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Intents / Endpoint Sec.</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">intents</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">Account Protection</text>
+          <text x="20" y="106" fill="#6B85A6" font-size="11.5">ancien style, pas obsolète</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#FF5A6E" font-size="12" font-weight="600">Supprimer-recréer</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">assignations perdues</text>
+        </g>
+        <!-- Device Configurations -->
+        <g transform="translate(480,24)">
+          <rect x="0" y="0" width="216" height="202" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="108" y="30" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Device Configurations</text>
+          <text x="108" y="48" text-anchor="middle" fill="#6B85A6" font-size="11"><tspan font-family="Geist Mono,monospace">deviceConfigurations</tspan></text>
+          <line x1="20" y1="62" x2="196" y2="62" stroke="#1F3C5C"/>
+          <text x="20" y="84" fill="#C4D4E8" font-size="12">BitLocker Settings</text>
+          <text x="20" y="106" fill="#C4D4E8" font-size="12">Windows Health Monitoring</text>
+          <text x="20" y="124" fill="#6B85A6" font-size="11.5">le plus vieux style</text>
+          <line x1="20" y1="146" x2="196" y2="146" stroke="#1F3C5C"/>
+          <text x="20" y="170" fill="#2EE8A0" font-size="12" font-weight="600">Mise à jour sur place</text>
+          <text x="20" y="188" fill="#6B85A6" font-size="11">typiquement préservées</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Trois familles de types de modèles, chacune avec sa propre section du portail et son propre comportement de mise à jour.</figcaption>
+  </figure>
+
+  <p><strong>Les déploiements Intune n'ont pas de vrai mode « rapport uniquement ».</strong> L'AC a Report-only comme un état de première classe. Intune ne l'a pas. Les équivalents les plus proches sont :</p>
+
+  <ul>
+    <li><em>Mode Audit</em> pour les règles ASR (un choix par règle entre Audit, Block ou Warn — couvert à la leçon 7).</li>
+    <li><em>Politique de conformité en assignation rapport-uniquement</em> (vous pouvez déployer une politique de conformité à un petit groupe pilote d'abord, évaluer, puis étendre l'assignation).</li>
+    <li><em>Profil de configuration déployé à un petit groupe pilote</em> (même patron — déployer à quelques appareils, vérifier, étendre).</li>
+  </ul>
+
+  <p>Aucun de ces mécanismes n'est exactement comme Report-only de l'AC. L'opérateur doit utiliser le déploiement à un groupe pilote comme essai à blanc, pas un commutateur au niveau de la politique.</p>
+
+  <h2>Les cinq étapes du pré-déploiement</h2>
+
+  <h3>1. Inventorier les appareils par plateforme et par état de gestion</h3>
+
+  <p>Avant de déployer n'importe quel modèle Intune, sortez l'inventaire des appareils. Vous devez savoir :</p>
+
+  <ul>
+    <li><strong>Combien d'appareils sur chaque plateforme?</strong> La bibliothèque Panoptica365 est lourde en Windows (10 des 14 modèles sont Windows uniquement) et ça correspond à la réalité PME — la plupart des appareils gérés sont des postes de travail Windows. Si un client n'a aucun appareil Windows, la moitié des modèles de la carte 4 ne sont pas pertinents. S'il a tout Windows sauf un Mac perdu, les modèles macOS visent un seul appareil.</li>
+    <li><strong>Combien d'appareils dans chaque état de gestion?</strong> Les appareils peuvent être gérés par Intune (entièrement inscrits MDM), enregistrés Entra (plus léger — connus d'Entra mais pas gérés), ou non inscrits (BYOD sans présence MDM). Les modèles s'appliquent aux appareils inscrits MDM; les appareils non inscrits ignorent le déploiement entièrement.</li>
+    <li><strong>Quel est le mélange BYOD?</strong> La plupart des tenants PME avec qui vous travaillerez sont fortement BYOD sur le mobile — les utilisateurs utilisent leurs iPhones et appareils Android personnels. Ces appareils ne sont typiquement pas inscrits du tout dans MDM. Les modèles de conformité mobile de Panoptica365 supposent une inscription MDM; sans elle, ils ne s'appliquent pas. Mettre les attentes du client sur « on ne gère pas les appareils mobiles personnels via ce modèle » est important.</li>
+  </ul>
+
+  <p>Vous tirerez cette donnée du portail Intune directement aujourd'hui — Panoptica365 fait remonter la liste d'appareils et la répartition par OS au tableau de bord client, mais le travail d'inventaire plus profond (état de gestion par appareil, BYOD vs corporatif, âge d'inscription) se passe dans la console Microsoft.</p>
+
+  <h3>2. Confirmer que la boucle de conformité est branchée</h3>
+
+  <p>La leçon 3 de la carte 1 a couvert la boucle de conformité : Intune évalue l'état de l'appareil → écrit l'état de conformité dans le dossier de l'appareil Entra → l'accès conditionnel lit cet état à la connexion. Si la boucle est brisée n'importe où, le signal de conformité est inutile même quand le modèle Intune se déploie correctement.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="La boucle de conformité : Intune évalue l'état de l'appareil, écrit l'état dans le dossier de l'appareil Entra, et l'accès conditionnel le lit à la connexion.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="clArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="125" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Intune</text>
+        <text x="125" y="92" fill="#6B85A6" font-size="11">évalue l'état</text>
+
+        <rect x="275" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Dossier Entra</text>
+        <text x="360" y="92" fill="#6B85A6" font-size="11">état de conformité écrit</text>
+
+        <rect x="510" y="50" width="170" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="595" y="74" fill="#A8E1F8" font-size="14" font-weight="600">Accès conditionnel</text>
+        <text x="595" y="92" fill="#6B85A6" font-size="11">lit l'état à la connexion</text>
+      </g>
+      <path d="M210 76 H275" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+      <path d="M445 76 H510" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="2">LA BOUCLE DE CONFORMITÉ</text>
+      <text x="360" y="130" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11">brisez-la quelque part et le signal est inutile</text>
+    </svg>
+    <figcaption>Trois sauts. Brisez-en un seul et le signal de conformité ment — même si le modèle s'est bien déployé.</figcaption>
+  </figure>
+
+  <p>Bris fréquents :</p>
+
+  <ul>
+    <li><strong>Appareil pas encore synchronisé.</strong> Les appareils nouvellement inscrits peuvent prendre de 1 à 8 heures pour compléter leur premier cycle d'évaluation de conformité. Pendant cette fenêtre, ils apparaissent comme « Pas encore évalué » dans l'état de conformité. L'AC traite « Pas encore évalué » différemment selon la configuration de la politique — parfois comme non conforme, parfois comme non concluant.</li>
+    <li><strong>Cadence d'évaluation de conformité trop lente.</strong> L'intervalle d'enregistrement Intune par défaut est aux 8 heures pour Windows. Un appareil qui devient non conforme à midi peut encore apparaître conforme dans le dossier Entra à 16 h parce que l'enregistrement n'a pas encore eu lieu.</li>
+    <li><strong>Enregistrement de l'appareil Entra brisé.</strong> Si l'appareil est inscrit dans Intune mais que son objet appareil Entra est dans un mauvais état (orphelin, dupliqué, synchronisation brisée depuis AD sur place en environnement hybride), le signal de conformité ne peut pas réécrire dans Entra. Fréquent dans les tenants qui ont grandi par acquisitions ou qui ont eu des problèmes avec AD Connect.</li>
+  </ul>
+
+  <p>Avant de déployer un modèle de conformité, vérifiez que la boucle fonctionne sur un appareil de test connu-bon. Si la boucle est brisée, réparez la boucle avant de déployer — sinon les modèles produisent de faux états « conforme » ou « non conforme ».</p>
+
+  <h3>3. Choisir la bonne portée d'assignation</h3>
+
+  <p>Les modèles Intune supportent plusieurs modèles d'assignation :</p>
+
+  <ul>
+    <li><strong>Tous les appareils.</strong> S'applique à chaque appareil inscrit dans Intune.</li>
+    <li><strong>Tous les utilisateurs.</strong> S'applique aux appareils détenus par n'importe quel utilisateur du tenant.</li>
+    <li><strong>Groupe spécifique (inclusion).</strong> S'applique seulement aux appareils/utilisateurs du groupe nommé.</li>
+    <li><strong>Groupe spécifique (exclusion).</strong> S'applique à tout le monde sauf aux appareils/utilisateurs du groupe nommé.</li>
+  </ul>
+
+  <p>La plupart des modèles Panoptica365 livrent avec « Tous les appareils » ou « Tous les utilisateurs » comme assignation par défaut. C'est le bon choix pour le durcissement fondamental. L'exception, c'est quand le client a des catégories d'appareils spécifiques qui doivent être exclues — appareils kiosque, postes de laboratoire, terminaux de point de vente — qui vivent habituellement dans leur propre groupe Entra et se font exclure des modèles standards.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Erreur fréquente</div>
+    <p>Un opérateur inclut le compte admin break-glass du client dans la portée « Tous les utilisateurs » sans en avoir l'intention. L'appareil de l'admin break-glass reçoit la même configuration Intune que tout le monde, ce qui peut inclure des restrictions que le flux break-glass dépend de pouvoir contourner. La discipline break-glass de la leçon 1 de la carte 3 s'applique ici aussi : excluez le compte break-glass de tout modèle Intune affectant l'état de gestion de l'appareil.</p>
+  </div>
+
+  <h3>4. Planifier le déploiement au groupe pilote</h3>
+
+  <p>Puisqu'Intune n'a pas le mode Report-only de l'AC, l'essai à blanc de l'opérateur, c'est un déploiement à un groupe pilote. La cadence standard :</p>
+
+  <ol>
+    <li><strong>Jour 0</strong> — déployer le modèle assigné à un groupe pilote (typiquement de 1 à 3 appareils de test connus-bons, ou les appareils de l'équipe TI elle-même).</li>
+    <li><strong>Jours 1 à 3</strong> — vérifier que le modèle s'est déployé avec succès aux appareils pilotes. Vérifier dans le portail Intune les comptes de succès de déploiement. Faire un échantillonnage sur un appareil pilote pour confirmer que les paramètres attendus sont réellement appliqués (parfois les paramètres se déploient avec succès selon le portail mais ne s'appliquent pas sur l'appareil — synchronisation, politiques en conflit).</li>
+    <li><strong>Jours 3 à 7</strong> — vérifier l'expérience client sur les appareils pilotes. Est-ce que quelque chose a brisé? Les utilisateurs se plaignent-ils? Des applications d'affaires sont-elles affectées?</li>
+    <li><strong>Jour 7</strong> — étendre l'assignation du groupe pilote à la portée complète.</li>
+  </ol>
+
+  <p>Cette fenêtre est plus longue pour les modèles qui changent l'expérience utilisateur (Security Baseline, règles ASR, BitLocker) et plus courte pour les modèles purement de surveillance (politiques de conformité, Windows Health Monitoring).</p>
+
+  <h3>5. Documenter ce que vous attendez et comment vous allez vérifier</h3>
+
+  <p>Avant le déploiement, écrivez quelque part (dans le billet, dans le journal de changement, quelque part) :</p>
+
+  <ul>
+    <li>Ce que ce modèle fait au niveau du client.</li>
+    <li>À quels appareils il s'applique.</li>
+    <li>Ce que vous vous attendez à voir dans le portail Intune 24 heures après le déploiement.</li>
+    <li>À quoi ressemble le succès sur un appareil pilote (valeurs de registre spécifiques, comportement UI spécifique, état de conformité spécifique).</li>
+    <li>Quoi faire si ça brise.</li>
+  </ul>
+
+  <p>Panoptica365 enregistre l'événement de déploiement automatiquement dans le journal de changement du tenant. Le travail de l'opérateur, c'est de faire en sorte que le <em>résultat attendu</em> fasse partie du dossier, pas juste l'événement de déploiement lui-même. Les opérateurs futurs qui lisent la piste de vérification doivent savoir ce qui aurait dû se passer, pas juste ce qui a été déployé.</p>
+
+  <h2>Le piège de la perte d'assignation — nommé explicitement</h2>
+
+  <p>C'est le mode d'échec que l'histoire d'ouverture décrivait. Il mérite d'être nommé explicitement parce qu'il est spécifique à Intune et que les opérateurs se font avoir par lui à répétition.</p>
+
+  <p>Quand vous mettez à jour un modèle Intune existant (changer un paramètre, modifier une configuration), le mécanisme de déploiement dans certains types de modèles Intune est <em>supprimer-et-recréer</em> plutôt qu'une mise à jour sur place. Spécifiquement :</p>
+
+  <ul>
+    <li><strong>Politiques du catalogue de paramètres (la plupart des modèles) :</strong> mise à jour sur place. Sûr. L'ID de la politique reste le même; les assignations sont préservées.</li>
+    <li><strong>Device Configurations (BitLocker, Health Monitoring) :</strong> aussi typiquement mise à jour sur place.</li>
+    <li><strong>Modèles Intents / Endpoint Security (Account Protection) :</strong> <em>supprimer-et-recréer.</em> L'ancienne politique est retirée et une nouvelle est créée. Toutes les exclusions d'assignation par tenant configurées contre l'ancien ID de politique ne sont pas transférées à la nouvelle — elles sont silencieusement perdues.</li>
+  </ul>
+
+  <p>La discipline de l'opérateur pour contourner ça :</p>
+
+  <ul>
+    <li><strong>Avant de mettre à jour un modèle de style Intents, capturer les assignations courantes par tenant</strong> en ouvrant le portail Intune de chaque client et en notant les groupes d'assignation + d'exclusion sur la politique pertinente.</li>
+    <li><strong>Après la mise à jour, vérifier que les assignations sont toujours correctes sur chaque tenant</strong> — encore une fois, par client dans le portail Intune.</li>
+    <li><strong>Si certaines manquent, les restaurer manuellement.</strong></li>
+  </ul>
+
+  <p>C'est agaçant et vraiment fastidieux à travers plusieurs tenants. C'est une contrainte imposée par Microsoft à la couche API — jusqu'à ce que Microsoft remplace le comportement supprimer-recréer par une mise à jour sur place fiable pour les modèles de style Intents (sur quoi ils travaillent lentement), l'étape manuelle de rejeu d'assignation est le seul chemin sûr.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Intune est plus sujet aux erreurs au déploiement que l'AC.</strong> La spécificité à la plateforme, les trois familles de types de modèles, le piège de la perte d'assignation, l'absence de mode Report-only — tout ça augmente la surface d'échec. Traitez les déploiements Intune avec plus de discipline pré-déploiement que les déploiements AC, pas moins.</p>
+
+  <p><strong>Le déploiement au groupe pilote est l'essai à blanc de l'opérateur.</strong> Utilisez-le. Le sauter, c'est le même genre d'erreur que sauter le mode Report-only de l'AC — sauf que les conséquences atterrissent sur les appareils des utilisateurs plutôt que sur le chemin de connexion infonuagique. Plus facile de se remettre d'un mauvais déploiement AC que d'un mauvais déploiement Intune qui a poussé une mauvaise configuration sur 500 terminaux.</p>
+
+  <p><strong>Documentez le résultat attendu, pas juste l'action.</strong> La piste de vérification de Panoptica365 capture l'événement de déploiement automatiquement. L'opérateur capture le résultat attendu et les étapes de vérification. Les opérateurs futurs ont besoin des deux pour opérer la posture Intune du client en sécurité.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <p>Le reste de la carte 4 parcourt chaque modèle Intune Panoptica365 :</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Politiques de conformité</b> — Windows, iOS, Android, macOS combinés.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Le Security Baseline</b> — l'ensemble de durcissement Windows curé de 60 Ko.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>BitLocker Settings</b> — posture de chiffrement de disque.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Defender for Endpoint (Win + Mac)</b> — configuration antivirus / EDR.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Firewall Settings (Windows)</b> — pare-feu hôte.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Règles ASR + Block mshta.exe</b> — réduction de surface d'attaque.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Account Protection + Block MSA</b> — Windows Hello, Credential Guard, blocage MSA.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>La boucle de conformité en production</b> — détection de dérive et flux de signal.</div></div>
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Importer vos propres modèles Intune</b> — flux de personnalisation.</div></div>
+    <div class="xl"><div class="xnum">11</div><div class="xt"><b>Opérer Intune à l'échelle</b> — dérive, exclusions, cycle de vie.</div></div>
+  </div>
+
+  <p>Chaque leçon présume que vous avez fait le pré-déploiement plus haut. Les leçons elles-mêmes ne répètent pas la liste de vérification. Elles vont droit à <em>ce que chaque modèle fait et comment le déployer</em>.</p>
+
+  <p>Pour l'instant : le pré-déploiement, c'est l'inoculation. Les déploiements Intune sans lui, c'est comme ça que les appareils des clients finissent mal configurés à 16 h un vendredi.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur la cadence d'évaluation de conformité Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Compliance policies</a>); Microsoft Learn sur les trois types de politiques Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/settings-catalog" target="_blank" rel="noopener">Microsoft Learn — Settings Catalog vs Templates</a>); référence de comportement d'assignation Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/device-profile-assign" target="_blank" rel="noopener">Microsoft Learn — Assign user and device profiles</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

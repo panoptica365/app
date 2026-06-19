@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajuste las directivas de alerta — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Ajuste las directivas de alerta">
+<meta name="lesson:subtitle" content="Gravedad, enrutamiento, activado/desactivado y límites de notificación — haga que el flujo de alertas encaje con cómo trabaja realmente su equipo.">
+<meta name="lesson:icon" content="list-checks">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Ajuste las directivas de alerta</span></div>
+  <h1>Ajuste las directivas de alerta</h1>
+  <p class="dek">Gravedad, enrutamiento, activado/desactivado y límites de notificación — haga que el flujo de alertas encaje con cómo trabaja realmente su equipo.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un flujo bruto de alertas atraviesa cuatro mandos de ajuste — gravedad, enrutamiento, activado/desactivado y un límite diario de notificaciones — hasta convertirse en un flujo de alertas en el que el equipo confía.">
+      <defs>
+        <radialGradient id="taBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="taTrust" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#2EE8A0"/></linearGradient>
+        <marker id="taArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#taBg)"/>
+
+      <!-- left: raw alerts in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="150" y="58" fill="#52708F" font-size="13" letter-spacing="3">ALERTAS BRUTAS</text>
+        <g fill="#0E2640" stroke="#33527A">
+          <rect x="70" y="84" width="160" height="30" rx="6"/>
+          <rect x="86" y="128" width="160" height="30" rx="6"/>
+          <rect x="60" y="172" width="160" height="30" rx="6"/>
+          <rect x="92" y="216" width="160" height="30" rx="6"/>
+          <rect x="74" y="260" width="160" height="30" rx="6"/>
+        </g>
+        <g fill="#5CCBF4"><circle cx="86" cy="99" r="4"/><circle cx="102" cy="143" r="4"/><circle cx="76" cy="187" r="4"/></g>
+        <g fill="#FFC04D"><circle cx="108" cy="231" r="4"/></g>
+        <g fill="#FF5A6E"><circle cx="90" cy="275" r="4"/></g>
+      </g>
+
+      <!-- arrow into the dials -->
+      <path d="M268 187 H352" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- centre: four tuning dials -->
+      <g transform="translate(560,170)">
+        <rect x="-190" y="-118" width="380" height="236" rx="18" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="0" y="-92" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">DIRECTIVAS DE ALERTA</text>
+        <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+          <!-- four dials -->
+          <g transform="translate(-120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="18" y2="-22" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Gravedad</text>
+          </g>
+          <g transform="translate(-40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="-20" y2="-18" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="11" font-weight="600">Enrutamiento</text>
+          </g>
+          <g transform="translate(40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="0" y2="-26" stroke="#2EE8A0" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="54" fill="#A8E1F8" font-size="11.5" font-weight="600">Activado /</text>
+            <text y="70" fill="#A8E1F8" font-size="11.5" font-weight="600">Desactivado</text>
+          </g>
+          <g transform="translate(120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="22" y2="14" stroke="#FFC04D" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Límite</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- arrow out to trusted stream -->
+      <path d="M768 187 H852" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- right: trusted stream -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="970" y="58" fill="#2EE8A0" font-size="12" letter-spacing="2" font-weight="600">UN FLUJO DE CONFIANZA</text>
+        <g fill="#0E2640" stroke="url(#taTrust)" stroke-width="1.6">
+          <rect x="892" y="96" width="156" height="32" rx="7"/>
+          <rect x="892" y="140" width="156" height="32" rx="7"/>
+          <rect x="892" y="184" width="156" height="32" rx="7"/>
+        </g>
+        <g fill="#2EE8A0"><circle cx="908" cy="112" r="4"/><circle cx="908" cy="156" r="4"/><circle cx="908" cy="200" r="4"/></g>
+      </g>
+    </svg>
+    <figcaption>Cuatro controles convierten el flujo de alertas predeterminado en uno en el que su equipo realmente confía.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>De fábrica, Panoptica365 trae docenas de directivas de alerta con valores predeterminados sensatos. <strong>Directivas de alerta</strong> (barra lateral) es donde las adapta a su negocio — y la diferencia entre un flujo de alertas en el que su equipo confía y uno que ignora son veinte minutos en esta página.</p>
+  </div>
+
+  <h2>La disposición</h2>
+
+  <p>Las directivas están agrupadas en categorías plegables:</p>
+
+  <ul>
+    <li><strong>Inicios de sesión de riesgo</strong> — viaje imposible, ubicaciones desconocidas, detecciones de riesgo.</li>
+    <li><strong>Gestión de amenazas</strong> — incidentes de Defender, malware, señales de phishing.</li>
+    <li><strong>Permisos</strong> — cambios de rol, concesiones de consentimiento, crecimiento de permisos de aplicaciones.</li>
+    <li><strong>Cambios de configuración</strong> — deriva y cambios de configuración, incluidos los elementos del Centro de mensajes.</li>
+    <li><strong>Uso compartido externo</strong> — enlaces anónimos, eventos de acceso externo.</li>
+    <li><strong>Gobierno de la información</strong> — DLP y eventos cercanos al cumplimiento.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Las seis categorías plegables de directivas de alerta: Inicios de sesión de riesgo, Gestión de amenazas, Permisos, Cambios de configuración, Uso compartido externo y Gobierno de la información.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CATEGORÍAS PLEGABLES</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Inicios de sesión de riesgo</text>
+        </g>
+        <g transform="translate(380,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Gestión de amenazas</text>
+        </g>
+        <g transform="translate(40,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Permisos</text>
+        </g>
+        <g transform="translate(380,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Cambios de configuración</text>
+        </g>
+        <g transform="translate(40,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Uso compartido externo</text>
+        </g>
+        <g transform="translate(380,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Gobierno de la información</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Seis categorías agrupan cada directiva; las secciones con coincidencias se expanden solas al buscar.</figcaption>
+  </figure>
+
+  <p>Una barra de búsqueda filtra por nombres y descripciones; las secciones con coincidencias se expanden solas. Cada fila de directiva lleva el <strong>icono del birrete</strong> — el mismo explicador de cinco secciones que tiene una alerta en vivo, para que pueda entender una directiva antes de decidir qué hacer con ella.</p>
+
+  <h2>Qué puede cambiar por directiva</h2>
+
+  <ul>
+    <li><strong>Gravedad</strong> — información / bajo / medio / alto / severo. La gravedad gobierna la ordenación, el umbral del resumen diario y el mapeo de prioridad de los tickets del PSA. Si su equipo trata un tipo de alerta como «se deja todo y se atiende», califíquela así.</li>
+    <li><strong>Enrutamiento</strong> — Ninguno / Correo / PSA / Ambos. <em>Correo</em> va a sus destinatarios de notificación (correo electrónico); <em>PSA</em> va a su PSA (ticket, o el correo del PSA como respaldo); <em>Ambos</em> hace las dos cosas. Enrute al PSA el trabajo accionable para el cliente, y al correo lo que solo necesita conocimiento del operador.</li>
+    <li><strong>Conmutador Activado / Desactivado</strong> — las directivas deshabilitadas no se evalúan en absoluto. Apagar una directiva es honesto cuando esa señal de verdad no le interesa; resolver sus alertas eternamente con la directiva encendida no lo es.</li>
+    <li><strong>Límite de notificaciones (por día)</strong> (modal de edición, Administrador) — un tope diario de notificaciones por directiva, su freno contra una alerta desbocada que inunde buzones o el tablero del PSA.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Los cuatro destinos de enrutamiento: Ninguno, Correo va a los destinatarios de correo, PSA va al PSA, y Ambos van al correo y al PSA.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ENRUTAMIENTO</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- none -->
+        <g transform="translate(96,108)">
+          <circle r="40" fill="#0E2236" stroke="#52708F" stroke-width="1.4"/>
+          <text y="-2" fill="#6B85A6" font-size="13" font-weight="600">Ninguno</text>
+          <text y="62" fill="#52708F" font-size="11">sin notif.</text>
+        </g>
+        <!-- personal -->
+        <g transform="translate(272,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">Correo</text>
+          <text y="62" fill="#6B85A6" font-size="11">personal</text>
+        </g>
+        <!-- support -->
+        <g transform="translate(448,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">PSA</text>
+          <text y="62" fill="#6B85A6" font-size="11">ticket</text>
+        </g>
+        <!-- both -->
+        <g transform="translate(624,108)">
+          <circle r="40" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text y="-2" fill="#7DD9F9" font-size="13" font-weight="700">Ambos</text>
+          <text y="62" fill="#6B85A6" font-size="11">Correo + PSA</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>El enrutamiento decide dónde aterrizan las alertas de cada directiva: en ningún lado, su correo, su PSA, o ambos.</figcaption>
+  </figure>
+
+  <div class="callout caution">
+    <div class="clabel">Global, no por inquilino</div>
+    <p>Los cambios hechos aquí son globales — aplican a todos los inquilinos. Las excepciones por inquilino van en las <strong>exenciones</strong> (siguiente guía), no en los conmutadores de directivas.</p>
+  </div>
+
+  <h2>Un método de ajuste que funciona</h2>
+
+  <ol>
+    <li><strong>Corra con los valores predeterminados dos semanas.</strong> No ajuste de antemano contra un ruido imaginado.</li>
+    <li><strong>Mire lo que realmente resolvió como falso positivo.</strong> Cada falso positivo recurrente es o un candidato a exención (un usuario, un patrón, un inquilino) o un desajuste de gravedad/enrutamiento (la señal es real pero no merece un ticket).</li>
+    <li><strong>Suba lo que le quemó.</strong> Si algo se convirtió en incidente y su alerta estaba calificada como baja, súbala.</li>
+    <li><strong>Vigile el umbral del resumen.</strong> El resumen diario tiene su propio ajuste de gravedad mínima (Configuración → Resumen diario). La gravedad aquí y el umbral allí deciden juntos qué contiene su correo de las 6 de la mañana.</li>
+  </ol>
+
+  <div class="callout insight">
+    <div class="clabel">El ajuste rinde cuentas</div>
+    <p>Todas las ediciones de esta página quedan registradas en el registro de auditoría MSP — cambios de gravedad, conmutadores, cambios de enrutamiento. El ajuste es trabajo con rendición de cuentas, y así debe ser.</p>
+  </div>
+
+</div>
+</body>
+</html>

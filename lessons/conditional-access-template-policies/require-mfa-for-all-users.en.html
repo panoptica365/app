@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Require MFA for all users — the foundation — Conditional Access Template Policies</title>
+<meta name="lesson:title" content="Require MFA for all users — the foundation">
+<meta name="lesson:subtitle" content="The CA policy that blocks 99.9% of automated account compromise — and why it must be first on every tenant.">
+<meta name="lesson:icon" content="shield-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access Template Policies</span> <span class="sep">·</span> <span>Require MFA for all users</span></div>
+  <h1>Require MFA for all users — the foundation</h1>
+  <p class="dek">The CA policy that blocks 99.9% of automated account compromise — and why it must be first on every tenant.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Any sign-in to any cloud app is evaluated by the policy: if MFA is already satisfied in the session the sign-in proceeds, otherwise Microsoft prompts for MFA.">
+      <defs>
+        <radialGradient id="mfaBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="mfaArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mfaBg)"/>
+
+      <!-- sign-in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="44" y="128" width="216" height="84" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="152" y="166" fill="#C4D4E8" font-size="17" font-weight="600">Any sign-in</text>
+        <text x="152" y="190" fill="#6B85A6" font-size="13">any user · any cloud app</text>
+      </g>
+      <path d="M260 170 H346" stroke="#335F92" stroke-width="2.5" marker-end="url(#mfaArr)"/>
+
+      <!-- policy evaluates -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="354" y="116" width="232" height="108" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <text x="470" y="152" fill="#A8E1F8" font-size="16" font-weight="700">Policy evaluates</text>
+        <text x="470" y="178" fill="#7DD9F9" font-size="13.5">MFA already satisfied</text>
+        <text x="470" y="196" fill="#7DD9F9" font-size="13.5">in this session?</text>
+      </g>
+
+      <!-- yes branch -> proceed -->
+      <path d="M586 146 H700 V112 H792" stroke="#2A7FA3" stroke-width="2.5" fill="none" marker-end="url(#mfaArr)"/>
+      <text x="660" y="134" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">YES</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="800" y="84" width="276" height="56" rx="12" fill="#0B2A22" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="938" y="118" fill="#74F2C2" font-size="16" font-weight="600">Sign-in proceeds</text>
+      </g>
+
+      <!-- no branch -> prompt -->
+      <path d="M586 194 H700 V230 H792" stroke="#2A7FA3" stroke-width="2.5" fill="none" marker-end="url(#mfaArr)"/>
+      <text x="660" y="218" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">NO</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="800" y="202" width="276" height="56" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <text x="938" y="236" fill="#7DD9F9" font-size="16" font-weight="600">Prompt for MFA</text>
+      </g>
+
+      <text x="560" y="306" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">REQUIRE MFA · ALL USERS · ALL CLOUD APPS</text>
+    </svg>
+    <figcaption>Every sign-in is evaluated: already MFA'd this session, it proceeds; if not, Microsoft prompts before continuing.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The Microsoft Identity Security team has been saying the same thing for six years: enabling MFA blocks more than 99.9% of automated account compromise attempts. The number has been quoted in every Conditional Access training Microsoft has ever published and in every cyber-insurance underwriting form since 2022.</p>
+
+  <p>The flip side of that statistic is the part nobody quotes: in tenants where MFA is <em>not</em> universally enforced, the same 99.9% just describes what's happening to all the other tenants. The unprotected user in the unprotected tenant is exactly who the credential-stuffing botnets are looking for.</p>
+
+  <p>This is the template that closes that gap.</p>
+
+  <p><strong>Panoptica365 - Require MFA for all users.</strong> Grant: Require MFA. Users: All users. Apps: All cloud apps.</p>
+
+  <p>It is the simplest CA policy in the library, the most important, and the one that should be enabled on every Business Premium and above tenant before any other CA work begins.</p>
+  </div>
+
+  <h2>What it does</h2>
+
+  <p>The mechanics are uncomplicated. Every time any user signs in to any cloud app, Microsoft evaluates the policy. If the user has already satisfied MFA in their current session, the sign-in proceeds. If not, Microsoft prompts for MFA before letting the sign-in continue.</p>
+
+  <p>The single control is <code>Require multi-factor authentication</code>. There are no conditions beyond "all users, all apps." It's the baseline — every sign-in completes MFA before anything else happens.</p>
+
+  <p>What the policy does <em>not</em> care about:</p>
+
+  <ul>
+    <li>The user's location. Whether they're in the office, at home, or in a coffee shop in Lisbon, MFA is required.</li>
+    <li>The device. Personal laptops, managed devices, mobile phones — MFA on all of them.</li>
+    <li>The app. Outlook, SharePoint, Teams, Power BI, the admin centre — all of them.</li>
+    <li>The time of day or the user's role. Everyone, always, every sign-in.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Location, device, app, and time or role all converge on the same outcome: MFA required.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">THE POLICY DOESN'T CARE ABOUT</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="34" y="52" width="140" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="104" y="79" fill="#C4D4E8" font-size="14">Location</text></g>
+        <g><rect x="190" y="52" width="140" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="260" y="79" fill="#C4D4E8" font-size="14">Device</text></g>
+        <g><rect x="346" y="52" width="140" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="416" y="79" fill="#C4D4E8" font-size="14">App</text></g>
+        <g><rect x="502" y="52" width="184" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="594" y="79" fill="#C4D4E8" font-size="14">Time of day · role</text></g>
+      </g>
+      <path d="M104 96 V128 H360" stroke="#335F92" stroke-width="2" fill="none"/>
+      <path d="M260 96 V128" stroke="#335F92" stroke-width="2" fill="none"/>
+      <path d="M416 96 V128" stroke="#335F92" stroke-width="2" fill="none"/>
+      <path d="M594 96 V128 H360" stroke="#335F92" stroke-width="2" fill="none"/>
+      <path d="M360 128 V150" stroke="#335F92" stroke-width="2.5" marker-end="url(#cArr)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="252" y="158" width="216" height="52" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="360" y="190" fill="#7DD9F9" font-size="16" font-weight="700">MFA required</text>
+      </g>
+    </svg>
+    <figcaption>No conditions, no exceptions by context — every sign-in lands on the same answer.</figcaption>
+  </figure>
+
+  <p>That uniformity is the policy's strength and its weakness. The strength: no edge case is uncovered, no "but my service account doesn't have MFA" gap exists. The weakness: every sign-in, even from a perfectly trustworthy managed device, hits the MFA path. That's the trade-off lesson 5 will revisit.</p>
+
+  <h2>What it defeats</h2>
+
+  <p>Roughly the entire bottom half of card 2's threat catalogue.</p>
+
+  <p><strong>Credential stuffing</strong> (card 2 lesson 1) — the password is correct because the attacker bought it from a breach dump, but they don't have the MFA method, so the sign-in fails. This is exactly the attack the 99.9% statistic was measured against.</p>
+
+  <p><strong>Password spray</strong> — same defence. The attacker tried "Spring2024!" against 50,000 accounts; the few accounts where the password matches still need MFA the attacker doesn't have.</p>
+
+  <p><strong>Stolen credentials from unrelated breaches</strong> — same defence. The user reused their LinkedIn password on M365; the attacker has it; the MFA prompt stops them.</p>
+
+  <p>What it doesn't defeat:</p>
+
+  <ul>
+    <li><strong>MFA fatigue</strong> (card 2 lesson 2) — the user is the one approving the prompt; MFA doesn't help when the user is the weak link.</li>
+    <li><strong>AiTM phishing</strong> (card 2 lesson 3) — the attacker proxies the MFA prompt; the user completes MFA on the fake site.</li>
+    <li><strong>OAuth consent phishing</strong> (lesson 4) — no password or MFA is involved; the attack runs through the consent dialog.</li>
+    <li><strong>Device-code abuse</strong> (lesson 5) — the user completes MFA correctly on the real Microsoft page; the attacker gets the token anyway.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="The policy defeats credential-based attacks: credential stuffing, password spray, and stolen credentials. It does not defeat token-based or consent-based attacks: MFA fatigue, AiTM phishing, OAuth consent phishing, and device-code abuse.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- defeats column -->
+        <rect x="24" y="20" width="320" height="260" rx="10" fill="#0B2419" stroke="#2EE8A0" stroke-width="1.3" opacity="0.95"/>
+        <text x="184" y="48" text-anchor="middle" fill="#74F2C2" font-size="13" font-weight="700" letter-spacing="1">DEFEATS · CREDENTIAL-BASED</text>
+        <g text-anchor="middle">
+          <rect x="48" y="68" width="272" height="42" rx="8" fill="#0E2236" stroke="#2A7FA3"/><text x="184" y="94" fill="#C4D4E8" font-size="13.5">Credential stuffing</text>
+          <rect x="48" y="122" width="272" height="42" rx="8" fill="#0E2236" stroke="#2A7FA3"/><text x="184" y="148" fill="#C4D4E8" font-size="13.5">Password spray</text>
+          <rect x="48" y="176" width="272" height="58" rx="8" fill="#0E2236" stroke="#2A7FA3"/><text x="184" y="200" fill="#C4D4E8" font-size="13.5">Stolen credentials</text><text x="184" y="218" fill="#6B85A6" font-size="11.5">from unrelated breaches</text>
+        </g>
+
+        <!-- does not defeat column -->
+        <rect x="376" y="20" width="320" height="260" rx="10" fill="#241016" stroke="#FF5A6E" stroke-width="1.3" opacity="0.95"/>
+        <text x="536" y="48" text-anchor="middle" fill="#FF8A98" font-size="13" font-weight="700" letter-spacing="1">DOESN'T · TOKEN / CONSENT</text>
+        <g text-anchor="middle">
+          <rect x="400" y="62" width="272" height="38" rx="8" fill="#1B0D11" stroke="#7A3540"/><text x="536" y="86" fill="#E2A0AA" font-size="13.5">MFA fatigue</text>
+          <rect x="400" y="108" width="272" height="38" rx="8" fill="#1B0D11" stroke="#7A3540"/><text x="536" y="132" fill="#E2A0AA" font-size="13.5">AiTM phishing</text>
+          <rect x="400" y="154" width="272" height="38" rx="8" fill="#1B0D11" stroke="#7A3540"/><text x="536" y="178" fill="#E2A0AA" font-size="13.5">OAuth consent phishing</text>
+          <rect x="400" y="200" width="272" height="38" rx="8" fill="#1B0D11" stroke="#7A3540"/><text x="536" y="224" fill="#E2A0AA" font-size="13.5">Device-code abuse</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Require MFA defeats the credential-based attacks; the token- and consent-based attacks need additional layers.</figcaption>
+  </figure>
+
+  <p>In other words: Require MFA for all users defeats the <em>credential-based</em> attacks. It does not defeat the <em>token-based</em> or <em>consent-based</em> attacks. Those need additional layers — compliant-device requirements (lessons 4 and 5), phishing-resistant MFA for high-value users (lesson 6), and the device-code-flow block (lesson 7).</p>
+
+  <p>But before any of those layers matter, the foundation must be in place. A tenant without universal MFA is exposed to the simplest, cheapest, most automated attack class. There is no defensible reason to leave that gap open in 2026.</p>
+
+  <h2>Who it applies to</h2>
+
+  <p>The template ships with <strong>Users: All users</strong>. The intent is universal coverage.</p>
+
+  <p>In practice, the policy almost always has a handful of exclusions:</p>
+
+  <ul>
+    <li><strong>The break-glass account(s)</strong> — from lesson 1's pre-flight. Excluded by default. Their MFA is enforced through other means (the FIDO2 key stored physically), not through CA.</li>
+    <li><strong>Documented service accounts</strong> that haven't yet been migrated to managed identities — temporarily excluded with a documented expiration. Each service account exclusion is a known security gap and should be on a sunset plan.</li>
+    <li><strong>Specific guest accounts in unusual configurations</strong> — rare. Most B2B guests should have MFA. If a guest account is excluded, document why.</li>
+  </ul>
+
+  <p>What should <em>not</em> be in the exclusion list:</p>
+
+  <ul>
+    <li>Executives. ("It's easier this way" is not a security argument.)</li>
+    <li>Field workers. (Their MFA is on their phone; that's already in their pocket.)</li>
+    <li>"Customer service team" or other generic groups. (If they're using cloud apps, they need MFA.)</li>
+  </ul>
+
+  <p>If a customer pushes back on universal MFA — "our sales team finds it too annoying" — the right response is to enrol them on the Authenticator app with number matching, or better, on passkeys. The MFA prompt at 8 AM Monday morning is not the friction; the alternative is the friction of explaining a credential-stuffing compromise to that user's entire client list.</p>
+
+  <h2>Rollout</h2>
+
+  <p>This template deploys in Enabled state, per lesson 1, section 3. For most small-business tenants the pre-flight inventory (break-glass excluded, service accounts catalogued, user communication sent) is your dry run; deploy and monitor closely. For complex environments with legacy service principals, deploy via Panoptica365 and then manually flip the policy to Report-only in the Entra portal for a 3–7 day verification window before letting it enforce — lesson 1's section 3 covers the Report-only workflow in detail.</p>
+
+  <p>Before deployment, make sure every user has at least one MFA method registered. Microsoft's combined registration page (<code>mysignins.microsoft.com/security-info</code>) is the user-facing path. Send the link with instructions a few days before deployment so users aren't surprised by an MFA prompt on a workday morning.</p>
+
+  <p>In the first week after enforcement, the Panoptica365 Daily Activity widget will show a spike in successful MFA challenges. That's the policy working — every sign-in is now completing the second factor. MFA-disabled alerts that fired before deployment should be quiet for users who completed enrolment. Users still firing MFA-disabled alerts a week after enforcement are either incomplete enrolments (chase them) or genuine exclusions (verify and document).</p>
+
+  <p>Handle the long tail of service accounts and third-party integrations as the alerts surface in the first week. Document each exclusion with a justification and a sunset date in Panoptica365's exemption system.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p>Three things to watch:</p>
+
+  <p><strong>MFA challenge failures.</strong> A sudden burst of failed MFA challenges on one user is the MFA fatigue pattern from card 2 lesson 2. The Daily Activity donut surfaces this near-real-time. The triage approach is unchanged: foreign IP + failed MFA bursts + eventual success = treat as compromise.</p>
+
+  <p><strong>Sign-ins that complete MFA via SMS or voice.</strong> These methods are weaker than push, far weaker than passkeys. The Authentication Methods report in the Entra portal shows the breakdown. Customers with too much SMS reliance are candidates for the lesson 6 admin-hardening upgrade (phishing-resistant MFA for high-value users).</p>
+
+  <p><strong>Drift on the policy itself.</strong> Panoptica365's CA drift detector flags if the policy gets disabled, the user list narrows, or the exclusion list grows. An exclusion list that's growing without your knowledge is somebody else turning off MFA for a user — investigate.</p>
+
+  <h2>The overlap with lesson 5</h2>
+
+  <p>You'll notice when you read lesson 5 that the <strong>Require compliant or hybrid Azure AD joined device or MFA for all users</strong> template offers an alternative path: managed devices skip MFA, unmanaged devices get MFA. Both templates exist in the library; they're not meant to be enabled together as a coherent strategy.</p>
+
+  <p>If you enable both: the strictest combination wins. The lesson 2 policy demands MFA unconditionally, the lesson 5 policy says "MFA is one of three acceptable proofs." When both apply, MFA is required because lesson 2 doesn't accept the device-trust paths. Lesson 5 becomes redundant.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="When both policies apply, the strictest combination wins: lesson 2 demands MFA unconditionally while lesson 5 accepts device trust, so MFA is required and lesson 5 becomes redundant.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="oArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="40" width="244" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="162" y="66" fill="#A8E1F8" font-size="13.5" font-weight="600">Lesson 2</text>
+        <text x="162" y="86" fill="#7DD9F9" font-size="12">MFA, unconditionally</text>
+
+        <rect x="40" y="118" width="244" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="162" y="144" fill="#C4D4E8" font-size="13.5" font-weight="600">Lesson 5</text>
+        <text x="162" y="164" fill="#6B85A6" font-size="12">MFA is one of three proofs</text>
+      </g>
+      <path d="M284 72 H372 V102 H418" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#oArr)"/>
+      <path d="M284 150 H372 V118 H418" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#oArr)"/>
+      <text x="372" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">both apply →</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="426" y="62" width="262" height="52" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="557" y="93" fill="#7DD9F9" font-size="15" font-weight="700">Strictest wins: MFA required</text>
+        <rect x="426" y="128" width="262" height="44" rx="10" fill="#0E2236" stroke="#52708F" stroke-dasharray="4 4"/>
+        <text x="557" y="155" fill="#6B85A6" font-size="13">Lesson 5 redundant</text>
+      </g>
+    </svg>
+    <figcaption>Stack them and MFA wins every time — so pick one rather than running both.</figcaption>
+  </figure>
+
+  <p>The right way to think about it:</p>
+
+  <ul>
+    <li><strong>Enable Require MFA for all users (this lesson)</strong> as the default policy when the tenant doesn't yet have reliable Intune compliance, when you're early in the rollout, or when you want simple "always MFA" semantics.</li>
+    <li><strong>Enable Require compliant OR hybrid OR MFA (lesson 5)</strong> as the upgrade when Intune compliance is in place and reliable, the customer wants better UX for users on managed devices, and you trust the compliance signal.</li>
+  </ul>
+
+  <p>Lesson 5 has the full treatment of the strategy choice. For now: pick one. Don't run both expecting the OR-paths to apply — they won't.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>This is the policy you deploy first.</strong> Before any other CA work, before any Intune templates, before any of the more sophisticated controls in later lessons. A tenant without universal MFA is exposed to the simplest possible attack; closing that gap is the highest-leverage thing you can do for a new customer.</p>
+
+  <p><strong>The 99.9% statistic earns its keep here.</strong> When a customer pushes back on the friction of universal MFA, that statistic is the right answer. It's not a slogan; it's a measured outcome from Microsoft's own telemetry. Cite it. Use it.</p>
+
+  <p><strong>Document every exclusion.</strong> Every service account, every special case, every "this user can't have MFA because…" entry on the exclusion list is a hole in the perimeter. Treat each one as a known issue with a sunset date. Panoptica365's exemption system makes this concrete — use it.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Lesson 3: Block legacy authentication.</b> The companion policy to this one. Without legacy auth blocking, the attacker who has the user's password can simply use a legacy protocol that doesn't support MFA and bypass this entire policy. Lessons 2 and 3 are a paired deployment.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Compliant device OR hybrid OR MFA.</b> The upgrade path for tenants with Intune in place — better UX, same security floor.</div></div>
+  </div>
+
+  <p>For now: this is the policy you cannot ship without. Get it deployed on every customer tenant. Document exclusions. Move on to lesson 3.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Identity Security Group on MFA blocking 99.9% of automated account compromise (<a href="https://techcommunity.microsoft.com/blog/microsoft-entra-blog/your-pa%24%24word-doesn%E2%80%99t-matter/731984" target="_blank" rel="noopener">Weinert, August 2019</a>); Microsoft Learn on Conditional Access policy structure (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-policies" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policies</a>); combined registration page reference (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-registration-mfa-sspr-combined" target="_blank" rel="noopener">Microsoft Learn — Combined registration</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

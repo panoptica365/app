@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Examinez les applications — approuvez ce en quoi vous avez confiance, triez le reste — Guides Panoptica365</title>
+<meta name="lesson:title" content="Examinez les applications — approuvez ce en quoi vous avez confiance, triez le reste">
+<meta name="lesson:subtitle" content="Le flux de travail de l'onglet Applications : Actualiser, cocher Approuvée, Enregistrer — et laisser Sonnet trier tout ce que vous n'avez pas approuvé.">
+<meta name="lesson:icon" content="app-window">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Examinez les applications</span></div>
+  <h1>Examinez les applications — approuvez ce en quoi vous avez confiance, triez le reste</h1>
+  <p class="dek">Le flux de travail de l'onglet Applications : Actualiser, cocher Approuvée, Enregistrer — et laisser Sonnet trier tout ce que vous n'avez pas approuvé.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Flux en trois étapes : une pile d'applications, actualisée et examinée, devient des applications approuvées dotées d'une base de référence protégée tandis que le reste part vers Sonnet pour triage.">
+      <defs>
+        <radialGradient id="raBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="raGood" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="raArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#raBg)"/>
+
+      <!-- gauche : la pile non examinée -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="170" y="70" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="3">LA PILE</text>
+        <g stroke="#33527A" stroke-width="1.4" fill="#0E2236">
+          <rect x="92" y="96" width="156" height="30" rx="6"/>
+          <rect x="104" y="134" width="156" height="30" rx="6"/>
+          <rect x="86" y="172" width="156" height="30" rx="6"/>
+          <rect x="110" y="210" width="156" height="30" rx="6"/>
+          <rect x="96" y="248" width="156" height="30" rx="6"/>
+        </g>
+        <g fill="#52708F">
+          <circle cx="108" cy="111" r="4"/><circle cx="120" cy="149" r="4"/><circle cx="102" cy="187" r="4"/><circle cx="126" cy="225" r="4"/><circle cx="112" cy="263" r="4"/>
+        </g>
+        <text x="170" y="306" text-anchor="middle" fill="#52708F" font-size="11.5">applications et inscriptions</text>
+      </g>
+
+      <!-- flèche + Actualiser -->
+      <path d="M280 188 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#raArr)"/>
+      <text x="336" y="176" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Actualiser</text>
+
+      <!-- centre : examen + Enregistrer -->
+      <g transform="translate(560,188)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-66" y="-58" width="132" height="116" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <g stroke="#2A6F9E" stroke-width="1.3" fill="#102A4C">
+          <rect x="-48" y="-40" width="96" height="22" rx="5"/>
+          <rect x="-48" y="-10" width="96" height="22" rx="5"/>
+          <rect x="-48" y="20" width="96" height="22" rx="5"/>
+        </g>
+        <g stroke="#2EE8A0" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M-40 -30 l4 5 l8 -10"/>
+          <path d="M-40 0 l4 5 l8 -10"/>
+        </g>
+        <rect x="-44" y="24" width="12" height="12" rx="3" fill="none" stroke="#52708F" stroke-width="1.6"/>
+      </g>
+      <text x="560" y="74" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="3">EXAMEN · ENREGISTRER</text>
+      <text x="560" y="306" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">cochez Approuvée, puis Enregistrer</text>
+
+      <!-- deux flèches sortantes -->
+      <path d="M652 158 C 730 120, 770 110, 836 110" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#raArr)"/>
+      <path d="M652 218 C 730 256, 770 266, 836 266" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#raArr)"/>
+
+      <!-- droite haut : approuvée + base de référence -->
+      <g transform="translate(960,108)">
+        <rect x="-86" y="-40" width="172" height="80" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-58" cy="0" r="13" fill="url(#raGood)"/>
+        <path d="M-64 0 l4 5 l8 -10" stroke="#071221" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="-34" y="-4" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Approuvée</text>
+        <text x="-34" y="16" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">base de référence</text>
+      </g>
+
+      <!-- droite bas : triage Sonnet -->
+      <g transform="translate(960,266)">
+        <rect x="-86" y="-32" width="172" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="-58" cy="-4" r="6" fill="#2EE8A0"/>
+        <circle cx="-42" cy="-4" r="6" fill="#FFC04D"/>
+        <circle cx="-26" cy="-4" r="6" fill="#FF5A6E"/>
+        <text x="4" y="-1" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" text-anchor="middle">Triage Sonnet</text>
+        <text x="4" y="18" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11" text-anchor="middle">tout ce qui n'est pas approuvé</text>
+      </g>
+    </svg>
+    <figcaption>Une pile d'applications devient un inventaire révisé : approuvez celles en qui vous avez confiance, envoyez le reste à Sonnet.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Chaque locataire accumule des applications d'entreprise et des inscriptions d'applications — certaines installées délibérément, d'autres consenties par des utilisateurs il y a des années, d'autres malveillantes. L'onglet <strong>Applications</strong> du tableau de bord du locataire transforme cette pile en inventaire révisé doté d'une base de référence protégée.</p>
+
+  <p>Les applications de première partie de Microsoft sont exclues automatiquement — vous n'examinez que ce qui est tiers ou personnalisé.</p>
+  </div>
+
+  <h2>Le flux de travail</h2>
+
+  <ol>
+    <li>Ouvrez le tableau de bord du locataire → onglet <strong>Applications</strong>.</li>
+    <li>Cliquez sur <strong>Actualiser</strong> si l'inventaire n'a pas été récupéré récemment. Vous verrez <em>« Actualisation depuis Microsoft Graph… »</em> pendant la récupération de la liste en direct.</li>
+    <li>Parcourez la liste. Pour chaque application que vous reconnaissez et en qui vous avez confiance — celles que vous avez installées, celles que le client confirme utiliser — cochez sa case <strong>Approuvée</strong>. Dépliez une ligne pour voir ses permissions déléguées et d'application, ses identifiants et ses URI de redirection si vous voulez y regarder de plus près. Une coche <em>Éditeur vérifié</em> et une étiquette <em>tout le locataire</em> sur les portées vous aident à juger.</li>
+    <li>En cas de doute, <strong>demandez au client</strong>. « Utilisez-vous quelque chose qui s'appelle Acme Sync? » est un appel de trente secondes qui vaut mieux que deviner.</li>
+    <li>Cliquez sur <strong>Enregistrer</strong>. Deux choses se produisent :
+      <ul>
+        <li>Les applications cochées sont <strong>marquées approuvées</strong> et reçoivent une <strong>base de référence protégée</strong> : leur ensemble de permissions actuel est capturé.</li>
+        <li>Chaque application que vous n'avez <em>pas</em> cochée est envoyée à <strong>Sonnet pour triage</strong>. La ligne de progression ressemble à <em>« Enregistrement… 12 application(s) approuvée(s); envoi de 9 à Sonnet pour triage. »</em></li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2>Lire les résultats du triage</h2>
+
+  <p>Chaque application non approuvée revient avec une pastille d'évaluation colorée :</p>
+
+  <ul>
+    <li><strong>Vert — rien d'alarmant.</strong> Éditeur, ancienneté, type de consentement et portées semblent ordinaires.</li>
+    <li><strong>Jaune — à examiner.</strong> Quelque chose est assez inhabituel pour mériter vos yeux.</li>
+    <li><strong>Rouge — à investiguer.</strong> Examinez cette application maintenant, avec le client au besoin.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Les trois pastilles d'évaluation renvoyées par le triage : vert rien d'alarmant, jaune à examiner, rouge à investiguer.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- vert -->
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="30" cy="34" r="12" fill="#2EE8A0"/>
+          <text x="54" y="39" fill="#C4D4E8" font-size="15" font-weight="700">Vert</text>
+          <text x="20" y="72" fill="#A8E1F8" font-size="12.5">Rien d'alarmant.</text>
+          <text x="20" y="92" fill="#6B85A6" font-size="11">Éditeur, ancienneté, type de</text>
+          <text x="20" y="108" fill="#6B85A6" font-size="11">consentement, portées : ordinaires.</text>
+        </g>
+        <!-- jaune -->
+        <g transform="translate(260,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="30" cy="34" r="12" fill="#FFC04D"/>
+          <text x="54" y="39" fill="#C4D4E8" font-size="15" font-weight="700">Jaune</text>
+          <text x="20" y="72" fill="#FFD98A" font-size="12.5">À examiner.</text>
+          <text x="20" y="92" fill="#6B85A6" font-size="11">Quelque chose d'assez inhabituel</text>
+          <text x="20" y="108" fill="#6B85A6" font-size="11">pour mériter vos yeux.</text>
+        </g>
+        <!-- rouge -->
+        <g transform="translate(480,40)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <circle cx="30" cy="34" r="12" fill="#FF5A6E"/>
+          <text x="54" y="39" fill="#FF8A98" font-size="15" font-weight="700">Rouge</text>
+          <text x="20" y="72" fill="#FF8A98" font-size="12.5">À investiguer.</text>
+          <text x="20" y="92" fill="#E2A0AA" font-size="11">Examinez cette application</text>
+          <text x="20" y="108" fill="#E2A0AA" font-size="11">maintenant, avec le client au besoin.</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Trois pastilles, trois actions — utilisez le rouge et le jaune comme liste de travail.</figcaption>
+  </figure>
+
+  <p>Tenez compte de l'avertissement affiché dans l'interface : c'est <em>un triage, pas une garantie</em>. La pastille reflète ce que Sonnet a pu déduire de l'éditeur, de l'ancienneté, du type de consentement et des portées. Seul le marquage d'une application comme <strong>Approuvée</strong> enregistre une base de référence protégée. Utilisez les pastilles rouges et jaunes comme liste de travail : investiguez, puis approuvez l'application ou retirez-la du locataire (le lien <strong>Supprimer ↗</strong> vous amène au bon endroit dans Entra).</p>
+
+  <h2>Ce que la base de référence vous apporte</h2>
+
+  <p>Une fois une application approuvée, Panoptica365 la surveille. Si elle <strong>gagne plus tard des permissions au-delà de sa base approuvée</strong>, la ligne affiche <em>« Permissions modifiées depuis l'approbation »</em> et une alerte se déclenche. Les <em>retraits</em> de permissions ne déclenchent rien — seule la croissance au-delà de ce que vous avez approuvé. La comparaison s'exécute à chaque Actualiser et dans une boucle automatique quotidienne.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Une application approuvée dont la base de référence a été capturée gagne plus tard une permission au-delà de cette base, ce qui marque la ligne et déclenche une alerte.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="baArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- base approuvée -->
+        <text x="150" y="40" text-anchor="middle" fill="#5CCBF4" font-size="12" letter-spacing="2">BASE APPROUVÉE</text>
+        <rect x="50" y="58" width="200" height="120" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.4"/>
+        <g>
+          <rect x="68" y="78" width="164" height="22" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="80" y="93" fill="#A8E1F8" font-size="11.5">User.Read</text>
+          <rect x="68" y="106" width="164" height="22" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="80" y="121" fill="#A8E1F8" font-size="11.5">Calendars.Read</text>
+        </g>
+        <text x="150" y="160" text-anchor="middle" fill="#6B85A6" font-size="11">capturée à l'approbation</text>
+
+        <!-- flèche -->
+        <path d="M260 118 H342" stroke="#335F92" stroke-width="2.5" marker-end="url(#baArr)"/>
+        <text x="301" y="106" text-anchor="middle" fill="#6B85A6" font-size="11">plus tard</text>
+
+        <!-- permission gagnée -->
+        <text x="560" y="40" text-anchor="middle" fill="#FF8A98" font-size="12" letter-spacing="2">PERMISSIONS ÉLARGIES</text>
+        <rect x="460" y="58" width="200" height="120" rx="10" fill="#0E2640" stroke="#33527A"/>
+        <g>
+          <rect x="478" y="74" width="164" height="20" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="490" y="88" fill="#A8E1F8" font-size="11">User.Read</text>
+          <rect x="478" y="98" width="164" height="20" rx="5" fill="#102A4C" stroke="#2A6F9E"/>
+          <text x="490" y="112" fill="#A8E1F8" font-size="11">Calendars.Read</text>
+          <rect x="478" y="122" width="164" height="22" rx="5" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <text x="490" y="137" fill="#FF8A98" font-size="11" font-weight="600">+ Mail.Read</text>
+        </g>
+        <text x="560" y="164" text-anchor="middle" fill="#FF8A98" font-size="11">au-delà de la base approuvée</text>
+
+        <!-- alerte -->
+        <rect x="150" y="192" width="420" height="28" rx="14" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="211" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="600">« Permissions modifiées depuis l'approbation » → alerte déclenchée</text>
+      </g>
+    </svg>
+    <figcaption>La croissance au-delà de la base approuvée marque la ligne et déclenche une alerte; pas les retraits.</figcaption>
+  </figure>
+
+  <p>C'est la défense contre un schéma d'attaque classique : une application légitime, de confiance depuis longtemps, dont les identifiants sont volés et qui se voit soudainement greffer <code>Mail.Read</code> pour tout le locataire. Vous avez approuvé ce qu'elle était — Panoptica365 vous avertit quand elle devient autre chose.</p>
+
+  <h2>Quand refaire l'exercice</h2>
+
+  <ul>
+    <li>Après l'intégration : faites le passage complet une fois, avec la confirmation du client là où c'est nécessaire.</li>
+    <li>Quand une alerte de nouvelle application ou de consentement se déclenche : examinez l'application, puis approuvez-la ou éliminez-la. Approuver une application résout automatiquement son alerte de consentement ouverte.</li>
+    <li>Périodiquement (une fois par trimestre suffit amplement) : cliquez sur Actualiser et vérifiez s'il y a de nouvelles pastilles jaunes ou rouges.</li>
+  </ul>
+
+</div>
+</body>
+</html>

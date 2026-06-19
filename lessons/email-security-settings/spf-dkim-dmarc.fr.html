@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPF, DKIM, DMARC — le trio d'authentification courriel que presque tout le monde se trompe — Paramètres de sécurité courriel</title>
+<meta name="lesson:title" content="SPF, DKIM, DMARC — le trio d'authentification courriel que presque tout le monde se trompe">
+<meta name="lesson:subtitle" content="Comment SPF, DKIM et DMARC arrêtent la falsification de domaine — et pourquoi p=none équivaut à n'avoir aucune politique.">
+<meta name="lesson:icon" content="shield-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres de sécurité courriel</span> <span class="sep">·</span> <span>SPF, DKIM, DMARC</span></div>
+  <h1>SPF, DKIM, DMARC — le trio d'authentification courriel que presque tout le monde se trompe</h1>
+  <p class="dek">Comment SPF, DKIM et DMARC arrêtent la falsification de domaine — et pourquoi p=none équivaut à n'avoir aucune politique.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un attaquant hors du réseau du client envoie un courriel falsifié portant le domaine du client dans l'en-tête From au partenaire du client.">
+      <defs>
+        <radialGradient id="emBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="emArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#emBg)"/>
+
+      <!-- left: attacker infrastructure, outside -->
+      <g transform="translate(80,108)">
+        <rect x="0" y="0" width="180" height="120" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <g transform="translate(46,30)" fill="none" stroke="#FF8A98" stroke-width="2.4">
+          <rect x="0" y="0" width="88" height="58" rx="6"/>
+          <line x1="0" y1="20" x2="88" y2="20"/>
+          <circle cx="12" cy="10" r="2.4" fill="#FF8A98" stroke="none"/>
+          <circle cx="24" cy="10" r="2.4" fill="#FF8A98" stroke="none"/>
+        </g>
+      </g>
+      <text x="170" y="256" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">ATTAQUANT · DEHORS</text>
+
+      <!-- the forged envelope, mid-flight, carrying the customer's domain -->
+      <g transform="translate(440,116)">
+        <rect x="0" y="0" width="240" height="108" rx="10" fill="#0E2640" stroke="#FFC04D" stroke-width="1.6"/>
+        <path d="M0 8 L120 70 L240 8" fill="none" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="120" y="92" text-anchor="middle" fill="#FFC04D" font-family="Geist Mono,monospace" font-size="13">From: dirfin@client.com</text>
+      </g>
+      <text x="560" y="256" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">&laquo;&nbsp;FROM&nbsp;&raquo; FALSIFIÉ</text>
+
+      <!-- right: the partner who receives it -->
+      <g transform="translate(860,108)">
+        <rect x="0" y="0" width="180" height="120" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <g transform="translate(58,30)" fill="none" stroke="#C4D4E8" stroke-width="2.2">
+          <circle cx="32" cy="20" r="16"/>
+          <path d="M6 64 a26 24 0 0 1 52 0"/>
+        </g>
+      </g>
+      <text x="950" y="256" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">LE PARTENAIRE</text>
+
+      <!-- flight path -->
+      <path d="M268 168 H432" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#emArr)"/>
+      <path d="M688 168 H852" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#emArr)"/>
+    </svg>
+    <figcaption>L'attaquant n'entre jamais. Il envoie un courriel falsifié depuis sa propre infrastructure, estampillant le domaine du client sur l'en-tête From — et le partenaire vire presque l'argent.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un MSP reçoit un appel paniqué d'un client un jeudi après-midi. « Notre plus gros client vient d'appeler. Il a reçu un courriel ce matin qui avait l'air de venir de notre directeur financier — instructions de virement, paiement urgent de fournisseur, le grand jeu. Il a presque payé. Les en-têtes du courriel disent qu'il vient de notre domaine. Comment l'attaquant est-il entré dans notre système? »</p>
+
+  <p>La réponse est la pire sorte de réponse : l'attaquant n'est entré dans rien. Il est dehors, envoyant un courriel falsifié depuis sa propre infrastructure, en mettant le domaine du client dans l'en-tête <code>From</code>. Le courriel du client va bien. Le directeur financier du client va bien. Le CRM du client et Active Directory et le compte bancaire vont bien.</p>
+
+  <p>Le partenaire du client <em>voit aussi</em> un courriel falsifié et vire presque de l'argent à l'attaquant. Le client encaisse le coup de réputation. Le partenaire encaisse le coup financier. Le MSP encaisse la conversation gênante.</p>
+
+  <p>C'est l'attaque que SPF, DKIM et DMARC existent pour arrêter. Le client a SPF. Il a peut-être DKIM. Il n'a probablement pas DMARC. Même s'il a les trois, DMARC est presque certainement à <code>p=none</code>, ce qui est observer-seulement — ça ne fait rien pour bloquer l'usurpation. Le serveur de courriel récepteur (le fournisseur de courriel du partenaire) voit l'authentification échouée, n'a aucune politique du domaine du client pour lui dire quoi faire, et prend une décision. Souvent la mauvaise.</p>
+
+  <p>Cette leçon vise à combler cet écart honnêtement. Le parcours de « pas de DMARC » ou <code>p=none</code> à <code>p=reject</code> est le travail de durcissement courriel le plus conséquent qu'un MSP fasse — et le plus communément sauté.</p>
+  </div>
+
+  <h2>Les trois mécanismes, distincts et complémentaires</h2>
+
+  <p>SPF, DKIM et DMARC sont <em>trois choses séparées</em> qui travaillent ensemble. Les opérateurs les confondent constamment. Savoir qui est qui, c'est la fondation.</p>
+
+  <p><strong>SPF (Sender Policy Framework).</strong> Un enregistrement DNS TXT sur votre domaine qui liste les adresses IP et services autorisés à envoyer du courrier « depuis » votre domaine. Publié comme <code>v=spf1 include:spf.protection.outlook.com -all</code> pour un tenant M365-seulement. Le serveur récepteur, quand un courriel arrive en prétendant être de votre domaine, vérifie l'IP expéditrice contre votre enregistrement SPF publié. Si l'IP n'est pas autorisée, SPF échoue.</p>
+
+  <p><strong>DKIM (DomainKeys Identified Mail).</strong> Une signature cryptographique ajoutée au courriel sortant par le serveur expéditeur, utilisant une clé privée. La clé publique correspondante est publiée dans DNS comme enregistrement TXT à un sous-domaine de sélecteur (p. ex., <code>selector1._domainkey.customer.com</code>). Le serveur récepteur récupère la clé publique, vérifie la signature contre le corps du message. Si la signature est valide, le courriel prouve qu'il a été envoyé par un système autorisé <em>et</em> n'a pas été altéré en transit.</p>
+
+  <p><strong>DMARC (Domain-based Message Authentication, Reporting, and Conformance).</strong> Un enregistrement DNS TXT à <code>_dmarc.customer.com</code> qui dit aux serveurs récepteurs quoi faire quand SPF ou DKIM échouent. Trois politiques : <code>p=none</code> (ne rien faire — envoyez-moi juste un rapport), <code>p=quarantine</code> (traiter comme suspect — dossier indésirables), <code>p=reject</code> (refuser le message carrément — rebondir). Plus une destination de rapport — une adresse courriel qui reçoit des rapports d'agrégation quotidiens de chaque serveur qui tente d'envoyer sous votre domaine.</p>
+
+  <p>Trois choses en couches :</p>
+  <ul>
+    <li>SPF demande « l'IP expéditrice est-elle autorisée à envoyer pour ce domaine? »</li>
+    <li>DKIM demande « le message est-il signé cryptographiquement par le domaine autorisé? »</li>
+    <li>DMARC demande « si SPF ou DKIM échouent, que devrait faire le récepteur, et où devrais-je rapporter? »</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Les trois mécanismes en couches : SPF vérifie l'IP expéditrice, DKIM vérifie la signature cryptographique, DMARC décide quoi faire en cas d'échec et où rapporter.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="m3Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- SPF -->
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="200" height="200" rx="10" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="100" y="40" text-anchor="middle" fill="#A8E1F8" font-size="18" font-weight="700" letter-spacing="1">SPF</text>
+          <line x1="24" y1="56" x2="176" y2="56" stroke="#1F3C5C"/>
+          <text x="100" y="92" text-anchor="middle" fill="#C4D4E8" font-size="12.5">L'IP expéditrice</text>
+          <text x="100" y="112" text-anchor="middle" fill="#C4D4E8" font-size="12.5">est-elle autorisée</text>
+          <text x="100" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">pour ce domaine?</text>
+          <text x="100" y="178" text-anchor="middle" fill="#6B85A6" font-size="11" letter-spacing="1">IP EXPÉDITRICE</text>
+        </g>
+        <!-- DKIM -->
+        <g transform="translate(260,40)">
+          <rect x="0" y="0" width="200" height="200" rx="10" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="100" y="40" text-anchor="middle" fill="#A8E1F8" font-size="18" font-weight="700" letter-spacing="1">DKIM</text>
+          <line x1="24" y1="56" x2="176" y2="56" stroke="#1F3C5C"/>
+          <text x="100" y="92" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Le message est-il</text>
+          <text x="100" y="112" text-anchor="middle" fill="#C4D4E8" font-size="12.5">signé cryptogra-</text>
+          <text x="100" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">phiquement?</text>
+          <text x="100" y="178" text-anchor="middle" fill="#6B85A6" font-size="11" letter-spacing="1">SIGNATURE</text>
+        </g>
+        <!-- DMARC -->
+        <g transform="translate(480,40)">
+          <rect x="0" y="0" width="200" height="200" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+          <text x="100" y="40" text-anchor="middle" fill="#7DD9F9" font-size="18" font-weight="700" letter-spacing="1">DMARC</text>
+          <line x1="24" y1="56" x2="176" y2="56" stroke="#274B72"/>
+          <text x="100" y="92" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Si SPF ou DKIM</text>
+          <text x="100" y="112" text-anchor="middle" fill="#C4D4E8" font-size="12.5">échouent : que fait</text>
+          <text x="100" y="132" text-anchor="middle" fill="#C4D4E8" font-size="12.5">le récepteur, et où</text>
+          <text x="100" y="152" text-anchor="middle" fill="#C4D4E8" font-size="12.5">rapporter?</text>
+          <text x="100" y="186" text-anchor="middle" fill="#7DD9F9" font-size="11" letter-spacing="1">DÉCIDER + RAPPORTER</text>
+        </g>
+        <path d="M240 140 H260" stroke="#335F92" stroke-width="2" marker-end="url(#m3Arr)"/>
+        <path d="M460 140 H480" stroke="#335F92" stroke-width="2" marker-end="url(#m3Arr)"/>
+      </g>
+    </svg>
+    <figcaption>Trois choses séparées, en couches : SPF vérifie l'IP expéditrice, DKIM vérifie la signature, DMARC décide quoi faire en cas d'échec et où rapporter.</figcaption>
+  </figure>
+
+  <p>Un domaine avec seulement SPF est à moitié protégé. Un domaine avec seulement DKIM est à moitié protégé. Un domaine avec les deux mais sans DMARC est <em>observablement authentifié</em> mais le récepteur doit encore décider quoi faire des messages échoués — et beaucoup les laissent passer.</p>
+
+  <h2>Alignement — le concept que la plupart des opérateurs manquent</h2>
+
+  <p>SPF et DKIM « passent » ou « échouent » tous les deux, mais DMARC ajoute une vérification supplémentaire cruciale : <strong>l'alignement</strong>.</p>
+
+  <p><strong>L'alignement SPF</strong> veut dire que le domaine dans la vérification SPF correspond au domaine dans l'en-tête <code>From:</code> visible que l'utilisateur voit. Les attaquants peuvent s'authentifier depuis leur propre domaine (<code>evil-attacker.com</code>) et mettre votre domaine dans le <code>From:</code> visible. SPF passe — pour le domaine de l'attaquant. Le <code>From:</code> visible dit le vôtre. L'alignement SPF attrape ce désaccord.</p>
+
+  <p><strong>L'alignement DKIM</strong> veut dire que le domaine qui signe le message via DKIM correspond au domaine <code>From:</code> visible. Même logique — un attaquant peut signer DKIM avec son propre domaine tout en falsifiant le <code>From:</code> visible. L'alignement DKIM attrape le désaccord.</p>
+
+  <p>DMARC exige <em>qu'au moins SPF ou DKIM passe avec alignement</em>. Les deux qui passent mais non alignés est encore un échec DMARC. Le récepteur applique alors votre politique DMARC (<code>p=quarantine</code> ou <code>p=reject</code>).</p>
+
+  <div class="callout insight">
+    <div class="clabel">La partie que les opérateurs manquent</div>
+    <p>Un domaine peut avoir un enregistrement SPF valide ET un DKIM valide ET être encore usurpable parce que rien n'applique l'alignement. DMARC l'applique.</p>
+  </div>
+
+  <h2>Le parcours — de p=none à p=quarantine à p=reject</h2>
+
+  <p>Presque chaque parcours DMARC de client PME ressemble à ça :</p>
+
+  <p><strong>Étape 0 — Aucun DMARC du tout.</strong> La plupart des domaines. Le récepteur obtient des SPF/DKIM échoués et décide tout seul (habituellement il laisse passer le courriel parce que rejeter semble impoli). Le client est entièrement usurpable.</p>
+
+  <p><strong>Étape 1 — DMARC publié à p=none.</strong> Le client a <em>l'observabilité</em> — les rapports d'agrégation quotidiens vous disent qui envoie sous votre domaine, depuis où, avec quel statut d'authentification. Mais la politique dit encore « ne rien faire », donc l'usurpation fonctionne encore. C'est là où 80 % des domaines avec DMARC vivent, souvent pendant des années.</p>
+
+  <p><strong>Étape 2 — DMARC à p=quarantine.</strong> Le courrier avec authentification échouée va dans le dossier indésirables du destinataire. La plupart des courriels usurpés de l'attaquant n'atteignent pas la boîte de réception. Certains utilisateurs les trouvent quand même dans les indésirables et agissent dessus; c'est un plus petit rayon d'impact mais pas zéro.</p>
+
+  <p><strong>Étape 3 — DMARC à p=reject.</strong> Le courrier avec authentification échouée est refusé carrément par le serveur récepteur. Le destinataire ne le voit jamais; l'expéditeur (réel ou attaquant) obtient un rebond. Le domaine du client n'est plus usurpable du point de vue du récepteur.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Le parcours DMARC de l'étape 0 sans DMARC, à travers p=none, p=quarantine, jusqu'à p=reject, avec la protection qui monte à mesure que vous avancez.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="mJArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <!-- rising protection baseline -->
+      <text x="36" y="40" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="1">PROTECTION &rarr;</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Stage 0 -->
+        <g transform="translate(40,150)">
+          <rect x="0" y="0" width="140" height="54" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="70" y="24" fill="#C4D4E8" font-size="13" font-weight="600">Étape 0</text>
+          <text x="70" y="42" fill="#6B85A6" font-size="11">Aucun DMARC</text>
+        </g>
+        <!-- Stage 1 -->
+        <g transform="translate(200,118)">
+          <rect x="0" y="0" width="140" height="54" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="70" y="24" fill="#A8E1F8" font-size="13" font-weight="600">p=none</text>
+          <text x="70" y="42" fill="#6B85A6" font-size="11">observer seul.</text>
+        </g>
+        <!-- Stage 2 -->
+        <g transform="translate(360,86)">
+          <rect x="0" y="0" width="140" height="54" rx="9" fill="#10243B" stroke="#FFC04D"/>
+          <text x="70" y="24" fill="#FFC04D" font-size="13" font-weight="600">p=quarantine</text>
+          <text x="70" y="42" fill="#6B85A6" font-size="11">vers indésirables</text>
+        </g>
+        <!-- Stage 3 -->
+        <g transform="translate(520,54)">
+          <rect x="0" y="0" width="160" height="54" rx="9" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.4"/>
+          <text x="80" y="24" fill="#2EE8A0" font-size="13" font-weight="700">p=reject</text>
+          <text x="80" y="42" fill="#6B85A6" font-size="11">non usurpable</text>
+        </g>
+        <!-- arrows climbing -->
+        <path d="M180 168 L200 152" stroke="#335F92" stroke-width="2" marker-end="url(#mJArr)"/>
+        <path d="M340 136 L360 120" stroke="#335F92" stroke-width="2" marker-end="url(#mJArr)"/>
+        <path d="M500 104 L520 88" stroke="#335F92" stroke-width="2" marker-end="url(#mJArr)"/>
+      </g>
+    </svg>
+    <figcaption>Les quatre étapes, qui montent : rien ne protège le client tant que la politique ne dit pas réellement aux récepteurs d'agir.</figcaption>
+  </figure>
+
+  <p>Le parcours de l'étape 0 à l'étape 3 prend des semaines à des mois pour la plupart des clients. Pas parce que c'est techniquement difficile — les changements DNS sont petits. Parce qu'entre <code>p=none</code> et <code>p=reject</code>, vous devez trouver chaque expéditeur légitime qui s'authentifie mal et le réparer, ou accepter qu'il sera mis en quarantaine / rejeté.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Ne soyez pas ce MSP</div>
+    <p>C'est la partie qui fait peur aux MSP et les fait rester à <code>p=none</code> indéfiniment. Ne soyez pas ce MSP. Le client est à un courriel d'ingénierie sociale d'un incident de fraude par virement que DMARC aurait arrêté.</p>
+  </div>
+
+  <h2>Diagnostic — utiliser DomainGuardian</h2>
+
+  <p>Avant de toucher à quoi que ce soit, auditez l'état actuel. <a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">DomainGuardian</a> vous donne la vue codée par couleur pour SPF / DKIM / DMARC / MX / enregistrements connexes, conçue pour les techs L1 qui ne veulent pas mémoriser la syntaxe de recherche DNS.</p>
+
+  <p>Pour chaque domaine accepté sur le tenant du client, vérifiez :</p>
+
+  <ul>
+    <li><strong>SPF.</strong> Existe-t-il? Finit-il par <code>-all</code> (hard fail) ou <code>~all</code> (soft fail) ou <code>+all</code> (catastrophique — autoriser tout)? Inclut-il <code>spf.protection.outlook.com</code> (requis pour M365)? Inclut-il les autres expéditeurs que le client utilise réellement (plateformes marketing, fournisseurs de paye, outils comptables)? Le compte de recherches est-il sous 10 (la limite stricte de SPF — dépassez-la et l'enregistrement se brise)?</li>
+    <li><strong>DKIM.</strong> DKIM est-il activé pour ce domaine dans le centre d'administration M365? Les enregistrements CNAME correspondants (<code>selector1._domainkey.customer.com</code> et <code>selector2._domainkey.customer.com</code>) sont-ils publiés dans DNS pointant vers les cibles Microsoft? Se résolvent-ils réellement correctement?</li>
+    <li><strong>DMARC.</strong> Y a-t-il un enregistrement TXT à <code>_dmarc.customer.com</code>? Quelle est la politique (<code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>)? Y a-t-il une destination de rapport d'agrégation (<code>rua=mailto:...</code>)? <code>aspf</code> et <code>adkim</code> sont-ils configurés (modes d'alignement — <code>r</code> pour relaxed, <code>s</code> pour strict)?</li>
+  </ul>
+
+  <p>Documentez les constats par domaine. L'audit est la fondation pour le parcours.</p>
+
+  <h2>Configuration — les étapes pratiques</h2>
+
+  <p><strong>SPF, pour un tenant M365-seulement :</strong></p>
+
+  <pre><code>v=spf1 include:spf.protection.outlook.com -all</code></pre>
+
+  <p>Ajoutez d'autres includes pour les expéditeurs tiers que le client utilise (Mailchimp <code>include:servers.mcsv.net</code>, SendGrid <code>include:sendgrid.net</code>, ADP <code>include:spf.adp.com</code>, etc. — chaque plateforme documente son include). Gardez le total d'includes sous 10 pour rester dans la limite de recherches. Finissez avec <code>-all</code> (hard fail) pour le durcissement de production — <code>~all</code> est une marche, pas une destination.</p>
+
+  <p><strong>DKIM, dans M365 :</strong></p>
+
+  <p>Ouvrez le portail Microsoft 365 Defender &rarr; Email &amp; collaboration &rarr; Policies &amp; rules &rarr; Threat policies &rarr; Email authentication settings &rarr; DKIM. Sélectionnez chaque domaine accepté. Microsoft affiche les deux valeurs CNAME que vous devez publier dans DNS. Publiez-les. Attendez la propagation DNS (habituellement sous une heure). Basculez la signature DKIM à <em>enabled</em> dans le portail pour le domaine.</p>
+
+  <p>Ça doit être fait <strong>par domaine accepté</strong>. Le domaine <code>onmicrosoft.com</code> du client a DKIM automatique; ses domaines personnalisés n'en ont pas tant que vous ne configurez pas chacun.</p>
+
+  <p><strong>DMARC, en commençant à p=none :</strong></p>
+
+  <pre><code>v=DMARC1; p=none; rua=mailto:dmarc-reports@customer.com; aspf=r; adkim=r;</code></pre>
+
+  <p>Publié comme enregistrement TXT à <code>_dmarc.customer.com</code>. La destination <code>rua</code> devrait être une boîte aux lettres que vous (ou un service de rapport DMARC) surveillez activement — les rapports arrivent quotidiennement et c'est la mine d'or pour la prochaine étape.</p>
+
+  <p><strong>Lire les rapports</strong> est la partie difficile du parcours. Les rapports sont des fichiers XML (un par serveur expéditeur, par jour). Pour les clients PME, vous voulez un service qui transforme le XML en tableaux de bord lisibles montrant qui envoie sous votre domaine, quel statut d'authentification ils ont, et quels expéditeurs vous devez réparer. Celui qu'on recommande est <a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a>. D'autres options existent (le suivi DMARC de Postmark, Valimail, dmarcian, Mailhardener); choisissez-en un par MSP et utilisez-le systématiquement sur tous les clients pour que le flux de travail devienne familier.</p>
+
+  <p><strong>Avancer à p=quarantine :</strong></p>
+
+  <p>Une fois que vous avez passé quelques semaines à <code>p=none</code> et identifié (et réparé) tous les expéditeurs légitimes, changez la politique :</p>
+
+  <pre><code>v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@customer.com; aspf=r; adkim=r; pct=25;</code></pre>
+
+  <p>Le <code>pct=25</code> déploie la quarantaine à 25 % du courrier avec authentification échouée. Surveillez les rapports pendant deux semaines. Si rien de légitime ne brise, montez à <code>pct=50</code>, puis <code>pct=100</code>. C'est le filet de sécurité pour les surprises.</p>
+
+  <p><strong>Avancer à p=reject :</strong></p>
+
+  <p>Une fois que <code>p=quarantine; pct=100</code> a roulé proprement pendant quelques semaines, basculez à <code>p=reject</code>. Le domaine du client n'est plus usurpable du point de vue du récepteur.</p>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p><strong>Expéditeurs légitimes sans autorisation SPF/DKIM appropriée.</strong> Plateformes marketing, fournisseurs de paye, systèmes CRM, outils de sondages — tout service qui envoie sous le domaine du client qui n'a pas les bons includes SPF ou la signature DKIM. Une fois que DMARC se resserre à <code>p=quarantine</code> ou <code>p=reject</code>, ces expéditeurs se font mettre en quarantaine ou rebondir. La correction est spécifique au service — ajouter des includes SPF, configurer DKIM pour l'expéditeur tiers, ou migrer l'expéditeur vers un sous-domaine avec sa propre politique DMARC.</p>
+
+  <p><strong>Campagnes marketing où le client ne l'a pas dit à TI.</strong> Un cycle commun : le marketing essaie une nouvelle plateforme de courriel, envoie une campagne, la moitié des destinataires ne la reçoit jamais parce que DMARC a bloqué le courriel non authentifié. Le marketing se plaint à TI. TI réalise que le marketing utilise la plateforme depuis des mois. La correction est d'authentifier correctement, pas d'affaiblir DMARC.</p>
+
+  <p><strong>Courrier transféré.</strong> Le courrier transféré à travers un intermédiaire (une liste de diffusion, un transitaire personnel) échoue souvent DMARC parce que l'IP du serveur de transfert ne correspond pas à SPF et le corps du message est modifié, brisant DKIM. Les listes de diffusion modernes gèrent ça via ARC (Authenticated Received Chain) mais une infrastructure plus ancienne fait encore trébucher DMARC.</p>
+
+  <p><strong>Limite de recherches SPF dépassée.</strong> Les enregistrements SPF qui imbriquent trop d'includes (limite stricte de 10 recherches) deviennent invalides. M365 seul utilise un include; ajoutez Mailchimp, ADP, et Salesforce et vous pouvez frapper la limite vite. Les outils d'aplatissement SPF (services payants) effondrent les includes en listes IP brutes pour rester sous la limite.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>SPF, DKIM et DMARC sont des enregistrements DNS sur le domaine du client — hors du modèle de lecture focalisé-sur-tenant-M365 de Panoptica365. Panoptica365 n'audite pas actuellement les enregistrements DNS nativement; le flux de travail de l'opérateur, c'est d'utiliser DomainGuardian (ou un outil similaire) pour l'audit périodique.</p>
+
+  <p>Ce que Panoptica365 <em>fait</em> remonter de pertinent :</p>
+
+  <ul>
+    <li><strong>L'état d'activation DKIM dans le tenant M365.</strong> Basculer DKIM « activé » par domaine est un paramètre M365 — la détection de dérive de Panoptica365 peut signaler si la signature DKIM est désactivée pour un domaine qui était précédemment activé.</li>
+    <li><strong>Le pipeline d'alertes Defender XDR.</strong> Quand MDO détecte une tentative d'usurpation qui a échoué à l'alignement DMARC, l'alerte résultante coule vers le moteur d'alertes de Panoptica365.</li>
+  </ul>
+
+  <p>Pour les rapports DMARC eux-mêmes — les rapports d'agrégation XML quotidiens — les opérateurs s'appuient sur une plateforme tierce de suivi DMARC; <a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a> est celle qu'on recommande, avec Postmark, Valimail, dmarcian, ou Mailhardener comme alternatives utilisables. Panoptica365 n'ingère pas ces rapports aujourd'hui.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong><code>p=none</code> ne fait rien.</strong> Un client avec DMARC à <code>p=none</code> est observablement authentifié mais opérationnellement non protégé. Les récepteurs laissent encore passer le courriel usurpé. Le parcours vers <code>p=quarantine</code> puis <code>p=reject</code> est le travail qui fait que DMARC défend réellement le client.</p>
+
+  <p><strong>L'alignement est le concept qui attrape les opérateurs.</strong> SPF et DKIM peuvent tous deux « passer » alors que l'en-tête <code>From:</code> visible est falsifié. L'exigence d'alignement de DMARC est ce qui fait que le trio attrape vraiment l'usurpation que l'anecdote d'ouverture décrit.</p>
+
+  <p><strong>DomainGuardian pour le diagnostic, mailsec.ca pour les rapports.</strong> Le travail d'audit-du-DNS est convivial pour L1 avec le bon outil visuel. Le travail de lecture-des-rapports-DMARC a besoin d'une vraie plateforme de rapport pour l'échelle PME — les fichiers XML ne se mettent pas à l'échelle d'un carnet de 30 clients. mailsec.ca est celle qu'on recommande; Postmark, Valimail, dmarcian, ou Mailhardener sont des alternatives utilisables. Choisissez-en une par MSP et utilisez-la pour chaque client.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Transfert automatique et règles de boîte de réception</b> — la paire d'indicateurs post-compromission — ce qui arrive après que l'authentification et Safe Links et DMARC ont tous été contournés d'une façon ou d'une autre.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Audit de boîte aux lettres</b> — la posture d'audit qui vous donne la visibilité sur ce qui s'est passé dans une boîte aux lettres après coup.</div></div>
+  </div>
+
+  <p>Pour l'instant : ouvrez DomainGuardian, collez le domaine principal du client, prenez une capture d'écran du résultat, et parcourez les constats SPF / DKIM / DMARC avec le client. S'il est à <code>p=none</code> ou n'a aucun DMARC du tout, le parcours commence là. Deux à trois mois de travail discipliné amènent un client de l'étape 0 à l'étape 3. Sautez ça et le client reste à un courriel d'ingénierie sociale de l'appel dans l'anecdote d'ouverture.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — vérificateur d'authentification courriel DomainGuardian (<a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">domainguardian.nebiatek.com</a>); plateforme de rapport DMARC mailsec.ca (<a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a>); Microsoft Learn sur SPF dans Microsoft 365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-spf-configure" target="_blank" rel="noopener">Microsoft Learn — Set up SPF</a>); configuration de la signature DKIM dans M365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dkim-configure" target="_blank" rel="noopener">Microsoft Learn — Use DKIM to validate outbound email</a>); vue d'ensemble DMARC et référence de politique (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure" target="_blank" rel="noopener">Microsoft Learn — Use DMARC to validate email</a>); RFC 7489 (spécification DMARC — modes d'alignement et sémantique de politique) (<a href="https://datatracker.ietf.org/doc/html/rfc7489" target="_blank" rel="noopener">RFC 7489</a>); vue d'ensemble ARC (Authenticated Received Chain) pour le courrier transféré (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-arc-configure" target="_blank" rel="noopener">Microsoft Learn — ARC</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

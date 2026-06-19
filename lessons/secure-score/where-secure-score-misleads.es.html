@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dónde Secure Score induce a error — Secure Score</title>
+<meta name="lesson:title" content="Dónde Secure Score induce a error — la historia del 92 %-y-víctima-de-BEC y la trampa de manipular la puntuación">
+<meta name="lesson:subtitle" content="Un 92 % no evitó un BEC de 94 000 $. Los puntos ciegos, la trampa de manipular la puntuación, y el trabajo de seguridad que no aparece en ninguna cifra.">
+<meta name="lesson:icon" content="triangle-alert">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Dónde Secure Score induce a error</span></div>
+  <h1>Dónde Secure Score induce a error — la historia del 92 %-y-víctima-de-BEC y la trampa de manipular la puntuación</h1>
+  <p class="dek">Un 92 % no evitó un BEC de 94 000 $. Los puntos ciegos, la trampa de manipular la puntuación, y el trabajo de seguridad que no aparece en ninguna cifra.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un indicador de Secure Score al 92 % junto a una transferencia de 94 000 $ que salió igualmente — la puntuación nunca se movió.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ssGood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- izquierda: el indicador al 92 % -->
+      <g transform="translate(250,180)">
+        <circle r="110" fill="none" stroke="#1F3C5C" stroke-width="18"/>
+        <circle r="110" fill="none" stroke="url(#ssGood)" stroke-width="18" stroke-linecap="round"
+                stroke-dasharray="636 56" transform="rotate(-90)"/>
+        <text x="0" y="6" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="56" font-weight="700">92 %</text>
+        <text x="0" y="36" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">SECURE SCORE</text>
+      </g>
+      <text x="250" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">NO SE MOVIÓ</text>
+
+      <!-- centro: conector « y aun así » -->
+      <path d="M400 170 H660" stroke="#335F92" stroke-width="2.5" marker-end="url(#ssArr)"/>
+      <defs><marker id="ssArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="530" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" font-style="italic">y aun así</text>
+
+      <!-- derecha: la transferencia que salió -->
+      <g transform="translate(840,180)">
+        <rect x="-130" y="-66" width="260" height="132" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-18" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="38" font-weight="700">94 000 $</text>
+        <text x="0" y="14" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="14">transferencia redirigida</text>
+        <text x="0" y="40" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">BEC</text>
+      </g>
+      <text x="840" y="318" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">CONFIGURACIÓN ≠ SEGURIDAD</text>
+    </svg>
+    <figcaption>El tenant se quedó en el 92 %. Ninguna de las recomendaciones previno el ataque.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Una empresa logística de 60 personas está en una Microsoft Secure Score del 92 %. El MSP que gestiona el tenant está orgulloso de la cifra. El equipo ejecutivo del cliente ha visto la puntuación en su revisión trimestral y está satisfecho. La cifra del año anterior era del 79 %; el trabajo para subirla apareció en la propuesta de renovación y la renovación se cerró limpiamente. Por cualquier medida convencional de cómo un MSP demuestra valor, este tenant está en el cuartil superior.</p>
+
+  <p>Un martes por la mañana de noviembre, la controladora reenvía una transferencia de 94 000 $ a lo que cree que es el nuevo socio logístico del cliente. Las instrucciones de la transferencia llegaron en un correo que se parecía exactamente al estilo de comunicación normal del socio. El correo pasó la autenticación SPF y DKIM — realmente vino del dominio del socio. El correo del socio había sido comprometido por un atacante equipado con AiTM dos días antes. El atacante había leído la conversación de la operación logística en curso y se había insertado con un mensaje de redirección de transferencia en el momento perfecto.</p>
+
+  <p>La Secure Score no se mueve. La configuración del tenant del MSP sigue en el 92 %. Las recomendaciones de Microsoft siguen implementadas. Ninguna de ellas previno este ataque.</p>
+
+  <p>El abogado del cliente quiere entenderlo. El suscriptor del seguro quiere entenderlo. El consultor sénior del MSP tiene que explicar la brecha entre «Secure Score del 92 %» y «fue víctima de un BEC por 94 000 $». Esta lección va de esa brecha.</p>
+  </div>
+
+  <h2>Lo que la puntuación mide vs lo que no mide</h2>
+
+  <p>La puntuación mide <strong>si el tenant del cliente tiene configuraciones que Microsoft recomienda.</strong> Cada configuración ha sido elegida por Microsoft porque es una defensa de línea base útil. Implementarlas todas mueve al tenant de «configuración de fábrica por defecto» a «línea base recomendada por Microsoft». Eso es valor de seguridad genuino.</p>
+
+  <p>La puntuación <em>no</em> mide:</p>
+
+  <ul>
+    <li>Si las configuraciones están bien afinadas para el perfil de riesgo real del cliente</li>
+    <li>Si el cliente ha sido atacado</li>
+    <li>Si el operador responde rápidamente cuando algo deriva</li>
+    <li>Si los proveedores y socios del cliente tienen seguridad de correo básica</li>
+    <li>Si los usuarios del cliente han sido formados para reconocer phishing sofisticado</li>
+    <li>Si existe la capacidad de respuesta a incidentes fuera de la plataforma</li>
+    <li>Si la aplicación de DMARC del cliente está en su sitio</li>
+    <li>Si el libro de excepciones del cliente ha sido revisado recientemente</li>
+    <li>Si las MailTips llegan realmente a los usuarios (algunos usuarios las deshabilitan a nivel de buzón)</li>
+    <li>Si el operador audita las reglas de transporte trimestralmente</li>
+    <li>Si el operador detecta patrones anómalos de inicio de sesión dentro de la ventana de respuesta</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Una sola instantánea de configuración se puntúa; el trabajo continuo entre instantáneas — afinado, respuesta, higiene de socios, DMARC, respuesta a incidentes — no.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- instantánea puntuada -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="44" width="200" height="162" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="74" fill="#5CCBF4" font-size="12" letter-spacing="2">PUNTUADO</text>
+        <text x="140" y="110" fill="#A8E1F8" font-size="14">Instantánea de</text>
+        <text x="140" y="132" fill="#A8E1F8" font-size="14">configuración</text>
+        <text x="140" y="170" fill="#6B85A6" font-size="11.5">¿el ajuste está on?</text>
+        <text x="140" y="188" fill="#6B85A6" font-size="11.5">(binario, verificable)</text>
+      </g>
+      <!-- separador -->
+      <line x1="280" y1="44" x2="280" y2="206" stroke="#1F3C5C" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <!-- trabajo sin puntuar -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="480" y="74" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="2">SIN PUNTUAR · ENTRE INSTANTÁNEAS</text>
+        <g fill="#C4D4E8" font-size="12.5">
+          <text x="320" y="106">• afinado según el riesgo del cliente</text>
+          <text x="320" y="128">• triaje de deriva y respuesta</text>
+          <text x="320" y="150">• publicación DMARC / SPF</text>
+          <text x="320" y="172">• higiene de correo de socios</text>
+          <text x="320" y="194">• capacidad de respuesta a incidentes</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>La puntuación mide la instantánea. El trabajo que mantiene al cliente seguro ocurre entre instantáneas — y queda sin puntuar.</figcaption>
+  </figure>
+
+  <p>La empresa logística al 92 % tenía un tenant perfectamente configurado según el conjunto de recomendaciones de Microsoft. El ataque entró por un vector que el conjunto de recomendaciones no aborda — un correo del socio comprometido, usado para insertar un mensaje de redirección en una conversación en curso. La puntuación no tenía nada que decir sobre la higiene de correo del socio, el proceso de verificación de transferencias del cliente, o el tiempo de respuesta del operador cuando el ataque aterrizó. La puntuación no estaba <em>equivocada</em>; simplemente no estaba <em>completa</em>.</p>
+
+  <h2>La trampa de manipular la puntuación — cuando la puntuación miente porque el operador la ayudó</h2>
+
+  <p>Hay formas honestas de que una Secure Score suba (implementar las recomendaciones) y formas deshonestas. Los operadores a veces — bajo presión, bajo tiempo, o porque el cliente está mirando la cifra — se deslizan hacia las formas deshonestas. Esta es la trampa de manipular la puntuación, y reconocerla en tu propio trabajo es parte de la disciplina profesional.</p>
+
+  <p>Los tres patrones de manipulación más habituales:</p>
+
+  <p><strong>1. « Resolved through third party » sin tercero.</strong> La lección 2 introdujo la opción: cuando una herramienta no-Microsoft cubre genuinamente la misma función de seguridad, puedes marcar una recomendación como resuelta y obtener los puntos. Algunos operadores aplican esto a recomendaciones que simplemente no quieren implementar, reclamando cobertura de «tercero» que no existe o que no cubre realmente la función. La puntuación sube. La seguridad no. El riesgo de auditoría es el mismo.</p>
+
+  <p><strong>2. Marcar la implementación como «completa» cuando no lo está.</strong> Algunas recomendaciones de Secure Score comprueban configuración del tenant que Microsoft puede verificar automáticamente (binaria: ¿está el ajuste activado o desactivado?). Otras requieren la auto-atestación del operador — «sí, hemos completado esto». Cuando un operador marca algo como completo sin haberlo completado realmente, la puntuación refleja la atestación, no la realidad. En algunos contextos de cumplimiento, esto es genuinamente fraude.</p>
+
+  <p><strong>3. Risk-Accepting recomendaciones para limpiar el ruido visual.</strong> Las recomendaciones sentadas en cero puntos arrastran el porcentaje hacia abajo. Marcarlas como Risk-Accepted no mueve los puntos pero sí cambia la presentación visual en el portal. Un operador que marca como Risk-Accepted todo lo que no puede o no quiere implementar está siendo honesto. Un operador que marca como Risk-Accepted elementos que <em>deberían</em> ser implementados — porque hacerlo hace que el panel parezca más limpio — está manipulando. La línea entre higiene (Risk-Accept lo que genuinamente no es aplicable) y manipulación (Risk-Accept lo que es inconveniente) es el juicio profesional del operador.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>La prueba de la reunión de renovación</div>
+    <p>La prueba honesta para cualquiera de estas: ¿te sentirías cómodo mostrando la recomendación y la acción tomada al cliente en una reunión de renovación? «Marcamos Customer Lockbox como Risk Accepted porque el tenant no tiene licencia E5 y documentamos las alternativas que usamos en su lugar» — eso es defendible. «Marcamos Defender for Identity como Resolved through third party porque... eh... bueno, la cifra de la puntuación se ve mejor» — eso no lo es.</p>
+  </div>
+
+  <h2>Recomendaciones que se puntúan pero son operativamente dolorosas</h2>
+
+  <p>Una trampa aparte: algunas recomendaciones de Secure Score están configuradas para otorgar puntos por ajustes que, cuando se implementan a ciegas, perjudican las operaciones del cliente. Implementarlas correctamente requiere el afinado específico del cliente que la puntuación no mide.</p>
+
+  <p>Ejemplos:</p>
+
+  <p><strong>«Habilitar Controlled Folder Access en modo Block».</strong> La Tarjeta 4 lección 7 cubrió esto directamente. Microsoft otorga más puntos de Secure Score por CFA configurado en Block que en Audit — Block efectivamente previene escrituras a carpetas protegidas por aplicaciones no incluidas en la lista de permitidos, mientras que Audit solo las registra. Pero el modo Block sin una lista de permitidos de aplicaciones específica del cliente genera una avalancha de tickets de mesa de ayuda el primer día: herramientas de backup escribiendo en documentos de usuario, clientes de sincronización (Dropbox, Google Drive, variantes de OneDrive), aplicaciones creativas escribiendo en Documentos, herramientas de productividad guardando automáticamente. La plantilla ASR de Panoptica365 entrega CFA en modo Audit específicamente porque Block-desde-el-principio es operativamente insostenible. Pasar CFA a Block puramente por los puntos de Secure Score, sin la revisión del registro de auditoría y la construcción de la lista de permitidos, rompe flujos de trabajo legítimos. El patrón correcto del operador es el de la lección 7: enviar en Audit, vigilar durante dos a cuatro semanas, construir la lista de permitidos a partir de los intentos de escritura del modo audit, luego pasar a Block. La puntuación se mueve al final, no al principio.</p>
+
+  <p><strong>«Bloquear autenticación heredada».</strong> La Tarjeta 3 lección 3 ya cubrió esto — y es la decisión correcta. Pero si lo implementas sin identificar primero las impresoras heredadas, las aplicaciones de negocio heredadas y el flujo de trabajo incompatible con MFA heredado que el cliente tiene, rompes cosas. La puntuación se mueve; la mesa de ayuda se inunda. El patrón correcto del operador es la auditoría previa seguida del despliegue, no el despliegue solo.</p>
+
+  <p><strong>«Designar más de un administrador global».</strong> Microsoft premia tener varios administradores globales (resiliencia frente a que cualquiera pierda el acceso). Algunos clientes tienen solo uno — a menudo deliberadamente, a menudo por buenas razones (menor superficie de amenaza, auditoría más simple). Implementar la recomendación añadiendo más administradores globales sin reflexión añade superficie de ataque por la puntuación. La disciplina de endurecimiento de admin de la Tarjeta 3 lección 6 es la respuesta correcta aquí.</p>
+
+  <p>Estas recomendaciones no son malas recomendaciones. Son recomendaciones que requieren el juicio del operador sobre <em>cómo</em> implementar, no solo <em>si</em> implementar. La puntuación no premia el juicio; premia el estado de configuración.</p>
+
+  <h2>Las recomendaciones que la puntuación no rastrea en absoluto</h2>
+
+  <p>Este es el corazón de la lección. Una fracción significativa del trabajo de seguridad que hace un MSP competente es invisible para Microsoft Secure Score. No porque Microsoft no piense que importa — sino porque la puntuación solo puede medir lo que Microsoft puede verificar programáticamente en el tenant.</p>
+
+  <p><strong>Publicación y aplicación de DMARC y SPF.</strong> El viaje completo de SPF / DKIM / DMARC desde <code>p=none</code> a <code>p=reject</code> importa enormemente para la protección anti-spoofing del correo entrante. <strong>La habilitación de DKIM</strong> (el interruptor del lado del tenant en el centro de administración de M365) se puntúa — Microsoft puede verificarlo. <strong>La publicación de SPF y DMARC no</strong> — son registros DNS externos que Microsoft no puede verificar de forma fiable a la escala de todos los tenants de M365 del mundo, así que la puntuación no los incluye. Los clientes que han hecho el trabajo completo de autenticación de correo se ven igual en Secure Score que los clientes que solo han habilitado DKIM. El trabajo importa; la puntuación no lo mide.</p>
+
+  <p><strong>Disciplina operativa.</strong> Tiempo de triaje de deriva. Tiempo de respuesta a alertas. Mantenimiento del libro de excepciones. Finalización de revisiones anuales. La disciplina de <em>realmente hacer el trabajo entre instantáneas</em> — esa es toda la tesis operativa de las tarjetas 4 y 5, y nada de eso aparece en la puntuación. Un tenant cuyo MSP responde a las alertas de deriva en una hora tiene la misma puntuación que un tenant cuyo MSP responde en una semana, dada una configuración actual idéntica.</p>
+
+  <p><strong>Afinado específico del cliente.</strong> Listas de usuarios protegidos de antiphishing. Listas de remitentes de confianza con alcance a socios de negocio específicos. Excepciones de reenvío automático por Remote Domain por cliente. Auditoría de reglas de flujo de correo. Todo el contenido de la Tarjeta 5. La habilitación de la política de seguridad preestablecida se puntúa; el afinado específico del cliente subyacente no.</p>
+
+  <p><strong>Capacidad de respuesta a incidentes.</strong> ¿Tiene el MSP un runbook escrito de respuesta a BEC? ¿Se ha probado? ¿Hay un canal de contacto fuera de horario para el cliente? ¿Puede el equipo de operadores ejecutar un restablecimiento de credenciales / revocación de sesiones / auditoría de reglas de buzón en 30 minutos cuando se dispara una alerta? Nada de esto se puntúa. Nada de esto forma parte del conjunto de recomendaciones de Microsoft.</p>
+
+  <p><strong>Higiene de correo de proveedores y socios.</strong> El ataque del 92 % de la apertura vino a través de un proveedor comprometido. Si los proveedores del cliente tienen autenticación de correo correcta, si han sido comprometidos recientemente, si el proceso de verificación de transferencias del cliente trata los mensajes provenientes de proveedores con un escepticismo apropiado — todo sin puntuar.</p>
+
+  <p><strong>Concienciación de seguridad del usuario.</strong> Tasas de finalización de simulación de phishing. Ratios entrenados-vs-no-entrenados. Tasa de reportadores por usuario. Nada de esto está directamente en Microsoft Secure Score (Attack Simulation Training es exclusivo de E5, e incluso eso puntúa la configuración de la herramienta de simulación, no los resultados de formación del usuario del cliente).</p>
+
+  <p>La lista podría continuar. El patrón: <strong>cualquier cosa que requiera juicio humano, trabajo operativo continuo, o visibilidad sobre cosas que Microsoft no puede verificar programáticamente sobre el entorno del cliente queda sin puntuar.</strong> Secure Score mide la instantánea de configuración. El trabajo no puntuado es lo que mantiene al cliente seguro en los momentos entre instantáneas.</p>
+
+  <h2>Por qué perseguir el 100 % es el objetivo equivocado</h2>
+
+  <p>Una Secure Score del 100 % es alcanzable en principio pero rara vez correcta en la práctica. Razones:</p>
+
+  <ul>
+    <li><strong>Algunas recomendaciones no encajan con algunos clientes.</strong> Un pequeño despacho contable no necesita Insider Risk Management. Forzar la recomendación a estado «completo» con una falsa atribución a terceros es manipulación.</li>
+    <li><strong>Las recomendaciones limitadas por licencia requieren actualizaciones de licencia.</strong> Un cliente de Business Premium no puede honestamente implementar funciones exclusivas de E5. Aceptarlas como Risk-Accepted y aceptar un porcentaje más bajo es más honesto que manipular la solución.</li>
+    <li><strong>Algunas recomendaciones entran en conflicto con las realidades operativas del cliente.</strong> Política de spam saliente puesta en su acción más estricta de restringir-y-bloquear sin afinar para los remitentes legítimos de alto volumen del cliente (gente de ventas en un día de campaña, gente de comunicaciones enviando la carta anual a empleados). Varios administradores globales en un negocio de un solo propietario. Bloqueo de autenticación heredada en un tenant con aplicaciones de negocio heredadas críticas que aún no se han modernizado.</li>
+    <li><strong>Los puntos marginales por encima de ~88 % requieren rendimientos decrecientes.</strong> Cada recomendación restante contribuye menos; el coste operativo de implementar es a menudo desproporcionado a la ganancia de seguridad.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .9 1.6h6.2c.1-.6.4-1.2.9-1.6A7 7 0 0 0 12 2z"/></svg>El objetivo correcto</div>
+    <p>El objetivo correcto de Secure Score, para clientes de Business Premium que usan el ecosistema completo, es <strong>80 % o superior con decisiones honestas de Risk Accepted documentadas para todo lo de debajo</strong>. Los 80 altos son alcanzables para clientes donde el operador ha hecho el trabajo de implementación completo. 90 %+ requiere que se alineen factores específicos del cliente (sin recomendaciones aplicables exclusivas de E5, sin restricciones operativas) y rara vez viene de la persecución incremental de puntuación.</p>
+  </div>
+
+  <p>La lección 6 cubre el encuadre del objetivo en detalle operativo. Para esta lección, el principio: un objetivo del 100 % distorsiona el trabajo. Un objetivo de 80 %-con-disciplina lo enfoca.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>Secure Score mide configuración, no seguridad.</strong> La historia del 92 %-y-víctima-de-BEC es el caso de advertencia que todo operador necesita tener en la cabeza. Una puntuación alta es un logro de configuración; no es una garantía de seguridad. Úsala como una de varias señales, no como la conclusión de cabecera.</p>
+
+  <p><strong>Reconoce los patrones de manipulación en tu propio trabajo.</strong> « Resolved through third party » sin tercero. Auto-atestación sin seguimiento. Risk-Accepting para limpiar el ruido visual en lugar de para documentar no-aplicabilidad genuina. Estos son fáciles de deslizarse bajo presión. La prueba honesta: ¿defenderías la acción al cliente en una reunión de renovación? Si no, no la tomes.</p>
+
+  <p><strong>El trabajo no puntuado es lo que mantiene al cliente seguro.</strong> Publicación de DMARC, triaje de deriva, mantenimiento del libro de excepciones, afinado específico del cliente, capacidad de respuesta a incidentes, concienciación de higiene de correo de proveedores — nada de esto puntúa, todo importa. El valor profesional del operador reside en gran medida en el trabajo no puntuado. Comunica eso a los clientes explícitamente; no dejes que confundan la puntuación con toda la historia.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Secure Score de cara al cliente</b> — cómo usar el porcentaje en conversaciones con el cliente honestamente: la narrativa de renovación, la tendencia a lo largo del tiempo, la historia de línea-base-en-incorporación.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Operar Secure Score a escala + cierre del curriculum</b> — la cadencia de revisión trimestral, el encuadre del objetivo del 80 %+, y el argumento de cierre del curriculum.</div></div>
+  </div>
+
+  <p>Por ahora: elige al cliente con la Secure Score más alta de tu cartera. Mira su lista de recomendaciones. Para cada recomendación marcada como « Resolved through third party », ¿puedes nombrar la herramienta de terceros y confirmar que realmente cubre la función? Para cada « Risk accepted », ¿puedes defender la razón de la aceptación? Los patrones de manipulación suelen ser silenciosos — encontrarlos en tu propio trabajo es la disciplina. Encuéntralos antes que un cliente o un auditor lo haga.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre las limitaciones de Secure Score y qué mide la métrica (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score overview</a>); opciones de estado de recomendaciones incluyendo terceros y Risk Accepted (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — Track recommendation completion</a>); contexto de patrones de ataque BEC y AiTM (<a href="https://www.cisa.gov/topics/cyber-threats-and-advisories/business-email-compromise-bec" target="_blank" rel="noopener">CISA — Business Email Compromise</a>); modos de Controlled Folder Access (Audit vs Block) y consideraciones operativas (<a href="https://learn.microsoft.com/en-us/defender-endpoint/controlled-folders" target="_blank" rel="noopener">Microsoft Learn — Controlled Folder Access</a>); orientación de buenas prácticas para administrador global (<a href="https://learn.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/protect-global-admin" target="_blank" rel="noopener">Microsoft Learn — Protect admin accounts</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

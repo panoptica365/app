@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Où Panoptica365 s'installe dans le tableau — Bienvenue à la cybersécurité M365</title>
+<meta name="lesson:title" content="Où Panoptica365 s'installe dans le tableau">
+<meta name="lesson:subtitle" content="Panoptica365 ne remplace pas Defender — c'est la couche de surveillance et de triage à l'échelle de la flotte que les MSP n'avaient pas au-dessus des portails mono-tenant de Microsoft.">
+<meta name="lesson:icon" content="map-pin">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Bienvenue à la cybersécurité M365</span> <span class="sep">·</span> <span>Où s'installe Panoptica365</span></div>
+  <h1>Où Panoptica365 s'installe dans le tableau</h1>
+  <p class="dek">Panoptica365 ne remplace pas Defender — c'est la couche de surveillance et de triage à l'échelle de la flotte que les MSP n'avaient pas au-dessus des portails mono-tenant de Microsoft.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Panoptica365 s'installe comme une couche à l'échelle de la flotte au-dessus des portails mono-tenant de Microsoft, couvrant le fait de remarquer et de trier que les portails laissent mince.">
+      <defs>
+        <radialGradient id="wsBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="wsLayer" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#wsBg)"/>
+
+      <!-- haut : la couche Panoptica365 à l'échelle de la flotte -->
+      <rect x="120" y="40" width="880" height="78" rx="14" fill="url(#wsLayer)" stroke="#5CCBF4" stroke-width="1.8"/>
+      <text x="560" y="74" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="19" font-weight="700">Panoptica365</text>
+      <text x="560" y="98" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13">remarquer + trier à l'échelle de la flotte · un écran pour chaque tenant</text>
+
+      <!-- connecteurs vers les portails de tenants -->
+      <g stroke="#335F92" stroke-width="2" fill="none" opacity="0.85">
+        <path d="M280 118 V168"/>
+        <path d="M480 118 V168"/>
+        <path d="M680 118 V168"/>
+        <path d="M880 118 V168"/>
+      </g>
+
+      <!-- bas : portails Microsoft mono-tenant -->
+      <text x="560" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PORTAILS MICROSOFT MONO-TENANT</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="198" y="172" width="164" height="128" rx="11" fill="#0E2640" stroke="#2A6F9E"/><text x="280" y="210" fill="#D0EFFD" font-size="15" font-weight="600">Defender XDR</text><text x="280" y="244" fill="#9FB4CE" font-size="12.5">criminalistique</text><text x="280" y="265" fill="#9FB4CE" font-size="12.5">un tenant</text><text x="280" y="286" fill="#9FB4CE" font-size="12.5">à la fois</text></g>
+        <g><rect x="398" y="172" width="164" height="128" rx="11" fill="#0E2640" stroke="#2A6F9E"/><text x="480" y="210" fill="#D0EFFD" font-size="15" font-weight="600">Intune</text><text x="480" y="244" fill="#9FB4CE" font-size="12.5">éditeur de politiques</text><text x="480" y="265" fill="#9FB4CE" font-size="12.5">un tenant</text><text x="480" y="286" fill="#9FB4CE" font-size="12.5">à la fois</text></g>
+        <g><rect x="598" y="172" width="164" height="128" rx="11" fill="#0E2640" stroke="#2A6F9E"/><text x="680" y="210" fill="#D0EFFD" font-size="15" font-weight="600">Accès conditionnel</text><text x="680" y="244" fill="#9FB4CE" font-size="12.5">éditeur de politiques</text><text x="680" y="265" fill="#9FB4CE" font-size="12.5">un tenant</text><text x="680" y="286" fill="#9FB4CE" font-size="12.5">à la fois</text></g>
+        <g><rect x="798" y="172" width="164" height="128" rx="11" fill="#0E2640" stroke="#2A6F9E"/><text x="880" y="210" fill="#D0EFFD" font-size="15" font-weight="600">Exchange</text><text x="880" y="244" fill="#9FB4CE" font-size="12.5">centre d'admin</text><text x="880" y="265" fill="#9FB4CE" font-size="12.5">un tenant</text><text x="880" y="286" fill="#9FB4CE" font-size="12.5">à la fois</text></g>
+      </g>
+      <text x="560" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">une couche qui s'installe au-dessus d'eux — elle n'en remplace aucun</text>
+    </svg>
+    <figcaption>Panoptica365 est la couche au-dessus des portails mono-tenant de Microsoft, pas un remplacement pour aucun d'eux.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <blockquote>« On a déjà Defender. Pourquoi a-t-on besoin de Panoptica365? »</blockquote>
+
+  <p>Vous allez recevoir cette question — d'un nouvel opérateur de votre équipe, d'un partenaire qui évalue la trousse d'outils, peut-être de vous-même, après une session de 90 minutes dans Defender XDR qui n'a produit aucun élément actionnable. Une personne de qui vous ne l'entendrez <em>pas</em> : le client. Panoptica365 est un outil interne à votre MSP — il fait partie de la façon dont vous livrez la sécurité gérée, pas une ligne sur la facture de qui que ce soit (on y revient plus bas). C'est une question légitime, et la réponse est plus intéressante que « on surveille plus de choses ».</p>
+
+  <p>Panoptica365 n'est pas un remplacement pour Defender XDR, l'accès conditionnel, Intune, ou n'importe quel autre produit Microsoft. C'est une couche qui s'installe <em>au-dessus</em> d'eux, conçue pour un seul travail : rendre la tâche quotidienne de l'opérateur, sur une flotte de tenants clients, gérable.</p>
+
+  <p>Cette leçon, c'est ce que ça veut dire en pratique — ce que Panoptica365 surveille, ce qu'il <em>ne fait pas</em> délibérément, pourquoi, et où le produit s'insère dans le rythme quotidien du travail d'un opérateur.</p>
+  </div>
+
+  <h2>Les quatre travaux d'un opérateur M365</h2>
+
+  <p>Prenez un pas en arrière des produits pour un moment. Un opérateur MSP qui travaille sur M365 a quatre travaux, à peu près dans cet ordre de fréquence :</p>
+
+  <ol>
+    <li><strong>Remarquer quand quelque chose a changé</strong> dans un tenant client qui n'aurait pas dû changer.</li>
+    <li><strong>Trier les alertes</strong> d'à travers plusieurs tenants et décider lesquelles ont besoin d'action aujourd'hui.</li>
+    <li><strong>Appliquer des contrôles</strong> quand un client a besoin d'une nouvelle politique, d'un nouveau modèle, d'une nouvelle base de conformité.</li>
+    <li><strong>Criminalistique</strong> quand quelque chose a mal tourné et qu'on a besoin de comprendre ce qui s'est passé.</li>
+  </ol>
+
+  <p>Microsoft a construit de l'outillage de classe mondiale pour le <strong>travail 4</strong> — Defender XDR est excellent pour la criminalistique, surtout pour un utilisateur, un appareil, un incident à la fois.</p>
+
+  <p>Microsoft a construit de l'outillage raisonnable pour le <strong>travail 3</strong> — le portail Intune, l'éditeur de politiques d'accès conditionnel, le centre d'administration Exchange. Ils fonctionnent, à la manière dont les logiciels des années 1990 fonctionnaient. Vous pouvez gérer un client comme ça; vous passerez juste beaucoup de temps à cliquer.</p>
+
+  <p>Là où Microsoft n'a pas construit grand-chose, c'est sur les <strong>travaux 1 et 2</strong> — <em>remarquer et trier à l'échelle de la flotte</em>. Les portails sont mono-tenant. Les tableaux de bord présument que vous vivez à l'intérieur du portail d'un seul client à la fois. Les fonctions multi-tenant pour MSP de Defender XDR sont un ajout récent et ne sont pas encore ce que vous construiriez si vous partiez de « un MSP gère 30 clients et a besoin d'un écran pour les regarder ».</p>
+
+  <p>Panoptica365 est le produit qu'on a construit parce que <em>les travaux 1 et 2 n'étaient pas gérables à l'échelle MSP avec ce que Microsoft livre</em>.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Les quatre travaux de l'opérateur : Microsoft est fort sur appliquer et la criminalistique, mince sur remarquer et trier à l'échelle de la flotte, là où Panoptica365 s'insère.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LES QUATRE TRAVAUX</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- travaux 1 & 2 : Panoptica365 comble le trou -->
+        <g transform="translate(40,52)">
+          <rect x="0" y="0" width="316" height="64" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="20" y="27" fill="#7DD9F9" font-size="14" font-weight="700">1 · Remarquer les changements</text>
+          <text x="20" y="50" fill="#A8E1F8" font-size="13">2 · Trier les alertes</text>
+          <text x="296" y="40" text-anchor="end" fill="#5CCBF4" font-size="10" letter-spacing="0.5">FLOTTE</text>
+        </g>
+        <g transform="translate(364,52)">
+          <rect x="0" y="0" width="316" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="27" fill="#52708F" font-size="13">Microsoft : mince</text>
+          <text x="20" y="50" fill="#52708F" font-size="13">portails mono-tenant</text>
+        </g>
+        <!-- travaux 3 & 4 : Microsoft fait ça -->
+        <g transform="translate(40,132)">
+          <rect x="0" y="0" width="316" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="27" fill="#C4D4E8" font-size="14">3 · Appliquer des contrôles</text>
+          <text x="20" y="50" fill="#C4D4E8" font-size="13">4 · Criminalistique</text>
+        </g>
+        <g transform="translate(364,132)">
+          <rect x="0" y="0" width="316" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="27" fill="#A8E1F8" font-size="12.5" font-weight="600">Microsoft : raisonnable / classe mondiale</text>
+          <text x="20" y="50" fill="#6B85A6" font-size="12.5">Intune, AC, Exchange, Defender XDR</text>
+        </g>
+      </g>
+      <text x="360" y="232" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5">Panoptica365 est le produit construit pour les travaux 1 et 2.</text>
+    </svg>
+    <figcaption>Microsoft est fort sur appliquer et la criminalistique; les travaux 1 et 2 — remarquer et trier à l'échelle de la flotte — sont le trou que Panoptica365 comble.</figcaption>
+  </figure>
+
+  <h2>Ce que Panoptica365 surveille vraiment</h2>
+
+  <p>Concrètement, à travers chaque tenant connecté :</p>
+
+  <p><strong>Identité et accès conditionnel.</strong> Application du MFA par utilisateur, patrons de connexion (IP étrangère, déplacement impossible), dérive des politiques d'AC (un modèle que vous avez déployé hier a l'air différent aujourd'hui), changements d'affectation d'AC, changements d'emplacement nommé, changements d'enregistrement des méthodes d'authentification.</p>
+
+  <p><strong>Modèles Intune et conformité.</strong> Dérive des modèles, dérive des politiques de conformité, patrons d'inscription d'appareils, trous de couverture EDR.</p>
+
+  <p><strong>Posture de sécurité Exchange Online.</strong> Préréglage anti-hameçonnage, posture d'audit des boîtes aux lettres, changements de règles de boîte, transfert au niveau boîte, configuration de Safe Links et Safe Attachments, changements de règles de flux de courriel.</p>
+
+  <p><strong>Partage SharePoint et OneDrive.</strong> Posture de partage externe, liens anonymes, patrons d'accès des invités, inventaire des permissions de site.</p>
+
+  <p><strong>Ingestion Unified Audit Log + Defender XDR.</strong> 25 évaluateurs de détection à travers le flux UAL et les incidents Defender XDR — patrons de credential stuffing, chaînes de connexion suspectes, consentements OAuth, accords de permission de boîte aux lettres, anomalies de code d'appareil, indicateurs de BEC, comportement de mise en scène de rançongiciel.</p>
+
+  <p><strong>Secure Score.</strong> Instantané quotidien, tendance, comparaison contre des bases de référence de l'industrie.</p>
+
+  <p><strong>Moteur de paramètres de sécurité.</strong> 17 paramètres de sécurité Microsoft spécifiques surveillés pour la dérive contre une base de référence que vous définissez — contenu des listes anti-hameçonnage, configurations des méthodes d'authentification, état des politiques DLP, et d'autres.</p>
+
+  <p>C'est le catalogue d'aujourd'hui. Il bouge. La plupart de la carte 2 (<em>Menaces identitaires</em>) se cartographie directement sur des évaluateurs spécifiques de cette liste. Quand on dit qu'une carte « couvre » un patron d'attaque, ce qu'on veut dire, c'est : cette attaque déclenche un ou plusieurs de ces évaluateurs, l'alerte arrive dans Panoptica365, et vous agissez dessus de là.</p>
+
+  <h2>Ce que Panoptica365 ne fait pas délibérément</h2>
+
+  <p>Cette partie est plus importante que le catalogue ci-dessus, parce que c'est ce qui rend Panoptica365 différent d'Inforcer, Octiga, 365Sentri et des autres produits de type forceur de politique dans cet espace.</p>
+
+  <div class="callout insight">
+    <div class="clabel">La posture fondamentale</div>
+    <p>Panoptica365 surveille tout et ne modifie rien de sa propre initiative. Il remarque la dérive, recommande une correction, et vous redirige directement à l'endroit où l'action vit — mais il ne remédie pas automatiquement, et il ne lance aucune action destructrice à votre place. Lecture-seule par conception.</p>
+  </div>
+
+  <p><strong>On ne remédie pas automatiquement.</strong> Panoptica365 ne va pas pousser des changements dans le tenant M365 d'un client de sa propre initiative. Quand quelque chose dérive, on vous dit ce qui a dérivé et on recommande une correction. On n'exécute pas la correction.</p>
+
+  <p>Pourquoi : le mode d'échec de la remédiation automatique, c'est de livrer une base de référence mal configurée à 2 h du matin à travers 30 tenants. Récupérer de ça, c'est beaucoup pire que le travail supplémentaire marginal d'un opérateur qui clique « appliquer ». La garantie « on ne brisera jamais vos clients » fonctionne seulement si on garde les mains hors du volant.</p>
+
+  <p><strong>On ne lance pas d'actions destructrices à l'intérieur du portail Microsoft à votre place.</strong> Il n'y a pas de bouton « désactiver l'utilisateur » dans Panoptica365, pas de bouton « réinitialiser le mot de passe », pas de bouton « révoquer la session ». Ces actions existent dans les portails Microsoft; on vous redirige directement à l'endroit où l'action vit, et c'est vous qui prenez la décision.</p>
+
+  <p>Pourquoi : même logique. Envelopper les actions destructrices de Microsoft dans une UI tierce, c'est un incident client qui attend de se produire. Lecture-seule par conception.</p>
+
+  <p><strong>On n'est pas un SIEM.</strong> Panoptica365 n'ingère pas de journaux de pare-feu, de journaux d'applications tierces, ou de télémétrie non-Microsoft. Si un client a besoin de ça, la réponse est Microsoft Sentinel (leçon 4) ou un SIEM dédié, pas Panoptica365.</p>
+
+  <p><strong>On ne remplace pas Defender XDR.</strong> Quand une chaîne d'attaque se déroule et que vous avez besoin de plonger dans la chronologie de session d'un utilisateur, c'est un travail de Defender XDR. Panoptica365 fait remonter l'existence de la chaîne; Defender XDR vous montre l'intérieur. Les deux outils sont conçus pour être utilisés ensemble, pas en compétition.</p>
+
+  <p><strong>On n'est pas une offre de services gérés.</strong> Panoptica365 est un produit. Il n'y a pas d'équipe SOC Panoptica365 qui gère les alertes à votre place. (Augmentt vend ça séparément; Acronis vend Octiga comme ça. Pas nous.) Le travail de l'opérateur reste le travail de l'opérateur.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="Panoptica365 lit, remarque, recommande et redirige; il ne remédie pas automatiquement, ne lance pas d'actions destructrices, n'agit pas comme un SIEM, ne remplace pas Defender XDR et n'opère pas de SOC.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="186" y="34" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">CE QU'IL FAIT</text>
+      <text x="534" y="34" text-anchor="middle" fill="#FF5A6E" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">CE QU'IL NE FAIT PAS</text>
+      <line x1="360" y1="50" x2="360" y2="280" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- fait -->
+        <g transform="translate(36,56)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#2A7A5E"/><circle cx="22" cy="21" r="5" fill="#2EE8A0"/><text x="40" y="26" fill="#C4D4E8" font-size="12.5">Surveille chaque tenant connecté</text>
+        </g>
+        <g transform="translate(36,106)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#2A7A5E"/><circle cx="22" cy="21" r="5" fill="#2EE8A0"/><text x="40" y="26" fill="#C4D4E8" font-size="12.5">Remarque la dérive, fait remonter l'alerte</text>
+        </g>
+        <g transform="translate(36,156)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#2A7A5E"/><circle cx="22" cy="21" r="5" fill="#2EE8A0"/><text x="40" y="26" fill="#C4D4E8" font-size="12.5">Recommande une correction</text>
+        </g>
+        <g transform="translate(36,206)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#2A7A5E"/><circle cx="22" cy="21" r="5" fill="#2EE8A0"/><text x="40" y="26" fill="#C4D4E8" font-size="12.5">Redirige vers le portail Microsoft</text>
+        </g>
+        <!-- ne fait pas -->
+        <g transform="translate(384,56)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#5A2730"/><path d="M18 17 L26 25 M26 17 L18 25" stroke="#FF5A6E" stroke-width="2.2" stroke-linecap="round"/><text x="40" y="26" fill="#9FB2C8" font-size="12.5">Remédier automatiquement</text>
+        </g>
+        <g transform="translate(384,106)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#5A2730"/><path d="M18 17 L26 25 M26 17 L18 25" stroke="#FF5A6E" stroke-width="2.2" stroke-linecap="round"/><text x="40" y="26" fill="#9FB2C8" font-size="12.5">Lancer des actions destructrices</text>
+        </g>
+        <g transform="translate(384,156)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#5A2730"/><path d="M18 17 L26 25 M26 17 L18 25" stroke="#FF5A6E" stroke-width="2.2" stroke-linecap="round"/><text x="40" y="26" fill="#9FB2C8" font-size="12.5">Agir comme un SIEM</text>
+        </g>
+        <g transform="translate(384,206)">
+          <rect x="0" y="0" width="300" height="42" rx="9" fill="#0E2236" stroke="#5A2730"/><path d="M18 17 L26 25 M26 17 L18 25" stroke="#FF5A6E" stroke-width="2.2" stroke-linecap="round"/><text x="40" y="26" fill="#9FB2C8" font-size="12.5">Remplacer Defender XDR ou faire un SOC</text>
+        </g>
+      </g>
+      <text x="360" y="285" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">Lecture-seule par conception — l'opérateur prend chaque décision.</text>
+    </svg>
+    <figcaption>La frontière en un cadre : il lit, remarque, recommande et redirige — il ne touche pas, ne change pas, ne corrige pas tout seul.</figcaption>
+  </figure>
+
+  <h2>Comment Panoptica365 s'inscrit dans la journée de l'opérateur</h2>
+
+  <p>Le rythme quotidien réaliste pour un opérateur MSP qui utilise Panoptica365 :</p>
+
+  <p><strong>Matin.</strong> Ouvrez Panoptica365. Le tableau de bord principal vous montre, à travers tous les tenants clients, quelles alertes se sont déclenchées pendant la nuit, quelle dérive a été détectée, à quoi ressemblent les incidents Defender XDR. Le courriel de briefing matinal résume ça en 30 secondes de lecture; le tableau de bord, c'est pour les éléments qui ont besoin d'attention.</p>
+
+  <p><strong>Triage.</strong> Cliquez dans une alerte spécifique. Le panneau coulissant d'alerte vous donne le détail structuré (qui, quoi, quand), l'analyse IA (explication générée par Haiku adaptée au palier de licence du client), l'explicateur lié (l'icône de chapeau de finissant — le cousin en-contexte de ce programme), et la prochaine action recommandée. Du panneau coulissant, vous décidez : acquitter, exempter, ou ouvrir le portail Microsoft pertinent pour enquêter et agir.</p>
+
+  <p><strong>Appliquer.</strong> Quand un client a besoin d'une nouvelle politique — un modèle d'AC, une politique de conformité Intune, un paramètre EXO — vous le déployez depuis la bibliothèque de modèles de Panoptica365. Panoptica365 <em>écrit</em> ici, mais seulement pour des actions que l'opérateur a explicitement choisies et seulement avec piste d'audit complète.</p>
+
+  <p><strong>Criminalistique.</strong> Quand un incident demande une vraie enquête, vous quittez Panoptica365 et allez dans Defender XDR. Le travail de Panoptica365 à ce moment-là, c'est d'avoir rendu évident le fait que l'enquête était nécessaire.</p>
+
+  <p><strong>Documentation.</strong> Panoptica365 garde un Journal de Changements de Tenant par client (chaque action d'opérateur), un Journal d'Audit MSP à travers tous les opérateurs (qui a fait quoi, quand, depuis quel rôle), et un registre d'Exemptions (quand une alerte a été délibérément supprimée pour une raison). La plupart du travail pour « montrez-moi ce qui a changé dans les 30 derniers jours », « qu'est-ce que l'équipe d'audit avait besoin de voir » ou « quelle est la preuve qu'on a fait notre travail » vit dans ces trois vues.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="La journée de l'opérateur coule du tableau de bord matinal au triage, puis soit l'application d'un modèle dans Panoptica365 soit le relais vers Defender XDR pour la criminalistique, avec tout enregistré pour la documentation.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="wdArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="28" y="44" width="120" height="50" rx="10" fill="#10243B" stroke="#5CCBF4"/><text x="88" y="74" fill="#7DD9F9" font-size="13.5" font-weight="600">Matin</text></g>
+        <g><rect x="188" y="44" width="120" height="50" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="248" y="74" fill="#A8E1F8" font-size="13.5" font-weight="600">Triage</text></g>
+        <!-- deux branches depuis triage -->
+        <g><rect x="368" y="14" width="150" height="44" rx="10" fill="#0E2236" stroke="#2A7A5E"/><text x="443" y="34" fill="#9FE6C9" font-size="12" font-weight="600">Appliquer</text><text x="443" y="49" fill="#6B85A6" font-size="10">dans l'app</text></g>
+        <g><rect x="368" y="80" width="150" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="443" y="100" fill="#C4D4E8" font-size="12" font-weight="600">Criminalistique</text><text x="443" y="115" fill="#6B85A6" font-size="10">dans Defender XDR</text></g>
+        <g><rect x="558" y="44" width="134" height="50" rx="10" fill="#0E2236" stroke="#33527A"/><text x="625" y="68" fill="#C4D4E8" font-size="12" font-weight="600">Documentation</text><text x="625" y="84" fill="#6B85A6" font-size="10">journaux + exemptions</text></g>
+      </g>
+      <!-- flux -->
+      <path d="M148 69 H184" stroke="#335F92" stroke-width="2" marker-end="url(#wdArr)" fill="none"/>
+      <path d="M308 60 C 340 60, 340 36, 364 36" stroke="#335F92" stroke-width="2" marker-end="url(#wdArr)" fill="none"/>
+      <path d="M308 78 C 340 78, 340 102, 364 102" stroke="#335F92" stroke-width="2" marker-end="url(#wdArr)" fill="none"/>
+      <path d="M518 36 C 545 36, 545 60, 555 65" stroke="#335F92" stroke-width="2" marker-end="url(#wdArr)" fill="none"/>
+      <path d="M518 102 C 545 102, 545 78, 555 73" stroke="#335F92" stroke-width="2" marker-end="url(#wdArr)" fill="none"/>
+      <text x="360" y="178" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">Remarquer dans Panoptica365; agir dans les outils Microsoft quand la criminalistique est nécessaire.</text>
+    </svg>
+    <figcaption>Le rythme quotidien : matin, triage, puis soit appliquer dans l'app soit relayer vers Defender XDR — avec tout enregistré pour la documentation.</figcaption>
+  </figure>
+
+  <h2>La posture « préventif par conception »</h2>
+
+  <p>Panoptica365 a une posture philosophique que les autres produits dans cette catégorie ne partagent pas en majorité : on croit que l'opérateur devrait être dans la boucle de chaque changement au tenant d'un client.</p>
+
+  <p>Ça se manifeste comme une constellation de choix de conception :</p>
+
+  <ul>
+    <li><strong>Lecture-seule par défaut.</strong> On peut tout surveiller; on modifie seulement ce que l'opérateur demande explicitement.</li>
+    <li><strong>Les exemptions sont de première classe.</strong> Quand un contrôle ne s'applique pas à un client (raisons réglementaires, raisons de modèle d'affaires, raisons techniques), l'opérateur enregistre une exemption avec une justification et une date d'expiration. Les opérateurs futurs voient la justification.</li>
+    <li><strong>Mutations journalisées en audit.</strong> Chaque changement que Panoptica365 fait à un tenant client est journalisé avec l'identité de l'opérateur, son rôle, et sa raison. Si vous n'avez pas fait le changement, vous pouvez le prouver. Si vous l'avez fait, vous pouvez montrer votre travail.</li>
+    <li><strong>Pas de corrections silencieuses.</strong> Quand Microsoft fait quelque chose qui re-crée la dérive (un changement par défaut côté Microsoft, par exemple), l'opérateur reçoit une alerte. On ne « re-base » pas silencieusement — ce serait effacer la visibilité sur ce que Microsoft a fait, et cette visibilité, c'est tout l'enjeu.</li>
+  </ul>
+
+  <p>La compétition n'est pas d'accord avec cette posture, et c'est un désaccord légitime. Les boutiques d'auto-remédiation croient que le risque marginal d'un mauvais changement est compensé par le travail économisé sur les corrections de routine. Elles pourraient avoir raison pour certains clients; elles ont définitivement tort pour d'autres. Panoptica365 est le bon outil pour les MSP dont la clientèle ne tolère pas « on a brisé quelque chose à 2 h du matin » comme mode d'échec acceptable.</p>
+
+  <h2>Comment les MSP intelligents facturent Panoptica365</h2>
+
+  <p>Un conseil de modèle d'affaires qui devrait vous parvenir plutôt tôt que tard : Panoptica365 est un outil pour rendre votre MSP meilleur à protéger les clients — pas un produit à vendre directement à ces clients.</p>
+
+  <p>Quand votre MSP adopte Panoptica365, le coup intelligent, c'est d'intégrer le coût dans vos frais mensuels existants par utilisateur ou par appareil. Ne le mettez pas en ligne distincte sur la facture du client. À environ 1 $ par utilisateur par mois, c'est un petit coût absorbable à l'intérieur d'un service que vous facturez déjà. Le mettre en ligne distincte crée deux conversations que vous ne voulez pas : le client demande « qu'est-ce que Panoptica365? » — et là vous devez expliquer un outil qui était censé être invisible — et il pourrait essayer de le négocier vers la sortie — <em>« on n'a pas besoin d'un outil de surveillance de sécurité, non? »</em> Ces deux conversations rendent votre MSP plus faible, pas plus fort.</p>
+
+  <p>Le pitch au client reste simple : « on surveille votre sécurité M365 en continu, on trie les alertes quotidiennement, on rapporte sur la posture mensuellement, on déploie et révise les modèles de politiques ». Panoptica365 est le <em>comment</em>. Le client paie pour le <em>quoi</em>. Il n'a pas besoin de voir la marque pour en bénéficier.</p>
+
+  <p>C'est aussi pourquoi notre propre marketing penche côté MSP, pas côté client final. On n'essaie pas d'être un nom reconnu pour le directeur financier de votre client. On essaie d'être l'outil que l'opérateur ouvre tranquillement chaque matin pour rendre la journée gérable.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir pour le travail quotidien.</p>
+
+  <p><strong>Panoptica365 vous dit que quelque chose a besoin d'attention; les outils Microsoft vous disent quoi faire à ce sujet.</strong> Le relais est intentionnel. Quand vous cliquez « ouvrir dans Defender » depuis une alerte, vous n'abandonnez pas Panoptica365; vous l'utilisez comme prévu.</p>
+
+  <p><strong>Lecture-seule est la fonctionnalité, pas la limitation.</strong> Si un client averse au risque — ou son auditeur — demande un jour ce que votre outil de surveillance peut faire à son tenant, la réponse est : rien que l'opérateur n'ait approuvé. C'est une position vendable dans les industries réglementées et les clients de milieu de marché averses au risque.</p>
+
+  <p><strong>Documenter la moitié « remarquer », c'est la moitié du travail.</strong> Chaque alerte acquittée, chaque exemption accordée, chaque modèle déployé est enregistré. Si vous avez besoin de démontrer la diligence raisonnable — à un auditeur, à un assureur, à un client dans une conversation de renouvellement — le journal d'audit et le journal de changements sont là où vivent les preuves. Utilisez-les. Référez-y-vous dans les rapports clients.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <p>Vous avez fini la carte d'accueil. La carte du territoire est tracée.</p>
+
+  <p>Ensuite, c'est <strong>la carte 2 : Menaces identitaires et patrons d'attaque</strong>, où on marche à travers les six attaques spécifiques que Panoptica365 a été construit pour faire remonter — credential stuffing, fatigue MFA, hameçonnage AiTM, hameçonnage par consentement OAuth, abus de code d'appareil, et les patrons BEC qui suivent la compromission. À la fin de la carte 2, chaque alerte dans votre file devrait se mapper à un de ces six (ou, occasionnellement, plusieurs à la fois).</p>
+
+  <p>Après ça, les cartes de contrôles : Accès conditionnel (carte 3), Intune (carte 4), Renforcement du courriel (carte 5), et Secure Score (carte 6).</p>
+
+  <p>Pour l'instant : Panoptica365 est la couche qui rend « gérer 30 tenants » gérable sans enlever le travail de Microsoft à Microsoft. Les menaces de la carte 2 vont arriver dans votre file. Votre travail, comme opérateur, c'est de remarquer. Le nôtre, comme outil, c'est de rendre le fait de remarquer facile.</p>
+
+</div>
+</body>
+</html>

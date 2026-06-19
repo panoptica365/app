@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Où Secure Score induit en erreur — Secure Score</title>
+<meta name="lesson:title" content="Où Secure Score induit en erreur — l'histoire du 92 % qui s'est fait BEC et le piège du jeu de score">
+<meta name="lesson:subtitle" content="Un 92 % n'a pas empêché un BEC de 94 000 $. Les angles morts, le piège du jeu de score, et le travail de sécurité qui n'apparaît dans aucun chiffre.">
+<meta name="lesson:icon" content="triangle-alert">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Où Secure Score induit en erreur</span></div>
+  <h1>Où Secure Score induit en erreur — l'histoire du 92 % qui s'est fait BEC et le piège du jeu de score</h1>
+  <p class="dek">Un 92 % n'a pas empêché un BEC de 94 000 $. Les angles morts, le piège du jeu de score, et le travail de sécurité qui n'apparaît dans aucun chiffre.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une jauge Secure Score à 92 % à côté d'un virement de 94 000 $ parti quand même — la note n'a jamais bougé.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ssGood" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- gauche : la jauge à 92 % -->
+      <g transform="translate(250,180)">
+        <circle r="110" fill="none" stroke="#1F3C5C" stroke-width="18"/>
+        <circle r="110" fill="none" stroke="url(#ssGood)" stroke-width="18" stroke-linecap="round"
+                stroke-dasharray="636 56" transform="rotate(-90)"/>
+        <text x="0" y="6" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="56" font-weight="700">92 %</text>
+        <text x="0" y="36" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">SECURE SCORE</text>
+      </g>
+      <text x="250" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">N'A PAS BOUGÉ</text>
+
+      <!-- milieu : connecteur « et pourtant » -->
+      <path d="M400 170 H660" stroke="#335F92" stroke-width="2.5" marker-end="url(#ssArr)"/>
+      <defs><marker id="ssArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="530" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" font-style="italic">et pourtant</text>
+
+      <!-- droite : le virement parti -->
+      <g transform="translate(840,180)">
+        <rect x="-130" y="-66" width="260" height="132" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-18" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="38" font-weight="700">94 000 $</text>
+        <text x="0" y="14" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="15">virement redirigé</text>
+        <text x="0" y="40" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">BEC</text>
+      </g>
+      <text x="840" y="318" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">CONFIGURATION ≠ SÉCURITÉ</text>
+    </svg>
+    <figcaption>Le tenant est resté à 92 %. Aucune des recommandations n'a empêché l'attaque.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Une compagnie de logistique de 60 personnes est à 92 % de Microsoft Secure Score. Le MSP qui gère le tenant est fier du chiffre. L'équipe de direction du client a vu la note dans sa revue trimestrielle et est satisfaite. Le chiffre de l'année précédente était de 79 %; le travail pour le faire monter est apparu dans la proposition de renouvellement et le renouvellement s'est fermé proprement. Par n'importe quelle mesure conventionnelle de comment un MSP démontre sa valeur, ce tenant est dans le quartile supérieur.</p>
+
+  <p>Un mardi matin de novembre, la contrôleuse vire 94 000 $ à ce qu'elle croit être le nouveau partenaire logistique du client. Les instructions de virement sont arrivées dans un courriel qui ressemblait exactement au style de communication habituel du partenaire. Le courriel a passé l'authentification SPF et DKIM — il venait vraiment du domaine du partenaire. Le courriel du partenaire avait été compromis par un attaquant équipé d'AiTM deux jours plus tôt. L'attaquant avait lu la conversation en cours sur l'entente logistique et s'était inséré avec un message de redirection de virement au moment parfait.</p>
+
+  <p>La Secure Score ne bouge pas. La configuration du tenant du MSP est toujours à 92 %. Les recommandations Microsoft sont toujours implémentées. Aucune n'a empêché cette attaque.</p>
+
+  <p>L'avocate du client veut comprendre. Le souscripteur d'assurance veut comprendre. Le consultant senior du MSP doit expliquer l'écart entre « 92 % de Secure Score » et « s'est fait BEC pour 94 000 $ ». Cette leçon parle de cet écart.</p>
+  </div>
+
+  <h2>Ce que la note mesure vs ce qu'elle ne mesure pas</h2>
+
+  <p>La note mesure <strong>si le tenant du client a des configurations que Microsoft recommande.</strong> Chaque configuration a été choisie par Microsoft parce que c'est une défense de base utile. Les implémenter toutes fait passer le tenant de « paramètres d'usine » à « base de référence recommandée par Microsoft ». C'est de la vraie valeur sécurité.</p>
+
+  <p>La note ne mesure <em>pas</em> :</p>
+
+  <ul>
+    <li>Si les configurations sont bien réglées pour le profil de risque réel du client</li>
+    <li>Si le client a été attaqué</li>
+    <li>Si l'opérateur répond vite quand quelque chose dérive</li>
+    <li>Si les fournisseurs et partenaires du client ont une sécurité courriel de base</li>
+    <li>Si les utilisateurs du client ont été formés à reconnaître un hameçonnage sophistiqué</li>
+    <li>Si la capacité de réponse aux incidents hors plateforme existe</li>
+    <li>Si l'application DMARC du client est en place</li>
+    <li>Si le registre d'exceptions du client a été revu récemment</li>
+    <li>Si MailTips rejoint vraiment les utilisateurs (certains utilisateurs les désactivent au niveau de la boîte aux lettres)</li>
+    <li>Si l'opérateur audite les règles de transport trimestriellement</li>
+    <li>Si l'opérateur attrape les patrons de connexion anormaux à l'intérieur de la fenêtre de réponse</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Un seul instantané de configuration est noté; le travail continu entre les instantanés — réglage, réponse, hygiène des partenaires, DMARC, réponse aux incidents — ne l'est pas.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- instantané noté -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="44" width="200" height="162" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="74" fill="#5CCBF4" font-size="12" letter-spacing="2">NOTÉ</text>
+        <text x="140" y="110" fill="#A8E1F8" font-size="14">Instantané de</text>
+        <text x="140" y="132" fill="#A8E1F8" font-size="14">configuration</text>
+        <text x="140" y="170" fill="#6B85A6" font-size="11.5">le paramètre est-il on?</text>
+        <text x="140" y="188" fill="#6B85A6" font-size="11.5">(binaire, vérifiable)</text>
+      </g>
+      <!-- séparateur -->
+      <line x1="280" y1="44" x2="280" y2="206" stroke="#1F3C5C" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <!-- travail non noté -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="480" y="74" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="2">NON NOTÉ · ENTRE LES INSTANTANÉS</text>
+        <g fill="#C4D4E8" font-size="12.5">
+          <text x="320" y="106">• réglage selon le risque du client</text>
+          <text x="320" y="128">• triage de dérive et réponse</text>
+          <text x="320" y="150">• publication DMARC / SPF</text>
+          <text x="320" y="172">• hygiène courriel des partenaires</text>
+          <text x="320" y="194">• capacité de réponse aux incidents</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>La note mesure l'instantané. Le travail qui garde le client en sécurité se fait entre les instantanés — et reste non noté.</figcaption>
+  </figure>
+
+  <p>La compagnie de logistique à 92 % avait un tenant parfaitement configuré selon l'ensemble de recommandations de Microsoft. L'attaque est entrée par un vecteur que l'ensemble de recommandations n'adresse pas — le courriel compromis d'un partenaire, utilisé pour insérer un message de redirection dans une conversation en cours. La note n'avait rien à dire sur l'hygiène courriel du partenaire, le processus de vérification de virement du client, ou le temps de réponse de l'opérateur quand l'attaque a atterri. La note n'était pas <em>fausse</em>; elle n'était juste pas <em>complète</em>.</p>
+
+  <h2>Le piège du jeu de score — quand la note ment parce que l'opérateur l'a aidée</h2>
+
+  <p>Il y a des façons honnêtes pour une Secure Score de monter (implémenter les recommandations) et des façons malhonnêtes. Les opérateurs glissent parfois — sous pression, à court de temps, ou parce que le client surveille le chiffre — dans les façons malhonnêtes. C'est le piège du jeu de score, et le reconnaître dans votre propre travail fait partie de la discipline professionnelle.</p>
+
+  <p>Les trois patrons de jeu les plus fréquents :</p>
+
+  <p><strong>1. « Resolved through third party » sans tiers.</strong> La leçon 2 a présenté l'option : quand un outil non-Microsoft couvre vraiment la même fonction de sécurité, vous pouvez marquer une recommandation comme résolue et obtenir les points. Certains opérateurs appliquent ça à des recommandations qu'ils ne veulent simplement pas implémenter, en réclamant une couverture « tiers » qui n'existe pas ou qui ne couvre pas vraiment la fonction. La note monte. La sécurité non. Le risque d'audit est le même.</p>
+
+  <p><strong>2. Marquer une implémentation « complète » alors qu'elle ne l'est pas.</strong> Certaines recommandations Secure Score vérifient une configuration de tenant que Microsoft peut valider automatiquement (binaire : le paramètre est-il on ou off?). D'autres exigent une auto-attestation de l'opérateur — « oui, on a complété ça ». Quand un opérateur marque quelque chose complet sans vraiment l'avoir complété, la note reflète l'attestation, pas la réalité. Dans certains contextes de conformité, c'est carrément de la fraude.</p>
+
+  <p><strong>3. Mettre des recommandations en Risk-Accepted pour effacer le bruit visuel.</strong> Les recommandations assises à zéro point tirent le pourcentage vers le bas. Les Risk-Accepted ne fait pas bouger les points mais change la présentation visuelle dans le portail. Un opérateur qui met en Risk-Accepted tout ce qu'il ne peut pas ou ne veut pas implémenter est honnête. Un opérateur qui met en Risk-Accepted des items qui <em>devraient</em> être implémentés — parce que ça fait paraître le tableau de bord plus propre — joue le score. La ligne entre l'hygiène (Risk-Accepted ce qui n'est vraiment pas applicable) et le jeu (Risk-Accepted ce qui est inconvenant), c'est le jugement professionnel de l'opérateur.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Le test de la rencontre de renouvellement</div>
+    <p>Le test honnête pour n'importe laquelle de ces : seriez-vous à l'aise de montrer la recommandation et l'action prise au client dans une rencontre de renouvellement? « On a marqué Customer Lockbox comme Risk Accepted parce que le tenant n'a pas la licence E5 et on a documenté les alternatives qu'on utilise à la place » — défendable. « On a marqué Defender for Identity comme Resolved through third party parce que… euh… ben, le chiffre de la note est mieux comme ça » — pas défendable.</p>
+  </div>
+
+  <h2>Des recommandations qui sont notées mais opérationnellement douloureuses</h2>
+
+  <p>Un piège séparé : certaines recommandations Secure Score sont configurées pour donner des points pour des paramètres qui, quand ils sont implémentés aveuglément, font mal aux opérations du client. Les implémenter correctement exige le réglage spécifique au client que la note ne mesure pas.</p>
+
+  <p>Exemples :</p>
+
+  <p><strong>« Activer Controlled Folder Access en mode Block. »</strong> La carte 4 leçon 7 a couvert ça directement. Microsoft donne plus de points Secure Score pour CFA mis à Block qu'à Audit — Block empêche vraiment les écritures dans les dossiers protégés par des apps non listées dans la liste d'autorisation, tandis qu'Audit les journalise seulement. Mais le mode Block sans liste d'autorisation d'apps spécifique au client génère une avalanche de tickets de soutien le jour un : outils de sauvegarde qui écrivent dans les documents utilisateur, clients de synchronisation (Dropbox, Google Drive, variantes OneDrive), apps créatives qui écrivent dans Documents, outils de productivité qui sauvegardent automatiquement. Le modèle ASR de Panoptica365 livre CFA en mode Audit précisément parce que Block dès le départ est opérationnellement intenable. Basculer CFA en Block uniquement pour les points Secure Score, sans la revue de journaux d'audit et la construction de la liste d'autorisation, casse des flux légitimes. Le bon patron opérateur, c'est celui de la leçon 7 : livrer en Audit, surveiller deux à quatre semaines, construire la liste d'autorisation à partir des tentatives d'écriture en mode audit, puis basculer en Block. La note bouge à la fin, pas au début.</p>
+
+  <p><strong>« Bloquer l'authentification héritée. »</strong> La carte 3 leçon 3 a déjà couvert ça — et c'est le bon appel. Mais si vous l'implémentez sans d'abord identifier les imprimantes héritées, les applications métier héritées, et les flux de travail incompatibles avec MFA que le client a, vous brisez des choses. La note bouge; le service de soutien déborde. Le bon patron opérateur, c'est l'audit pré-vol suivi du déploiement, pas le déploiement tout seul.</p>
+
+  <p><strong>« Désigner plus d'un administrateur global. »</strong> Microsoft récompense le fait d'avoir plusieurs administrateurs globaux (résilience contre la perte d'accès de l'un d'eux). Certains clients n'en ont qu'un — souvent délibérément, souvent pour de bonnes raisons (surface d'attaque plus petite, audit plus simple). Implémenter la recommandation en ajoutant plus d'administrateurs globaux sans réfléchir ajoute de la surface d'attaque pour la note. La discipline de durcissement admin de la carte 3 leçon 6 est la bonne réponse ici.</p>
+
+  <p>Ces recommandations ne sont pas de mauvaises recommandations. Ce sont des recommandations qui exigent du jugement opérateur sur <em>comment</em> implémenter, pas juste <em>si</em> implémenter. La note ne récompense pas le jugement; elle récompense l'état de configuration.</p>
+
+  <h2>Les recommandations que la note ne suit pas du tout</h2>
+
+  <p>C'est le cœur de la leçon. Une fraction significative du travail sécurité qu'un MSP compétent fait est invisible à Microsoft Secure Score. Pas parce que Microsoft ne pense pas que ça compte — mais parce que la note ne peut mesurer que ce que Microsoft peut vérifier programmatiquement dans le tenant.</p>
+
+  <p><strong>Publication et application de DMARC et SPF.</strong> Tout le parcours SPF / DKIM / DMARC de <code>p=none</code> à <code>p=reject</code> compte énormément pour la protection contre l'usurpation par courriel entrant. <strong>L'activation DKIM</strong> (la bascule côté tenant dans le centre d'administration M365) est notée — Microsoft peut la vérifier. <strong>La publication SPF et DMARC ne le sont pas</strong> — ce sont des enregistrements DNS externes que Microsoft ne peut pas vérifier de façon fiable à l'échelle de chaque tenant M365 dans le monde, donc la note ne les inclut pas. Les clients qui ont fait tout le travail d'authentification courriel ont l'air pareils dans Secure Score que les clients qui ont seulement activé DKIM. Le travail compte; la note ne le mesure pas.</p>
+
+  <p><strong>Discipline opérationnelle.</strong> Temps de triage de dérive. Temps de réponse aux alertes. Maintenance du registre d'exceptions. Complétion des revues annuelles. La discipline de <em>vraiment faire le travail entre les instantanés</em> — c'est toute la thèse opérationnelle des cartes 4 et 5, et rien de tout ça n'apparaît dans la note. Un tenant dont le MSP répond aux alertes de dérive en une heure a la même note qu'un tenant dont le MSP répond en une semaine, à configuration courante identique.</p>
+
+  <p><strong>Réglage spécifique au client.</strong> Listes d'utilisateurs protégés anti-hameçonnage. Listes d'expéditeurs de confiance portées à des partenaires d'affaires précis. Exceptions de transfert automatique Remote Domain par client. Audit des règles de flux de courrier. Tout le contenu de la carte 5. L'activation de la politique de sécurité prédéfinie est notée; le réglage spécifique au client en dessous ne l'est pas.</p>
+
+  <p><strong>Capacité de réponse aux incidents.</strong> Le MSP a-t-il un runbook écrit de réponse aux BEC? L'a-t-il testé? Y a-t-il un chemin de contact hors heures de bureau pour le client? L'équipe d'opérateurs peut-elle exécuter un reset d'identifiants / révocation de session / audit des règles de boîte de réception en 30 minutes quand une alerte se déclenche? Rien de tout ça n'est noté. Rien de tout ça ne fait partie de l'ensemble de recommandations de Microsoft.</p>
+
+  <p><strong>Hygiène courriel des fournisseurs et partenaires.</strong> L'attaque à 92 % de l'ouverture est venue par un fournisseur compromis. Si les fournisseurs du client ont une authentification courriel correcte, s'ils ont été compromis récemment, si le processus de vérification de virement du client traite les messages venant des fournisseurs avec un scepticisme approprié — tout ça non noté.</p>
+
+  <p><strong>Sensibilisation à la sécurité des utilisateurs.</strong> Taux de complétion des simulations d'hameçonnage. Ratios formés/non formés. Taux de signalement par utilisateur. Rien de tout ça n'est directement dans Microsoft Secure Score (Attack Simulation Training est E5 seulement, et même ça note la configuration de l'outil de simulation, pas les résultats de la formation des utilisateurs du client).</p>
+
+  <p>La liste pourrait continuer. Le patron : <strong>tout ce qui exige du jugement humain, du travail opérationnel continu, ou de la visibilité sur des choses que Microsoft ne peut pas vérifier programmatiquement sur l'environnement du client est non noté.</strong> La Secure Score mesure l'instantané de configuration. Le travail non noté, c'est ce qui garde le client en sécurité dans les moments entre les instantanés.</p>
+
+  <h2>Pourquoi courir après 100 % est le mauvais objectif</h2>
+
+  <p>Une Secure Score de 100 % est atteignable en principe mais rarement correcte en pratique. Raisons :</p>
+
+  <ul>
+    <li><strong>Certaines recommandations ne conviennent pas à certains clients.</strong> Un petit cabinet comptable n'a pas besoin d'Insider Risk Management. Forcer la recommandation au statut « complète » avec une fausse attribution tiers, c'est jouer le score.</li>
+    <li><strong>Les recommandations conditionnées par licence exigent des mises à niveau de licence.</strong> Un client Business Premium ne peut pas honnêtement implémenter des fonctionnalités E5. Les mettre en Risk-Accepted et accepter un pourcentage plus bas est plus honnête que de jouer le contournement.</li>
+    <li><strong>Certaines recommandations entrent en conflit avec les réalités opérationnelles du client.</strong> Politique de pourriel sortant mise à son action restreindre-et-bloquer la plus stricte sans régler pour les expéditeurs légitimes à haut volume du client (vendeurs en journée de campagne, communications qui envoient la lettre annuelle aux employés). Plusieurs administrateurs globaux sur une entreprise à un seul propriétaire. Blocage d'auth héritée sur un tenant avec des applications métier héritées critiques qui n'ont pas encore été modernisées.</li>
+    <li><strong>Les points marginaux au-dessus de ~88 % demandent des rendements décroissants.</strong> Chaque recommandation qui reste contribue moins; le coût opérationnel pour l'implémenter est souvent disproportionné par rapport au gain de sécurité.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.5.4.8 1 .9 1.6h6.2c.1-.6.4-1.2.9-1.6A7 7 0 0 0 12 2z"/></svg>La bonne cible</div>
+    <p>Le bon objectif Secure Score, pour les clients Business Premium qui roulent l'écosystème complet, c'est <strong>80 % ou plus avec des décisions Risk Accepted honnêtes documentées pour tout ce qui est en dessous</strong>. La fin des 80 est atteignable pour les clients où l'opérateur a fait tout le travail d'implémentation. 90 % et plus exige que des facteurs spécifiques au client s'alignent (aucune recommandation E5 applicable, aucune contrainte opérationnelle) et vient rarement de chasse incrémentale au score.</p>
+  </div>
+
+  <p>La leçon 6 couvre le cadrage de cible en détail opérationnel. Pour cette leçon-ci, le principe : une cible de 100 % distord le travail. Une cible de 80 % avec discipline le focalise.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Secure Score mesure la configuration, pas la sécurité.</strong> L'histoire du 92 % qui s'est fait BEC, c'est le cas d'avertissement que chaque opérateur a besoin d'avoir en tête. Une note élevée, c'est un accomplissement de configuration; ce n'est pas une garantie de sécurité. Utilisez-la comme un signal parmi plusieurs, pas comme la conclusion principale.</p>
+
+  <p><strong>Reconnaissez les patrons de jeu de score dans votre propre travail.</strong> « Resolved through third party » sans tiers. Auto-attestation sans suivi. Risk-Accepted pour effacer le bruit visuel plutôt que pour documenter une non-applicabilité véritable. Faciles à glisser dedans sous pression. Le test honnête : défendriez-vous l'action au client dans une rencontre de renouvellement? Si non, ne la prenez pas.</p>
+
+  <p><strong>Le travail non noté, c'est ce qui garde le client en sécurité.</strong> Publication DMARC, triage de dérive, maintenance du registre d'exceptions, réglage spécifique au client, capacité de réponse aux incidents, sensibilisation à l'hygiène courriel des fournisseurs — rien de ça ne note, tout ça compte. La valeur professionnelle de l'opérateur est largement dans le travail non noté. Communiquez ça aux clients explicitement; ne les laissez pas confondre la note avec l'histoire complète.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Secure Score face client</b> — comment se servir du pourcentage honnêtement dans les conversations avec les clients : le récit de renouvellement, la tendance dans le temps, l'histoire de la base de référence à l'accueil.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Opérer Secure Score à l'échelle + fermer le curriculum</b> — la cadence de revue trimestrielle, le cadrage de la cible 80 % et plus, et l'argument de fermeture du curriculum.</div></div>
+  </div>
+
+  <p>Pour l'instant : prenez le client avec la plus haute Secure Score de votre carnet. Regardez sa liste de recommandations. Pour chaque recommandation marquée « Resolved through third party », pouvez-vous nommer l'outil tiers et confirmer qu'il couvre vraiment la fonction? Pour chaque « Risk Accepted », pouvez-vous défendre la raison d'acceptation? Les patrons de jeu sont habituellement silencieux — les trouver dans votre propre travail, c'est la discipline. Trouvez-les avant qu'un client ou un auditeur ne les trouve.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur les limites de Secure Score et ce que mesure la métrique (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score overview</a>); options de statut de recommandation incluant tiers et Risk Accepted (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — Track recommendation completion</a>); contexte des patrons d'attaque BEC et AiTM (<a href="https://www.cisa.gov/topics/cyber-threats-and-advisories/business-email-compromise-bec" target="_blank" rel="noopener">CISA — Business Email Compromise</a>); modes Controlled Folder Access (Audit vs Block) et considérations opérationnelles (<a href="https://learn.microsoft.com/en-us/defender-endpoint/controlled-folders" target="_blank" rel="noopener">Microsoft Learn — Controlled Folder Access</a>); guidance de bonnes pratiques pour les administrateurs globaux (<a href="https://learn.microsoft.com/en-us/microsoft-365/admin/security-and-compliance/protect-global-admin" target="_blank" rel="noopener">Microsoft Learn — Protect admin accounts</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

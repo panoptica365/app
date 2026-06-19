@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Políticas de cuarentena y liberación de usuario — Ajustes de seguridad de correo</title>
+<meta name="lesson:title" content="Políticas de cuarentena y liberación de usuario — donde mueren los buenos valores por defecto">
+<meta name="lesson:subtitle" content="Restringir los permisos de liberación de cuarentena para que los usuarios finales no puedan liberar por su cuenta phishing de alta confianza.">
+<meta name="lesson:icon" content="inbox">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de seguridad de correo</span> <span class="sep">·</span> <span>Políticas de cuarentena y liberación de usuario</span></div>
+  <h1>Políticas de cuarentena y liberación de usuario — donde mueren los buenos valores por defecto</h1>
+  <p class="dek">Restringir los permisos de liberación de cuarentena para que los usuarios finales no puedan liberar por su cuenta phishing de alta confianza.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un correo de notificación de cuarentena que lista un mensaje en cuarentena con un botón de Liberar al lado, y un clic enviando el mensaje a la bandeja de entrada.">
+      <defs>
+        <radialGradient id="qpBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="qpSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="qpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#qpBg)"/>
+
+      <!-- left: the quarantine notification email -->
+      <text x="300" y="58" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">NOTIFICACIÓN DE CUARENTENA</text>
+      <g transform="translate(110,76)">
+        <rect x="0" y="0" width="380" height="206" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="22" y="38" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Tienes 3 mensajes en cuarentena</text>
+        <line x1="22" y1="52" x2="358" y2="52" stroke="#1F3C5C"/>
+        <g font-family="Geist,Inter,sans-serif">
+          <rect x="22" y="66" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="86" fill="#6B85A6" font-size="12.5">boletín · resumen semanal</text>
+          <rect x="278" y="66" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="86" text-anchor="middle" fill="#A8E1F8" font-size="12">Liberar</text>
+
+          <rect x="22" y="104" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="124" fill="#6B85A6" font-size="12.5">promo · oferta primavera</text>
+          <rect x="278" y="104" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="124" text-anchor="middle" fill="#A8E1F8" font-size="12">Liberar</text>
+
+          <rect x="22" y="146" width="246" height="38" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <text x="34" y="164" fill="#FF8A98" font-size="12.5" font-weight="600">remitente desconocido</text>
+          <text x="34" y="179" fill="#E2A0AA" font-size="11">«Tu sobre de DocuSign está listo»</text>
+          <rect x="278" y="148" width="80" height="34" rx="8" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="318" y="170" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="700">Liberar</text>
+          <circle cx="368" cy="148" r="9" fill="#5CCBF4" filter="url(#qpSoft)" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- one click arrow -->
+      <text x="610" y="150" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">un clic</text>
+      <path d="M540 168 H690" stroke="#FF5A6E" stroke-width="3" stroke-linecap="round" marker-end="url(#qpArr)"/>
+
+      <!-- right: the inbox -->
+      <text x="880" y="58" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">LA BANDEJA DE ENTRADA</text>
+      <g transform="translate(720,76)">
+        <rect x="0" y="0" width="300" height="206" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <g transform="translate(110,60)" stroke="#5CCBF4" stroke-width="2.4" fill="none">
+          <rect x="0" y="0" width="80" height="56" rx="6"/>
+          <path d="M0 6 L40 34 L80 6"/>
+        </g>
+        <rect x="70" y="150" width="160" height="34" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="150" y="172" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">phishing entregado</text>
+      </g>
+    </svg>
+    <figcaption>La cuarentena funcionó. Luego el propio botón de Liberar del usuario la deshizo.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La asistente del director general de un cliente recibe un correo diario de notificación de cuarentena de Microsoft. Asunto: «Tienes 3 mensajes en cuarentena». El cuerpo lista tres mensajes con remitente, asunto y un botón de Liberar al lado de cada uno.</p>
+
+  <p>Uno de los tres es de alguien que no reconoce, con un asunto como «Tu sobre de DocuSign está listo para firma». Ella no esperaba un sobre de DocuSign. Pero el director firma cosas todo el tiempo, y ella le gestiona el calendario, y a lo mejor esto es algo que necesita ver, y ella no quiere parecer la asistente que bloqueó algo importante. Hace clic en Liberar.</p>
+
+  <p>El mensaje llega a su bandeja de entrada. Lo abre. Hace clic en el enlace con marca de DocuSign. El enlace va a una página de captura de credenciales corriendo en un dominio recién registrado con un certificado válido de Let's Encrypt. Teclea las credenciales del director general, porque el director le había pedido que se encargara de DocuSign por él, y ella tiene la contraseña. El atacante captura tanto la credencial como la cookie de sesión. Doce minutos después el atacante está dentro del buzón del director general.</p>
+
+  <p>La asistente hizo exactamente lo que la notificación de cuarentena por defecto de Microsoft <em>la invitó a hacer</em>. Tenía un botón de Liberar. Lo usó.</p>
+
+  <p>Este es el vector complementario al BEC que recibe menos atención de la que merece: incluso cuando Defender pone con éxito en cuarentena un correo de phishing, el propio usuario del cliente puede liberarlo de vuelta a la bandeja de entrada con un clic. La defensa contra el phishing existe; la defensa contra que el usuario deshaga la defensa es de lo que trata esta lección.</p>
+  </div>
+
+  <h2>Las cuatro (o cinco) categorías de cuarentena</h2>
+
+  <p>Microsoft clasifica los mensajes en cuarentena en categorías distintas, cada una con sus propias reglas de liberación por defecto. Conocer las categorías importa porque la configuración correcta es <em>específica de la categoría</em>.</p>
+
+  <ul>
+    <li><strong>Spam</strong> (spam de baja confianza) — mensajes que Microsoft sospecha que son spam con confianza moderada. Por defecto: los usuarios pueden liberar con notificación.</li>
+    <li><strong>Spam de alta confianza</strong> — Microsoft está más seguro. Por defecto: los usuarios pueden liberar con notificación.</li>
+    <li><strong>Bulk</strong> — correo masivo de estilo boletín. Por defecto: los usuarios pueden liberar con notificación.</li>
+    <li><strong>Phishing</strong> — Microsoft sospecha que esto es un intento de phishing. Por defecto: el admin debe liberar.</li>
+    <li><strong>Phishing de alta confianza</strong> — Microsoft está muy seguro. Por defecto: el admin debe liberar; el mensaje no puede ser liberado por usuarios.</li>
+    <li><strong>Malware</strong> — el adjunto o enlace coincidió con un patrón malicioso. Por defecto: el admin debe liberar.</li>
+    <li><strong>Spoof</strong> — la autenticación del remitente (SPF/DKIM/DMARC) falló de un modo que sugiere suplantación del remitente. Por defecto, varía según la configuración del tenant.</li>
+  </ul>
+
+  <p>Los valores por defecto son razonables para las categorías de alta confianza (el admin debe liberar) y <em>peligrosos</em> para las de baja confianza (los usuarios pueden liberar). La anécdota inicial ocurrió porque la asistente recibió un mensaje clasificado como Phishing (no de alta confianza) con la configuración antigua por defecto que dejaba a los usuarios liberar phishing de baja confianza — y Microsoft ha endurecido los valores por defecto desde entonces, pero los tenants de clientes configurados hace años aún pueden llevar los ajustes más laxos.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Las categorías de cuarentena divididas en dos grupos según la regla de liberación por defecto: categorías de menor confianza donde los usuarios pueden liberar, y categorías de mayor confianza donde el admin debe liberar.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="186" y="34" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1" font-weight="600">USUARIOS PUEDEN LIBERAR</text>
+      <text x="186" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(menor confianza)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="56" y="70" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="95" fill="#C4D4E8" font-size="14">Spam</text></g>
+        <g><rect x="56" y="120" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="145" fill="#C4D4E8" font-size="14">Spam de alta confianza</text></g>
+        <g><rect x="56" y="170" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="195" fill="#C4D4E8" font-size="14">Bulk</text></g>
+      </g>
+      <text x="534" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1" font-weight="600">EL ADMIN DEBE LIBERAR</text>
+      <text x="534" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(mayor confianza / peligroso)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="404" y="70" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="95" fill="#A8E1F8" font-size="14">Phishing</text></g>
+        <g><rect x="404" y="120" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="145" fill="#A8E1F8" font-size="14">Phishing de alta confianza</text></g>
+        <g><rect x="404" y="170" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="195" fill="#A8E1F8" font-size="14">Malware</text></g>
+        <g><rect x="404" y="220" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="245" fill="#A8E1F8" font-size="14">Spoof</text></g>
+      </g>
+      <text x="534" y="290" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11" font-style="italic">El valor por defecto de Spoof varía según el tenant</text>
+    </svg>
+    <figcaption>Reglas de liberación por defecto divididas por confianza — la configuración correcta es específica de la categoría.</figcaption>
+  </figure>
+
+  <h2>Políticas de cuarentena — el objeto de configuración</h2>
+
+  <p>Una <strong>política de cuarentena</strong> en M365 es el objeto que define qué pueden hacer los usuarios con los mensajes en cuarentena. Microsoft entrega tres políticas preestablecidas; puedes crear personalizadas.</p>
+
+  <p>Las preestablecidas:</p>
+
+  <ul>
+    <li><strong>AdminOnlyAccessPolicy</strong> — los usuarios no tienen ninguna capacidad de liberar. Pueden ver los mensajes en cuarentena (si la notificación está habilitada) pero no pueden liberarlos. El admin es el único que puede. La postura más estricta.</li>
+    <li><strong>DefaultFullAccessPolicy</strong> — los usuarios pueden solicitar liberación (el admin igual aprueba) y pueden previsualizar los mensajes. Sin notificaciones.</li>
+    <li><strong>DefaultFullAccessWithNotificationPolicy</strong> — igual que DefaultFullAccessPolicy pero con notificaciones de cuarentena habilitadas. La más permisiva de los valores por defecto de Microsoft.</li>
+  </ul>
+
+  <p>Las políticas personalizadas te dejan mezclar y combinar: habilitar acciones específicas (solicitar liberación, previsualizar, bloquear remitente), especificar si se envían notificaciones, y elegir cuán agresiva es la cadencia de notificación.</p>
+
+  <p>La configuración que importa para el endurecimiento de pequeña empresa: <strong>aplica AdminOnlyAccessPolicy a las categorías peligrosas</strong> (Phishing, Phishing de alta confianza, Malware, Spoof). Los usuarios nunca pueden liberar mensajes en esas categorías sin la aprobación del operador. Para las categorías de menor confianza (Spam, Bulk), la más permisiva DefaultFullAccessWithNotificationPolicy es defendible — esas suelen ser correo de marketing o ruido, y darle a los usuarios autoservicio para esas reduce la carga de mesa de ayuda.</p>
+
+  <div class="callout insight">
+    <div class="clabel">La regla de endurecimiento</div>
+    <p>Aplica <strong>AdminOnlyAccessPolicy</strong> a Phishing, Phishing de alta confianza, Malware y Spoof. Los usuarios nunca pueden liberar mensajes en esas categorías sin la aprobación del operador.</p>
+  </div>
+
+  <h2>Cadencia de notificación de cuarentena</h2>
+
+  <p>Aparte de las propias políticas, M365 controla con qué frecuencia los usuarios reciben el correo resumen de «tienes mensajes en cuarentena». La frecuencia de notificación puede ponerse por política de cuarentena (en configuraciones más nuevas) o vía un ajuste global (en las más antiguas).</p>
+
+  <p>Cadencias habituales:</p>
+
+  <ul>
+    <li><strong>Diaria</strong> — el valor por defecto. Un correo al día con los mensajes en cuarentena del día.</li>
+    <li><strong>Cada 4 horas</strong> — más agresiva; para buzones de alto volumen.</li>
+    <li><strong>Apagada</strong> — sin notificaciones. Los usuarios tienen que comprobar activamente el portal de cuarentena si quieren ver qué se ha bloqueado.</li>
+  </ul>
+
+  <p>Para clientes de pequeña empresa, diaria suele ser el balance correcto. Notificaciones más frecuentes generan ruido; apagada genera tickets de «nunca recibí X» porque los usuarios no se acuerdan de comprobar el portal.</p>
+
+  <h2>El complemento al BEC — por qué los valores por defecto importan</h2>
+
+  <p>La anécdota inicial no es hipotética. Es el segundo vector complementario más habitual después del reenvío automático (lección 5). La secuencia de ataque es consistente entre incidentes:</p>
+
+  <ol>
+    <li>El atacante envía un correo de phishing elaborado para parecer una comunicación de negocio legítima (DocuSign, factura, RR. HH. interno, expiración de contraseña de IT).</li>
+    <li>El correo aterriza en cuarentena porque el clasificador antiphishing de Microsoft lo marca — pero con clasificación Phishing (no de alta confianza), porque el mensaje está técnicamente bien formado y usa infraestructura de alojamiento legítima.</li>
+    <li>El usuario recibe la notificación de cuarentena, ve un asunto plausiblemente de negocio, no quiere retrasar algo importante, hace clic en Liberar.</li>
+    <li>El mensaje llega a la bandeja de entrada. El usuario hace clic en el enlace. Se capturan las credenciales. Se captura la cookie de sesión. El buzón está comprometido.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="La secuencia complementaria al BEC: un correo de phishing aterriza en cuarentena, el usuario lo libera, hace clic en el enlace, y el buzón queda comprometido.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="100" width="138" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="99" y="126" fill="#C4D4E8" font-size="13" font-weight="600">Phishing</text>
+        <text x="99" y="144" fill="#6B85A6" font-size="11">clasif. Phishing</text>
+
+        <rect x="206" y="100" width="138" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="275" y="126" fill="#7DD9F9" font-size="13" font-weight="600">Cuarentena</text>
+        <text x="275" y="144" fill="#6B85A6" font-size="11">la defensa aguanta</text>
+
+        <rect x="382" y="100" width="138" height="56" rx="10" fill="#2A1A0A" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="451" y="126" fill="#FFD27A" font-size="12.5" font-weight="600">Usuario libera</text>
+        <text x="451" y="144" fill="#C9A468" font-size="11">clica el enlace</text>
+
+        <rect x="558" y="100" width="138" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="627" y="126" fill="#FF8A98" font-size="13" font-weight="700">Buzón</text>
+        <text x="627" y="144" fill="#E2A0AA" font-size="11">comprometido</text>
+      </g>
+      <path d="M168 128 H206" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M344 128 H382" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M520 128 H558" stroke="#FF5A6E" stroke-width="2" marker-end="url(#bArr)"/>
+      <text x="451" y="200" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="11">credencial + cookie de sesión capturadas</text>
+    </svg>
+    <figcaption>La defensa de la cuarentena aguanta — hasta que el clic de Liberar del usuario entrega el mensaje el resto del camino.</figcaption>
+  </figure>
+
+  <p>La defensa es quitar el botón de Liberar para las categorías peligrosas. Configura todas — Phishing, Phishing de alta confianza, Malware y Spoof — a AdminOnlyAccessPolicy. La notificación aún puede llegar (para que el usuario sepa que su correo se puso en cuarentena y pueda pedirle al operador que investigue), pero el botón de Liberar no está. El usuario tiene que llamar a la mesa de ayuda.</p>
+
+  <p>Esto añade carga operativa — los operadores ahora atienden tickets de «libera mi mensaje en cuarentena». El compromiso es intencional: cada ticket de petición de liberación es una oportunidad para mirar el mensaje, verificar que es legítimo, y o bien liberarlo o usar la conversación para educar al usuario sobre lo que casi hizo clic. La conversación de cinco minutos es barata; el incidente de transferencia fraudulenta es caro.</p>
+
+  <h2>Las políticas de seguridad preestablecidas lo hacen más fácil</h2>
+
+  <p>Las políticas de seguridad preestablecidas de Microsoft (Standard y Strict — la lección 10 las cubre en detalle) incluyen configuraciones de políticas de cuarentena. La preestablecida Standard asigna la política estricta de acceso (AdminOnlyAccessPolicy) a las categorías de Phishing de alta confianza, Malware y Spoof por defecto. La preestablecida Strict extiende esto también a Phishing.</p>
+
+  <p>Si has aplicado la preestablecida Standard o Strict al cliente (cubierto en las lecciones 3 y 10), la configuración de cuarentena está parcialmente manejada. Lo que las preestablecidas no anulan es la cadencia y la asignación de política por categoría para Spam y Bulk — esas siguen siendo decisiones específicas del tenant.</p>
+
+  <p>El punto a llevarte: si estás desplegando políticas de seguridad preestablecidas y no personalizas más la cuarentena, ya has obtenido el bloqueo de liberación de las categorías peligrosas. Si estás configurando políticas de cuarentena independientemente de las preestablecidas, tienes que hacer explícita la asignación AdminOnly para cada categoría peligrosa.</p>
+
+  <h2>El flujo del operador — liberar en nombre del usuario</h2>
+
+  <p>Cuando AdminOnlyAccessPolicy está en su sitio y un usuario llama para pedir una liberación:</p>
+
+  <ol>
+    <li><strong>Abre el portal de cuarentena</strong> (portal de Defender → Email &amp; collaboration → Review → Quarantine). Busca el mensaje por destinatario, remitente o asunto.</li>
+    <li><strong>Previsualiza el mensaje</strong> antes de liberarlo. Lee el cuerpo. Mira los enlaces. Mira los detalles del remitente — incluida la dirección real de envío (no solo el nombre para mostrar). Mira las cabeceras si el mensaje está en el límite.</li>
+    <li><strong>Verifica con el usuario</strong> lo que esperaba. «Dices que es de Bob sobre la factura — ¿coincide con lo que Bob enviaría normalmente? ¿El enlace va donde esperas?».</li>
+    <li><strong>Libera si es legítimo; repórtalo como phishing si no.</strong> El portal de Defender de Microsoft te deja liberar con una opción de «enviar a Microsoft para revisión» — esto entrena al clasificador de Microsoft y ayuda a que mensajes legítimos similares pasen automáticamente en el futuro.</li>
+  </ol>
+
+  <p>Este es un flujo de 3 a 5 minutos por petición. Para clientes con muchas liberaciones, agrúpalas — maneja la cola una o dos veces al día en lugar de reaccionar a cada llamada. Para clientes de alto volumen, considera ajustar el afinado del antiphishing o el antispam para que menos mensajes legítimos aterricen en cuarentena.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>La configuración de la política de cuarentena es parte de lo que gobiernan las <strong>políticas de seguridad preestablecidas</strong>. El ajuste de seguridad de Panoptica365 «Enable Preset Security Policy (Standard or Strict) — MDO» empuja la habilitación de la preestablecida en el tenant del cliente, y el detector de deriva vigila si se mantiene habilitada. Si el admin de un cliente abre el portal de Defender y deshabilita la preestablecida — o crea una política de cuarentena personalizada con derechos de liberación permisivos que anula la preestablecida — la señal de deriva es el aviso temprano.</p>
+
+  <p><strong>Las alertas de Defender XDR</strong> fluyen al motor de alertas de Panoptica365 cuando MDO expone eventos de alta severidad relacionados con liberaciones de cuarentena iniciadas por usuario de mensajes sospechosos. Estos aparecen en el pipeline estándar de alertas.</p>
+
+  <p>Lo que Panoptica365 <em>no</em> expone en el panel: navegadores de cola de cuarentena por tenant, flujo de aprobación de petición de liberación por mensaje, historial de actividad de liberación por usuario. La propia cola de cuarentena, la vista previa por mensaje, la acción de aprobación de liberación — todo eso pasa en el portal de Microsoft Defender. Panoptica365 vigila la <em>configuración</em> del sistema de cuarentena; la <em>operación</em> de la cola de cuarentena es una superficie de Microsoft.</p>
+
+  <h2>Qué se puede romper</h2>
+
+  <p><strong>Quejas del cliente por mensajes «atascados en cuarentena».</strong> Cuando AdminOnlyAccessPolicy está en su sitio, los usuarios genuinamente no pueden liberar sus propios mensajes. Llamarán por teléfono. Algunos clientes experimentan esto como una degradación. Encuádralo explícitamente durante la conversación con el cliente como «os estamos protegiendo del patrón de ataque AiTM-y-liberación; el compromiso es que nos llamáis para liberar mensajes ambiguos, y tardamos cinco minutos en verificar». La mayoría de los clientes lo acepta una vez explicado el compromiso.</p>
+
+  <p><strong>Correo legítimo de marketing o transaccional yendo a cuarentena repetidamente.</strong> Facturas de proveedores, sobres de DocuSign, invitaciones de calendario de terceros — cualquier sistema que envíe correo con características que Microsoft puntúa como cercanas al phishing. El arreglo es o bien autenticar al remitente correctamente (lección 4) o añadir el dominio del remitente a la lista de remitentes de confianza antiphishing (lección 2). No crear una política de cuarentena permisiva.</p>
+
+  <p><strong>Notificaciones de cuarentena yendo a correo no deseado.</strong> Los usuarios a veces configuran reglas que mueven todos los correos de remitente «noreply@» a correo no deseado, incluido el resumen de cuarentena de Microsoft. Luego se quejan de que no se enteran de los mensajes en cuarentena. Diagnostícalo durante el onboarding y educa al usuario.</p>
+
+  <p><strong>Políticas de cuarentena personalizadas viejas dejadas por administradores anteriores.</strong> Algunos tenants de cliente tienen políticas de cuarentena personalizadas heredadas de migraciones o de MSPs anteriores. Audítalas durante el chequeo previo (lección 1) y o bien alinéalas con el modelo de preestablecidas Standard/Strict o reconstrúyelas explícitamente.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>La liberación de cuarentena por defecto es un vector complementario al BEC.</strong> Los valores por defecto de Microsoft dejan a los usuarios liberar mensajes de phishing de baja confianza ellos mismos. La asistente de la historia inicial es la víctima recurrente. Pon AdminOnlyAccessPolicy en Phishing, Phishing de alta confianza, Malware y Spoof — como mínimo.</p>
+
+  <p><strong>O despliega preestablecidas o configura las políticas de cuarentena explícitamente.</strong> La preestablecida Standard o Strict maneja la configuración de liberación solo-admin de las categorías peligrosas. Si no estás usando preestablecidas, cada categoría necesita una asignación explícita de política. No hay una tercera opción segura.</p>
+
+  <p><strong>Liberar en nombre del usuario es un flujo de operador de cinco minutos, y vale la pena hacerlo bien.</strong> Cuando los usuarios llaman para liberar un mensaje, ese es el momento de verificar el remitente, previsualizar el enlace, y o bien liberar con confianza o usar la llamada para educar. La sobrecarga operativa es real pero proporcional a la protección — y las conversaciones mismas entrenan a los usuarios del cliente para ser más escépticos del phishing de la próxima vez.</p>
+
+  <h2>Lo que viene</h2>
+
+  <ul>
+    <li><strong>Lección 8: Reglas de flujo de correo y MailTips.</strong> Transport rules — el objeto de configuración que da a los operadores control quirúrgico sobre el manejo de mensajes, y el patrón de abuso cuando se usa demasiado ampliamente.</li>
+    <li><strong>Lección 9: Spam saliente y SMTP AUTH.</strong> Los controles del radio de impacto post-compromiso — qué pasa cuando el buzón del cliente es el que envía el phishing.</li>
+  </ul>
+
+  <p>Por ahora: abre las políticas de cuarentena del cliente en el portal de Defender. Verifica que Phishing, Phishing de alta confianza, Malware y Spoof están mapeados a AdminOnlyAccessPolicy (o que la política de seguridad preestablecida está habilitada y proporcionando el mismo efecto). Verifica que la cadencia de notificación es diaria, no apagada. La asistente de la historia inicial no obtiene su botón de Liberar esta semana; tú puedes dormir mejor como resultado.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la visión general de políticas de cuarentena (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies" target="_blank" rel="noopener">Microsoft Learn — Quarantine policies</a>); creación y asignación de políticas de cuarentena personalizadas (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Manage quarantine policies</a>); referencia del comportamiento de liberación de cuarentena por usuario (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-end-user" target="_blank" rel="noopener">Microsoft Learn — Quarantine user permissions</a>); configuración de notificaciones de cuarentena (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies#quarantine-notifications" target="_blank" rel="noopener">Microsoft Learn — Quarantine notifications</a>); políticas de seguridad preestablecidas y sus efectos sobre la cuarentena (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

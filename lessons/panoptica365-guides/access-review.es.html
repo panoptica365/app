@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisión de acceso — quién es administrador, quién está inactivo y su vía de regreso de emergencia — Guías Panoptica365</title>
+<meta name="lesson:title" content="Revisión de acceso — quién es administrador, quién está inactivo y su vía de regreso de emergencia">
+<meta name="lesson:subtitle" content="Revise a cada titular de un rol con privilegios, deshabilite o elimine cuentas inactivas, y configure cuentas de emergencia que eluden el Acceso condicional y avisan en cuanto se usan.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-13">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Revisión de acceso</span></div>
+  <h1>Revisión de acceso — quién es administrador, quién está inactivo y su vía de regreso de emergencia</h1>
+  <p class="dek">Revise a cada titular de un rol con privilegios, deshabilite o elimine cuentas inactivas, y configure cuentas de emergencia que eluden el Acceso condicional y avisan en cuanto se usan.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La pestaña Revisión de acceso se encuentra entre Seguridad y Aplicaciones, y contiene dos tablas y un flujo de cuentas de emergencia.">
+      <defs>
+        <radialGradient id="arBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="arKey" cx="50%" cy="45%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="arSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="arArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#arBg)"/>
+
+      <!-- tab strip: Seguridad · Revisión de acceso · Aplicaciones -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="92" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="182" y="76" fill="#6B85A6" font-size="15">Seguridad</text></g>
+        <g><rect x="296" y="44" width="216" height="52" rx="11" fill="#10243B" stroke="#5CCBF4" stroke-width="1.8"/><text x="404" y="76" fill="#7DD9F9" font-size="15" font-weight="700">Revisión de acceso</text></g>
+        <g><rect x="536" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="626" y="76" fill="#6B85A6" font-size="14">Aplicaciones</text></g>
+      </g>
+
+      <!-- two tables -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(150,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="13.5" font-weight="600">Tabla 1 · Roles de admin</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+        <g transform="translate(414,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="13.5" font-weight="600">Tabla 2 · Todas las cuentas</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+      </g>
+
+      <!-- break-glass workflow on the right -->
+      <g transform="translate(880,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="82" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <rect x="-30" y="-58" width="60" height="36" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <line x1="-30" y1="-40" x2="30" y2="-40" stroke="#FF5A6E" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <circle cx="0" cy="14" r="26" fill="url(#arKey)" filter="url(#arSoft)" opacity="0.9"/>
+        <circle cx="0" cy="6" r="9" fill="#0E2640"/>
+        <rect x="-3" y="10" width="6" height="26" rx="2" fill="#0E2640"/>
+        <rect x="2" y="26" width="10" height="5" rx="2" fill="#0E2640"/>
+        <rect x="2" y="34" width="8" height="5" rx="2" fill="#0E2640"/>
+      </g>
+      <text x="880" y="312" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">CUENTA DE EMERGENCIA</text>
+    </svg>
+    <figcaption>Una pestaña entre Seguridad y Aplicaciones: dos tablas que usted lee, más la cuenta de emergencia que reserva para los imprevistos.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La pestaña <strong>Revisión de acceso</strong> del panel del inquilino responde a tres preguntas que debería poder resolver sobre cualquier cliente: <em>quién tiene roles administrativos, qué cuentas son peso muerto y qué pasa si una directiva de Acceso condicional bloquea a todos.</em> Se encuentra entre <strong>Seguridad</strong> y <strong>Aplicaciones</strong>, y son dos tablas más un flujo de cuentas de emergencia.</p>
+
+  <p>Todo lo que escribe en el inquilino aquí lo inicia el operador, se confirma y se audita — Panoptica365 nunca deshabilita ni elimina una cuenta por su cuenta.</p>
+  </div>
+
+  <h2>Tabla 1 — Cuentas con roles administrativos</h2>
+
+  <p>Es una lista de <strong>solo lectura</strong> de cada cuenta que tiene un rol con privilegios supervisado, agrupada por nivel (los roles de cúspide como Administrador global primero, luego alto, luego medio). Para cada cuenta verá su nombre (enlazado a su ficha de usuario en Entra), su UPN, los roles que tiene, si está habilitada, si la <strong>MFA</strong> está registrada y su última actividad.</p>
+
+  <p>Dos cosas que conviene leer con atención:</p>
+
+  <ul>
+    <li><strong>MFA registrado</strong> muestra <em>Sí</em>, <em>No</em> o un guion. Un guion significa <em>no pudimos leer un registro para esa cuenta</em> — <strong>no</strong> es lo mismo que «sin MFA». No actúe sobre un guion; actúe sobre un <em>No</em> claro.</li>
+    <li>El <strong>nivel de cúspide</strong> es donde merece estar su atención. Un Administrador global sin MFA, o tres Administradores globales más de los que recuerda haber creado, es justo lo que esta tabla existe para revelar.</li>
+  </ul>
+
+  <p>No hay botones de acción en esta tabla — es una postura que usted lee y sobre la que luego actúa en otro sitio (en Entra, o mediante la Tabla 2 para cuentas sin privilegios).</p>
+
+  <h2>Tabla 2 — Todas las cuentas de usuario</h2>
+
+  <p>Cada cuenta del inquilino, con filtros: <strong>Todas</strong>, <strong>Miembros</strong>, <strong>Invitados</strong>, <strong>Inactivas</strong>. Las columnas son cuenta + UPN, tipo, habilitada, última actividad y acciones.</p>
+
+  <p>La <strong>inactividad</strong> se calcula a partir de los informes de uso de Microsoft 365, no de los registros de inicio de sesión del directorio — lo que significa que <strong>funciona en Business Standard</strong>, donde los registros de inicio de sesión no están disponibles por licencia. La columna de última actividad muestra la fecha más reciente en que la cuenta hizo algo en Exchange, SharePoint, OneDrive o Teams; si es más antigua que el umbral (90 días por defecto), la fecha se pone roja y la fila se marca <strong>Inactiva</strong>. Un invitado que fue convidado pero nunca aceptó se etiqueta <strong>Nunca aceptada</strong> — el candidato a eliminación más claro que hay.</p>
+
+  <p>Si el inquilino tiene activada la opción <em>Mostrar nombres ocultos de usuarios, grupos y sitios</em>, el informe de uso vuelve anonimizado y no podemos asociar la actividad a las cuentas. En lugar de mostrarle datos sin sentido, aparece una nota sobre la tabla con un enlace para desactivar el ajuste.</p>
+
+  <h2>Deshabilitar y eliminar cuentas</h2>
+
+  <p><strong>Deshabilitar</strong>, <strong>Habilitar</strong> y <strong>Eliminar</strong> son acciones del operador en la Tabla 2. Cada una abre un cuadro de confirmación que nombra la cuenta, indica lo que va a pasar y recuerda que la acción queda registrada en el registro de auditoría. Eliminar también le indica que la cuenta es <strong>recuperable en Entra durante 30 días</strong> antes de que la eliminación sea permanente.</p>
+
+  <p>Las salvaguardas se aplican en el servidor, no solo se ocultan en la interfaz:</p>
+
+  <ul>
+    <li><strong>La eliminación se rechaza para cualquier cuenta que tenga un rol administrativo.</strong> Quite primero sus roles en Entra — esta herramienta no le dejará borrar a un administrador por accidente.</li>
+    <li><strong>Deshabilitar al último Administrador global habilitado está bloqueado.</strong> Ese es el único clic que deja a un inquilino bloqueado fuera de sí mismo.</li>
+    <li>Una <strong>cuenta de emergencia</strong> exige una confirmación adicional antes de poder deshabilitarse o eliminarse.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Salvaguardas del lado del servidor en las acciones deshabilitar, habilitar y eliminar: la eliminación se rechaza para los administradores, deshabilitar al último Administrador global está bloqueado, y las cuentas de emergencia exigen una confirmación adicional.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">APLICADAS EN EL SERVIDOR</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- guard 1 -->
+        <g transform="translate(36,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="14" font-weight="700">Eliminar un admin</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Rechazado</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">quite antes sus roles</text>
+        </g>
+        <!-- guard 2 -->
+        <g transform="translate(260,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="13" font-weight="700">Deshabilitar último AG</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Bloqueado</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">bloquea el inquilino</text>
+        </g>
+        <!-- guard 3 -->
+        <g transform="translate(484,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#10243B" stroke="#FFC04D" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FFC04D" font-size="13.5" font-weight="700">Cuenta de emergencia</text>
+          <text x="100" y="88" fill="#FFC04D" font-size="16" font-weight="700">Confirmación</text>
+          <text x="100" y="110" fill="#FFC04D" font-size="16" font-weight="700">adicional</text>
+          <text x="100" y="138" fill="#D8C49A" font-size="11">antes de deshabilitar / eliminar</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Tres salvaguardas viven en el servidor, no solo en la interfaz — para que un clic descuidado no pueda aislar un inquilino.</figcaption>
+  </figure>
+
+  <p>Cada deshabilitación, habilitación y eliminación se escribe en el registro de auditoría del MSP <strong>y</strong> en el registro de cambios del inquilino, con el operador, el UPN de destino, la acción y el resultado — de modo que una acción descuidada u hostil siempre sea atribuible a posteriori.</p>
+
+  <h2>Cuentas de emergencia — acceso de emergencia bien hecho</h2>
+
+  <p>Una cuenta de emergencia («break-glass») es la credencial a la que recurre cuando algo ha salido mal: una directiva de Acceso condicional mal configurada ha bloqueado a todos los administradores normales, o su proveedor de MFA está caído. Su única función es <strong>eludir las directivas de Acceso condicional</strong> para que un humano siempre pueda volver a entrar y arreglar las cosas.</p>
+
+  <p>Panoptica365 lo hace como recomienda Microsoft — con un <strong>grupo</strong> dedicado, no con ediciones cuenta por cuenta. Abra <strong>Cuentas de emergencia</strong> desde la pestaña Revisión de acceso. La primera vez, se le guiará.</p>
+
+  <h3>Antes de empezar</h3>
+
+  <p>Cree primero la cuenta de emergencia en Entra:</p>
+
+  <ul>
+    <li><strong>Administrador global</strong>, <strong>sin licencia</strong>, solo en la nube, en el dominio <strong>.onmicrosoft.com</strong>.</li>
+    <li>Póngale un <strong>nombre genérico</strong> — nunca «break glass», «emergencia» ni «admin». Un nombre evidente es una señal para un atacante que consigue un punto de apoyo; elija algo anodino (un operador usa <em>facturación</em>). Nombre el grupo también de forma genérica y conserve en él solo sus cuentas de emergencia.</li>
+    <li>Microsoft recomienda mantener <strong>al menos dos</strong> cuentas de emergencia.</li>
+  </ul>
+
+  <h3>Indique el grupo a Panoptica365</h3>
+
+  <p>Elija su grupo de seguridad dedicado en el selector — mostramos el nombre pero nos basamos en el identificador inmutable del grupo, de modo que renombrarlo más tarde no rompa nada. Aquí hay una barrera de seguridad estricta: si elige un grupo con más de unos pocos miembros, Panoptica365 lo detiene, porque excluir ese grupo del Acceso condicional eximiría a <em>todos sus miembros</em> — apuntar por error a «Todo el personal» eximiría a toda su empresa. También comprueba que sea un grupo de seguridad asignado, no dinámico (a un grupo dinámico no se le pueden añadir miembros).</p>
+
+  <p>Al confirmar, Panoptica365 <strong>excluye el grupo de cada directiva de Acceso condicional</strong> y le muestra el resultado directiva por directiva — excluido, ya excluido o con error. Si una escritura falla, se lo dice, en vez de fingir éxito — porque «excluido de 5 de 7 directivas» significa que la cuenta aún puede quedar bloqueada por las otras dos. A partir de entonces, designar una cuenta es simplemente <strong>añadirla al grupo</strong>, y el estado de cobertura muestra <em>«Excluido de N de N directivas.»</em></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Flujo de configuración de cuentas de emergencia: un grupo dedicado se excluye de cada directiva de Acceso condicional, y un inicio de sesión genera una alerta severa.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1: grupo dedicado -->
+        <rect x="34" y="76" width="168" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="102" fill="#A8E1F8" font-size="14" font-weight="600">Grupo dedicado</text>
+        <text x="118" y="121" fill="#6B85A6" font-size="11">solo cuentas de emergencia</text>
+
+        <!-- step 2: excluido de cada directiva de AC -->
+        <rect x="276" y="76" width="168" height="58" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="102" fill="#7DD9F9" font-size="13" font-weight="700">Excluido de cada</text>
+        <text x="360" y="121" fill="#7DD9F9" font-size="13" font-weight="700">directiva de AC</text>
+
+        <!-- step 3: inicio de sesión -> alerta severa -->
+        <rect x="518" y="76" width="168" height="58" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="602" y="102" fill="#FF8A98" font-size="13.5" font-weight="700">Inicio de sesión</text>
+        <text x="602" y="121" fill="#FF8A98" font-size="12.5" font-weight="600">alerta SEVERA</text>
+      </g>
+      <path d="M202 105 H276" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <path d="M444 105 H518" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <text x="360" y="170" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">designar una cuenta = añadirla al grupo</text>
+    </svg>
+    <figcaption>Configure el grupo una vez; desde entonces, una cuenta de emergencia es solo un miembro del grupo — y cualquier inicio de sesión es ruidoso.</figcaption>
+  </figure>
+
+  <p>Si el inquilino aún está en <strong>Valores predeterminados de seguridad</strong> (sin Acceso condicional), la exclusión es imposible — esos valores imponen la MFA a todos, sin exclusiones. Panoptica365 lo dice con claridad y sugiere pasar a Acceso condicional. Aun así puede designar y supervisar la cuenta; la alerta de inicio de sesión de abajo funciona de todos modos.</p>
+
+  <h3>La alerta de inicio de sesión</h3>
+
+  <p>En cuanto una cuenta de emergencia <strong>inicia sesión</strong>, Panoptica365 genera una alerta <strong>SEVERA</strong> — correo y un ticket de PSA si tiene uno conectado. Un inicio de sesión de emergencia real casi siempre significa que algo se rompió o que alguien está donde no debería, así que está pensada para ser ruidosa. La detección se apoya en el registro de auditoría unificado: <strong>funciona sin licencia Premium</strong>, y coincide con la identidad estable de la cuenta — por lo que se dispara incluso si ha cambiado el dominio de la cuenta.</p>
+
+  <p>Un solo inicio de sesión produce una sola alerta (y no una por registro de auditoría); los inicios de sesión repetidos el mismo día incrementan su contador de recurrencia hasta que la resuelva.</p>
+
+  <h3>La cobertura sigue garantizada</h3>
+
+  <p>Con el tiempo se crean nuevas directivas de Acceso condicional, y una exclusión puede quitarse. Panoptica365 sigue verificando que su grupo de emergencia permanezca excluido de <strong>cada</strong> directiva y genera una alerta si se abre una brecha — una directiva nueva sin la exclusión, o una exclusión que se eliminó. Y como la exclusión es algo que <em>usted</em> aplicó, Panoptica365 la considera esperada: no señalará su propia exclusión de emergencia como una desviación de Acceso condicional.</p>
+
+  <h3>Lo único que ha cambiado en las cuentas de emergencia</h3>
+
+  <p>Microsoft ahora <strong>exige MFA en los inicios de sesión de los portales de administración a nivel de plataforma — con independencia del Acceso condicional.</strong> Excluir la cuenta de todas las directivas de AC ya no elimina el aviso de MFA, y el viejo modelo de «sin MFA, solo una contraseña en bóveda» ha desaparecido. Registre un método <strong>resistente a la suplantación</strong> en la cuenta — una <strong>llave de seguridad FIDO2</strong> — y guárdela en la bóveda con la contraseña. De hecho es <em>mejor</em> para una cuenta de emergencia: una llave de hardware no depende de la aplicación de autenticación ni de la señal del teléfono, así que sigue funcionando cuando lo que está caído es precisamente la vía de MFA normal.</p>
+
+  <h2>Cuándo usar esto</h2>
+
+  <ul>
+    <li><strong>En la incorporación:</strong> revise la lista de administradores, señale cualquier administrador sin MFA y configure dos cuentas de emergencia con un grupo dedicado.</li>
+    <li><strong>Periódicamente:</strong> repase la Tabla 2 en busca de cuentas inactivas e invitados nunca aceptados; deshabilite o elimine con el visto bueno del cliente.</li>
+    <li><strong>Cada vez que se dispare una alerta de emergencia:</strong> confirme que fue un uso planificado. Si no lo fue, acaba de detectar algo.</li>
+    <li><strong>Después de crear nuevas directivas de AC:</strong> revise el estado de cobertura de las cuentas de emergencia (o espere la alerta de brecha) y vuelva a aplicar si es necesario.</li>
+  </ul>
+
+</div>
+</body>
+</html>

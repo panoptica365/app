@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empiece aquí — qué hace Panoptica365 y cómo usar estas guías — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Empiece aquí — qué hace Panoptica365 y cómo usar estas guías">
+<meta name="lesson:subtitle" content="La orientación en dos minutos: qué vigila la plataforma, cómo las alertas marcan su día y en qué orden leer estas guías.">
+<meta name="lesson:icon" content="flag">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Empiece aquí</span></div>
+  <h1>Empiece aquí — qué hace Panoptica365 y cómo usar estas guías</h1>
+  <p class="dek">La orientación en dos minutos: qué vigila la plataforma, cómo las alertas marcan su día y en qué orden leer estas guías.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El ciclo de Panoptica365: sondear cada inquilino según un calendario, comparar con las directivas y líneas base, generar una alerta cuando algo se desvía, añadir análisis de IA y usted responde.">
+      <defs>
+        <radialGradient id="shBg" cx="50%" cy="34%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="shGlow" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="shArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#shBg)"/>
+
+      <!-- node 1: poll tenants -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="44" y="124" width="180" height="92" rx="14" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="134" cy="156" r="13" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M134 156 V148 M134 156 L140 160" stroke="#5CCBF4" stroke-width="2" stroke-linecap="round"/>
+        <text x="134" y="188" fill="#C4D4E8" font-size="14" font-weight="600">Sondear cada</text>
+        <text x="134" y="206" fill="#6B85A6" font-size="12">inquilino (calendario)</text>
+      </g>
+
+      <path d="M224 170 H290" stroke="#335F92" stroke-width="2.5" marker-end="url(#shArr)"/>
+
+      <!-- node 2: compare -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="298" y="124" width="200" height="92" rx="14" fill="#0E2236" stroke="#33527A"/>
+        <path d="M386 150 h26 M386 162 h26 M386 174 h16" stroke="#5CCBF4" stroke-width="2" stroke-linecap="round"/>
+        <text x="398" y="194" fill="#C4D4E8" font-size="13" font-weight="600">Comparar con directivas</text>
+        <text x="398" y="212" fill="#6B85A6" font-size="12">y líneas base</text>
+      </g>
+
+      <path d="M498 170 H564" stroke="#335F92" stroke-width="2.5" marker-end="url(#shArr)"/>
+
+      <!-- node 3: alert (center, emphasized) -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle cx="664" cy="170" r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="592" y="128" width="144" height="84" rx="16" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.8"/>
+        <path d="M664 148 l16 30 h-32 z" fill="none" stroke="#FFC04D" stroke-width="2.4" stroke-linejoin="round"/>
+        <line x1="664" y1="162" x2="664" y2="170" stroke="#FFC04D" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="664" cy="174" r="1.6" fill="#FFC04D"/>
+        <text x="664" y="200" fill="#7DD9F9" font-size="16" font-weight="700">Alerta</text>
+      </g>
+
+      <path d="M738 170 H804" stroke="#335F92" stroke-width="2.5" marker-end="url(#shArr)"/>
+
+      <!-- node 4: AI analysis -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="812" y="124" width="180" height="92" rx="14" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="902" cy="156" r="13" fill="url(#shGlow)" opacity="0.92"/>
+        <text x="902" y="188" fill="#A8E1F8" font-size="15" font-weight="600">Análisis de IA</text>
+        <text x="902" y="206" fill="#6B85A6" font-size="12">en lenguaje llano</text>
+      </g>
+
+      <!-- return path: you respond -->
+      <path d="M902 216 V270 H134 V216" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#shArr)"/>
+      <text x="518" y="292" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">USTED RESPONDE A LA ALERTA</text>
+    </svg>
+    <figcaption>Configúrelo una vez y luego responda a las alertas a medida que llegan — por correo, por ticket en su PSA o en la página Alertas.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Bienvenido. Si acaba de instalar y se pregunta dónde hacer clic primero, está en el lugar correcto.</p>
+  </div>
+
+  <h2>Qué es Panoptica365</h2>
+
+  <p>Panoptica365 supervisa de forma continua los inquilinos de Microsoft 365 que usted gestiona. Sondea cada inquilino según un calendario, compara lo que encuentra con las directivas y líneas base que usted eligió, y genera una <strong>alerta</strong> cuando algo se desvía, se rompe o resulta sospechoso. Por encima va el análisis de IA (Claude): cada alerta recibe una evaluación en lenguaje llano, y los resúmenes diarios le mantienen al tanto sin tener que vivir en la consola.</p>
+
+  <p>Lo más importante que debe entender el primer día: <strong>Panoptica365 funciona por alertas, no por rondas de vigilancia.</strong> No necesita una rutina matinal de recorrer todos los inquilinos. Configura sus inquilinos y directivas una vez, y a partir de ahí responde a las alertas a medida que llegan — por correo, por ticket en su PSA o en la página <strong>Alertas</strong>. La consola está ahí para investigar y configurar, no para hacer rondas diarias.</p>
+
+  <h2>Qué vigila</h2>
+
+  <p>Una vez incorporado un inquilino, Panoptica365 sigue (entre otras cosas):</p>
+
+  <ul>
+    <li>Las <strong>directivas de Acceso Condicional</strong> que usted desplegó desde plantillas — y cualquier deriva respecto a ellas.</li>
+    <li>Las <strong>directivas de configuración de Intune</strong> — mismo modelo de plantilla y deriva.</li>
+    <li>La <strong>configuración de seguridad</strong> en M365, Entra, Exchange, Teams y SharePoint.</li>
+    <li>Las <strong>aplicaciones empresariales y los registros de aplicaciones</strong> — con triaje de IA para todo lo que usted no haya aprobado.</li>
+    <li>La <strong>actividad de inicio de sesión, los eventos del registro de auditoría y los incidentes de Defender</strong> — evaluados contra docenas de directivas de alerta.</li>
+    <li><strong>Puntuación de seguridad, usuarios, dispositivos, buzones, reglas de bandeja, enlaces compartidos</strong> y más, todo visible en el panel de cada inquilino.</li>
+  </ul>
+
+  <h2>Su primer día, en orden</h2>
+
+  <p>Estas guías están escritas en la secuencia que debería seguir un operador nuevo:</p>
+
+  <ol>
+    <li><strong>Añada su primer inquilino</strong> — el flujo de consentimiento y qué credenciales necesita.</li>
+    <li><strong>Gestionado vs. solo auditoría</strong> — la única decisión que se toma antes de consentir.</li>
+    <li><strong>La Consola principal</strong> — su parque de un vistazo.</li>
+    <li><strong>El panel del inquilino</strong> — qué significan todas esas tarjetas y pestañas.</li>
+    <li><strong>Revise las aplicaciones</strong> — apruebe las aplicaciones de confianza y deje que la IA haga el triaje del resto.</li>
+    <li><strong>Despliegue directivas de CA</strong> y <strong>de Intune</strong> — plantillas, deriva, remediación.</li>
+    <li><strong>Supervise la configuración de seguridad</strong> — la superficie de deriva a nivel de todo el inquilino.</li>
+    <li><strong>Trabaje las alertas</strong> — su verdadero día a día.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="El recorrido de inicio en ocho pasos, en orden: añada su primer inquilino, gestionado vs. solo auditoría, la Consola principal, el panel del inquilino, revise las aplicaciones, despliegue directivas de CA e Intune, supervise la configuración de seguridad y trabaje las alertas.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="pathArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <line x1="56" y1="60" x2="56" y2="306" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(0,46)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">1</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">Añada su primer inquilino</text>
+        </g>
+        <g transform="translate(0,78)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">2</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">Gestionado vs. solo auditoría</text>
+        </g>
+        <g transform="translate(0,110)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">3</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">La Consola principal</text>
+        </g>
+        <g transform="translate(0,142)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">4</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">El panel del inquilino</text>
+        </g>
+        <g transform="translate(0,174)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">5</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">Revise las aplicaciones</text>
+        </g>
+        <g transform="translate(0,206)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">6</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="13.5" font-weight="600">Despliegue directivas de CA e Intune</text>
+        </g>
+        <g transform="translate(0,238)">
+          <circle cx="56" cy="14" r="15" fill="#0E2640" stroke="#4A80BD"/><text x="56" y="19" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">7</text>
+          <text x="92" y="19" fill="#C4D4E8" font-size="14" font-weight="600">Supervise la configuración de seguridad</text>
+        </g>
+        <g transform="translate(0,270)">
+          <circle cx="56" cy="14" r="15" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/><text x="56" y="19" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">8</text>
+          <text x="92" y="19" fill="#A8E1F8" font-size="14" font-weight="700">Trabaje las alertas</text>
+        </g>
+      </g>
+      <text x="92" y="318" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" font-style="italic">en la secuencia que debería seguir un operador nuevo</text>
+    </svg>
+    <figcaption>El recorrido del primer día, paso a paso — lea las guías en esta secuencia.</figcaption>
+  </figure>
+
+  <p>Después de esas, las guías restantes cubren el ajuste fino (directivas de alerta, exenciones), las vistas de todo el parque (Mapa de calor, Actividad diaria), los informes y la administración (notificaciones, PSA, usuarios y roles, configuración del sistema).</p>
+
+  <h2>Una nota sobre los roles</h2>
+
+  <p>Panoptica365 tiene tres niveles de acceso: <strong>Administrador</strong>, <strong>Operador</strong> y <strong>Observador</strong>. Algunos pasos de estas guías — añadir inquilinos, cambiar la Configuración — requieren el rol de Administrador. Si un botón descrito aquí no le aparece o está deshabilitado, es el control de roles, no un error. La guía <em>Usuarios, roles y acceso</em> explica el modelo.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Los tres niveles de acceso de Panoptica365: Administrador, Operador y Observador.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TRES NIVELES DE ACCESO</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="44" y="58" width="192" height="56" rx="12" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/><text x="140" y="92" fill="#7DD9F9" font-size="16" font-weight="700">Administrador</text></g>
+        <g><rect x="264" y="58" width="192" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E"/><text x="360" y="92" fill="#A8E1F8" font-size="16" font-weight="600">Operador</text></g>
+        <g><rect x="484" y="58" width="192" height="56" rx="12" fill="#0E2236" stroke="#33527A"/><text x="580" y="92" fill="#C4D4E8" font-size="16" font-weight="600">Observador</text></g>
+      </g>
+    </svg>
+    <figcaption>Tres niveles — algunos pasos de estas guías requieren el rol de Administrador.</figcaption>
+  </figure>
+
+  <h2>Dónde profundizar</h2>
+
+  <p>Esta tarjeta es el <em>cómo</em> de la propia plataforma. Las demás tarjetas de Aprender son el <em>porqué</em>: fundamentos de seguridad de M365, diseño de Acceso Condicional, configuración de Intune, seguridad del correo, Puntuación de seguridad y patrones de ataque a la identidad. Las guías enlazan a ellas donde importa — por ejemplo, lea la lección de la lista de verificación previa antes de desplegar su primera directiva de Acceso Condicional en un cliente real.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Siguiente</div>
+    <p><strong>Añada su primer inquilino</strong>.</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gérez les exemptions — Guides Panoptica365</title>
+<meta name="lesson:title" content="Gérez les exemptions">
+<meta name="lesson:subtitle" content="Des exceptions documentées et limitées dans le temps : comment elles naissent de l'AC, d'Intune et des alertes, et comment les garder honnêtes.">
+<meta name="lesson:icon" content="shield-off">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Gérez les exemptions</span></div>
+  <h1>Gérez les exemptions</h1>
+  <p class="dek">Des exceptions documentées et limitées dans le temps : comment elles naissent de l'AC, d'Intune et des alertes, et comment les garder honnêtes.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Le cycle de vie d'une exemption : acceptée en contexte avec une raison, active pendant 180 jours par défaut en supprimant les alertes correspondantes, puis expirée pour réexamen.">
+      <defs>
+        <radialGradient id="exBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="exTrack" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="exArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#exBg)"/>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- 1. Accept in context -->
+        <g transform="translate(170,170)">
+          <circle r="74" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+          <circle r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8" transform="scale(1.34)"/>
+          <text y="-8" fill="#A8E1F8" font-size="15" font-weight="700">Acceptée</text>
+          <text y="14" fill="#8FB4D6" font-size="12.5">en contexte</text>
+        </g>
+        <text x="170" y="284" fill="#52708F" font-size="12">portée · raison · responsable</text>
+
+        <!-- arrow -->
+        <path d="M268 170 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+
+        <!-- 2. Active for 180 days -->
+        <g transform="translate(560,170)">
+          <circle r="92" fill="none" stroke="#1F3C5C" stroke-width="14"/>
+          <path d="M560 78 A92 92 0 1 1 472 188" fill="none" stroke="url(#exTrack)" stroke-width="14" stroke-linecap="round" transform="translate(-560,-170)"/>
+          <text y="-8" fill="#7DD9F9" font-size="22" font-weight="700">180</text>
+          <text y="16" fill="#8FB4D6" font-size="12.5">jours · défaut</text>
+        </g>
+        <text x="560" y="296" fill="#52708F" font-size="12">alertes correspondantes supprimées, de façon imputable</text>
+
+        <!-- 3. Expire / re-review -->
+        <path d="M662 170 H786" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+        <g transform="translate(950,170)">
+          <circle r="74" fill="#0E2236" stroke="#FFC04D" stroke-width="1.6"/>
+          <text y="-8" fill="#FFC04D" font-size="15" font-weight="700">Expire</text>
+          <text y="14" fill="#C9A86A" font-size="12.5">réexamen</text>
+        </g>
+        <text x="950" y="284" fill="#52708F" font-size="12">&#171;&#160;est-ce encore vrai?&#160;&#187;</text>
+      </g>
+    </svg>
+    <figcaption>Une exemption est acceptée en contexte, reste active 180 jours par défaut, puis expire pour que la question soit reposée.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Chaque parc a ses exceptions légitimes : le compte de service qui ne peut pas encore faire d'AMF, le déploiement qui diffère intentionnellement chez un client, l'utilisateur dont le schéma de connexion étrange-mais-réel fait trébucher un évaluateur. Les exemptions sont la façon dont Panoptica365 consigne ces exceptions <strong>explicitement</strong> — avec une portée, une raison, un responsable et une expiration — au lieu de les laisser vivre sous forme d'alertes résolues par réflexe.</p>
+  </div>
+
+  <h2>D'où viennent les exemptions</h2>
+
+  <p>Vous ne créez pas d'exemptions sur la page Exemptions. Elles sont créées en contexte, au moment où vous acceptez une exception :</p>
+
+  <ul>
+    <li><strong>Acceptation de dérive AC</strong> — accepter une dérive de stratégie AC <em>avec expiration</em> transfère les principaux exclus (utilisateurs ou groupes) en exemptions. Portée : par principal.</li>
+    <li><strong>Acceptation de dérive Intune</strong> — même flux; la portée est <strong>à l'échelle de la stratégie</strong> pour ce déploiement.</li>
+    <li><strong>Exemptions d'alerte</strong> — depuis le panneau de détail d'une alerte, pour exempter un schéma récurrent : un utilisateur, optionnellement restreint par pays et/ou plage d'IP. Portée : le schéma.</li>
+  </ul>
+
+  <p>L'expiration par défaut est de <strong>180 jours</strong>. Accepter exige le rôle Opérateur ou plus, et une raison est toujours obligatoire.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Trois sources alimentent les exemptions : l'acceptation de dérive AC avec portée par principal, l'acceptation de dérive Intune avec portée à l'échelle de la stratégie, et les exemptions d'alerte avec portée par schéma.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="srcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- sources -->
+        <g transform="translate(0,28)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Dérive AC</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">portée : par principal</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,94)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Dérive Intune</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">portée : toute la stratégie</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,160)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Exemptions d'alerte</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">portée : le schéma</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <!-- registry -->
+        <rect x="454" y="56" width="230" height="128" rx="11" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="569" y="108" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Exemptions</text>
+        <text x="569" y="132" text-anchor="middle" fill="#8FB4D6" font-size="12">portée · raison</text>
+        <text x="569" y="150" text-anchor="middle" fill="#8FB4D6" font-size="12">responsable · expiration</text>
+      </g>
+    </svg>
+    <figcaption>Les exemptions ne s'écrivent pas sur une page — chacune est créée en contexte, en portant la portée de sa source.</figcaption>
+  </figure>
+
+  <h2>Ce qu'une exemption fait réellement</h2>
+
+  <p>Tant qu'elle est active, les évaluations d'alertes correspondantes sont supprimées — et surtout, elles le sont <em>de façon imputable</em>. Les alertes résolues par une règle d'exemption sont estampillées comme telles, n'atteignent jamais votre PSA et sont exclues du résumé quotidien. Pour les exemptions AC, la colonne du <strong>compteur de suppressions</strong> montre combien d'alertes chaque exemption a absorbées — dépliez la ligne pour voir exactement quels événements ont été supprimés, quand et pour qui.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Aperçu</div>
+    <p>Ce compteur est votre rétroaction de réglage : une exemption qui a supprimé 47 alertes ce mois-ci porte un vrai poids; une qui en a supprimé zéro n'est peut-être plus nécessaire.</p>
+  </div>
+
+  <h2>La page Exemptions</h2>
+
+  <p><strong>Exemptions</strong> (barre latérale → Système) est le registre. Filtrez par locataire, par source (AC / Intune / Règles d'alerte), et incluez au besoin les entrées révoquées et expirées. Chaque ligne montre le badge de source, le locataire, le modèle, la portée (principal, à l'échelle de la stratégie, ou schéma d'utilisateur), la <strong>raison</strong>, qui l'a acceptée, quand, et l'expiration avec un compte à rebours en jours — rouge gras sous 7 jours, orange sous 30.</p>
+
+  <p><strong>Révoquer</strong> (Opérateur et plus) met fin immédiatement à une exemption. La confirmation énonce la conséquence : au prochain cycle de dérive, le principal ou le déploiement sera de nouveau signalé, ou les futures alertes correspondantes se déclencheront normalement.</p>
+
+  <h2>Garder le registre honnête</h2>
+
+  <ul>
+    <li><strong>Les raisons sont pour la personne suivante.</strong> « Selon billet #4321 — exception voyage du chef des finances, validée avec le client » vaut mieux que « ok selon client ». Vous relirez ces raisons un an plus tard lors d'un audit.</li>
+    <li><strong>Laissez les expirations expirer.</strong> Le défaut de 180 jours est un déclencheur de réexamen, pas une nuisance. Quand une exemption tombe et que l'alerte se redéclenche, c'est le système qui demande <em>« est-ce encore vrai? »</em> — répondez-y, ne réacceptez pas en pilote automatique.</li>
+    <li><strong>Préférez les portées étroites.</strong> Un utilisateur avec contrainte de pays vaut mieux qu'une portée à l'échelle de la stratégie; une portée à l'échelle de la stratégie vaut mieux que désactiver une stratégie. Utilisez l'outil le plus étroit qui arrête le bruit.</li>
+    <li><strong>Faites le ménage chaque trimestre.</strong> Filtrez sur les actives, passez en revue tout ce qui n'a aucune suppression récente ou dont le responsable est parti — révoquez ce qui est périmé.</li>
+  </ul>
+
+  <p>Les exemptions sont la différence entre <em>« on ignore cette alerte »</em> (indéfendable) et <em>« on a accepté ce risque, on l'a documenté, et il expire en mars »</em> (professionnel). Utilisez-les généreusement et gardez-les propres.</p>
+
+</div>
+</body>
+</html>

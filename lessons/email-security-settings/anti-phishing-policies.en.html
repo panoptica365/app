@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anti-phishing policies — the impersonation gap Microsoft leaves on by default — Email Security Settings</title>
+<meta name="lesson:title" content="Anti-phishing policies — the impersonation gap Microsoft leaves on by default">
+<meta name="lesson:subtitle" content="User impersonation protection, anti-spoofing tuning, and the BEC patterns Microsoft's defaults don't catch.">
+<meta name="lesson:icon" content="fish">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email Security Settings</span> <span class="sep">·</span> <span>Anti-phishing policies</span></div>
+  <h1>Anti-phishing policies — the impersonation gap Microsoft leaves on by default</h1>
+  <p class="dek">User impersonation protection, anti-spoofing tuning, and the BEC patterns Microsoft's defaults don't catch.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A phone inbox showing the trusted display name 'James Wilson, CEO' over the hidden real sending address james.wilson.ceo@gmail.com.">
+      <defs>
+        <radialGradient id="apBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="apPhone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E2640"/><stop offset="100%" stop-color="#0B1E36"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#apBg)"/>
+
+      <!-- phone frame -->
+      <rect x="120" y="40" width="300" height="260" rx="26" fill="url(#apPhone)" stroke="#335F92" stroke-width="2"/>
+      <rect x="120" y="40" width="300" height="48" rx="26" fill="#0B2038"/>
+      <rect x="120" y="64" width="300" height="24" fill="#0B2038"/>
+      <text x="146" y="72" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">INBOX</text>
+      <circle cx="396" cy="64" r="4" fill="#52708F"/>
+      <!-- the message row, what the eye trusts -->
+      <rect x="140" y="108" width="260" height="80" rx="10" fill="#10243B" stroke="#2A6F9E"/>
+      <circle cx="170" cy="148" r="16" fill="#1A5F87"/>
+      <text x="170" y="153" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">JW</text>
+      <text x="198" y="138" fill="#EEF4FC" font-family="Geist,Inter,sans-serif" font-size="14.5" font-weight="600">James Wilson, CEO</text>
+      <text x="198" y="160" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">Confidential — payment</text>
+      <text x="198" y="176" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">needed today</text>
+      <text x="270" y="246" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">What she sees on the phone</text>
+
+      <!-- magnifier / reveal -->
+      <path d="M470 170 H560" stroke="#335F92" stroke-width="2.5" marker-end="url(#apArr)"/>
+      <defs><marker id="apArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="515" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">tap &amp; squint</text>
+
+      <!-- the truth underneath -->
+      <g transform="translate(600,96)">
+        <rect x="0" y="0" width="430" height="150" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="24" y="40" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="1.5">ACTUAL SENDER</text>
+        <text x="24" y="78" fill="#FF8A98" font-family="Geist Mono,monospace" font-size="18" font-weight="500">james.wilson.ceo@gmail.com</text>
+        <line x1="24" y1="98" x2="406" y2="98" stroke="#5C2630" stroke-width="1"/>
+        <text x="24" y="124" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13">not the customer's domain · not even close</text>
+      </g>
+      <text x="815" y="276" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">$46,000 wired</text>
+    </svg>
+    <figcaption>The display name said the right thing. The real address — visible only if you tap and squint — was a Gmail account.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A controller at a 40-person manufacturing company gets an email from her CEO on a Tuesday afternoon. Subject: "Confidential — payment needed today." Body: "Please pay the attached invoice from our new equipment supplier. Wire details inside. Don't loop in accounting yet — I'll explain Thursday." Signed with the CEO's actual sign-off block, formatted exactly the way her real emails look.</p>
+
+  <p>The controller reads the email on her phone. The display name says "James Wilson, CEO" — same as every other email from the CEO. She taps the attachment, sees what looks like a legitimate invoice with bank details, and starts the wire. $46,000.</p>
+
+  <p>The actual sending address — visible only if you tap the display name and squint — was <code>james.wilson.ceo@gmail.com</code>. Not the customer's domain. Not even close. But on a phone, in the inbox view, you see the display name. The display name said the right thing.</p>
+
+  <p>This is the most common BEC pattern in 2026 and the one Microsoft's default anti-phishing policy doesn't catch. Anti-spoofing on the customer's actual domain works fine — the attacker isn't spoofing the customer's domain, they're using Gmail. The defence that <em>would</em> have caught this is <strong>user impersonation protection</strong>, and Microsoft ships it turned off.</p>
+
+  <p>This lesson is about closing that gap.</p>
+  </div>
+
+  <h2>The four layers of M365 anti-phishing — and which ones are on</h2>
+
+  <p>Microsoft 365's anti-phishing protection is four distinct mechanisms living under the same policy umbrella. Most operators treat them as one feature. They're not. Knowing which is which is the whole game.</p>
+
+  <p><strong>Anti-spoofing.</strong> Catches mail that <em>claims to be from the customer's own domain</em> but failed SPF / DKIM / DMARC authentication. Default: <strong>on</strong>. This is the basic floor — if someone sends a forged message claiming to be <code>ceo@customer.com</code> from a server that has no business sending for <code>customer.com</code>, anti-spoofing catches it. Microsoft's defaults are reasonable here.</p>
+
+  <p><strong>Mailbox intelligence.</strong> Uses Microsoft's ML on the recipient's communication history. If a user has never received mail from a particular sender, but the sender's identity looks like someone they DO regularly communicate with, mailbox intelligence flags it. Default: <strong>on with first contact safety tip</strong>, but the <em>enforcement actions</em> (move to junk, quarantine) are typically configured at the <strong>Off</strong> position until you tune the policy.</p>
+
+  <p><strong>User impersonation protection.</strong> You specify "protected users" — typically the CEO, CFO, controller, anyone who could plausibly be asked to wire money. The policy then flags mail from senders whose display name closely matches one of those protected users <em>but whose sending address doesn't</em>. Default: <strong>off</strong>. This is the gap in the opening story.</p>
+
+  <p><strong>Domain impersonation protection.</strong> You specify "protected domains" — typically the customer's own domain(s) and any partner / supplier domains the customer routinely transacts with. The policy flags lookalike domains (<code>trilogiam.com</code> vs <code>trilogiam-corp.com</code>, <code>customer.com</code> vs <code>customer.co</code>, the classic homoglyph attacks where a Cyrillic 'a' replaces a Latin 'a'). Default: <strong>off</strong>.</p>
+
+  <p>Two of four. On by default: the two that catch the easy attacks. Off by default: the two that catch the attacks SMB customers actually fall for.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="The four anti-phishing mechanisms and their default state: anti-spoofing on, mailbox intelligence on with enforcement off, user impersonation off, domain impersonation off.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">MECHANISM</text>
+      <text x="520" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DEFAULT</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- anti-spoofing: on -->
+        <g transform="translate(0,52)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Anti-spoofing</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">forged "from your own domain"</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#0C2A22" stroke="#2EE8A0"/>
+          <circle cx="540" cy="25" r="5" fill="#2EE8A0"/>
+          <text x="556" y="30" fill="#2EE8A0" font-size="13" font-weight="700">ON</text>
+        </g>
+        <!-- mailbox intelligence: on, enforcement off -->
+        <g transform="translate(0,116)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Mailbox intelligence</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">ML on the recipient's history</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A2210" stroke="#FFC04D"/>
+          <circle cx="540" cy="25" r="5" fill="#FFC04D"/>
+          <text x="556" y="30" fill="#FFC04D" font-size="11.5" font-weight="700">ON · enforce OFF</text>
+        </g>
+        <!-- user impersonation: off -->
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">User impersonation</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">the BEC gap in the opening story</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="540" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="556" y="30" fill="#FF8A98" font-size="13" font-weight="700">OFF</text>
+        </g>
+        <!-- domain impersonation: off -->
+        <g transform="translate(0,244)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">Domain impersonation</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">lookalike &amp; homoglyph domains</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="540" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="556" y="30" fill="#FF8A98" font-size="13" font-weight="700">OFF</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Two of four are on by default — the two that catch the easy attacks. The two SMB customers fall for ship off.</figcaption>
+  </figure>
+
+  <h2>The trusted-senders pattern — what customers actually ask for</h2>
+
+  <p>You will get this ticket. Probably this week:</p>
+
+  <blockquote>"Stop your anti-phishing thing from blocking emails from our partner ABC Corp. We need their invoices to come through."</blockquote>
+
+  <p><strong>Before you touch a single setting, check the sender's email authentication.</strong> It takes two to dance when it comes to email — and most of the time, the dance partner has missing steps.</p>
+
+  <p>Pull up a DNS lookup tool. The one we recommend for this kind of work is <a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">DomainGuardian</a> — a clean, visual checker built by a colleague in the Quebec cybersecurity community. Paste a domain in, get a colour-coded breakdown of SPF, DKIM, DMARC, MX, and related records with clear flags on what's right and what's broken. Designed for L1 techs who shouldn't have to memorise <code>dig</code> syntax to do their job. (Command-line operators can still reach for <code>dig</code> or <code>nslookup</code> if that's faster for them.)</p>
+
+  <p>Check <code>abccorp.com</code> for:</p>
+
+  <ul>
+    <li><strong>SPF.</strong> Is there a TXT record starting with <code>v=spf1</code>? Does it include the IPs or services ABC Corp actually sends from? Common failure: SPF exists but ends in <code>~all</code> (soft-fail) or <code>+all</code> (allow everything — basically broken).</li>
+    <li><strong>DKIM.</strong> Is there a DKIM selector record published? Try common selectors (<code>default._domainkey</code>, <code>selector1._domainkey</code>, <code>s1._domainkey</code>, plus the specific selectors for Microsoft 365, Google Workspace, Mailchimp, or whatever they actually send through).</li>
+    <li><strong>DMARC.</strong> Is there a TXT record at <code>_dmarc.abccorp.com</code>? What's the policy — <code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>? Is <code>aspf</code> and <code>adkim</code> set?</li>
+  </ul>
+
+  <p>In a large fraction of these tickets — comfortably the majority of SMB-to-SMB email — the sender has SPF set up (often half-configured), no DKIM at all, and no DMARC. From Microsoft's perspective, the email looks exactly like the kind of mail an attacker would send: poorly authenticated, sometimes failing alignment, with no policy from the sender's domain telling receivers what to do with it. The quarantine isn't a bug — it's Microsoft doing exactly what you want it to do.</p>
+
+  <p>The first move is the conversation, not the exception:</p>
+
+  <blockquote>"ABC Corp's email authentication is misconfigured — specifically, they have no DKIM and no DMARC published. That's why their emails are getting flagged. The fix is at <em>their</em> end: their IT team needs to publish DKIM signing and a DMARC record. Once they do that, Microsoft will trust their email and we won't need an exception at all. Can you reach out to your contact at ABC Corp and ask them to have their IT look at this?"</blockquote>
+
+  <p>Half the time this conversation resolves the issue cleanly within a week — ABC Corp's IT publishes DKIM and DMARC, Microsoft starts trusting the mail, the customer never asks you about it again, and the broader email ecosystem gets one notch healthier. The other half of the time ABC Corp can't or won't fix their authentication (small vendor with no IT, vendor's MSP shrugs, the customer's "contact" doesn't have the political capital to push), the customer reports back, and <em>then</em> you fall back to one of two exception patterns: one right, one tempting.</p>
+
+  <p><strong>The tempting way.</strong> Open the Exchange admin centre. Create a mail flow rule that bypasses spam filtering for all mail from <code>*@abccorp.com</code>. The customer's ticket closes. Tomorrow, ABC Corp's domain gets compromised by a phishing attack and the attackers send malware-laden invoices to the customer's controller. The mail flow rule you created cheerfully bypasses every defence Microsoft would otherwise apply. The controller opens the attachment. You spend the weekend on incident response.</p>
+
+  <p><strong>The right way.</strong> Open the anti-phishing policy. Add <code>abccorp.com</code> to the trusted senders list at the <em>anti-phishing policy level</em>, scoped to <em>that specific protection</em> (typically user impersonation and mailbox intelligence). The trusted-senders entry tells the anti-phishing policy "messages from this domain shouldn't trigger impersonation flags." Spam filtering, malware scanning, Safe Links, Safe Attachments — all of those still apply. If ABC Corp's domain is compromised tomorrow, the malware in their invoices gets caught by Safe Attachments before it reaches the controller's inbox.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 290" role="img" aria-label="Two exception patterns for a trusted sender: a mail flow rule bypasses every defence, while an anti-phishing trusted-senders entry keeps spam filtering, malware scanning, Safe Links and Safe Attachments in force.">
+      <rect width="720" height="290" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- tempting column -->
+        <text x="190" y="38" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">The tempting way</text>
+        <text x="190" y="58" text-anchor="middle" fill="#52708F" font-size="11.5">Mail flow rule bypass</text>
+        <rect x="40" y="74" width="300" height="180" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <g fill="#E2A0AA" font-size="13">
+          <text x="62" y="108">Spam filtering</text><text x="320" y="108" text-anchor="end" fill="#FF8A98">bypassed</text>
+          <text x="62" y="140">Malware scanning</text><text x="320" y="140" text-anchor="end" fill="#FF8A98">bypassed</text>
+          <text x="62" y="172">Safe Links</text><text x="320" y="172" text-anchor="end" fill="#FF8A98">bypassed</text>
+          <text x="62" y="204">Safe Attachments</text><text x="320" y="204" text-anchor="end" fill="#FF8A98">bypassed</text>
+        </g>
+        <text x="190" y="236" text-anchor="middle" fill="#FF8A98" font-size="11.5">if the domain is compromised → exposed</text>
+
+        <!-- right column -->
+        <text x="530" y="38" text-anchor="middle" fill="#2EE8A0" font-size="14" font-weight="700">The right way</text>
+        <text x="530" y="58" text-anchor="middle" fill="#52708F" font-size="11.5">Trusted-senders in the policy</text>
+        <rect x="380" y="74" width="300" height="180" rx="10" fill="#0C2A22" stroke="#2EE8A0" stroke-width="1.4"/>
+        <g fill="#C4D4E8" font-size="13">
+          <text x="402" y="108">Spam filtering</text><text x="660" y="108" text-anchor="end" fill="#2EE8A0">still on</text>
+          <text x="402" y="140">Malware scanning</text><text x="660" y="140" text-anchor="end" fill="#2EE8A0">still on</text>
+          <text x="402" y="172">Safe Links</text><text x="660" y="172" text-anchor="end" fill="#2EE8A0">still on</text>
+          <text x="402" y="204">Safe Attachments</text><text x="660" y="204" text-anchor="end" fill="#2EE8A0">still on</text>
+        </g>
+        <text x="530" y="236" text-anchor="middle" fill="#2EE8A0" font-size="11.5">only impersonation flags suppressed</text>
+      </g>
+    </svg>
+    <figcaption>Both close the ticket. Only one keeps every other defence standing when the trusted sender is later compromised.</figcaption>
+  </figure>
+
+  <p>The difference between the two approaches is the blast radius when the trusted sender is later compromised. Customers don't think about that part. You have to.</p>
+
+  <h2>Configuring user impersonation protection — the practical bit</h2>
+
+  <p>For a typical SMB customer, the configuration is straightforward and the discipline is in knowing <em>who</em> to protect.</p>
+
+  <p><strong>Who to protect.</strong> Anyone in a position where impersonating them would lead a recipient to send money, share credentials, or grant access. Real list:</p>
+
+  <ul>
+    <li>The CEO, CFO, and any C-level</li>
+    <li>The controller, head of finance, head of accounting</li>
+    <li>The head of HR (W-2 / payroll scams)</li>
+    <li>The head of IT (credential and access requests)</li>
+    <li>The owner / founder / principal (small companies)</li>
+  </ul>
+
+  <p>A 40-person company might have 5 to 8 protected users. A 200-person company might have 12 to 20. Don't try to protect everyone — the policy gets noisy and the operator team loses signal.</p>
+
+  <p>For each protected user, the policy needs:</p>
+
+  <ul>
+    <li>The user's display name (exactly as it appears in Entra ID)</li>
+    <li>The user's email address (typically <code>firstname.lastname@customer.com</code>)</li>
+  </ul>
+
+  <p>The policy flags any inbound message whose sender display name closely matches a protected display name OR whose sender address closely matches a protected address — but the sender isn't actually that user. The opening anecdote (<code>james.wilson.ceo@gmail.com</code> with display name "James Wilson, CEO") gets caught because the display name matches a protected user but the address doesn't.</p>
+
+  <p><strong>What to do when flagged.</strong> Three options: move to junk, quarantine, or "deliver and add safety tip." For SMB customers, <strong>quarantine</strong> is typically the right choice. The safety-tip option assumes users read safety tips; many don't. Junk lets the user release the message themselves; for high-confidence impersonation flags, you don't want the user making that judgment call. Quarantine routes through the operator workflow.</p>
+
+  <h2>Configuring domain impersonation protection</h2>
+
+  <p>Same idea, scoped to domains.</p>
+
+  <p><strong>Domains to protect:</strong></p>
+
+  <ul>
+    <li>The customer's primary email domain (always)</li>
+    <li>Any other email domains the customer actively uses</li>
+    <li>Key partner/supplier/vendor domains the customer transacts with (top 10–20 by transaction volume)</li>
+  </ul>
+
+  <p>The policy flags inbound mail from domains that are visually similar to one of the protected domains. The classic case: customer is <code>acme.com</code>, attacker registers <code>acne.com</code> or <code>acrne.com</code> (where the 'r' and 'n' together look like an 'm' on a phone screen) or <code>аcme.com</code> (with a Cyrillic 'а'). All three get caught.</p>
+
+  <p>The flagged-action choice (move to junk, quarantine, safety tip) follows the same logic as user impersonation. Quarantine is typically right for SMB.</p>
+
+  <h2>Spoof intelligence — the manageable tail</h2>
+
+  <p>Microsoft's spoof intelligence is the inverse of impersonation protection. Where impersonation catches <em>illegitimate</em> senders trying to look like <em>legitimate</em> ones, spoof intelligence handles the <em>legitimate</em> senders who fail authentication for boring infrastructure reasons.</p>
+
+  <p>The most common case: the customer uses a third-party service (a marketing platform, an HR-tool email sender, a survey provider) that sends "from" the customer's domain but doesn't have proper SPF / DKIM authorisation. Microsoft's anti-spoofing wants to block this; spoof intelligence lets you review the senders, allow the legitimate ones, and block the ones that are actually attackers.</p>
+
+  <p>This is the "Tenant Allow/Block Lists" surface in the Defender portal. The operator's discipline:</p>
+
+  <ul>
+    <li>Review the spoof intelligence insights monthly</li>
+    <li>For each unauthenticated-but-legitimate sender (marketing platform, payroll vendor, etc.), add an explicit allow entry</li>
+    <li>For each unauthenticated-and-illegitimate sender, add an explicit block</li>
+    <li>Tell the customer's marketing team to fix their SPF / DKIM configuration so you don't have to keep adding allows</li>
+  </ul>
+
+  <h2>The preset security policy alternative</h2>
+
+  <p>For customers where you don't want to hand-tune the anti-phishing policy, Microsoft's <strong>preset security policies</strong> (Standard and Strict, covered in detail in lesson 10) include preconfigured anti-phishing rules. The Standard preset enables user impersonation protection with sensible defaults; the Strict preset turns the knobs higher.</p>
+
+  <p>The preset approach trade-off: you get Microsoft's curated configuration, you lose granular control over thresholds and trusted-senders lists. For most SMB customers, this is the right trade. For customers with specific impersonation needs (lots of protected users, complex trusted-sender exceptions), a custom policy gives you the flexibility.</p>
+
+  <p>In practice: deploy a preset (Standard for most; Strict for higher-risk customers like accounting firms or law firms) as the <em>foundation</em>, then layer a custom anti-phishing policy <em>with higher priority</em> for the customer-specific protected users and trusted-senders. This pattern keeps the Microsoft-curated defaults as the floor while letting you customise where it matters.</p>
+
+  <h2>What can break</h2>
+
+  <p><strong>Customer's executive's emails to themselves get quarantined.</strong> When the CEO emails their own assistant from their personal Gmail address and the display name matches the protected-user list, impersonation protection catches it. The fix is either to add the executive's personal address to the trusted-senders list or to have the executive use their work account for work email (the correct answer).</p>
+
+  <p><strong>Legitimate vendors with poor email hygiene get blocked.</strong> A small vendor with no DMARC, mismatched SPF, and a habit of sending from random IP addresses will trip several anti-phishing checks. Adding them to trusted senders solves it; ideally the vendor fixes their authentication, but that's a slow conversation.</p>
+
+  <p><strong>Marketing platforms sending under the customer's domain.</strong> If the customer's marketing team uses HubSpot, Mailchimp, Marketo, or similar to send under the customer's domain without proper SPF / DKIM authorisation, those emails fail anti-spoofing and get caught by impersonation when the display name matches a protected user. The fix is either authentication setup at the marketing platform (right answer) or trusted-senders entries (workaround).</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Anti-phishing policy state is one of the security settings Panoptica365 monitors per tenant. Specifically:</p>
+
+  <ul>
+    <li><strong>Drift on the preset security policy enablement.</strong> If Microsoft's preset security policy (Standard or Strict) gets disabled at a customer tenant — somebody opens the Defender portal and turns it off, either by mistake or in response to a complaint — the drift detector fires an alert. The operator can revert, reapply, or accept.</li>
+    <li><strong>Alert engine evaluators on phishing-related events.</strong> When Defender XDR detects a phishing-pattern incident at a customer tenant, the alert flows into Panoptica365's alert engine, where it appears alongside other security alerts with attribution back to the customer.</li>
+  </ul>
+
+  <p>What Panoptica365 does not surface today: per-user impersonation flagging volume, per-policy thresholds, the spoof intelligence insights list, or any per-mailbox phishing posture. Those live in the Microsoft 365 Defender portal — drill in there when you need the deep diagnostic view.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <div class="callout insight">
+    <div class="clabel">The impersonation gap is the BEC gap</div>
+    <p>Microsoft's default anti-spoofing catches the easy attacks; impersonation protection catches the ones SMB customers actually fall for. If you do one thing for the customer this quarter, turn user and domain impersonation on with quarantine action and a thoughtful protected-users list.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Check the sender's authentication first</div>
+    <p>When a customer asks you to "let X through," it takes two to dance — and most quarantine complaints trace back to the sender's missing DKIM and DMARC, not to over-aggressive filtering on the receiving side. Push the conversation to the sender first. When an exception is still needed after that, route it through the anti-phishing policy's trusted-senders list, scoped to the specific protection — never a mail flow rule bypass. Spam filtering, Safe Links, Safe Attachments stay in force.</p>
+  </div>
+
+  <div class="callout">
+    <div class="clabel">Preset is the floor, customisation is the value</div>
+    <p>The preset policy is a defensible default; customisation is where the value sits. Deploy a preset (Standard or Strict) as the floor; layer a custom anti-phishing policy with the customer-specific protected users and trusted senders. This gives you Microsoft's curated tuning plus the customer-specific defence you need.</p>
+  </div>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Safe Links and Safe Attachments</b> — the Defender for Office 365 P1 features the customer paid for and isn't using. Where they catch real attacks and where they fall short.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>SPF, DKIM, DMARC</b> — the authentication trio that closes the spoofing side of the gap — the half anti-phishing doesn't catch.</div></div>
+  </div>
+
+  <p>For now: open the customer's anti-phishing policy. Turn user impersonation on. List the protected users. Turn domain impersonation on. List the protected domains. Set the action to quarantine. Layer a custom trusted-senders list for the legitimate partners. This single configuration change closes the most common SMB BEC vector — the one the controller in the opening story fell for.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on anti-phishing policy configuration (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-about" target="_blank" rel="noopener">Microsoft Learn — Anti-phishing policies in EOP and MDO</a>); user impersonation protection (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-mdo-configure" target="_blank" rel="noopener">Microsoft Learn — Impersonation protection in anti-phishing</a>); spoof intelligence and the Tenant Allow/Block Lists (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-spoofing-spoof-intelligence" target="_blank" rel="noopener">Microsoft Learn — Spoof intelligence insight</a>); mailbox intelligence (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-mdo-impersonation-insight" target="_blank" rel="noopener">Microsoft Learn — Mailbox intelligence</a>); preset security policies (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

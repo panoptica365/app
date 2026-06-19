@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajustez les stratégies d'alerte — Guides Panoptica365</title>
+<meta name="lesson:title" content="Ajustez les stratégies d'alerte">
+<meta name="lesson:subtitle" content="Gravité, acheminement, activation et limites de notifications — faites correspondre le flux d'alertes à la façon dont votre boîte travaille vraiment.">
+<meta name="lesson:icon" content="list-checks">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Ajustez les stratégies d'alerte</span></div>
+  <h1>Ajustez les stratégies d'alerte</h1>
+  <p class="dek">Gravité, acheminement, activation et limites de notifications — faites correspondre le flux d'alertes à la façon dont votre boîte travaille vraiment.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un flux brut d'alertes traverse quatre molettes de réglage — gravité, acheminement, activation et limite quotidienne de notifications — pour devenir un flux d'alertes auquel l'équipe fait confiance.">
+      <defs>
+        <radialGradient id="taBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="taTrust" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#2EE8A0"/></linearGradient>
+        <marker id="taArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#taBg)"/>
+
+      <!-- left: raw alerts in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="150" y="58" fill="#52708F" font-size="13" letter-spacing="3">ALERTES BRUTES</text>
+        <g fill="#0E2640" stroke="#33527A">
+          <rect x="70" y="84" width="160" height="30" rx="6"/>
+          <rect x="86" y="128" width="160" height="30" rx="6"/>
+          <rect x="60" y="172" width="160" height="30" rx="6"/>
+          <rect x="92" y="216" width="160" height="30" rx="6"/>
+          <rect x="74" y="260" width="160" height="30" rx="6"/>
+        </g>
+        <g fill="#5CCBF4"><circle cx="86" cy="99" r="4"/><circle cx="102" cy="143" r="4"/><circle cx="76" cy="187" r="4"/></g>
+        <g fill="#FFC04D"><circle cx="108" cy="231" r="4"/></g>
+        <g fill="#FF5A6E"><circle cx="90" cy="275" r="4"/></g>
+      </g>
+
+      <!-- arrow into the dials -->
+      <path d="M268 187 H352" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- centre: four tuning dials -->
+      <g transform="translate(560,170)">
+        <rect x="-190" y="-118" width="380" height="236" rx="18" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="0" y="-92" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">STRATÉGIES D'ALERTE</text>
+        <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+          <!-- four dials -->
+          <g transform="translate(-120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="18" y2="-22" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Gravité</text>
+          </g>
+          <g transform="translate(-40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="-20" y2="-18" stroke="#5CCBF4" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="11" font-weight="600">Acheminement</text>
+          </g>
+          <g transform="translate(40,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="0" y2="-26" stroke="#2EE8A0" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="54" fill="#A8E1F8" font-size="11.5" font-weight="600">Activée /</text>
+            <text y="70" fill="#A8E1F8" font-size="11.5" font-weight="600">Désactivée</text>
+          </g>
+          <g transform="translate(120,-18)">
+            <circle r="34" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.4"/>
+            <line x1="0" y1="0" x2="22" y2="14" stroke="#FFC04D" stroke-width="2.5" stroke-linecap="round"/>
+            <circle r="4" fill="#A8E1F8"/>
+            <text y="56" fill="#A8E1F8" font-size="12.5" font-weight="600">Limite</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- arrow out to trusted stream -->
+      <path d="M768 187 H852" stroke="#335F92" stroke-width="2.5" marker-end="url(#taArr)"/>
+
+      <!-- right: trusted stream -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="970" y="58" fill="#2EE8A0" font-size="12" letter-spacing="2" font-weight="600">UN FLUX DE CONFIANCE</text>
+        <g fill="#0E2640" stroke="url(#taTrust)" stroke-width="1.6">
+          <rect x="892" y="96" width="156" height="32" rx="7"/>
+          <rect x="892" y="140" width="156" height="32" rx="7"/>
+          <rect x="892" y="184" width="156" height="32" rx="7"/>
+        </g>
+        <g fill="#2EE8A0"><circle cx="908" cy="112" r="4"/><circle cx="908" cy="156" r="4"/><circle cx="908" cy="200" r="4"/></g>
+      </g>
+    </svg>
+    <figcaption>Quatre commandes transforment le flux d'alertes par défaut en un flux auquel votre équipe fait vraiment confiance.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Dès l'installation, Panoptica365 livre des dizaines de stratégies d'alerte avec des valeurs par défaut sensées. <strong>Stratégies d'alerte</strong> (barre latérale) est l'endroit où vous les adaptez à votre boîte — et la différence entre un flux d'alertes auquel votre équipe fait confiance et un flux qu'elle ignore, c'est vingt minutes sur cette page.</p>
+  </div>
+
+  <h2>La disposition</h2>
+
+  <p>Les stratégies sont regroupées en catégories repliables :</p>
+
+  <ul>
+    <li><strong>Connexions à risque</strong> — voyages impossibles, emplacements inhabituels, détections de risque.</li>
+    <li><strong>Gestion des menaces</strong> — incidents Defender, maliciels, signaux d'hameçonnage.</li>
+    <li><strong>Autorisations</strong> — changements de rôles, octrois de consentement, croissance des permissions d'applications.</li>
+    <li><strong>Modifications de configuration</strong> — dérives et changements de paramètres, y compris les éléments du Centre de messages.</li>
+    <li><strong>Partage externe</strong> — liens anonymes, événements d'accès externe.</li>
+    <li><strong>Gouvernance de l'information</strong> — événements DLP et apparentés à la conformité.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Les six catégories repliables de stratégies d'alerte : Connexions à risque, Gestion des menaces, Autorisations, Modifications de configuration, Partage externe et Gouvernance de l'information.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CATÉGORIES REPLIABLES</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Connexions à risque</text>
+        </g>
+        <g transform="translate(380,56)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Gestion des menaces</text>
+        </g>
+        <g transform="translate(40,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Autorisations</text>
+        </g>
+        <g transform="translate(380,108)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Modifications de configuration</text>
+        </g>
+        <g transform="translate(40,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Partage externe</text>
+        </g>
+        <g transform="translate(380,160)">
+          <rect width="300" height="40" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M18 14 l8 6 l-8 6" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="40" y="26" fill="#C4D4E8" font-size="13">Gouvernance de l'information</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Six catégories regroupent chaque stratégie; les sections correspondantes se déplient automatiquement lors de la recherche.</figcaption>
+  </figure>
+
+  <p>Une barre de recherche filtre les noms et les descriptions; les sections qui correspondent se déplient automatiquement. Chaque ligne de stratégie porte l'<strong>icône de mortier</strong> — le même explicateur en cinq sections que sur une alerte réelle, pour que vous puissiez comprendre une stratégie avant de décider quoi en faire.</p>
+
+  <h2>Ce que vous pouvez changer par stratégie</h2>
+
+  <ul>
+    <li><strong>Gravité</strong> — info / faible / moyenne / élevée / sévère. La gravité pilote le tri, le seuil du résumé quotidien et la correspondance de priorité des billets PSA. Si votre équipe traite un type d'alerte comme « on lâche tout », cotez-le ainsi.</li>
+    <li><strong>Acheminement</strong> — Aucun / Courriel / PSA / Les deux. <em>Courriel</em> va à vos destinataires de notifications (courriel personnel); <em>PSA</em> va à votre PSA (billet, ou repli courriel PSA); <em>Les deux</em> fait les deux. Acheminez le travail actionnable pour le client vers le PSA et les éléments de vigie opérateur vers le courriel.</li>
+    <li><strong>Bascule Activée / Désactivée</strong> — les stratégies désactivées n'évaluent rien du tout. Désactiver une stratégie est honnête quand le signal ne vous intéresse réellement pas; résoudre ses alertes à perpétuité en la laissant active ne l'est pas.</li>
+    <li><strong>Limite de notifications</strong> (fenêtre de modification, Administrateur) — un plafond quotidien de notifications pour cette stratégie, votre frein contre une alerte emballée qui inonde les boîtes de courriel ou le tableau PSA.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Les quatre destinations d'acheminement : Aucun, Courriel va aux destinataires courriel, PSA va au PSA, et Les deux vont au courriel et au PSA.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ACHEMINEMENT</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- none -->
+        <g transform="translate(96,108)">
+          <circle r="40" fill="#0E2236" stroke="#52708F" stroke-width="1.4"/>
+          <text y="-2" fill="#6B85A6" font-size="13" font-weight="600">Aucun</text>
+          <text y="62" fill="#52708F" font-size="11">sans notif.</text>
+        </g>
+        <!-- personal -->
+        <g transform="translate(272,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">Courriel</text>
+          <text y="62" fill="#6B85A6" font-size="11">perso.</text>
+        </g>
+        <!-- support -->
+        <g transform="translate(448,108)">
+          <circle r="40" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text y="-2" fill="#A8E1F8" font-size="13" font-weight="600">PSA</text>
+          <text y="62" fill="#6B85A6" font-size="11">billet</text>
+        </g>
+        <!-- both -->
+        <g transform="translate(624,108)">
+          <circle r="40" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text y="-2" fill="#7DD9F9" font-size="13" font-weight="700">Les deux</text>
+          <text y="62" fill="#6B85A6" font-size="11">Courriel + PSA</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>L'acheminement décide où atterrissent les alertes de chaque stratégie : nulle part, votre courriel, votre PSA, ou les deux.</figcaption>
+  </figure>
+
+  <div class="callout caution">
+    <div class="clabel">Global, pas par locataire</div>
+    <p>Les changements faits ici sont globaux — ils s'appliquent à tous les locataires. Les exceptions par locataire relèvent des <strong>exemptions</strong> (prochain guide), pas des bascules de stratégies.</p>
+  </div>
+
+  <h2>Une méthode de réglage qui fonctionne</h2>
+
+  <ol>
+    <li><strong>Roulez les valeurs par défaut pendant deux semaines.</strong> Ne préréglez pas contre du bruit imaginé.</li>
+    <li><strong>Regardez ce que vous avez réellement résolu en faux positif.</strong> Chaque faux positif récurrent est soit un candidat à l'exemption (un utilisateur, un schéma, un locataire), soit un mauvais appariement gravité/acheminement (le signal est réel mais ne mérite pas un billet).</li>
+    <li><strong>Promouvez ce qui vous a brûlé.</strong> Si quelque chose a tourné en incident et que son alerte était cotée faible, montez-la.</li>
+    <li><strong>Surveillez le seuil du résumé.</strong> Le résumé quotidien a son propre réglage de gravité minimale (Paramètres → Résumé quotidien). La gravité ici et le seuil là-bas décident ensemble du contenu de votre courriel de 6 h.</li>
+  </ol>
+
+  <div class="callout insight">
+    <div class="clabel">Un réglage dont on rend compte</div>
+    <p>Toutes les modifications sur cette page sont consignées dans le journal d'audit MSP — changements de gravité, bascules, changements d'acheminement. Le réglage est un travail dont on rend compte, et c'est très bien ainsi.</p>
+  </div>
+
+</div>
+</body>
+</html>

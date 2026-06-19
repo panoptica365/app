@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestione las exenciones — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Gestione las exenciones">
+<meta name="lesson:subtitle" content="Excepciones documentadas y con fecha de caducidad: cómo se crean desde CA, Intune y las alertas, y cómo mantenerlas honestas.">
+<meta name="lesson:icon" content="shield-off">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Gestione las exenciones</span></div>
+  <h1>Gestione las exenciones</h1>
+  <p class="dek">Excepciones documentadas y con fecha de caducidad: cómo se crean desde CA, Intune y las alertas, y cómo mantenerlas honestas.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El ciclo de vida de una exención: aceptada en contexto con un motivo, activa durante 180 días de forma predeterminada suprimiendo las alertas coincidentes, y luego caducada para su re-revisión.">
+      <defs>
+        <radialGradient id="exBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="exTrack" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="exArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#exBg)"/>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- 1. Accept in context -->
+        <g transform="translate(170,170)">
+          <circle r="74" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+          <circle r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8" transform="scale(1.34)"/>
+          <text y="-8" fill="#A8E1F8" font-size="15" font-weight="700">Aceptada</text>
+          <text y="14" fill="#8FB4D6" font-size="12.5">en contexto</text>
+        </g>
+        <text x="170" y="284" fill="#52708F" font-size="12">ámbito · motivo · responsable</text>
+
+        <!-- arrow -->
+        <path d="M268 170 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+
+        <!-- 2. Active for 180 days -->
+        <g transform="translate(560,170)">
+          <circle r="92" fill="none" stroke="#1F3C5C" stroke-width="14"/>
+          <path d="M560 78 A92 92 0 1 1 472 188" fill="none" stroke="url(#exTrack)" stroke-width="14" stroke-linecap="round" transform="translate(-560,-170)"/>
+          <text y="-8" fill="#7DD9F9" font-size="22" font-weight="700">180</text>
+          <text y="16" fill="#8FB4D6" font-size="12.5">días · predet.</text>
+        </g>
+        <text x="560" y="296" fill="#52708F" font-size="12">alertas coincidentes suprimidas, con rendición de cuentas</text>
+
+        <!-- 3. Expire / re-review -->
+        <path d="M662 170 H786" stroke="#335F92" stroke-width="2.5" marker-end="url(#exArr)"/>
+        <g transform="translate(950,170)">
+          <circle r="74" fill="#0E2236" stroke="#FFC04D" stroke-width="1.6"/>
+          <text y="-8" fill="#FFC04D" font-size="15" font-weight="700">Caduca</text>
+          <text y="14" fill="#C9A86A" font-size="12.5">re-revisión</text>
+        </g>
+        <text x="950" y="284" fill="#52708F" font-size="12">&#171;&#191;sigue siendo verdad esto?&#187;</text>
+      </g>
+    </svg>
+    <figcaption>Una exención se acepta en contexto, dura 180 días de forma predeterminada y luego caduca para que se vuelva a plantear la pregunta.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Todo parque tiene excepciones legítimas: la cuenta de servicio que todavía no puede usar MFA, el despliegue que difiere intencionadamente en un cliente, el usuario cuyo patrón de inicio de sesión raro-pero-real no deja de disparar un evaluador. Las exenciones son la forma en que Panoptica365 registra esas excepciones <strong>de manera explícita</strong> — con un ámbito, un motivo, un responsable y una caducidad — en lugar de dejarlas vivir como alertas resueltas por reflejo.</p>
+  </div>
+
+  <h2>De dónde salen las exenciones</h2>
+
+  <p>Las exenciones no se crean en la página de Exenciones. Se crean en contexto, en el momento en que usted acepta una excepción:</p>
+
+  <ul>
+    <li><strong>Aceptación de desviación de CA</strong> — aceptar una desviación de directiva de CA <em>con vencimiento</em> eleva los principales excluidos (usuarios o grupos) a exenciones. Ámbito: por principal.</li>
+    <li><strong>Aceptación de desviación de Intune</strong> — mismo flujo; el ámbito es <strong>toda la directiva</strong> para ese despliegue.</li>
+    <li><strong>Exenciones de alerta</strong> — desde el panel lateral de una alerta, eximiendo un patrón recurrente: un usuario, opcionalmente acotado por país y/o rango de IP. Ámbito: el patrón.</li>
+  </ul>
+
+  <p>La caducidad predeterminada es de <strong>180 días</strong>. Aceptar requiere rol de Operador o superior, y el motivo es siempre obligatorio.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Tres orígenes alimentan las exenciones: la aceptación de desviación de CA con ámbito por principal, la aceptación de desviación de Intune con ámbito de toda la directiva, y las exenciones de alerta con ámbito de patrón.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="srcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- sources -->
+        <g transform="translate(0,28)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Desviación de CA</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">ámbito: por principal</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,94)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Desviación de Intune</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">ámbito: toda la directiva</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <g transform="translate(0,160)">
+          <rect x="36" y="0" width="252" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Exenciones de alerta</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11">ámbito: el patrón</text>
+          <path d="M288 26 H446" stroke="#335F92" stroke-width="2" marker-end="url(#srcArr)"/>
+        </g>
+        <!-- registry -->
+        <rect x="454" y="56" width="230" height="128" rx="11" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="569" y="108" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Exenciones</text>
+        <text x="569" y="132" text-anchor="middle" fill="#8FB4D6" font-size="12">ámbito · motivo</text>
+        <text x="569" y="150" text-anchor="middle" fill="#8FB4D6" font-size="12">responsable · caducidad</text>
+      </g>
+    </svg>
+    <figcaption>Las exenciones no se redactan en una página — cada una se crea en contexto, llevando el ámbito de su origen.</figcaption>
+  </figure>
+
+  <h2>Qué hace realmente una exención</h2>
+
+  <p>Mientras está activa, las evaluaciones de alerta coincidentes se suprimen — y, lo importante, se suprimen <em>con rendición de cuentas</em>. Las alertas resueltas por una regla de exención quedan marcadas como tales, nunca llegan a su PSA y se excluyen del resumen diario. En las exenciones de CA, la columna de <strong>recuento de supresiones</strong> muestra cuántas alertas ha absorbido cada exención — expanda la fila para ver exactamente qué eventos se suprimieron, cuándo y para quién.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Perspectiva</div>
+    <p>Ese recuento es su retroalimentación de ajuste: una exención que suprimió 47 alertas este mes está cargando un peso real; una que suprimió cero puede que ya no haga falta.</p>
+  </div>
+
+  <h2>La página de Exenciones</h2>
+
+  <p><strong>Exenciones</strong> (barra lateral → Sistema) es el registro. Filtre por inquilino, por origen (CA / Intune / reglas de alerta) y, si quiere, incluya las entradas revocadas y caducadas. Cada fila muestra la insignia de origen, el inquilino, la plantilla, el ámbito (principal, toda la directiva o patrón de usuario), el <strong>Motivo</strong>, quién la aceptó, cuándo, y la caducidad con una cuenta atrás de días restantes — rojo en negrita por debajo de 7 días, naranja por debajo de 30.</p>
+
+  <p><strong>Revocar</strong> (Operador o superior) termina una exención de inmediato. La confirmación deja clara la consecuencia: en el siguiente ciclo de deriva el principal o el despliegue volverá a marcarse, o las futuras alertas coincidentes se dispararán con normalidad.</p>
+
+  <h2>Mantener el registro honesto</h2>
+
+  <ul>
+    <li><strong>Los motivos son para la siguiente persona.</strong> «Según ticket #4321 — excepción de viaje del CFO, revisada con el cliente» vale más que «ok según el cliente». Los leerá un año después, en una auditoría.</li>
+    <li><strong>Deje que las caducidades caduquen.</strong> Los 180 días predeterminados son un disparador de re-revisión, no una molestia. Cuando una exención vence y la alerta vuelve a dispararse, es el sistema preguntando <em>«¿sigue siendo verdad esto?»</em> — respóndalo, no vuelva a aceptar en piloto automático.</li>
+    <li><strong>Prefiera ámbitos estrechos.</strong> Un usuario con restricción de país vale más que toda la directiva; toda la directiva vale más que apagar una directiva. Use la herramienta más estrecha que detenga el ruido.</li>
+    <li><strong>Haga una barrida trimestral.</strong> Filtre por activas, repase todo lo que no tenga supresiones recientes o cuyo responsable se haya ido — revoque lo que esté rancio.</li>
+  </ul>
+
+  <p>Las exenciones son la diferencia entre <em>«esa alerta la ignoramos»</em> (indefendible) y <em>«aceptamos ese riesgo, lo documentamos y caduca en marzo»</em> (profesional). Úselas con generosidad y manténgalas limpias.</p>
+
+</div>
+</body>
+</html>

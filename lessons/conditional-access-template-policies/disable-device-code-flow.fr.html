@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Désactiver le flux de code d'appareil — la défense Storm-2372 — Modèles de politiques d'accès conditionnel</title>
+<meta name="lesson:title" content="Désactiver le flux de code d'appareil — la défense Storm-2372">
+<meta name="lesson:subtitle" content="Comment Storm-2372 abuse du code d'appareil pour contourner le MFA, et la politique d'AC qui ferme ce vecteur.">
+<meta name="lesson:icon" content="smartphone">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Modèles de politiques d'accès conditionnel</span> <span class="sep">·</span> <span>Désactiver le flux de code d'appareil</span></div>
+  <h1>Désactiver le flux de code d'appareil — la défense Storm-2372</h1>
+  <p class="dek">Comment Storm-2372 abuse du code d'appareil pour contourner le MFA, et la politique d'AC qui ferme ce vecteur.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une tentative d'hameçonnage par code d'appareil est bloquée : le code utilisateur envoyé par messagerie est rejeté, donc aucun jeton n'est émis vers l'appareil de l'attaquant.">
+      <defs>
+        <radialGradient id="dcBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="dcShield" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="dcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dcBg)"/>
+
+      <!-- gauche : l'attaquant envoie le code utilisateur par messagerie -->
+      <g transform="translate(120,90)">
+        <rect x="0" y="0" width="150" height="120" rx="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="75" cy="38" r="18" fill="none" stroke="#FF8A98" stroke-width="2"/>
+        <path d="M60 70 q15 -18 30 0" fill="none" stroke="#FF8A98" stroke-width="2"/>
+        <text x="75" y="100" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">Attaquant</text>
+      </g>
+      <text x="195" y="248" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11.5">envoie un code utilisateur</text>
+
+      <!-- bulle de messagerie portant le code -->
+      <g transform="translate(310,120)">
+        <rect x="0" y="0" width="148" height="58" rx="12" fill="#0E2640" stroke="#52708F"/>
+        <text x="74" y="26" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">WhatsApp · Teams · Signal</text>
+        <text x="74" y="46" text-anchor="middle" fill="#A8E1F8" font-family="Geist Mono,monospace" font-size="14" font-weight="600">entrez ce code</text>
+      </g>
+      <path d="M278 150 H310" stroke="#52708F" stroke-width="2" marker-end="url(#dcArr)"/>
+      <path d="M458 150 H520" stroke="#52708F" stroke-width="2" marker-end="url(#dcArr)"/>
+
+      <!-- centre : le bouclier de blocage AC -->
+      <g transform="translate(560,170)">
+        <path d="M0 -92 L78 -58 V8 C78 58 44 86 0 102 C-44 86 -78 58 -78 8 V-58 Z" fill="url(#dcShield)" stroke="#5CCBF4" stroke-width="2.4"/>
+        <text x="0" y="-30" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="1">POLITIQUE AC</text>
+        <text x="0" y="-12" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="10.5">code d'appareil</text>
+        <!-- X de blocage -->
+        <line x1="-26" y1="14" x2="26" y2="58" stroke="#FF5A6E" stroke-width="6" stroke-linecap="round"/>
+        <line x1="26" y1="14" x2="-26" y2="58" stroke="#FF5A6E" stroke-width="6" stroke-linecap="round"/>
+        <text x="0" y="90" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600">BLOQUER</text>
+      </g>
+
+      <!-- droite : jeton jamais émis vers l'appareil de l'attaquant -->
+      <g transform="translate(820,90)" opacity="0.55">
+        <rect x="0" y="0" width="150" height="120" rx="14" fill="#0E2236" stroke="#33527A" stroke-dasharray="5 6"/>
+        <rect x="42" y="30" width="66" height="44" rx="6" fill="none" stroke="#52708F" stroke-width="2"/>
+        <circle cx="75" cy="52" r="7" fill="none" stroke="#52708F" stroke-width="2"/>
+        <text x="75" y="100" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Aucun jeton</text>
+      </g>
+      <text x="895" y="248" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">l'appareil n'obtient rien</text>
+      <path d="M662 150 H820" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 5" marker-end="url(#dcArr)" opacity="0.5"/>
+    </svg>
+    <figcaption>Le code ne peut pas être utilisé, le jeton n'est jamais émis — le manuel Storm-2372 échoue à la toute première étape.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La leçon 5 de la carte 2 a parcouru ce qu'est l'abus du code d'appareil, pourquoi il contourne le MFA, et comment Storm-2372 — un acteur de menace aligné avec la Russie — l'utilise à grande échelle contre les gouvernements, ONG, services IT et autres cibles depuis août 2024. La défense dans cette leçon était une politique d'AC unique : bloquer le flux d'authentification par code d'appareil pour les utilisateurs qui n'en ont pas besoin.</p>
+
+  <p>C'est cette politique.</p>
+
+  <p><strong>Panoptica365 - Disable Device Code Flow.</strong> Description : <em>Empêche l'exploitation du flux de code d'appareil.</em> Octroi : Aucun (bloquer). Utilisateurs : Tous les utilisateurs. Applications : Toutes les applications infonuagiques.</p>
+
+  <p>C'est une des politiques d'AC les moins chères et à plus haut levier que vous pouvez déployer sur un tenant client. La plupart des tenants n'ont aucun besoin légitime du flux de code d'appareil. Le bloquer ne coûte rien dans ces tenants et ferme toute la surface d'attaque Storm-2372.</p>
+
+  <p>Cette leçon couvre le détail opérationnel — ce que la politique fait, quand la déployer, ce qu'il faut surveiller, quand les exceptions rares s'appliquent.</p>
+  </div>
+
+  <h2>Ce qu'elle fait</h2>
+
+  <p>La politique utilise la condition <strong>flux d'authentification</strong> de l'accès conditionnel — une condition d'AC relativement récente (preview jusqu'en 2024, généralement disponible en 2025) qui vous permet de cibler les connexions par <em>comment</em> elles se sont authentifiées. Un des interrupteurs à l'intérieur de cette condition est « Flux de code d'appareil ».</p>
+
+  <p>La politique est configurée :</p>
+
+  <ul>
+    <li><strong>Condition de flux d'authentification : Flux de code d'appareil.</strong></li>
+    <li><strong>Octroi : Bloquer.</strong></li>
+    <li><strong>Utilisateurs : Tous les utilisateurs.</strong></li>
+    <li><strong>Applications : Toutes les applications infonuagiques.</strong></li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="Les quatre réglages de la politique : la condition de flux d'authentification est le flux de code d'appareil, l'octroi est bloquer, les utilisateurs sont tous les utilisateurs, les applications sont toutes les applications infonuagiques.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANOPTICA365 — DISABLE DEVICE CODE FLOW</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,56)">
+          <rect x="0" y="0" width="312" height="68" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="28" fill="#6B85A6" font-size="11.5" letter-spacing="1">CONDITION</text>
+          <text x="20" y="52" fill="#C4D4E8" font-size="14" font-weight="600">Flux de code d'appareil</text>
+        </g>
+        <g transform="translate(368,56)">
+          <rect x="0" y="0" width="312" height="68" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="20" y="28" fill="#E2A0AA" font-size="11.5" letter-spacing="1">OCTROI</text>
+          <text x="20" y="52" fill="#FF8A98" font-size="15" font-weight="700">Bloquer</text>
+        </g>
+        <g transform="translate(40,140)">
+          <rect x="0" y="0" width="312" height="68" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="28" fill="#6B85A6" font-size="11.5" letter-spacing="1">UTILISATEURS</text>
+          <text x="20" y="52" fill="#A8E1F8" font-size="15" font-weight="600">Tous les utilisateurs</text>
+        </g>
+        <g transform="translate(368,140)">
+          <rect x="0" y="0" width="312" height="68" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="28" fill="#6B85A6" font-size="11.5" letter-spacing="1">APPLICATIONS</text>
+          <text x="20" y="52" fill="#A8E1F8" font-size="14" font-weight="600">Toutes les apps infonuagiques</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Quatre réglages, un résultat : toute connexion par code d'appareil est bloquée.</figcaption>
+  </figure>
+
+  <p>Toute tentative de connexion qui utilise le flux de code d'appareil est rejetée d'emblée. Le code utilisateur qu'un attaquant a envoyé à la victime par WhatsApp / Teams / Signal ne peut pas être utilisé. Le manuel Storm-2372 échoue à la toute première étape.</p>
+
+  <p>La mécanique de la leçon 5 de la carte 2 vaut la peine d'être répétée en une phrase : l'hameçonnage par code d'appareil fonctionne parce que l'utilisateur complète correctement le MFA sur la vraie page de Microsoft, mais l'appareil recevant le jeton résultant appartient à l'attaquant. Bloquer le flux de code d'appareil à la couche de la politique signifie que le jeton n'est jamais émis, peu importe si l'utilisateur a complété le MFA.</p>
+
+  <h2>Pourquoi « Tous les utilisateurs » est le bon défaut</h2>
+
+  <p>La plupart des politiques d'AC sont déployées avec un cadrage réfléchi — groupes d'utilisateurs spécifiques, apps spécifiques. Celle-ci se déploie par défaut sur « Tous les utilisateurs / Toutes les applications infonuagiques » et c'est correct.</p>
+
+  <p>La raison : le flux de code d'appareil est un <em>chemin d'authentification Microsoft légitime</em>, mais il est utilisé par un ensemble très étroit de clients légitimes. Spécifiquement :</p>
+
+  <ul>
+    <li>Imprimantes et appareils IoT faisant du scan-vers-courriel ou similaire — mais ceux-ci utilisent habituellement des comptes de service, pas des comptes utilisateurs, et le compte de service a souvent sa propre politique d'AC dédiée.</li>
+    <li>Microsoft Graph PowerShell ou Microsoft 365 CLI quand exécuté sur une machine qui n'a pas de navigateur disponible — cas d'usage étroit, habituellement un développeur ou admin faisant du travail d'automatisation.</li>
+    <li>Vieilles apps d'exemples Microsoft et tutoriels — rares en 2026, surtout retirés.</li>
+  </ul>
+
+  <p>Pour la grande majorité des utilisateurs dans la grande majorité des tenants, le flux de code d'appareil n'est pas légitimement utilisé. Les quelques exceptions (comptes de service spécifiques, scénarios de développeur spécifiques) sont exclues par nom plutôt que par découpe large de populations d'utilisateurs.</p>
+
+  <p>Un tenant avec zéro cas d'usage documenté de code d'appareil devrait bloquer le flux pour tous les utilisateurs. Un tenant avec un ou deux cas d'usage documentés devrait bloquer pour tous les utilisateurs <em>sauf</em> les comptes de service spécifiques qui en ont besoin. Il n'y a aucun scénario où « flux de code d'appareil ouvert pour tout le monde » est le bon réglage en 2026.</p>
+
+  <h2>Ce qui peut briser — et comment le gérer</h2>
+
+  <p>La rupture la plus courante quand cette politique est activée :</p>
+
+  <p><strong>Automatisation PowerShell multi-tenant.</strong> Un MSP qui utilise Microsoft Graph PowerShell pour gérer plusieurs tenants clients exécute souvent des scripts qui s'authentifient par code d'appareil. Le script affiche un code, l'opérateur l'entre dans un navigateur, le script opère ensuite sur le tenant du client. Si le tenant du client a le blocage de code d'appareil activé, le script échoue.</p>
+
+  <p>Solution : utiliser l'authentification par principal de service (secret client ou certificat) au lieu de code d'appareil. Graph PowerShell moderne le supporte. Le script change d'une « connexion interactive par code d'appareil » à une « connexion non interactive par principal de service », ce qui est plus sécurisé de toute façon parce qu'il n'y a pas d'étape humain-dans-la-boucle où l'ingénierie sociale peut détourner le flux.</p>
+
+  <p><strong>Tutoriels d'exemples Microsoft spécifiques.</strong> La documentation Microsoft utilise parfois le code d'appareil comme exemple de flux d'authentification pour les nouveaux venus. Suivre ces tutoriels contre un tenant avec cette politique activée échouera. La solution est habituellement d'utiliser le flux de connexion interactif à la place, qui fonctionne par un navigateur normal.</p>
+
+  <p><strong>Vieilles imprimantes et appareils IoT.</strong> Certains appareils multifonctions hérités utilisent le code d'appareil pour la configuration scan-vers-courriel. Les appareils plus récents sont passés à SMTP OAuth 2.0 avec identifiants stockés. Si vous avez une vieille imprimante qui utilise encore le code d'appareil, vous avez un choix : exclure le compte de service de l'imprimante de cette politique (avec une justification documentée et une date de coucher de soleil pour le remplacement d'imprimante), ou remplacer l'imprimante par un modèle moderne.</p>
+
+  <p><strong>Outils maison du client.</strong> Occasionnellement un client a un outil construit maison qui s'authentifie par code d'appareil. Même réponse que pour les imprimantes : exclure le compte spécifique avec documentation, ou migrer l'outil vers l'authentification par principal de service.</p>
+
+  <p>Le patron dans chaque cas : l'exception est <em>un compte spécifique sur un cas d'usage spécifique</em>. Les exclusions larges comme « exclure le département IT » sont le mauvais mouvement. Le département IT n'a pas besoin du code d'appareil comme classe.</p>
+
+  <h2>Déploiement</h2>
+
+  <p>Déploiement le plus court de la carte parce que la surface d'usage légitime est petite. L'inventaire pré-déploiement est l'essai à blanc.</p>
+
+  <p>Inventaire pré-déploiement : vérifiez le journal de connexion Entra des 30 derniers jours, filtré sur <code>authenticationProtocol == "deviceCode"</code>. Listez chaque compte qui a utilisé avec succès le code d'appareil. Pour la plupart des clients, cette liste sera très courte ou vide.</p>
+
+  <p>Pour chaque correspondance du pré-déploiement :</p>
+
+  <ul>
+    <li>Cas d'usage légitime (compte de service, automatisation documentée) → ajouter à la liste d'exclusion de la politique avec une date de coucher de soleil <em>avant</em> le déploiement.</li>
+    <li>Utilisateur inattendu → indicateur potentiel de compromission (un attaquant peut déjà être en train d'hameçonner cet utilisateur par code d'appareil). Enquêtez immédiatement, <em>avant</em> de déployer cette politique.</li>
+  </ul>
+
+  <p>Une fois le pré-déploiement complet, déployez. Le modèle s'active à l'état Activé — typiquement avec zéro impact sur les utilisateurs légitimes parce que presque personne sur un tenant de petite entreprise n'utilise le code d'appareil légitimement. Surveillez les 48 premières heures pour tout utilisateur inattendu bloqué par la politique. Soit vous avez raté quelque chose dans le pré-déploiement (rare mais possible), soit un attaquant vient d'être contrecarré (la politique fonctionne).</p>
+
+  <p>Pour les tenants plus grands ou plus complexes avec plusieurs cas d'usage documentés de code d'appareil, l'étape manuelle de rapport uniquement dans le portail Entra peut être utilisée comme prudence supplémentaire — mais pour la plupart des tenants, l'inventaire pré-déploiement est suffisant et l'approche déploiement-à-chaud est appropriée.</p>
+
+  <h2>À surveiller après l'application</h2>
+
+  <p>Le widget Activité quotidienne montrera des blocages d'AC sur cette politique. Dans un tenant en santé, le volume devrait être :</p>
+
+  <ul>
+    <li><strong>Proche de zéro</strong> en régime permanent. Les vrais utilisateurs sur de vrais appareils n'utilisent pas le code d'appareil, donc ils ne déclenchent pas la politique.</li>
+    <li><strong>Pointes occasionnelles</strong> quand un attaquant sonde — typiquement des campagnes de style Storm-2372 qui essaient de démarrer un flux de code d'appareil sur le tenant. Chaque pointe est une <em>défense réussie</em> — la politique fait son travail.</li>
+  </ul>
+
+  <p>Ce que vous voulez spécifiquement voir si Storm-2372 cible un jour un client :</p>
+
+  <ol>
+    <li><strong>Une rafale de connexions échouées</strong> avec <code>authenticationProtocol == "deviceCode"</code> — l'initiation automatisée de code d'appareil de l'attaquant frappant la politique.</li>
+    <li><strong>Aucune connexion réussie par code d'appareil</strong> — la politique bloque l'abus tenté avant qu'il ne puisse se compléter.</li>
+    <li><strong>Aucun nouvel enregistrement d'appareil</strong> dans le journal d'audit suivant les tentatives échouées.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Les trois signaux qui confirment que la politique fonctionne : une rafale de connexions échouées par code d'appareil, aucune connexion réussie par code d'appareil, et aucun nouvel enregistrement d'appareil.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">UNE DÉFENSE EN SANTÉ RESSEMBLE À</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(36,60)">
+          <rect x="0" y="0" width="200" height="150" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <g transform="translate(34,28)">
+            <rect x="0" y="36" width="16" height="40" rx="2" fill="#FFC04D"/>
+            <rect x="24" y="14" width="16" height="62" rx="2" fill="#FFC04D"/>
+            <rect x="48" y="0" width="16" height="76" rx="2" fill="#FFC04D"/>
+            <rect x="72" y="22" width="16" height="54" rx="2" fill="#FFC04D"/>
+            <rect x="96" y="44" width="16" height="32" rx="2" fill="#FFC04D"/>
+          </g>
+          <text x="100" y="128" text-anchor="middle" fill="#FFC04D" font-size="13" font-weight="700">Rafale échouée</text>
+          <text x="100" y="144" text-anchor="middle" fill="#A9B7CC" font-size="11">connexions deviceCode</text>
+        </g>
+        <g transform="translate(260,60)">
+          <rect x="0" y="0" width="200" height="150" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <g transform="translate(100,62)">
+            <circle r="34" fill="none" stroke="#2EE8A0" stroke-width="3"/>
+            <line x1="-22" y1="-22" x2="22" y2="22" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <text x="100" y="128" text-anchor="middle" fill="#2EE8A0" font-size="13" font-weight="700">Aucune réussie</text>
+          <text x="100" y="144" text-anchor="middle" fill="#A9B7CC" font-size="11">connexions deviceCode</text>
+        </g>
+        <g transform="translate(484,60)">
+          <rect x="0" y="0" width="200" height="150" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <g transform="translate(100,62)">
+            <rect x="-26" y="-22" width="52" height="44" rx="6" fill="none" stroke="#2EE8A0" stroke-width="2.5"/>
+            <circle cx="0" cy="0" r="6" fill="none" stroke="#2EE8A0" stroke-width="2.5"/>
+            <line x1="-30" y1="26" x2="30" y2="-26" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <text x="100" y="128" text-anchor="middle" fill="#2EE8A0" font-size="13" font-weight="700">Aucun nouvel</text>
+          <text x="100" y="144" text-anchor="middle" fill="#A9B7CC" font-size="11">enregistrement d'appareil</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>La chaîne d'attaque s'arrête à la première étape : les codes échouent, aucun jeton n'est émis, aucun appareil n'est enregistré.</figcaption>
+  </figure>
+
+  <p>Le troisième point compte spécifiquement à cause de l'évolution de février 2025 de Storm-2372 : l'attaquant essaie d'enregistrer son propre appareil dans Entra ID en utilisant le jeton acquis par code d'appareil. Si le flux de code d'appareil a été bloqué, aucun jeton n'a été émis, et aucun enregistrement d'appareil ne suit. Toute la chaîne d'attaque s'arrête à la première étape.</p>
+
+  <p>Si vous voyez jamais des connexions réussies par code d'appareil dans un tenant où cette politique est censée être activée, c'est une alerte qui vaut la peine d'être enquêtée immédiatement — soit la politique a été désactivée (dérive), soit une exclusion est trop large (mauvaise configuration). Les deux sont urgents.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>Deux catégories de signaux principales :</p>
+
+  <p><strong>Tentatives de connexion par code d'appareil suspectes (échouées ou réussies).</strong> Le pipeline d'ingestion UAL de Panoptica365 inclut des évaluateurs qui cherchent l'activité de code d'appareil. Quand la politique est activée et fonctionne, vous devriez voir des tentatives échouées (la politique les a bloquées) et très peu ou aucune tentative réussie. Une connexion par code d'appareil réussie à un compte inattendu vaut la peine d'être enquêtée.</p>
+
+  <p><strong>Nouvel appareil enregistré.</strong> Quand un attaquant complète avec succès l'attaque évoluée de Storm-2372 (la variante Microsoft Authentication Broker de février 2025), l'étape suivante est d'enregistrer sa machine comme appareil dans le tenant. Panoptica365 alerte sur les événements de nouvel enregistrement d'appareil. Croisez avec l'activité de connexion — y avait-il une connexion récente par code d'appareil pour cet utilisateur avant l'enregistrement de l'appareil? C'est la chaîne d'attaque.</p>
+
+  <p>L'anneau Activité quotidienne fait aussi remonter les blocages d'AC en quasi-temps-réel, y compris les blocages sur cette politique.</p>
+
+  <h2>La conversation avec le client</h2>
+
+  <p>Quand vous proposez d'activer cette politique sur un tenant client, la question typique du client est « qu'est-ce que ça brise? » La réponse honnête est « presque rien, parce que presque rien n'utilise légitimement le code d'appareil dans votre environnement ». L'inventaire pré-déploiement vous le dira à coup sûr — et s'il y a un ou deux cas d'usage légitimes, vous excluez ces comptes et procédez.</p>
+
+  <p>Le pitch :</p>
+
+  <ul>
+    <li>La menace Storm-2372 est réelle, documentée, en cours.</li>
+    <li>Microsoft elle-même recommande de bloquer le code d'appareil pour les tenants sans cas d'usage documentés depuis février 2025.</li>
+    <li>La politique s'active d'abord en rapport uniquement, donc vous pouvez vérifier que rien ne se brise avant d'appliquer.</li>
+    <li>Le coût est essentiellement zéro (aucune friction pour les utilisateurs normaux; exclusions spécifiques pour toute automatisation légitime).</li>
+  </ul>
+
+  <p>Pour les tenants dans des secteurs cibles (gouvernement, ONG, services IT, défense, télécoms, santé, enseignement supérieur, énergie — la liste de cibles Storm-2372), cette politique est spécialement recommandée. Pour d'autres secteurs, elle est encore recommandée; le ciblage de l'acteur peut changer, et la politique est assez peu chère pour que la défense en profondeur s'applique.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Ajoutez ceci à la liste de vérification d'accueil des nouveaux clients.</strong> De tous les modèles d'AC de la carte 3, celui-ci a le plus haut ratio impact-effort pour la plupart des tenants. Déploiement de trois jours, friction utilisateur proche de zéro, défense complète contre une menace sophistiquée identifiée.</p>
+
+  <p><strong>Surveillez le journal de connexion pour l'usage légitime de code d'appareil comme ligne de base.</strong> Si vous trouvez un tenant où le code d'appareil est utilisé par quelque chose que vous n'attendiez pas, c'est intéressant — ça pourrait être légitime (un script oublié) ou ça pourrait être une compromission partielle existante. Dans les deux cas, enquêtez avant de déployer la politique.</p>
+
+  <p><strong>Cette politique ne remplace pas les autres.</strong> Elle est étroitement cadrée — seulement le flux de code d'appareil. Le reste de la bibliothèque d'AC (application MFA, restrictions géo, durcissement admin) est encore nécessaire. Cette politique ferme un vecteur d'attaque spécifique que les politiques plus larges n'adressent pas.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Importer vos propres modèles d'AC</b> — Comment prendre une politique d'AC personnalisée d'un tenant et la transformer en modèle Panoptica365 qui se déploie à travers la base de clients du MSP. La généralisation d'emplacements nommés qui rend les modèles portables.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Opérer l'AC à l'échelle</b> — Le closer méta sur la dérive, les exclusions et le cycle de vie.</div></div>
+  </div>
+
+  <p>Pour l'instant : déployez cette politique sur chaque tenant client qui n'a pas d'exigence documentée de code d'appareil. Le risque du client face à la menace Storm-2372 passe d'« exposé » à « couvert » avec trois jours de travail et une friction proche de zéro. Il n'y a pas beaucoup d'autres politiques d'AC avec ce ROI.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Security Blog sur la campagne d'hameçonnage par code d'appareil de Storm-2372 (<a href="https://www.microsoft.com/en-us/security/blog/2025/02/13/storm-2372-conducts-device-code-phishing-campaign/" target="_blank" rel="noopener">Microsoft Security Blog — Storm-2372 conducts device code phishing campaign, février 2025</a>); condition de flux d'authentification de l'accès conditionnel (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps#authentication-flows" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Authentication flows</a>); référence technique du flux d'autorisation d'appareil OAuth 2.0 (<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code" target="_blank" rel="noopener">Microsoft Learn — OAuth 2.0 device code flow</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,178 @@
+/* ════════════════════════════════════════════════════════════
+   Learn — base stylesheet for the technical curriculum
+   Cool, Geist-only reading theme (cyan accent) for the technical
+   topics (Welcome, Identity threats, Conditional Access, Intune,
+   Email security, Secure Score, Panoptica365 Guides).
+   Single source of truth; every technical lesson links this file.
+   (The Human Layer keeps its own warm theme in the-human-layer.css.)
+   ════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  /* Panoptica dark tokens (mirrored from public/css/themes/panoptica-dark.css) */
+  --p-accent-bright:#7DD9F9; --p-accent:#5CCBF4; --p-accent-deep:#2A7FA3; --p-accent-dark:#1A5F87;
+  --p-accent-pale:#A8E1F8; --p-accent-ice:#D0EFFD; --p-accent-glow-rgba:rgba(92,203,244,.40);
+  --p-secondary:#B78BFF;
+  --p-bg:#1D3A62; --p-surface:#081829; --p-surface-alt:#0C2038; --p-surface-deep:#071221;
+  --p-surface-elevated:#153055; --p-surface-sunken:#04101E;
+  --p-text:#EEF4FC; --p-text-secondary:#B0C4DF; --p-text-muted:#6B85A6; --p-text-dim:#425C7E; --p-text-bright:#FFFFFF;
+  --p-border:#1F3C5C; --p-border-strong:#335F92; --p-border-accent:#4A80BD;
+  --p-danger:#FF5A6E; --p-success:#2EE8A0; --p-warn:#FFC04D; --p-info:#7C9CFF;
+  --font-body:'Geist','Inter',system-ui,sans-serif;
+  --font-mono:'Geist Mono','JetBrains Mono','Courier New',monospace;
+  --corner:10px;
+}
+
+/* ── Light theme ──────────────────────────────────────────────
+   Surfaces/text/borders flip to the app's light palette, and the cyan
+   accent deepens for contrast on a light reading surface. Values are mirrored
+   from public/css/themes/panoptica-light.css (the single source of truth — the
+   app's own light theme). The renderer sets data-theme="light" on the iframe's
+   <html> when the app pref is light; absent it, lessons render dark as before.
+   The inline <svg> diagrams keep their authored dark palette by design — each
+   has its own rounded background, so on a light surface they read as
+   self-contained dark figure cards. */
+:root[data-theme="light"]{
+  --p-accent-bright:#2A9CCB; --p-accent:#1684B5; --p-accent-deep:#0B6C9A; --p-accent-dark:#0A4F73;
+  --p-accent-pale:#7DC4DD; --p-accent-ice:#E4F2F8; --p-accent-glow-rgba:rgba(22,132,181,.28);
+  --p-bg:#E8EEF5; --p-surface:#FFFFFF; --p-surface-alt:#F4F7FB; --p-surface-deep:#DCE3EE;
+  --p-surface-elevated:#FFFFFF; --p-surface-sunken:#F8FAFC;
+  --p-text:#14202E; --p-text-secondary:#4C5E7A; --p-text-muted:#7388A2; --p-text-dim:#9CABBE; --p-text-bright:#0A1320;
+  --p-border:#C5CFDC; --p-border-strong:#9CABBE; --p-border-accent:#5CCBF4;
+  --p-danger:#D43A4F; --p-success:#1FB87C; --p-warn:#E89B0F; --p-info:#5774D1;
+}
+/* Light page glow (the dark default uses a navy wash, wrong on white). */
+:root[data-theme="light"] body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(92,203,244,.10) 0%, transparent 60%),
+    var(--p-surface);
+}
+/* Spots where the *pale* cyan token is used as TEXT can't carry on near-white —
+   deepen them. (pre code re-asserts neutral so code blocks don't go cyan.) */
+:root[data-theme="light"] em,
+:root[data-theme="light"] code,
+:root[data-theme="light"] blockquote{ color:var(--p-accent-deep); }
+:root[data-theme="light"] pre code{ color:var(--p-text-secondary); }
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #14305280 0%, transparent 60%),
+    var(--p-surface);
+  color:var(--p-text);
+  font-family:var(--font-body);
+  line-height:1.7;
+  font-size:17px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 90px;}
+
+/* ── eyebrow ── */
+.eyebrow{
+  font-weight:600;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--p-accent);display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:42px 0 14px;
+}
+.eyebrow .sep{color:var(--p-text-dim);letter-spacing:0;}
+
+h1{
+  font-weight:700;font-size:2.5rem;line-height:1.12;letter-spacing:-.02em;
+  margin:.1em 0 .35em;color:var(--p-text-bright);
+}
+.dek{
+  font-size:1.22rem;line-height:1.45;color:var(--p-text-secondary);
+  font-weight:400;margin:0 0 30px;max-width:38em;
+}
+
+/* ── figures ── */
+figure{margin:0 0 14px;}
+.figsmall{margin:26px 0;}
+.hero{width:100%;height:auto;display:block;border-radius:var(--corner);border:1px solid var(--p-border);background:var(--p-surface-deep);}
+svg.diagram{width:100%;height:auto;display:block;}
+figcaption{color:var(--p-text-muted);font-size:.8rem;margin-top:8px;text-align:center;font-style:italic;}
+
+/* ── body text ── */
+p{margin:0 0 20px;color:var(--p-text);}
+.lead p:first-of-type{font-size:1.06rem;}
+strong{color:var(--p-text-bright);font-weight:600;}
+em{font-style:italic;color:var(--p-accent-pale);}
+a{color:var(--p-accent);text-decoration:none;border-bottom:1px solid rgba(92,203,244,.35);}
+a:hover{border-bottom-color:var(--p-accent);}
+
+h2{
+  font-weight:700;font-size:1.55rem;line-height:1.2;letter-spacing:-.01em;
+  margin:48px 0 16px;color:var(--p-text-bright);
+  padding-top:8px;border-top:1px solid var(--p-border);
+}
+h2:first-of-type{border-top:none;padding-top:0;}
+h3{font-weight:600;font-size:1.16rem;margin:30px 0 12px;color:var(--p-text-bright);}
+
+/* ── lists ── */
+ul,ol{margin:0 0 20px;padding-left:0;list-style:none;}
+ul li,ol li{position:relative;padding:0 0 12px 26px;color:var(--p-text);}
+ul li b,ol li b{color:var(--p-text-bright);}
+ul li::before{content:"";position:absolute;left:4px;top:11px;width:7px;height:7px;border-radius:50%;background:var(--p-accent);}
+ol{counter-reset:li;}
+ol li{counter-increment:li;}
+ol li::before{content:counter(li);position:absolute;left:0;top:1px;width:18px;height:18px;border-radius:50%;
+  background:var(--p-surface-elevated);color:var(--p-accent);font-size:.72rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border:1px solid var(--p-border-accent);}
+
+/* ── tables ── */
+.table-wrap{overflow-x:auto;margin:26px 0;border:1px solid var(--p-border);border-radius:var(--corner);}
+table{border-collapse:collapse;width:100%;font-size:.95rem;}
+thead th{
+  background:var(--p-surface-deep);color:var(--p-accent);text-align:left;font-weight:600;
+  font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:12px 16px;border-bottom:1px solid var(--p-border-strong);
+}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--p-border);color:var(--p-text-secondary);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:nth-child(even){background:rgba(255,255,255,.015);}
+td strong,th strong{color:var(--p-text-bright);}
+
+/* ── callouts ── */
+.callout{border:1px solid var(--p-border);border-left:3px solid var(--p-accent);background:var(--p-surface-deep);
+  border-radius:var(--corner);padding:18px 22px;margin:26px 0;color:var(--p-text-secondary);}
+.callout .clabel{font-weight:600;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--p-accent);}
+.callout .clabel svg{width:15px;height:15px;}
+.callout p:last-child{margin-bottom:0;}
+.callout.insight{border-left-color:var(--p-accent);background:linear-gradient(180deg,rgba(92,203,244,.06),var(--p-surface-deep));}
+.callout.insight .clabel{color:var(--p-accent-bright);}
+.callout.caution{border-left-color:var(--p-warn);}
+.callout.caution .clabel{color:var(--p-warn);}
+.callout.danger{border-left-color:var(--p-danger);}
+.callout.danger .clabel{color:var(--p-danger);}
+
+/* ── stat band ── */
+.stat-band{display:flex;gap:18px;flex-wrap:wrap;margin:28px 0;}
+.stat{flex:1 1 150px;border:1px solid var(--p-border);border-radius:var(--corner);background:var(--p-surface-deep);padding:18px 20px;}
+.stat .n{font-weight:700;font-size:2.05rem;color:var(--p-accent);line-height:1;letter-spacing:-.01em;}
+.stat .l{font-size:.86rem;color:var(--p-text-secondary);margin-top:8px;}
+
+/* ── cross-links (territory map) ── */
+.crosslinks{display:grid;grid-template-columns:1fr;gap:10px;margin:24px 0;}
+.crosslinks .xl{border:1px solid var(--p-border);border-radius:var(--corner);background:var(--p-surface-alt);
+  padding:14px 18px;display:flex;gap:14px;align-items:flex-start;}
+.crosslinks .xl .xnum{flex:0 0 auto;width:26px;height:26px;border-radius:6px;background:var(--p-surface-elevated);
+  color:var(--p-accent);font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;border:1px solid var(--p-border-accent);}
+.crosslinks .xl .xt{font-size:.95rem;color:var(--p-text-secondary);}
+.crosslinks .xl .xt b{color:var(--p-text-bright);display:block;margin-bottom:2px;}
+
+/* ── inline code ── */
+code{font-family:var(--font-mono);font-size:.86em;background:var(--p-surface-sunken);
+  border:1px solid var(--p-border);border-radius:5px;padding:1px 6px;color:var(--p-accent-pale);}
+pre{background:var(--p-surface-sunken);border:1px solid var(--p-border);border-radius:var(--corner);
+  padding:16px 18px;overflow-x:auto;margin:24px 0;}
+pre code{background:none;border:none;padding:0;color:var(--p-text-secondary);}
+
+/* ── blockquote / key line ── */
+blockquote{border-left:3px solid var(--p-accent);margin:26px 0;padding:4px 0 4px 22px;
+  color:var(--p-accent-pale);font-size:1.18rem;line-height:1.45;}
+
+/* ── sources footer ── */
+.sources{margin-top:54px;padding-top:22px;border-top:1px solid var(--p-border);font-size:.86rem;color:var(--p-text-muted);}
+.sources h4{font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--p-text-secondary);margin:0 0 12px;}
+.sources p{margin:0;font-style:italic;line-height:1.55;color:var(--p-text-muted);}
+.sources a{color:var(--p-text-secondary);}

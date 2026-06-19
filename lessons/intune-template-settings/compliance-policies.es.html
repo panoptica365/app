@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Políticas de cumplimiento — definiendo «conforme» a través de cuatro plataformas — Intune Template Settings</title>
+<meta name="lesson:title" content="Políticas de cumplimiento — definiendo «conforme» a través de cuatro plataformas">
+<meta name="lesson:subtitle" content="Las cuatro políticas de cumplimiento de Panoptica365 — Windows, iOS, Android, macOS — y el listón mínimo que cada una aplica.">
+<meta name="lesson:icon" content="monitor-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Políticas de cumplimiento</span></div>
+  <h1>Políticas de cumplimiento — definiendo «conforme» a través de cuatro plataformas</h1>
+  <p class="dek">Las cuatro políticas de cumplimiento de Panoptica365 — Windows, iOS, Android, macOS — y el listón mínimo que cada una aplica.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Cuatro políticas de cumplimiento — Windows, iOS/iPadOS, Android y macOS — definiendo cada una un listón mínimo.">
+      <defs>
+        <radialGradient id="cpBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="cpBar" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#cpBg)"/>
+
+      <line x1="120" y1="208" x2="990" y2="208" stroke="#5CCBF4" stroke-width="1.6" stroke-dasharray="2 7" opacity="0.8"/>
+      <text x="1000" y="212" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">LISTÓN MÍN</text>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Windows -->
+        <g transform="translate(220,0)">
+          <rect x="-66" y="150" width="132" height="58" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <rect x="-66" y="60" width="132" height="90" rx="6" fill="#0E2640" stroke="#2A6F9E" stroke-dasharray="3 5"/>
+          <text x="0" y="106" fill="#6B85A6" font-size="11.5">la configuración</text>
+          <text x="0" y="123" fill="#6B85A6" font-size="11.5">endurece encima</text>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">Windows</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">7 comprobaciones</text>
+        </g>
+        <!-- iOS -->
+        <g transform="translate(450,0)">
+          <rect x="-66" y="172" width="132" height="36" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">iOS/iPadOS</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">ligera por diseño</text>
+        </g>
+        <!-- Android -->
+        <g transform="translate(670,0)">
+          <rect x="-66" y="170" width="132" height="38" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">Android</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">AOSP Device Owner</text>
+        </g>
+        <!-- macOS -->
+        <g transform="translate(890,0)">
+          <rect x="-66" y="166" width="132" height="42" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">macOS</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">parque pequeño</text>
+        </g>
+      </g>
+
+      <text x="120" y="44" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="3">QUÉ SIGNIFICA «CONFORME» · CUATRO PLATAFORMAS</text>
+    </svg>
+    <figcaption>Cuatro políticas, un solo trabajo: cada una define el listón mínimo que un dispositivo debe superar para contar como «conforme».</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Una política de cumplimiento es el documento que responde a una sola pregunta: <em>¿qué significa que un dispositivo se considere «conforme» en el tenant de este cliente?</em></p>
+
+  <p>La respuesta alimenta directamente al Acceso Condicional. Cuando una política de AC dice «exigir dispositivo conforme» (el patrón anti-AiTM de la tarjeta 3 lección 4), la señal de cumplimiento del dispositivo que lee viene de la política de cumplimiento que tú escribiste. No del perfil de configuración de Intune que <em>aplica</em> ajustes en el dispositivo — la política de cumplimiento que <em>evalúa</em> si el dispositivo alcanza el listón.</p>
+
+  <p>Esta distinción importa y se confunde a menudo. La plantilla BitLocker Settings de Panoptica365 <em>hace que BitLocker ocurra</em> en los dispositivos Windows. La política de Windows Compliance de Panoptica365 <em>comprueba si BitLocker está activado</em> y reporta conforme o no conforme en consecuencia. Mismo resultado (BitLocker habilitado), dos políticas distintas haciendo trabajos distintos. Necesitas las dos.</p>
+
+  <p>Esta lección recorre las cuatro políticas de cumplimiento de la biblioteca de Panoptica365: Windows, iOS/iPadOS, Android y macOS. Cada una es pequeña (menos de 2KB de JSON), opinionada e intencionadamente laxa — definen el listón mínimo, no el objetivo aspiracional.</p>
+  </div>
+
+  <h2>Las cuatro políticas</h2>
+
+  <h3>Panoptica365 - Windows Compliance</h3>
+
+  <p>La política de cumplimiento de Windows es la más consecuente porque Windows es la plataforma de dispositivos gestionados dominante en los entornos MSP de pequeña empresa. Lo que comprueba realmente:</p>
+
+  <ul>
+    <li><strong>Defender habilitado</strong> (<code>defenderEnabled: true</code>) — Microsoft Defender Antivirus debe estar funcionando.</li>
+    <li><strong>Protección en tiempo real habilitada</strong> (<code>rtpEnabled: true</code>) — RTP tiene que estar activa, no solo instalada.</li>
+    <li><strong>Antivirus requerido</strong> (<code>antivirusRequired: true</code>) — debe haber un antivirus presente.</li>
+    <li><strong>Anti-spyware requerido</strong> (<code>antiSpywareRequired: true</code>) — motor anti-spyware presente.</li>
+    <li><strong>Firewall activo requerido</strong> (<code>activeFirewallRequired: true</code>) — Windows Defender Firewall debe estar activo.</li>
+    <li><strong>Comprobación de firmas desactualizadas</strong> (<code>signatureOutOfDate: true</code>) — marca los dispositivos con firmas de AV obsoletas.</li>
+    <li><strong>Protección de amenazas del dispositivo habilitada</strong> (<code>deviceThreatProtectionEnabled: true</code>) en nivel <code>low</code> — Defender for Endpoint no debe reportar amenazas de alta confianza.</li>
+  </ul>
+
+  <p>Lo que <em>deliberadamente no comprueba:</em></p>
+
+  <ul>
+    <li><strong>BitLocker</strong> <em>no</em> es obligatorio. (Fíjate en el <code>bitLockerEnabled: false</code>.) Es una elección real. La aplicación de BitLocker se hace vía la plantilla BitLocker Settings (lección 4); la política de cumplimiento no lo exige.</li>
+    <li><strong>Contraseña</strong> <em>no</em> es obligatoria. (<code>passwordRequired: false</code>.) La aplicación de contraseñas de Windows viene de la Security Baseline (lección 3) o de la Group Policy en otro sitio.</li>
+    <li><strong>TPM</strong> <em>no</em> es obligatorio. (<code>tpmRequired: false</code>.) La mayoría del hardware Windows moderno tiene TPM, pero exigirlo haría fallar el cumplimiento de los dispositivos más antiguos del parque.</li>
+    <li><strong>Secure Boot</strong> <em>no</em> es obligatorio. Mismo motivo.</li>
+    <li><strong>Versión mínima del SO</strong> <em>no</em> está fijada. La política de cumplimiento no exige Windows 11 ni ninguna compilación específica.</li>
+  </ul>
+
+  <p>¿Por qué la laxitud? Porque la política de cumplimiento es el <em>listón mínimo para el control de dispositivo-conforme de AC</em>. Si lo pones demasiado alto, dispositivos que por lo demás están correctamente configurados fallan el cumplimiento y pierden acceso a M365 — incluso cuando no hay nada mal con ellos desde el punto de vista de seguridad. La política de Windows Compliance de Panoptica365 peca por el lado de «si Defender está corriendo, este dispositivo es lo bastante conforme para acceder a M365». El endurecimiento más allá de ese listón ocurre en las plantillas de configuración (BitLocker, Security Baseline, ASR Rules) — separadamente de la evaluación de cumplimiento.</p>
+
+  <p>Es una elección <em>defendible</em>. Otro MSP podría exigir BitLocker como criterio de cumplimiento. El compromiso: criterios de cumplimiento más estrictos atrapan más brechas de seguridad pero también producen más hallazgos falsos positivos de no conformidad cuando el estado del dispositivo está brevemente inconsistente (BitLocker temporalmente deshabilitado para una operación de recuperación, firmas brevemente obsoletas durante una ventana de actualización, etc.). El listón laxo prioriza la estabilidad de la señal dispositivo-conforme de AC sobre el endurecimiento agresivo.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Lo que la política de cumplimiento de Windows comprueba frente a lo que deliberadamente deja fuera.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="200" y="34" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">COMPRUEBA</text>
+      <text x="520" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DEJA FUERA</text>
+      <line x1="360" y1="50" x2="360" y2="296" stroke="#1F3C5C" stroke-width="1.5"/>
+
+      <g font-family="Geist,Inter,sans-serif" font-size="13">
+        <g fill="#C4D4E8">
+          <g transform="translate(40,64)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Defender habilitado</text></g>
+          <g transform="translate(40,92)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Protección en tiempo real</text></g>
+          <g transform="translate(40,120)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Antivirus presente</text></g>
+          <g transform="translate(40,148)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Anti-spyware presente</text></g>
+          <g transform="translate(40,176)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Firewall activo</text></g>
+          <g transform="translate(40,204)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Frescura de firmas</text></g>
+          <g transform="translate(40,232)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Protección de amenazas</text></g>
+          <g transform="translate(40,260)"><text x="26" y="0" fill="#52708F" font-size="11.5">en nivel «low»</text></g>
+        </g>
+        <g fill="#6B85A6">
+          <g transform="translate(396,64)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">BitLocker</text></g>
+          <g transform="translate(396,92)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">Contraseña</text></g>
+          <g transform="translate(396,120)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">TPM</text></g>
+          <g transform="translate(396,148)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">Secure Boot</text></g>
+          <g transform="translate(396,176)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">Versión mínima del SO</text></g>
+        </g>
+      </g>
+      <text x="200" y="290" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">si Defender corre, lo bastante conforme para M365</text>
+    </svg>
+    <figcaption>Las siete comprobaciones de la política Windows, y las cinco cosas que deja a las plantillas de configuración.</figcaption>
+  </figure>
+
+  <h3>Panoptica365 - iOS/iPadOS Compliance</h3>
+
+  <p>El cumplimiento móvil es ligero por diseño. Los dispositivos iOS en el contexto de pequeña empresa son abrumadoramente BYOD — teléfonos personales usados para leer correo corporativo. La inscripción completa en MDM en un teléfono personal es algo a lo que los usuarios oponen resistencia y muchos MSP no intentan forzar.</p>
+
+  <p>Lo que comprueba la política iOS:</p>
+
+  <ul>
+    <li><strong>Código de acceso requerido</strong> (<code>passcodeRequired: true</code>) — el dispositivo debe tener un código de acceso.</li>
+    <li><strong>Longitud mínima del código: 4 caracteres.</strong></li>
+    <li><strong>Máximo 5 minutos de inactividad antes del bloqueo</strong> (<code>passcodeMinutesOfInactivityBeforeLock: 5</code>).</li>
+    <li><strong>Bloqueo de los últimos 24 códigos</strong> — no puedes reutilizar los últimos 24 códigos.</li>
+    <li><strong>Detección de jailbreak</strong> (<code>securityBlockJailbrokenDevices: true</code>) — bloquea dispositivos marcados como jailbroken.</li>
+  </ul>
+
+  <p>Lo que no comprueba:</p>
+
+  <ul>
+    <li><strong>Versión mínima del SO</strong> no está fijada. iOS recibe actualizaciones de seguridad agresivamente; los usuarios suelen estar en versiones actuales; exigir un mínimo específico atraparía un número pequeño de dispositivos en versiones de iOS antiguas que probablemente no pueden actualizarse de todas formas.</li>
+    <li><strong>Protección de amenazas del dispositivo</strong> no es obligatoria (Defender for Endpoint en iOS existe pero no es estándar para BYOD de pequeña empresa).</li>
+    <li><strong>Perfil de correo gestionado</strong> no es obligatorio. Los usuarios acceden al correo a través de su aplicación de consumo Outlook/Apple Mail, no a través de una configuración gestionada.</li>
+  </ul>
+
+  <p>El encuadre honesto: esta política asegura lo básico (código de acceso + pantalla de bloqueo + no-jailbreak) y acepta que el resto del endurecimiento de dispositivo móvil está fuera del ámbito del MSP de pequeña empresa. Si un cliente quiere MDM móvil más estricto, quiere una relación distinta con su MSP.</p>
+
+  <h3>Panoptica365 - Android Compliance</h3>
+
+  <p>La política Android está configurada para el modo <strong>Android Open Source Project (AOSP) Device Owner</strong> — el modelo de Android Enterprise. Lo que comprueba:</p>
+
+  <ul>
+    <li><strong>Cifrado de almacenamiento requerido</strong> (<code>storageRequireEncryption: true</code>) — el cifrado del dispositivo debe estar habilitado.</li>
+    <li><strong>Contraseña requerida</strong> (<code>passwordRequired: true</code>).</li>
+    <li><strong>15 minutos de inactividad antes del bloqueo</strong> (<code>passwordMinutesOfInactivityBeforeLock: 15</code>).</li>
+    <li><strong>Detección de jailbreak / root</strong> (<code>securityBlockJailbrokenDevices: true</code>).</li>
+  </ul>
+
+  <p>Notablemente ausente: versión mínima del SO, nivel mínimo del parche de seguridad de Android, verificación de aplicaciones. Mismo razonamiento que iOS — estos harían fallar el cumplimiento en dispositivos que los clientes no pueden actualizar fácilmente.</p>
+
+  <p>El modo AOSP Device Owner es específicamente para dispositivos Android <em>propiedad de la empresa, totalmente gestionados</em>. Para dispositivos Android <em>de propiedad personal</em> usando un perfil de trabajo, la estructura de la política de cumplimiento es ligeramente distinta y no está representada en la biblioteca de Panoptica365. Si un cliente tiene un parque significativo de Android-BYOD, esta plantilla no cubre ese escenario directamente — y el ámbito móvil de Panoptica365 es «señal de cumplimiento para lo que está inscrito, nada más».</p>
+
+  <h3>Panoptica365 - macOS Compliance</h3>
+
+  <p>macOS recibe menos atención en la mayoría de los contextos MSP de pequeña empresa porque el parque es pequeño. La política de cumplimiento refleja eso:</p>
+
+  <ul>
+    <li><strong>Contraseña requerida</strong> (<code>passwordRequired: true</code>).</li>
+    <li><strong>Longitud mínima de la contraseña: 6 caracteres.</strong></li>
+    <li><strong>Cifrado de almacenamiento requerido</strong> (<code>storageRequireEncryption: true</code>) — FileVault debe estar activo.</li>
+    <li><strong>Firewall habilitado</strong> (<code>firewallEnabled: true</code>) — firewall de macOS activo.</li>
+    <li><strong>El firewall bloquea todo el tráfico entrante</strong> (<code>firewallBlockAllIncoming: true</code>) — bloqueo entrante estricto.</li>
+  </ul>
+
+  <p>Notablemente <em>no</em> requerido: System Integrity Protection (SIP). La mayoría de las instalaciones modernas de macOS tienen SIP habilitado por defecto, pero puede ser deshabilitado por usuarios sofisticados. La política de cumplimiento no lo exige.</p>
+
+  <p>También notable: <code>gatekeeperAllowedAppSource: "anywhere"</code> — la política de cumplimiento no impone restricciones de Gatekeeper sobre las fuentes de aplicaciones. Es permisiva; una política más estricta pondría esto en <code>macAppStore</code> o <code>macAppStoreAndIdentifiedDevelopers</code>. El valor por defecto de Panoptica365 acepta lo que sea que el cliente haya configurado a nivel del SO.</p>
+
+  <p>Para la mayoría de los tenants de pequeña empresa con uno o dos usuarios de Mac, este listón de cumplimiento es apropiado. Para clientes con parques sustanciales de Mac (agencias creativas, empresas de desarrollo), el operador debería plantearse endurecer esta plantilla mediante el flujo de personalización de la lección 10.</p>
+
+  <h2>La señal de cumplimiento vs la configuración</h2>
+
+  <p>Un patrón que vale la pena nombrar explícitamente: la biblioteca de Panoptica365 trata el cumplimiento y la configuración como asuntos separados. Cada política de cumplimiento se empareja con una o más plantillas de configuración que <em>hacen</em> que el dispositivo alcance ese listón.</p>
+
+  <p>Para Windows:</p>
+
+  <ul>
+    <li>La política de cumplimiento dice «Defender debe estar habilitado» → la configuración la entrega la plantilla Defender Settings (lección 5).</li>
+    <li>La política de cumplimiento dice «el firewall debe estar activo» → la configuración la entrega la plantilla Firewall Settings (lección 6).</li>
+    <li>(BitLocker no está en el listón de cumplimiento pero SÍ está en la configuración → plantilla BitLocker Settings, lección 4.)</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="La política de cumplimiento evalúa si un dispositivo alcanza el listón; la plantilla de configuración hace que el dispositivo lo alcance.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="78" width="200" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="104" fill="#A8E1F8" font-size="13" font-weight="600">Plantilla de configuración</text>
+        <text x="140" y="124" fill="#6B85A6" font-size="11">hace alcanzar el listón</text>
+
+        <rect x="300" y="84" width="120" height="52" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="115" fill="#C4D4E8" font-size="14" font-weight="600">Dispositivo</text>
+
+        <rect x="480" y="78" width="200" height="64" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="580" y="104" fill="#7DD9F9" font-size="13" font-weight="700">Política de cumplimiento</text>
+        <text x="580" y="124" fill="#6B85A6" font-size="11">evalúa si lo alcanza</text>
+      </g>
+      <path d="M240 110 H300" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <path d="M480 110 H420" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <text x="270" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">configura</text>
+      <text x="450" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">comprueba</text>
+      <text x="360" y="40" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DOS POLÍTICAS, TRABAJOS DISTINTOS — NECESITAS LAS DOS</text>
+    </svg>
+    <figcaption>Una plantilla hace que el dispositivo alcance el listón; la otra comprueba si lo hizo. Mismo resultado, dos trabajos.</figcaption>
+  </figure>
+
+  <p>Para macOS <em>sí</em> hay una plantilla de configuración emparejada — <strong>Panoptica365 - Defender Settings macOS</strong> (cubierta en la lección 5). Activa Defender para macOS, habilita la protección en tiempo real y habilita el envío automático de muestras. Así que el par macOS existe, pero es estructuralmente más ligero que el par Windows — y la razón es Microsoft, no Panoptica365. La política de cumplimiento macOS en Intune expone exactamente estos criterios: System Integrity Protection, versión del SO, reglas de contraseña, FileVault, firewall + modo silencioso, y Gatekeeper. Esa es la lista completa. Sin fila de Defender, sin fila de protección en tiempo real, sin nivel de Protección de Amenazas del Dispositivo (que en Windows es la señal de salud de Defender-for-Endpoint). Puedes <em>configurar</em> Defender en macOS vía la plantilla de configuración; no puedes <em>comprobar</em> su estado a través de la política de cumplimiento en absoluto. La política de cumplimiento de macOS de Panoptica365 por tanto comprueba las cosas que Microsoft expone, y la plantilla Defender Settings macOS gestiona la parte de configuración sin un control de cumplimiento que case con ella. Si te has preguntado por qué la historia de macOS se siente a medio terminar, esta es la razón.</p>
+
+  <p>Para iOS y Android: no hay plantilla de configuración emparejada en la biblioteca de Panoptica365 — solo la política de cumplimiento. La configuración es responsabilidad del usuario (él pone su propio código de acceso, él mantiene el cifrado activado).</p>
+
+  <p>Esta separación refleja el modelo de negocio real: gestión completa de configuración-más-cumplimiento en Windows (porque el MSP efectivamente posee esos dispositivos a través del cliente); un par de configuración más ligero en macOS limitado por lo que la API de cumplimiento de Microsoft soporta; señal-de-cumplimiento-solamente en iOS y Android (porque el MSP no posee esos dispositivos y no puede empujar configuración).</p>
+
+  <p>La conclusión honesta: un cliente que quiere que sus iPhones, iPads o dispositivos Android estén <em>gestionados</em> (no solo <em>comprobados para cumplimiento</em>) necesita una conversación distinta. La biblioteca empaquetada de Panoptica365 no cubre ese escenario por diseño. Los operadores que lo necesiten — o que necesiten configuración macOS más profunda más allá de Defender — pueden construir sus propias plantillas de configuración e importarlas mediante el flujo de la lección 10.</p>
+
+  <h2>Despliegue</h2>
+
+  <p>Las políticas de cumplimiento se despliegan en estado Habilitado, como todas las plantillas de Panoptica365. Para estas políticas específicas, el enfoque de desplegar-en-caliente es casi siempre seguro — el listón es intencionadamente bajo y las comprobaciones son conservadoras:</p>
+
+  <ul>
+    <li>Un dispositivo Windows nuevo con Defender corriendo pasa inmediatamente.</li>
+    <li>Un iPhone nuevo con código de acceso y sin jailbreak pasa inmediatamente.</li>
+    <li>Un Mac nuevo con FileVault activado pasa inmediatamente.</li>
+  </ul>
+
+  <p>El despliegue por grupo piloto de la comprobación previa de la lección 1 sigue siendo recomendable, pero la ventana de verificación es corta — 24–48 horas suele bastar. Busca:</p>
+
+  <ul>
+    <li>Dispositivos marcados como <strong>Aún no evaluados</strong> que deberían haberse evaluado ya (indica rotura del bucle de cumplimiento — ver lección 9).</li>
+    <li>Dispositivos marcados como <strong>No conformes</strong> por una razón que te sorprenda. Sorpresa habitual: una ventana de temporización de firmas de Defender donde un dispositivo aparece brevemente no conforme por obsolescencia.</li>
+    <li>Dispositivos que <em>no aparecen</em> en la evaluación de cumplimiento en absoluto. Normalmente significa que no están inscritos en Intune y la política no tiene destinatario.</li>
+  </ul>
+
+  <p>Después de la aplicación (que para las políticas de cumplimiento es «desplegada y siendo evaluada»), monitoriza:</p>
+
+  <ul>
+    <li><strong>Ratio general de cumplimiento.</strong> El tile de dispositivos de Panoptica365 te da el titular (p. ej., «32/57 conformes»). Saludable es 95%+ conformes para el conjunto evaluado. Por debajo del 90% significa que algo estructural está mal — plantilla mal configurada, problema de infraestructura, o un grupo de dispositivos que no deberían estar inscritos.</li>
+    <li><strong>Comprobación de salud por plataforma.</strong> Usa el desglose de Dispositivos por SO para confirmar que la mezcla de plataformas es la que esperas. Si ves contadores que se mueven inesperadamente (un grupo de dispositivos Windows desaparece, aparece un SO desconocido), eso merece investigación.</li>
+    <li><strong>Razones habituales de no conformidad.</strong> Profundiza en los dispositivos no conformes en el portal de Intune y lee la razón concreta del fallo — Microsoft expone qué comprobación falló por dispositivo. Si «Defender deshabilitado» aparece en varios dispositivos, tienes un problema real (Defender no debería estar apagado en máquinas Windows gestionadas). Unos pocos sueltos son ruido; un grupo con la misma razón es señal. Panoptica365 no agrega estas razones por ti, así que el reconocimiento de patrones es trabajo manual en el portal de Intune.</li>
+    <li><strong>Dispositivos que oscilan repetidamente entre conforme y no conforme.</strong> Esto es «flapping de cumplimiento» — normalmente un problema de temporización de sincronización o un ajuste aplicado de forma desigual por una plantilla de configuración. Pillarlo es manual: nota en el portal de Intune que un dispositivo ha cambiado de estado varias veces en una semana, luego investiga por dispositivo. La lección 9 recorre los modos de fallo.</li>
+  </ul>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>El estado de cumplimiento por dispositivo fluye a Panoptica365 desde Microsoft Graph. El panel del cliente saca a la superficie tres cosas al respecto, deliberadamente mantenidas a alto nivel:</p>
+
+  <ul>
+    <li><strong>La lista de Dispositivos Gestionados por Intune</strong> — cada dispositivo inscrito con su SO, el estado actual de cumplimiento (conforme / no conforme / no evaluado), el usuario asignado y el timestamp de la última sincronización. El cubo «no evaluado» incluye cosas como los Windows Server que Intune no gestiona en absoluto — aparecen porque están registrados en Entra pero nunca obtienen un veredicto de cumplimiento.</li>
+    <li><strong>Un tile de «Dispositivos Conformes»</strong> — el titular es el porcentaje de cumplimiento en tipografía grande (p. ej., «94%» o «60%»), coloreado según la postura (verde cuando sano, rojo cuando débil). El subtítulo dice «X de Y conformes, Z no evaluados» — tres números que te cuentan toda la historia: cuántos dispositivos evaluó Panoptica365 con éxito, cuántos de esos pasaron y cuántos dispositivos inscritos nunca recibieron veredicto (típicamente servidores que Intune no gestiona, dispositivos recién inscritos aún en su primera ventana de sincronización, o dispositivos con clientes de Intune rotos). Cuando el porcentaje cambia entre sondeos, una flecha de tendencia muestra la dirección — roja hacia abajo en una caída, verde hacia arriba en una mejora.</li>
+    <li><strong>Dispositivos por SO</strong> — un desglose por cuenta (Windows N, iOS N, Android N, Windows Server N, etc.).</li>
+  </ul>
+
+  <p>Esa es la superficie. La razón del fallo por dispositivo, la cola de triaje &gt;24 horas, el patrón de flapping — esos no viven en el panel de Panoptica365. Viven en el portal de Intune, dispositivo a dispositivo. La plataforma señala <em>que</em> algo va mal (un dispositivo cayó del conforme, el contador de conformes bajó); Microsoft te dice <em>por qué</em>.</p>
+
+  <p>Esto es consistente con cómo se posiciona Panoptica365 en general — solo lectura, orientado a alertas, profundiza en las consolas propias de Microsoft para el diagnóstico hondo. La lección del bucle de cumplimiento (lección 9) recorre cómo es la monitorización operativa en la práctica con este reparto.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>El cumplimiento es un listón, no una configuración.</strong> Estas cuatro políticas <em>evalúan</em> dispositivos; no <em>configuran</em> dispositivos. Las plantillas de configuración de las lecciones 3–8 hacen la configuración. Ambas son necesarias.</p>
+
+  <p><strong>Los listones de cumplimiento laxos son una característica, no un defecto.</strong> Una política de cumplimiento estricta que pilla cada inconsistencia del estado del dispositivo produce una señal de AC ruidosa. Los valores por defecto de Panoptica365 pecan por el lado de la estabilidad. Los clientes que necesitan cumplimiento más estricto (industrias reguladas, endurecimiento posterior a incidentes) pueden personalizar — pero los valores por defecto son apropiados para la mayoría de los tenants de pequeña empresa.</p>
+
+  <p><strong>El cumplimiento móvil y de macOS son declaraciones de ámbito tanto como controles de seguridad.</strong> Le dicen al cliente «esto es lo que comprobamos; esto es lo que no». Los operadores que quieren una gestión más profunda de móvil/macOS necesitan construir sus propias plantillas (lección 10) o aceptar que esas plataformas se gestionan ligeramente.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Lección 3: La Security Baseline.</b> El paquete curado de endurecimiento de Windows — tu plantilla individual más grande.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lección 4: BitLocker Settings.</b> Configuración de cifrado de disco que la política de cumplimiento de Windows <em>no</em> exige pero que la postura de endurecimiento de Panoptica365 sí despliega.</div></div>
+  </div>
+
+  <p>Por ahora: despliega las cuatro políticas de cumplimiento como una unidad. Son la base para el camino de dispositivo-conforme de AC. Sin ellas, las plantillas de las tarjetas 3.4 y 3.5 no tienen nada contra lo que leer.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la estructura de las políticas de cumplimiento (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Device compliance policies</a>); referencia de la política de cumplimiento de Windows (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-windows" target="_blank" rel="noopener">Microsoft Learn — Windows 10/11 compliance settings</a>); ajustes de cumplimiento de iOS (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-ios" target="_blank" rel="noopener">Microsoft Learn — iOS/iPadOS compliance settings</a>); cumplimiento de Android Enterprise (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-android-for-work" target="_blank" rel="noopener">Microsoft Learn — Android Enterprise compliance settings</a>); cumplimiento de macOS (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-mac-os" target="_blank" rel="noopener">Microsoft Learn — macOS compliance settings</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

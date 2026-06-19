@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Políticas de seguridad preestablecidas y operar la seguridad del correo a escala — Ajustes de seguridad del correo</title>
+<meta name="lesson:title" content="Políticas de seguridad preestablecidas y operar la seguridad del correo a escala">
+<meta name="lesson:subtitle" content="Usar las políticas Estándar y Estricta de Microsoft para imponer una postura de correo coherente en todos los tenants gestionados.">
+<meta name="lesson:icon" content="layers">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de seguridad del correo</span> <span class="sep">·</span> <span>Políticas preestablecidas y operar a escala</span></div>
+  <h1>Políticas de seguridad preestablecidas y operar la seguridad del correo a escala</h1>
+  <p class="dek">Usar las políticas Estándar y Estricta de Microsoft para imponer una postura de correo coherente en todos los tenants gestionados.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una cartera de 28 tenants de clientes, configurada una vez, cuyas alertas de deriva afloran a una sola cola de triaje en lugar de una inspección manual del lunes por la mañana.">
+      <defs>
+        <radialGradient id="psBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="psQueue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="psArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#psBg)"/>
+
+      <!-- left: the book of 28 tenants, configured once -->
+      <text x="250" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">28 TENANTS · CONFIGURADOS UNA VEZ</text>
+      <g>
+        <!-- 4 x 7 grid of small tenant tiles -->
+        <g fill="#0E2640" stroke="#2A6F9E" stroke-width="1">
+          <rect x="96"  y="76" width="58" height="34" rx="5"/><rect x="166" y="76" width="58" height="34" rx="5"/><rect x="236" y="76" width="58" height="34" rx="5"/><rect x="306" y="76" width="58" height="34" rx="5"/>
+          <rect x="96"  y="120" width="58" height="34" rx="5"/><rect x="166" y="120" width="58" height="34" rx="5"/><rect x="236" y="120" width="58" height="34" rx="5"/><rect x="306" y="120" width="58" height="34" rx="5"/>
+          <rect x="96"  y="164" width="58" height="34" rx="5"/><rect x="166" y="164" width="58" height="34" rx="5"/><rect x="236" y="164" width="58" height="34" rx="5"/><rect x="306" y="164" width="58" height="34" rx="5"/>
+          <rect x="96"  y="208" width="58" height="34" rx="5"/><rect x="166" y="208" width="58" height="34" rx="5"/><rect x="236" y="208" width="58" height="34" rx="5"/><rect x="306" y="208" width="58" height="34" rx="5"/>
+          <rect x="96"  y="252" width="58" height="34" rx="5"/><rect x="166" y="252" width="58" height="34" rx="5"/><rect x="236" y="252" width="58" height="34" rx="5"/><rect x="306" y="252" width="58" height="34" rx="5"/>
+          <rect x="96"  y="296" width="58" height="22" rx="5"/><rect x="166" y="296" width="58" height="22" rx="5"/><rect x="236" y="296" width="58" height="22" rx="5"/><rect x="306" y="296" width="58" height="22" rx="5"/>
+        </g>
+        <!-- a few green status dots; two drifting (warn / danger) -->
+        <g>
+          <circle cx="110" cy="93"  r="4" fill="#2EE8A0"/><circle cx="180" cy="93"  r="4" fill="#2EE8A0"/><circle cx="250" cy="93"  r="4" fill="#2EE8A0"/><circle cx="320" cy="93"  r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="137" r="4" fill="#2EE8A0"/><circle cx="180" cy="137" r="4" fill="#FFC04D"/><circle cx="250" cy="137" r="4" fill="#2EE8A0"/><circle cx="320" cy="137" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="181" r="4" fill="#2EE8A0"/><circle cx="180" cy="181" r="4" fill="#2EE8A0"/><circle cx="250" cy="181" r="4" fill="#2EE8A0"/><circle cx="320" cy="181" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="225" r="4" fill="#2EE8A0"/><circle cx="180" cy="225" r="4" fill="#2EE8A0"/><circle cx="250" cy="225" r="4" fill="#FF5A6E"/><circle cx="320" cy="225" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="269" r="4" fill="#2EE8A0"/><circle cx="180" cy="269" r="4" fill="#2EE8A0"/><circle cx="250" cy="269" r="4" fill="#2EE8A0"/><circle cx="320" cy="269" r="4" fill="#2EE8A0"/>
+        </g>
+      </g>
+
+      <!-- middle: drift alerts flow to the queue -->
+      <g font-family="Geist,Inter,sans-serif">
+        <path d="M396 154 C 470 154, 470 130, 540 130" stroke="#FFC04D" stroke-width="2" fill="none" marker-end="url(#psArr)" opacity="0.9"/>
+        <path d="M396 242 C 470 242, 470 196, 540 196" stroke="#FF5A6E" stroke-width="2" fill="none" marker-end="url(#psArr)" opacity="0.9"/>
+        <text x="466" y="100" text-anchor="middle" fill="#52708F" font-size="12">alertas de deriva</text>
+      </g>
+
+      <!-- right: the triage queue -->
+      <text x="800" y="52" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">UNA COLA DE TRIAJE</text>
+      <rect x="592" y="76" width="416" height="232" rx="12" fill="url(#psQueue)" stroke="#335F92"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <g><rect x="612" y="96"  width="376" height="42" rx="7" fill="#0E2236" stroke="#5A3A12"/><circle cx="636" cy="117" r="5" fill="#FFC04D"/><text x="656" y="113" fill="#C4D4E8" font-size="13.5">MailTips deshabilitado</text><text x="656" y="129" fill="#6B85A6" font-size="11">Cliente · ajuste Exchange derivado</text></g>
+        <g><rect x="612" y="148" width="376" height="42" rx="7" fill="#0E2236" stroke="#5A1A22"/><circle cx="636" cy="169" r="5" fill="#FF5A6E"/><text x="656" y="165" fill="#C4D4E8" font-size="13.5">Acción spam saliente debilitada</text><text x="656" y="181" fill="#6B85A6" font-size="11">Cliente · revisar antes de aplicar</text></g>
+        <g><rect x="612" y="200" width="376" height="42" rx="7" fill="#0E2236" stroke="#1F3C5C"/><circle cx="636" cy="221" r="5" fill="#2EE8A0"/><text x="656" y="217" fill="#C4D4E8" font-size="13.5">Buzón nuevo · postura de auditoría</text><text x="656" y="233" fill="#6B85A6" font-size="11">Cliente · rutina — aplicar</text></g>
+        <text x="800" y="282" text-anchor="middle" fill="#52708F" font-size="12">los cambios vienen a buscarte</text>
+      </g>
+    </svg>
+    <figcaption>Configura cada tenant una vez; deja que la deriva aflore a una sola cola, en lugar de abrir 28 paneles cada lunes.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un técnico junior, dos semanas en el puesto, le pregunta al sénior un martes por la tarde: «¿Cuándo miraste por última vez los ajustes de seguridad del Cliente X?».</p>
+
+  <p>El sénior piensa un segundo. «Honestamente, ¿en su revisión anual hace seis meses? Antes de eso, en la incorporación de 2024».</p>
+
+  <p>«¿Entonces no los <em>compruebas</em>?».</p>
+
+  <p>«No los <em>compruebo</em>. Panoptica365 los comprueba. Cada ciclo de sondeo, cada ajuste, cada cliente. Si algo deriva — alguien apaga MailTips porque un usuario se queja, se crea un buzón nuevo y no hereda la postura estricta de auditoría, la acción de la política de spam saliente se debilita — me llega una alerta. Actúo sobre la alerta. Luego sigo adelante. El panel de ajustes es donde voy <em>cuando salta una alerta</em>, no un sitio donde patrullo».</p>
+
+  <p>«¿Entonces de verdad funciona ponerlo y olvidarlo?».</p>
+
+  <p>«Ponlo, configúralo, documenta las excepciones en las notas del cliente, y luego sí — deja que el detector de deriva vigile. La cola de alertas es donde paso mi tiempo. Ese es el modelo entero. Sin él, estaría abriendo 28 paneles de cliente cada lunes por la mañana para verificar que nada cambió. Con él, los cambios vienen a buscarme».</p>
+
+  <p>Esta lección trata de cómo eso escala. Las políticas de seguridad preestablecidas Standard y Strict que te dan la mayor parte de los controles de la tarjeta 5 en un paquete. El modelo operativo dirigido por alertas que convierte una cartera de 28 clientes en una cola manejable de triaje en lugar de una tarea de inspección manual. La revisión anual profunda que pilla las cosas que la detección de deriva no puede. Y el registro de excepciones específicas del cliente que evita que rehagas el mismo trabajo por tenant cada año.</p>
+  </div>
+
+  <h2>Las políticas de seguridad preestablecidas de Microsoft — Built-in, Standard, Strict</h2>
+
+  <p>Microsoft entrega tres niveles de política de seguridad preestablecida en Defender for Office 365. Cada uno es un paquete de políticas preconfiguradas cubriendo antispam, antiphishing, antimalware, Safe Links y Safe Attachments — todas las superficies MDO que ha cubierto la tarjeta 5. Cada preestablecida incluye los <em>ajustes</em>, el <em>alcance</em> (quién recibe qué preestablecida) y las <em>asignaciones de política de cuarentena</em> para los mensajes que esos ajustes pillan.</p>
+
+  <ul>
+    <li><strong>Built-in protection</strong> — línea base mínima. Se aplica a cada buzón en cada tenant automáticamente. No configurable. Este es el suelo.</li>
+    <li><strong>Preestablecida Standard</strong> — valores por defecto sensatos para la mayoría de los clientes. Protección contra suplantación de identidad de usuario habilitada con umbrales razonables. Acciones antiphishing puestas en cuarentena. Safe Links y Safe Attachments habilitados con Dynamic Delivery. Políticas de cuarentena puestas en AdminOnlyAccessPolicy para phishing de alta confianza, malware y spoof. Esta es la opción correcta para la mayoría de los tenants de pequeña empresa.</li>
+    <li><strong>Preestablecida Strict</strong> — umbrales más ajustados en todo. Antiphishing más agresivo (más mensajes acaban en cuarentena). Umbral de bulk más bajo (más correo masivo se pilla). AdminOnlyAccessPolicy extendido también a Phishing (no solo de alta confianza). Esta es la opción correcta para industrias reguladas, clientes de mayor riesgo (legal, finanzas, contabilidad) o clientes con un historial reciente de compromisos.</li>
+  </ul>
+
+  <p>Tanto para Standard como Strict, asignas la preestablecida a usuarios, grupos o dominios. La preestablecida entonces dirige la configuración para esos alcances. Lo que no esté cubierto por Standard o Strict cae de vuelta a Built-in protection.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="Tres niveles de preestablecida apilados desde Built-in protection en el suelo, a Standard, a Strict en lo más ajustado, con lo que cada capa añade.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TRES NIVELES DE PREESTABLECIDA</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Built-in (floor) -->
+        <rect x="60" y="252" width="600" height="78" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="84" y="284" fill="#C4D4E8" font-size="16" font-weight="700">Built-in protection</text>
+        <text x="84" y="308" fill="#6B85A6" font-size="12.5">Línea base mínima · cada buzón · no configurable · el suelo</text>
+
+        <!-- Standard -->
+        <rect x="100" y="156" width="560" height="80" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="124" y="188" fill="#A8E1F8" font-size="16" font-weight="700">Preestablecida Standard</text>
+        <text x="124" y="212" fill="#6B85A6" font-size="12.5">Valores sensatos · acciones de cuarentena · la mayoría de PyME</text>
+
+        <!-- Strict -->
+        <rect x="140" y="60" width="520" height="80" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="164" y="92" fill="#7DD9F9" font-size="16" font-weight="700">Preestablecida Strict</text>
+        <text x="164" y="116" fill="#6B85A6" font-size="12">Umbrales más ajustados · regulado, mayor riesgo, post-compromiso</text>
+      </g>
+    </svg>
+    <figcaption>Built-in es el suelo que todos reciben; Standard y Strict son los paquetes configurables que asignas encima.</figcaption>
+  </figure>
+
+  <h2>Lo que hay realmente en la preestablecida Standard</h2>
+
+  <p>Vale la pena ser concreto, porque la mayor parte de la tarjeta 5 mapea directamente con ajustes que la preestablecida configura:</p>
+
+  <ul>
+    <li><strong>Antiphishing</strong> — suplantación de identidad de usuario habilitada (configura los usuarios protegidos explícitamente), suplantación de dominio habilitada, antispoofing encendido, mailbox intelligence habilitado. Acciones al detectar: cuarentena.</li>
+    <li><strong>Safe Links</strong> — protección habilitada, comprobación de URL en momento del clic encendida, anulación por usuario deshabilitada, protección de apps de Office encendida (la expansión SafeLinks-for-Office).</li>
+    <li><strong>Safe Attachments</strong> — protección habilitada, acción Dynamic Delivery.</li>
+    <li><strong>Antimalware</strong> — lista común de bloqueo de adjuntos aplicada.</li>
+    <li><strong>Antispam (entrante)</strong> — umbral de bulk y umbrales de spam puestos en los valores de rango medio de Standard.</li>
+    <li><strong>Asignación de política de cuarentena</strong> — AdminOnlyAccessPolicy para Phishing de alta confianza, Malware, Spoof; DefaultFullAccessWithNotificationPolicy para Spam y Bulk.</li>
+  </ul>
+
+  <p>Lo que Standard <em>no</em> configura (tienes que manejar esto aparte aun con la preestablecida):</p>
+
+  <ul>
+    <li>La lista de usuarios protegidos por la protección contra suplantación (la preestablecida habilita la funcionalidad; tú especificas quién).</li>
+    <li>Entradas personalizadas de remitentes de confianza (por cliente, por relación).</li>
+    <li>La política de spam saliente (aparte de la preestablecida).</li>
+    <li>Postura de auditoría de buzón, MailTips, control de reenvío de Remote Domain, deshabilitar envío SMTP AUTH — todos estos viven fuera de la preestablecida y necesitan su propia configuración. Estos son los siete ajustes de la categoría Exchange que Panoptica365 monitoriza.</li>
+  </ul>
+
+  <h2>Standard vs Strict — cuándo usar cuál</h2>
+
+  <p>El encuadre honesto:</p>
+
+  <p><strong>Usa Standard para:</strong></p>
+  <ul>
+    <li>El cliente de pequeña empresa por defecto</li>
+    <li>Cualquier tenant donde no se te haya pedido defensas más estrictas</li>
+    <li>Clientes sin motores regulatorios específicos</li>
+    <li>El primer despliegue a un cliente nuevo (puedes apretar después)</li>
+  </ul>
+
+  <p><strong>Usa Strict para:</strong></p>
+  <ul>
+    <li>Clientes en industrias reguladas — sanidad, finanzas, legal, contratación pública</li>
+    <li>Clientes con un historial de compromisos en los últimos 12 meses</li>
+    <li>Clientes donde el valor de negocio de los datos transportados por correo es alto (M&amp;A, intensivos en IP, orientados a transacciones)</li>
+    <li>Clientes que han pedido «la protección más fuerte que nos puedas dar» (y han aceptado los compromisos en la conversación con el cliente)</li>
+  </ul>
+
+  <p>También puedes mezclar por alcance de usuario/grupo. El director general, el director financiero y el equipo financiero reciben Strict; el resto de la empresa recibe Standard. Esto es razonable cuando una parte de la organización tiene un valor objetivo más alto que el resto.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="Comparación lado a lado de las preestablecidas Standard y Strict sobre la agresividad antiphishing, el umbral de bulk, el alcance de cuarentena AdminOnly, y el cliente al que va destinada cada una.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="270" y="40" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Standard</text>
+        <text x="540" y="40" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Strict</text>
+        <line x1="405" y1="56" x2="405" y2="280" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- rows -->
+        <g fill="#52708F" font-size="11.5" text-anchor="end">
+          <text x="148" y="92">Antiphishing</text>
+          <text x="148" y="142">Umbral de bulk</text>
+          <text x="148" y="192">Cuarentena AdminOnly</text>
+          <text x="148" y="242">Mejor para</text>
+        </g>
+        <line x1="60" y1="108" x2="660" y2="108" stroke="#13283F"/>
+        <line x1="60" y1="158" x2="660" y2="158" stroke="#13283F"/>
+        <line x1="60" y1="208" x2="660" y2="208" stroke="#13283F"/>
+
+        <g fill="#C4D4E8" font-size="12.5" text-anchor="middle">
+          <text x="270" y="92">Umbrales razonables</text>
+          <text x="270" y="142">Rango medio</text>
+          <text x="270" y="192">Phishing alta confianza</text>
+          <text x="270" y="234">PyME por defecto,</text>
+          <text x="270" y="252">sin motores específicos</text>
+        </g>
+        <g fill="#A8E1F8" font-size="12.5" text-anchor="middle">
+          <text x="540" y="92" font-weight="600">Más agresivo</text>
+          <text x="540" y="142" font-weight="600">Más bajo</text>
+          <text x="540" y="192" font-weight="600">+ Phishing también</text>
+          <text x="540" y="234" font-weight="600">Regulado, mayor riesgo,</text>
+          <text x="540" y="252" font-weight="600">post-compromiso</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Strict ajusta cada umbral y extiende la cuarentena AdminOnly a Phishing, no solo al phishing de alta confianza.</figcaption>
+  </figure>
+
+  <h2>El patrón de preestablecida + superposición personalizada</h2>
+
+  <p>Las preestablecidas te dan un valor por defecto defendible; las políticas personalizadas te dan el afinado específico del tenant. El patrón que funciona a escala MSP:</p>
+
+  <ol>
+    <li><strong>Despliega una preestablecida (Standard o Strict) como fundamento</strong> para todos los usuarios.</li>
+    <li><strong>Pon encima una política personalizada con prioridad más alta</strong> que añade las partes específicas del cliente: los usuarios protegidos nombrados para suplantación, la lista de remitentes de confianza para socios legítimos, los umbrales por cliente donde divergen de la preestablecida.</li>
+    <li><strong>Trata la preestablecida como intocable</strong> — cuando un cliente pide un cambio, el cambio va en la superposición personalizada, no en la preestablecida.</li>
+  </ol>
+
+  <p>Esto mantiene el afinado curado de la preestablecida intacto (para que las actualizaciones de Microsoft fluyan automáticamente) mientras te deja personalizar donde importa. El compromiso es tener dos políticas por cliente en lugar de una; la ventaja es que puedes responder «¿está este cliente aún en la línea base recomendada por Microsoft?» con un sí.</p>
+
+  <div class="callout caution">
+    <div class="clabel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Los nombres de regla de la preestablecida llevan timestamp
+    </div>
+    <p>Una peculiaridad que vale la pena conocer: <strong>los nombres de regla de la política preestablecida están con timestamp</strong>. Cuando creas una preestablecida, Microsoft genera nombres de regla que incluyen el timestamp de creación — <code>Standard Preset Security Policy123456789...</code>. Si automatizas la creación de la preestablecida o buscas preestablecidas vía PowerShell, usa coincidencia con comodín (<code>Get-EOPProtectionPolicyRule -Identity 'Standard*'</code>) en lugar de nombres exactos, porque el nombre será único por tenant y por evento de creación.</p>
+  </div>
+
+  <h2>Operar a escala — el modelo dirigido por alertas</h2>
+
+  <p>La tarjeta 5 entrega siete ajustes de seguridad de la categoría Exchange que Panoptica365 monitoriza por tenant:</p>
+
+  <ol>
+    <li>Disable Automatic Forwarding to External Domains (Crítica)</li>
+    <li>Enable Mailbox Auditing for All Users (Crítica)</li>
+    <li>Enable Preset Security Policy (Standard or Strict) — MDO (Crítica)</li>
+    <li>Strict Mailbox Audit Posture (Bypass + Action List) (Crítica)</li>
+    <li>Enable MailTips (All Tips + External Recipients) (Alta)</li>
+    <li>Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts) (Alta)</li>
+    <li>Disable Basic Auth for SMTP AUTH Submission (Alta)</li>
+  </ol>
+
+  <p>Una vez configurados en el tenant de un cliente, no necesitas revisitarlos en ninguna agenda. Panoptica365 sondea cada ajuste de cada cliente continuamente. Cuando un ajuste deriva de su valor configurado — alguien apaga MailTips en el centro de administración de Exchange, se crea un buzón nuevo sin la postura estricta de auditoría, la política de spam saliente se debilita como respuesta a un ticket de falso positivo — Panoptica365 dispara una alerta de deriva. La alerta va al equipo de operadores por el pipeline estándar: aparece en el panel de alertas, genera una notificación por correo, está atribuida al cliente específico con el ajuste específico que cambió.</p>
+
+  <p>El flujo del operador a escala es por tanto reactivo, no proactivo:</p>
+
+  <ul>
+    <li><strong>Tría la cola de alertas.</strong> Abre el panel de alertas a la cadencia que tenga sentido para el equipo (la mayoría de los MSPs echan un vistazo a diario; las notificaciones por correo de alertas significan que nada se cuela aunque no abras el panel). Cada alerta de deriva es algo que el tenant de un cliente hizo y deberías saber.</li>
+    <li><strong>Para cada alerta, decide la respuesta.</strong> Abre el ajuste de seguridad afectado. Lee la pestaña Historial — cuál era el valor anterior, cuál es el nuevo, cuándo cambió, quién o qué probablemente lo causó. Decide:
+      <ul>
+        <li><strong>Aplicar</strong> — restablecer al valor recomendado. La acción por defecto; apropiada cuando la deriva es un accidente rutinario o un evento conocido (nuevo buzón aprovisionado, etc.).</li>
+        <li><strong>Aceptar la deriva</strong> — dejar el nuevo valor en su sitio, documentar la razón. Apropiada cuando el cambio es una decisión intencional dirigida por el cliente que has validado.</li>
+        <li><strong>Investigar más</strong> — cuando el patrón de deriva es lo bastante sospechoso para justificar una mirada más profunda antes de responder. Cuenta de admin comprometida, cambio de configuración no autorizado, patrón inesperado en varios ajustes.</li>
+      </ul>
+    </li>
+    <li><strong>Documenta decisiones no rutinarias en las notas del cliente.</strong> El rutinario «buzón nuevo derivado, reaplicado» no necesita mucho. Las derivas aceptadas siempre necesitan una razón en el registro (cubierto abajo). Esto es lo que hace tratable la revisión anual.</li>
+  </ul>
+
+  <p>Esto es lo que hace que el modelo funcione a escala MSP. No estás inspeccionando manualmente las posturas de los clientes cada lunes; estás respondiendo a un pequeño número de alertas por semana según afloran. Una cartera de 28 clientes típicamente genera un puñado de alertas de deriva por semana — la mayoría de ellas los casos rutinarios de buzón nuevo que se resuelven con un clic de aplicar. Las alertas que no son rutinarias son por definición las que merecen tu atención.</p>
+
+  <div class="callout insight">
+    <div class="clabel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
+      El modelo entero
+    </div>
+    <p>No estás inspeccionando manualmente las posturas de los clientes cada lunes; estás respondiendo a un pequeño número de alertas por semana según afloran. Las alertas que no son rutinarias son por definición las que merecen tu atención.</p>
+  </div>
+
+  <h2>La revisión anual — qué verificar en profundidad</h2>
+
+  <p>La revisión semanal de deriva pilla la deriva operativa — buzones nuevos, deshabilitaciones accidentales, cambios en los valores por defecto de Microsoft. No pilla la <em>deuda de configuración</em>: excepciones específicas del cliente que se han acumulado, entradas de remitentes de confianza que ya no sirven, anulaciones SMTP AUTH por buzón para impresoras que han sido reemplazadas desde entonces, entradas de Remote Domain para socios con los que el cliente ya no trabaja.</p>
+
+  <p>Una vez al año, por cliente — sincronizado con la revisión de seguridad o la conversación de renovación de contrato — haz la auditoría más profunda:</p>
+
+  <ul>
+    <li><strong>Usuarios protegidos por antiphishing.</strong> ¿Sigue la lista al día? ¿Ha cambiado el director financiero? ¿Hay un nuevo interventor? ¿Hay ex-empleados aún en la lista?</li>
+    <li><strong>Remitentes de confianza.</strong> Cada entrada debería tener una razón documentada. Las entradas sin razón se quitan.</li>
+    <li><strong>Entradas Remote Domain</strong> (excepciones de reenvío automático por dominio). Cada una debería referenciar una relación de negocio documentada. Las entradas viejas para ex-socios se quitan.</li>
+    <li><strong>Anulaciones SMTP AUTH por buzón.</strong> Cada una debería tener un dispositivo o app heredada documentada. Dispositivos que ya no existen; apps que han sido reemplazadas — quita la anulación.</li>
+    <li><strong>Transport rules.</strong> La auditoría de cuatro preguntas de la lección 8 — propósito, dueño, sigue-siendo-necesaria, impacto en defensa — aplicada a cada regla.</li>
+    <li><strong>Políticas de cuarentena personalizadas.</strong> Mismo patrón de auditoría.</li>
+    <li><strong>Reglas de flujo de correo</strong> añadidas por el cliente desde la última revisión. ¿Apareció algo nuevo que no autorizaste?</li>
+    <li><strong>Recuento de buzones del cliente.</strong> ¿Crece o decrece? ¿Hay buzones abandonados (ex-empleados) que deberían limpiarse?</li>
+  </ul>
+
+  <p>Documenta los hallazgos. Quita el peso muerto. Reafirma las excepciones supervivientes. La revisión anual es como evitas que la configuración del cliente se vuelva un cementerio de decisiones tomadas por gente que ya no recuerda por qué.</p>
+
+  <h2>Excepciones específicas del cliente — el registro</h2>
+
+  <p>Cada cliente acumula excepciones legítimas con el tiempo. La disciplina que mantiene cuerdo el modelo a escala es <em>escribirlas en un solo sitio por cliente</em>.</p>
+
+  <p>Un registro mínimo de excepciones de cliente:</p>
+
+  <ul>
+    <li><strong>Remitentes de confianza de antiphishing</strong> — dominio, protección acotada, razón, fecha de añadido, operador que aprueba.</li>
+    <li><strong>Excepciones de política de cuarentena</strong> — asignaciones de política no-por-defecto, razón, operador que aprueba.</li>
+    <li><strong>Excepciones de reenvío automático de Remote Domain</strong> — dominio, razón, operador que aprueba.</li>
+    <li><strong>Anulaciones SMTP AUTH por buzón</strong> — buzón, dispositivo/app, razón, objetivo de migración planeado, operador que aprueba.</li>
+    <li><strong>Transport rules</strong> — nombre de regla, propósito, dueño, fecha de la última revisión.</li>
+    <li><strong>Reglas de flujo de correo personalizadas</strong> — igual.</li>
+    <li><strong>Personalizaciones de política de seguridad preestablecida</strong> — qué se anula en la superposición personalizada, por qué.</li>
+  </ul>
+
+  <p>Esto es un documento, no un sistema de configuración. Markdown, Word, página del sistema de tickets — lo que use el MSP. El punto es que cualquier operador que coja la cuenta del cliente pueda leer el registro y entender por qué existe cada excepción, y la revisión anual tiene una lista de comprobación contra la que trabajar.</p>
+
+  <p>Sin el registro, cada revisión anual empieza desde cero — los operadores tienen que aplicar ingeniería inversa a la configuración del cliente para entender si cada excepción sigue siendo necesaria. Con el registro, la revisión tarda una hora en lugar de un día.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>El panel de cliente de Panoptica365 expone, por tenant:</p>
+
+  <ul>
+    <li><strong>Todos los ajustes de seguridad con estado actual</strong> (verde / deriva / no monitorizado). La sección de la categoría Exchange contiene los siete ajustes de la tarjeta 5; otras secciones manejan otras superficies.</li>
+    <li><strong>Historial por ajuste</strong> — qué valor ha tenido a lo largo del tiempo, cuándo cambió.</li>
+    <li><strong>Acción de aplicar por ajuste</strong> — reaplicar el valor recomendado cuando se detecta deriva.</li>
+    <li><strong>El pipeline estándar de alertas</strong> para eventos de alta severidad: eventos de Restricted Users de la política de spam saliente, creación sospechosa de transport rules, patrones sospechosos en reglas de bandeja de entrada, incidentes ingeridos por Defender XDR de MDO.</li>
+  </ul>
+
+  <p>Lo que Panoptica365 <em>no</em> expone en el panel: una agregación de flota entre clientes, una matriz de «cada cliente de un vistazo», una vista de comparación entre los ajustes de dos clientes, un registro de excepciones de cliente integrado. El trabajo entre clientes es click-through por cliente, una revisión de lunes por la mañana a la vez. El registro vive fuera de Panoptica365 — en el sistema de documentación del MSP, en la plataforma de tickets, o donde sea que se guarden las notas del cliente.</p>
+
+  <h2>Qué se puede romper (a escala)</h2>
+
+  <p><strong>El afinado específico del cliente se pierde con la rotación de personal.</strong> El operador que configuró al cliente hace dos años se fue; el operador que hereda la cuenta no sabe por qué la lista de remitentes de confianza tiene la pinta que tiene. El registro de excepciones es el antídoto. Haz que crear entradas en el registro sea parte del flujo de cambio — ninguna excepción entra sin una nota de registro.</p>
+
+  <p><strong>Microsoft actualiza los valores por defecto de las preestablecidas y los clientes se comportan diferente.</strong> Microsoft ocasionalmente endurece o suaviza configuraciones preestablecidas. Los clientes usando preestablecidas reciben el nuevo comportamiento automáticamente. A veces esto es bueno (mejora gratuita); a veces sorprende a usuarios que experimentan un cambio de comportamiento que no entienden. Vigilar las notas de versión de seguridad del correo de Microsoft vale la pena; comunicar cambios mayores de preestablecidas a los clientes proactivamente es el diferenciador.</p>
+
+  <p><strong>Las alertas de deriva se amontonan sin atender durante semanas ajetreadas.</strong> Cuando el equipo va corto, las alertas de deriva son la cosa fácil de despriorizar — «ya me ocuparé el viernes». El coste es invisible hasta que un patrón real de compromiso esté en la cola esperando ser triado. Trata el triaje de alertas como no opcional; enruta las notificaciones de alertas a algún sitio que todos vean; asigna propiedad clara para cada tenant o turno.</p>
+
+  <p><strong>Las revisiones anuales se estiran de anuales a «cuando lleguemos».</strong> El detector de deriva cubre la deriva operativa, pero no pilla la deuda de configuración — remitentes de confianza rancios, entradas Remote Domain abandonadas, anulaciones SMTP AUTH por buzón para impresoras retiradas. La revisión anual es lo único que pilla esas. Ponla en el calendario; factúrala; hazla un entregable que los clientes vean en su informe de servicio.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>Las preestablecidas son el fundamento; la personalización es el diferenciador.</strong> Despliega Standard o Strict a cada cliente como valor por defecto. Pon encima una superposición personalizada para los usuarios protegidos específicos, los remitentes de confianza y el afinado donde importa. Trata la preestablecida como la línea base curada de Microsoft que no tocas; trata la superposición como el sitio donde viven las decisiones específicas del cliente.</p>
+
+  <p><strong>La detección de deriva convierte la seguridad del correo a escala de imposible en reactiva.</strong> Sin detección de deriva, la única forma honesta de operar las posturas de correo de 28 clientes sería una rutina de inspección manual que ningún MSP puede sostener. Con detección de deriva, configuras una vez, documentas las excepciones, y dejas que las alertas vengan a buscarte. El trabajo del operador se vuelve triar una pequeña cola de eventos reales — no patrullar buscando derivas hipotéticas.</p>
+
+  <p><strong>El registro de excepciones es la disciplina poco sexy que se compone.</strong> Cada excepción legítima documentada es un misterio menos para el operador que herede al cliente. Cada revisión anual con un registro es una hora en lugar de un día. Los MSPs que ganan a esta escala no son los que tienen las defensas más astutas — son los que escriben las cosas y las miran una vez al año.</p>
+
+  <h2>Cerrando la tarjeta 5</h2>
+
+  <p>Has visto la postura de endurecimiento del correo a lo largo de diez lecciones:</p>
+
+  <ol>
+    <li>Inventario del chequeo previo y realidad del licenciamiento</li>
+    <li>Protección antiphishing contra suplantación — la brecha BEC de pequeña empresa</li>
+    <li>Safe Links y Safe Attachments — las funcionalidades de MDO P1 que los clientes pagan</li>
+    <li>SPF, DKIM, DMARC — el trío de autenticación de correo</li>
+    <li>Reenvío automático y reglas de bandeja de entrada — el par de indicadores post-compromiso</li>
+    <li>Auditoría de buzón — el registro forense que solo echas en falta cuando lo necesitas</li>
+    <li>Políticas de cuarentena y liberación de usuario — donde mueren los buenos valores por defecto</li>
+    <li>Reglas de flujo de correo y MailTips — las herramientas quirúrgicas y las luces de aviso</li>
+    <li>Spam saliente y SMTP AUTH — controlando el radio de impacto</li>
+    <li>Políticas de seguridad preestablecidas y operar a escala — lo que acabamos de cubrir</li>
+  </ol>
+
+  <p>El arco: enciende lo que el cliente pagó, configúralo correctamente, vigila la deriva, documenta las excepciones, revisa anualmente. La seguridad del correo no va de desplegar una bala de plata — va de defensas en capas aplicadas con disciplina. El cliente al que nunca le hacen BEC es aquel cuyo MSP hizo el trabajo de las diez lecciones, no el que encendió Safe Links y se dio por satisfecho.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Tarjeta 6: Secure Score</b> — La métrica de postura de seguridad a nivel tenant de Microsoft, cómo interpretarla, dónde engaña, y cómo el trabajo MSP de las tarjetas 3, 4 y 5 mapea a recomendaciones específicas de Secure Score.</div></div>
+  </div>
+
+  <p>Por ahora: abre la cola de alertas de Panoptica365. Tría lo que esté ahí. Si la cola es corta — la mayoría de las semanas lo es — cierra la pestaña y haz otra cosa. Así es como se supone que se siente el modelo. El detector de deriva está haciendo la vigilancia para que tú no tengas que hacerla.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la visión general de las políticas de seguridad preestablecidas (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>); diferencias de configuración entre las preestablecidas Standard y Strict (<a href="https://learn.microsoft.com/en-us/defender-office-365/recommended-settings-for-eop-and-office365" target="_blank" rel="noopener">Microsoft Learn — Recommended settings for EOP and MDO</a>); gestión de las políticas de seguridad preestablecidas vía PowerShell (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Manage preset security policies</a>); referencia del alcance de Built-in protection (<a href="https://learn.microsoft.com/en-us/defender-office-365/mdo-support-teams-about" target="_blank" rel="noopener">Microsoft Learn — Built-in protection</a>); cmdlet EOPProtectionPolicyRule para las reglas de preestablecida (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/get-eopprotectionpolicyrule" target="_blank" rel="noopener">Microsoft Learn — Get-EOPProtectionPolicyRule</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BitLocker Settings — postura de cifrado de disco — Intune Template Settings</title>
+<meta name="lesson:title" content="BitLocker Settings — postura de cifrado de disco">
+<meta name="lesson:subtitle" content="Aplicar cifrado completo de disco en dispositivos Windows mediante Intune — qué configura la plantilla, gestión de claves de recuperación y dependencias de TPM.">
+<meta name="lesson:icon" content="hard-drive">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>BitLocker Settings</span></div>
+  <h1>BitLocker Settings — postura de cifrado de disco</h1>
+  <p class="dek">Aplicar cifrado completo de disco en dispositivos Windows mediante Intune — qué configura la plantilla, gestión de claves de recuperación y dependencias de TPM.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un portátil robado a la izquierda cuyos datos son legibles; el mismo portátil a la derecha con un volumen cifrado y bloqueado que no entrega nada.">
+      <defs>
+        <radialGradient id="blBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="blDisk" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#blBg)"/>
+
+      <!-- izquierda: sin cifrar, datos legibles -->
+      <g transform="translate(240,150)">
+        <rect x="-86" y="-58" width="172" height="108" rx="8" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <rect x="-72" y="-46" width="144" height="84" rx="3" fill="#102A4C"/>
+        <g stroke="#FF8A98" stroke-width="3" stroke-linecap="round" opacity="0.9">
+          <line x1="-58" y1="-26" x2="34" y2="-26"/>
+          <line x1="-58" y1="-8" x2="56" y2="-8"/>
+          <line x1="-58" y1="10" x2="20" y2="10"/>
+          <line x1="-58" y1="28" x2="48" y2="28"/>
+        </g>
+        <rect x="-98" y="50" width="196" height="12" rx="3" fill="#0E2236" stroke="#33527A"/>
+      </g>
+      <text x="240" y="266" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600" letter-spacing="2">SIN CIFRAR · DATOS LEGIBLES</text>
+
+      <!-- flecha -->
+      <path d="M430 165 H650" stroke="#335F92" stroke-width="2.5" marker-end="url(#blArr)"/>
+      <defs><marker id="blArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="540" y="150" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">BitLocker</text>
+
+      <!-- derecha: cifrado, bloqueado -->
+      <g transform="translate(820,150)">
+        <rect x="-86" y="-58" width="172" height="108" rx="8" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="-72" y="-46" width="144" height="84" rx="3" fill="url(#blDisk)"/>
+        <g fill="#2A7FA3" opacity="0.85">
+          <rect x="-58" y="-30" width="14" height="10" rx="2"/><rect x="-40" y="-30" width="22" height="10" rx="2"/><rect x="-14" y="-30" width="12" height="10" rx="2"/><rect x="2" y="-30" width="26" height="10" rx="2"/>
+          <rect x="-58" y="-14" width="24" height="10" rx="2"/><rect x="-30" y="-14" width="12" height="10" rx="2"/><rect x="-14" y="-14" width="28" height="10" rx="2"/>
+          <rect x="-58" y="2" width="14" height="10" rx="2"/><rect x="-40" y="2" width="30" height="10" rx="2"/><rect x="-6" y="2" width="16" height="10" rx="2"/>
+        </g>
+        <g transform="translate(0,18)">
+          <path d="M-12 0 v-9 a12 12 0 0 1 24 0 v9" fill="none" stroke="#A8E1F8" stroke-width="3.5"/>
+          <rect x="-18" y="0" width="36" height="26" rx="5" fill="#5CCBF4"/>
+          <circle cx="0" cy="11" r="4" fill="#071221"/>
+          <rect x="-1.6" y="11" width="3.2" height="9" rx="1.6" fill="#071221"/>
+        </g>
+        <rect x="-98" y="50" width="196" height="12" rx="3" fill="#0E2236" stroke="#33527A"/>
+      </g>
+      <text x="820" y="266" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="700" letter-spacing="2">CIFRADO · SE VA CON EL PORTÁTIL</text>
+    </svg>
+    <figcaption>Robado sin cifrar, los datos acaban en internet en una semana. Robado cifrado, los datos se van con el portátil.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Si un portátil gestionado se roba de un coche aparcado a las 2 de la madrugada y el ladrón es un oportunista genérico, el ladrón se lleva un portátil que puede formatear y vender por unos cientos de euros. Si el disco del portátil está cifrado, los datos del cliente se van con el portátil. Si no lo está, los datos del cliente acaban en algún lugar de internet en una semana, dependiendo de a quién le vendió el ladrón el equipo y qué hicieron con la unidad original.</p>
+
+  <p>BitLocker es la diferencia entre esos dos desenlaces en dispositivos Windows. La plantilla BitLocker Settings de Panoptica365 es la configuración que lo aplica.</p>
+
+  <p>Esta lección cubre lo que la plantilla BitLocker Settings configura realmente, por qué algunas elecciones se hicieron como se hicieron, y cómo manejar las realidades operativas — claves de recuperación, dependencias de TPM, la distinción actualización-vs-instalación-limpia.</p>
+  </div>
+
+  <h2>Qué configura la plantilla</h2>
+
+  <p>La plantilla BitLocker Settings de Panoptica365 usa el tipo de plantilla más antiguo <strong>Device Configurations</strong> (<code>windows10EndpointProtectionConfiguration</code>). Es la misma familia de plantillas que Microsoft usa para los ajustes heredados de protección de endpoint. Se despliega vía MDM a dispositivos Windows 10/11.</p>
+
+  <p>Las configuraciones BitLocker centrales:</p>
+
+  <p><strong>BitLocker habilitado y aplicado.</strong></p>
+
+  <ul>
+    <li><code>bitLockerEncryptDevice: true</code> — los dispositivos deben estar cifrados.</li>
+    <li><code>bitLockerAllowStandardUserEncryption: true</code> — los usuarios estándar (no admin) pueden iniciar el cifrado.</li>
+    <li><code>bitLockerDisableWarningForOtherDiskEncryption: true</code> — suprime las advertencias cuando hay también cifrado de disco de terceros presente.</li>
+  </ul>
+
+  <p><strong>Política de la unidad de sistema (la unidad del SO — típicamente C:):</strong></p>
+
+  <ul>
+    <li>Método de cifrado: <strong>XTS-AES 256-bit</strong>. Es el cifrado moderno y recomendado para Windows 10 1511 y posteriores. Más fuerte que las variantes AES-CBC más antiguas.</li>
+    <li>Autenticación de arranque requerida (protegida por TPM por defecto).</li>
+    <li>Permitido el uso de PIN de arranque por TPM.</li>
+    <li>Bloquear la autenticación de arranque sin TPM (sin modo solo-PIN — se requiere TPM).</li>
+    <li>Opciones de recuperación configuradas: la clave de recuperación de BitLocker puede guardarse en Microsoft Entra ID; agente de recuperación de datos permitido; uso de contraseña de recuperación permitido.</li>
+  </ul>
+
+  <p><strong>Unidades fijas (unidades de datos que no son del SO — típicamente D:, E:, etc.):</strong></p>
+
+  <ul>
+    <li>Método de cifrado: <strong>XTS-AES 256-bit</strong> (igual que la unidad del sistema).</li>
+    <li>Cifrado no requerido para acceso de escritura (<code>requireEncryptionForWriteAccess: false</code>) — los dispositivos todavía pueden escribir en unidades fijas no cifradas. Es la elección laxa; la versión estricta rechazaría el acceso de escritura.</li>
+    <li>Opciones de recuperación similares a la unidad del sistema.</li>
+  </ul>
+
+  <p><strong>Unidades extraíbles (memorias USB, discos duros externos):</strong></p>
+
+  <ul>
+    <li>Método de cifrado: <strong>AES-CBC 128-bit</strong>. Nota la diferencia con las unidades de sistema/fijas — las unidades extraíbles usan el cifrado AES-CBC más antiguo porque XTS-AES es incompatible con versiones más antiguas de Windows en las que el cliente o sus socios pueden estar leyendo todavía la unidad. AES-CBC 128 sigue siendo lo bastante moderno; la elección sacrifica algo de fuerza de cifrado por compatibilidad.</li>
+    <li>Cifrado no requerido para acceso de escritura — mismo patrón laxo que las unidades fijas.</li>
+    <li>Acceso de escritura entre organizaciones no bloqueado.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Una tabla que compara el método de cifrado y el requisito de acceso de escritura que la plantilla fija para las unidades de sistema, fijas y extraíbles.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- encabezado -->
+        <text x="44" y="42" fill="#6B85A6" font-size="11" letter-spacing="1">CLASE DE UNIDAD</text>
+        <text x="320" y="42" fill="#5CCBF4" font-size="11" letter-spacing="1">MÉTODO DE CIFRADO</text>
+        <text x="668" y="42" text-anchor="end" fill="#5CCBF4" font-size="11" letter-spacing="1">¿CIFRAR PARA ESCRIBIR?</text>
+        <line x1="44" y1="56" x2="676" y2="56" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- sistema -->
+        <g transform="translate(0,72)">
+          <text x="44" y="22" fill="#C4D4E8" font-size="15" font-weight="600">Unidad de sistema</text>
+          <text x="44" y="42" fill="#6B85A6" font-size="11.5">unidad del SO · C:</text>
+          <rect x="320" y="4" width="166" height="32" rx="16" fill="#10243B" stroke="#5CCBF4"/><text x="403" y="25" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">XTS-AES 256</text>
+          <text x="560" y="26" fill="#A8E1F8" font-size="14" font-weight="600">requerido</text>
+        </g>
+        <line x1="44" y1="142" x2="676" y2="142" stroke="#1F3C5C" stroke-width="1"/>
+
+        <!-- fijas -->
+        <g transform="translate(0,142)">
+          <text x="44" y="32" fill="#C4D4E8" font-size="15" font-weight="600">Unidades fijas</text>
+          <text x="44" y="52" fill="#6B85A6" font-size="11.5">unidades de datos · D:, E:</text>
+          <rect x="320" y="14" width="166" height="32" rx="16" fill="#10243B" stroke="#5CCBF4"/><text x="403" y="35" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">XTS-AES 256</text>
+          <text x="560" y="36" fill="#52708F" font-size="14">no requerido</text>
+        </g>
+        <line x1="44" y1="212" x2="676" y2="212" stroke="#1F3C5C" stroke-width="1"/>
+
+        <!-- extraíbles -->
+        <g transform="translate(0,212)">
+          <text x="44" y="32" fill="#C4D4E8" font-size="15" font-weight="600">Unidades extraíbles</text>
+          <text x="44" y="52" fill="#6B85A6" font-size="11.5">USB · disco externo</text>
+          <rect x="320" y="14" width="166" height="32" rx="16" fill="#0E2640" stroke="#2A6F9E"/><text x="403" y="35" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="700">AES-CBC 128</text>
+          <text x="560" y="36" fill="#52708F" font-size="14">no requerido</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Tres clases de unidad, tres políticas: XTS-AES más fuerte en las unidades de sistema y fijas, el AES-CBC más compatible en las extraíbles, y cifrar-para-escribir aplicado solo en la unidad de sistema.</figcaption>
+  </figure>
+
+  <p><strong>Más allá de BitLocker — la plantilla también configura algunos ajustes de endurecimiento de endpoint:</strong></p>
+
+  <p>El tipo de plantilla Device Configurations agrupa BitLocker con otros ajustes de protección de endpoint en el mismo JSON. La plantilla de Panoptica365 solo configura BitLocker explícitamente; todo lo demás está puesto en <code>notConfigured</code> o <code>userDefined</code>, lo que significa «esta plantilla no toma una postura». Unos pocos ajustes no-BitLocker <em>sí</em> están explícitamente fijados:</p>
+
+  <ul>
+    <li><code>lanManagerAuthenticationLevel: lmAndNltm</code> — acepta autenticación tanto LM como NTLM (relativamente permisivo — más estricto sería <code>ntlmV2Only</code>).</li>
+    <li><code>localSecurityOptionsMinimumSessionSecurityForNtlmSspBasedClients: none</code> — sin seguridad mínima de sesión NTLM (muy permisivo).</li>
+    <li><code>localSecurityOptionsMinimumSessionSecurityForNtlmSspBasedServers: none</code> — igual.</li>
+    <li><code>localSecurityOptionsSmartCardRemovalBehavior: noAction</code> — no pasa nada cuando se retira una tarjeta inteligente.</li>
+    <li><code>xboxServicesAccessoryManagementServiceStartupMode: manual</code> (y otros tres servicios Xbox puestos en manual) — estos servicios relacionados con Xbox no arrancan automáticamente al iniciar, eliminando algo de superficie de ataque en dispositivos que no son PCs gaming.</li>
+  </ul>
+
+  <p>Las elecciones de los servicios Xbox son <em>interesantes</em>. La mayoría de los dispositivos Windows del parque gestionado no son PCs gaming, pero los servicios Xbox están presentes en instalaciones estándar de Windows y arrancan automáticamente por defecto. Ponerlos en manual elimina servicios en segundo plano que nada en un entorno corporativo usa. Endurecimiento de baja palanca, pero gratis.</p>
+
+  <p>Las elecciones de LM Manager / seguridad de sesión NTLM son <em>permisivas</em> y vale la pena conocerlas — no están aplicando endurecimiento NTLM moderno. Si un cliente necesita NTLM estricto (industrias reguladas, requisitos de baseline endurecida), esos ajustes deberían endurecerse vía la Security Baseline (lección 3) o vía personalización.</p>
+
+  <h2>Dependencia de TPM</h2>
+
+  <p>La plantilla BitLocker de Panoptica365 requiere que la autenticación de arranque use el TPM (Trusted Platform Module). Específicamente:</p>
+
+  <ul>
+    <li><code>startupAuthenticationRequired: true</code> (debe haber autenticación de arranque)</li>
+    <li><code>startupAuthenticationBlockWithoutTpmChip: true</code> (TPM requerido — sin alternativa solo-PIN)</li>
+  </ul>
+
+  <p>Casi todos los dispositivos Windows fabricados en la última década tienen un chip TPM 2.0. Windows 11 <em>requiere</em> TPM 2.0 para la instalación, así que cualquier dispositivo Windows 11 por definición tiene uno. Los dispositivos Windows 10 pueden o no, dependiendo de edad y configuración.</p>
+
+  <p>Para dispositivos sin TPM (o con TPM deshabilitado en la BIOS — a veces el caso en hardware barato donde los valores por defecto de la BIOS lo dejaron apagado):</p>
+
+  <ul>
+    <li>El cifrado BitLocker con esta plantilla <em>fallará al arrancar</em> — la política exige TPM, el dispositivo no tiene uno o está deshabilitado, y el cifrado no puede iniciarse.</li>
+    <li>El arreglo es o bien habilitar TPM en la BIOS (a menudo posible en dispositivos donde estaba deshabilitado por defecto) o reemplazar el dispositivo.</li>
+  </ul>
+
+  <p>En la práctica esto raramente importa para tenants de pequeña empresa porque el hardware con TPM ha sido estándar desde principios de los 2010. Pero ocasionalmente aparece en el inventario un dispositivo más antiguo — normalmente un sobremesa que alguien compró barato hace años — y ese dispositivo falla el despliegue de BitLocker. Manéjalo caso a caso.</p>
+
+  <h2>Gestión de claves de recuperación — la parte que más importa</h2>
+
+  <p>BitLocker solo es útil si puedes recuperar los datos cifrados cuando algo va mal. Escenarios de recuperación:</p>
+
+  <ul>
+    <li>El usuario olvida su PIN (si la autenticación por PIN está configurada).</li>
+    <li>Cambios de hardware disparan el prompt de recuperación de BitLocker (reemplazo de placa base, a veces actualización de RAM, ocasionalmente una actualización de BIOS).</li>
+    <li>La configuración de arranque del dispositivo se vuelve inconsistente (actualización de característica de Windows, a veces un intento de arranque dual con Linux).</li>
+    <li>El dispositivo se reinicia y la clave de recuperación es la única forma de desbloquear los datos de la instalación anterior.</li>
+  </ul>
+
+  <p>La plantilla BitLocker de Panoptica365 almacena las claves de recuperación en <strong>Microsoft Entra ID</strong> (la ubicación moderna basada en la nube). Cuando un dispositivo Windows se une a Entra y BitLocker se inicializa, la clave de recuperación se sube a Entra automáticamente. Los operadores pueden recuperarla desde el portal de administración de Entra, en las propiedades del dispositivo.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Un dispositivo Windows se une a Entra, BitLocker se inicializa, y la clave de recuperación se sube a Microsoft Entra ID, de donde un operador puede recuperarla.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rkArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- dispositivo -->
+        <rect x="40" y="78" width="170" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="125" y="106" fill="#C4D4E8" font-size="14" font-weight="600">Dispositivo Windows</text>
+        <text x="125" y="126" fill="#6B85A6" font-size="11.5">BitLocker se inicializa</text>
+
+        <!-- entra -->
+        <rect x="510" y="78" width="170" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="595" y="106" fill="#A8E1F8" font-size="14" font-weight="600">Microsoft Entra ID</text>
+        <text x="595" y="126" fill="#6B85A6" font-size="11.5">clave de recuperación guardada</text>
+
+        <!-- clave en tránsito -->
+        <g transform="translate(345,98)">
+          <circle cx="0" cy="0" r="12" fill="none" stroke="#7DD9F9" stroke-width="3"/>
+          <rect x="6" y="-2.5" width="26" height="5" rx="2.5" fill="#7DD9F9"/>
+          <rect x="26" y="2.5" width="4" height="8" rx="2" fill="#7DD9F9"/>
+          <rect x="20" y="2.5" width="4" height="6" rx="2" fill="#7DD9F9"/>
+        </g>
+        <path d="M210 110 H320" stroke="#5CCBF4" stroke-width="2" marker-end="url(#rkArr)"/>
+        <path d="M400 110 H510" stroke="#5CCBF4" stroke-width="2" marker-end="url(#rkArr)"/>
+        <text x="360" y="78" fill="#52708F" font-size="11">clave subida automáticamente</text>
+
+        <!-- recuperación operador -->
+        <text x="595" y="186" fill="#6B85A6" font-size="11.5">el operador la recupera del portal de admin</text>
+        <path d="M595 142 V168" stroke="#335F92" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#rkArr)"/>
+      </g>
+    </svg>
+    <figcaption>Al unirse a Entra, la clave se sube automáticamente — y esa es la única copia que un operador puede alcanzar de forma fiable más tarde.</figcaption>
+  </figure>
+
+  <p>Tres realidades operativas que entender:</p>
+
+  <p><strong>Las claves de recuperación <em>tienen</em> que aterrizar en Entra, no solo en el dispositivo.</strong> Los dispositivos pre-gestionados por Intune que inicializaron BitLocker antes de la inscripción pueden tener las claves de recuperación almacenadas localmente en el dispositivo o en una ubicación de recuperación de AD híbrido. La plantilla de Panoptica365 no rellena retroactivamente esas claves. Tras el despliegue, ejecuta una auditoría de claves de recuperación por cliente — confirma que cada dispositivo cifrado tiene su clave subida a Entra. Los dispositivos sin claves de recuperación en Entra son dispositivos que será imposible recuperar si el usuario recibe un prompt de recuperación.</p>
+
+  <p><strong>Las claves de recuperación son por-instalación-de-SO, no por-dispositivo.</strong> Si un dispositivo se formatea y reinstala, la nueva instalación genera una nueva clave de recuperación. La clave antigua sigue en Entra pero no sirve para la nueva instalación. La limpieza de claves de recuperación obsoletas es una tarea de mantenimiento separada; por ahora, trata la existencia de múltiples claves por número de serie del dispositivo como una pista de que el dispositivo ha sido reinstalado.</p>
+
+  <p><strong>La clave de recuperación es una preocupación de clasificación de datos del cliente.</strong> Una clave de recuperación en las manos equivocadas desbloquea un dispositivo cifrado. Los admin del cliente con permisos de lectura en Entra pueden ver claves de recuperación para cualquier dispositivo. Esto a veces es un problema de privacidad (dispositivos gestionados por RR.HH. cifrados con personalización de PIN personal, dispositivos en industrias reguladas con requisitos de cadena de custodia). Documenta quién tiene acceso a las claves de recuperación por tenant del cliente. Audita el acceso vía el log de auditoría de Entra.</p>
+
+  <h2>Qué puede romperse</h2>
+
+  <p>El despliegue de BitLocker es mayormente seguro pero no del todo. Vigila:</p>
+
+  <p><strong>Cifrado inicial lento en dispositivos más antiguos.</strong> Cuando BitLocker se inicializa en un dispositivo que lleva años en uso, la primera pasada de cifrado puede tardar 4–8 horas y degradar significativamente el rendimiento durante ese tiempo. Programa el primer cifrado para horas fuera de oficina donde sea posible.</p>
+
+  <p><strong>Conflictos con cifrado de terceros.</strong> Un cliente que ya tiene Symantec Endpoint Encryption, McAfee Drive Encryption u otro producto de cifrado de disco completo instalado producirá conflictos. El <code>bitLockerDisableWarningForOtherDiskEncryption: true</code> de la plantilla de Panoptica365 suprime la <em>advertencia</em>, pero el conflicto puede manifestarse como cifrado fallido o problemas de arranque. Antes de desplegar, confirma que no hay otro FDE en juego.</p>
+
+  <p><strong>Las actualizaciones de BIOS / firmware pueden disparar prompts de recuperación.</strong> Cuando una Windows Update o una utilidad del fabricante actualiza la BIOS o el firmware del TPM, BitLocker puede detectar el cambio y exigir la clave de recuperación en el siguiente arranque. El usuario ve una pantalla azul intimidante pidiendo una clave numérica de 48 dígitos. Si la clave de recuperación está en Entra, el helpdesk puede recuperarla y guiar al usuario. Si la clave de recuperación falta en Entra, el usuario queda bloqueado. Por eso la auditoría de claves de recuperación en Entra (arriba) importa tanto.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Dónde rinde la auditoría de recuperación</div>
+    <p>Una actualización de BIOS o de firmware del TPM puede exigir la clave de recuperación de 48 dígitos en el siguiente arranque. Si esa clave está en Entra, el helpdesk guía al usuario. Si falta en Entra, el usuario queda bloqueado. La auditoría es lo único que se interpone entre esos dos desenlaces.</p>
+  </div>
+
+  <p><strong>BitLocker en unidades extraíbles es molesto para compartir entre organizaciones.</strong> Un usuario cifra una memoria USB con BitLocker, la lleva a una organización socia, y la máquina del socio no puede leerla (BitLocker-to-Go requiere la contraseña en cada acceso). Para clientes de pequeña empresa, el cifrado de unidades extraíbles a veces lo rechazan los usuarios — quieren que sus pendrives funcionen en todas partes. La plantilla no <em>exige</em> cifrado para acceso de escritura a unidades extraíbles (<code>requireEncryptionForWriteAccess: false</code>), así que esto es una aplicación blanda; los usuarios todavía pueden usar pendrives sin cifrar. La intención de la plantilla es «si cifras, usa este cifrado» — no «debes cifrar».</p>
+
+  <h2>Despliegue</h2>
+
+  <p>Despliegue estándar por grupo piloto de la lección 1:</p>
+
+  <ol>
+    <li><strong>Día 0</strong> — despliega en 3–5 dispositivos Windows piloto. Elige dispositivos que <em>no</em> estén en uso productivo activo durante la noche (la primera pasada de cifrado es lenta).</li>
+    <li><strong>Días 1–2</strong> — verifica que los dispositivos piloto completaron el cifrado (el portal de Intune muestra el cumplimiento de BitLocker). Confirma que las claves de recuperación aparecen en Entra para cada dispositivo piloto.</li>
+    <li><strong>Día 3–7</strong> — observa los dispositivos piloto en uso normal. ¿Algo raro? ¿Prompts de recuperación disparados? ¿Quejas de rendimiento?</li>
+    <li><strong>Día 7</strong> — despliegue más amplio si el piloto está limpio. Programa el despliegue del parque del cliente para que aterrice un viernes por la tarde, así la pasada de cifrado se completa durante el fin de semana.</li>
+  </ol>
+
+  <p>Caso especial: un parque de cliente que nunca ha tenido BitLocker aplicado verá un impacto de rendimiento notable durante las primeras 48 horas mientras todos los dispositivos cifran en paralelo. Comunícalo al cliente con antelación. Tras la pasada inicial de cifrado, la sobrecarga continua de BitLocker es esencialmente cero.</p>
+
+  <h2>Qué monitorizar tras la aplicación</h2>
+
+  <p><strong>Cumplimiento de BitLocker por dispositivo.</strong> Debería estar cerca del 100% en dispositivos Windows tras la ventana inicial de cifrado. Los dispositivos que muestran no conformidad necesitan investigación por-dispositivo — normalmente TPM deshabilitado, hardware demasiado antiguo, o ajustes de BIOS que impiden el cifrado.</p>
+
+  <p><strong>Claves de recuperación en Entra.</strong> Cada dispositivo cifrado con BitLocker debería tener una clave de recuperación en Entra. Ejecuta una auditoría trimestral: lista de dispositivos con BitLocker habilitado vs. lista de claves de recuperación en Entra. Las discrepancias son dispositivos que serán irrecuperables.</p>
+
+  <p><strong>Prompts de recuperación disparados.</strong> Un pico de prompts de recuperación (el usuario llama al helpdesk pidiendo la clave de 48 dígitos) suele correlacionarse con una oleada de actualizaciones de Windows, actualizaciones de BIOS o cambios de hardware. Rastrea la fuente.</p>
+
+  <p><strong>Deriva del método de cifrado.</strong> Si un dispositivo muestra BitLocker habilitado pero con un cifrado más antiguo (p. ej., AES-CBC 128 en una unidad de sistema que debería ser XTS-AES 256), probablemente el dispositivo se cifró <em>antes</em> de que la plantilla aplicara el estándar actual. El arreglo es descifrar y volver a cifrar con el método correcto, lo que es molesto y lento. Pilla esto durante el despliegue, no después.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>La respuesta honesta: no mucho, específicamente sobre BitLocker. Panoptica365 actualmente no expone el estado de BitLocker por dispositivo, el método-de-cifrado-por-dispositivo, ni el inventario de claves de recuperación en ningún sitio del panel — ninguna de esas cosas vive en el producto hoy, y nada por-dispositivo forma parte del modelo de lectura de la plataforma en absoluto.</p>
+
+  <p>Lo que Panoptica365 <em>sí</em> expone que es relevante para BitLocker:</p>
+
+  <ul>
+    <li><strong>Detección de deriva en la plantilla BitLocker Settings.</strong> Si la plantilla desplegada en un tenant de cliente diverge de la referencia de Panoptica365 — alguien abre la consola de Intune y cambia un ajuste — el detector de deriva dispara una alerta. El operador puede revertir a la plantilla, reaplicar o aceptar la deriva, mismo flujo que la deriva de AC.</li>
+    <li><strong>El contador general de cumplimiento de dispositivos.</strong> BitLocker no es un control de cumplimiento duro en la política de cumplimiento de Windows de Panoptica365 (ver lección 2 — <code>bitLockerEnabled: false</code>), así que un dispositivo con BitLocker apagado no caerá del contador de conformes por sí solo. Pero si la política de cumplimiento ajustada por el MSP <em>sí</em> exige BitLocker, esos fallos aparecen en la ratio conforme/no-conforme.</li>
+  </ul>
+
+  <p>Para visibilidad de BitLocker por dispositivo — qué dispositivo está cifrado con qué cifrado, dónde vive la clave de recuperación — los operadores profundizan en el portal de Intune o en la hoja de dispositivo de Entra. Ese es el flujo hoy.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Los tres puntos para llevarte</div>
+    <p><strong>BitLocker es fundamental — pero la historia de la recuperación es lo que más importa.</strong> El cifrado protege contra el robo. La gestión de claves de recuperación protege contra dejar fuera a tus propios clientes. Un despliegue de BitLocker sin una historia de auditoría de claves de recuperación está a una actualización de BIOS de una crisis del helpdesk.</p>
+    <p><strong>La dependencia del TPM es real pero normalmente invisible.</strong> La mayoría del hardware Windows moderno tiene TPM 2.0. Los fallos de despliegue de BitLocker son casi siempre hardware-demasiado-antiguo o TPM-deshabilitado-en-BIOS. Documenta las excepciones por-dispositivo; no las ignores.</p>
+    <p><strong>La política de unidades extraíbles es permisiva a propósito.</strong> La plantilla especifica el cifrado para las unidades extraíbles pero no exige cifrado. Los usuarios mantienen sus pendrives funcionando. Si un cliente necesita más estricto (requisitos de clasificación de datos, sanidad, finanzas), personaliza esa plantilla vía la lección 10.</p>
+  </div>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Defender for Endpoint (Win + Mac)</b> — la configuración antivirus / EDR — lo que hace que Defender proteja lo que BitLocker ahora mantiene cifrado.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Firewall Settings (Windows)</b> — configuración del firewall de host.</div></div>
+  </div>
+
+  <p>Por ahora: BitLocker primero porque nada más importa si el portátil de un cliente sale por la puerta sin cifrar. Despliégalo, audita las claves de recuperación y sigue adelante.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la gestión de BitLocker vía Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/encrypt-devices" target="_blank" rel="noopener">Microsoft Learn — Manage BitLocker with Intune</a>); referencia de métodos de cifrado de BitLocker (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/bitlocker-overview" target="_blank" rel="noopener">Microsoft Learn — BitLocker encryption methods</a>); almacenamiento de claves de recuperación en Entra ID (<a href="https://learn.microsoft.com/en-us/entra/identity/devices/device-management-azure-portal#view-bitlocker-keys" target="_blank" rel="noopener">Microsoft Learn — BitLocker recovery in Entra ID</a>); requisitos de TPM (<a href="https://learn.microsoft.com/en-us/windows/security/hardware-security/tpm/tpm-fundamentals" target="_blank" rel="noopener">Microsoft Learn — TPM and BitLocker</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

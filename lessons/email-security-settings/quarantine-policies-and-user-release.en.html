@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quarantine policies and user release — Email security settings</title>
+<meta name="lesson:title" content="Quarantine policies and user release — where good defaults go to die">
+<meta name="lesson:subtitle" content="Locking down quarantine release permissions so end users can't single-handedly release high-confidence phish into their own inboxes.">
+<meta name="lesson:icon" content="inbox">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Quarantine policies and user release</span></div>
+  <h1>Quarantine policies and user release — where good defaults go to die</h1>
+  <p class="dek">Locking down quarantine release permissions so end users can't single-handedly release high-confidence phish into their own inboxes.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A quarantine notification email listing a quarantined message with a Release button beside it, and one click sending the message into the inbox.">
+      <defs>
+        <radialGradient id="qpBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="qpSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="qpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#qpBg)"/>
+
+      <!-- left: the quarantine notification email -->
+      <text x="300" y="58" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">QUARANTINE NOTIFICATION</text>
+      <g transform="translate(110,76)">
+        <rect x="0" y="0" width="380" height="206" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="22" y="38" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="16" font-weight="600">You have 3 quarantined messages</text>
+        <line x1="22" y1="52" x2="358" y2="52" stroke="#1F3C5C"/>
+        <!-- two ordinary rows -->
+        <g font-family="Geist,Inter,sans-serif">
+          <rect x="22" y="66" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="86" fill="#6B85A6" font-size="12.5">newsletter · weekly digest</text>
+          <rect x="278" y="66" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="86" text-anchor="middle" fill="#A8E1F8" font-size="12">Release</text>
+
+          <rect x="22" y="104" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="124" fill="#6B85A6" font-size="12.5">promo · spring sale</text>
+          <rect x="278" y="104" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="124" text-anchor="middle" fill="#A8E1F8" font-size="12">Release</text>
+
+          <!-- the dangerous row -->
+          <rect x="22" y="146" width="246" height="38" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <text x="34" y="164" fill="#FF8A98" font-size="12.5" font-weight="600">unknown sender</text>
+          <text x="34" y="179" fill="#E2A0AA" font-size="11.5">"Your DocuSign envelope is ready"</text>
+          <rect x="278" y="148" width="80" height="34" rx="8" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="318" y="170" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="700">Release</text>
+          <circle cx="368" cy="148" r="9" fill="#5CCBF4" filter="url(#qpSoft)" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- one click arrow -->
+      <text x="610" y="150" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">one click</text>
+      <path d="M540 168 H690" stroke="#FF5A6E" stroke-width="3" stroke-linecap="round" marker-end="url(#qpArr)"/>
+
+      <!-- right: the inbox -->
+      <text x="880" y="58" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">THE INBOX</text>
+      <g transform="translate(720,76)">
+        <rect x="0" y="0" width="300" height="206" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <g transform="translate(110,60)" stroke="#5CCBF4" stroke-width="2.4" fill="none">
+          <rect x="0" y="0" width="80" height="56" rx="6"/>
+          <path d="M0 6 L40 34 L80 6"/>
+        </g>
+        <rect x="78" y="150" width="144" height="34" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="150" y="172" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">phish delivered</text>
+      </g>
+    </svg>
+    <figcaption>The quarantine worked. Then the user's own Release button undid it.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A customer's CEO assistant gets a daily quarantine notification email from Microsoft. Subject: "You have 3 quarantined messages." The body lists three messages with sender, subject, and a Release button next to each.</p>
+
+  <p>One of the three is from someone she doesn't recognise, with a subject like "Your DocuSign envelope is ready for signature." She wasn't expecting a DocuSign envelope. But the CEO does sign things all the time, and she handles his calendar, and maybe this is something he needs to see, and she doesn't want to look like the assistant who blocked something important from getting through. She clicks Release.</p>
+
+  <p>The message arrives in her inbox. She opens it. She clicks the DocuSign-branded link. The link goes to a credential-harvester running on a freshly-registered domain with a valid Let's Encrypt certificate. She types the CEO's credentials, because the CEO had asked her to handle DocuSign for him, and she has the password. The attacker captures both the credential and the session cookie. Twelve minutes later the attacker is inside the CEO's mailbox.</p>
+
+  <p>The assistant did exactly what Microsoft's default quarantine notification <em>invited her to do</em>. She had a Release button. She used it.</p>
+
+  <p>This is the BEC follow-on vector that gets less attention than it deserves: even when Defender successfully quarantines a phishing email, the customer's own user can release it back into the inbox with one click. The defence against the phish exists; the defence against the user undoing the defence is what this lesson is about.</p>
+  </div>
+
+  <h2>The four (or five) quarantine categories</h2>
+
+  <p>Microsoft classifies quarantined messages into distinct categories, each with its own default release rules. Knowing the categories matters because the right configuration is <em>category-specific</em>.</p>
+
+  <ul>
+    <li><strong>Spam</strong> (low-confidence spam) — messages Microsoft suspects are spam with moderate confidence. Default: users can release with notification.</li>
+    <li><strong>High-confidence spam</strong> — Microsoft is more certain. Default: users can release with notification.</li>
+    <li><strong>Bulk</strong> — newsletter-style mass mail. Default: users can release with notification.</li>
+    <li><strong>Phishing</strong> — Microsoft suspects this is a phishing attempt. Default: admin must release.</li>
+    <li><strong>High-confidence phishing</strong> — Microsoft is highly confident. Default: admin must release; the message can't be released by users.</li>
+    <li><strong>Malware</strong> — file attachment or link matched a malicious pattern. Default: admin must release.</li>
+    <li><strong>Spoof</strong> — sender authentication (SPF/DKIM/DMARC) failed in a way that suggests sender impersonation. Default varies by tenant configuration.</li>
+  </ul>
+
+  <p>The defaults are reasonable for the high-confidence categories (admin must release) and <em>dangerous</em> for the lower-confidence ones (users can release). The opening anecdote happened because the assistant got a message classified as Phishing (not High-confidence) with the default older configuration that let users release lower-confidence phish — and Microsoft has tightened defaults since, but customer tenants that were configured years ago may still carry the looser settings.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="The quarantine categories split into two groups by default release rule: lower-confidence categories where users can release, and higher-confidence categories where the admin must release.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- left column: users can release -->
+      <text x="186" y="34" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1.5" font-weight="600">USERS CAN RELEASE</text>
+      <text x="186" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(lower confidence)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="56" y="70" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="95" fill="#C4D4E8" font-size="14">Spam</text></g>
+        <g><rect x="56" y="120" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="145" fill="#C4D4E8" font-size="14">High-confidence spam</text></g>
+        <g><rect x="56" y="170" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="195" fill="#C4D4E8" font-size="14">Bulk</text></g>
+      </g>
+      <!-- right column: admin must release -->
+      <text x="534" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1.5" font-weight="600">ADMIN MUST RELEASE</text>
+      <text x="534" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(higher confidence / dangerous)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="404" y="70" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="95" fill="#A8E1F8" font-size="14">Phishing</text></g>
+        <g><rect x="404" y="120" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="145" fill="#A8E1F8" font-size="14">High-confidence phishing</text></g>
+        <g><rect x="404" y="170" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="195" fill="#A8E1F8" font-size="14">Malware</text></g>
+        <g><rect x="404" y="220" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="245" fill="#A8E1F8" font-size="14">Spoof</text></g>
+      </g>
+      <text x="534" y="290" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11" font-style="italic">Spoof default varies by tenant</text>
+    </svg>
+    <figcaption>Default release rules split by confidence — the right configuration is category-specific.</figcaption>
+  </figure>
+
+  <h2>Quarantine policies — the configuration object</h2>
+
+  <p>A <strong>quarantine policy</strong> in M365 is the object that defines what users are allowed to do with quarantined messages. Microsoft ships three preset policies; you can create custom ones.</p>
+
+  <p>The presets:</p>
+
+  <ul>
+    <li><strong>AdminOnlyAccessPolicy</strong> — users get no release capability at all. They can view the quarantined messages (if notification is enabled) but cannot release them. The admin is the only one who can. The strictest posture.</li>
+    <li><strong>DefaultFullAccessPolicy</strong> — users can request release (admin still approves) and can preview messages. No notifications.</li>
+    <li><strong>DefaultFullAccessWithNotificationPolicy</strong> — same as DefaultFullAccessPolicy but with quarantine notifications enabled. Microsoft's most-permissive default.</li>
+  </ul>
+
+  <p>Custom policies let you mix-and-match: enable specific actions (request release, preview, block sender), specify whether notifications are sent, and choose how aggressive the notification cadence is.</p>
+
+  <p>The configuration that matters for SMB hardening: <strong>apply AdminOnlyAccessPolicy to the dangerous categories</strong> (Phishing, High-confidence phishing, Malware, Spoof). Users can never release messages in those categories without the operator's approval. For the lower-confidence categories (Spam, Bulk), the more permissive DefaultFullAccessWithNotificationPolicy is defensible — those are usually marketing email or noise, and giving users self-service for those reduces help-desk load.</p>
+
+  <div class="callout insight">
+    <div class="clabel">The hardening rule</div>
+    <p>Apply <strong>AdminOnlyAccessPolicy</strong> to Phishing, High-confidence phishing, Malware, and Spoof. Users can never release messages in those categories without the operator's approval.</p>
+  </div>
+
+  <h2>Quarantine notification cadence</h2>
+
+  <p>Separate from the policies themselves, M365 controls how often users get the "you have quarantined messages" digest email. The notification frequency can be set per quarantine policy (in newer configurations) or via a global setting (in older ones).</p>
+
+  <p>Common cadences:</p>
+
+  <ul>
+    <li><strong>Daily</strong> — the default. One email per day with the day's quarantined messages.</li>
+    <li><strong>Every 4 hours</strong> — more aggressive; for high-volume mailboxes.</li>
+    <li><strong>Off</strong> — no notifications at all. Users have to actively check the quarantine portal if they want to see what's been blocked.</li>
+  </ul>
+
+  <p>For SMB customers, daily is usually the right balance. More frequent notifications generate noise; off generates "I never got X" tickets because users don't think to check the portal.</p>
+
+  <h2>The BEC follow-on — why the defaults matter</h2>
+
+  <p>The opening anecdote isn't hypothetical. It's the second-most-common follow-on vector after auto-forwarding (lesson 5). The attack sequence is consistent across incidents:</p>
+
+  <ol>
+    <li>Attacker sends a phishing email crafted to look like a legitimate business communication (DocuSign, invoice, internal HR, IT password expiry).</li>
+    <li>The email lands in quarantine because Microsoft's anti-phishing classifier flags it — but with Phishing (not High-confidence) classification, because the message is technically well-formed and uses legitimate hosting infrastructure.</li>
+    <li>The user gets the quarantine notification, sees a plausibly-business-looking subject, doesn't want to delay something important, clicks Release.</li>
+    <li>The message arrives in the inbox. The user clicks the link. The credentials are captured. The session cookie is captured. The mailbox is compromised.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The BEC follow-on sequence: a phishing email lands in quarantine, the user releases it, clicks the link, and the mailbox is compromised.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="100" width="138" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="99" y="126" fill="#C4D4E8" font-size="13" font-weight="600">Phish email</text>
+        <text x="99" y="144" fill="#6B85A6" font-size="11">classed Phishing</text>
+
+        <rect x="206" y="100" width="138" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="275" y="126" fill="#7DD9F9" font-size="13" font-weight="600">Quarantine</text>
+        <text x="275" y="144" fill="#6B85A6" font-size="11">defence holds</text>
+
+        <rect x="382" y="100" width="138" height="56" rx="10" fill="#2A1A0A" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="451" y="126" fill="#FFD27A" font-size="13" font-weight="600">User releases</text>
+        <text x="451" y="144" fill="#C9A468" font-size="11">clicks the link</text>
+
+        <rect x="558" y="100" width="138" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="627" y="126" fill="#FF8A98" font-size="13" font-weight="700">Mailbox</text>
+        <text x="627" y="144" fill="#E2A0AA" font-size="11">compromised</text>
+      </g>
+      <path d="M168 128 H206" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M344 128 H382" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M520 128 H558" stroke="#FF5A6E" stroke-width="2" marker-end="url(#bArr)"/>
+      <text x="451" y="200" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="11">credential + session cookie captured</text>
+    </svg>
+    <figcaption>The quarantine defence holds — until the user's Release click hands the message back the rest of the way.</figcaption>
+  </figure>
+
+  <p>The defence is to remove the Release button for the dangerous categories. Configure all of Phishing, High-confidence phishing, Malware, and Spoof to AdminOnlyAccessPolicy. The notification can still come (so the user knows their email was quarantined and can ask the operator to investigate), but the Release button isn't there. The user has to call the help desk.</p>
+
+  <p>This adds operational load — operators now field "release my quarantined message" tickets. The trade-off is intentional: each release-request ticket is an opportunity to look at the message, verify it's legitimate, and either release it or use the conversation to educate the user about what they nearly clicked. The five-minute conversation is cheap; the wire fraud incident is expensive.</p>
+
+  <h2>The preset security policies make this easier</h2>
+
+  <p>Microsoft's preset security policies (Standard and Strict — lesson 10 covers them in detail) include quarantine policy configurations. The Standard preset assigns the strict access policy (AdminOnlyAccessPolicy) to the High-confidence phishing, Malware, and Spoof categories by default. The Strict preset extends this to Phishing as well.</p>
+
+  <p>If you've applied the Standard or Strict preset to the customer (covered in lesson 3 and lesson 10), the quarantine configuration is partly handled. What the presets don't override is the cadence and the per-category policy mapping for Spam and Bulk — those are still tenant-specific decisions.</p>
+
+  <p>The takeaway: if you're deploying preset security policies and not customising quarantine further, you've already gotten the dangerous-categories release block. If you're configuring quarantine policies independently of presets, you have to make the AdminOnly assignment explicit for each dangerous category.</p>
+
+  <h2>The operator workflow — releasing on the user's behalf</h2>
+
+  <p>When AdminOnlyAccessPolicy is in place and a user calls in to ask for a release:</p>
+
+  <ol>
+    <li><strong>Open the quarantine portal</strong> (Defender portal → Email &amp; collaboration → Review → Quarantine). Search for the message by recipient, sender, or subject.</li>
+    <li><strong>Preview the message</strong> before releasing. Read the body. Look at the links. Look at the sender details — including the actual sending address (not just the display name). Look at the headers if the message is borderline.</li>
+    <li><strong>Verify with the user</strong> what they expected. "You said this is from Bob about the invoice — does this match what Bob would normally send? Is the link going where you expect?"</li>
+    <li><strong>Release if legitimate; report-as-phish if not.</strong> Microsoft's Defender portal lets you release with an option to "submit to Microsoft for review" — this trains Microsoft's classifier and helps similar legitimate messages get through automatically in the future.</li>
+  </ol>
+
+  <p>This is a 3-to-5 minute workflow per request. For customers with many releases, batch them — handle the queue once or twice a day rather than reacting to each call. For high-volume customers, consider tightening the anti-phishing or anti-spam tuning so fewer legitimate messages land in quarantine.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Quarantine policy configuration is part of what the <strong>preset security policies</strong> govern. The Panoptica365 security setting "Enable Preset Security Policy (Standard or Strict) — MDO" pushes the preset enablement at the customer tenant, and the drift detector watches whether it stays enabled. If a customer's admin opens the Defender portal and disables the preset — or creates a custom quarantine policy with permissive release rights that overrides the preset — the drift signal is the early warning.</p>
+
+  <p><strong>Defender XDR alerts</strong> flow into Panoptica365's alert engine when MDO surfaces high-severity events related to user-initiated quarantine releases of suspicious messages. These show up in the standard alert pipeline.</p>
+
+  <p>What Panoptica365 does <em>not</em> surface in the dashboard: per-tenant quarantine queue browsers, per-message release-request approval workflow, per-user release-activity history. The quarantine queue itself, the per-message preview, the release approval action — all happen in the Microsoft Defender portal. Panoptica365 watches the <em>configuration</em> of the quarantine system; the <em>operation</em> of the quarantine queue is a Microsoft surface.</p>
+
+  <h2>What can break</h2>
+
+  <p><strong>Customer complaints about messages "stuck in quarantine."</strong> When AdminOnlyAccessPolicy is in place, users genuinely cannot release their own messages. They will phone in. Some customers experience this as a degradation. Frame it explicitly during the customer conversation as "we're protecting you from the AiTM-and-release attack pattern; the trade-off is that you call us to release ambiguous messages, and we take five minutes to verify." Most customers accept this once the trade-off is explained.</p>
+
+  <p><strong>Legitimate marketing or transactional email getting quarantined repeatedly.</strong> Vendor invoices, DocuSign envelopes, calendar invitations from third parties — any system that sends mail with characteristics Microsoft scores as phishing-adjacent. The fix is either authenticating the sender properly (lesson 4) or adding the sender domain to the anti-phishing trusted-senders list (lesson 2). Not creating a permissive quarantine policy.</p>
+
+  <p><strong>Quarantine notifications going to junk.</strong> Users sometimes set up rules that move all "noreply@" sender emails to junk, including Microsoft's quarantine digest. Then they complain they don't know about quarantined messages. Diagnose during onboarding and educate the user.</p>
+
+  <p><strong>Old custom quarantine policies left from previous admins.</strong> Some customer tenants have custom quarantine policies inherited from migrations or previous MSPs. Audit them during pre-flight (lesson 1) and either align them with the Standard/Strict preset model or rebuild them explicitly.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Default quarantine release is a BEC follow-on vector.</strong> Microsoft's defaults let users release lower-confidence phishing messages themselves. The assistant in the opening story is the recurring victim. Set AdminOnlyAccessPolicy on Phishing, High-confidence phishing, Malware, and Spoof — at minimum.</p>
+
+  <p><strong>Either deploy presets or configure quarantine policies explicitly.</strong> The Standard or Strict preset handles the dangerous-category admin-only release configuration. If you're not using presets, every category needs an explicit policy assignment. There's no third option that's safe.</p>
+
+  <p><strong>Release-on-behalf is a five-minute operator workflow, and it's worth doing right.</strong> When users call to release a message, that's the moment to verify the sender, preview the link, and either release with confidence or use the call to educate. The operational overhead is real but proportional to the protection — and the conversations themselves train customer users to be more skeptical of next time's phish.</p>
+
+  <h2>What's next</h2>
+
+  <ul>
+    <li><strong>Lesson 8: Mail flow rules and MailTips.</strong> Transport rules — the configuration object that gives operators surgical control over message handling, and the abuse pattern when used too broadly.</li>
+    <li><strong>Lesson 9: Outbound spam and SMTP AUTH.</strong> The post-compromise blast radius controls — what happens when a customer's mailbox is the one sending the phish.</li>
+  </ul>
+
+  <p>For now: open the customer's quarantine policies in the Defender portal. Verify Phishing, High-confidence phishing, Malware, and Spoof are mapped to AdminOnlyAccessPolicy (or that the preset security policy is enabled and providing the same effect). Verify the notification cadence is daily, not turned off. The assistant in the opening story doesn't get her Release button this week; you can sleep better as a result.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on quarantine policies overview (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies" target="_blank" rel="noopener">Microsoft Learn — Quarantine policies</a>); creating and assigning custom quarantine policies (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Manage quarantine policies</a>); user-quarantine release behaviour reference (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-end-user" target="_blank" rel="noopener">Microsoft Learn — Quarantine user permissions</a>); quarantine notification configuration (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies#quarantine-notifications" target="_blank" rel="noopener">Microsoft Learn — Quarantine notifications</a>); preset security policies and their quarantine effects (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importing your own CA templates — Conditional Access template policies</title>
+<meta name="lesson:title" content="Importing your own CA templates — the Panoptica365 superpower">
+<meta name="lesson:subtitle" content="Export any CA policy from any Entra tenant, add it to Panoptica365, and deploy it across your entire customer fleet.">
+<meta name="lesson:icon" content="upload">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Importing your own CA templates</span></div>
+  <h1>Importing your own CA templates — the Panoptica365 superpower</h1>
+  <p class="dek">Export any CA policy from any Entra tenant, add it to Panoptica365, and deploy it across your entire customer fleet.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A CA policy is exported from one tenant, generalised into a template, and deployed across many customer tenants.">
+      <defs>
+        <radialGradient id="ictBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ictTpl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="ictArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="ictArrC" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ictBg)"/>
+
+      <!-- 1: source tenant with a policy -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="158" height="104" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="20" y="22" width="118" height="14" rx="4" fill="#16345A"/>
+        <rect x="20" y="46" width="92" height="11" rx="4" fill="#13294A"/>
+        <rect x="20" y="66" width="104" height="11" rx="4" fill="#13294A"/>
+        <text x="79" y="-14" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">One tenant</text>
+        <text x="79" y="128" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5">a CA policy</text>
+      </g>
+      <text x="290" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">EXPORT</text>
+      <path d="M236 170 H346" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 2: generalised template -->
+      <g transform="translate(360,108)">
+        <rect x="0" y="0" width="178" height="124" rx="12" fill="#0E2640" stroke="url(#ictTpl)" stroke-width="1.8"/>
+        <text x="89" y="-14" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">Generalised template</text>
+        <rect x="22" y="24" width="134" height="14" rx="4" fill="#16345A"/>
+        <g font-family="Geist Mono,monospace" font-size="11">
+          <rect x="22" y="50" width="134" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="65" fill="#A8E1F8">{TRUSTED_LOCATION}</text>
+          <rect x="22" y="80" width="100" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="95" fill="#A8E1F8">{GROUP}</text>
+        </g>
+        <text x="89" y="148" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5">GUIDs → placeholders</text>
+      </g>
+      <text x="588" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">DEPLOY</text>
+      <path d="M546 170 H636" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 3: the fleet -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="888" y="44" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Every customer tenant</text>
+        <g transform="translate(656,66)">
+          <rect x="0" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="0" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+        </g>
+        <!-- fan-out from template to fleet -->
+        <g stroke="#2A7FA3" stroke-width="1.6" fill="none" opacity="0.75">
+          <path d="M636 170 C700 150 700 110 725 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 158 800 110 888 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 158 980 110 1052 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C700 190 700 200 725 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 182 800 200 888 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 182 980 200 1052 209" marker-end="url(#ictArrC)"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The whole feature in one line: a policy from one tenant becomes a template that deploys across the fleet.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Most CA-template tooling treats templates as a vendor's gift. The vendor ships a library; you deploy what's in the library; if you want something different, you wait for the vendor to add it. The customer in Mexico can't use a Canada-locked template. The senior engineer who built a brilliant CA policy at one customer's tenant can't easily share it with the rest of the MSP. The template library is a closed catalogue.</p>
+
+  <p>Panoptica365 is built differently. Any Conditional Access policy that exists in any Entra tenant — your own MSP's tenant, a specific customer's tenant, a partner's tenant — can be exported and imported into Panoptica365 as a custom template. From there, it deploys to every customer tenant in your fleet the same way the shipped templates do.</p>
+
+  <p>This is the platform feature that turns the CA template library from "what Panoptica365 thought of" into "what your MSP and your senior engineers know about your customers." It's also the mechanism that makes the geographic customisation from lesson 4 possible — the Mexican MSP doesn't wait for Panoptica365 to ship a Mexico template; they build one and import it.</p>
+
+  <p>This lesson is the workflow for that — when to use it, how it works, what to watch for.</p>
+  </div>
+
+  <h2>When to import a custom template</h2>
+
+  <p>Five scenarios where importing makes sense:</p>
+
+  <p><strong>1. Geographic customisation.</strong> Lesson 4's "Only allow access from Canada" template needs to become "Only allow access from Mexico" for a Mexican-based MSP, "Only allow access from France/EU" for a French MSP, etc. The OR-condition pattern stays the same; the named location changes. Import is the customisation mechanism.</p>
+
+  <p><strong>2. A custom policy you built somewhere and want to reuse everywhere.</strong> A senior engineer at the MSP built a clever CA policy for one customer — say, a policy that requires phishing-resistant MFA specifically for users in the Finance department, with carefully-tuned exclusions for the AP clerk's mobile device. Rather than rebuilding that policy by hand for each customer tenant, export from the original, import as a template, deploy across the fleet.</p>
+
+  <p><strong>3. A regulatory requirement that needs a non-default policy.</strong> A customer in a regulated industry (healthcare, finance, government contracting) may need CA policies that the standard library doesn't include — a specific session-frequency policy for accessing PII, for example, or a policy that enforces a particular authentication strength for specific apps. Build it once for the regulated customer, import it as a template, deploy across other similar customers.</p>
+
+  <p><strong>4. A response to a specific compromise or near-miss.</strong> After a customer had an AiTM incident, you tightened their CA policy to require compliant device + phishing-resistant MFA for sensitive apps. You'd like that same hardened posture for other customers in the same industry. Import is the mechanism for that "spread good policy" workflow.</p>
+
+  <p><strong>5. A new threat that requires a new policy.</strong> Microsoft announces a new attack technique, your security team designs a CA policy that addresses it, you build it once and need to deploy it across thirty tenants. Import is faster than re-creating thirty times.</p>
+
+  <p>The pattern in all five: a policy exists somewhere, you want it to exist somewhere else, the platform makes the transfer trivial.</p>
+
+  <h2>How the import works</h2>
+
+  <p>The high-level workflow:</p>
+
+  <ol>
+    <li><strong>Export from a source tenant.</strong> In Panoptica365's CA module, select the source tenant and choose to export Conditional Access policies. Panoptica365 reads the policies from Entra ID via Graph API and produces a structured JSON representation.</li>
+
+    <li><strong>Choose which policies to import.</strong> The export typically contains every CA policy on the source tenant. You select the specific policies you want to bring in as templates — typically one or two, not all of them.</li>
+
+    <li><strong>Generalise tenant-specific GUIDs.</strong> This is the technically interesting step. Conditional Access policies reference users, groups, and named locations by GUID — and those GUIDs are unique to the source tenant. A "Block from outside Canada" policy in tenant A references named-location GUID <code>abc-123</code> for "Canada"; tenant B has a different GUID for the same named location. If you imported the policy raw, it would reference a non-existent GUID in tenant B and the import would fail or produce a broken policy.
+
+   <br><br>Panoptica365 handles this by substituting placeholder tokens at import time. Tenant-specific GUIDs in the source export get replaced with placeholders like <code>{NAMED_LOCATION_CANADA}</code>. When the template is later deployed to tenant B, Panoptica365 resolves the placeholder against tenant B's actual named-location GUIDs. If tenant B has a named location matching the placeholder, the deployment proceeds; if not, the operator is prompted to create one or remap to an existing location.</li>
+
+    <li><strong>Name and describe the template.</strong> Give it a Panoptica365-style name and one-line description. The naming convention used by the shipped templates is <code>Panoptica365 - &lt;descriptive name&gt;</code> — custom templates should follow a similar pattern (<code>Acme MSP - &lt;descriptive name&gt;</code> or <code>&lt;MSP name&gt; - &lt;descriptive name&gt;</code>) so they're distinguishable from the shipped ones in the policy list on customer tenants.</li>
+
+    <li><strong>Save as a template in the Panoptica365 library.</strong> From this point, the template behaves like any of the shipped templates — it's available for deployment to any customer tenant, supports Report-only-then-On rollout, and shows up in the drift detector.</li>
+  </ol>
+
+  <h2>The named-location generalisation, specifically</h2>
+
+  <p>The Mexican MSP example from lesson 4 is the canonical case. Walk through what happens mechanically:</p>
+
+  <p>The MSP exports the "Only allow access from Canada" template from one of their Canadian customer's tenants (or from Panoptica365's bundled-template view, depending on the export path). The policy references named-location GUID <code>xyz-canada-789</code> and country code <code>CA</code>.</p>
+
+  <p>In Panoptica365's import flow, the named-location reference gets converted to a placeholder. The template now contains something like:</p>
+
+  <pre><code>condition.locations.include = ["{TRUSTED_LOCATION}"]</code></pre>
+
+  <p>The MSP names this customised template "AcmeMSP - Only allow access from Mexico" and saves it.</p>
+
+  <p>For each Mexican customer tenant, the MSP first creates a named location called "Mexico" with the Mexico country code. Then they deploy the AcmeMSP template. At deployment time, Panoptica365 resolves <code>{TRUSTED_LOCATION}</code> against the customer's named locations and uses the GUID for the "Mexico" entry. The policy gets created in the customer's tenant with the correct location reference.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="At deployment, the TRUSTED_LOCATION placeholder is resolved against the destination tenant's named locations; if none matches, the operator is prompted to create one.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- template placeholder -->
+        <rect x="28" y="92" width="190" height="48" rx="10" fill="#0E2640" stroke="#5CCBF4"/>
+        <text x="123" y="113" fill="#7DD9F9" font-size="12.5" font-weight="700" font-family="Geist Mono,monospace">{TRUSTED_LOCATION}</text>
+        <text x="123" y="131" fill="#6B85A6" font-size="11">template placeholder</text>
+        <text x="123" y="74" fill="#6B85A6" font-size="11.5" letter-spacing="1">AT DEPLOY TIME</text>
+
+        <!-- resolve box -->
+        <rect x="265" y="84" width="170" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="350" y="110" fill="#C4D4E8" font-size="13" font-weight="600">Resolve against</text>
+        <text x="350" y="129" fill="#C4D4E8" font-size="13" font-weight="600">named locations</text>
+
+        <!-- match branch -->
+        <rect x="500" y="40" width="192" height="56" rx="10" fill="#0C2A1E" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="596" y="63" fill="#2EE8A0" font-size="13" font-weight="700">Match found</text>
+        <text x="596" y="81" fill="#8FE6C4" font-size="11">use that GUID, deploy</text>
+
+        <!-- no-match branch -->
+        <rect x="500" y="136" width="192" height="64" rx="10" fill="#2B210C" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="596" y="159" fill="#FFC04D" font-size="13" font-weight="700">No match</text>
+        <text x="596" y="177" fill="#E6CD96" font-size="11">prompt operator: create</text>
+        <text x="596" y="192" fill="#E6CD96" font-size="11">or remap location</text>
+      </g>
+      <path d="M218 116 H261" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M435 106 C470 92 470 74 498 68" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+      <path d="M435 126 C470 142 470 158 498 164" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+    </svg>
+    <figcaption>The placeholder resolves to a real GUID when the named location exists — and never fails silently when it doesn't.</figcaption>
+  </figure>
+
+  <p>If a customer tenant doesn't have a "Mexico" named location yet, the deployment prompts the operator to create one (or to map the placeholder to a different existing named location). The system doesn't fail silently or create a broken policy.</p>
+
+  <p>This is the platform feature that makes lesson 4 work across geographies. The same mechanism applies to any other tenant-specific reference in an imported template — user groups, conditional access locations, authentication strength names, etc.</p>
+
+  <h2>What gets exported and what doesn't</h2>
+
+  <p>Worth being explicit about: not every aspect of a CA policy is portable.</p>
+
+  <p><strong>Things that export cleanly:</strong></p>
+  <ul>
+    <li>Policy name and state (Enabled, Report-only, Disabled).</li>
+    <li>User and group includes/excludes (by reference; the placeholder mechanism handles the GUID translation).</li>
+    <li>App targets (by app ID; Microsoft's first-party app IDs are universal across tenants).</li>
+    <li>Conditions: locations (via placeholders), client apps, platforms, sign-in risk levels, user risk levels.</li>
+    <li>Grant controls and session controls.</li>
+    <li>Authentication strength references (by name, which is consistent across tenants).</li>
+  </ul>
+
+  <p><strong>Things that don't export portably:</strong></p>
+  <ul>
+    <li><em>User-specific exclusions</em> by individual user ID (the user doesn't exist in the destination tenant). The export captures the <em>group</em> containing the user but the individual user-by-GUID exclusions are typically stripped or flagged as untransferable.</li>
+    <li><em>Custom security attributes</em> that exist only on the source tenant.</li>
+    <li><em>Reports-only result history</em> — that's an artifact of running the policy on the source tenant, not part of the template.</li>
+  </ul>
+
+  <p>The Panoptica365 import flow surfaces any non-portable elements during the import step. The operator decides whether to drop them, generalise them, or accept the limitation.</p>
+
+  <h2>When <em>not</em> to import</h2>
+
+  <p>A few honest caveats — importing isn't always the right move:</p>
+
+  <p><strong>The policy is broken or poorly-tuned at the source.</strong> If the original policy has accumulated cruft (forgotten exclusions, outdated targets, deprecated authentication methods), importing it spreads the cruft to every customer tenant. The right move is to clean up the source policy first, <em>then</em> export and import.</p>
+
+  <p><strong>The policy is too customer-specific.</strong> Some CA policies are deeply specific to one customer's environment — their specific user groups, their specific apps, their specific compliance state. Trying to generalise such a policy into a template can produce something that doesn't quite work for the new customer and requires per-deployment fiddling. If the per-deployment customisation is substantial, the template adds less value than just deploying ad-hoc.</p>
+
+  <p><strong>The policy depends on E5-only features and the destination tenant is Business Premium.</strong> Risk-based CA, authentication strengths with phishing-resistant requirements, and PIM-aware policies often assume an E5 tenant. Importing those into a Business Premium customer's tenant produces a policy that doesn't enforce as intended (because the underlying signal isn't available).</p>
+
+  <p><strong>The policy is in the source tenant's exclusion list for an obvious reason.</strong> If the policy at the source is currently disabled or has a broad exclusion because something didn't work, that's information about whether the policy is mature enough to spread. Importing a policy that the source customer turned off because it was breaking things is just spreading the breakage.</p>
+
+  <div class="callout caution">
+    <div class="clabel">The honest principle</div>
+    <p>Import policies that have been validated, are clean, are portable, and that the operator understands well. Imported templates inherit your MSP's reputation. Bad templates cost more than good policies save.</p>
+  </div>
+
+  <h2>Maintaining custom templates</h2>
+
+  <p>A custom template needs ongoing maintenance — Microsoft changes things, the customer environment changes, the policy may need to evolve. The MSP that imported the template now owns its lifecycle:</p>
+
+  <ul>
+    <li><strong>Microsoft Graph schema changes.</strong> Microsoft occasionally renames CA properties or changes the JSON schema. Imported templates may need updating to track schema changes. Panoptica365's CA drift detector covers shipped templates; custom templates need the MSP to verify periodically.</li>
+
+    <li><strong>Customer-specific divergence.</strong> When a customer's environment changes (they add Intune, they merge a subsidiary, they expand to a new region), the template that worked perfectly six months ago may need adjustment. The pattern is the same as for shipped templates — drift detection surfaces the differences, the operator addresses them.</li>
+
+    <li><strong>Template-vs-deployed-policy divergence.</strong> Over time, individual customer deployments may drift from the template (an admin makes a per-tenant tweak). Panoptica365's drift detector flags this; the MSP decides whether to (a) update the template to match the divergence, or (b) revert the customer policy to match the template, or (c) accept the divergence as customer-specific customisation.</li>
+  </ul>
+
+  <p>The maintenance overhead is real. Importing 15 custom templates means committing to maintain 15 templates. Most MSPs benefit from a small number of carefully-curated custom templates rather than a large unmaintained collection.</p>
+
+  <h2>The MSP value proposition</h2>
+
+  <p>The single line that captures why this matters: <em>every customer's best CA policy can become every customer's baseline CA policy</em>. The senior engineer's brilliant policy doesn't stay locked in one customer's tenant; the regulatory hardening doesn't get rebuilt thirty times; the post-incident response doesn't have to be invented twice.</p>
+
+  <blockquote>The platform mechanic — export, generalise, import, deploy — is the difference between "Panoptica365's catalogue" and "your MSP's catalogue, built on top of Panoptica365's foundations." For an MSP that takes CA seriously, this is one of the highest-leverage product features. It's why the seven shipped templates in card 3 aren't the ceiling — they're the floor, and the MSP builds on top.</blockquote>
+
+  <h2>Rollout for a custom template</h2>
+
+  <p>Same as for any shipped template, with two differences. First, an explicit pre-import inspection step. Second, <strong>the manual Report-only step in the Entra portal is strongly recommended for the first deployment of any custom template, regardless of tenant size</strong> — imported templates are not pre-validated, and the operator hasn't seen this specific policy enforced before.</p>
+
+  <ol start="0">
+    <li><strong>Pre-import inspection.</strong> Before importing, audit the source policy. Is it clean? Is it well-tuned? Is it the version of this policy the customer is using right now (and is happy with), or is it an older draft? Are all the references portable, or are there hardcoded user-by-GUID exclusions that won't transfer? Fix any issues in the source before importing.</li>
+    <li><strong>Import.</strong> Pull the policy from the source tenant. Resolve placeholders. Save as a template.</li>
+    <li><strong>Pre-flight on each destination tenant.</strong> Same as for shipped templates (lesson 1). Confirm named locations exist, break-glass excluded, etc.</li>
+    <li><strong>Day 0</strong> — deploy via Panoptica365 (creates the policy in Enabled state). Immediately open the Entra portal and flip the policy to Report-only.</li>
+    <li><strong>Days 1–N</strong> — Report-only review. N is longer for more complex policies; budget 7–14 days for a substantial custom template.</li>
+    <li><strong>Day N+1</strong> — flip the policy back to Enabled in the Entra portal.</li>
+  </ol>
+
+  <p>The longer Report-only window for custom templates reflects the additional uncertainty. A shipped template has been validated against many tenants; an imported template has been validated against only the source tenant. The verification window catches the differences between source and destination environments.</p>
+
+  <p>Once a custom template has been deployed to several customer tenants and verified to work cleanly, subsequent deployments can follow the shipped-template workflow (deploy directly, skip the manual Report-only flip) — the validation has accumulated.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p>Same monitoring as for shipped templates, plus one specific:</p>
+
+  <p><strong>Template drift across the MSP fleet.</strong> When multiple customers have the same custom template deployed, individual divergence creates a fleet-wide drift question — should the template be updated to match the most-common deployment shape, or should the outlier customers be re-aligned to the template? Panoptica365 surfaces both kinds of drift.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Healthy steady-state</div>
+    <p>The healthy steady-state is <em>near-zero divergence</em> between the template and the deployed policies. Substantial divergence indicates either (a) the template needs updating, or (b) the deployments are being modified per-customer in ways the template doesn't capture.</p>
+  </div>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The shipped templates are the floor, not the ceiling.</strong> Treat the seven Panoptica365 templates as the starting point for any customer. Build the MSP's own templates on top of that floor for any regional, regulatory, or customer-specific needs.</p>
+
+  <p><strong>Validate before you spread.</strong> A bad imported template multiplied across thirty customer tenants is thirty broken policies. The pre-import inspection step is the most important step in the workflow.</p>
+
+  <p><strong>Custom templates are an investment, not a free win.</strong> Each one you import requires ongoing maintenance. Better to have five well-maintained custom templates than fifty stale ones.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Lesson 9: Operating CA at scale.</b> The meta closer. How a CA policy set evolves over years, how drift detection works, how to retire exclusions cleanly, how Panoptica365's audit log makes the long-term operation tractable.</div></div>
+  </div>
+
+  <p>For now: the import-template workflow is what turns Panoptica365's CA module from a vendor library into your MSP's library. It's the difference between deploying what we shipped and deploying what your senior engineers know about your customers. Use it.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Graph API reference for Conditional Access policy export/import (<a href="https://learn.microsoft.com/en-us/graph/api/resources/conditionalaccesspolicy" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policy resource type</a>); Conditional Access named locations as referenced objects (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Locations</a>); Microsoft Graph object IDs across tenants (<a href="https://learn.microsoft.com/en-us/graph/best-practices-concept" target="_blank" rel="noopener">Microsoft Learn — Object IDs and properties</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

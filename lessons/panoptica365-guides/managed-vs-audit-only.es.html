@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inquilinos gestionados vs. solo auditoría — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Inquilinos gestionados vs. solo auditoría">
+<meta name="lesson:subtitle" content="La única decisión que se toma antes de consentir: supervisión completa para siempre, o una instantánea de solo lectura que caduca.">
+<meta name="lesson:icon" content="scale">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Inquilinos gestionados vs. solo auditoría</span></div>
+  <h1>Inquilinos gestionados vs. solo auditoría</h1>
+  <p class="dek">La única decisión que se toma antes de consentir: supervisión completa para siempre, o una instantánea de solo lectura que caduca.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Comparación lado a lado: un inquilino Gestionado que supervisa, alerta y envía directivas para siempre, frente a un inquilino Solo auditoría que solo lee una instantánea y luego caduca.">
+      <defs>
+        <radialGradient id="mvBg" cx="50%" cy="32%" r="84%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mvBg)"/>
+
+      <!-- izquierda: Gestionado -->
+      <g transform="translate(80,46)">
+        <rect x="0" y="0" width="430" height="248" rx="16" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="215" y="42" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">Gestionado</text>
+        <text x="215" y="68" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">CONJUNTO COMPLETO · PERSISTE</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="14.5" fill="#C4D4E8">
+          <circle cx="44" cy="106" r="6" fill="#2EE8A0"/><text x="62" y="111">Sondeo programado</text>
+          <circle cx="44" cy="142" r="6" fill="#2EE8A0"/><text x="62" y="147">Alertas y detección de deriva</text>
+          <circle cx="44" cy="178" r="6" fill="#2EE8A0"/><text x="62" y="183">Envía CA / Intune / configuración</text>
+          <circle cx="44" cy="214" r="6" fill="#2EE8A0"/><text x="62" y="219">Vistas de parque y resumen diario</text>
+        </g>
+      </g>
+
+      <!-- divisor -->
+      <line x1="560" y1="70" x2="560" y2="270" stroke="#274B72" stroke-width="1.4" stroke-dasharray="3 8"/>
+
+      <!-- derecha: Solo auditoría -->
+      <g transform="translate(610,46)">
+        <rect x="0" y="0" width="430" height="248" rx="16" fill="#0E2236" stroke="#FFC04D" stroke-width="1.5"/>
+        <text x="215" y="42" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">Solo auditoría</text>
+        <text x="215" y="68" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">INSTANTÁNEA SOLO LECTURA · CADUCA</text>
+        <g font-family="Geist,Inter,sans-serif" font-size="14.5" fill="#C4D4E8">
+          <circle cx="44" cy="106" r="6" fill="#5CCBF4"/><text x="62" y="111">Instantánea de solo lectura</text>
+          <circle cx="44" cy="142" r="6" fill="#FF5A6E"/><text x="62" y="147">Sin alertas, deriva ni escrituras</text>
+          <circle cx="44" cy="178" r="6" fill="#FFC04D"/><text x="62" y="183">Caduca 14 días tras la creación</text>
+          <circle cx="44" cy="214" r="6" fill="#FFC04D"/><text x="62" y="219">Eliminación definitiva 7 d después</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Dos modos, una decisión: supervisión completa que persiste, o una instantánea de solo lectura que caduca.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Al añadir un inquilino, la primera decisión — antes de conceder cualquier consentimiento — es su modo. Acierte desde el principio, porque la conversión solo funciona en un sentido.</p>
+  </div>
+
+  <h2>Gestionado</h2>
+
+  <p><strong>Gestionado</strong> es el modo normal para un cliente de pago. Le da el conjunto completo de funciones de Panoptica365:</p>
+
+  <ul>
+    <li>Sondeo programado en el intervalo que usted elija.</li>
+    <li>Alertas, detección de deriva y análisis de IA.</li>
+    <li>La capacidad de <strong>enviar</strong> directivas de CA, directivas de Intune y configuración de seguridad al inquilino.</li>
+    <li>Inclusión en las vistas de parque (Mapa de calor, Actividad diaria) y en el resumen diario.</li>
+  </ul>
+
+  <p>Un inquilino gestionado persiste indefinidamente — hasta que un Administrador lo elimine.</p>
+
+  <h2>Solo auditoría</h2>
+
+  <p><strong>Solo auditoría</strong> está pensado para evaluaciones de vulnerabilidades y descubrimiento de prospectos. Piense en él como una fotografía con fecha de caducidad de un inquilino que (todavía) no gestiona:</p>
+
+  <ul>
+    <li><strong>Recopilación de instantáneas de solo lectura para exportación.</strong> Panoptica365 lee la configuración del inquilino para que usted pueda revisarla y generar informes.</li>
+    <li><strong>Sin alertas, sin detección de deriva y sin escrituras</strong> en el inquilino del cliente. No se envía nada, nada se dispara a las 2 de la madrugada.</li>
+    <li><strong>Caducidad automática.</strong> El inquilino queda programado para caducar <strong>14 días después de su creación</strong>, y la eliminación definitiva se ejecuta <strong>7 días después</strong>. La tabla de Inquilinos muestra una insignia con cuenta atrás (p. ej. <em>AUDITORÍA · quedan 9 d</em>), y el modal de edición muestra la fecha exacta de caducidad.</li>
+  </ul>
+
+  <p>Esta caducidad es deliberada: usted no debería conservar indefinidamente los datos de configuración de un prospecto sin un contrato de por medio.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Cronología de solo auditoría: creado en el día cero, caduca 14 días después de la creación, luego eliminación definitiva 7 días después.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="70" y1="78" x2="650" y2="78" stroke="#1F3C5C" stroke-width="2"/>
+      <!-- creado -->
+      <circle cx="90" cy="78" r="8" fill="#5CCBF4"/>
+      <text x="90" y="50" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Creado</text>
+      <text x="90" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">día 0</text>
+      <!-- caduca -->
+      <circle cx="430" cy="78" r="8" fill="#FFC04D"/>
+      <text x="430" y="50" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Caduca</text>
+      <text x="430" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">14 días tras la creación</text>
+      <text x="260" y="70" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">+14 días</text>
+      <!-- eliminación definitiva -->
+      <circle cx="630" cy="78" r="8" fill="#FF5A6E"/>
+      <text x="630" y="50" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Elim. definitiva</text>
+      <text x="630" y="108" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">7 días después</text>
+      <text x="530" y="70" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">+7 días</text>
+    </svg>
+    <figcaption>El reloj de solo auditoría: caduca 14 días tras la creación, eliminación definitiva 7 días después.</figcaption>
+  </figure>
+
+  <h2>Convertir entre modos</h2>
+
+  <ul>
+    <li><strong>Solo auditoría → Gestionado: permitido.</strong> La historia típica — hizo una evaluación, el prospecto firmó y ahora lo gestiona. Un Administrador abre el modal de edición del inquilino y cambia <strong>Modo</strong> a Gestionado. La caducidad desaparece y comienza la supervisión completa.</li>
+    <li><strong>Gestionado → Solo auditoría: no permitido.</strong> Es una puerta de un solo sentido. Un inquilino gestionado tiene historial de alertas, plantillas desplegadas, líneas base e historial de cambios que no tienen sentido en un contenedor de solo lectura que caduca.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 180" role="img" aria-label="La conversión es una puerta de un solo sentido: solo auditoría se convierte en gestionado, pero gestionado no puede volver a solo auditoría.">
+      <rect width="720" height="180" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="cvOk" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+        <marker id="cvNo" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <!-- nodos -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="60" y="62" width="220" height="56" rx="12" fill="#0E2236" stroke="#FFC04D" stroke-width="1.5"/>
+        <text x="170" y="96" fill="#FFC04D" font-size="15" font-weight="700">Solo auditoría</text>
+        <rect x="440" y="62" width="220" height="56" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="550" y="96" fill="#7DD9F9" font-size="16" font-weight="700">Gestionado</text>
+      </g>
+      <!-- permitido -->
+      <path d="M284 78 H436" stroke="#2EE8A0" stroke-width="2.6" marker-end="url(#cvOk)"/>
+      <text x="360" y="62" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">permitido</text>
+      <!-- no permitido -->
+      <path d="M436 104 H288" stroke="#FF5A6E" stroke-width="2.6" stroke-dasharray="6 5" marker-end="url(#cvNo)"/>
+      <text x="360" y="142" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">no permitido (puerta de un sentido)</text>
+    </svg>
+    <figcaption>Puerta de un solo sentido: solo auditoría puede pasar a gestionado; gestionado nunca puede volver atrás.</figcaption>
+  </figure>
+
+  <h2>Guía práctica</h2>
+
+  <ul>
+    <li>¿Un prospecto pidió una evaluación de seguridad? <strong>Solo auditoría.</strong> Hágala, genere un informe de Evaluación rápida o de Documentación de configuración, y deje que los datos caduquen (o convierta el inquilino si firma).</li>
+    <li>¿Cliente nuevo con contrato? <strong>Gestionado</strong>, desde el primer día.</li>
+    <li>¿No está seguro? <strong>Solo auditoría</strong> — siempre puede subir de modo. Lo contrario exige eliminar el inquilino y volver a incorporarlo.</li>
+  </ul>
+
+  <p>Una nota más: eliminar un inquilino (de cualquier modo) borra permanentemente <strong>todos</strong> sus datos — alertas, instantáneas, configuración de seguridad, asignaciones de CA, auditorías e historial de cambios. El modal de confirmación lo dice en serio.</p>
+
+</div>
+</body>
+</html>

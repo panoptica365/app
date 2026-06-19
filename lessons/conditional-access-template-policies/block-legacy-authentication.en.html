@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block legacy authentication — Conditional Access template policies</title>
+<meta name="lesson:title" content="Block legacy authentication — closing the basic-auth bypass">
+<meta name="lesson:subtitle" content="Why IMAP and SMTP AUTH can bypass MFA entirely, and how one CA policy closes that loophole across all users and apps.">
+<meta name="lesson:icon" content="ban">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Block legacy authentication</span></div>
+  <h1>Block legacy authentication — closing the basic-auth bypass</h1>
+  <p class="dek">Why IMAP and SMTP AUTH can bypass MFA entirely, and how one CA policy closes that loophole across all users and apps.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Require MFA covers modern-auth sign-ins; Block Legacy Authentication blocks legacy-auth sign-ins; together no path through with only a password.">
+      <defs>
+        <radialGradient id="blBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="blArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="blArrR" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#blBg)"/>
+
+      <!-- left: a single password-only sign-in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="56" y="128" width="184" height="84" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="148" y="166" fill="#C4D4E8" font-size="17" font-weight="600">Sign-in</text>
+        <text x="148" y="190" fill="#6B85A6" font-size="13">password only</text>
+      </g>
+      <path d="M240 170 H352" stroke="#335F92" stroke-width="2.5" marker-end="url(#blArr)"/>
+
+      <!-- two gates -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- modern auth → Require MFA -->
+        <rect x="360" y="64" width="296" height="84" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.5"/>
+        <text x="508" y="98" fill="#A8E1F8" font-size="16" font-weight="700">Require MFA</text>
+        <text x="508" y="120" fill="#7FA6C9" font-size="12.5">modern-auth sign-ins</text>
+        <text x="508" y="138" fill="#6B85A6" font-size="12">second factor demanded</text>
+
+        <!-- legacy auth → Block -->
+        <rect x="360" y="192" width="296" height="84" rx="14" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="508" y="226" fill="#7DD9F9" font-size="16" font-weight="700">Block Legacy Authentication</text>
+        <text x="508" y="248" fill="#7FA6C9" font-size="12.5">legacy-auth sign-ins</text>
+        <text x="508" y="266" fill="#6B85A6" font-size="12">blocked outright</text>
+      </g>
+      <path d="M280 158 C320 120 330 106 360 106" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <path d="M280 184 C320 222 330 234 360 234" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+
+      <!-- outcome -->
+      <path d="M656 106 C740 130 760 150 800 168" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <path d="M656 234 C740 210 760 190 800 172" fill="none" stroke="#335F92" stroke-width="2" marker-end="url(#blArr)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="808" y="128" width="256" height="84" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="936" y="162" fill="#EAF7FE" font-size="16" font-weight="700">No password-only path</text>
+        <text x="936" y="186" fill="#7FA6C9" font-size="13">MFA or blocked — nothing else</text>
+      </g>
+    </svg>
+    <figcaption>The pair closes the surface: every sign-in either carries MFA, or it is blocked outright.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>You enable Require MFA for all users on Monday morning. By Tuesday afternoon, the attacker who already had a user's password from a 2019 LinkedIn breach signs in to that user's mailbox over IMAP. No MFA prompt. No challenge. No alert. Just a successful sign-in to a mailbox they shouldn't have access to.</p>
+
+  <p>The MFA policy didn't help because IMAP doesn't speak MFA. Neither does POP3, nor SMTP AUTH, nor any of the half-dozen other "legacy authentication" protocols that Microsoft has been trying to retire for a decade. To a CA policy that says "require MFA," a legacy auth client signs in <em>as if MFA were never asked for</em>. The user has correct credentials. There's no MFA prompt. The sign-in succeeds.</p>
+
+  <p>This is the loophole the Block Legacy Authentication template closes.</p>
+
+  <p><strong>Panoptica365 - Block Legacy Authentication.</strong> Grant: None (i.e., block). Users: All users. Apps: All cloud apps.</p>
+
+  <p>It is the paired policy to lesson 2. Without it, Require MFA for all users has a hole. Together, they close the most common credential-theft attack path in M365.</p>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="A legacy-auth client signs in with correct credentials over IMAP; no MFA prompt is asked; the sign-in succeeds.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="lgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="84" width="168" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="120" y="110" fill="#C4D4E8" font-size="14" font-weight="600">Legacy-auth client</text>
+        <text x="120" y="130" fill="#6B85A6" font-size="11.5">IMAP · correct password</text>
+
+        <rect x="276" y="84" width="168" height="62" rx="10" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="360" y="110" fill="#A8E1F8" font-size="14" font-weight="600">"Require MFA" policy</text>
+        <text x="360" y="130" fill="#6B85A6" font-size="11.5">never asked</text>
+
+        <rect x="516" y="84" width="168" height="62" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="600" y="110" fill="#A8E1F8" font-size="14" font-weight="600">Mailbox</text>
+        <text x="600" y="130" fill="#7DD9F9" font-size="11.5" font-weight="600">sign-in succeeds</text>
+      </g>
+      <path d="M204 115 H276" stroke="#5C7796" stroke-width="2" marker-end="url(#lgArr)"/>
+      <path d="M444 115 H516" stroke="#5C7796" stroke-width="2" marker-end="url(#lgArr)"/>
+      <text x="360" y="178" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">no MFA prompt · no challenge · no alert</text>
+    </svg>
+    <figcaption>IMAP doesn't speak MFA, so the "require MFA" policy is never asked — and the sign-in goes through.</figcaption>
+  </figure>
+
+  <h2>What is "legacy authentication," exactly</h2>
+
+  <p>The term covers any authentication protocol that doesn't support modern features like MFA, Conditional Access, or token binding. The main offenders:</p>
+
+  <ul>
+    <li><strong>Basic authentication</strong> — the username-and-password-over-HTTP-Basic-Auth protocol. Used historically by Outlook for Mac, Mail.app on iOS before iOS 11, scripted SMTP senders.</li>
+    <li><strong>IMAP / POP3 / SMTP AUTH</strong> — the classic email protocols. Used by third-party mail clients, scan-to-email devices, old scripts.</li>
+    <li><strong>Exchange ActiveSync (EAS) basic auth</strong> — the variant of ActiveSync that doesn't support modern auth. Used by older mobile mail clients.</li>
+    <li><strong>MAPI over HTTP basic auth</strong> — the legacy MAPI variant. Used by very old Outlook clients.</li>
+    <li><strong>Outlook Anywhere (RPC over HTTP) basic auth</strong> — same family.</li>
+  </ul>
+
+  <p>Microsoft has been retiring these for years. In October 2022, they disabled basic auth for most Exchange Online protocols. In 2023 and 2024, they extended the deprecation to the remaining legacy paths. By 2026, the surface area is significantly smaller than it was — but pockets remain, and any pocket is a hole.</p>
+
+  <p>The non-legacy alternative is <strong>modern authentication</strong> — OAuth 2.0-based, supports MFA, supports Conditional Access, supports token-based session controls. Every supported M365 client since 2020 speaks modern auth.</p>
+
+  <h2>Why this policy is still needed in 2026</h2>
+
+  <p>If Microsoft has retired most legacy auth, why ship a policy that blocks it?</p>
+
+  <p>Three reasons:</p>
+
+  <p><strong>1. The retirement is incomplete.</strong> Microsoft turned off basic auth for <em>most</em> Exchange Online protocols, but the off-by-default state doesn't mean off-everywhere. Some service principals can still authenticate via legacy paths. SMTP AUTH is still available (Microsoft has been re-enabling and re-disabling it tenant by tenant for years). Specific tenants that requested exceptions during the deprecation may still have basic auth on for one or more protocols.</p>
+
+  <p><strong>2. Customers re-enable basic auth.</strong> When a customer's old scan-to-email device stops working, the path of least resistance is to call Microsoft support and ask them to re-enable basic auth for SMTP. Some customers have. The CA policy is what catches that decision — and prevents it from being made silently.</p>
+
+  <p><strong>3. Some non-Microsoft applications still use it.</strong> Third-party apps that integrate with M365 over IMAP or SMTP — older marketing automation tools, line-of-business apps with hardcoded credentials, the occasional self-built script — speak legacy auth by design. The CA policy forces a conversation: either modernise the integration, or document the exclusion.</p>
+
+  <p>The CA policy is the durable backstop. Microsoft's protocol-level deprecation can be reversed at the tenant level; a CA policy that's enabled and monitored cannot be reversed silently.</p>
+
+  <h2>What it does</h2>
+
+  <p>The policy mechanics are simple:</p>
+
+  <ul>
+    <li><strong>Grant: Block.</strong> Sign-ins matching the policy are denied outright. No MFA prompt, no challenge — just rejected.</li>
+    <li><strong>Conditions: Client apps = Other clients.</strong> This is the CA condition that captures everything that <em>isn't</em> modern auth: Exchange ActiveSync basic auth, IMAP, POP3, SMTP AUTH, MAPI over HTTP, and a few others. The policy applies only to sign-ins from those legacy clients; modern-auth sign-ins are not affected.</li>
+  </ul>
+
+  <p>So a user opening Outlook (modern auth) is unaffected; an old script trying SMTP AUTH from a Linux box is blocked. The user experience for the vast majority of users is <em>no change</em> — they're already on modern auth and don't notice.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="On the Conditional Access gate, a modern-auth Outlook sign-in is unaffected, while an Other clients SMTP AUTH sign-in is blocked.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="caPass" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+        <marker id="caBlk" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <!-- gate column -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="286" y="40" width="148" height="160" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="74" fill="#C4D4E8" font-size="13" font-weight="600">CA policy</text>
+        <text x="360" y="92" fill="#6B85A6" font-size="11">Client apps =</text>
+        <text x="360" y="108" fill="#6B85A6" font-size="11">Other clients</text>
+        <line x1="306" y1="124" x2="414" y2="124" stroke="#1F3C5C"/>
+        <text x="360" y="148" fill="#7DD9F9" font-size="11.5" font-weight="700">Grant: Block</text>
+      </g>
+      <!-- top: modern auth passes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="56" width="178" height="52" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="125" y="80" fill="#A8E1F8" font-size="13.5" font-weight="600">Outlook</text>
+        <text x="125" y="98" fill="#6B85A6" font-size="11">modern auth</text>
+        <rect x="506" y="56" width="178" height="52" rx="10" fill="#0E2640" stroke="#2A7FA3"/>
+        <text x="595" y="86" fill="#A8E1F8" font-size="13.5" font-weight="600">Unaffected</text>
+      </g>
+      <path d="M214 82 H286" stroke="#2A7FA3" stroke-width="2"/>
+      <path d="M434 82 H506" stroke="#2A7FA3" stroke-width="2" marker-end="url(#caPass)"/>
+      <!-- bottom: legacy blocked -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="146" width="178" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="125" y="170" fill="#C4D4E8" font-size="13.5" font-weight="600">SMTP AUTH script</text>
+        <text x="125" y="188" fill="#6B85A6" font-size="11">Linux box · legacy</text>
+        <rect x="506" y="146" width="178" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="595" y="178" fill="#FF8A98" font-size="13.5" font-weight="700">Blocked</text>
+      </g>
+      <path d="M214 174 H286" stroke="#5C7796" stroke-width="2"/>
+      <path d="M434 174 H506" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#caBlk)"/>
+    </svg>
+    <figcaption>Same gate, two outcomes: modern auth passes untouched, "Other clients" is blocked.</figcaption>
+  </figure>
+
+  <h2>What can break when you turn it on</h2>
+
+  <p>The pre-flight matters here, because legacy-auth blocking is one of the policies most likely to surface unknown integrations.</p>
+
+  <p>Common breakage:</p>
+
+  <p><strong>Scan-to-email on printers.</strong> Older multifunction printers were configured years ago to send email via SMTP AUTH with a service account. When legacy auth is blocked, the printer can no longer send. The fix: either reconfigure the printer to use a modern SMTP relay (most modern printers support OAuth 2.0 SMTP now) or move scan-to-email through a connector that handles the legacy path.</p>
+
+  <p><strong>Old line-of-business apps with hardcoded SMTP credentials.</strong> Many internal apps have a "send email when this happens" feature configured with hardcoded SMTP credentials from 2017. They fail silently when blocked. The customer notices when a workflow that used to send notifications stops sending.</p>
+
+  <p><strong>Third-party CRM / marketing tools with IMAP-based email integration.</strong> Old Salesforce integrations, old HubSpot setups, custom email-parsing tools. Some still default to IMAP. Most modern versions support OAuth 2.0 IMAP, but legacy installations may not have been upgraded.</p>
+
+  <p><strong>Macs running old Mail.app versions.</strong> Pre-iOS 11 / pre-macOS 10.14 Mail.app uses basic auth. Users on truly old hardware can't connect. The fix is usually "your computer is too old to authenticate to a modern enterprise mail system; here's a $400 budget for a new one." This conversation is uncomfortable but correct.</p>
+
+  <p><strong>Custom PowerShell scripts that send mail.</strong> Internal scripts using <code>Send-MailMessage</code> with hardcoded credentials. The fix is to migrate to <code>Send-MailKitMessage</code> or use Graph API.</p>
+
+  <p>Each of these is a <em>known</em> legacy-auth use case the operator finds during the Report-only window. None of them is a reason to <em>not</em> enable the policy — they're reasons to plan the cutover carefully and migrate the affected integrations.</p>
+
+  <h2>Rollout</h2>
+
+  <p>This template deploys in Enabled state like the others, but with one important difference: <strong>legacy-auth breakage is harder to predict than MFA breakage</strong>. Service accounts that only authenticate once a quarter (for the year-end report, for the recurring invoice batch) don't show up in the pre-flight inventory or in the first week of monitoring. Their failure manifests months later.</p>
+
+  <p>For that reason, the manual Report-only step in the Entra portal is <strong>strongly recommended for this specific policy regardless of tenant size</strong>, even on small-business tenants where the other templates can deploy hot. Deploy via Panoptica365 (creates the policy in Enabled state), then immediately flip the policy to Report-only in the Entra portal, and run a <em>14-day</em> Report-only window.</p>
+
+  <p>During the Report-only window, pull the sign-in log filtered to "Required Block — Report-only result, Client = Other clients." Inventory:</p>
+
+  <ul>
+    <li>Which users? (Service accounts mostly; some real users on old clients.)</li>
+    <li>Which protocols? (SMTP AUTH is the most common.)</li>
+    <li>Which IPs / devices? (Printers, scripts, third-party integrations.)</li>
+  </ul>
+
+  <p>Then work through the inventory:</p>
+
+  <ul>
+    <li>For each legitimate use case, identify a modernisation path, or accept that the account stays on legacy auth and document the exclusion in Panoptica365 with a sunset date.</li>
+    <li>For each suspicious or unknown sign-in, treat as potential compromise — same playbook as the credential-stuffing response in card 2 lesson 1.</li>
+  </ul>
+
+  <p>Communicate to users with old clients about the upcoming change. Provide modernisation instructions. Then flip the policy back to Enabled in the Entra portal.</p>
+
+  <p>The 14-day Report-only window for legacy auth is longer than for most policies because legacy-auth use cases hide in monthly and quarterly cycles. A 3-day window misses too many quiet integrations.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>Sign-in attempts with <code>Other clients</code> that succeed.</strong> Should be zero after enforcement (the policy blocks them). Any successful sign-ins via legacy paths means a policy gap — an exclusion that's too broad, or a protocol the policy doesn't cover.</p>
+
+  <p><strong>Sign-in attempts with <code>Other clients</code> that fail with a CA block.</strong> Should be the normal daily noise — attackers probing, old scripts on excluded accounts. Pay attention to the <em>source</em>. A burst of legacy-auth attempts on multiple accounts from a single IP is credential-stuffing using a botnet that hasn't kept up with modern auth.</p>
+
+  <p><strong>Drift on the policy.</strong> The same drift detection that applies to Require MFA applies here. If the policy gets disabled or its scope narrows, somebody (the customer's other admin, a Microsoft support technician) has loosened the perimeter.</p>
+
+  <h2>The order matters</h2>
+
+  <p>Block Legacy Auth should be enabled <em>after</em> Require MFA, not before. Reasoning:</p>
+
+  <ul>
+    <li>Require MFA covers all modern-auth sign-ins. The MFA policy puts the second factor in front of the password-only path.</li>
+    <li>Block Legacy Auth covers all non-modern-auth sign-ins. The blocking policy puts a wall in front of the password-only path that <em>doesn't</em> support MFA.</li>
+  </ul>
+
+  <p>Together, they close the surface: any sign-in either has MFA (modern) or is blocked outright (legacy). There is no path through with only a password.</p>
+
+  <p>If you enabled Block Legacy Auth <em>first</em>, MFA-less modern-auth sign-ins would still succeed. If you enabled Require MFA <em>first</em> without Block Legacy Auth, legacy-auth sign-ins would still succeed. The pair has to be deployed together; the order is "MFA first, then Block Legacy Auth a few days later." The MFA policy can be enabled with broader scope and lower breakage risk; Block Legacy Auth then closes the remaining hole.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>The successful detection of attempts blocked by this policy comes through the standard sign-in log ingestion. Three signals that matter:</p>
+
+  <ul>
+    <li><strong>A burst of legacy-auth blocks</strong> on multiple accounts from a single IP — credential stuffing via a legacy protocol. Same triage as the modern-auth credential stuffing pattern.</li>
+    <li><strong>An unexpected successful legacy-auth sign-in</strong> — somebody loosened the policy. Investigate.</li>
+    <li><strong>An exclusion list that grew unexpectedly</strong> — drift on the policy itself, surfaced by Panoptica365's CA drift detector.</li>
+  </ul>
+
+  <p>The Daily Activity donut surfaces the volume of CA blocks in near-real-time, including the legacy-auth blocks. After enforcement, the legacy-auth block volume should be a steady low number (attackers probing) with no spikes.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Block Legacy Auth is the companion to Require MFA, not a replacement.</strong> Both are needed. The MFA policy covers the path users use; the Block Legacy Auth policy covers the path attackers prefer.</p>
+
+  <p><strong>The Report-only window is longer here than for other policies.</strong> Legacy-auth use cases hide in monthly and quarterly automations that don't show up in a 3-day Report-only sample. Budget two weeks.</p>
+
+  <p><strong>Resist the customer pressure to make broad exclusions.</strong> "Our printer needs SMTP AUTH" is true; "we need to exclude the entire IT department" is not. Each exclusion is a specific account on a specific IP with a documented use case and a sunset date. Broad exclusions are how this policy gets compromised in slow motion.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: Trusted location OR compliant device.</b> The next CA layer — location-based with a smart escape valve for compliant devices.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Compliant OR hybrid OR MFA.</b> The upgrade path that uses device-trust signals to reduce friction on managed-device sign-ins.</div></div>
+  </div>
+
+  <p>For now: this policy plus Require MFA from lesson 2 are the baseline. Until both are enabled and verified on a customer tenant, none of the more sophisticated CA work in later lessons matters — the credential-only attack path is still open.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on legacy authentication and basic auth retirement (<a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online" target="_blank" rel="noopener">Microsoft Learn — Deprecation of Basic authentication in Exchange Online</a>); Conditional Access "Other clients" condition reference (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-conditions#client-apps" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Client apps condition</a>); modern authentication overview (<a href="https://learn.microsoft.com/en-us/microsoft-365/enterprise/modern-auth-for-office-2013-and-2016" target="_blank" rel="noopener">Microsoft Learn — Modern authentication</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

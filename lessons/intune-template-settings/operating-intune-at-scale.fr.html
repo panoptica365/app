@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opérer Intune à l'échelle — dérive, exclusions, cycle de vie, le problème de perte d'assignation</title>
+<meta name="lesson:title" content="Opérer Intune à l'échelle — dérive, exclusions, cycle de vie, le problème de perte d'assignation">
+<meta name="lesson:subtitle" content="Le patron opérationnel le plus coûteux dans Intune : comment supprimer-et-recréer abandonne silencieusement les exclusions par tenant, et comment l'éviter.">
+<meta name="lesson:icon" content="settings-2">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres des modèles Intune</span> <span class="sep">·</span> <span>Opérer à l'échelle</span></div>
+  <h1>Opérer Intune à l'échelle — dérive, exclusions, cycle de vie, le problème de perte d'assignation</h1>
+  <p class="dek">Le patron opérationnel le plus coûteux dans Intune : comment supprimer-et-recréer abandonne silencieusement les exclusions par tenant, et comment l'éviter.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une mise à jour de modèle de style Intents supprime l'ancienne politique et en crée une nouvelle ; les groupes d'exclusion par tenant attachés à l'ancienne politique ne sont pas transférés.">
+      <defs>
+        <radialGradient id="osBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="osArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#osBg)"/>
+
+      <!-- left: old policy with exclusions -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="70" y="96" width="240" height="148" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.5"/>
+        <text x="190" y="128" fill="#C4D4E8" font-size="16" font-weight="600">Ancienne politique</text>
+        <rect x="98" y="148" width="184" height="34" rx="8" fill="#102A4C" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="190" y="170" fill="#FFC04D" font-size="12">Appareils kiosque exclus</text>
+        <rect x="98" y="192" width="184" height="34" rx="8" fill="#102A4C" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="190" y="214" fill="#FFC04D" font-size="12">Comptes de service exclus</text>
+      </g>
+
+      <!-- middle: delete-and-recreate -->
+      <path d="M330 170 H470" stroke="#335F92" stroke-width="2.5" marker-end="url(#osArr)"/>
+      <text x="400" y="150" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">supprimer</text>
+      <text x="400" y="200" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">recréer</text>
+
+      <!-- right: new policy, exclusions gone -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="490" y="96" width="240" height="148" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="610" y="128" fill="#A8E1F8" font-size="16" font-weight="600">Nouvelle politique</text>
+        <rect x="518" y="148" width="184" height="34" rx="8" fill="#0C2038" stroke="#33527A" stroke-dasharray="4 5"/>
+        <text x="610" y="170" fill="#52708F" font-size="12">exclusion abandonnée</text>
+        <rect x="518" y="192" width="184" height="34" rx="8" fill="#0C2038" stroke="#33527A" stroke-dasharray="4 5"/>
+        <text x="610" y="214" fill="#52708F" font-size="12">exclusion abandonnée</text>
+      </g>
+
+      <!-- the exclusions falling away -->
+      <g opacity="0.9">
+        <path d="M610 244 V300" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#osArr)"/>
+      </g>
+      <text x="610" y="322" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">silencieusement perdues</text>
+
+      <!-- consequence: lockouts -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="820" y="120" width="244" height="100" rx="14" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="942" y="160" fill="#FF8A98" font-size="15" font-weight="700">Verrouillages</text>
+        <text x="942" y="186" fill="#FF8A98" font-size="15" font-weight="700">d'utilisateurs inexpliqués</text>
+        <path d="M730 170 H812" stroke="#335F92" stroke-width="2.5" marker-end="url(#osArr)"/>
+      </g>
+      <text x="942" y="250" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="0.5">personne n'a remarqué pendant six semaines</text>
+    </svg>
+    <figcaption>La mise à jour de style Intents supprime l'ancienne politique et en bâtit une nouvelle — les exclusions par tenant soigneusement configurées ne suivent pas.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un MSP en croissance a découvert à la fin de 2025 que 12 de ses clients avaient silencieusement perdu leurs groupes d'exclusion par tenant sur le modèle Intune Account Protection. Les exclusions avaient été soigneusement configurées — appareils kiosque exclus pour qu'ils ne reçoivent pas d'invites Windows Hello qu'ils ne pouvaient pas satisfaire, comptes de service spécifiques exclus des politiques qui auraient brisé leurs flux. Puis quelqu'un a mis à jour le modèle Account Protection dans Panoptica365 — modernisé quelques paramètres, ajouté une nouvelle exigence — et poussé la mise à jour. La mise à jour a redéployé le modèle à travers tous les clients. Le comportement sous-jacent du modèle de style Intents, c'est supprimer-et-recréer. Les anciennes configurations d'exclusion par tenant ont été silencieusement abandonnées.</p>
+
+  <p>Personne n'a remarqué pendant six semaines. À ce moment-là, plusieurs clients avaient rapporté des verrouillages d'utilisateurs inexpliqués sur des appareils qui n'auraient pas dû être dans la portée.</p>
+
+  <p>C'est le patron opérationnel le plus coûteux dans Intune. La solution n'est pas difficile; la conscience l'est. Cette leçon est le finale de la carte 4 — comment opérer Intune à l'échelle, ce que la dérive veut dire ici, comment les exclusions se décomposent, et le problème de perte d'assignation qui a été nommé dans chaque leçon mais mérite un traitement explicite.</p>
+  </div>
+
+  <h2>Le problème de perte d'assignation, au complet</h2>
+
+  <p>La leçon 1 de la carte 4 a introduit ça; ça mérite un traitement complet.</p>
+
+  <p>Les modèles Intune viennent dans trois familles de types de modèles : catalogue de paramètres (<code>configurationPolicies</code>), Endpoint Security Intents (<code>intents</code>), et plus anciens Device Configurations (<code>deviceConfigurations</code>). Quand Panoptica365 déploie une mise à jour de modèle à travers les tenants clients, le comportement sous-jacent diffère par type :</p>
+
+  <ul>
+    <li><strong>Politiques de catalogue de paramètres</strong> — mise à jour sur place via Graph API PATCH. L'ID de la politique reste le même; les assignations sont préservées. Sûr.</li>
+    <li><strong>Device Configurations</strong> — habituellement mise à jour sur place. Surtout sûr.</li>
+    <li><strong>Modèles Intents / Endpoint Security</strong> — <em>supprimer-et-recréer</em>. L'ancienne politique est retirée et une nouvelle est créée. Toutes les exclusions d'assignation par tenant configurées contre l'ancien ID de politique ne sont pas transférées — elles sont silencieusement perdues.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="Trois familles de types de modèles Intune et leur comportement de mise à jour : catalogue de paramètres et Device Configurations se mettent à jour sur place et préservent les assignations ; les modèles de style Intents suppriment et recréent, perdant les assignations.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Settings Catalog -->
+        <g transform="translate(0,24)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="13.5" font-weight="600">Catalogue de paramètres</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">configurationPolicies</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#0E2640" stroke="#2EE8A0"/>
+          <text x="400" y="24" fill="#2EE8A0" font-size="13" font-weight="600">PATCH sur place</text>
+          <text x="400" y="42" fill="#7FD9B8" font-size="11">assignations préservées · sûr</text>
+        </g>
+        <!-- Device Configurations -->
+        <g transform="translate(0,90)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="13.5" font-weight="600">Device Configurations</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">deviceConfigurations</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#0E2640" stroke="#2EE8A0"/>
+          <text x="400" y="24" fill="#2EE8A0" font-size="13" font-weight="600">Habituellement sur place</text>
+          <text x="400" y="42" fill="#7FD9B8" font-size="11.5">surtout sûr</text>
+        </g>
+        <!-- Intents -->
+        <g transform="translate(0,156)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="56" y="24" fill="#FF8A98" font-size="13.5" font-weight="700">Intents / Endpoint Security</text>
+          <text x="56" y="42" fill="#E2A0AA" font-size="11.5">intents</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="400" y="24" fill="#FF8A98" font-size="13" font-weight="700">Supprimer-et-recréer</text>
+          <text x="400" y="42" fill="#E2A0AA" font-size="11">exclusions silencieusement perdues</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Trois familles de types de modèles, trois comportements de mise à jour. Seule la famille Intents perd les exclusions par tenant à la mise à jour.</figcaption>
+  </figure>
+
+  <p>Des 14 modèles dans la bibliothèque Panoptica365, ce comportement supprimer-et-recréer affecte <strong>Account Protection Settings</strong> spécifiquement (le seul modèle de style Intents dans la bibliothèque). Il affecte aussi tout modèle de style Intents importé que le MSP ajoute (leçon 10).</p>
+
+  <p>Microsoft a travaillé sur la transition des modèles Endpoint Security vers un vrai modèle PATCH plutôt que supprimer-recréer, mais en mi-2026 le comportement persiste. Jusqu'à ce que Microsoft règle l'API sous-jacente, la responsabilité de l'opérateur est de contourner ça manuellement.</p>
+
+  <p>La discipline opérationnelle :</p>
+
+  <p><strong>Avant de mettre à jour n'importe quel modèle de style Intents à travers la flotte :</strong></p>
+  <ol>
+    <li>Capturer les assignations courantes par tenant pour le modèle en ouvrant le portail Intune de chaque client affecté et en enregistrant les groupes d'assignation + d'exclusion manuellement. Il n'y a pas de vue de déploiement à l'échelle de la flotte dans Panoptica365 aujourd'hui, donc c'est du travail de clic-clic par client.</li>
+    <li>Noter spécifiquement les exclusions non par défaut. L'assignation standard « Tous les appareils » se redéploiera correctement; les exclusions par client sur mesure, c'est ce qui se perd.</li>
+  </ol>
+
+  <p><strong>Après la mise à jour :</strong></p>
+  <ol start="3">
+    <li>Vérifier les assignations sur chaque tenant client affecté.</li>
+    <li>Pour n'importe quel client où les exclusions manquent, les restaurer manuellement.</li>
+  </ol>
+
+  <p>C'est agaçant, et il n'y a pas de raccourci automatisé aujourd'hui — mettre à jour en lot les modèles de style Intents à travers une flotte sans l'étape manuelle capture-et-rejeu, c'est un canon-à-pied. Jusqu'à ce que Microsoft remplace le comportement supprimer-recréer, le flux manuel est le seul chemin sûr.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Le point à retenir</div>
+    <p>Pour l'opérateur typique, le point pratique à retenir : <strong>avant de pousser n'importe quelle mise à jour au modèle Account Protection</strong> (ou n'importe quel modèle de style Intents importé), inventoriez les exclusions des clients affectés. Ne mettez pas à jour en lot les modèles de style Intents sans l'étape de rejeu.</p>
+  </div>
+
+  <h2>Détection de dérive sur les modèles Intune</h2>
+
+  <p>Comme l'AC, les modèles Intune dérivent au fil du temps. Les catégories de dérive sont similaires mais les modes d'échec diffèrent :</p>
+
+  <p><strong>Dérive d'état</strong> — l'état de déploiement d'un modèle a changé de façon inattendue. Moins fréquent dans Intune que dans l'AC (Intune n'a pas d'équivalent Report-only qui peut basculer de la même façon) mais possible : un autre admin du client peut avoir supprimé une politique entièrement, ou avoir mis sa portée d'assignation si étroitement qu'elle ne s'applique plus à personne.</p>
+
+  <p><strong>Dérive de portée</strong> — la portée d'assignation a changé. Nouveaux groupes d'inclusion ajoutés, groupes d'exclusion ajoutés, groupes retirés. C'est la catégorie de dérive la plus conséquente pour Intune parce que changer la portée peut changer dramatiquement quels appareils la politique affecte. Un autre admin du client qui ajoute un large groupe d'exclusion peut effectivement désactiver la politique sans la désactiver formellement.</p>
+
+  <p><strong>Dérive de paramètre</strong> — des paramètres individuels à l'intérieur d'un modèle ont changé. Un paramètre spécifique a été accordé par client (un chemin d'exclusion Defender ajouté, une règle de pare-feu ajustée, un minimum de NIP Windows Hello assoupli). Ce sont les personnalisations légitimes par client qui <em>devraient</em> dériver — mais l'opérateur a besoin de savoir.</p>
+
+  <p><strong>Dérive de valeur de configuration</strong> — la valeur d'une politique de catalogue de paramètres pour un paramètre spécifique a été changée centralement (l'admin d'un client a cliqué à travers et modifié une valeur spécifique). Le plus difficile à détecter manuellement parce que la politique semble encore « correcte » à un haut niveau; seule la comparaison paramètre par paramètre l'attrape.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 196" role="img" aria-label="Les quatre catégories de dérive que le détecteur de dérive de Panoptica365 couvre pour les modèles Intune : état, portée, paramètre, et valeur de configuration.">
+      <rect width="720" height="196" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">QUATRE CATÉGORIES DE DÉRIVE</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="36" y="60" width="148" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="110" y="100" fill="#A8E1F8" font-size="14.5" font-weight="600">État</text>
+          <text x="110" y="124" fill="#6B85A6" font-size="11.5">état de</text>
+          <text x="110" y="140" fill="#6B85A6" font-size="11.5">déploiement changé</text>
+        </g>
+        <g>
+          <rect x="200" y="60" width="148" height="100" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="274" y="100" fill="#7DD9F9" font-size="14.5" font-weight="700">Portée</text>
+          <text x="274" y="124" fill="#6B85A6" font-size="11.5">portée</text>
+          <text x="274" y="140" fill="#6B85A6" font-size="11.5">d'assignation changée</text>
+        </g>
+        <g>
+          <rect x="364" y="60" width="148" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="438" y="100" fill="#A8E1F8" font-size="14.5" font-weight="600">Paramètre</text>
+          <text x="438" y="124" fill="#6B85A6" font-size="11.5">paramètres</text>
+          <text x="438" y="140" fill="#6B85A6" font-size="11.5">individuels changés</text>
+        </g>
+        <g>
+          <rect x="528" y="60" width="156" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="606" y="96" fill="#A8E1F8" font-size="13.5" font-weight="600">Valeur de</text>
+          <text x="606" y="113" fill="#A8E1F8" font-size="13.5" font-weight="600">config</text>
+          <text x="606" y="137" fill="#6B85A6" font-size="11">une valeur changée</text>
+          <text x="606" y="152" fill="#6B85A6" font-size="11">centralement</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Le détecteur de dérive couvre les quatre catégories pour les 14 modèles inclus.</figcaption>
+  </figure>
+
+  <p>Le détecteur de dérive de Panoptica365 couvre les quatre catégories pour les 14 modèles inclus. Pour les modèles sur mesure importés (leçon 10), la responsabilité de l'opérateur inclut de vérifier que la détection de dérive fonctionne — Panoptica365 fait remonter la dérive pour les modèles dont il a une référence; si un modèle sur mesure a été importé dans Panoptica365 correctement, la référence est capturée et la détection de dérive fonctionne automatiquement.</p>
+
+  <p>Le flux opérateur pour les alertes de dérive :</p>
+
+  <ol>
+    <li><strong>Accuser réception de l'alerte</strong> et identifier le type (état / portée / paramètre / valeur).</li>
+    <li><strong>Identifier la cause via le journal d'audit.</strong> Qui a fait le changement, quand, depuis quel rôle.</li>
+    <li><strong>Décider : accepter ou revenir.</strong>
+      <ul>
+        <li>Personnalisation par client légitime? Accepter et mettre à jour la référence (ou accepter que le client a sa propre variante).</li>
+        <li>Changement non autorisé ou modification accidentelle? Revenir à la référence du modèle.</li>
+      </ul>
+    </li>
+    <li><strong>Documenter la décision</strong> dans le journal de changement du client (Panoptica365 fait ça automatiquement).</li>
+  </ol>
+
+  <h2>Exclusions — le problème persistant de décomposition</h2>
+
+  <p>Tout comme l'AC, les exclusions Intune s'accumulent silencieusement. Le mécanisme qui prévient ça :</p>
+
+  <p><strong>Chaque exclusion a une date d'extinction.</strong> Quand un opérateur ajoute un appareil ou un groupe à la liste d'exclusion d'un modèle Intune, Panoptica365 invite à une justification et une date d'expiration. L'expiration par défaut est 180 jours; l'opérateur peut ajuster.</p>
+
+  <p><strong>Chaque exclusion est revue avant l'expiration.</strong> Panoptica365 alerte l'opérateur responsable avant la date d'extinction. Revue : encore nécessaire? Renouveler avec une justification fraîche? Ou la laisser expirer et ramener l'appareil dans la portée?</p>
+
+  <p><strong>Les exclusions basées sur les groupes sont auditées périodiquement.</strong> Exclure « Appareils Kiosque » (un groupe Entra) veut dire que n'importe qui ajouté à ce groupe plus tard hérite de l'exclusion. L'appartenance au groupe peut changer sans que le modèle change. Des audits périodiques de l'appartenance au groupe font partie de la discipline.</p>
+
+  <p>Les patrons à éviter :</p>
+
+  <ul>
+    <li>« Exclusion permanente » sans expiration. Rien n'est permanent; les modèles changent, les appareils changent, les règlements changent. Les exclusions permanentes deviennent des brèches de sécurité invisibles.</li>
+    <li>« Exclure le département TI pour la commodité. » Si vous excluez les admins d'une politique de durcissement parce qu'ils la trouvent agaçante, vous avez inversé le modèle de sécurité — les admins sont les cibles à plus haute valeur et ont besoin de <em>plus</em> de durcissement, pas moins.</li>
+    <li>« Exclure un appareil pour un incident spécifique, jamais ré-inclure. » Un appareil exclu pour une raison technique temporaire reste souvent exclu pour toujours parce que personne ne se souvient de la raison.</li>
+  </ul>
+
+  <p>Le flux d'exemption de Panoptica365 rend l'ajout d'exclusions légèrement plus difficile que de les ignorer. Cette friction est intentionnelle — elle rend les mauvais patrons plus difficiles à commettre que les bons.</p>
+
+  <h2>Cycle de vie — comment les modèles Intune évoluent</h2>
+
+  <p>Le déploiement Intune d'un client évolue comme son entreprise évolue. Événements qui devraient déclencher une revue des modèles Intune :</p>
+
+  <ul>
+    <li><strong>Nouvelle plateforme d'appareils introduite.</strong> Le client acquiert une flotte Mac pour une équipe créative. Les modèles macOS ont besoin d'attention.</li>
+    <li><strong>Mise à jour de fonctionnalité Windows majeure.</strong> Windows 11 25H2 change les défauts de certains paramètres; les modèles peuvent avoir besoin d'ajustement pour appliquer les comportements précédents.</li>
+    <li><strong>Nouveau cadre de conformité.</strong> Le client signe un contrat qui exige la conformité CIS Microsoft 365 Foundations; a besoin de modèles alignés CIS importés.</li>
+    <li><strong>Bureaux qui déménagent ou l'entreprise qui s'agrandit.</strong> Nouvelles plages IP de confiance, nouveaux endpoints VPN, nouvelles apps d'affaires qui ont besoin d'être sur la liste d'autorisation.</li>
+    <li><strong>Réponse à incident.</strong> Post-compromission, la posture Intune du client se durcit typiquement.</li>
+    <li><strong>Le client se réduit ou fusionne.</strong> La population d'appareils change; les anciens modèles peuvent avoir besoin de nettoyage.</li>
+    <li><strong>Microsoft retire ou remplace une fonctionnalité.</strong> Microsoft a tranquillement retiré des types de politiques Intune plus anciens en faveur du catalogue de paramètres. Les modèles peuvent avoir besoin de migration.</li>
+  </ul>
+
+  <p>Pour chaque client, une <strong>revue annuelle d'Intune</strong> est la bonne cadence :</p>
+
+  <ol>
+    <li>Lister tous les modèles Intune déployés par client.</li>
+    <li>Pour chaque modèle : encore approprié? Encore nécessaire? Paramètres encore corrects?</li>
+    <li>Réviser les listes d'exclusions. Chaque entrée : encore nécessaire? Date d'extinction encore appropriée?</li>
+    <li>Réviser l'historique de dérive. Y a-t-il eu des changements dans la dernière année qui n'ont pas été pleinement résolus?</li>
+    <li>Comparer avec la bibliothèque incluse Panoptica365 courante. Modèles que le client devrait déployer mais ne déploie pas? Nouveaux modèles ajoutés depuis la dernière revue?</li>
+    <li>Documenter la revue.</li>
+  </ol>
+
+  <p>C'est la même cadence de revue annuelle que la leçon 9 de la carte 3 recommandait pour l'AC. Mêmes principes s'appliquent : c'est une discipline opérationnelle, pas optionnelle, facturable au client comme partie du service de sécurité.</p>
+
+  <h2>Dépendances de licence</h2>
+
+  <p>Certaines fonctionnalités Intune exigent Intune Plan 2 (E3 ou E5) plutôt qu'Intune Plan 1 (Business Premium). Pour la bibliothèque incluse Panoptica365, les modèles fonctionnent à Intune Plan 1 — ils ont été curés pour entrer dans la portée Business Premium. Mais certaines fonctionnalités avancées que le MSP pourrait importer ne fonctionnent pas :</p>
+
+  <ul>
+    <li><strong>Endpoint Privilege Management (EPM)</strong> — contrôle d'élévation admin local. Exige Intune Plan 2 / E5.</li>
+    <li><strong>Remote Help</strong> — support à distance intégré Intune. Exige Intune Plan 2 / E5.</li>
+    <li><strong>Endpoint Analytics avancé</strong> — télémétrie plus profonde. Exige Intune Plan 2 / E5.</li>
+    <li><strong>Intégration Mobile Threat Defense</strong> — partenaires MTD tiers. Exige Intune Plan 1 minimum mais la configuration varie.</li>
+  </ul>
+
+  <p>Quand vous importez des modèles sur mesure qui dépendent de ces fonctionnalités, vérifiez que le tenant de destination a la licence. Déployer une fonctionnalité Plan 2 à un tenant Plan 1 produit un échec silencieux — la politique existe mais ne peut pas s'activer.</p>
+
+  <h2>Ce que Panoptica365 fait remonter</h2>
+
+  <p>Il n'y a pas de vue unique « opérer à l'échelle » dans Panoptica365 aujourd'hui qui agrège la flotte à travers les clients — soyez honnête avec votre équipe à ce sujet et ne promettez pas ça à vos clients. Le modèle de lecture de la plateforme est par tenant, et le flux à-l'échelle de l'opérateur aujourd'hui est un mélange de trois choses :</p>
+
+  <ul>
+    <li><strong>Alertes de dérive par modèle par client.</strong> La détection de dérive tourne à travers les modèles déployés; quand le tenant d'un client diverge de la référence incluse (ou importée), une alerte se déclenche. C'est le principal signal « quelque chose a changé quelque part à travers ma flotte » que Panoptica365 fournit aujourd'hui.</li>
+    <li><strong>La section Exemptions.</strong> Quand un opérateur a approuvé des exemptions à travers les tenants clients, la vue Exemptions les liste avec l'option de révoquer. Ce n'est pas une file « en attente de revue » — c'est un dossier de ce qui a été accordé. La discipline de l'opérateur d'ouvrir ça périodiquement et de demander « est-ce que tout ça est encore défendable? », c'est ce qui transforme ça en flux d'extinction.</li>
+    <li><strong>Tableaux de bord par tenant, un à la fois.</strong> Tuile de compte de conformité, liste d'appareils, Appareils par OS — la même surface que la leçon 9 a décrite. Pour faire une revue « à l'échelle » aujourd'hui, l'opérateur clique à travers les tenants un par un.</li>
+  </ul>
+
+  <p>Ce qui <em>n'existe pas</em> aujourd'hui, au cas où le reste de cette leçon vous aurait fait l'attendre :</p>
+
+  <ul>
+    <li>Une agrégation « conformité de flotte » entre clients</li>
+    <li>Une vue matrice « état de déploiement de modèle par client par modèle »</li>
+    <li>Une chronologie « activité de déploiement récente à travers tous les clients »</li>
+    <li>Une liste « appareils dans des états de conformité problématiques »</li>
+    <li>Une file de revue d'exclusions avec dates d'extinction</li>
+  </ul>
+
+  <p>Les flèches de tendance de la tuile de conformité donnent à l'opérateur un signal directionnel par sondage — utile pour attraper la dérive de posture rapidement sans se souvenir du chiffre d'hier. Pour l'instant, c'est le niveau de visibilité entre clients que Panoptica365 fournit; une agrégation plus profonde demande le clic-clic par tenant décrit plus haut.</p>
+
+  <h2>La revue annuelle Intune — cadence recommandée</h2>
+
+  <p>Pour chaque client, une fois par an (communément synchronisée avec la revue annuelle de sécurité et la conversation de renouvellement) :</p>
+
+  <ol>
+    <li><strong>Lister tous les modèles Intune déployés.</strong> Ce qui est activé, ce qui est déployé en mode audit, ce qui a été déployé mais n'est pas activement en usage.</li>
+    <li><strong>Pour chaque modèle, vérifier qu'il est encore approprié.</strong> Conditions correspondent à la réalité courante du client? Exclusions encore défendables?</li>
+    <li><strong>Réviser l'historique de dérive.</strong> Qu'est-ce qui a changé dans la dernière année? Chaque changement a-t-il été correctement résolu (accepté avec référence mise à jour, ou annulé)?</li>
+    <li><strong>Comparer avec la bibliothèque Panoptica365 courante.</strong> Modèles inclus qui devraient être déployés mais ne le sont pas (nouvellement ajoutés, récemment mis à jour)?</li>
+    <li><strong>Comparer avec l'état courant du client.</strong> L'environnement du client a-t-il changé (nouvelles plateformes, nouvelles licences, nouvelles obligations réglementaires) de façons qui suggèrent de nouveaux modèles?</li>
+    <li><strong>Documenter la revue.</strong> Le directeur TI du client devrait avoir un dossier de la revue annuelle et ses conclusions.</li>
+  </ol>
+
+  <p>C'est de la discipline opérationnelle. C'est le travail qui empêche la posture Intune du client de se décomposer au fil des années. C'est facturable comme partie du service de sécurité du MSP — et c'est ce qui différencie un MSP soigné de celui qui déploie et oublie.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Le problème de perte d'assignation est le piège opérationnel le plus conséquent dans Intune.</strong> Account Protection Settings (et n'importe quel modèle de style Intents importé) demande la discipline inventaire-mise-à-jour-rejeu. La sauter, c'est comme ça que les exclusions client s'évaporent sans que personne ne remarque.</p>
+
+  <p><strong>Les listes d'exclusions sont une dette silencieuse.</strong> Elles s'accumulent, elles se décomposent, elles deviennent des brèches de sécurité invisibles. Le flux d'exemption avec des dates d'extinction est l'outil pour combattre ça; utilisez-le.</p>
+
+  <p><strong>La revue annuelle n'est pas négociable.</strong> Les modèles Intune qui étaient appropriés il y a trois ans peuvent ne pas être appropriés aujourd'hui. Sans une cadence de revue structurée, la posture Intune du client se décompose. Facturez la revue; documentez-la; rendez-la visible au client.</p>
+
+  <h2>Fermeture de la carte 4</h2>
+
+  <p>Vous avez maintenant vu les 14 modèles Intune Panoptica365 et les mécaniques opérationnelles qui les transforment en pratique de durcissement de terminal fonctionnelle.</p>
+
+  <p>L'arc de la carte 4 :</p>
+
+  <ol>
+    <li>Pré-déploiement pour les modèles Intune — la discipline avant n'importe quel déploiement.</li>
+    <li>Politiques de conformité — définir « conforme » à travers quatre plateformes.</li>
+    <li>Le Security Baseline — votre ensemble curé de durcissement Windows.</li>
+    <li>BitLocker Settings — posture de chiffrement de disque.</li>
+    <li>Configuration Defender for Endpoint — Windows + macOS.</li>
+    <li>Firewall Settings — défense réseau Windows.</li>
+    <li>Règles ASR + Block mshta.exe — réduction de surface d'attaque.</li>
+    <li>Account Protection + Block MSA — durcissement des identifiants sur le terminal.</li>
+    <li>La boucle de conformité en production — dérive, signaux, surveillance.</li>
+    <li>Importer vos propres modèles Intune — le flux de personnalisation.</li>
+    <li>Opérer Intune à l'échelle — dérive, exclusions, cycle de vie, le problème de perte d'assignation (cette leçon).</li>
+  </ol>
+
+  <p>La carte 5 (durcissement Exchange / courriel) commence ensuite. Cette carte déplace le focus du terminal à la surface courriel — les paramètres EXO qui protègent le canal que les attaquants utilisent le plus.</p>
+
+  <p>Pour l'instant : les modèles de la carte 4 vous ont donné la fondation de durcissement côté Windows. La boucle de conformité signale dans l'AC. La posture de terminal du client passe du défaut d'usine à vraiment durci avec la bibliothèque incluse déployée. Le MSP qui réussit ça ferme la plus grande avenue d'attaque unique contre les flottes Windows PME.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur les types de politiques Intune et le comportement de mise à jour (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/device-profiles" target="_blank" rel="noopener">Microsoft Learn — Intune policy types</a>); modèles Endpoint Security et leur modèle de mise à jour (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-policy" target="_blank" rel="noopener">Microsoft Learn — Endpoint security policy</a>); exigences de licence Intune par fonctionnalité (<a href="https://learn.microsoft.com/en-us/mem/intune/fundamentals/licenses" target="_blank" rel="noopener">Microsoft Learn — Intune licensing</a>); API Microsoft Graph pour l'assignation de politique (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-shared-deviceconfigurationassignment" target="_blank" rel="noopener">Microsoft Learn — Assignment resource type</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politiques anti-hameçonnage — l'écart d'usurpation d'identité que Microsoft laisse ouvert par défaut — Paramètres de sécurité courriel</title>
+<meta name="lesson:title" content="Politiques anti-hameçonnage — l'écart d'usurpation d'identité que Microsoft laisse ouvert par défaut">
+<meta name="lesson:subtitle" content="Protection contre l'usurpation d'identité, réglage de l'anti-spoofing et schémas BEC que les défauts Microsoft ne détectent pas.">
+<meta name="lesson:icon" content="fish">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres de sécurité courriel</span> <span class="sep">·</span> <span>Politiques anti-hameçonnage</span></div>
+  <h1>Politiques anti-hameçonnage — l'écart d'usurpation d'identité que Microsoft laisse ouvert par défaut</h1>
+  <p class="dek">Protection contre l'usurpation d'identité, réglage de l'anti-spoofing et schémas BEC que les défauts Microsoft ne détectent pas.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une boîte de réception sur téléphone montrant le nom d'affichage de confiance « James Wilson, PDG » au-dessus de l'adresse expéditrice réelle cachée james.wilson.ceo@gmail.com.">
+      <defs>
+        <radialGradient id="apBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="apPhone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0E2640"/><stop offset="100%" stop-color="#0B1E36"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#apBg)"/>
+
+      <!-- phone frame -->
+      <rect x="120" y="40" width="300" height="260" rx="26" fill="url(#apPhone)" stroke="#335F92" stroke-width="2"/>
+      <rect x="120" y="40" width="300" height="48" rx="26" fill="#0B2038"/>
+      <rect x="120" y="64" width="300" height="24" fill="#0B2038"/>
+      <text x="146" y="72" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">RÉCEPTION</text>
+      <circle cx="396" cy="64" r="4" fill="#52708F"/>
+      <!-- the message row, what the eye trusts -->
+      <rect x="140" y="108" width="260" height="80" rx="10" fill="#10243B" stroke="#2A6F9E"/>
+      <circle cx="170" cy="148" r="16" fill="#1A5F87"/>
+      <text x="170" y="153" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">JW</text>
+      <text x="198" y="138" fill="#EEF4FC" font-family="Geist,Inter,sans-serif" font-size="14.5" font-weight="600">James Wilson, PDG</text>
+      <text x="198" y="160" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">Confidentiel — paiement</text>
+      <text x="198" y="176" fill="#B0C4DF" font-family="Geist,Inter,sans-serif" font-size="12">nécessaire aujourd'hui</text>
+      <text x="270" y="246" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600">Ce qu'elle voit sur le téléphone</text>
+
+      <!-- magnifier / reveal -->
+      <path d="M470 170 H560" stroke="#335F92" stroke-width="2.5" marker-end="url(#apArr)"/>
+      <defs><marker id="apArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <text x="515" y="156" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">touche &amp; plisse</text>
+
+      <!-- the truth underneath -->
+      <g transform="translate(600,96)">
+        <rect x="0" y="0" width="430" height="150" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="24" y="40" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="1.5">EXPÉDITEUR RÉEL</text>
+        <text x="24" y="78" fill="#FF8A98" font-family="Geist Mono,monospace" font-size="18" font-weight="500">james.wilson.ceo@gmail.com</text>
+        <line x1="24" y1="98" x2="406" y2="98" stroke="#5C2630" stroke-width="1"/>
+        <text x="24" y="124" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13">pas le domaine du client · loin de là</text>
+      </g>
+      <text x="815" y="276" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">46 000 $ virés</text>
+    </svg>
+    <figcaption>Le nom d'affichage disait la bonne chose. L'adresse réelle — visible seulement si on touche et plisse les yeux — était un compte Gmail.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Une contrôleuse dans une compagnie manufacturière de 40 personnes reçoit un courriel de son PDG un mardi après-midi. Sujet : « Confidentiel — paiement nécessaire aujourd'hui. » Corps : « S'il vous plaît payez la facture jointe de notre nouveau fournisseur d'équipement. Détails de virement à l'intérieur. N'incluez pas la comptabilité tout de suite — je vous expliquerai jeudi. » Signé avec le bloc de signature réel du PDG, formaté exactement comme ses vrais courriels.</p>
+
+  <p>La contrôleuse lit le courriel sur son téléphone. Le nom d'affichage dit « James Wilson, PDG » — le même que chaque autre courriel du PDG. Elle ouvre la pièce jointe, voit ce qui ressemble à une facture légitime avec les détails bancaires, et lance le virement. 46 000 $.</p>
+
+  <p>L'adresse expéditrice réelle — visible seulement si vous touchez le nom d'affichage et plissez les yeux — était <code>james.wilson.ceo@gmail.com</code>. Pas le domaine du client. Loin de là. Mais sur un téléphone, dans la vue boîte de réception, vous voyez le nom d'affichage. Le nom d'affichage disait la bonne chose.</p>
+
+  <p>C'est le patron BEC le plus commun en 2026 et celui que la politique anti-hameçonnage par défaut de Microsoft n'attrape pas. L'anti-spoofing sur le domaine réel du client fonctionne très bien — l'attaquant n'usurpe pas le domaine du client, il utilise Gmail. La défense qui <em>aurait</em> attrapé ça, c'est la <strong>protection contre l'usurpation d'identité d'utilisateur</strong>, et Microsoft la livre désactivée.</p>
+
+  <p>Cette leçon vise à combler cet écart.</p>
+  </div>
+
+  <h2>Les quatre couches de l'anti-hameçonnage M365 — et lesquelles sont activées</h2>
+
+  <p>La protection anti-hameçonnage de Microsoft 365 est quatre mécanismes distincts qui vivent sous le même parapluie de politique. La plupart des opérateurs les traitent comme une fonctionnalité. Ils ne le sont pas. Savoir qui est qui, c'est tout le jeu.</p>
+
+  <p><strong>Anti-spoofing.</strong> Attrape le courriel qui <em>prétend venir du domaine du client lui-même</em> mais a échoué à l'authentification SPF / DKIM / DMARC. Défaut : <strong>activé</strong>. C'est le plancher de base — si quelqu'un envoie un message falsifié prétendant être <code>ceo@customer.com</code> depuis un serveur qui n'a rien à faire à envoyer pour <code>customer.com</code>, l'anti-spoofing l'attrape. Les défauts de Microsoft sont raisonnables ici.</p>
+
+  <p><strong>Mailbox intelligence.</strong> Utilise l'apprentissage machine de Microsoft sur l'historique de communication du destinataire. Si un utilisateur n'a jamais reçu de courriel d'un expéditeur particulier, mais que l'identité de l'expéditeur ressemble à quelqu'un avec qui il communique régulièrement, mailbox intelligence le signale. Défaut : <strong>activée avec conseil de sécurité de premier contact</strong>, mais les <em>actions d'application</em> (déplacer vers indésirables, mettre en quarantaine) sont typiquement configurées à la position <strong>Off</strong> tant que vous ne réglez pas la politique.</p>
+
+  <p><strong>Protection contre l'usurpation d'identité d'utilisateur.</strong> Vous spécifiez les « utilisateurs protégés » — typiquement le PDG, le directeur financier, le contrôleur, n'importe qui à qui on pourrait plausiblement demander de virer de l'argent. La politique signale alors le courriel d'expéditeurs dont le nom d'affichage correspond étroitement à l'un de ces utilisateurs protégés <em>mais dont l'adresse expéditrice ne correspond pas</em>. Défaut : <strong>désactivée</strong>. C'est l'écart dans l'histoire d'ouverture.</p>
+
+  <p><strong>Protection contre l'usurpation de domaine.</strong> Vous spécifiez les « domaines protégés » — typiquement le ou les domaines propres du client et tous les domaines de partenaires / fournisseurs avec qui le client transige régulièrement. La politique signale les domaines sosies (<code>trilogiam.com</code> vs <code>trilogiam-corp.com</code>, <code>customer.com</code> vs <code>customer.co</code>, les attaques classiques d'homoglyphe où un 'a' cyrillique remplace un 'a' latin). Défaut : <strong>désactivée</strong>.</p>
+
+  <p>Deux sur quatre. Activées par défaut : les deux qui attrapent les attaques faciles. Désactivées par défaut : les deux qui attrapent les attaques pour lesquelles les clients PME tombent réellement.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Les quatre mécanismes anti-hameçonnage et leur état par défaut : anti-spoofing activé, mailbox intelligence activée avec application désactivée, usurpation d'identité d'utilisateur désactivée, usurpation de domaine désactivée.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">MÉCANISME</text>
+      <text x="520" y="34" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DÉFAUT</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- anti-spoofing: on -->
+        <g transform="translate(0,52)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Anti-spoofing</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">falsifié « de votre propre domaine »</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#0C2A22" stroke="#2EE8A0"/>
+          <circle cx="540" cy="25" r="5" fill="#2EE8A0"/>
+          <text x="556" y="30" fill="#2EE8A0" font-size="12.5" font-weight="700">ACTIVÉ</text>
+        </g>
+        <!-- mailbox intelligence: on, enforcement off -->
+        <g transform="translate(0,116)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="60" y="24" fill="#EEF4FC" font-size="15" font-weight="600">Mailbox intelligence</text>
+          <text x="60" y="42" fill="#6B85A6" font-size="11.5">apprentissage machine sur l'historique</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A2210" stroke="#FFC04D"/>
+          <circle cx="538" cy="25" r="5" fill="#FFC04D"/>
+          <text x="552" y="30" fill="#FFC04D" font-size="11" font-weight="700">ACTIVÉE · appl. OFF</text>
+        </g>
+        <!-- user impersonation: off -->
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">Usurpation d'identité</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">l'écart BEC de l'histoire d'ouverture</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="536" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="550" y="30" fill="#FF8A98" font-size="12.5" font-weight="700">DÉSACTIVÉE</text>
+        </g>
+        <!-- domain impersonation: off -->
+        <g transform="translate(0,244)">
+          <rect x="40" y="0" width="460" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="60" y="24" fill="#7DD9F9" font-size="15" font-weight="700">Usurpation de domaine</text>
+          <text x="60" y="42" fill="#52708F" font-size="11.5">domaines sosies &amp; homoglyphes</text>
+          <rect x="520" y="9" width="160" height="32" rx="16" fill="#2A0F16" stroke="#FF5A6E"/>
+          <circle cx="536" cy="25" r="5" fill="#FF5A6E"/>
+          <text x="550" y="30" fill="#FF8A98" font-size="12.5" font-weight="700">DÉSACTIVÉE</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Deux sur quatre activées par défaut — celles qui attrapent les attaques faciles. Les deux pour lesquelles les PME tombent sont livrées désactivées.</figcaption>
+  </figure>
+
+  <h2>Le patron des expéditeurs de confiance — ce que les clients demandent vraiment</h2>
+
+  <p>Vous allez recevoir ce ticket. Probablement cette semaine :</p>
+
+  <blockquote>« Arrêtez votre truc anti-hameçonnage de bloquer les courriels de notre partenaire ABC Corp. On a besoin que leurs factures passent. »</blockquote>
+
+  <p><strong>Avant de toucher à un seul paramètre, vérifiez l'authentification courriel de l'expéditeur.</strong> Ça prend deux personnes pour danser quand il s'agit de courriel — et la plupart du temps, le partenaire de danse a des pas manquants.</p>
+
+  <p>Ouvrez un outil de recherche DNS. Celui qu'on recommande pour ce genre de travail, c'est <a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">DomainGuardian</a> — un vérificateur visuel net construit par un collègue de la communauté cybersécurité du Québec. Vous y collez un domaine, vous obtenez une décomposition codée par couleur de SPF, DKIM, DMARC, MX, et enregistrements connexes avec des indicateurs clairs sur ce qui va et ce qui est brisé. Conçu pour les techs L1 qui ne devraient pas avoir à mémoriser la syntaxe de <code>dig</code> pour faire leur travail. (Les opérateurs en ligne de commande peuvent encore prendre <code>dig</code> ou <code>nslookup</code> si c'est plus rapide pour eux.)</p>
+
+  <p>Vérifiez <code>abccorp.com</code> pour :</p>
+
+  <ul>
+    <li><strong>SPF.</strong> Y a-t-il un enregistrement TXT qui commence par <code>v=spf1</code>? Inclut-il les IP ou services depuis lesquels ABC Corp envoie réellement? Échec commun : SPF existe mais finit par <code>~all</code> (soft-fail) ou <code>+all</code> (autoriser tout — essentiellement brisé).</li>
+    <li><strong>DKIM.</strong> Y a-t-il un enregistrement de sélecteur DKIM publié? Essayez les sélecteurs communs (<code>default._domainkey</code>, <code>selector1._domainkey</code>, <code>s1._domainkey</code>, plus les sélecteurs spécifiques pour Microsoft 365, Google Workspace, Mailchimp, ou ce par quoi ils envoient réellement).</li>
+    <li><strong>DMARC.</strong> Y a-t-il un enregistrement TXT à <code>_dmarc.abccorp.com</code>? Quelle est la politique — <code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>? Est-ce que <code>aspf</code> et <code>adkim</code> sont configurés?</li>
+  </ul>
+
+  <p>Dans une grande fraction de ces tickets — confortablement la majorité du courriel PME-à-PME — l'expéditeur a SPF configuré (souvent à moitié), aucun DKIM du tout, et aucun DMARC. Du point de vue de Microsoft, le courriel ressemble exactement au genre de courriel qu'un attaquant enverrait : mal authentifié, échoue parfois l'alignement, sans politique du domaine de l'expéditeur disant aux récepteurs quoi en faire. La quarantaine n'est pas un bogue — c'est Microsoft qui fait exactement ce que vous voulez qu'il fasse.</p>
+
+  <p>Le premier mouvement, c'est la conversation, pas l'exception :</p>
+
+  <blockquote>« L'authentification courriel d'ABC Corp est mal configurée — spécifiquement, ils n'ont pas de DKIM et pas de DMARC publié. C'est pourquoi leurs courriels sont signalés. La correction est de <em>leur</em> côté : leur équipe TI doit publier la signature DKIM et un enregistrement DMARC. Une fois que c'est fait, Microsoft fera confiance à leur courriel et on n'aura pas besoin d'exception du tout. Pouvez-vous joindre votre contact chez ABC Corp et leur demander que leur TI regarde ça? »</blockquote>
+
+  <p>La moitié du temps, cette conversation règle l'enjeu proprement en une semaine — la TI d'ABC Corp publie DKIM et DMARC, Microsoft commence à faire confiance au courriel, le client ne vous en parle plus jamais, et l'écosystème courriel plus large gagne un cran de santé. L'autre moitié du temps, ABC Corp ne peut pas ou ne veut pas réparer son authentification (petit fournisseur sans TI, le MSP du fournisseur hausse les épaules, le « contact » du client n'a pas le capital politique pour pousser), le client revient à la charge, et <em>là</em> vous tombez sur l'un de deux patrons d'exception : un correct, un tentant.</p>
+
+  <p><strong>La voie tentante.</strong> Ouvrir le centre d'administration Exchange. Créer une règle de flux de courrier qui contourne le filtrage anti-pourriel pour tout courriel de <code>*@abccorp.com</code>. Le ticket du client se ferme. Demain, le domaine d'ABC Corp est compromis par une attaque d'hameçonnage et les attaquants envoient des factures truffées de maliciels à la contrôleuse du client. La règle de flux de courrier que vous avez créée contourne joyeusement chaque défense que Microsoft appliquerait autrement. La contrôleuse ouvre la pièce jointe. Vous passez la fin de semaine sur la réponse à incident.</p>
+
+  <p><strong>La bonne voie.</strong> Ouvrez la politique anti-hameçonnage. Ajoutez <code>abccorp.com</code> à la liste d'expéditeurs de confiance au <em>niveau de la politique anti-hameçonnage</em>, ciblé sur <em>cette protection spécifique</em> (typiquement l'usurpation d'identité d'utilisateur et mailbox intelligence). L'entrée d'expéditeurs de confiance dit à la politique anti-hameçonnage « les messages de ce domaine ne devraient pas déclencher de signalisation d'usurpation d'identité ». Filtrage anti-pourriel, analyse anti-maliciel, Safe Links, Safe Attachments — tout ça s'applique encore. Si le domaine d'ABC Corp est compromis demain, le maliciel dans leurs factures se fait attraper par Safe Attachments avant d'atteindre la boîte de réception de la contrôleuse.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 290" role="img" aria-label="Deux patrons d'exception pour un expéditeur de confiance : une règle de flux de courrier contourne chaque défense, tandis qu'une entrée d'expéditeurs de confiance dans la politique anti-hameçonnage garde le filtrage anti-pourriel, l'analyse anti-maliciel, Safe Links et Safe Attachments en vigueur.">
+      <rect width="720" height="290" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- tempting column -->
+        <text x="190" y="38" text-anchor="middle" fill="#FF8A98" font-size="14" font-weight="700">La voie tentante</text>
+        <text x="190" y="58" text-anchor="middle" fill="#52708F" font-size="11.5">Contournement par règle de flux</text>
+        <rect x="40" y="74" width="300" height="180" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <g fill="#E2A0AA" font-size="13">
+          <text x="62" y="108">Filtrage anti-pourriel</text><text x="320" y="108" text-anchor="end" fill="#FF8A98">contourné</text>
+          <text x="62" y="140">Analyse anti-maliciel</text><text x="320" y="140" text-anchor="end" fill="#FF8A98">contournée</text>
+          <text x="62" y="172">Safe Links</text><text x="320" y="172" text-anchor="end" fill="#FF8A98">contourné</text>
+          <text x="62" y="204">Safe Attachments</text><text x="320" y="204" text-anchor="end" fill="#FF8A98">contourné</text>
+        </g>
+        <text x="190" y="236" text-anchor="middle" fill="#FF8A98" font-size="11">domaine compromis → exposé</text>
+
+        <!-- right column -->
+        <text x="530" y="38" text-anchor="middle" fill="#2EE8A0" font-size="14" font-weight="700">La bonne voie</text>
+        <text x="530" y="58" text-anchor="middle" fill="#52708F" font-size="11.5">Expéditeurs de confiance dans la politique</text>
+        <rect x="380" y="74" width="300" height="180" rx="10" fill="#0C2A22" stroke="#2EE8A0" stroke-width="1.4"/>
+        <g fill="#C4D4E8" font-size="13">
+          <text x="402" y="108">Filtrage anti-pourriel</text><text x="660" y="108" text-anchor="end" fill="#2EE8A0">actif</text>
+          <text x="402" y="140">Analyse anti-maliciel</text><text x="660" y="140" text-anchor="end" fill="#2EE8A0">active</text>
+          <text x="402" y="172">Safe Links</text><text x="660" y="172" text-anchor="end" fill="#2EE8A0">actif</text>
+          <text x="402" y="204">Safe Attachments</text><text x="660" y="204" text-anchor="end" fill="#2EE8A0">actif</text>
+        </g>
+        <text x="530" y="236" text-anchor="middle" fill="#2EE8A0" font-size="11">seuls les signalements d'usurpation supprimés</text>
+      </g>
+    </svg>
+    <figcaption>Les deux ferment le ticket. Une seule garde toutes les autres défenses debout quand l'expéditeur de confiance est plus tard compromis.</figcaption>
+  </figure>
+
+  <p>La différence entre les deux approches, c'est le rayon d'impact quand l'expéditeur de confiance est plus tard compromis. Les clients ne pensent pas à cette partie. Vous, vous devez.</p>
+
+  <h2>Configurer la protection contre l'usurpation d'identité d'utilisateur — la partie pratique</h2>
+
+  <p>Pour un client PME typique, la configuration est sans complication et la discipline, c'est de savoir <em>qui</em> protéger.</p>
+
+  <p><strong>Qui protéger.</strong> Quiconque dans une position où l'usurper conduirait un destinataire à envoyer de l'argent, partager des identifiants, ou accorder un accès. Liste réelle :</p>
+
+  <ul>
+    <li>Le PDG, le directeur financier, et n'importe quel niveau C</li>
+    <li>Le contrôleur, le chef des finances, le chef de la comptabilité</li>
+    <li>Le chef des RH (arnaques de W-2 / paye)</li>
+    <li>Le chef des TI (demandes d'identifiants et d'accès)</li>
+    <li>Le propriétaire / fondateur / directeur principal (petites compagnies)</li>
+  </ul>
+
+  <p>Une compagnie de 40 personnes peut avoir 5 à 8 utilisateurs protégés. Une compagnie de 200 personnes peut en avoir 12 à 20. N'essayez pas de protéger tout le monde — la politique devient bruyante et l'équipe d'opérateurs perd le signal.</p>
+
+  <p>Pour chaque utilisateur protégé, la politique a besoin :</p>
+
+  <ul>
+    <li>Du nom d'affichage de l'utilisateur (exactement comme il apparaît dans Entra ID)</li>
+    <li>De l'adresse courriel de l'utilisateur (typiquement <code>prenom.nom@customer.com</code>)</li>
+  </ul>
+
+  <p>La politique signale tout message entrant dont le nom d'affichage de l'expéditeur correspond étroitement à un nom d'affichage protégé OU dont l'adresse de l'expéditeur correspond étroitement à une adresse protégée — mais l'expéditeur n'est pas réellement cet utilisateur. L'anecdote d'ouverture (<code>james.wilson.ceo@gmail.com</code> avec nom d'affichage « James Wilson, PDG ») se fait attraper parce que le nom d'affichage correspond à un utilisateur protégé mais l'adresse non.</p>
+
+  <p><strong>Quoi faire quand signalé.</strong> Trois options : déplacer vers indésirables, mettre en quarantaine, ou « livrer et ajouter conseil de sécurité ». Pour les clients PME, la <strong>quarantaine</strong> est typiquement le bon choix. L'option conseil-de-sécurité suppose que les utilisateurs lisent les conseils de sécurité; beaucoup ne le font pas. Les indésirables laissent l'utilisateur libérer le message lui-même; pour des signalements d'usurpation d'identité à haute confiance, vous ne voulez pas que l'utilisateur prenne cette décision. La quarantaine route à travers le flux de travail opérateur.</p>
+
+  <h2>Configurer la protection contre l'usurpation de domaine</h2>
+
+  <p>Même idée, ciblée sur les domaines.</p>
+
+  <p><strong>Domaines à protéger :</strong></p>
+
+  <ul>
+    <li>Le domaine courriel principal du client (toujours)</li>
+    <li>N'importe quel autre domaine courriel que le client utilise activement</li>
+    <li>Domaines clés de partenaires / fournisseurs / vendeurs avec qui le client transige (top 10 à 20 par volume de transactions)</li>
+  </ul>
+
+  <p>La politique signale le courrier entrant de domaines qui sont visuellement similaires à l'un des domaines protégés. Le cas classique : le client est <code>acme.com</code>, l'attaquant enregistre <code>acne.com</code> ou <code>acrne.com</code> (où le 'r' et le 'n' ensemble ressemblent à un 'm' sur un écran de téléphone) ou <code>аcme.com</code> (avec un 'а' cyrillique). Les trois se font attraper.</p>
+
+  <p>Le choix d'action sur signalement (déplacer vers indésirables, mettre en quarantaine, conseil de sécurité) suit la même logique que l'usurpation d'identité d'utilisateur. La quarantaine est typiquement la bonne pour la PME.</p>
+
+  <h2>Spoof intelligence — la traîne gérable</h2>
+
+  <p>Le spoof intelligence de Microsoft est l'inverse de la protection contre l'usurpation d'identité. Là où l'usurpation d'identité attrape les expéditeurs <em>illégitimes</em> qui essaient de ressembler à des <em>légitimes</em>, le spoof intelligence gère les expéditeurs <em>légitimes</em> qui échouent à l'authentification pour des raisons d'infrastructure ennuyeuses.</p>
+
+  <p>Le cas le plus commun : le client utilise un service tiers (une plateforme marketing, un envoyeur de courriel d'outil RH, un fournisseur de sondages) qui envoie « depuis » le domaine du client mais n'a pas l'autorisation SPF / DKIM appropriée. L'anti-spoofing de Microsoft veut bloquer ça; le spoof intelligence vous laisse réviser les expéditeurs, autoriser les légitimes, et bloquer ceux qui sont vraiment des attaquants.</p>
+
+  <p>C'est la surface « Tenant Allow/Block Lists » dans le portail Defender. La discipline de l'opérateur :</p>
+
+  <ul>
+    <li>Réviser les renseignements de spoof intelligence mensuellement</li>
+    <li>Pour chaque expéditeur non-authentifié-mais-légitime (plateforme marketing, fournisseur de paye, etc.), ajouter une entrée d'autorisation explicite</li>
+    <li>Pour chaque expéditeur non-authentifié-et-illégitime, ajouter un blocage explicite</li>
+    <li>Dire à l'équipe marketing du client de réparer sa configuration SPF / DKIM pour que vous n'ayez pas à continuer d'ajouter des autorisations</li>
+  </ul>
+
+  <h2>L'alternative de la politique de sécurité prédéfinie</h2>
+
+  <p>Pour les clients où vous ne voulez pas régler à la main la politique anti-hameçonnage, les <strong>politiques de sécurité prédéfinies</strong> de Microsoft (Standard et Strict, couvertes en détail à la leçon 10) incluent des règles anti-hameçonnage préconfigurées. Le préréglage Standard active la protection contre l'usurpation d'identité d'utilisateur avec des défauts sensés; le préréglage Strict tourne les boutons plus haut.</p>
+
+  <p>Le compromis de l'approche prédéfinie : vous obtenez la configuration sélectionnée par Microsoft, vous perdez le contrôle granulaire sur les seuils et les listes d'expéditeurs de confiance. Pour la plupart des clients PME, c'est le bon échange. Pour les clients avec des besoins d'usurpation d'identité spécifiques (beaucoup d'utilisateurs protégés, exceptions complexes d'expéditeurs de confiance), une politique personnalisée vous donne la flexibilité.</p>
+
+  <p>En pratique : déployez un préréglage (Standard pour la plupart; Strict pour les clients à plus haut risque comme les firmes comptables ou les cabinets d'avocats) comme <em>fondation</em>, puis superposez une politique anti-hameçonnage personnalisée <em>avec priorité plus haute</em> pour les utilisateurs protégés et expéditeurs de confiance spécifiques au client. Ce patron garde les défauts sélectionnés par Microsoft comme plancher tout en vous laissant personnaliser là où ça compte.</p>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p><strong>Les courriels du dirigeant du client vers lui-même se font mettre en quarantaine.</strong> Quand le PDG envoie un courriel à son propre assistant depuis son adresse Gmail personnelle et que le nom d'affichage correspond à la liste d'utilisateurs protégés, la protection contre l'usurpation d'identité l'attrape. La correction est soit d'ajouter l'adresse personnelle du dirigeant à la liste d'expéditeurs de confiance, soit de faire en sorte que le dirigeant utilise son compte de travail pour le courriel de travail (la bonne réponse).</p>
+
+  <p><strong>Fournisseurs légitimes avec une mauvaise hygiène courriel se font bloquer.</strong> Un petit fournisseur sans DMARC, SPF mal aligné, et une habitude d'envoyer depuis des adresses IP aléatoires déclenchera plusieurs vérifications anti-hameçonnage. Les ajouter aux expéditeurs de confiance règle le problème; idéalement, le fournisseur répare son authentification, mais c'est une conversation lente.</p>
+
+  <p><strong>Plateformes marketing qui envoient sous le domaine du client.</strong> Si l'équipe marketing du client utilise HubSpot, Mailchimp, Marketo, ou similaire pour envoyer sous le domaine du client sans autorisation SPF / DKIM appropriée, ces courriels échouent à l'anti-spoofing et se font attraper par l'usurpation d'identité quand le nom d'affichage correspond à un utilisateur protégé. La correction est soit la configuration d'authentification dans la plateforme marketing (bonne réponse), soit des entrées d'expéditeurs de confiance (solution de contournement).</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>L'état des politiques anti-hameçonnage est l'un des paramètres de sécurité que Panoptica365 surveille par tenant. Spécifiquement :</p>
+
+  <ul>
+    <li><strong>Dérive sur l'activation de la politique de sécurité prédéfinie.</strong> Si la politique de sécurité prédéfinie (Standard ou Strict) de Microsoft est désactivée sur un tenant client — quelqu'un ouvre le portail Defender et l'éteint, soit par erreur soit en réponse à une plainte — le détecteur de dérive déclenche une alerte. L'opérateur peut revenir, réappliquer, ou accepter.</li>
+    <li><strong>Évaluateurs du moteur d'alertes sur les événements liés à l'hameçonnage.</strong> Quand Defender XDR détecte un incident à patron d'hameçonnage sur un tenant client, l'alerte coule dans le moteur d'alertes de Panoptica365, où elle apparaît à côté des autres alertes de sécurité avec attribution au client.</li>
+  </ul>
+
+  <p>Ce que Panoptica365 ne fait pas remonter aujourd'hui : le volume de signalisation d'usurpation d'identité par utilisateur, les seuils par politique, la liste de renseignements de spoof intelligence, ni la posture d'hameçonnage par boîte aux lettres. Ceux-là vivent dans le portail Microsoft 365 Defender — plongez-y quand vous avez besoin de la vue diagnostique profonde.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <div class="callout insight">
+    <div class="clabel">L'écart d'usurpation d'identité, c'est l'écart BEC</div>
+    <p>L'anti-spoofing par défaut de Microsoft attrape les attaques faciles; la protection contre l'usurpation d'identité attrape celles auxquelles les clients PME tombent vraiment. Si vous faites une chose pour le client ce trimestre, activez l'usurpation d'identité d'utilisateur et de domaine avec action de quarantaine et une liste d'utilisateurs protégés réfléchie.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Vérifiez d'abord l'authentification de l'expéditeur</div>
+    <p>Quand un client vous demande de « laisser passer X », ça prend deux pour danser — et la plupart des plaintes de quarantaine remontent au DKIM et DMARC manquants de l'expéditeur, pas à un filtrage trop agressif du côté récepteur. Poussez d'abord la conversation vers l'expéditeur. Quand une exception est encore nécessaire après ça, routez-la à travers la liste d'expéditeurs de confiance de la politique anti-hameçonnage, ciblée sur la protection spécifique — jamais un contournement par règle de flux de courrier. Filtrage anti-pourriel, Safe Links, Safe Attachments restent en vigueur.</p>
+  </div>
+
+  <div class="callout">
+    <div class="clabel">Le préréglage est le plancher, la personnalisation est la valeur</div>
+    <p>La politique prédéfinie est un défaut défendable; la personnalisation, c'est là où la valeur se trouve. Déployez un préréglage (Standard ou Strict) comme plancher; superposez une politique anti-hameçonnage personnalisée avec les utilisateurs protégés et expéditeurs de confiance spécifiques au client. Ça vous donne le réglage sélectionné par Microsoft plus la défense spécifique au client dont vous avez besoin.</p>
+  </div>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Safe Links et Safe Attachments</b> — les fonctionnalités Defender for Office 365 P1 que le client a payées et n'utilise pas. Où elles attrapent de vraies attaques et où elles tombent court.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>SPF, DKIM, DMARC</b> — le trio d'authentification qui ferme le côté usurpation de l'écart — la moitié que l'anti-hameçonnage n'attrape pas.</div></div>
+  </div>
+
+  <p>Pour l'instant : ouvrez la politique anti-hameçonnage du client. Activez l'usurpation d'identité d'utilisateur. Listez les utilisateurs protégés. Activez l'usurpation de domaine. Listez les domaines protégés. Mettez l'action à quarantaine. Superposez une liste personnalisée d'expéditeurs de confiance pour les partenaires légitimes. Ce seul changement de configuration ferme le vecteur BEC PME le plus commun — celui auquel la contrôleuse de l'histoire d'ouverture est tombée.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur la configuration des politiques anti-hameçonnage (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-about" target="_blank" rel="noopener">Microsoft Learn — Anti-phishing policies in EOP and MDO</a>); protection contre l'usurpation d'identité d'utilisateur (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-policies-mdo-configure" target="_blank" rel="noopener">Microsoft Learn — Impersonation protection in anti-phishing</a>); spoof intelligence et les Tenant Allow/Block Lists (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-spoofing-spoof-intelligence" target="_blank" rel="noopener">Microsoft Learn — Spoof intelligence insight</a>); mailbox intelligence (<a href="https://learn.microsoft.com/en-us/defender-office-365/anti-phishing-mdo-impersonation-insight" target="_blank" rel="noopener">Microsoft Learn — Mailbox intelligence</a>); politiques de sécurité prédéfinies (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

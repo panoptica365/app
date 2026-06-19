@@ -42,8 +42,6 @@ module.exports = {
     // beyond this fail fast ("Queue limit reached.") instead of queueing
     // forever — memory stays bounded and recovery avoids a thundering herd.
     queueLimit: parseInt(process.env.DB_QUEUE_LIMIT, 10) || 200,
-    // db_size health check: warn when total schema size crosses this (GB).
-    sizeWarnGb: parseFloat(process.env.DB_SIZE_WARN_GB) || 10,
   },
 
   // Data retention windows (days) enforced by src/retention-worker.js daily

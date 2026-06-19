@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conforme O híbrido O MFA — la política OR de señales de confianza — Políticas de plantilla de Acceso Condicional</title>
+<meta name="lesson:title" content="Conforme O híbrido O MFA — la política OR de señales de confianza">
+<meta name="lesson:subtitle" content="El sucesor con Intune de Exigir MFA: acceso si el dispositivo es gestionado, hybrid-joined, o MFA satisfecho.">
+<meta name="lesson:icon" content="git-branch">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Políticas de plantilla de Acceso Condicional</span> <span class="sep">·</span> <span>Política OR de señales de confianza</span></div>
+  <h1>Conforme O híbrido O MFA — la política OR de señales de confianza</h1>
+  <p class="dek">El sucesor con Intune de Exigir MFA: acceso si el dispositivo es gestionado, hybrid-joined, o MFA satisfecho.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Tres caminos de confianza — dispositivo conforme, dispositivo hybrid-joined, o MFA — cada uno llevando por una puerta OR a un inicio de sesión permitido.">
+      <defs>
+        <radialGradient id="trBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="trGate" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="trArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#trBg)"/>
+
+      <!-- three trust paths on the left -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="70" y="58" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="83" fill="#A8E1F8" font-size="16" font-weight="600">Dispositivo conforme</text>
+          <text x="210" y="102" fill="#6B85A6" font-size="12.5">el dispositivo lo prueba</text>
+        </g>
+        <g>
+          <rect x="70" y="142" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="167" fill="#A8E1F8" font-size="15" font-weight="600">Dispositivo hybrid-joined</text>
+          <text x="210" y="186" fill="#6B85A6" font-size="12.5">el dispositivo lo prueba</text>
+        </g>
+        <g>
+          <rect x="70" y="226" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="251" fill="#A8E1F8" font-size="16" font-weight="600">MFA</text>
+          <text x="210" y="270" fill="#6B85A6" font-size="12.5">el usuario lo prueba</text>
+        </g>
+      </g>
+
+      <!-- converging lines into the OR gate -->
+      <path d="M350 86 C460 86 470 170 560 170" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+      <path d="M350 170 H560" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+      <path d="M350 254 C460 254 470 170 560 170" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+
+      <!-- OR gate -->
+      <g transform="translate(640,170)">
+        <circle r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="52" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.8"/>
+        <text x="0" y="-2" text-anchor="middle" fill="url(#trGate)" font-family="Geist,Inter,sans-serif" font-size="30" font-weight="700">OR</text>
+        <text x="0" y="24" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="1.5">CUALQUIERA</text>
+      </g>
+
+      <!-- gate to allow -->
+      <path d="M714 170 H840" stroke="#2EE8A0" stroke-width="2.4" fill="none" marker-end="url(#trArr)"/>
+
+      <!-- allowed sign-in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="852" y="140" width="200" height="60" rx="12" fill="#0C2A1F" stroke="#2EE8A0" stroke-width="1.6"/>
+        <text x="952" y="167" fill="#2EE8A0" font-size="14.5" font-weight="700">Inicio de sesión OK</text>
+        <text x="952" y="187" fill="#7FCDB0" font-size="11.5">ninguno → bloqueado</text>
+      </g>
+    </svg>
+    <figcaption>Elige cualquiera — dispositivo conforme, dispositivo hybrid-joined, o MFA — y el inicio de sesión procede. No elijas ninguna, y es bloqueado.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La lección 2 cubrió la política Exigir MFA para todos los usuarios: simple, fundamental, siempre-MFA-pase-lo-que-pase. Esta lección es su sucesora — la versión más sofisticada para tenants que tienen Intune funcionando y quieren dar a los usuarios en dispositivos gestionados una experiencia más fluida sin renunciar al suelo de seguridad.</p>
+
+  <p><strong>Panoptica365 - Require compliant or hybrid Azure AD joined device or MFA for all users.</strong> Descripción: <em>Comprueba varias condiciones para permitir conexiones.</em> Concesión: Exigir MFA, Exigir dispositivo conforme, Exigir Hybrid Azure AD joined (OR). Usuarios: Todos los usuarios. Aplicaciones: Todas las aplicaciones en la nube.</p>
+
+  <p>Esta plantilla usa el mismo patrón de condición OR que la lección 4 introdujo — múltiples caminos para satisfacer la misma intención. La política de la lección 4 combinaba la confianza de ubicación con la confianza de dispositivo. La política de esta lección combina tres formas distintas de probar que la postura del usuario es de confianza: dispositivo gestionado, dispositivo hybrid-joined, o MFA.</p>
+
+  <p>Elige cualquiera, el inicio de sesión procede. No elijas ninguna, el inicio de sesión es bloqueado.</p>
+  </div>
+
+  <h2>Los tres caminos</h2>
+
+  <p><strong>Camino 1: Dispositivo conforme.</strong> El dispositivo desde el que el usuario inicia sesión está inscrito en Intune y actualmente reporta como conforme. El cumplimiento normalmente significa: cifrado activado, SO parcheado dentro de una ventana aceptable, AV activo, sin jailbreak, la política específica del cliente se cumple. Si el dispositivo pasa esa barra, el inicio de sesión procede — <em>sin necesidad de prompt MFA</em>. El dispositivo ha probado que la postura del usuario es de confianza.</p>
+
+  <p><strong>Camino 2: Dispositivo Hybrid Azure AD joined.</strong> El dispositivo es una máquina Windows gestionada por la empresa unida tanto al Active Directory local como a Entra ID. Los dispositivos hybrid-joined son típicamente estaciones de trabajo corporativas en entornos donde el cliente mantiene un controlador de dominio. Como los dispositivos conformes, los dispositivos hybrid-joined han probado que están gestionados y son de confianza. El inicio de sesión procede sin MFA.</p>
+
+  <p><strong>Camino 3: MFA.</strong> El usuario completa un desafío de autenticación multifactor. Este es el camino de respaldo para usuarios en dispositivos personales, dispositivos no gestionados, o dispositivos aún no inscritos. Si pueden probar identidad mediante MFA, entran.</p>
+
+  <p>Cualquiera de los tres es suficiente. El control de concesión está configurado con «Exigir uno de los controles seleccionados» en lugar de «Exigir todos los controles seleccionados» — esa es la diferencia estructural entre esta plantilla y una política ingenua de «exigir todo».</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Los tres caminos agrupados por lo que prueba el inicio de sesión: el dispositivo lo prueba (conforme o hybrid-joined) o el usuario lo prueba (MFA).">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- device proves it group -->
+        <text x="40" y="44" fill="#6B85A6" font-size="12" letter-spacing="1.5">EL DISPOSITIVO LO PRUEBA</text>
+        <rect x="40" y="56" width="300" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="80" fill="#A8E1F8" font-size="14.5" font-weight="600">Dispositivo conforme</text>
+        <text x="60" y="98" fill="#6B85A6" font-size="11">inscrito en Intune, reporta conforme</text>
+        <rect x="40" y="120" width="300" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="144" fill="#A8E1F8" font-size="14" font-weight="600">Dispositivo hybrid-joined</text>
+        <text x="60" y="162" fill="#6B85A6" font-size="11">Windows corporativo, unido a AD + Entra ID</text>
+
+        <!-- user proves it group -->
+        <text x="40" y="208" fill="#6B85A6" font-size="12" letter-spacing="1.5">EL USUARIO LO PRUEBA</text>
+        <rect x="40" y="220" width="300" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="247" fill="#A8E1F8" font-size="13" font-weight="600">MFA — respaldo para no gestionados</text>
+
+        <!-- the question -->
+        <rect x="392" y="92" width="288" height="96" rx="11" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="536" y="128" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">¿Es de confianza este</text>
+        <text x="536" y="150" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">inicio de sesión?</text>
+        <text x="536" y="172" text-anchor="middle" fill="#6B85A6" font-size="11">tres pruebas aceptadas</text>
+      </g>
+      <defs><marker id="tpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <path d="M340 82 C368 82 366 130 392 130" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+      <path d="M340 146 C368 146 366 134 392 134" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+      <path d="M340 242 C368 242 366 150 392 150" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+    </svg>
+    <figcaption>Una pregunta, tres pruebas aceptadas: el dispositivo lo prueba, o el usuario lo prueba.</figcaption>
+  </figure>
+
+  <h2>Qué está haciendo <em>en realidad</em></h2>
+
+  <p>Lee la intención de la política a través del lente de la tarjeta 1: <em>quién, qué, dónde, cuándo, raro?</em> Esta política está respondiendo a una pregunta — «¿es de confianza este inicio de sesión?» — y aceptando tres pruebas distintas:</p>
+
+  <ul>
+    <li><strong>El dispositivo lo prueba</strong> (conforme o hybrid-joined). Microsoft e Intune ya han verificado el dispositivo; la confianza se transfiere al inicio de sesión.</li>
+    <li><strong>El usuario lo prueba</strong> (MFA). El humano frente al teclado ha demostrado que es el usuario legítimo.</li>
+  </ul>
+
+  <p>Si ni el dispositivo ni el usuario lo prueban, el inicio de sesión es denegado. No hay un cuarto camino. No hay excepción «confiar porque es miércoles».</p>
+
+  <p>La fuerza de la política está en el efecto <em>combinado</em>: en dispositivos gestionados, los usuarios tienen una experiencia de inicio de sesión sin fricción (sin prompt MFA en cada sesión); en dispositivos no gestionados, el camino MFA los pilla. El cliente obtiene el suelo de seguridad de siempre-de-confianza-o-MFA sin la fricción de siempre-MFA.</p>
+
+  <h2>Cuándo usar esta plantilla en lugar de «Exigir MFA para todos los usuarios»</h2>
+
+  <p>La plantilla de la lección 2 (Exigir MFA para todos los usuarios) y la plantilla de esta lección son las dos elecciones estratégicas principales para la política de AC de línea base de un tenant. Son alternativas, no complementos. La elección depende de la postura de Intune del cliente y la tolerancia a la fricción.</p>
+
+  <p><strong>Usa Exigir MFA para todos los usuarios (lección 2) cuando:</strong></p>
+
+  <ul>
+    <li>El cliente aún no tiene Intune (Business Standard o inferior — aunque esos clientes no deberían estar ahí en primer lugar según la tarjeta 1 lección 5).</li>
+    <li>El cliente tiene Intune pero la cobertura de dispositivos es desigual — algunos usuarios en portátiles gestionados, otros en BYOD.</li>
+    <li>Estás en medio del despliegue de Intune y el cumplimiento todavía no es fiable.</li>
+    <li>La dirección del cliente quiere la postura «MFA en cada inicio de sesión» más simple posible por razones de cumplimiento.</li>
+  </ul>
+
+  <p><strong>Usa la plantilla de esta lección (Conforme O híbrido O MFA) cuando:</strong></p>
+
+  <ul>
+    <li>Intune está desplegado y el cumplimiento es fiable.</li>
+    <li>La mayoría de los usuarios están en dispositivos gestionados.</li>
+    <li>Quieres mejor UX para esos usuarios sin comprometer la seguridad de los usuarios en dispositivos no gestionados.</li>
+    <li>El cliente está cómodo con que la señal de confianza de dispositivo lleve peso (en lugar de exigir MFA en cada inicio de sesión).</li>
+  </ul>
+
+  <p>En la práctica, la segunda plantilla encaja en la mayoría de los tenants bien-gestionados de Business Premium una vez que Intune está en su sitio. La primera plantilla es el valor por defecto seguro durante la ventana de despliegue de Intune o para tenants sin historia de Intune.</p>
+
+  <h2>Qué pasa si ambas están activadas simultáneamente</h2>
+
+  <p>Esta es la pregunta que a menudo surge — y la respuesta afecta cómo un operador piensa sobre la migración entre estrategias.</p>
+
+  <p>Las políticas de Acceso Condicional <em>se acumulan vía AND lógico entre políticas</em>. Un inicio de sesión debe satisfacer cada política aplicable. Dentro de una política individual, las concesiones se combinan según las reglas de esa política (OR para «cualquiera de», AND para «todas de»).</p>
+
+  <p>Así que si tanto Exigir MFA para todos los usuarios (lección 2) como Conforme O híbrido O MFA (esta lección) están activadas:</p>
+
+  <ul>
+    <li>La política de la lección 2 dice: <em>debe completar MFA</em>.</li>
+    <li>La política de esta lección dice: <em>debe tener dispositivo conforme, O dispositivo hybrid-joined, O completar MFA</em>.</li>
+    <li>Combinadas: <em>debe satisfacer ambas políticas</em>.</li>
+  </ul>
+
+  <p>El requisito de MFA de la política de la lección 2 es incondicional. Los caminos OR de la política de la lección 5 incluyen MFA. Así que la única forma de satisfacer <em>ambas</em> es completar MFA. Los caminos dispositivo-conforme y hybrid-joined de la lección 5 se vuelven irrelevantes — incluso en un dispositivo perfectamente conforme, el usuario todavía tiene que hacer MFA porque la lección 2 lo exige.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Efecto neto de ambas activadas</div>
+    <p><strong>Igual que activar la lección 2 sola.</strong> Las partes «OR» de la plantilla de esta lección quedan suprimidas por el requisito de MFA incondicional de la lección 2. Esta <em>no</em> es una configuración útil. No es «defensa en profundidad» — es redundancia con la severidad de la política más estricta. El camino dispositivo-conforme que la plantilla de la lección 5 fue diseñada para habilitar es inalcanzable.</p>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Cuando ambas políticas están activadas, el requisito de MFA incondicional de la lección 2 suprime los caminos OR de la lección 5, dejando MFA como único paso.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- lesson 5 OR-paths -->
+        <text x="40" y="38" fill="#6B85A6" font-size="12" letter-spacing="1.5">CAMINOS OR LECCIÓN 5</text>
+        <rect x="40" y="50" width="230" height="38" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="58" y="74" fill="#52708F" font-size="13">Dispositivo conforme</text>
+        <line x1="60" y1="69" x2="250" y2="69" stroke="#FF5A6E" stroke-width="2" opacity="0.85"/>
+        <rect x="40" y="98" width="230" height="38" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="58" y="122" fill="#52708F" font-size="12.5">Dispositivo hybrid-joined</text>
+        <line x1="60" y1="117" x2="250" y2="117" stroke="#FF5A6E" stroke-width="2" opacity="0.85"/>
+        <rect x="40" y="146" width="230" height="38" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="58" y="170" fill="#A8E1F8" font-size="13.5" font-weight="600">MFA</text>
+        <text x="155" y="208" text-anchor="middle" fill="#6B85A6" font-size="11">dos caminos suprimidos</text>
+
+        <!-- AND gate from lesson 2 -->
+        <rect x="320" y="86" width="120" height="62" rx="10" fill="#2A1A06" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="380" y="112" text-anchor="middle" fill="#FFC04D" font-size="15" font-weight="700">Lección 2</text>
+        <text x="380" y="132" text-anchor="middle" fill="#E0B872" font-size="11">MFA, incondicional</text>
+
+        <!-- result -->
+        <rect x="490" y="86" width="190" height="62" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="585" y="112" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Solo MFA entra</text>
+        <text x="585" y="132" text-anchor="middle" fill="#6B85A6" font-size="11">= lección 2 sola</text>
+      </g>
+      <defs><marker id="seArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <path d="M270 165 C300 165 296 117 320 117" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#seArr)"/>
+      <path d="M440 117 H490" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#seArr)"/>
+    </svg>
+    <figcaption>Ambas activadas: el MFA incondicional de la lección 2 cancela los caminos de confianza de dispositivo de la lección 5. Resultado neto igual a la lección 2 sola.</figcaption>
+  </figure>
+
+  <p><strong>Efecto neto de ambas activadas: igual que activar la lección 2 sola.</strong> Las partes «OR» de la plantilla de esta lección quedan suprimidas por el requisito de MFA incondicional de la lección 2.</p>
+
+  <p>Esta <em>no</em> es una configuración útil. No es «defensa en profundidad» — es redundancia con la severidad de la política más estricta. El camino dispositivo-conforme que la plantilla de la lección 5 fue diseñada para habilitar es inalcanzable.</p>
+
+  <p>Las configuraciones correctas:</p>
+
+  <ul>
+    <li><strong>Activa solo la lección 2</strong> si quieres semántica de MFA-siempre-estricto.</li>
+    <li><strong>Activa solo la lección 5</strong> si quieres semántica de OR-basada-en-confianza inteligente.</li>
+    <li><strong>No actives ambas</strong> esperando que los caminos OR se apliquen.</li>
+  </ul>
+
+  <p>El camino de migración entre estrategias:</p>
+
+  <ol>
+    <li>Empieza con la política de la lección 2 activada (siempre-MFA). La mayoría de los tenants aterrizan aquí primero porque Intune aún no está listo.</li>
+    <li>Despliega el cumplimiento de Intune. Prepara el lado dispositivo.</li>
+    <li>Cuando el cumplimiento sea fiable, despliega la política de la lección 5 en modo solo informe.</li>
+    <li>Verifica que los inicios de sesión desde dispositivos conformes coincidan con la política y serían permitidos sin MFA.</li>
+    <li>Cambia la lección 5 a Habilitada.</li>
+    <li><em>Deshabilita la lección 2</em> una vez que la lección 5 esté aplicándose. (O mantén la lección 2 en solo informe como referencia de documentación; está bien, simplemente no tengas ambas aplicándose.)</li>
+    <li>La experiencia del usuario cambia: los usuarios en dispositivos gestionados ya no ven un prompt MFA en cada sesión.</li>
+  </ol>
+
+  <p>El punto de decisión es entre los pasos 5 y 6. Si el cliente está nervioso con el cambio, puedes mantener ambas políticas aplicándose durante un breve período de solapamiento — los usuarios seguirán viendo prompts MFA incluso en dispositivos conformes — y luego deshabilitar la lección 2. El pre-despliegue (lección 1) debería haber verificado ya que el cumplimiento es fiable; el solapamiento es solo una medida de confianza.</p>
+
+  <h2>Qué vigilar durante la migración</h2>
+
+  <p><strong>Fiabilidad de los informes de cumplimiento.</strong> Toda la estrategia depende de que los dispositivos reporten su estado con precisión. Si un dispositivo genuinamente conforme pero Intune lo reporta como no conforme (problemas de red, retardo de sincronización, estado obsoleto), el usuario obtiene un prompt MFA donde no debería. Lo inverso es peor: si un dispositivo no es conforme pero Intune lo reporta como conforme, el inicio de sesión se salta MFA cuando no debería.</p>
+
+  <p>Ejecuta comprobaciones periódicas de reconciliación de dispositivos. Si un dispositivo se muestra conforme en Intune pero está fallando alguna comprobación de cumplimiento a nivel de SO, la brecha importa.</p>
+
+  <p><strong>Evaluación perezosa del cumplimiento.</strong> Intune no reevalúa continuamente cada dispositivo. Hay una cadencia de check-in. Un dispositivo que se vuelve no conforme (el usuario deshabilita BitLocker, se atrasa en parches) puede seguir reportando conforme durante algunas horas después del cambio. AC lee el estado actual en el momento del inicio de sesión, así que puede haber una ventana corta donde el camino de confianza-de-dispositivo de esta política sea «conforme» cuando no debería serlo.</p>
+
+  <p>No te preocupes por el retardo a nivel de minuto — es el retardo a nivel de hora el que importa. Configura los intervalos de check-in de cumplimiento de dispositivo apropiadamente en Intune.</p>
+
+  <p><strong>Deriva de dispositivos hybrid-joined.</strong> Si el cliente tiene un entorno Hybrid AD, los dispositivos pueden caerse del estado hybrid-joined sin que nadie se dé cuenta (problemas de sincronización de Azure AD Connect, retardo de replicación, controladores de dominio retirados). Los dispositivos que ya no están hybrid-joined silenciosamente pierden el camino de confianza hybrid-joined. No te das cuenta hasta que el usuario está en una red personal y el inicio de sesión falla.</p>
+
+  <p>Monitoriza la salud de tu sincronización de Hybrid AD regularmente; Panoptica365 no saca directamente esta señal a la superficie pero la salud de sincronización de Entra subyacente es visible en los centros de administración de Microsoft.</p>
+
+  <h2>Despliegue</h2>
+
+  <p>Migrar de la política de la lección 2 a esta es el camino de migración típico. El trabajo es lo bastante sustancial como para que <strong>el paso manual de solo informe en el portal de Entra sea recomendable para esta migración independientemente del tamaño del tenant</strong>. La razón: esto no es una política nueva única; es un cambio de estrategia. Los errores son más ruidosos.</p>
+
+  <p>La verificación pre-despliegue (según la lección 1) confirma que el cumplimiento de Intune es fiable en una fracción sustancial de la base de usuarios, los dispositivos hybrid-joined están con sincronización-sana si aplica.</p>
+
+  <p>Luego:</p>
+
+  <ol>
+    <li><strong>Día 0</strong> — despliega esta plantilla vía Panoptica365 (crea la política en estado Habilitado). Cambia inmediatamente la política a solo informe en el portal de Entra. Mantén la plantilla de la lección 2 aplicándose durante esta ventana.</li>
+    <li><strong>Días 1–7</strong> — saca el registro de inicios de sesión filtrado por el resultado de solo informe de esta política. Para cada inicio de sesión:
+      <ul>
+        <li>¿Tuvo éxito el camino dispositivo-conforme o hybrid-joined? (El usuario está en un dispositivo gestionado.) Bien — el patrón OR está funcionando como se diseñó.</li>
+        <li>¿Solo tuvo éxito el camino MFA? (El usuario completó MFA, ningún otro camino estaba disponible.) Este usuario o está en un dispositivo personal o en un dispositivo gestionado donde el cumplimiento está reportando mal. Investiga.</li>
+        <li>¿Falló el inicio de sesión los tres caminos? (Bloqueado.) Este es un usuario que no pudo autenticarse incluso con MFA — probablemente un problema de configuración. Investiga.</li>
+      </ul>
+    </li>
+    <li><strong>Días 7–14</strong> — arregla cualquier problema de reporte de cumplimiento que aflore durante solo informe.</li>
+    <li><strong>Día 14</strong> — cambia esta plantilla de vuelta a Habilitada en el portal de Entra.</li>
+    <li><strong>Día 14 (mismo día)</strong> — deshabilita la plantilla de la lección 2 en Panoptica365 (o cámbiala a solo informe como referencia de documentación, pero no la mantengas aplicándose junto a esta).</li>
+    <li><strong>Día 14 en adelante</strong> — monitoriza el comportamiento del usuario. Los usuarios en dispositivos gestionados notarán la experiencia más fluida; los usuarios en dispositivos personales no notarán cambio (estaban obteniendo MFA antes y obtienen MFA ahora).</li>
+  </ol>
+
+  <p>Ventana total: dos semanas. El coste de fricción está justificado — este cambio de estrategia recompensa la verificación cuidadosa.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>Este es el objetivo de actualización para tenants con Intune fiable.</strong> Mueve a los clientes aquí tan pronto como su postura de Intune sea buena. Mejor UX para usuarios en dispositivos gestionados, mismo suelo de seguridad para usuarios en dispositivos no gestionados, menos fricción en total.</p>
+
+  <p><strong>No corras la lección 2 y esta lección en paralelo.</strong> Los caminos OR quedan suprimidos. Estás corriendo efectivamente la lección 2 con ruido adicional en el registro de auditoría. Elige una estrategia por tenant.</p>
+
+  <p><strong>La elección de estrategia sigue el despliegue de Intune.</strong> Un cliente nuevo típicamente empieza en la lección 2 (siempre-MFA) porque Intune aún no se ha desplegado. A medida que la cobertura de Intune crece, la señal de confianza-de-dispositivo se vuelve fiable, y el cliente está listo para graduarse a la plantilla de esta lección. La transición es en sí misma un hito en la madurez de seguridad del cliente.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Endurecer el acceso de admin</b> — cuatro plantillas específicas de admin en una lección. La combinación de aplicación de MFA, MFA-para-portales, y controles de sesión.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Deshabilitar el flujo de código de dispositivo</b> — la defensa contra Storm-2372.</div></div>
+  </div>
+
+  <p>Por ahora: si un cliente tiene Intune funcionando, esta es la plantilla en la que debería estar. La migración desde la lección 2 es un ejercicio de dos semanas que se paga inmediatamente en UX del usuario y con el tiempo en horas de operador ahorradas (menos quejas de «el prompt MFA es tan molesto» de usuarios senior).</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre controles de concesión de Acceso Condicional y semántica OR-vs-AND (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Grant</a>); cumplimiento de dispositivo de Intune y flujo de señal a AC (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/conditional-access" target="_blank" rel="noopener">Microsoft Learn — Device compliance for Conditional Access</a>); resumen de Hybrid Azure AD join (<a href="https://learn.microsoft.com/en-us/entra/identity/devices/concept-hybrid-join" target="_blank" rel="noopener">Microsoft Learn — Hybrid Azure AD join</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

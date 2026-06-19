@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compliant OR hybrid OR MFA — the trust-signal OR policy — Conditional Access template policies</title>
+<meta name="lesson:title" content="Compliant OR hybrid OR MFA — the trust-signal OR policy">
+<meta name="lesson:subtitle" content="The Intune-aware successor to Require MFA: grant access when a device is managed, hybrid-joined, or MFA-satisfied.">
+<meta name="lesson:icon" content="git-branch">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Trust-signal OR policy</span></div>
+  <h1>Compliant OR hybrid OR MFA — the trust-signal OR policy</h1>
+  <p class="dek">The Intune-aware successor to Require MFA: grant access when a device is managed, hybrid-joined, or MFA-satisfied.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Three trust paths — compliant device, hybrid-joined device, or MFA — each leading through an OR gate to an allowed sign-in.">
+      <defs>
+        <radialGradient id="trBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="trGate" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="trArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#trBg)"/>
+
+      <!-- three trust paths on the left -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="70" y="58" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="83" fill="#A8E1F8" font-size="16" font-weight="600">Compliant device</text>
+          <text x="210" y="102" fill="#6B85A6" font-size="12.5">device proves it</text>
+        </g>
+        <g>
+          <rect x="70" y="142" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="167" fill="#A8E1F8" font-size="16" font-weight="600">Hybrid-joined device</text>
+          <text x="210" y="186" fill="#6B85A6" font-size="12.5">device proves it</text>
+        </g>
+        <g>
+          <rect x="70" y="226" width="280" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="210" y="251" fill="#A8E1F8" font-size="16" font-weight="600">MFA</text>
+          <text x="210" y="270" fill="#6B85A6" font-size="12.5">user proves it</text>
+        </g>
+      </g>
+
+      <!-- converging lines into the OR gate -->
+      <path d="M350 86 C460 86 470 170 560 170" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+      <path d="M350 170 H560" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+      <path d="M350 254 C460 254 470 170 560 170" stroke="#335F92" stroke-width="2.2" fill="none" marker-end="url(#trArr)"/>
+
+      <!-- OR gate -->
+      <g transform="translate(640,170)">
+        <circle r="74" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="52" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.8"/>
+        <text x="0" y="-2" text-anchor="middle" fill="url(#trGate)" font-family="Geist,Inter,sans-serif" font-size="30" font-weight="700">OR</text>
+        <text x="0" y="24" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="2">ANY ONE</text>
+      </g>
+
+      <!-- gate to allow -->
+      <path d="M714 170 H840" stroke="#2EE8A0" stroke-width="2.4" fill="none" marker-end="url(#trArr)"/>
+
+      <!-- allowed sign-in -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="852" y="140" width="200" height="60" rx="12" fill="#0C2A1F" stroke="#2EE8A0" stroke-width="1.6"/>
+        <text x="952" y="167" fill="#2EE8A0" font-size="16" font-weight="700">Sign-in proceeds</text>
+        <text x="952" y="187" fill="#7FCDB0" font-size="12">none → blocked</text>
+      </g>
+    </svg>
+    <figcaption>Pick any one — compliant device, hybrid-joined device, or MFA — and the sign-in proceeds. Pick none, and it's blocked.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Lesson 2 covered the Require MFA for all users policy: simple, foundational, always-MFA-no-matter-what. This lesson is its successor — the more sophisticated version for tenants that have Intune working and want to give users on managed devices a smoother experience without giving up the security floor.</p>
+
+  <p><strong>Panoptica365 - Require compliant or hybrid Azure AD joined device or MFA for all users.</strong> Description: <em>Check several conditions to allow connections.</em> Grant: Require MFA, Require compliant device, Require Hybrid Azure AD joined (OR). Users: All users. Apps: All cloud apps.</p>
+
+  <p>This template uses the same OR-condition pattern lesson 4 introduced — multiple paths to satisfy the same intent. Lesson 4's policy combined location-trust with device-trust. This lesson's policy combines three different ways of proving the user's posture is trustworthy: managed device, hybrid-joined device, or MFA.</p>
+
+  <p>Pick any one, the sign-in proceeds. Pick none, the sign-in is blocked.</p>
+  </div>
+
+  <h2>The three paths</h2>
+
+  <p><strong>Path 1: Compliant device.</strong> The device the user is signing in from is enrolled in Intune and currently reports as compliant. Compliance typically means: encryption on, OS patched within an acceptable window, AV active, no jailbreak, the customer's specific policy is met. If the device clears that bar, the sign-in proceeds — <em>no MFA prompt needed</em>. The device has proven the user's posture is trustworthy.</p>
+
+  <p><strong>Path 2: Hybrid Azure AD joined device.</strong> The device is a corporate-managed Windows machine joined to both the on-premises Active Directory and Entra ID. Hybrid-joined devices are typically corporate-issued workstations in environments where the customer maintains a domain controller. Like compliant devices, hybrid-joined devices have proven they're managed and trustworthy. Sign-in proceeds without MFA.</p>
+
+  <p><strong>Path 3: MFA.</strong> The user completes a multi-factor authentication challenge. This is the fallback path for users on personal devices, unmanaged devices, or devices not yet enrolled. If they can prove identity through MFA, they get in.</p>
+
+  <p>Any one of the three is sufficient. The grant control is configured with "Require one of the selected controls" rather than "Require all selected controls" — that's the structural difference between this template and a naive "require everything" policy.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="The three paths grouped by what proves the sign-in: the device proves it (compliant or hybrid-joined) or the user proves it (MFA).">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- device proves it group -->
+        <text x="40" y="44" fill="#6B85A6" font-size="12" letter-spacing="2">THE DEVICE PROVES IT</text>
+        <rect x="40" y="56" width="300" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="80" fill="#A8E1F8" font-size="14.5" font-weight="600">Compliant device</text>
+        <text x="60" y="98" fill="#6B85A6" font-size="11.5">enrolled in Intune, reports compliant</text>
+        <rect x="40" y="120" width="300" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="144" fill="#A8E1F8" font-size="14.5" font-weight="600">Hybrid-joined device</text>
+        <text x="60" y="162" fill="#6B85A6" font-size="11.5">corporate Windows, joined to AD + Entra ID</text>
+
+        <!-- user proves it group -->
+        <text x="40" y="208" fill="#6B85A6" font-size="12" letter-spacing="2">THE USER PROVES IT</text>
+        <rect x="40" y="220" width="300" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="247" fill="#A8E1F8" font-size="14.5" font-weight="600">MFA — fallback for unmanaged devices</text>
+
+        <!-- the question -->
+        <rect x="392" y="92" width="288" height="96" rx="11" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="536" y="128" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Is this sign-in</text>
+        <text x="536" y="150" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">trustworthy?</text>
+        <text x="536" y="172" text-anchor="middle" fill="#6B85A6" font-size="11.5">three proofs accepted</text>
+      </g>
+      <defs><marker id="tpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <path d="M340 82 C368 82 366 130 392 130" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+      <path d="M340 146 C368 146 366 134 392 134" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+      <path d="M340 242 C368 242 366 150 392 150" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#tpArr)"/>
+    </svg>
+    <figcaption>One question, three accepted proofs: the device proves it, or the user proves it.</figcaption>
+  </figure>
+
+  <h2>What this is <em>actually</em> doing</h2>
+
+  <p>Read the policy intent through the lens of card 1: <em>who, what, where, when, weird?</em> This policy is answering one question — "is this sign-in trustworthy?" — and accepting three different proofs:</p>
+
+  <ul>
+    <li><strong>The device proves it</strong> (compliant or hybrid-joined). Microsoft and Intune have already vetted the device; trust transfers to the sign-in.</li>
+    <li><strong>The user proves it</strong> (MFA). The human in front of the keyboard has demonstrated they're the legitimate user.</li>
+  </ul>
+
+  <p>If neither the device nor the user proves it, the sign-in is denied. There's no fourth path. There's no "trust because it's Wednesday" exception.</p>
+
+  <p>The policy's strength is in the <em>combined</em> effect: on managed devices, users have a frictionless sign-in experience (no MFA prompt every session); on unmanaged devices, the MFA path catches them. The customer gets the security floor of always-trusted-or-MFA without the always-MFA friction.</p>
+
+  <h2>When to use this template instead of "Require MFA for all users"</h2>
+
+  <p>Lesson 2's template (Require MFA for all users) and this lesson's template are the two main strategic choices for a tenant's baseline CA policy. They're alternatives, not complements. The choice depends on the customer's Intune posture and friction tolerance.</p>
+
+  <p><strong>Use Require MFA for all users (lesson 2) when:</strong></p>
+
+  <ul>
+    <li>The customer doesn't have Intune yet (Business Standard or below — though those customers shouldn't be there in the first place per card 1 lesson 5).</li>
+    <li>The customer has Intune but device coverage is patchy — some users on managed laptops, others on BYO.</li>
+    <li>You're in the middle of rolling out Intune and compliance is still unreliable.</li>
+    <li>The customer's leadership wants the simplest possible "MFA on every sign-in" posture for compliance reasons.</li>
+  </ul>
+
+  <p><strong>Use this lesson's template (Compliant OR hybrid OR MFA) when:</strong></p>
+
+  <ul>
+    <li>Intune is rolled out and compliance is reliable.</li>
+    <li>The majority of users are on managed devices.</li>
+    <li>You want better UX for those users without compromising the security of users on unmanaged devices.</li>
+    <li>The customer is comfortable with the device-trust signal carrying weight (rather than requiring MFA on every sign-in).</li>
+  </ul>
+
+  <p>In practice, the second template fits most well-managed Business Premium tenants once Intune is in place. The first template is the safe default during the Intune rollout window or for tenants without an Intune story.</p>
+
+  <h2>What happens if both are enabled simultaneously</h2>
+
+  <p>This is the question that often comes up — and the answer affects how an operator thinks about migrating between strategies.</p>
+
+  <p>Conditional Access policies <em>stack via logical AND across policies</em>. A sign-in must satisfy every applicable policy. Within a single policy, the grants are combined via the rules of that policy (OR for "any of," AND for "all of").</p>
+
+  <p>So if both Require MFA for all users (lesson 2) and Compliant OR hybrid OR MFA (this lesson) are enabled:</p>
+
+  <ul>
+    <li>Lesson 2's policy says: <em>must complete MFA</em>.</li>
+    <li>This lesson's policy says: <em>must have compliant device, OR hybrid-joined device, OR complete MFA</em>.</li>
+    <li>Combined: <em>must satisfy both policies</em>.</li>
+  </ul>
+
+  <p>The lesson 2 policy's MFA requirement is unconditional. The lesson 5 policy's OR-paths include MFA. So the only way to satisfy <em>both</em> is to complete MFA. The compliant-device and hybrid-joined paths of lesson 5 become irrelevant — even on a perfectly compliant device, the user still has to do MFA because lesson 2 demands it.</p>
+
+  <div class="callout caution">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Net effect of both enabled</div>
+    <p><strong>Same as enabling lesson 2 alone.</strong> The "OR" parts of this lesson's template are suppressed by the unconditional MFA requirement of lesson 2. This is <em>not</em> a useful configuration. It's not "defence in depth" — it's redundancy with the strictness of the strictest policy. The compliant-device path that the lesson 5 template was designed to enable is unreachable.</p>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="When both policies are enabled, lesson 2's unconditional MFA requirement suppresses the OR-paths of lesson 5, leaving MFA as the only way through.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- lesson 5 OR-paths -->
+        <text x="40" y="38" fill="#6B85A6" font-size="12" letter-spacing="2">LESSON 5 OR-PATHS</text>
+        <rect x="40" y="50" width="230" height="38" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="58" y="74" fill="#52708F" font-size="13.5">Compliant device</text>
+        <line x1="60" y1="69" x2="250" y2="69" stroke="#FF5A6E" stroke-width="2" opacity="0.85"/>
+        <rect x="40" y="98" width="230" height="38" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="58" y="122" fill="#52708F" font-size="13.5">Hybrid-joined device</text>
+        <line x1="60" y1="117" x2="250" y2="117" stroke="#FF5A6E" stroke-width="2" opacity="0.85"/>
+        <rect x="40" y="146" width="230" height="38" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="58" y="170" fill="#A8E1F8" font-size="13.5" font-weight="600">MFA</text>
+        <text x="155" y="208" text-anchor="middle" fill="#6B85A6" font-size="11.5">two paths suppressed</text>
+
+        <!-- AND gate from lesson 2 -->
+        <rect x="320" y="86" width="120" height="62" rx="10" fill="#2A1A06" stroke="#FFC04D" stroke-width="1.6"/>
+        <text x="380" y="112" text-anchor="middle" fill="#FFC04D" font-size="15" font-weight="700">Lesson 2</text>
+        <text x="380" y="132" text-anchor="middle" fill="#E0B872" font-size="11.5">MFA, unconditional</text>
+
+        <!-- result -->
+        <rect x="490" y="86" width="190" height="62" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="585" y="112" text-anchor="middle" fill="#7DD9F9" font-size="14.5" font-weight="700">Only MFA gets in</text>
+        <text x="585" y="132" text-anchor="middle" fill="#6B85A6" font-size="11.5">= lesson 2 alone</text>
+      </g>
+      <defs><marker id="seArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <path d="M270 165 C300 165 296 117 320 117" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#seArr)"/>
+      <path d="M440 117 H490" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#seArr)"/>
+    </svg>
+    <figcaption>Both enabled: lesson 2's unconditional MFA cancels lesson 5's device-trust paths. Net result equals lesson 2 alone.</figcaption>
+  </figure>
+
+  <p>The right configurations:</p>
+
+  <ul>
+    <li><strong>Enable only lesson 2</strong> if you want strict-always-MFA semantics.</li>
+    <li><strong>Enable only lesson 5</strong> if you want smart-OR-based-trust semantics.</li>
+    <li><strong>Do not enable both</strong> and expect the OR-paths to apply.</li>
+  </ul>
+
+  <p>The migration path between strategies:</p>
+
+  <ol>
+    <li>Start with lesson 2's policy enabled (always-MFA). Most tenants land here first because Intune isn't ready yet.</li>
+    <li>Roll out Intune compliance. Get the device-side ready.</li>
+    <li>When compliance is reliable, deploy lesson 5's policy in Report-only mode.</li>
+    <li>Verify that sign-ins from compliant devices match the policy and would be allowed without MFA.</li>
+    <li>Flip lesson 5 to On.</li>
+    <li><em>Disable lesson 2</em> once lesson 5 is enforcing. (Or keep lesson 2 in Report-only as a documentation reference; that's fine, just don't have both enforcing.)</li>
+    <li>The user experience changes: managed-device users no longer see an MFA prompt every session.</li>
+  </ol>
+
+  <p>The decision point is between steps 5 and 6. If the customer is nervous about the change, you can keep both policies enforcing for a brief overlap period — users will continue to see MFA prompts even on compliant devices — and then disable lesson 2. The pre-flight (lesson 1) should have already verified that compliance is reliable; the overlap is just a confidence-building measure.</p>
+
+  <h2>What to watch for during the migration</h2>
+
+  <p><strong>Compliance reporting reliability.</strong> The whole strategy depends on devices accurately reporting their state. If a device is genuinely compliant but Intune reports it as non-compliant (network issues, sync lag, stale state), the user gets an MFA prompt where they shouldn't. Inverse is worse: if a device is non-compliant but Intune reports it as compliant, the sign-in skips MFA when it shouldn't.</p>
+
+  <p>Run periodic device-reconciliation checks. If a device shows compliant in Intune but is failing some compliance check at the OS level, the gap matters.</p>
+
+  <p><strong>Lazy compliance evaluation.</strong> Intune doesn't continuously re-evaluate every device. There's a check-in cadence. A device that goes non-compliant (user disables BitLocker, falls behind on patches) may still report compliant for some hours after the change. CA reads the current state at sign-in time, so there can be a short window where the device-trust path of this policy is "compliant" when it shouldn't be.</p>
+
+  <p>Don't worry about minute-level lag — it's the hour-level lag that matters. Set device-compliance check-in intervals appropriately in Intune.</p>
+
+  <p><strong>Hybrid-joined-device drift.</strong> If the customer has a Hybrid AD environment, devices can fall out of hybrid-joined status without anyone noticing (Azure AD Connect sync issues, replication lag, decommissioned domain controllers). Devices that are no longer hybrid-joined silently lose the hybrid-joined trust path. Don't notice this until the user is on a personal network and the sign-in fails.</p>
+
+  <p>Monitor your Hybrid AD sync health regularly; Panoptica365 doesn't directly surface this signal but the underlying Entra sync health is visible in the Microsoft admin centres.</p>
+
+  <h2>Rollout</h2>
+
+  <p>Migrating from lesson 2's policy to this one is the typical migration path. The work is substantial enough that <strong>the manual Report-only step in the Entra portal is recommended for this migration regardless of tenant size</strong>. The reason: this isn't a single new policy; it's a strategy change. Mistakes are louder.</p>
+
+  <p>Pre-flight verification (per lesson 1) confirms Intune compliance is reliable on a substantial fraction of the user base, hybrid-joined devices are sync-healthy if applicable.</p>
+
+  <p>Then:</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy this template via Panoptica365 (creates the policy in Enabled state). Immediately flip the policy to Report-only in the Entra portal. Keep the lesson 2 template enforcing during this window.</li>
+    <li><strong>Days 1–7</strong> — pull the sign-in log filtered to this policy's Report-only result. For each sign-in:
+      <ul>
+        <li>Did the compliant-device or hybrid-joined-device path succeed? (User is on a managed device.) Good — the OR-pattern is working as designed.</li>
+        <li>Did only the MFA path succeed? (User completed MFA, no other path was available.) This user is either on a personal device or on a managed device where compliance is misreporting. Investigate.</li>
+        <li>Did the sign-in fail all three paths? (Blocked.) This is a user who couldn't authenticate even with MFA — likely a configuration issue. Investigate.</li>
+      </ul>
+    </li>
+    <li><strong>Days 7–14</strong> — fix any compliance misreporting issues surfaced during Report-only.</li>
+    <li><strong>Day 14</strong> — flip this template back to Enabled in the Entra portal.</li>
+    <li><strong>Day 14 (same day)</strong> — disable the lesson 2 template in Panoptica365 (or flip it to Report-only as a documentation reference, but don't keep it enforcing alongside this one).</li>
+    <li><strong>Day 14 onward</strong> — monitor user behaviour. Users on managed devices will notice the smoother experience; users on personal devices won't notice any change (they were getting MFA before and they get MFA now).</li>
+  </ol>
+
+  <p>Total window: two weeks. The friction cost is justified — this strategy change rewards careful verification.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>This is the upgrade target for tenants with reliable Intune.</strong> Move customers here as soon as their Intune posture is good. Better UX for users on managed devices, same security floor for users on unmanaged ones, less friction overall.</p>
+
+  <p><strong>Don't run lesson 2 and this lesson in parallel.</strong> The OR-paths get suppressed. You're effectively running lesson 2 with extra audit-log noise. Pick one strategy per tenant.</p>
+
+  <p><strong>The strategy choice tracks the Intune rollout.</strong> A new customer typically starts on lesson 2 (always-MFA) because Intune isn't yet rolled out. As Intune coverage grows, the device-trust signal becomes reliable, and the customer is ready to graduate to this lesson's template. The transition is itself a milestone in the customer's security maturity.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Hardening admin access</b> — four admin-specific templates in one lesson. The combination of MFA enforcement, MFA-for-portals, and session controls.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Disable device code flow</b> — the Storm-2372 defence.</div></div>
+  </div>
+
+  <p>For now: if a customer has Intune working, this is the template they should be on. The migration from lesson 2 is a two-week exercise that pays for itself in user UX immediately and in operator hours saved over time (fewer "the MFA prompt is so annoying" complaints from senior users).</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Conditional Access grant controls and OR-vs-AND semantics (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Grant</a>); Intune device compliance and signal flow into CA (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/conditional-access" target="_blank" rel="noopener">Microsoft Learn — Device compliance for Conditional Access</a>); Hybrid Azure AD join overview (<a href="https://learn.microsoft.com/en-us/entra/identity/devices/concept-hybrid-join" target="_blank" rel="noopener">Microsoft Learn — Hybrid Azure AD join</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

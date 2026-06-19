@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account Protection + Block Microsoft Consumer Accounts — durcissement des identifiants sur le terminal — Intune Template Settings</title>
+<meta name="lesson:title" content="Account Protection + Block Microsoft Consumer Accounts — durcissement des identifiants sur le terminal">
+<meta name="lesson:subtitle" content="Windows Hello for Business, Credential Guard et blocage des comptes Microsoft personnels — rendre les identifiants plus difficiles à voler si l'appareil est compromis.">
+<meta name="lesson:icon" content="user-lock">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Account Protection + Block MSA</span></div>
+  <h1>Account Protection + Block Microsoft Consumer Accounts — durcissement des identifiants sur le terminal</h1>
+  <p class="dek">Windows Hello for Business, Credential Guard et blocage des comptes Microsoft personnels — rendre les identifiants plus difficiles à voler si l'appareil est compromis.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Deux modèles de terminal — Account Protection et Block Microsoft Consumer Accounts — ferment ensemble la brèche côté identifiants sur un appareil Windows.">
+      <defs>
+        <radialGradient id="apBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="apTpm" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="apSoft"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#apBg)"/>
+
+      <!-- centre: the Windows endpoint holding the credential -->
+      <g transform="translate(560,168)">
+        <rect x="-150" y="-92" width="300" height="172" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.6"/>
+        <rect x="-150" y="-92" width="300" height="30" rx="14" fill="#102A4C"/>
+        <text x="0" y="-71" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TERMINAL WINDOWS</text>
+        <!-- TPM-held credential -->
+        <circle cx="0" cy="2" r="34" fill="url(#apTpm)" filter="url(#apSoft)" opacity="0.9"/>
+        <g transform="translate(0,2)">
+          <rect x="-13" y="-4" width="26" height="20" rx="3" fill="#071221" stroke="#EAF7FE" stroke-width="1.6"/>
+          <path d="M-8 -4 V-12 a8 8 0 0 1 16 0 V-4" fill="none" stroke="#EAF7FE" stroke-width="1.6"/>
+        </g>
+        <text x="0" y="58" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Identifiant, soutenu par TPM</text>
+      </g>
+
+      <!-- left template: Account Protection -->
+      <g transform="translate(220,168)">
+        <rect x="-150" y="-74" width="246" height="148" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="-27" y="-46" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="700">Account Protection</text>
+        <text x="-27" y="-22" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="12.5">Windows Hello for Business</text>
+        <text x="-27" y="-2" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="12.5">Credential Guard</text>
+        <text x="-27" y="44" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">plus durs à voler en mémoire</text>
+      </g>
+      <path d="M310 168 H400" stroke="#335F92" stroke-width="2.5" marker-end="url(#apArr)"/>
+      <defs><marker id="apArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+
+      <!-- right template: Block MSA -->
+      <g transform="translate(900,168)">
+        <rect x="-96" y="-74" width="246" height="148" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="27" y="-46" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="700">Block MSA</text>
+        <text x="27" y="-22" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="12">Aucun compte Microsoft perso</text>
+        <text x="27" y="-2" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="12">Travail/école via WAM intact</text>
+        <text x="27" y="44" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">identité corporative seulement</text>
+      </g>
+      <path d="M810 168 H720" stroke="#335F92" stroke-width="2.5" marker-end="url(#apArr)"/>
+    </svg>
+    <figcaption>Deux modèles, un travail : rendre l'identifiant plus dur à voler, et garder l'appareil sur l'identité corporative seulement.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La plupart des menaces d'identité de la carte 2 se terminent au moment où l'attaquant a les identifiants. L'hameçonnage AiTM capture le cookie de session; le credential stuffing réussit avec un mot de passe réutilisé; l'hameçonnage par consentement OAuth amène l'utilisateur à accorder l'accès. La défense dans chaque cas a été <em>ne laissez pas l'attaquant obtenir l'identifiant</em> (MFA résistant à l'hameçonnage), <em>ne laissez pas l'identifiant se faire voler</em> (passkeys, auth basée sur les certificats), ou <em>ne laissez pas un identifiant volé être utile</em> (Token Protection, accès conditionnel).</p>
+
+  <p>Il y a une défense complémentaire qui vit sur le terminal lui-même : rendre les identifiants <em>plus difficiles à voler en premier lieu</em> si l'appareil est compromis. C'est ce que les deux modèles de cette leçon font.</p>
+
+  <p>Le modèle Account Protection Settings configure Windows Hello for Business (authentification biométrique de style passkey ou par NIP attachée au TPM de l'appareil) et Credential Guard (une couche d'isolation basée sur la virtualisation qui protège les identifiants en mémoire de l'extraction par les maliciels).</p>
+
+  <p>Le modèle Block Microsoft Consumer Accounts empêche les utilisateurs d'ajouter des comptes Microsoft personnels (le genre Outlook.com / Hotmail / Live.com grand public) aux appareils Windows corporatifs, ce qui ferme une porte dérobée où un utilisateur pourrait accidentellement — ou délibérément — connecter son appareil à une identité infonuagique personnelle en parallèle de la corporative.</p>
+
+  <p>Cette leçon couvre les deux.</p>
+  </div>
+
+  <h2>Account Protection Settings — ce qu'il configure</h2>
+
+  <p>Le modèle utilise l'ancien type de modèle <strong>Intents</strong> (<code>policyType: intents</code>) avec l'ID de modèle Microsoft endpoint-security <code>0f2b5d70-d4e9-4156-8c16-1397eb6c54a5</code>. Cet ID de modèle correspond à la famille de politique Account Protection d'endpoint-security de Microsoft.</p>
+
+  <p>Les paramètres (environ 15 d'entre eux) se regroupent en trois zones :</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 196" role="img" aria-label="Les quelque quinze paramètres du modèle Account Protection se regroupent en trois zones : politique de NIP Windows Hello for Business, comportement de déverrouillage Windows Hello, et Credential Guard.">
+      <rect width="720" height="196" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ACCOUNT PROTECTION · ~15 PARAMÈTRES · 3 ZONES</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(24,64)">
+          <rect x="0" y="0" width="208" height="108" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="104" y="34" fill="#A8E1F8" font-size="14" font-weight="600">WHfB</text>
+          <text x="104" y="56" fill="#C4D4E8" font-size="13">politique de NIP</text>
+          <text x="104" y="84" fill="#52708F" font-size="11.5">longueur, réutilisation,</text>
+          <text x="104" y="100" fill="#52708F" font-size="11.5">expiration, récupération</text>
+        </g>
+        <g transform="translate(256,64)">
+          <rect x="0" y="0" width="208" height="108" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="104" y="34" fill="#A8E1F8" font-size="14" font-weight="600">WHfB</text>
+          <text x="104" y="56" fill="#C4D4E8" font-size="13">déverrouillage</text>
+          <text x="104" y="84" fill="#52708F" font-size="11.5">biométrie,</text>
+          <text x="104" y="100" fill="#52708F" font-size="11.5">anti-usurpation</text>
+        </g>
+        <g transform="translate(488,64)">
+          <rect x="0" y="0" width="208" height="108" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.5"/>
+          <text x="104" y="34" fill="#7DD9F9" font-size="14" font-weight="700">Credential Guard</text>
+          <text x="104" y="56" fill="#C4D4E8" font-size="13">isolation mémoire</text>
+          <text x="104" y="84" fill="#52708F" font-size="11.5">enableWithout-</text>
+          <text x="104" y="100" fill="#52708F" font-size="11.5">UEFILock</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les paramètres du modèle se groupent en trois zones — et Credential Guard est celui qui compte le plus.</figcaption>
+  </figure>
+
+  <h3>Windows Hello for Business — politique de NIP</h3>
+
+  <p>Windows Hello for Business (WHfB), c'est le mécanisme d'authentification sans mot de passe de Microsoft sur Windows. Plutôt que de taper un mot de passe pour se connecter, l'utilisateur s'authentifie via NIP (soutenu par le TPM), biométrie (visage ou empreinte, soutenue par le matériel Windows Hello), ou une clé de sécurité. L'identifiant est stocké cryptographiquement sur le TPM de l'appareil, donc il ne peut pas être extrait par des maliciels qui lisent la mémoire.</p>
+
+  <p>Les paramètres de politique de NIP :</p>
+
+  <ul>
+    <li><strong>Longueur minimum du NIP : 6</strong> (le choix du modèle — le minimum par défaut de Microsoft est 4; plus long est plus fort mais plus friction).</li>
+    <li><strong>Longueur maximum du NIP : 127</strong> (effectivement illimité).</li>
+    <li><strong>Compte de blocage des NIP précédents : 24</strong> — ne peut pas réutiliser les 24 derniers NIP.</li>
+    <li><strong>Expiration du NIP en jours : 0</strong> — pas d'expiration de NIP. C'est le paramètre moderne recommandé; la rotation forcée de NIP crée de pires résultats (les utilisateurs choisissent des NIP plus faibles dont ils peuvent se souvenir).</li>
+    <li><strong>Caractères majuscules / minuscules / spéciaux du NIP : notConfigured</strong> — pas d'exigences de caractères au-delà de la longueur minimum. Les NIP sont locaux à l'appareil et soutenus par TPM; la complexité compte moins que la longueur.</li>
+    <li><strong>Récupération du NIP activée : true</strong> — les utilisateurs peuvent récupérer un NIP perdu via la méthode de récupération configurée.</li>
+  </ul>
+
+  <h3>Comportement de déverrouillage Windows Hello</h3>
+
+  <ul>
+    <li><strong>Déverrouillage avec biométrie : true</strong> — déverrouillage par visage ou empreinte permis aux côtés du NIP.</li>
+    <li><strong>Anti-usurpation amélioré : true</strong> — le déverrouillage biométrique utilise la détection anti-usurpation (empêche de tromper la reconnaissance faciale avec une photo).</li>
+    <li><strong>Utiliser une clé de sécurité pour la connexion : false</strong> — les clés de sécurité FIDO2 pour la connexion ne sont pas le défaut. C'est configuré comme ça parce que tous les clients n'ont pas émis de clés FIDO2; les tenants qui l'ont fait peuvent surpasser ça par tenant.</li>
+    <li><strong>Utiliser les certificats pour l'auth sur place : false</strong> — auth sur place basée sur les certificats pas le défaut pour ce modèle.</li>
+    <li><strong>Windows Hello for Business requis : false</strong> — WHfB est <em>disponible</em> mais pas <em>requis</em>. Les utilisateurs peuvent encore se connecter avec un mot de passe s'ils préfèrent. La combinaison de l'infrastructure WHfB présente et de l'utilisateur qui la choisit, c'est le chemin d'adoption typique.</li>
+    <li><strong>Appareil de sécurité requis : false</strong> — TPM pas requis pour WHfB. (En pratique, presque chaque appareil Windows a un TPM; ce paramètre est permissif.)</li>
+  </ul>
+
+  <h3>Credential Guard</h3>
+
+  <ul>
+    <li><strong>Device Guard / Credential Guard : enableWithoutUEFILock</strong> — Credential Guard est activé, mais le verrou UEFI qui empêcherait de désactiver Credential Guard depuis l'extérieur de l'OS n'est pas appliqué.</li>
+  </ul>
+
+  <p>Credential Guard est la fonctionnalité de sécurité qui compte le plus dans ce modèle. Il utilise la virtualisation Windows (isolation Hyper-V) pour isoler le processus LSASS — la partie de Windows qui stocke les identifiants hachés en mémoire. Avec Credential Guard actif, les maliciels qui roulent sur l'appareil (même avec des privilèges élevés) ne peuvent pas extraire les identifiants depuis la mémoire LSASS — les identifiants sont dans un contenant matériellement isolé que le reste de l'OS ne peut pas atteindre.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Credential Guard utilise l'isolation Hyper-V pour placer le processus LSASS qui détient les identifiants hachés dans un contenant matériellement isolé, de sorte que les maliciels avec des privilèges élevés ne peuvent pas les extraire.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker></defs>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CREDENTIAL GUARD · ISOLATION HYPER-V</text>
+
+      <!-- malware on the device side -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="96" width="180" height="64" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="130" y="124" fill="#FF8A98" font-size="14" font-weight="700">Maliciel</text>
+        <text x="130" y="144" fill="#E2A0AA" font-size="11.5">privilèges élevés</text>
+      </g>
+
+      <!-- isolated container -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="396" y="60" width="288" height="150" rx="12" fill="#0C2038" stroke="#5CCBF4" stroke-width="1.6" stroke-dasharray="6 5"/>
+        <text x="540" y="86" fill="#7DD9F9" font-size="12.5" letter-spacing="1.5">CONTENANT ISOLÉ</text>
+        <rect x="448" y="104" width="184" height="56" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="540" y="130" fill="#A8E1F8" font-size="14" font-weight="600">LSASS</text>
+        <text x="540" y="150" fill="#6B85A6" font-size="11.5">identifiants hachés</text>
+        <text x="540" y="192" fill="#52708F" font-size="11.5">l'OS ne peut atteindre</text>
+      </g>
+
+      <!-- blocked extraction -->
+      <path d="M222 128 H392" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#cgArr)"/>
+      <g transform="translate(307,128)">
+        <circle r="15" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <line x1="-7" y1="-7" x2="7" y2="7" stroke="#FF5A6E" stroke-width="2"/>
+        <line x1="7" y1="-7" x2="-7" y2="7" stroke="#FF5A6E" stroke-width="2"/>
+      </g>
+      <text x="307" y="170" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11">extraction bloquée</text>
+    </svg>
+    <figcaption>LSASS est dans un contenant matériellement isolé; les maliciels sur l'appareil ne peuvent l'atteindre pour extraire les identifiants.</figcaption>
+  </figure>
+
+  <p>C'est la défense contre des outils comme Mimikatz, qui vident la mémoire LSASS pour extraire les hachages NTLM et les tickets Kerberos qui peuvent être rejoués pour attaquer d'autres systèmes. La règle ASR « Bloquer le vol d'identifiants depuis LSASS » (leçon 7) attrape Mimikatz au niveau du comportement; Credential Guard empêche l'attaque sous-jacente de réussir même si la détection comportementale était contournée.</p>
+
+  <p>Le choix « activer sans verrou UEFI » échange une petite quantité de sécurité contre une grande quantité de flexibilité opérationnelle. Le verrou UEFI rendrait Credential Guard impossible à désactiver sans reflasher physiquement le firmware de l'appareil. C'est le paramètre de sécurité maximum mais il est fragile — si un problème se développe (compatibilité de pilote, besoin de dépannage), l'opérateur ne peut pas l'annuler via Intune. La variante sans verrou UEFI donne aux MSP la capacité de désactiver Credential Guard via politique quand nécessaire, au coût de permettre le même chemin de désactivation à un attaquant sophistiqué qui a déjà compromis l'appareil.</p>
+
+  <h2>Block Microsoft Consumer Accounts — ce qu'il configure</h2>
+
+  <p>Le modèle utilise le type de modèle moderne catalogue de paramètres. Son travail est étroit et délibéré : empêcher les utilisateurs d'ajouter des comptes Microsoft personnels (Outlook.com / Hotmail / Live.com / Xbox / OneDrive personnel) à un appareil Windows corporatif, tout en laissant l'authentification de compte travail/école via le Web Account Manager (WAM) — le mécanisme que les apps Microsoft 365 utilisent pour se connecter — complètement intacte.</p>
+
+  <p>La distinction compte parce que la politique « bloquer les comptes Microsoft » dans Windows est un seul CSP qui peut être configuré de plusieurs façons, et la mauvaise valeur bloque trop. WAM utilise des flux d'authentification de style compte Microsoft pour les comptes travail/école en dessous, donc un paramètre lourd qui bloque tout l'auth de saveur MSA brisera aussi les connexions Outlook, Teams et autres apps Office. Le modèle est accordé pour ne bloquer que l'ajout MSA personnel, laissant le chemin d'authentification travail/école ouvert.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Le modèle Block MSA bloque l'ajout d'un compte Microsoft personnel à un appareil corporatif tout en laissant la connexion de compte travail et école via le Web Account Manager complètement intacte.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">APPAREIL WINDOWS CORPORATIF</text>
+      <defs>
+        <marker id="bmOk" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+        <marker id="bmNo" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+
+      <!-- the gate -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="296" y="74" width="128" height="92" rx="11" fill="#0E2236" stroke="#335F92" stroke-width="1.5"/>
+        <text x="360" y="110" fill="#C4D4E8" font-size="13" font-weight="600">Account</text>
+        <text x="360" y="128" fill="#C4D4E8" font-size="13" font-weight="600">Manager</text>
+        <text x="360" y="150" fill="#52708F" font-size="11">(CSP)</text>
+      </g>
+
+      <!-- personal MSA blocked -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="84" width="200" height="72" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="136" y="114" fill="#FF8A98" font-size="13.5" font-weight="700">MSA personnel</text>
+        <text x="136" y="134" fill="#E2A0AA" font-size="11.5">Outlook.com / Xbox</text>
+      </g>
+      <path d="M236 120 H290" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#bmNo)"/>
+      <text x="263" y="74" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11">bloqué</text>
+
+      <!-- work/school allowed via WAM -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="484" y="84" width="200" height="72" rx="10" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="584" y="114" fill="#A8E1F8" font-size="13.5" font-weight="700">Travail / école</text>
+        <text x="584" y="134" fill="#6B85A6" font-size="11.5">via WAM — intact</text>
+      </g>
+      <path d="M484 120 H430" stroke="#2EE8A0" stroke-width="2" marker-end="url(#bmOk)"/>
+      <text x="457" y="74" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="11">permis</text>
+
+      <text x="360" y="206" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5">ne bloquer que l'ajout MSA personnel — laisser le chemin travail/école ouvert</text>
+    </svg>
+    <figcaption>Le modèle ne cible que l'ajout MSA personnel; le chemin WAM travail/école dont les apps M365 dépendent reste ouvert.</figcaption>
+  </figure>
+
+  <p>La configuration réelle du modèle :</p>
+
+  <ul>
+    <li><strong>Autoriser les comptes Microsoft :</strong> configuré pour bloquer l'ajout MSA personnel tout en permettant l'authentification de compte travail/école via WAM.</li>
+    <li>Quelques paramètres Account Manager liés accordés de façon cohérente avec cette intention.</li>
+  </ul>
+
+  <p>L'intention : un appareil corporatif géré devrait se connecter à des identités corporatives seulement. Les utilisateurs ne devraient pas ajouter leur compte Outlook.com personnel, leur OneDrive personnel, leur MSA lié au jeu à l'appareil. Les raisons :</p>
+
+  <ul>
+    <li><strong>Risque de fuite de données.</strong> Un MSA personnel configuré sur un appareil corporatif peut synchroniser des dossiers OneDrive personnels qui contiennent des documents corporatifs. Les données corporatives sont maintenant dans le nuage personnel, en dehors du contrôle du MSP.</li>
+    <li><strong>Confusion d'identité.</strong> Les utilisateurs avec des MSA à la fois corporatifs et personnels sur le même appareil s'authentifient fréquemment à la mauvaise identité, causant des billets de support et occasionnellement exposant les données corporatives au stockage infonuagique personnel.</li>
+    <li><strong>Exposition à l'hameçonnage.</strong> Un courriel d'hameçonnage ciblant le MSA personnel de l'utilisateur, ouvert sur l'appareil corporatif, peut résulter en une compromission qui affecte l'appareil corporatif même si l'identité ciblée est personnelle.</li>
+    <li><strong>Conformité.</strong> Plusieurs cadres réglementaires (incluant certaines interprétations du RGPD et CCPA) traitent le mélange de données corporatives et personnelles sur le même appareil comme un enjeu de conformité.</li>
+  </ul>
+
+  <p>L'encadrement honnête : bloquer l'ajout MSA personnel est une amélioration de sécurité significative avec un impact utilisateur minimal. Les utilisateurs qui veulent légitimement leurs comptes personnels disponibles font ça sur leurs appareils personnels. Les appareils corporatifs sont corporatifs.</p>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p>Ces modèles sont généralement plus sûrs que les modèles ASR Rules et Firewall, mais ils ont des pièges spécifiques :</p>
+
+  <div class="callout caution">
+    <div class="clabel">Ce qui peut briser</div>
+    <p><strong>L'adoption de Windows Hello for Business demande de l'infrastructure.</strong> Déployer le modèle Account Protection sans l'infrastructure WHfB (la configuration de confiance Kerberos infonuagique, la configuration d'autorité de certification pour les scénarios hybrides sur place, le flux d'inscription d'appareil) veut dire que les utilisateurs ne peuvent pas vraiment utiliser WHfB. Ils se connecteront avec des mots de passe comme ils l'ont toujours fait, et les paramètres WHfB resteront inutilisés. C'est bénin mais veut dire que l'avantage de sécurité ne se réalise pas. L'adoption WHfB est habituellement un projet séparé du déploiement de ce modèle.</p>
+    <p><strong>Incompatibilité Credential Guard.</strong> Un petit nombre d'apps légitimes ne fonctionnent pas avec Credential Guard actif. Coupables fréquents : vieux clients VPN, certains produits anti-maliciel qui s'accrochent à LSASS, certains outils d'authentification basés sur les certificats. La solution habituelle, c'est de mettre à jour le logiciel affecté; le contournement, c'est de désactiver Credential Guard pour l'utilisateur/appareil spécifique via une exclusion.</p>
+    <p><strong>Modèle Block MSA qui brise des MSA précédemment configurés.</strong> Les utilisateurs qui avaient des MSA personnels configurés avant que le modèle soit déployé peuvent voir leurs comptes personnels retirés ou devenir incapables de se rafraîchir. Communiquez ça au client à l'avance — les utilisateurs avec des patrons légitimes de compte personnel sur appareil corporatif devront ajuster leurs flux.</p>
+    <p><strong>Friction de réinitialisation de NIP WHfB.</strong> Les utilisateurs qui oublient leur NIP ont besoin d'un chemin de réinitialisation. Si le client n'a pas configuré l'infrastructure de récupération de NIP (le stockage de clé de récupération, l'UI de réinitialisation face à l'utilisateur), les utilisateurs se font verrouiller dehors. Vérifiez que le chemin de récupération fonctionne avant de déployer.</p>
+  </div>
+
+  <h2>Déploiement</h2>
+
+  <p>Déploiement au groupe pilote pour les deux modèles :</p>
+
+  <ol>
+    <li><strong>Jour 0</strong> — déployer Account Protection et Block MSA à 3 à 5 appareils pilotes. Caractéristique critique de l'appareil pilote : au moins un appareil avec MSA personnel déjà configuré (pour tester le comportement Block MSA sur l'état existant) et au moins un appareil où l'utilisateur est susceptible d'essayer WHfB (pour vérifier que l'infrastructure fonctionne).</li>
+    <li><strong>Jours 1 à 7</strong> — vérifier le succès du déploiement dans Intune. Faire un échantillonnage sur les appareils pilotes. Confirmer que Credential Guard apparaît actif dans <code>msinfo32.exe</code> (cherchez « Credential Guard » dans le résumé système — devrait montrer « Configuré » et « En cours d'exécution »). Confirmer l'effet de Block MSA — essayer d'ajouter un MSA personnel sur un appareil pilote; devrait échouer avec une erreur appropriée.</li>
+    <li><strong>Jours 7 à 14</strong> — observer l'usage de l'appareil pilote. Surveiller les problèmes VPN (compatibilité Credential Guard), les problèmes d'authentification avec des logiciels de niche, les plaintes d'utilisateurs sur Block MSA.</li>
+    <li><strong>Jour 14</strong> — déploiement plus large si le pilote est propre.</li>
+  </ol>
+
+  <p>Pour le modèle Block MSA spécifiquement, communiquez aux utilisateurs du client <em>avant</em> le déploiement. Les utilisateurs avec des MSA personnels sur leurs appareils corporatifs doivent savoir ce qui est sur le point de changer.</p>
+
+  <h2>Quoi surveiller après l'application</h2>
+
+  <p><strong>Credential Guard actif par appareil.</strong> Devrait être 100 % actif sur les appareils Windows 10/11 après le déploiement. Les appareils qui montrent « Configuré mais pas en cours d'exécution » indiquent des problèmes de compatibilité matérielle (rare; habituellement du matériel de virtualisation plus vieux) ou un conflit avec un autre produit.</p>
+
+  <p><strong>Taux d'inscription WHfB.</strong> Trace combien d'utilisateurs ont vraiment adopté WHfB. Le modèle rend WHfB <em>disponible</em>; l'adoption par les utilisateurs est volontaire. Une basse adoption est normale dans les premières semaines; devrait grimper sur des mois à mesure que les utilisateurs découvrent la commodité.</p>
+
+  <p><strong>Échecs d'authentification après le déploiement.</strong> Surveiller une pointe de billets de service d'aide liés à l'authentification. Pourrait être l'incompatibilité VPN (Credential Guard), la confusion Block MSA (les utilisateurs qui essaient de se connecter avec MSA personnel), ou des problèmes de réinitialisation de NIP.</p>
+
+  <p><strong>Événements d'accès mémoire LSASS</strong> (depuis l'ingestion Defender XDR, quand configurée selon la leçon 4 de la carte 1). Avec Credential Guard actif, le volume d'événements de tentatives d'accès à la mémoire LSASS qui se font bloquer devrait être près de zéro en fonctionnement normal. N'importe quel volume non-zéro est intéressant — soit Credential Guard fait son travail contre du maliciel actif, soit un processus légitime fait quelque chose qui déclenche la protection.</p>
+
+  <p><strong>Dérive sur l'un ou l'autre modèle.</strong> Les deux modèles peuvent dériver — un admin qui désactive Credential Guard pour un appareil spécifique qui avait des problèmes de compatibilité, un admin qui assouplit Block MSA à la demande d'un client, etc.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>Honnêtement : pas grand-chose spécifiquement à propos d'Account Protection. Le tableau de bord n'a pas d'état Credential Guard par appareil, de statut d'inscription WHfB par utilisateur, ou de matrice de déploiement Block MSA. Aucune de ces choses n'existe dans le produit aujourd'hui, et le par-appareil quoi que ce soit est en dehors du modèle de lecture de Panoptica365.</p>
+
+  <p>Ce que Panoptica365 <em>fait</em> remonter qui est pertinent :</p>
+
+  <ul>
+    <li><strong>Dérive sur l'un ou l'autre modèle.</strong> Account Protection et Block Microsoft Consumer Accounts sont tous deux surveillés par le détecteur de dérive. Si un admin désactive Credential Guard pour un appareil problématique, ou assouplit Block MSA à la demande d'un client, la dérive se déclenche et l'opérateur peut revenir, réappliquer, ou accepter.</li>
+    <li><strong>Détections Defender XDR.</strong> Quand l'ingestion Defender XDR est configurée (leçon 4 de la carte 1), les incidents liés aux attaques d'identifiants — tentatives d'accès LSASS, patrons d'extraction d'identifiants suspects — entrent dans le moteur d'alertes. Si Credential Guard fait son travail, ces incidents devraient être rares; une pointe est intéressante.</li>
+  </ul>
+
+  <p>Pour le statut de Credential Guard par appareil, l'inscription WHfB par utilisateur, ou la vérification Block MSA par appareil, les opérateurs plongent dans la section appareil Intune, les dossiers d'appareil Entra, ou le portail Defender for Endpoint. Cette division — Panoptica365 pour les alertes et la dérive, les consoles Microsoft pour la posture par appareil — c'est la forme cohérente de la plateforme à travers toute la carte 4.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Trois points à retenir</div>
+    <p><strong>Credential Guard est le paramètre à plus haut levier dans ce modèle.</strong> Des 15 paramètres Account Protection, l'activation de Credential Guard est celui qui compte le plus. Il défend contre toute une classe d'attaques d'extraction d'identifiants. Déployer sans lui laisse une brèche majeure; déployer avec lui ferme la brèche avec peu de coût opérationnel.</p>
+    <p><strong>Block MSA est un modèle silencieux et à haute valeur.</strong> Les MSA personnels sur les appareils corporatifs sont une source chronique d'incidents de fuite de données et de confusion d'identité. Les bloquer adresse le problème à la couche de configuration. Le modèle est précisément accordé pour bloquer l'ajout MSA personnel tout en laissant le chemin d'authentification WAM travail/école dont les apps M365 dépendent complètement intact — une cible plus étroite que ce que le CSP « Autoriser les comptes Microsoft » par défaut suggérerait, et la raison pour laquelle ce modèle vaut la peine d'être traité comme une configuration curée plutôt qu'un changement de politique d'une ligne.</p>
+    <p><strong>L'adoption WHfB est un mouvement à plus long terme.</strong> Ce modèle rend WHfB <em>possible</em>. Faire en sorte que les utilisateurs l'utilisent vraiment (vs continuer à taper des mots de passe), c'est un exercice de gestion du changement séparé. Ne vous attendez pas à 100 % d'adoption WHfB dans le mois suivant le déploiement; attendez-vous à une adoption graduelle sur six à douze mois.</p>
+  </div>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Leçon 9 : La boucle de conformité en production.</b> Comment tous ces modèles Intune font surface comme signaux — ce que Panoptica365 surveille, ce que la dérive veut dire ici.</div></div>
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Leçon 10 : Importer vos propres modèles Intune.</b> Le flux de personnalisation.</div></div>
+  </div>
+
+  <p>Pour l'instant : Account Protection + Block MSA ensemble ferment la brèche côté identifiants sur les terminaux Windows. Déployez les deux; vérifiez que Credential Guard s'active; communiquez le changement Block MSA aux utilisateurs; tracez l'adoption WHfB sur des mois.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur Windows Hello for Business (<a href="https://learn.microsoft.com/en-us/windows/security/identity-protection/hello-for-business/" target="_blank" rel="noopener">Microsoft Learn — Windows Hello for Business</a>); référence de Credential Guard (<a href="https://learn.microsoft.com/en-us/windows/security/identity-protection/credential-guard/" target="_blank" rel="noopener">Microsoft Learn — Credential Guard</a>); politique Account Protection dans endpoint security (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-account-protection-policy" target="_blank" rel="noopener">Microsoft Learn — Account Protection policies</a>); le CSP de politique Allow Microsoft Accounts (<a href="https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-accounts" target="_blank" rel="noopener">Microsoft Learn — Accounts CSP</a>); Web Account Manager et M365 (<a href="https://learn.microsoft.com/en-us/entra/identity-platform/scenario-desktop-acquire-token-wam" target="_blank" rel="noopener">Microsoft Learn — WAM and M365</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

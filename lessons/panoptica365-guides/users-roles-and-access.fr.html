@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Utilisateurs, rôles et accès — Guides Panoptica365</title>
+<meta name="lesson:title" content="Utilisateurs, rôles et accès">
+<meta name="lesson:subtitle" content="Trois niveaux contrôlés par des groupes Entra : qui peut faire quoi, comment le configurer, et comment c'est appliqué.">
+<meta name="lesson:icon" content="users">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Utilisateurs, rôles et accès</span></div>
+  <h1>Utilisateurs, rôles et accès</h1>
+  <p class="dek">Trois niveaux contrôlés par des groupes Entra : qui peut faire quoi, comment le configurer, et comment c'est appliqué.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Trois groupes de sécurité Entra — Admins, Operators, Viewers — alimentant trois niveaux d'accès Panoptica365.">
+      <defs>
+        <radialGradient id="urBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="urArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#urBg)"/>
+
+      <!-- left: Entra groups -->
+      <text x="250" y="58" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">GROUPES ENTRA ID</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="120" y="86" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="116" fill="#C4D4E8" font-size="15">Panoptica Admins</text></g>
+        <g><rect x="120" y="146" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="176" fill="#C4D4E8" font-size="15">Panoptica Operators</text></g>
+        <g><rect x="120" y="206" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="236" fill="#C4D4E8" font-size="15">Panoptica Viewers</text></g>
+      </g>
+
+      <!-- arrows -->
+      <path d="M388 110 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+      <path d="M388 170 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+      <path d="M388 230 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+
+      <!-- right: tiers -->
+      <text x="700" y="58" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">NIVEAUX PANOPTICA365</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="500" y="86" width="280" height="48" rx="10" fill="#10243B" stroke="#5CCBF4"/><text x="640" y="111" fill="#7DD9F9" font-size="15" font-weight="700">Administrateur</text><text x="640" y="127" fill="#6B85A6" font-size="11">contrôle complet</text></g>
+        <g><rect x="500" y="146" width="280" height="48" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="640" y="171" fill="#A8E1F8" font-size="15" font-weight="600">Opérateur</text><text x="640" y="187" fill="#6B85A6" font-size="11">le niveau de travail</text></g>
+        <g><rect x="500" y="206" width="280" height="48" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="640" y="231" fill="#A8E1F8" font-size="15" font-weight="600">Observateur</text><text x="640" y="247" fill="#6B85A6" font-size="11">lecture seule</text></g>
+      </g>
+
+      <!-- sign-in gate note -->
+      <g transform="translate(900,90)">
+        <rect x="0" y="0" width="180" height="160" rx="12" fill="#0E2236" stroke="#1F3C5C"/>
+        <circle cx="90" cy="52" r="26" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <rect x="78" y="46" width="24" height="20" rx="3" fill="#5CCBF4"/>
+        <path d="M82 46 v-6 a8 8 0 0 1 16 0 v6" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <text x="90" y="104" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12">Dans aucun des</text>
+        <text x="90" y="122" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12">trois groupes?</text>
+        <text x="90" y="144" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Aucune connexion</text>
+      </g>
+    </svg>
+    <figcaption>Trois groupes, trois niveaux. L'appartenance dans l'Entra ID de votre locataire MSP décide de ce que chaque opérateur peut faire.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Panoptica365 ne tient pas sa propre base de mots de passe. Les opérateurs se connectent avec leurs comptes Microsoft, et ce qu'ils ont le droit de faire est décidé par l'<strong>appartenance aux groupes Entra ID</strong> dans votre locataire MSP. Trois groupes, trois niveaux.</p>
+  </div>
+
+  <h2>Les trois rôles</h2>
+
+  <p><strong>Administrateur</strong> — contrôle complet. Gère les locataires (ajout, modification, suppression), tous les Paramètres, la modification des stratégies d'alerte et le journal d'audit. Le seul rôle qui peut intégrer ou supprimer un locataire.</p>
+
+  <p><strong>Opérateur</strong> — le niveau de travail. Déploie les modèles AC et Intune, applique les paramètres de sécurité, accepte les dérives et crée des exemptions, résout et gère les alertes, relance les analyses IA. Ne peut pas toucher aux Paramètres ni au cycle de vie des locataires.</p>
+
+  <p><strong>Observateur</strong> — lecture seule. Voit les tableaux de bord, les alertes, les rapports, la carte thermique, Apprendre — tout est visible, rien n'est modifiable. Idéal pour les techniciens en formation, les auditeurs ou un écran tourné vers le client.</p>
+
+  <p>La connexion elle-même est contrôlée par les mêmes groupes : un compte qui n'est dans aucun des trois groupes ne peut pas se connecter du tout.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Ce que chaque rôle peut faire : Administrateur, Opérateur et Observateur comparés sur le cycle de vie des locataires, les Paramètres, les déploiements et alertes, et la visibilité en lecture seule.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <g id="urYes"><circle r="9" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M-4 0 L-1 3 L4.5 -3.5" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+        <g id="urNo"><circle r="9" fill="none" stroke="#52708F" stroke-width="2"/><path d="M-3.5 -3.5 L3.5 3.5 M3.5 -3.5 L-3.5 3.5" stroke="#52708F" stroke-width="2" stroke-linecap="round"/></g>
+      </defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- header -->
+        <text x="36" y="44" fill="#6B85A6" font-size="12" letter-spacing="1.5">PEUT FAIRE</text>
+        <text x="438" y="44" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="700">Administ.</text>
+        <text x="558" y="44" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="600">Opérateur</text>
+        <text x="666" y="44" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="600">Observ.</text>
+        <line x1="36" y1="58" x2="684" y2="58" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- rows -->
+        <g transform="translate(0,86)"><text x="36" y="5" fill="#C4D4E8" font-size="13.5">Cycle de vie des locataires</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,134)"><text x="36" y="5" fill="#C4D4E8" font-size="13.5">Paramètres et stratégies d'alerte</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,182)"><text x="36" y="5" fill="#C4D4E8" font-size="13.5">Déployer, appliquer, accepter, résoudre</text><use href="#urYes" x="438" y="0"/><use href="#urYes" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,230)"><text x="36" y="5" fill="#C4D4E8" font-size="13.5">Voir tableaux de bord, alertes, rapports</text><use href="#urYes" x="438" y="0"/><use href="#urYes" x="558" y="0"/><use href="#urYes" x="666" y="0"/></g>
+        <g transform="translate(0,278)"><text x="36" y="5" fill="#C4D4E8" font-size="13.5">Journal d'audit</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+      </g>
+      <line x1="498" y1="64" x2="498" y2="296" stroke="#0E2640" stroke-width="1"/>
+      <line x1="610" y1="64" x2="610" y2="296" stroke="#0E2640" stroke-width="1"/>
+    </svg>
+    <figcaption>L'Administrateur a le contrôle complet; l'Opérateur est le niveau de travail; l'Observateur est en lecture seule. Si un utilisateur est dans plusieurs groupes, il obtient le niveau le plus élevé.</figcaption>
+  </figure>
+
+  <h2>La mise en place</h2>
+
+  <ol>
+    <li>Dans l'Entra ID de <strong>votre locataire MSP</strong>, créez trois groupes de sécurité (p. ex. <em>Panoptica Admins</em>, <em>Panoptica Operators</em>, <em>Panoptica Viewers</em>) et ajoutez-y vos gens.</li>
+    <li>Dans <strong>Paramètres → Contrôle d'accès</strong>, collez l'ID d'objet de chaque groupe dans le champ correspondant : <strong>Administrateurs</strong>, <strong>Opérateurs</strong>, <strong>Observateurs</strong>.</li>
+    <li>Cliquez sur le bouton de vérification à côté de chacun — il résout le nom d'affichage du groupe via Graph, ce qui confirme que vous avez collé le bon GUID.</li>
+    <li>Enregistrez. À partir de là, les changements d'appartenance dans Entra prennent effet à la connexion suivante — gérer qui peut faire quoi dans Panoptica365 revient à gérer l'appartenance aux groupes, ce que votre boîte sait déjà faire.</li>
+  </ol>
+
+  <p>Si un utilisateur se retrouve dans plusieurs groupes, il obtient le niveau le plus élevé auquel il est admissible.</p>
+
+  <h2>Comment l'application des règles fonctionne</h2>
+
+  <p>Deux couches, et il vaut la peine de connaître les deux :</p>
+
+  <ul>
+    <li><strong>L'interface s'adapte.</strong> Votre badge de rôle s'affiche dans la barre latérale; la section Système (Paramètres, Journal d'audit) est masquée pour les non-administrateurs; les boutons réservés aux administrateurs (Ajouter un locataire, Supprimer le client, modification de stratégies) disparaissent ou se désactivent; certains champs s'affichent visibles mais en lecture seule pour les niveaux inférieurs.</li>
+    <li><strong>Le serveur applique.</strong> Chaque point d'API qui modifie quelque chose vérifie le rôle côté serveur. Le bouton masqué n'est pas la frontière de sécurité — le 403 l'est. Et chaque tentative refusée est consignée dans le journal d'audit MSP.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Deux couches d'application : l'interface masque les contrôles, mais le 403 côté serveur est la vraie frontière de sécurité, et les tentatives refusées sont consignées.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="urArr2" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- layer 1: UI -->
+        <rect x="40" y="40" width="280" height="150" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="180" y="68" fill="#6B85A6" font-size="12" letter-spacing="1.5">COUCHE 1</text>
+        <text x="180" y="92" fill="#C4D4E8" font-size="15" font-weight="600">L'interface s'adapte</text>
+        <text x="180" y="122" fill="#8FA6C2" font-size="12.5">Boutons masqués ou désactivés</text>
+        <text x="180" y="142" fill="#8FA6C2" font-size="12.5">Champs visibles mais en lecture seule</text>
+        <text x="180" y="168" fill="#FFC04D" font-size="11.5">confort, pas la frontière</text>
+
+        <!-- layer 2: server -->
+        <rect x="400" y="40" width="280" height="150" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="540" y="68" fill="#6B85A6" font-size="12" letter-spacing="1.5">COUCHE 2</text>
+        <text x="540" y="92" fill="#A8E1F8" font-size="15" font-weight="700">Le serveur applique</text>
+        <text x="540" y="122" fill="#9FD8F2" font-size="12.5">Rôle vérifié côté serveur</text>
+        <text x="540" y="148" fill="#FF8A98" font-size="20" font-weight="700">403</text>
+        <text x="540" y="170" fill="#7DD9F9" font-size="11.5">la vraie frontière · consigné</text>
+      </g>
+      <path d="M320 115 H400" stroke="#5C7796" stroke-width="2" marker-end="url(#urArr2)"/>
+    </svg>
+    <figcaption>Le bouton masqué est un confort; le 403 côté serveur est la frontière de sécurité — et chaque tentative refusée est consignée dans le journal d'audit MSP.</figcaption>
+  </figure>
+
+  <p>Donc si quelqu'un de votre équipe signale un bouton manquant, vérifiez son appartenance de groupe avant de déclarer un bogue.</p>
+
+  <h2>Imputabilité</h2>
+
+  <p>Chaque action d'opérateur qui compte — déploiements de modèles, changements de paramètres, acceptations de dérive, résolutions d'alertes, cycle de vie des locataires, et ces fameux 403 — est consignée dans le <strong>Journal d'audit</strong> avec l'acteur, l'horodatage et le résultat (voir <em>Administration du système</em>). Le modèle de rôles décide qui <em>peut</em> agir; le journal d'audit consigne qui <em>a agi</em>.</p>
+
+  <h2>Conseils pratiques</h2>
+
+  <ul>
+    <li><strong>Soyez avare du rôle Administrateur.</strong> L'essentiel du travail quotidien — déployer, accepter, résoudre — est de niveau Opérateur, à dessein. Deux administrateurs suffisent à la plupart des boîtes.</li>
+    <li><strong>Utilisez Observateur délibérément.</strong> C'est une façon sûre de donner de la visibilité aux juniors, aux auditeurs ou à un écran de NOC sans remettre de gâchette à personne.</li>
+    <li><strong>Révisez l'appartenance quand les gens changent de poste</strong> — c'est un groupe Entra comme un autre, et il mérite la même discipline arrivée-mutation-départ que vous appliquez aux locataires de vos clients.</li>
+  </ul>
+
+</div>
+</body>
+</html>

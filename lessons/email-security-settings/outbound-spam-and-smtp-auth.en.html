@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Outbound spam and SMTP AUTH — controlling the blast radius when the customer is the attacker — Email security settings</title>
+<meta name="lesson:title" content="Outbound spam and SMTP AUTH — controlling the blast radius when the customer is the attacker">
+<meta name="lesson:subtitle" content="Outbound sending limits, Restricted Users auto-response, and disabling legacy SMTP AUTH to contain a compromised mailbox fast.">
+<meta name="lesson:icon" content="send">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Outbound spam &amp; SMTP AUTH</span></div>
+  <h1>Outbound spam and SMTP AUTH — controlling the blast radius when the customer is the attacker</h1>
+  <p class="dek">Outbound sending limits, Restricted Users auto-response, and disabling legacy SMTP AUTH to contain a compromised mailbox fast.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Two outcomes from one compromised mailbox: a contained blast radius of about 1,800 messages versus an uncontained one of 18,000.">
+      <defs>
+        <radialGradient id="osBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="osCap" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="osArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#osBg)"/>
+
+      <!-- source: the compromised mailbox -->
+      <g transform="translate(150,170)">
+        <rect x="-58" y="-46" width="116" height="80" rx="12" fill="#0E2640" stroke="#FF5A6E" stroke-width="1.6"/>
+        <path d="M-58 -38 L0 6 L58 -38" fill="none" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="40" cy="-40" r="13" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="40" y="-35" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">!</text>
+      </g>
+      <text x="150" y="262" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">COMPROMISED MAILBOX</text>
+
+      <!-- top path: contained -->
+      <path d="M250 144 C 360 96, 470 96, 560 100" stroke="#52708F" stroke-width="2" fill="none" marker-end="url(#osArr)"/>
+      <g transform="translate(700,96)">
+        <rect x="-130" y="-44" width="260" height="88" rx="14" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="0" y="-12" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">CONTAINED</text>
+        <text x="0" y="20" text-anchor="middle" fill="#EEF4FC" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">~1,800</text>
+        <text x="0" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">messages sent</text>
+      </g>
+      <!-- the cap on the contained path -->
+      <g transform="translate(478,100)">
+        <circle r="32" fill="none" stroke="#5CCBF4" stroke-width="1" stroke-dasharray="3 6"/>
+        <rect x="-22" y="-22" width="44" height="44" rx="10" fill="url(#osCap)" opacity="0.92"/>
+        <path d="M-11 0 L-3 9 L13 -10" fill="none" stroke="#071221" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="478" y="160" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11.5" font-weight="600">limit + Restrict</text>
+
+      <!-- bottom path: uncontained -->
+      <path d="M250 200 C 360 256, 470 256, 560 252" stroke="#52708F" stroke-width="2" fill="none" marker-end="url(#osArr)"/>
+      <g transform="translate(700,252)">
+        <rect x="-130" y="-44" width="260" height="88" rx="14" fill="#1A0B11" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="0" y="-12" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700" letter-spacing="2">UNCONTAINED</text>
+        <text x="0" y="20" text-anchor="middle" fill="#FFFFFF" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">18,000</text>
+        <text x="0" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">messages sent</text>
+      </g>
+      <text x="478" y="244" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11.5" font-style="italic">no limit</text>
+    </svg>
+    <figcaption>One compromised mailbox, two outcomes: the outbound limit is the cap that turns 18,000 into roughly 1,800.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A small accounting firm's senior partner gets phished at 7:14 AM on a Wednesday morning. AiTM-style: she signs into what looks like the Microsoft sign-in page on her phone before her first coffee. By 7:22, the attacker has the session cookie and is logged into her mailbox.</p>
+
+  <p>At 7:35 the attacker starts sending. The script is automated and ambitious. The partner has 1,847 contacts in her address book — clients, vendors, colleagues, friends, family, accountant-network mailing lists. The attacker sends each one an identical message: "Sorry for the urgency — please review this confidential file: [link to a credential-harvester branded as the firm]." 1,847 outbound messages over the course of about ninety minutes.</p>
+
+  <p>At 8:53 AM the attacker hits an outbound message limit. The customer's tenant flips the partner's account into Restricted Users state. Outbound mail from her mailbox stops. An alert email goes to the customer's IT contact (the MSP) saying "User X has been restricted from sending outbound mail due to suspected compromise."</p>
+
+  <p>The MSP's on-call sees the alert at 8:54 AM. By 9:10 they've revoked sessions, reset credentials, confirmed the compromise, locked the account, and started incident response. The damage at this point: roughly 1,800 phishing emails sent. Bad — but bounded. Roughly 150 of the recipients clicked the link (typical phishing click-rate); roughly 25 entered credentials (typical follow-through rate). The MSP spends a long Wednesday running follow-on incident response with those recipients' organisations and IT teams.</p>
+
+  <p>Now imagine the same scenario without the outbound limit. The attacker keeps sending. By the time anyone notices — perhaps that evening, when the partner gets back from her morning client meetings and checks her sent folder — the attacker has sent 18,000 messages. The customer's primary domain has been listed on three major spam blocklists. Microsoft has tenant-suspended outbound mail for the entire organisation. The MSP spends the next week getting the customer off blocklists, restoring deliverability for the whole tenant, and explaining to the 18,000 recipients' IT teams why they got phished from a now-tainted domain.</p>
+
+  <p>This is the post-compromise blast radius problem, and the outbound spam policy is the cap on it.</p>
+  </div>
+
+  <h2>Microsoft's outbound spam policy — what it controls</h2>
+
+  <p>The outbound spam policy in Defender (Threat policies → Anti-spam → Outbound spam) governs what happens when a mailbox in the tenant is sending more outbound mail than its baseline should produce. Three threshold controls:</p>
+
+  <ul>
+    <li><strong>External message limit per hour.</strong> How many messages to recipients outside the organisation can a single mailbox send in an hour. Microsoft's default is 500. Most legitimate mailboxes never hit this; compromised mailboxes running phishing scripts hit it in twenty minutes.</li>
+    <li><strong>Internal message limit per hour.</strong> How many messages to internal recipients per hour. Default 1000.</li>
+    <li><strong>Daily message limit per mailbox.</strong> Total messages per day across internal and external. Default 10,000 for most tenants.</li>
+  </ul>
+
+  <p>Three action options when a limit is exceeded:</p>
+
+  <ul>
+    <li><strong>Alert admins only.</strong> Notifications go out; the user keeps sending. Useful for visibility-only configurations; useless as a blast radius control.</li>
+    <li><strong>Restrict the user from sending email.</strong> The user gets added to a Restricted Users list. Outbound mail from their mailbox is blocked tenant-wide. They can still receive mail; they can still sign in; they just can't send.</li>
+    <li><strong>No action.</strong> The default for some older tenants. Microsoft tightened this in newer tenants but inherited configurations can still be at No action.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="The three actions when an outbound limit is exceeded: alert only, restrict the user, or no action.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">WHEN A LIMIT IS EXCEEDED</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- alert only -->
+        <g transform="translate(36,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.3"/>
+          <text x="100" y="34" text-anchor="middle" fill="#FFC04D" font-size="13.5" font-weight="700">Alert admins only</text>
+          <text x="100" y="74" text-anchor="middle" fill="#B0C4DF" font-size="12">user keeps sending</text>
+          <text x="100" y="110" text-anchor="middle" fill="#6B85A6" font-size="11">no cap on damage</text>
+        </g>
+        <!-- restrict -->
+        <g transform="translate(260,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2640" stroke="#2EE8A0" stroke-width="1.6"/>
+          <text x="100" y="34" text-anchor="middle" fill="#2EE8A0" font-size="13.5" font-weight="700">Restrict the user</text>
+          <text x="100" y="74" text-anchor="middle" fill="#EEF4FC" font-size="12">outbound mail blocked</text>
+          <text x="100" y="110" text-anchor="middle" fill="#7DD9F9" font-size="11">the blast radius cap</text>
+        </g>
+        <!-- no action -->
+        <g transform="translate(484,58)">
+          <rect x="0" y="0" width="200" height="138" rx="10" fill="#0E2236" stroke="#33527A" stroke-width="1.3"/>
+          <text x="100" y="34" text-anchor="middle" fill="#C4D4E8" font-size="13.5" font-weight="700">No action</text>
+          <text x="100" y="74" text-anchor="middle" fill="#B0C4DF" font-size="12">older-tenant default</text>
+          <text x="100" y="110" text-anchor="middle" fill="#6B85A6" font-size="11">inherited risk</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Only one of the three actions caps the damage: restrict the user from sending.</figcaption>
+  </figure>
+
+  <p>The protective setting is <strong>Restrict the user from sending email</strong>, with alerts going to the customer's IT contact (typically the MSP's shared inbox). When triggered, the alert is the early-warning signal that an account is likely compromised; the restriction is the cap on how much damage gets done before the operator can respond.</p>
+
+  <h2>The 24-hour auto-release — friction by design</h2>
+
+  <p>When a user is restricted, they stay restricted until one of two things happens:</p>
+
+  <ol>
+    <li><strong>An admin manually removes them from the Restricted Users list</strong> (Defender portal → Email &amp; collaboration → Review → Restricted users; or via PowerShell with <code>Remove-BlockedSenderAddress</code>).</li>
+    <li><strong>The 24-hour auto-release fires</strong> and Microsoft automatically removes them.</li>
+  </ol>
+
+  <p>The 24-hour auto-release is the safety net for false positives. If a legitimate high-volume sender hits the limit, they're not stuck offline forever — they wait until the next day. For genuine compromises, the restriction holds for the time the MSP needs to investigate; for false positives, it self-resolves.</p>
+
+  <p>The Panoptica365 security setting "Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts)" pushes this configuration: the action set to "Restrict the user," alert recipients pointed at the right address, the 24-hour auto-release engaged. The drift detector watches whether the action stays set to Restrict. Someone changing it to "Alert admins only" — typically in response to a false-positive ticket — fires the drift alert.</p>
+
+  <h2>Threshold tuning — the legitimate-volume conversation</h2>
+
+  <p>The default thresholds (500 external/hour, 1000 internal/hour, 10000 daily) are generous for most SMB tenants. Some legitimate senders do hit them, though, and tuning needs to be a deliberate conversation:</p>
+
+  <ul>
+    <li><strong>Marketing / mailing-list senders.</strong> The customer's CRM or marketing platform sending high-volume legitimate campaigns from a tenant mailbox.</li>
+    <li><strong>Customer service automation.</strong> Auto-responders, ticket notifications, account confirmations sent from a service mailbox.</li>
+    <li><strong>Internal newsletters.</strong> A communications team sending a weekly all-staff update to 500 internal recipients.</li>
+  </ul>
+
+  <p>For each, the right answer is usually <em>not</em> "raise the global threshold." It's either:</p>
+
+  <ul>
+    <li><strong>Move the legitimate high-volume sender to a different transport mechanism</strong> (Microsoft has dedicated bulk email services; a third-party email platform via authenticated connector; etc.) so the tenant mailbox isn't doing the sending.</li>
+    <li><strong>Create a custom outbound spam policy</strong> scoped to the specific mailbox (or group) with higher thresholds, while keeping the default policy strict for everyone else.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">Caution</div>
+    <p>Don't raise the threshold for the whole tenant just because one mailbox has a legitimate use case. That makes the blast radius cap worthless for the other 31 mailboxes in the tenant.</p>
+  </div>
+
+  <h2>SMTP AUTH submission — the legacy back door</h2>
+
+  <p>Separately from the outbound spam policy, M365 has another vector worth closing: <strong>SMTP AUTH submission</strong>.</p>
+
+  <p>SMTP AUTH submission is the protocol that lets an application or device authenticate to <code>smtp.office365.com:587</code> with a username and password and send mail through M365 as that user. It's been around forever. Legacy multi-function printers use it to scan-to-email. Old line-of-business applications use it to send notifications. Custom scripts use it to send report emails.</p>
+
+  <p>It's also a credential-stuffing dream. SMTP AUTH submission uses <strong>basic authentication</strong> — username and password, no MFA, no Conditional Access in most configurations. An attacker with the user's password (from a credential-stuffing list or a phish that didn't get the session cookie) can authenticate to SMTP AUTH and send mail as the user, bypassing all the modern auth defences.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="SMTP AUTH submission uses basic authentication, which has no MFA and no Conditional Access, letting a stolen password bypass modern auth defences.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="smArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- attacker with password -->
+        <rect x="34" y="96" width="160" height="58" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="114" y="122" fill="#FF8A98" font-size="14" font-weight="700">Stolen password</text>
+        <text x="114" y="140" fill="#E2A0AA" font-size="11.5">no session cookie</text>
+
+        <!-- modern defences wall, bypassed -->
+        <g transform="translate(360,40)">
+          <rect x="-86" y="0" width="172" height="62" rx="9" fill="#0E2236" stroke="#33527A" stroke-dasharray="5 5"/>
+          <text x="0" y="26" fill="#6B85A6" font-size="12.5" font-weight="600">MFA</text>
+          <text x="0" y="48" fill="#6B85A6" font-size="12.5" font-weight="600">Conditional Access</text>
+        </g>
+        <text x="360" y="120" fill="#FFC04D" font-size="11.5">basic auth — no MFA, no CA</text>
+
+        <!-- SMTP AUTH endpoint -->
+        <rect x="526" y="96" width="160" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="606" y="122" fill="#A8E1F8" font-size="13.5" font-weight="600">SMTP AUTH</text>
+        <text x="606" y="140" fill="#6B85A6" font-size="11">smtp.office365.com:587</text>
+
+        <!-- outcome -->
+        <rect x="360" y="194" width="200" height="40" rx="10" fill="#1A0B11" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="460" y="219" fill="#FF8A98" font-size="12.5" font-weight="700">Sends mail as the user</text>
+      </g>
+      <!-- flows -->
+      <path d="M194 125 H522" stroke="#5C7796" stroke-width="2" marker-end="url(#smArr)"/>
+      <!-- the bypass arc, around the defences wall -->
+      <path d="M280 110 C 300 78, 420 78, 440 110" stroke="#FFC04D" stroke-width="2" fill="none" stroke-dasharray="4 4"/>
+      <path d="M606 154 C 606 178, 520 186, 480 192" stroke="#FF5A6E" stroke-width="2" fill="none" marker-end="url(#smArr)"/>
+    </svg>
+    <figcaption>Basic auth on SMTP AUTH submission steps around MFA and Conditional Access — a password alone sends mail.</figcaption>
+  </figure>
+
+  <p>Microsoft has been deprecating Basic Auth for years across all the legacy protocols (IMAP, POP, EWS, MAPI/RPC, Remote PowerShell). SMTP AUTH submission was the last holdout because so many legacy devices and apps still depend on it. As of 2025–2026, Microsoft has been disabling SMTP AUTH submission by default for new tenants, but older tenants and tenants that explicitly enabled it can still have it active.</p>
+
+  <p>The Panoptica365 security setting "Disable Basic Auth for SMTP AUTH Submission" pushes <code>Set-TransportConfig -SmtpClientAuthenticationDisabled $true</code> at the tenant level. The drift detector watches whether it stays disabled.</p>
+
+  <h2>The legacy-use-case conversation</h2>
+
+  <p>When you push the tenant-wide block, you may break legitimate workflows. Find them during pre-flight (lesson 1's "audit current state" work), not after deployment.</p>
+
+  <p>Common legacy SMTP AUTH users:</p>
+
+  <ul>
+    <li><strong>Multi-function printers</strong> configured years ago for scan-to-email. The fix is usually to reconfigure the printer to use Microsoft's <em>direct send</em> mechanism (unauthenticated SMTP from the printer's internal IP via a tenant connector) or to upgrade the printer firmware to support modern auth.</li>
+    <li><strong>Legacy LOB apps</strong> sending email notifications. The fix depends on the vendor — modern versions usually support OAuth-based SMTP submission via Microsoft Graph; older versions may need a per-app password (less safe) or a replacement.</li>
+    <li><strong>Custom scripts.</strong> The fix is to rewrite to use Microsoft Graph's <code>sendMail</code> API or Azure Communication Services. Scripts are usually one-off and easy to update.</li>
+    <li><strong>Specific service mailboxes the customer can't easily migrate.</strong> As a last resort, SMTP AUTH submission can be enabled per-mailbox while remaining disabled tenant-wide (<code>Set-CASMailbox &lt;user&gt; -SmtpClientAuthenticationDisabled $false</code>). Document the exception; review it annually; plan the eventual migration.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">Caution</div>
+    <p>Avoid the tempting shortcut of leaving SMTP AUTH enabled tenant-wide just because one printer needs it. That re-opens the back door for everyone. The per-mailbox override exists for exactly this case.</p>
+  </div>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Two security settings on the Exchange-category list:</p>
+
+  <p><strong>"Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts)."</strong> Panoptica365 watches the outbound spam policy's action property. The recommended value is "Restrict the user from sending email" with the 24-hour auto-release engaged. Drift fires if the action changes or the alerts get disabled.</p>
+
+  <p><strong>"Disable Basic Auth for SMTP AUTH Submission."</strong> Panoptica365 watches the tenant transport config's <code>SmtpClientAuthenticationDisabled</code> property. The recommended value is <code>$true</code> (disabled). Drift fires if SMTP AUTH gets re-enabled tenant-wide.</p>
+
+  <p>Beyond drift, the <strong>alert engine</strong> ingests Microsoft's outbound-spam restriction events when they fire — a user-restricted event is one of the highest-signal compromise indicators Microsoft surfaces, and Panoptica365 forwards it through the standard alert pipeline so it doesn't get lost in Microsoft's notification flood.</p>
+
+  <p>What Panoptica365 does <em>not</em> surface in the dashboard: per-mailbox SMTP AUTH activity history, a Restricted Users browser, a per-mailbox outbound rate-limit history. Those live in the Defender portal's restricted users review surface and in Microsoft's audit logs.</p>
+
+  <h2>What can break</h2>
+
+  <p><strong>Legitimate sender hits the outbound limit and gets restricted.</strong> Sales person on a big campaign day; marketing person sending a one-off newsletter from their own mailbox; communications person sending the annual employee letter. The user calls in panicked. The fix is to either remove them from Restricted Users manually (and warn them about the proper bulk-mail mechanism) or to wait out the 24-hour auto-release. Tune for the customer's legitimate-volume patterns during onboarding.</p>
+
+  <p><strong>Printer stops scanning-to-email after SMTP AUTH disable.</strong> Common. The fix is direct-send via tenant connector (preferred), printer firmware upgrade to modern auth (works for newer models), or per-mailbox SMTP AUTH override for the printer's service account as a last resort.</p>
+
+  <p><strong>Backup-job email notifications stop working.</strong> Some legacy backup software uses SMTP AUTH for status emails. Modernise via OAuth-based SMTP (if vendor supports it) or migrate the notification mechanism.</p>
+
+  <p><strong>False-positive restriction during a legitimate spike.</strong> A new product launch, a major customer announcement, an emergency communication — these can briefly look like compromised-account behaviour. Whitelist the specific scenario, manually remove from Restricted Users, document in the runbook for next year.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The outbound limit is the blast radius cap.</strong> When a compromise happens — and it will eventually happen on every customer — the difference between 1,800 outbound phish and 18,000 is the outbound spam policy's Restrict action. Set it. Confirm the alerts route to your shared inbox. The 24-hour auto-release is your safety net for false positives; it's not a reason to weaken the action.</p>
+
+  <p><strong>SMTP AUTH submission is the legacy auth pathway that survived the others — disable it.</strong> Modern auth has been the standard for years; SMTP AUTH is the last hole. Disable it tenant-wide, identify the legacy workflows that need exceptions during pre-flight, fix them properly (direct send, OAuth submission, app modernisation), and keep per-mailbox overrides documented and time-bounded.</p>
+
+  <p><strong>The Restricted Users alert is the highest-signal compromise indicator Microsoft surfaces.</strong> When it fires, treat it as a credible compromise until proven otherwise. Revoke sessions, reset credentials, audit recent activity, check inbox rules and transport rules, look at the sent folder, identify what was sent. The customer's accounting partner in the opening story keeps her customer relationships because her MSP responded inside the 30-minute window the restriction bought.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Lesson 10: Preset security policies and operating email at scale.</b> The Standard / Strict bundles that bring most of card 5's controls together in one configuration, the drift-detection model across the whole card, and the annual review cadence.</div></div>
+  </div>
+
+  <p>For now: open the customer's outbound spam policy in the Defender portal. Verify the action is set to "Restrict the user from sending email" with admin alerts enabled. Verify SMTP AUTH submission is disabled at the tenant level (<code>Get-TransportConfig | Select SmtpClientAuthenticationDisabled</code> should return <code>True</code>). Identify and fix any per-mailbox SMTP AUTH exceptions that aren't documented. The partner in the opening story doesn't have her phone ringing all day on a Wednesday afternoon because the cap held.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on outbound spam policies and message limits (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Outbound spam policies</a>); Restricted Users review and removal workflow (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-restore-restricted-users" target="_blank" rel="noopener">Microsoft Learn — Restricted users</a>); SMTP AUTH submission overview and deprecation (<a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission" target="_blank" rel="noopener">Microsoft Learn — Authenticated SMTP submission</a>); Set-TransportConfig SmtpClientAuthenticationDisabled reference (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-transportconfig" target="_blank" rel="noopener">Microsoft Learn — Set-TransportConfig</a>); direct send for printers and scanners (<a href="https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365#option-2-send-mail-directly-from-your-printer-or-application-to-microsoft-365-or-office-365-direct-send-recommended" target="_blank" rel="noopener">Microsoft Learn — Submitting email using direct send</a>); per-mailbox SMTP AUTH override with Set-CASMailbox (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-casmailbox" target="_blank" rel="noopener">Microsoft Learn — Set-CASMailbox</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defender XDR — ce que c'est, ce que ce n'est pas — Bienvenue à la cybersécurité M365</title>
+<meta name="lesson:title" content="Defender XDR — ce que c'est, ce que ce n'est pas">
+<meta name="lesson:subtitle" content="La couche de corrélation inter-produit de Microsoft expliquée : pourquoi les MSP ne devraient pas ouvrir le portail chaque jour, et ce que fait Attack Disruption.">
+<meta name="lesson:icon" content="shield-alert">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Bienvenue à la cybersécurité M365</span> <span class="sep">·</span> <span>Defender XDR — ce que c'est</span></div>
+  <h1>Defender XDR — ce que c'est, ce que ce n'est pas</h1>
+  <p class="dek">La couche de corrélation inter-produit de Microsoft expliquée : pourquoi les MSP ne devraient pas ouvrir le portail chaque jour, et ce que fait Attack Disruption.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Cinq signaux des produits Defender alimentent une couche de corrélation inter-produit qui émet un seul incident.">
+      <defs>
+        <radialGradient id="dxBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="dxCore" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="dxSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="dxArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dxBg)"/>
+
+      <!-- left: the five raw signal sources -->
+      <text x="158" y="40" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">SIGNAUX BRUTS</text>
+      <g font-family="Geist,Inter,sans-serif" font-size="13">
+        <g transform="translate(40,58)"><rect width="236" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#C4D4E8">Defender for Endpoint</text></g>
+        <g transform="translate(40,102)"><rect width="236" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#C4D4E8">Defender for Office 365</text></g>
+        <g transform="translate(40,146)"><rect width="236" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#C4D4E8">Defender for Cloud Apps</text></g>
+        <g transform="translate(40,190)"><rect width="236" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#C4D4E8">Defender for Identity</text></g>
+        <g transform="translate(40,234)"><rect width="236" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#C4D4E8">Entra ID Protection</text></g>
+      </g>
+      <g stroke="#335F92" stroke-width="2" fill="none">
+        <path d="M276 75 C360 75 380 170 470 170" marker-end="url(#dxArr)"/>
+        <path d="M276 119 C360 119 392 170 470 170" marker-end="url(#dxArr)"/>
+        <path d="M276 163 H470" marker-end="url(#dxArr)"/>
+        <path d="M276 207 C360 207 392 170 470 170" marker-end="url(#dxArr)"/>
+        <path d="M276 251 C360 251 380 170 470 170" marker-end="url(#dxArr)"/>
+      </g>
+
+      <!-- centre: the correlation layer -->
+      <g transform="translate(620,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="82" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <circle r="58" fill="url(#dxCore)" filter="url(#dxSoft)" opacity="0.85"/>
+        <circle r="46" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text y="-2" text-anchor="middle" fill="#EAF7FE" font-family="Geist,Inter,sans-serif" font-size="20" font-weight="700">XDR</text>
+        <text y="18" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="1">corréler</text>
+      </g>
+
+      <!-- right: the single incident output -->
+      <path d="M736 170 H872" stroke="#335F92" stroke-width="2.5" marker-end="url(#dxArr)"/>
+      <g transform="translate(880,142)">
+        <rect width="200" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="100" y="28" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="700">Un incident</text>
+        <text x="100" y="46" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="11">une histoire sur laquelle agir</text>
+      </g>
+    </svg>
+    <figcaption>Les signaux bruts de cinq produits entrent; un seul incident corrélé, sur lequel un humain peut agir, ressort.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La plupart des jours, vous ne devriez pas avoir besoin d'ouvrir le portail Defender XDR.</p>
+
+  <p>Cette phrase va sonner faux si on vient juste de vous dire (correctement) que Defender XDR est le cœur de la détection de sécurité Microsoft 365. Alors laissez-moi vous expliquer pourquoi il est à la fois cœur et fleur murale en même temps.</p>
+
+  <p>Defender XDR est la couche de corrélation inter-produit de Microsoft — la chose qui prend les signaux de sécurité bruts de Defender for Endpoint, Defender for Office 365, Defender for Cloud Apps, Defender for Identity et Entra ID Protection, et qui essaie de les transformer en quelque chose sur quoi un humain peut agir. C'est l'endroit où la sécurité M365 passe de « beaucoup d'alertes » à « des histoires sur ce qui s'est passé ».</p>
+
+  <p>La réalité honnête de comment les MSP l'utilisent : la plupart ne regardent jamais le portail quotidiennement, et ce n'est pas nécessairement faux. C'est un portail que Microsoft a conçu pour qu'un analyste SOC y vive, huit heures par jour. La plupart des MSP n'en ont pas. Alors XDR doit être configuré pour faire le travail <em>de manière autonome</em> et ne faire remonter que ce qui a vraiment besoin d'yeux. Réussir cette configuration, c'est tout le savoir-faire.</p>
+  </div>
+
+  <h2>Ce que XDR veut vraiment dire</h2>
+
+  <p>Les acronymes dans cet espace se sont accumulés rapidement et le marketing n'a pas aidé. Trois termes que vous entendrez :</p>
+
+  <p><strong>EDR — Endpoint Detection and Response.</strong> Surveille un terminal unique (un portable Windows, un Mac, un serveur Linux) pour du comportement malicieux. Defender for Endpoint est l'EDR. Il voit les arbres de processus, les hachages de fichiers, les connexions réseau, les modifications de registre, les chaînes de scripts suspectes. C'est profond, étroit, et ça vit sur l'appareil.</p>
+
+  <p><strong>XDR — eXtended Detection and Response.</strong> Surveille <em>plusieurs</em> surfaces et <em>corrèle</em> entre elles. Defender XDR est le XDR. Même idée que l'EDR, portée plus large. Quand une utilisatrice clique sur un lien d'hameçonnage dans Outlook (Defender for Office 365), qu'un processus est lancé sur son portable (Defender for Endpoint), et qu'une connexion se produit depuis un autre pays (Entra ID Protection), XDR est la couche qui relie ces trois en <em>un</em> incident.</p>
+
+  <p><strong>SIEM — Security Information and Event Management.</strong> Pas une catégorie Microsoft spécifiquement; c'est le nom plus large de l'industrie pour les plateformes de collecte et d'analyse de journaux. Le SIEM de Microsoft, c'est Microsoft Sentinel. SIEM est plus large que XDR — il peut ingérer <em>n'importe quoi</em> : journaux de pare-feu, journaux d'applications personnalisées, outils de sécurité tiers. Mais SIEM est aussi plus <em>brut</em> — il vous donne les journaux et s'attend à ce que vous écriviez les détections.</p>
+
+  <p>La forme des trois :</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Une pile à trois niveaux : SIEM en haut filtre et corrèle vers XDR, qui se focalise vers EDR.">
+      <defs>
+        <marker id="stkArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+      </defs>
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- SIEM tier -->
+        <rect x="60" y="28" width="600" height="74" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="84" y="58" fill="#A8E1F8" font-size="18" font-weight="700">SIEM</text>
+        <text x="84" y="82" fill="#C4D4E8" font-size="13">Journaux bruts de n'importe où. Vous écrivez les détections.</text>
+        <text x="640" y="58" text-anchor="end" fill="#52708F" font-size="11.5">Microsoft Sentinel</text>
+
+        <text x="384" y="124" text-anchor="start" fill="#6B85A6" font-size="11.5" font-style="italic">filtré, corrélé</text>
+        <path d="M360 108 V134" stroke="#5CCBF4" stroke-width="2" marker-end="url(#stkArr)"/>
+
+        <!-- XDR tier -->
+        <rect x="60" y="142" width="600" height="74" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="84" y="170" fill="#7DD9F9" font-size="18" font-weight="700">XDR</text>
+        <text x="84" y="190" fill="#C4D4E8" font-size="13">Incidents inter-produit de Microsoft. Microsoft a écrit les</text>
+        <text x="84" y="208" fill="#C4D4E8" font-size="13">détections; vous les ajustez et les triez.</text>
+        <text x="640" y="170" text-anchor="end" fill="#5CCBF4" font-size="11.5">Defender XDR</text>
+
+        <text x="384" y="238" text-anchor="start" fill="#6B85A6" font-size="11.5" font-style="italic">focalisé sur une surface</text>
+        <path d="M360 222 V248" stroke="#5CCBF4" stroke-width="2" marker-end="url(#stkArr)"/>
+
+        <!-- EDR tier -->
+        <rect x="60" y="256" width="600" height="46" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="84" y="285" fill="#A8E1F8" font-size="18" font-weight="700">EDR</text>
+        <text x="160" y="285" fill="#C4D4E8" font-size="13">Télémétrie profonde d'une surface. Surtout en pilote auto.</text>
+        <text x="640" y="285" text-anchor="end" fill="#52708F" font-size="11.5">Defender for Endpoint</text>
+      </g>
+    </svg>
+    <figcaption>SIEM filtre vers XDR; XDR se focalise vers EDR. Defender XDR est la couche du milieu.</figcaption>
+  </figure>
+
+  <p>Defender XDR est la couche du milieu. Inforcer, Octiga, Overe, Panoptica365 — on vit tous en aval.</p>
+
+  <h2>Alertes vs détections vs incidents</h2>
+
+  <p>XDR a son propre vocabulaire, et ça vaut la peine de l'apprendre parce que les mots veulent dire des choses précises.</p>
+
+  <p><strong>Signal.</strong> Une observation brute. « Le processus X a été lancé sur l'appareil Y au moment T. » Il y en a des millions par jour dans un tenant typique. Personne ne regarde les signaux directement.</p>
+
+  <p><strong>Détection.</strong> Un patron que Microsoft (ou votre propre règle personnalisée) a décidé d'estimer intéressant. « Powershell.exe lancé avec une ligne de commande encodée depuis un document Word » est une détection. Les détections vivent dans les tables que vous pouvez interroger avec KQL dans Advanced Hunting.</p>
+
+  <p><strong>Alerte.</strong> Une détection qui a franchi un seuil qui mérite d'être montré dans l'UI. Les alertes viennent avec une gravité (informationnel / faible / moyen / élevé) et sont routées par catégorie (accès initial, mouvement latéral, exfiltration, etc.).</p>
+
+  <p><strong>Incident.</strong> Un <em>regroupement</em> d'alertes que le moteur de corrélation de XDR pense liées à une seule attaque. Un incident pourrait grouper six alertes à travers courriel, identité et terminal en une seule histoire : « L'utilisatrice Karen a cliqué sur un lien d'hameçonnage → le cookie de session de Karen a été volé → le cookie a été rejoué depuis l'Europe de l'Est → une règle de transfert dans la boîte de réception a été créée. »</p>
+
+  <p>Le voyage d'un événement, donc : signal → détection → alerte → incident.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Le voyage d'un événement en quatre étapes qui se rétrécissent : signal vers détection vers alerte vers incident.">
+      <defs>
+        <marker id="jrnArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(40,52)"><rect width="120" height="46" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="22" fill="#C4D4E8" font-size="14" font-weight="600">Signal</text><text x="60" y="38" fill="#6B85A6" font-size="11">millions/jour</text></g>
+        <g transform="translate(200,52)"><rect width="120" height="46" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="22" fill="#C4D4E8" font-size="14" font-weight="600">Détection</text><text x="60" y="38" fill="#6B85A6" font-size="11">un patron</text></g>
+        <g transform="translate(360,52)"><rect width="120" height="46" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="60" y="22" fill="#A8E1F8" font-size="14" font-weight="600">Alerte</text><text x="60" y="38" fill="#6B85A6" font-size="11">franchit un seuil</text></g>
+        <g transform="translate(560,52)"><rect width="120" height="46" rx="9" fill="#10243B" stroke="#5CCBF4"/><text x="60" y="22" fill="#7DD9F9" font-size="14" font-weight="700">Incident</text><text x="60" y="38" fill="#A8E1F8" font-size="11">une histoire</text></g>
+      </g>
+      <g stroke="#335F92" stroke-width="2">
+        <path d="M160 75 H200" marker-end="url(#jrnArr)"/>
+        <path d="M320 75 H360" marker-end="url(#jrnArr)"/>
+        <path d="M480 75 H560" marker-end="url(#jrnArr)"/>
+      </g>
+    </svg>
+    <figcaption>Chaque étape filtre la précédente — des millions de signaux se réduisent à une poignée d'incidents.</figcaption>
+  </figure>
+
+  <p>Un XDR bien configuré montre à l'opérateur des <em>incidents</em> et lui permet de descendre <em>vers</em> les alertes et de là vers les détections. Un mal configuré montre à l'opérateur un lance-à-incendie d'alertes sans corrélation, et l'opérateur se noie.</p>
+
+  <h2>Pourquoi la plupart des MSP n'ouvrent pas le portail quotidiennement</h2>
+
+  <p>Defender XDR est conçu pour un analyste SOC dans un centre de surveillance 24/7. La plupart des MSP n'en sont pas un. Alors la posture réaliste est :</p>
+
+  <p><strong>Attack Disruption gère les pires événements automatiquement.</strong> La capacité Attack Disruption de Microsoft répond automatiquement aux incidents à haute confiance — désactive l'utilisateur, révoque ses jetons, contient l'appareil. Ça se passe sans qu'un opérateur clique sur quoi que ce soit. Au moment où un opérateur regarde le portail le matin, les pires incidents de la nuit sont déjà contenus.</p>
+
+  <p><strong>Automated Investigation and Response (AIR) de Defender for Endpoint nettoie les événements terminaux.</strong> Les processus suspects sont tués et remédiés; les fichiers malicieux sont mis en quarantaine; l'appareil est investigué et re-noté. L'opérateur voit un incident fermé avec une histoire attachée.</p>
+
+  <p><strong>Les alertes en temps réel routent vers la boîte de courriels ou le PSA de l'opérateur.</strong> Le contenu de haute gravité sort de Defender XDR via webhook ou notifications Graph et atterrit dans le flux de travail normal de l'opérateur — Outlook, Teams, la file d'attente PSA, ou Panoptica365.</p>
+
+  <p>Ce que ça veut dire en pratique : vous devriez ouvrir le portail Defender XDR <em>délibérément</em> — d'habitude une fois par semaine, parfois en réponse à une alerte spécifique — pas tous les jours par habitude. Les deux rituels opérationnels qui comptent :</p>
+
+  <p><strong>Revue hebdomadaire.</strong> Scannez les incidents ouverts et récemment fermés à travers tous vos tenants. Y a-t-il des incidents qui se sont fermés tout seuls mais que vous devriez comprendre? Y en a-t-il qui sont restés ouverts plus de 48 heures? Des entrées non classées dans la file d'attente de notation d'incidents qui ont besoin d'une disposition?</p>
+
+  <p><strong>Plongée ciblée.</strong> Quand Panoptica365 (ou une alerte courriel, ou une plainte client) vous pointe vers un utilisateur ou un appareil spécifique, ouvrez le portail Defender XDR <em>pour cet utilisateur</em> et regardez ses alertes et incidents. Le portail est excellent pour la criminalistique un-utilisateur-à-la-fois. Il est mauvais comme outil de surveillance en continu pour un MSP qui gère trente tenants.</p>
+
+  <h2>Ce qu'est Attack Disruption, et pourquoi c'est une exception</h2>
+
+  <p>Attack Disruption mérite son propre paragraphe parce que c'est le seul endroit dans toute cette pile où Defender <em>fait activement quelque chose</em> pendant une attaque, plutôt que de simplement la rapporter passivement.</p>
+
+  <p>Ça fonctionne comme ça. Defender XDR corrèle les signaux à travers les produits et assigne un score de confiance à chaque incident. Quand cette confiance franchit un seuil élevé <em>et</em> que le type d'incident est un que Attack Disruption supporte — actuellement hameçonnage AiTM, business email compromise (BEC), human-operated ransomware (HumOR), password spray — le système prend des actions prédéfinies : désactiver le compte utilisateur dans Entra ID, révoquer ses jetons de session, contenir l'appareil, parfois contenir la connexion réseau de l'appareil. L'opérateur n'approuve pas ces actions. Elles se produisent, c'est tout.</p>
+
+  <p>L'opérateur apprend en recevant une notification (« un compte potentiellement compromis a été désactivé automatiquement par attack disruption ») et en voyant l'écusson fermé-avec-mitigation sur l'incident.</p>
+
+  <p>C'est la version moderne de « réponse en temps réel » — Microsoft est prêt à prendre des actions seulement quand la corrélation est assez forte pour que le risque de faux positif soit faible. Pour tout le reste, Defender XDR reste un système détecte-et-alerte, et l'humain est dans la boucle.</p>
+
+  <p>Quand Attack Disruption se déclenche dans le tenant d'un client, deux choses comptent :</p>
+
+  <p><strong>Vérifier que l'action était correcte.</strong> Un compte correctement désactivé, c'est super. Un compte incorrectement désactivé, c'est un appel de soutien du mardi matin. Vous allez devoir ré-activer l'utilisateur, réinitialiser ses identifiants, et comprendre ce que Defender a vu — et décider si vous êtes d'accord avec ça.</p>
+
+  <p><strong>Reculer le long de la chronologie de l'attaque.</strong> Attack Disruption arrête la propagation, mais l'attaquant était <em>à l'intérieur</em> avant que le système agisse. Le travail de criminalistique <em>après</em> un événement de disruption est exactement le même que la criminalistique après n'importe quelle compromission. Ne laissez pas « Defender s'en est occupé » arrêter l'enquête.</p>
+
+  <h2>Surprises courantes</h2>
+
+  <p>Quelques choses qui prennent les nouveaux opérateurs par surprise.</p>
+
+  <p><strong>Le portail se renomme tout seul.</strong> Microsoft 365 Defender, Microsoft Defender XDR, Microsoft Sentinel + Defender, et maintenant « Microsoft Security » réfèrent tous à des choses se chevauchant mais distinctes à différents moments dans le temps. Si un article Microsoft Learn de 2023 réfère à un nom de portail différent de ce que vous voyez en 2026, vous n'êtes pas perdu — vous lisez juste de la documentation périmée.</p>
+
+  <p><strong>Defender XDR n'est pas Sentinel, mais Microsoft est en train de les convaincre de fusionner.</strong> Sentinel est le SIEM de Microsoft. Defender XDR est le XDR de Microsoft. Ils partagent des données, ils partagent des surfaces UI (le portail unifié Microsoft Defender peut montrer les deux), mais ils sont facturés séparément et configurés séparément. Beaucoup de MSP utilisent seulement Defender XDR (couvert par les licences M365) et ne déploient jamais Sentinel (séparément licencié, facturé à la consommation). C'est un choix défendable pour un MSP focalisé sur les PME. Les plus grandes entreprises ont typiquement besoin des deux.</p>
+
+  <p><strong>E5 change le comportement de Defender de manière significative.</strong> Beaucoup des capacités plus profondes de Defender XDR — Attack Disruption est l'exemple le plus bruyant, mais Threat Explorer, la rétention de l'advanced hunting, les Custom Detection Rules à l'échelle, tous qualifient — fonctionnent pleinement seulement au palier E5. Les clients Business Premium obtiennent un sous-ensemble significatif mais réduit. La leçon 5 couvre ce qui est derrière quel paywall.</p>
+
+  <p><strong>Le « Centre d'actions » est l'endroit où vivent les remédiations automatiques.</strong> Quand Attack Disruption désactive un utilisateur, quand AIR met un fichier en quarantaine, quand une Custom Detection Rule auto-résout une alerte — tout ça va dans le Centre d'actions. Si vous ne vérifiez que Incidents et Alertes, vous allez manquer ce que Defender a déjà <em>fait</em> en votre nom. Survolez le Centre d'actions hebdomadairement.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Defender XDR est configuré, pas surveillé.</strong> Passez du temps à activer Attack Disruption, mettre AIR en automatique complet sur Endpoint, rendre la notation d'alertes cohérente entre les tenants. Bien configurer le routage des alertes entrantes (courriel, PSA, Panoptica365). Puis <em>résistez à l'envie</em> de garder le portail ouvert. Ce n'est pas un tableau de bord; c'est une surface de criminalistique.</p>
+
+  <p><strong>Faire confiance mais vérifier Attack Disruption.</strong> Quand ça se déclenche, c'est généralement correct. Le coût d'une mauvaise action, c'est un ré-activer. Le coût de <em>ne pas</em> agir sur une vraie compromission AiTM, c'est un incident à l'échelle du tenant. Le compromis favorise l'action, mais ça doit être couplé avec une pratique « chaque événement de disruption obtient un œil humain en moins de 24 heures ». Les incidents de disruption fermés en silence que personne ne lit, c'est comme ça que des choses se font manquer.</p>
+
+  <p><strong>N'essayez pas d'être Sentinel avec Defender XDR.</strong> Si un client a besoin de corrélation personnalisée à travers des sources de données non-Microsoft — journaux de pare-feu, journaux SaaS tiers, télémétrie d'applications locales — Defender XDR seul n'est pas le bon outil. Sentinel l'est. Pousser Defender XDR à faire ce que Sentinel fait va produire de la fatigue d'alertes et des trous silencieux.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <ul>
+    <li><strong>Leçon 5 : Les licences Microsoft 365.</strong> Le plus gros facteur limitant sur ce que Defender XDR peut réellement faire, c'est le palier de licence. La leçon 5 marche à travers ce que chaque SKU débloque.</li>
+    <li><strong>Leçon 6 : Où Panoptica365 s'installe dans le tableau.</strong> Indice : on est <em>complémentaire</em> à Defender XDR, pas un remplacement. Defender XDR est le système criminalistique; Panoptica365 est le système d'exploitation quotidien.</li>
+  </ul>
+
+  <p>Ensuite, on passe à la carte 2 (<em>Menaces identitaires et patrons d'attaque</em>), qui va vous faire ouvrir Defender XDR pour un utilisateur spécifique à la fois — en faisant exactement le genre de plongée qu'il fait bien.</p>
+
+  <p>Pour l'instant : Defender XDR est la couche de corrélation qui devrait surtout fonctionner toute seule. Votre travail, c'est de la configurer correctement, de vérifier dessus hebdomadairement, et de faire confiance à l'automatisation pour gérer le reste.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur l'architecture et le modèle d'incidents de Defender XDR (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-365-defender" target="_blank" rel="noopener">Microsoft Learn — Qu'est-ce que Microsoft Defender XDR?</a>); portée et types d'attaques supportés par la capacité Attack Disruption (<a href="https://learn.microsoft.com/en-us/defender-xdr/automatic-attack-disruption" target="_blank" rel="noopener">Microsoft Learn — Automatic attack disruption</a>); contexte de positionnement EDR/XDR/SIEM (<a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-endpoint" target="_blank" rel="noopener">Microsoft Learn — Defender for Endpoint plans</a>); référence du Centre d'actions (<a href="https://learn.microsoft.com/en-us/defender-xdr/m365d-action-center" target="_blank" rel="noopener">Microsoft Learn — Action center</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

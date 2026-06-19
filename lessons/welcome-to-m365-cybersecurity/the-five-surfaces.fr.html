@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les cinq surfaces que M365 sécurise — Bienvenue à la cybersécurité M365</title>
+<meta name="lesson:title" content="Les cinq surfaces que M365 sécurise">
+<meta name="lesson:subtitle" content="Identité, terminaux, courriel, collaboration et applications infonuagiques — les cinq arrêts de la tournée de tout attaquant dans M365.">
+<meta name="lesson:icon" content="layers">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Bienvenue à la cybersécurité M365</span> <span class="sep">·</span> <span>Les cinq surfaces</span></div>
+  <h1>Les cinq surfaces que M365 sécurise</h1>
+  <p class="dek">Identité, terminaux, courriel, collaboration et applications infonuagiques — les cinq arrêts de la tournée de tout attaquant dans M365.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un seul identifiant ouvrant une chaîne de quatre surfaces : identité, courriel, collaboration, applications infonuagiques.">
+      <defs>
+        <radialGradient id="fsBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="fsKey" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="fsArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#fsBg)"/>
+
+      <!-- one credential -->
+      <g transform="translate(110,140)">
+        <circle r="62" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle cx="-6" cy="0" r="26" fill="none" stroke="#5CCBF4" stroke-width="3"/>
+        <rect x="14" y="-5" width="52" height="10" rx="3" fill="url(#fsKey)"/>
+        <rect x="56" y="-5" width="6" height="16" rx="2" fill="#5CCBF4"/>
+        <rect x="44" y="-5" width="6" height="13" rx="2" fill="#5CCBF4"/>
+      </g>
+      <text x="110" y="246" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600" letter-spacing="2">UN IDENTIFIANT</text>
+
+      <!-- the tour: four surfaces in a chain -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(310,140)">
+          <rect x="-78" y="-30" width="156" height="60" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="15" font-weight="600">Identité</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="11.5">être quelqu'un</text>
+        </g>
+        <g transform="translate(540,140)">
+          <rect x="-78" y="-30" width="156" height="60" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="15" font-weight="600">Courriel</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="11.5">lire la boîte</text>
+        </g>
+        <g transform="translate(770,140)">
+          <rect x="-90" y="-30" width="180" height="60" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="15" font-weight="600">Collaboration</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="11.5">trouver SharePoint</text>
+        </g>
+        <g transform="translate(1000,140)">
+          <rect x="-94" y="-30" width="188" height="60" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="13.5" font-weight="600">Apps infonuagiques</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="11.5">synchroniser hors</text>
+        </g>
+      </g>
+      <path d="M172 140 H226" stroke="#335F92" stroke-width="2.5" marker-end="url(#fsArr)"/>
+      <path d="M392 140 H454" stroke="#335F92" stroke-width="2.5" marker-end="url(#fsArr)"/>
+      <path d="M622 140 H674" stroke="#335F92" stroke-width="2.5" marker-end="url(#fsArr)"/>
+      <path d="M868 140 H906" stroke="#335F92" stroke-width="2.5" marker-end="url(#fsArr)"/>
+      <text x="650" y="244" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">QUATRE SURFACES · UNE TOURNÉE</text>
+    </svg>
+    <figcaption>Identité → courriel → collaboration → applications infonuagiques. Un identifiant. Quatre surfaces. Une tournée.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>En 2024, un petit cabinet de comptables s'est fait compromettre. L'attaquant a commencé par hameçonner les identifiants d'un associé junior. Ça lui a donné accès à la boîte de courriels. Dans la boîte, il a trouvé un fil de discussion mentionnant « la lettre de mission est dans le SharePoint client ». Il a navigué vers SharePoint, trouvé 18 mois de déclarations fiscales pour 30 clients, les a téléchargées via OneDrive sync, et s'est déconnecté en silence.</p>
+
+  <p>Identité → courriel → collaboration → applications infonuagiques. Un identifiant. Quatre surfaces. Le MSP du cabinet avait mis en place de la surveillance pour une seule d'entre elles.</p>
+
+  <p>Quand on dit que M365 « est » cinq surfaces, c'est ça qu'on veut dire. Ce ne sont pas des conteneurs indépendants. Ce sont des arrêts dans la tournée d'un attaquant. Un contrôle sur n'importe laquelle d'entre elles ne compte que s'il est assez solide pour arrêter la tournée là où elle commence.</p>
+
+  <p>Cette leçon, c'est la carte.</p>
+  </div>
+
+  <h2>Ce que « surface » veut dire ici</h2>
+
+  <p>Une surface, c'est une catégorie de cible d'attaque — une chose que l'attaquant veut, et un endroit où M365 la range ou la fait transiter. M365 en a environ cinq.</p>
+
+  <p>On n'est pas les seuls à organiser la pile comme ça. Microsoft elle-même découpe le portail Defender XDR en « Identités », « Terminaux », « Courriel et collaboration », « Applications infonuagiques ». Le CIS Microsoft 365 Benchmark divise les contrôles selon des lignes semblables. Inforcer, Octiga, Overe, et la plupart des fournisseurs dans cet espace regroupent leurs produits en compartiments similaires. Ce n'est pas arbitraire; c'est comme ça que le modèle de menaces se découpe naturellement.</p>
+
+  <p>Les voici.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 470" role="img" aria-label="Les cinq surfaces que M365 sécurise, chacune étiquetée avec ce que les attaquants en veulent.">
+      <rect width="720" height="470" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="36" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LES CINQ SURFACES</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(0,58)">
+          <rect x="40" y="0" width="640" height="62" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="62" y="27" fill="#A8E1F8" font-size="16" font-weight="600">1 · Identité</text>
+          <text x="62" y="48" fill="#6B85A6" font-size="12.5">identifiants, jetons, sessions — la capacité d'être quelqu'un</text>
+        </g>
+        <g transform="translate(0,134)">
+          <rect x="40" y="0" width="640" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="62" y="27" fill="#C4D4E8" font-size="16" font-weight="600">2 · Terminaux</text>
+          <text x="62" y="48" fill="#6B85A6" font-size="12.5">un point d'appui initial — exécuter du maliciel, récolter des jetons, persister</text>
+        </g>
+        <g transform="translate(0,210)">
+          <rect x="40" y="0" width="640" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="62" y="27" fill="#C4D4E8" font-size="16" font-weight="600">3 · Courriel</text>
+          <text x="62" y="48" fill="#6B85A6" font-size="12.5">une cible (fraude financière) et un véhicule (hameçonnage d'expéditeur de confiance)</text>
+        </g>
+        <g transform="translate(0,286)">
+          <rect x="40" y="0" width="640" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="62" y="27" fill="#C4D4E8" font-size="16" font-weight="600">4 · Collaboration</text>
+          <text x="62" y="48" fill="#6B85A6" font-size="12.5">les fichiers — où l'exfiltration se termine, plus le mouvement latéral</text>
+        </g>
+        <g transform="translate(0,362)">
+          <rect x="40" y="0" width="640" height="62" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="62" y="27" fill="#C4D4E8" font-size="16" font-weight="600">5 · Applications infonuagiques</text>
+          <text x="62" y="48" fill="#6B85A6" font-size="12.5">accès persistant via OAuth, plus exfiltration latérale vers le SaaS fédéré</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Cinq catégories de cible d'attaque — chacune une chose que l'attaquant veut, et un endroit où M365 la range ou la fait transiter.</figcaption>
+  </figure>
+
+  <h2>1. Identité</h2>
+
+  <p><strong>Ce que c'est :</strong> Entra ID — comptes, groupes, appareils, applications, principaux de service, l'annuaire lui-même.</p>
+
+  <p><strong>Ce que les attaquants veulent :</strong> Des identifiants, des jetons, des sessions, la capacité <em>d'être</em> quelqu'un. L'identité est la porte d'entrée vers toutes les autres surfaces. Compromettez une identité et vous n'avez pas besoin de briser le serveur de courriels ou le site SharePoint; vous vous connectez simplement en tant que quelqu'un qui a accès.</p>
+
+  <p><strong>Ce qui la protège dans M365 :</strong></p>
+
+  <ul>
+    <li><strong>Entra ID</strong> lui-même — l'annuaire, MFA, méthodes d'authentification, protection par mot de passe.</li>
+    <li><strong>Accès conditionnel</strong> — applique <em>quelles</em> connexions sont autorisées selon le contexte (conformité de l'appareil, emplacement, application, score de risque).</li>
+    <li><strong>Entra ID Protection</strong> (seulement dans les SKU P2) — notation basée sur le risque des utilisateurs et des connexions.</li>
+    <li><strong>Microsoft Defender for Identity</strong> — surveille Active Directory local si vous en avez encore un, plus l'activité de synchronisation hybride.</li>
+  </ul>
+
+  <p><strong>Où Panoptica365 la surveille :</strong> C'est la surface la plus chargée pour nous. Surveillance des connexions, vérification de l'application du MFA, dérive des méthodes d'authentification, posture de l'accès conditionnel, alertes pour IP étrangère et déplacement impossible, plus les alertes d'identité de Defender XDR qui arrivent par le Unified Audit Log (UAL) — le flux d'événements à l'échelle du tenant Microsoft, qui enregistre chaque action administrative et la plupart des activités utilisateur.</p>
+
+  <h2>2. Terminaux</h2>
+
+  <p><strong>Ce que c'est :</strong> Les appareils physiques — portables Windows, Mac, iPhones, Androids — depuis lesquels les utilisateurs se connectent. Chaque appareil est un morceau du périmètre, au sens que la leçon 1 a expliqué : il n'y a plus de périmètre, seulement des fobs et les gens qui les tiennent.</p>
+
+  <p><strong>Ce que les attaquants veulent :</strong> Un point d'appui initial. Un appareil qu'ils contrôlent est un endroit pour exécuter du maliciel, récolter des jetons en cache, capturer des frappes au clavier, et persister après que l'utilisateur a réinitialisé son mot de passe. Les terminaux sont aussi là où <em>vivent</em> beaucoup de sessions M365 — Outlook, OneDrive sync, le client Teams pour ordinateur contiennent tous des jetons sur le disque local.</p>
+
+  <p><strong>Ce qui les protège dans M365 :</strong></p>
+
+  <ul>
+    <li><strong>Intune</strong> — gestion des appareils. Inscrit l'appareil, le configure, applique des politiques, vérifie la conformité (chiffrement activé, version d'OS à jour, antivirus actif, pas de jailbreak).</li>
+    <li><strong>Defender for Endpoint</strong> — EDR. Surveillance comportementale sur l'appareil lui-même; c'est ce qui attrape les rançongiciels, les processus suspects, le comportement de type ransomware.</li>
+    <li><strong>Defender Antivirus</strong> — l'antivirus qui vient avec Windows. De plus en plus enrichi par le nuage et sous-estimé.</li>
+    <li><strong>Règles de réduction de la surface d'attaque (ASR)</strong> — contrôles préventifs qui bloquent les patrons de comportement connus comme mauvais (macros Office qui lancent des processus, scripts dans des dossiers temp, ce genre d'affaire).</li>
+  </ul>
+
+  <p><strong>Où Panoptica365 les surveille :</strong> Dérive des déploiements Intune, posture de conformité des appareils, couverture du déploiement EDR. On n'analyse pas la télémétrie brute des terminaux — c'est le travail de Defender, et le répliquer serait une erreur.</p>
+
+  <h2>3. Courriel</h2>
+
+  <p><strong>Ce que c'est :</strong> Exchange Online. Boîtes aux lettres, flux de courriels, calendrier, contacts. Le canal au volume le plus élevé dans n'importe quelle entreprise.</p>
+
+  <p><strong>Ce que les attaquants veulent :</strong> Deux choses. D'abord, <em>comme cible</em> — fraude financière (manipulation de factures, redirection de virements, compromission de courriel d'entreprise, BEC). Ensuite, <em>comme véhicule</em> — courriels d'hameçonnage envoyés vers d'autres utilisateurs, y compris ceux d'autres entreprises avec lesquelles la victime fait affaire. Les boîtes compromises sont la façon dont se produit l'hameçonnage <em>d'expéditeur de confiance</em>, et c'est le type qui fonctionne vraiment.</p>
+
+  <p><strong>Ce qui le protège dans M365 :</strong></p>
+
+  <ul>
+    <li><strong>Exchange Online Protection (EOP)</strong> — le filtre de base sur le flux de courriels. Anti-pourriel, anti-maliciel, règles de flux.</li>
+    <li><strong>Defender for Office 365</strong> Plans 1 et 2 — politiques anti-hameçonnage, Safe Links (réécriture d'URL et vérification au moment du clic), Safe Attachments (chambre de détonation), protection contre l'usurpation d'identité. Le Plan 1 est maintenant inclus dans Business Premium et E3 depuis 2026; le Plan 2 ajoute Threat Explorer, Attack Simulation Training et Automated Investigation and Response.</li>
+    <li><strong>Audit des boîtes aux lettres</strong> — suit qui a fait quoi à l'intérieur d'une boîte (changements de règles, suppressions, configuration de transfert).</li>
+    <li><strong>Surveillance des règles de boîte et du transfert au niveau boîte</strong> — pour repérer la règle silencieuse de transfert vers Gmail que les attaquants adorent.</li>
+  </ul>
+
+  <p><strong>Où Panoptica365 le surveille :</strong> préréglage anti-hameçonnage, posture d'audit des boîtes aux lettres, détection des règles de boîte et du transfert au niveau boîte, configuration de Safe Links et Safe Attachments. C'est la catégorie la plus profonde dans notre catalogue de surveillance.</p>
+
+  <h2>4. Collaboration</h2>
+
+  <p><strong>Ce que c'est :</strong> SharePoint Online, OneDrive, Teams. Les endroits où les fichiers vivent vraiment et où le travail d'équipe se fait.</p>
+
+  <p><strong>Ce que les attaquants veulent :</strong> Les fichiers. Déclarations fiscales. Lettres de mission. Dossiers RH. Code source. Documents de fusions et acquisitions. Une fois à l'intérieur, c'est là que les données <em>intéressantes</em> se trouvent. Ils veulent aussi du mouvement latéral — un site SharePoint trop permissif avec le partage externe activé permet à un attaquant de s'inviter depuis une adresse Gmail. La plupart de l'exfiltration de données dans les attaques M365 se termine ici.</p>
+
+  <p><strong>Ce qui la protège dans M365 :</strong></p>
+
+  <ul>
+    <li><strong>Contrôles de partage SharePoint et OneDrive</strong> — qui peut partager quoi à l'externe, politiques de liens anonymes, expiration de liens, expiration des invités.</li>
+    <li><strong>Étiquettes de confidentialité</strong> — classification automatique et manuelle des documents (Confidentiel, Très confidentiel, etc.) avec chiffrement et contrôles d'accès attachés.</li>
+    <li><strong>Prévention des pertes de données (DLP)</strong> — politiques qui détectent les données sensibles (NAS, numéros de carte de crédit, motifs personnalisés) et bloquent le partage.</li>
+    <li><strong>Politiques Teams</strong> — qui peut créer des équipes, quelles applications sont permises, accès des invités.</li>
+    <li><strong>Accès conditionnel pour SharePoint et OneDrive</strong> — applique les mêmes règles de conformité d'appareil et d'emplacement de confiance à l'accès aux fichiers.</li>
+  </ul>
+
+  <p><strong>Où Panoptica365 la surveille :</strong> Posture de partage SharePoint, inventaire des permissions de site, audit du partage externe (le module d'audit SharePoint). La couverture des étiquettes de confidentialité et la visibilité DLP sont partielles aujourd'hui.</p>
+
+  <h2>5. Applications infonuagiques</h2>
+
+  <p><strong>Ce que c'est :</strong> Toutes les applications SaaS auxquelles vos utilisateurs se connectent avec leur identité M365 et qui <em>ne sont pas</em> M365. Salesforce, GitHub, Dropbox, l'outil d'IA qu'ils ont essayé un mardi. Plus toutes les applications enregistrées via OAuth et les principaux de service à l'intérieur d'Entra ID lui-même.</p>
+
+  <p><strong>Ce que les attaquants veulent :</strong> Deux choses. D'abord, un accès persistant via le consentement OAuth — une application qu'ils ont trompé l'utilisateur à approuver reste même après une réinitialisation de mot de passe. Ensuite, l'exfiltration latérale de données — si votre utilisateur a accès à Salesforce et qu'un attaquant compromet l'identité M365, il a probablement Salesforce aussi. Le SaaS fédéré est un multiplicateur de force pour la compromission.</p>
+
+  <p><strong>Ce qui les protège dans M365 :</strong></p>
+
+  <ul>
+    <li><strong>Inscriptions d'applications et applications d'entreprise Entra ID</strong> — ce qui est autorisé à demander des permissions, quels consentements doivent être approuvés par un admin.</li>
+    <li><strong>Politiques de consentement OAuth</strong> — restreindre les utilisateurs d'approuver des applications avec des portées à privilèges élevés.</li>
+    <li><strong>Defender for Cloud Apps (MDA)</strong> — surveillance à l'échelle SaaS sur les applications enregistrées; analyse du comportement utilisateur; découverte du SaaS fantôme.</li>
+    <li><strong>Accès conditionnel pour les applications infonuagiques</strong> — les mêmes règles peuvent s'appliquer aux applications SaaS non-Microsoft fédérées par Entra.</li>
+  </ul>
+
+  <p><strong>Où Panoptica365 les surveille :</strong> Plus léger aujourd'hui que les quatre autres surfaces. L'inventaire des consentements OAuth est partiel. Les alertes de Defender for Cloud Apps arrivent par l'ingestion Defender XDR.</p>
+
+  <h2>Les cinq surfaces ne sont pas cinq produits</h2>
+
+  <p>L'erreur que font les opérateurs juniors une fois qu'ils voient cette liste, c'est de traiter chaque surface comme « la responsabilité d'un produit ». L'identité est Entra. Les terminaux sont Intune. Le courriel est Defender for Office 365. Et ainsi de suite.</p>
+
+  <p>Ce modèle est faux, et il est faux d'une façon qui compte.</p>
+
+  <p>Regardez les listes de protection plus haut et notez le chevauchement :</p>
+
+  <ul>
+    <li><strong>L'accès conditionnel</strong> apparaît sous Identité, Collaboration et Applications infonuagiques. C'est une couche d'application <em>transversale</em> qui opère partout où une connexion se produit.</li>
+    <li><strong>La conformité Intune</strong> est un produit <em>terminal</em>, mais sa sortie (un état de conformité par appareil) est consommée par l'accès conditionnel à <em>chaque</em> connexion à <em>chaque</em> surface.</li>
+    <li><strong>Defender XDR</strong> n'apparaît sur la liste d'aucune surface individuelle parce qu'il siège <em>au-dessus</em> de toutes les cinq — corrélant les signaux entre elles et cherchant des incidents qui en couvrent plusieurs.</li>
+  </ul>
+
+  <p>Le bon modèle mental est <em>couches</em>, pas silos :</p>
+
+  <ol>
+    <li><strong>Identité</strong> est la couche dont toutes les autres surfaces dépendent (signal : <em>qui</em>).</li>
+    <li><strong>Terminaux</strong> est la couche qui produit le signal de confiance (signal : <em>depuis quoi</em>).</li>
+    <li><strong>Courriel</strong> et <strong>Collaboration</strong> sont les deux principales couches de <em>données</em> (où les choses qui ont de la valeur vivent vraiment).</li>
+    <li><strong>Applications infonuagiques</strong> est la couche qui prolonge ces couches de données vers le SaaS non-Microsoft.</li>
+  </ol>
+
+  <p>Et <strong>l'accès conditionnel</strong> est le <em>moteur de politique</em> qui opère sur toutes. <strong>Defender XDR</strong> est le <em>moteur de détection et de réponse</em> qui les surveille toutes.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="Les surfaces comme couches, avec l'accès conditionnel comme moteur de politique et Defender XDR comme moteur de détection sur toutes.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <!-- Defender XDR band above all -->
+      <rect x="40" y="30" width="640" height="40" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+      <text x="360" y="55" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="700">Defender XDR · moteur de détection et réponse, surveille toutes</text>
+      <!-- the data/access layers -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(0,96)">
+          <rect x="40" y="0" width="640" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="360" y="25" fill="#A8E1F8" font-size="13" font-weight="600">Applications infonuagiques — prolonge les couches de données vers le SaaS non-Microsoft</text>
+        </g>
+        <g transform="translate(0,148)">
+          <rect x="40" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="196" y="25" fill="#C4D4E8" font-size="13.5" font-weight="600">Courriel — couche de données</text>
+          <rect x="368" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="524" y="25" fill="#C4D4E8" font-size="13.5" font-weight="600">Collaboration — couche de données</text>
+        </g>
+        <g transform="translate(0,200)">
+          <rect x="40" y="0" width="640" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="360" y="25" fill="#C4D4E8" font-size="13.5" font-weight="600">Terminaux — produit le signal de confiance (depuis quoi)</text>
+        </g>
+        <g transform="translate(0,252)">
+          <rect x="40" y="0" width="640" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="360" y="25" fill="#C4D4E8" font-size="13.5" font-weight="600">Identité — la couche dont toutes les autres dépendent (qui)</text>
+        </g>
+      </g>
+      <!-- Conditional Access policy engine across all -->
+      <rect x="40" y="306" width="640" height="40" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+      <text x="360" y="331" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="700">Accès conditionnel · moteur de politique, opère sur toutes</text>
+    </svg>
+    <figcaption>Couches, pas silos : les surfaces sont des cibles de données et d'accès; l'accès conditionnel et Defender XDR sont les moteurs qui opèrent sur elles.</figcaption>
+  </figure>
+
+  <p>Si vous ne retenez qu'une seule forme de cette leçon : les surfaces sont des <em>cibles de données et d'accès</em>, les produits sont des <em>mécanismes d'application et de détection</em>. Ce sont des dimensions orthogonales. Un opérateur junior qui pense « Courriel = Defender for Office 365 » ratera la moitié de la sécurité courriel qui vit dans l'accès conditionnel, Entra ID Protection et DLP. (Qui est la moitié intéressante.)</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois implications concrètes.</p>
+
+  <p><strong>On ne choisit pas une surface à défendre; on choisit une chaîne.</strong> Hameçonnage → courriel → identité → applications infonuagiques est une chaîne. Portable compromis → maliciel sur le terminal → vol de jeton → identité → SharePoint en est une autre. Concevoir sa surveillance autour de chaînes, pas de surfaces, c'est comme ça qu'on attrape les attaques qui se déplacent.</p>
+
+  <p><strong>L'accès conditionnel est le contrôle le plus levier de toute la pile.</strong> C'est la seule chose qui opère sur plusieurs surfaces au moment de la politique. Mal configurer une politique d'accès conditionnel peut briser l'accès <em>ou</em> laisser un trou sur trois surfaces simultanément. La bonne nouvelle : bien configurer l'accès conditionnel est aussi la chose la plus levier que vous puissiez faire. On a toute une carte là-dessus (carte 3).</p>
+
+  <p><strong>La détection seule est incomplète sans corrélation.</strong> Surveiller les événements de courriel seuls est la moitié d'un travail. Surveiller les événements de connexion seuls est la moitié d'un travail. L'attaque qui vous intéresse — la chaîne — en touche plusieurs. Defender XDR (leçon 4) et la corrélation d'alertes de Panoptica365 sont tous les deux des tentatives de résoudre le même problème de corrélation depuis des angles différents.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <p>Le reste de cette carte :</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Defender, Intune, accès conditionnel — comment ils s'imbriquent vraiment</b> — le diagramme de la boucle de conformité et où chaque outil est configuré. C'est là que « l'accès conditionnel est le moteur de politique » devient concret.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Defender XDR — ce que c'est, ce que ce n'est pas</b> — l'histoire de la corrélation transversale.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Les licences Microsoft 365 — qu'est-ce qui débloque quoi</b> — parce que plusieurs des contrôles ci-dessus n'existent qu'à certains paliers de SKU, et un client Business Standard en manque la moitié.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Où Panoptica365 s'installe dans le tableau</b> — ce qu'on surveille, ce qu'on ne touche pas, pourquoi on ne corrige pas automatiquement.</div></div>
+  </div>
+
+  <p>Ensuite, la carte 2 (<em>Menaces identitaires et patrons d'attaque</em>) marche à travers de vraies chaînes d'attaque sur ces surfaces. À ce moment-là, les chaînes devraient avoir l'air familières — vous lirez « identifiant → boîte → SharePoint » et compterez instinctivement les traversées de surfaces.</p>
+
+  <p>Pour l'instant : les surfaces sont des arrêts dans la tournée de l'attaquant. Les produits sont l'application et la détection. Si vous saisissez le modèle correctement, le reste du programme devient forme, pas mémorisation.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — l'organisation du portail Microsoft 365 Defender autour des identités, terminaux, courriel et collaboration, applications infonuagiques comme domaines principaux de sécurité (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-365-defender" target="_blank" rel="noopener">Microsoft Learn — Vue d'ensemble Defender XDR</a>); Microsoft 365 Defender Threat Intelligence sur les chaînes d'attaque transversales (<a href="https://www.microsoft.com/en-us/security/blog/" target="_blank" rel="noopener">Microsoft Security Blog</a>, 2025); CIS Microsoft 365 Foundations Benchmark pour la taxonomie de contrôles basée sur les surfaces (<a href="https://www.cisecurity.org/benchmark/microsoft_365" target="_blank" rel="noopener">CIS</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

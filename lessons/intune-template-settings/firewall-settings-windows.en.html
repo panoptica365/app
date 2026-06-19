@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firewall Settings — Windows network defence — Intune Template Settings</title>
+<meta name="lesson:title" content="Firewall Settings — Windows network defence">
+<meta name="lesson:subtitle" content="51 settings across Domain, Private, and Public profiles — ensuring Windows Defender Firewall is on, logging, and tight in every network context.">
+<meta name="lesson:icon" content="flame">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Firewall Settings</span></div>
+  <h1>Firewall Settings — Windows network defence</h1>
+  <p class="dek">51 settings across Domain, Private, and Public profiles — ensuring Windows Defender Firewall is on, logging, and tight in every network context.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Windows Defender Firewall maintains three network profiles — Domain, Private, and Public — each tightening as the network gets less trusted.">
+      <defs>
+        <radialGradient id="fwBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="fwGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EE8A0"/><stop offset="50%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#FF5A6E"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#fwBg)"/>
+
+      <text x="560" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">ONE FIREWALL · THREE PROFILES</text>
+
+      <!-- three profile pillars, tightening left to right -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Domain -->
+        <g transform="translate(220,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text x="0" y="40" fill="#A8E1F8" font-size="20" font-weight="700">DOMAIN</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">corporate network</text>
+          <g opacity="0.92"><rect x="-58" y="92" width="116" height="9" rx="4.5" fill="#2A7FA3"/><rect x="-58" y="108" width="80" height="9" rx="4.5" fill="#274B72"/><rect x="-58" y="124" width="48" height="9" rx="4.5" fill="#1F3C5C"/></g>
+        </g>
+        <!-- Private -->
+        <g transform="translate(560,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#0E2640" stroke="#4A80BD" stroke-width="1.6"/>
+          <text x="0" y="40" fill="#A8E1F8" font-size="20" font-weight="700">PRIVATE</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">home / trusted</text>
+          <g opacity="0.92"><rect x="-58" y="92" width="86" height="9" rx="4.5" fill="#2A7FA3"/><rect x="-58" y="108" width="100" height="9" rx="4.5" fill="#335F92"/><rect x="-58" y="124" width="70" height="9" rx="4.5" fill="#274B72"/></g>
+        </g>
+        <!-- Public -->
+        <g transform="translate(900,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#102A4C" stroke="#5CCBF4" stroke-width="2"/>
+          <text x="0" y="40" fill="#D0EFFD" font-size="20" font-weight="700">PUBLIC</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">café · airport · hotel</text>
+          <g opacity="0.96"><rect x="-58" y="92" width="116" height="9" rx="4.5" fill="#5CCBF4"/><rect x="-58" y="108" width="116" height="9" rx="4.5" fill="#5CCBF4"/><rect x="-58" y="124" width="116" height="9" rx="4.5" fill="#5CCBF4"/></g>
+        </g>
+      </g>
+
+      <!-- tightening gradient bar -->
+      <rect x="100" y="288" width="920" height="8" rx="4" fill="url(#fwGrad)" opacity="0.85"/>
+      <text x="100" y="318" text-anchor="start" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">more permissive</text>
+      <text x="1020" y="318" text-anchor="end" fill="#9DBEDD" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">strictest</text>
+    </svg>
+    <figcaption>One firewall, three profiles — the active profile changes with the network, tightening as the network gets less trusted.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>If Defender for Endpoint is the layer that watches files and processes, the Windows Defender Firewall is the layer that watches network connections. The two complement each other: Defender catches malware that's already on the device; the Firewall stops malware from reaching the device in the first place — or stops compromised software on the device from reaching its command-and-control infrastructure.</p>
+
+  <p>The Panoptica365 Firewall Settings Windows template is the largest non-Security-Baseline configuration in the library at 34KB and 51 distinct settings. It configures Windows Defender Firewall across all three network profiles (Domain, Private, Public) plus global settings, ensuring the firewall is on, logging, and using sensible defaults.</p>
+
+  <p>This lesson walks through what gets configured, the three-profile model that makes Windows Defender Firewall confusing, and the operational realities of running host firewalls in production.</p>
+  </div>
+
+  <h2>The three-profile model — what makes this template look big</h2>
+
+  <p>Windows Defender Firewall has the unusual design of maintaining three separate firewall profiles, each applied based on the network the device is connected to:</p>
+
+  <ul>
+    <li><strong>Domain profile</strong> — applied when the device is on a network that contains a domain controller it's joined to. Typically the corporate office network.</li>
+    <li><strong>Private profile</strong> — applied when the device is on a network the user has marked as Private (home network, trusted small office).</li>
+    <li><strong>Public profile</strong> — applied when the device is on a network marked as Public (coffee shop, airport, hotel). The default profile for any unrecognised network.</li>
+  </ul>
+
+  <p>Each profile has roughly the same set of configurable settings: enable/disable, default inbound action, default outbound action, stealth mode, logging behaviour, log file location, log size, allow local policy merge. So the template's 51 settings is mostly <em>17 settings × 3 profiles</em> with a handful of global settings layered on top.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="The 51 settings are roughly 17 settings repeated across 3 profiles, plus a handful of global settings.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="48" width="120" height="54" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="100" y="72" fill="#A8E1F8" font-size="22" font-weight="700">17</text>
+        <text x="100" y="90" fill="#6B85A6" font-size="11">settings</text>
+
+        <text x="196" y="83" fill="#52708F" font-size="22" font-weight="500">×</text>
+
+        <rect x="226" y="48" width="120" height="54" rx="10" fill="#0E2640" stroke="#4A80BD"/>
+        <text x="286" y="72" fill="#A8E1F8" font-size="22" font-weight="700">3</text>
+        <text x="286" y="90" fill="#6B85A6" font-size="11">profiles</text>
+
+        <text x="382" y="83" fill="#52708F" font-size="22" font-weight="500">+</text>
+
+        <rect x="412" y="48" width="150" height="54" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="487" y="72" fill="#C4D4E8" font-size="22" font-weight="700">global</text>
+        <text x="487" y="90" fill="#6B85A6" font-size="11">handful</text>
+
+        <text x="598" y="83" fill="#52708F" font-size="22" font-weight="500">≈</text>
+
+        <rect x="626" y="44" width="68" height="62" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="660" y="74" fill="#7DD9F9" font-size="24" font-weight="700">51</text>
+        <text x="660" y="92" fill="#7DD9F9" font-size="11">total</text>
+      </g>
+      <text x="360" y="132" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">Why the template looks big: the same settings, repeated per profile.</text>
+    </svg>
+    <figcaption>Roughly 17 settings × 3 profiles, plus a handful of global settings, is what makes 51.</figcaption>
+  </figure>
+
+  <p>The reason all three profiles need explicit configuration is that the Public profile in particular needs to be tighter than the Domain profile. A device on the corporate network has trusted neighbours and trusted infrastructure; a device on a coffee shop network is sharing the LAN with strangers. The default action for inbound traffic should differ accordingly.</p>
+
+  <h2>What the template configures, by profile</h2>
+
+  <p>For <strong>each of the three profiles</strong>, the template sets:</p>
+
+  <ul>
+    <li><strong><code>enablefirewall</code></strong> — Firewall enabled on this profile.</li>
+    <li><strong><code>defaultinboundaction</code></strong> — Block inbound traffic by default (the secure baseline; specific allow rules layer on top).</li>
+    <li><strong><code>defaultoutboundaction</code></strong> — Allow outbound traffic by default (the typical posture for client devices; outbound block rules layer on top).</li>
+    <li><strong><code>disablestealthmode</code></strong> — Stealth mode enabled (no, the setting is named confusingly — <code>disablestealthmode: false</code> means stealth mode IS active). Stealth mode means the device doesn't respond to network probes (port scans, ICMP echo, etc.), which makes it less discoverable to attackers on the same network segment.</li>
+    <li><strong><code>disablestealthmodeipsecsecuredpacketexemption</code></strong> — IPSec-secured packets are exempt from stealth mode (so IPSec connections still work even with stealth on).</li>
+    <li><strong><code>disableunicastresponsestomulticastbroadcast</code></strong> — Disables unicast responses to multicast/broadcast — closes a small information-disclosure vector.</li>
+    <li><strong><code>disableinboundnotifications</code></strong> — Don't show inbound-blocked notifications to users. This is the lenient choice; the strict version would notify users when something tried to reach them.</li>
+    <li><strong><code>enablelogdroppedpackets</code></strong> — Log packets dropped by the firewall. Important for incident response.</li>
+    <li><strong><code>enablelogsuccessconnections</code></strong> — Log successful connections. Heavy on disk but useful for forensics.</li>
+    <li><strong><code>enablelogignoredrules</code></strong> — Log rules that were configured but ignored (e.g., disabled rules that would have matched). Diagnostic.</li>
+    <li><strong><code>logfilepath</code></strong> — Where the log file goes (typically <code>%systemroot%\system32\logfiles\firewall\pfirewall.log</code> or similar).</li>
+    <li><strong><code>logmaxfilesize</code></strong> — Maximum size of the firewall log before it rotates.</li>
+    <li><strong><code>allowlocalpolicymerge</code></strong> — Whether locally-configured firewall rules can merge with the central policy. Typically <code>false</code> (the centrally-managed policy wins; users can't add their own rules).</li>
+    <li><strong><code>allowlocalipsecpolicymerge</code></strong> — Same, for IPSec policy.</li>
+    <li><strong><code>authappsallowuserprefmerge</code></strong> — Whether authorised applications can merge with user preferences. Typically <code>false</code>.</li>
+    <li><strong><code>globalportsallowuserprefmerge</code></strong> — Whether global port rules can merge with user preferences.</li>
+  </ul>
+
+  <p>Across the three profiles, that's roughly 51 settings, with minor variations between Domain (more permissive — corporate network is trusted), Private (medium), and Public (strictest — coffee shop network is hostile).</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Profile</th><th>When it applies</th><th>Relative posture</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Domain</strong></td><td>Network with a joined domain controller — the corporate office network</td><td>More permissive — corporate network is trusted</td></tr>
+        <tr><td><strong>Private</strong></td><td>Network the user marked Private — home, trusted small office</td><td>Medium</td></tr>
+        <tr><td><strong>Public</strong></td><td>Network marked Public, or any unrecognised network — coffee shop, airport, hotel</td><td>Strictest — coffee shop network is hostile</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Global firewall settings</h2>
+
+  <p>In addition to per-profile settings, the template configures a few global settings that affect all three profiles:</p>
+
+  <ul>
+    <li><strong><code>crlcheck</code></strong> — Certificate Revocation List checking behaviour for firewall rule evaluation. Ensures revoked certs aren't accepted for authentication.</li>
+    <li><strong><code>disablestatefulftp</code></strong> — Stateful FTP filtering. Modern hardening — stateful FTP support introduces parsing complexity that's been exploited historically.</li>
+    <li><strong><code>presharedkeyencoding</code></strong> — Encoding for IPSec preshared keys (typically UTF-8).</li>
+  </ul>
+
+  <p>These global settings are deliberate hardening choices that close historical attack vectors in the Windows firewall component itself.</p>
+
+  <h2>The opinionated choices to know</h2>
+
+  <p>A handful of settings in this template that affect user experience or have specific security implications:</p>
+
+  <p><strong>Stealth mode enabled.</strong> Device won't respond to network probes. Means standard network discovery (ping, port scans) won't see the device. Helps in hostile networks; mostly invisible to users; occasionally confuses network engineers trying to troubleshoot from another machine ("why doesn't this PC respond to ping?"). Document this if a customer's IT team relies on ping for monitoring.</p>
+
+  <p><strong>Inbound notifications disabled.</strong> Users don't see "Windows Defender Firewall has blocked some features of this app" pop-ups. This is friendlier — the pop-ups are annoying and most users click through them without understanding. The trade-off: a user installing a legitimate app that needs an inbound exception won't be prompted to add one; the operator will need to add the exception centrally. For SMB scenarios, this is usually the right trade-off (operator-managed exceptions &gt; user-managed exceptions).</p>
+
+  <p><strong>Local policy merge disabled.</strong> Users (even those with local admin) can't add their own firewall rules that conflict with the central policy. This is the secure choice but it occasionally surprises power users who used to be able to allow their own apps through. The mitigation is the same as above — add legitimate exceptions centrally as they come up.</p>
+
+  <p><strong>Logging is verbose.</strong> <code>enablelogdroppedpackets</code>, <code>enablelogsuccessconnections</code>, and <code>enablelogignoredrules</code> are all on. This generates substantial firewall log activity on the device. The log file rotates at the configured max size, so it doesn't fill the disk indefinitely, but devices doing high-volume legitimate network activity will see meaningful log writes. The benefit is incident response — when something does go wrong, the firewall log is one of the most useful forensic artefacts available.</p>
+
+  <h2>What can break</h2>
+
+  <p>Firewall deployment can break things in ways that Defender deployment rarely does, because the firewall sits in the network path of every connection:</p>
+
+  <p><strong>Legitimate inbound services.</strong> Anything on the device that listens for inbound connections (a development web server on localhost, a network-shared printer driver, a remote management tool, a legacy line-of-business app that uses peer-to-peer connections) needs an explicit allow rule. Without one, the connection is blocked. The Panoptica365 template's <code>defaultinboundaction: block</code> makes this strict by design — but it means inbound use cases need exceptions.</p>
+
+  <p><strong>File and printer sharing.</strong> Windows SMB file sharing relies on specific inbound rules. The template's defaults handle these correctly for standard configurations, but customers with non-standard SMB setups (specific older Samba servers, non-standard ports) may need adjustments.</p>
+
+  <p><strong>Custom network apps.</strong> Industry-specific apps (medical imaging, CAD with shared license servers, manufacturing control systems) often have non-standard network behaviours. The template's strict defaults can break them. The fix is per-app firewall exceptions added to the deployed policy on a per-customer basis.</p>
+
+  <p><strong>Network discovery in non-domain environments.</strong> A user trying to find a network printer on a Private profile network may struggle because stealth mode and inbound block by default make discovery harder. Usually fine with proper printer-installation procedures; can surface as a complaint in less mature customer environments.</p>
+
+  <h2>Rollout</h2>
+
+  <p>Pilot-group deployment from lesson 1's pre-flight, with extra attention to network-dependent business workflows:</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy to 3–5 pilot devices. <em>Critical</em>: choose devices that exercise the customer's network workflows (file shares, printers, line-of-business apps with network components).</li>
+    <li><strong>Days 1–7</strong> — verify deployment success in the Intune portal. Test every network-dependent workflow on the pilot devices: print, file share access, business apps, VPN, remote desktop. <em>Anything</em> network-related should be tested.</li>
+    <li><strong>Days 7–14</strong> — observe pilot devices. The first week is when the obvious breakage surfaces; the second week is when the once-a-week and once-a-month workflows expose more subtle issues.</li>
+    <li><strong>Day 14</strong> — broader deployment if pilot is clean.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 168" role="img" aria-label="A four-stage firewall rollout timeline: Day 0 pilot deploy, Days 1 to 7 verify, Days 7 to 14 observe, Day 14 broader deployment.">
+      <rect width="720" height="168" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="80" y1="70" x2="640" y2="70" stroke="#1F3C5C" stroke-width="2"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Day 0 -->
+        <circle cx="100" cy="70" r="9" fill="#0E2640" stroke="#5CCBF4" stroke-width="2"/>
+        <text x="100" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Day 0</text>
+        <text x="100" y="100" fill="#6B85A6" font-size="11">deploy to</text>
+        <text x="100" y="114" fill="#6B85A6" font-size="11">3–5 pilots</text>
+        <!-- Days 1-7 -->
+        <circle cx="280" cy="70" r="9" fill="#0E2640" stroke="#4A80BD" stroke-width="2"/>
+        <text x="280" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Days 1–7</text>
+        <text x="280" y="100" fill="#6B85A6" font-size="11">verify +</text>
+        <text x="280" y="114" fill="#6B85A6" font-size="11">test workflows</text>
+        <!-- Days 7-14 -->
+        <circle cx="460" cy="70" r="9" fill="#0E2640" stroke="#4A80BD" stroke-width="2"/>
+        <text x="460" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Days 7–14</text>
+        <text x="460" y="100" fill="#6B85A6" font-size="11">observe</text>
+        <text x="460" y="114" fill="#6B85A6" font-size="11">pilot devices</text>
+        <!-- Day 14 -->
+        <circle cx="640" cy="70" r="9" fill="#10243B" stroke="#2EE8A0" stroke-width="2"/>
+        <text x="640" y="44" fill="#7DECC2" font-size="13" font-weight="700">Day 14</text>
+        <text x="640" y="100" fill="#6B85A6" font-size="11">broader</text>
+        <text x="640" y="114" fill="#6B85A6" font-size="11">if clean</text>
+      </g>
+      <text x="360" y="150" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">14 days is the minimum window — monthly or quarterly workflows may need 30.</text>
+    </svg>
+    <figcaption>The rollout in four stages — 14 days is the minimum; monthly or quarterly workflows may need a 30-day window.</figcaption>
+  </figure>
+
+  <p>For firewall changes specifically, the rollout window of 14 days is the minimum. A customer with monthly batch workflows or quarterly reports may need a 30-day window before you can confidently say "nothing broke."</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>Firewall enabled per device per profile.</strong> Should be 100% enabled across all three profiles after deployment. Devices showing the firewall disabled on any profile are devices where the template failed to apply (uncommon) or where a local admin has disabled it (more common — investigate).</p>
+
+  <p><strong>Dropped packet logs.</strong> The verbose logging means the firewall log is full of dropped-packet entries. Most are noise (Internet background scanning hitting the device). Real signals to watch for: bursts of dropped packets from a specific internal IP (could indicate compromised internal device probing), repeated drops from the same external source (could indicate a targeted scan), drops of legitimate-looking protocols (could indicate misconfigured app).</p>
+
+  <p><strong>User-reported workflow breakage.</strong> Track every "X stopped working after the firewall deployment" complaint. Some are real breakage requiring per-app exceptions; some are coincidence; some are user-error. Document each one.</p>
+
+  <p><strong>Drift on the template.</strong> Like other templates, the Firewall Settings template can drift if a customer's other admin modifies it. Drift can be dangerous here — broadening the inbound action default or disabling stealth mode would reduce security materially.</p>
+
+  <h2>The Block mshta.exe template is firewall-adjacent</h2>
+
+  <p>The Panoptica365 library includes a separate template — Block mshta.exe outbound connections — that lives in the same <code>endpointSecurityFirewall</code> template family as the main Firewall Settings template. It's covered in lesson 7 (alongside ASR Rules) because conceptually it's an attack-surface-reduction rule rather than a general firewall configuration. Worth knowing: when an operator opens the Intune portal looking for firewall-related configurations, they'll see both the main Firewall Settings template and the Block mshta.exe template in the same list. They serve different purposes.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Two real things, and what isn't there.</p>
+
+  <p><strong>What Panoptica365 surfaces:</strong></p>
+
+  <ul>
+    <li><strong>Drift on the Firewall Settings template.</strong> Same model as the rest: if a customer's deployed template diverges from the Panoptica365 reference — somebody opens the Intune console and disables stealth mode, opens an inbound block, drops the logging — drift detector fires and the operator can revert, reapply, or accept.</li>
+    <li><strong>Defender XDR detections</strong> (when Defender XDR ingestion is configured per card 1 lesson 4) — incidents that incorporate firewall-blocked connections in their context flow into the alert engine. This is not "firewall events"; it's higher-level Microsoft incidents that may reference firewall activity.</li>
+  </ul>
+
+  <p><strong>What Panoptica365 does <em>not</em> surface:</strong> per-device firewall enabled state, per-profile (Domain/Private/Public) status per device, raw firewall log events. None of that lives in the dashboard. The Intune compliance signal includes <code>activeFirewallRequired: true</code>, so a device with the firewall off rolls up into the overall compliant/non-compliant count — but you can't look at "which devices specifically have which profile off" from Panoptica365. That's an Intune-portal-and-Defender-console drill-down.</p>
+
+  <p>The firewall log file itself is a local Windows artefact that incident responders pull when investigating a specific device. Not ingested by Panoptica365 — for fleet-wide network defence telemetry, the visible surface is the Defender XDR alert pipeline.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Highest break risk in card 4</div>
+    <p><strong>Firewall deployment is the most likely template in card 4 to break something.</strong> Anything that listens on the network or that lives in non-standard network behaviour can be affected. Plan for a 14–30 day rollout window with thorough workflow testing.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">The three-profile model is real</div>
+    <p><strong>The three-profile model is real and worth understanding.</strong> When a user complains "the firewall is blocking [thing]," the first question is <em>which profile is active when this happens?</em> The same device behaves differently on the office Wi-Fi vs. the coffee shop Wi-Fi because the active profile changes.</p>
+  </div>
+
+  <p><strong>Stealth mode and inbound block defaults are the strict choices.</strong> Document them with the customer. The strictness is the point — the alternative is the laissez-faire default that gave attackers easy network discovery for two decades.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Lesson 7: ASR Rules + Block mshta.exe</b> — Attack surface reduction — the pre-emptive behaviour-block features that catch threats before they're delivered to disk.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Lesson 8: Account Protection + Block MSA</b> — Windows Hello for Business, Credential Guard, blocking personal MSA additions.</div></div>
+  </div>
+
+  <p>For now: the Firewall template is the network-layer companion to the Defender file-layer template. Together they constitute the active defence layer on Windows endpoints. Deploy with thorough workflow testing; tolerate the 14–30 day rollout; resist the temptation to weaken the strict defaults.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Windows Defender Firewall configuration via Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-policy" target="_blank" rel="noopener">Microsoft Learn — Configure Windows Defender Firewall via Intune</a>); Windows Defender Firewall profile model (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/windows-firewall-with-advanced-security" target="_blank" rel="noopener">Microsoft Learn — Windows Defender Firewall with Advanced Security</a>); Firewall logging reference (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/configure-firewall-logging" target="_blank" rel="noopener">Microsoft Learn — Firewall logging</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

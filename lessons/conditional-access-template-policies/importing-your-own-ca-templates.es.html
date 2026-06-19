@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importar tus propias plantillas de AC — Políticas de plantilla de Acceso Condicional</title>
+<meta name="lesson:title" content="Importar tus propias plantillas de AC — el superpoder de Panoptica365">
+<meta name="lesson:subtitle" content="Exporta cualquier política de AC de un tenant de Entra, añádela a Panoptica365 y despliégala en tu flota.">
+<meta name="lesson:icon" content="upload">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Políticas de plantilla de Acceso Condicional</span> <span class="sep">·</span> <span>Importar tus propias plantillas de AC</span></div>
+  <h1>Importar tus propias plantillas de AC — el superpoder de Panoptica365</h1>
+  <p class="dek">Exporta cualquier política de AC de un tenant de Entra, añádela a Panoptica365 y despliégala en tu flota.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una política de AC se exporta de un tenant, se generaliza en una plantilla y se despliega en muchos tenants de clientes.">
+      <defs>
+        <radialGradient id="ictBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="ictTpl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+        <marker id="ictArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="ictArrC" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ictBg)"/>
+
+      <!-- 1: source tenant with a policy -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="158" height="104" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <rect x="20" y="22" width="118" height="14" rx="4" fill="#16345A"/>
+        <rect x="20" y="46" width="92" height="11" rx="4" fill="#13294A"/>
+        <rect x="20" y="66" width="104" height="11" rx="4" fill="#13294A"/>
+        <text x="79" y="-14" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Un tenant</text>
+        <text x="79" y="128" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5">una política de AC</text>
+      </g>
+      <text x="290" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">EXPORTAR</text>
+      <path d="M236 170 H346" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 2: generalised template -->
+      <g transform="translate(360,108)">
+        <rect x="0" y="0" width="178" height="124" rx="12" fill="#0E2640" stroke="url(#ictTpl)" stroke-width="1.8"/>
+        <text x="89" y="-14" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Plantilla generalizada</text>
+        <rect x="22" y="24" width="134" height="14" rx="4" fill="#16345A"/>
+        <g font-family="Geist Mono,monospace" font-size="11">
+          <rect x="22" y="50" width="134" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="65" fill="#A8E1F8">{TRUSTED_LOCATION}</text>
+          <rect x="22" y="80" width="100" height="22" rx="5" fill="#04101E" stroke="#2A7FA3" stroke-width="1"/>
+          <text x="32" y="95" fill="#A8E1F8">{GROUP}</text>
+        </g>
+        <text x="89" y="148" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">GUIDs → marcadores</text>
+      </g>
+      <text x="588" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">DESPLEGAR</text>
+      <path d="M546 170 H636" stroke="#335F92" stroke-width="2.5" marker-end="url(#ictArr)"/>
+
+      <!-- 3: the fleet -->
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="888" y="44" text-anchor="middle" fill="#C4D4E8" font-size="14" font-weight="600">Cada tenant de cliente</text>
+        <g transform="translate(656,66)">
+          <rect x="0" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="0" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="16" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="34" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="0" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="18" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="18" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="164" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="182" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="182" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+          <rect x="328" y="76" width="138" height="58" rx="10" fill="#0E2236" stroke="#2A6F9E" stroke-width="1.2"/>
+          <rect x="346" y="92" width="86" height="11" rx="4" fill="#16345A"/><rect x="346" y="110" width="62" height="9" rx="4" fill="#13294A"/>
+        </g>
+        <!-- fan-out from template to fleet -->
+        <g stroke="#2A7FA3" stroke-width="1.6" fill="none" opacity="0.75">
+          <path d="M636 170 C700 150 700 110 725 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 158 800 110 888 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 158 980 110 1052 99" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C700 190 700 200 725 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C760 182 800 200 888 209" marker-end="url(#ictArrC)"/>
+          <path d="M636 170 C900 182 980 200 1052 209" marker-end="url(#ictArrC)"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Toda la característica en una línea: una política de un tenant se convierte en una plantilla que se despliega en la flota.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La mayoría de las herramientas de plantillas de AC tratan las plantillas como un regalo del proveedor. El proveedor entrega una biblioteca; tú despliegas lo que está en la biblioteca; si quieres algo distinto, esperas a que el proveedor lo añada. El cliente en México no puede usar una plantilla bloqueada a Canadá. El ingeniero senior que construyó una política de AC brillante en el tenant de un cliente no puede compartirla fácilmente con el resto del MSP. La biblioteca de plantillas es un catálogo cerrado.</p>
+
+  <p>Panoptica365 está construido de forma distinta. Cualquier política de Acceso Condicional que exista en cualquier tenant de Entra — el tenant de tu propio MSP, el tenant de un cliente específico, el tenant de un socio — puede exportarse e importarse a Panoptica365 como una plantilla personalizada. Desde ahí, se despliega a cada tenant de cliente en tu flota de la misma forma que las plantillas entregadas.</p>
+
+  <p>Esta es la característica de la plataforma que convierte la biblioteca de plantillas de AC de «lo que Panoptica365 pensó» en «lo que tu MSP y tus ingenieros senior saben sobre tus clientes». Es también el mecanismo que hace posible la personalización geográfica de la lección 4 — el MSP mexicano no espera a que Panoptica365 entregue una plantilla México; la construyen y la importan.</p>
+
+  <p>Esta lección es el flujo de trabajo para eso — cuándo usarlo, cómo funciona, qué vigilar.</p>
+  </div>
+
+  <h2>Cuándo importar una plantilla personalizada</h2>
+
+  <p>Cinco escenarios donde importar tiene sentido:</p>
+
+  <p><strong>1. Personalización geográfica.</strong> La plantilla «Permitir acceso solo desde Canadá» de la lección 4 necesita convertirse en «Permitir acceso solo desde México» para un MSP basado en México, «Permitir acceso solo desde Francia / UE» para un MSP francés, etc. El patrón de condición OR sigue siendo el mismo; la ubicación nombrada cambia. La importación es el mecanismo de personalización.</p>
+
+  <p><strong>2. Una política personalizada que construiste en algún lugar y quieres reutilizar en todas partes.</strong> Un ingeniero senior del MSP construyó una política de AC ingeniosa para un cliente — digamos, una política que exige MFA resistente al phishing específicamente para usuarios del departamento de Finanzas, con exclusiones cuidadosamente afinadas para el dispositivo móvil del empleado de cuentas por pagar. En lugar de reconstruir esa política a mano para cada tenant de cliente, exporta desde el original, importa como plantilla, despliega a través de la flota.</p>
+
+  <p><strong>3. Un requisito regulatorio que necesita una política no-predeterminada.</strong> Un cliente en una industria regulada (salud, finanzas, contratación gubernamental) puede necesitar políticas de AC que la biblioteca estándar no incluye — una política específica de frecuencia de sesión para acceder a PII, por ejemplo, o una política que aplique una fortaleza de autenticación particular a aplicaciones específicas. Constrúyela una vez para el cliente regulado, impórtala como plantilla, despliégala a través de otros clientes similares.</p>
+
+  <p><strong>4. Una respuesta a un compromiso específico o un casi-incidente.</strong> Después de que un cliente tuviera un incidente AiTM, apretaste su política de AC para exigir dispositivo conforme + MFA resistente al phishing para aplicaciones sensibles. Te gustaría esa misma postura endurecida para otros clientes en la misma industria. La importación es el mecanismo para ese flujo de trabajo de «extender buena política».</p>
+
+  <p><strong>5. Una nueva amenaza que requiere una nueva política.</strong> Microsoft anuncia una nueva técnica de ataque, tu equipo de seguridad diseña una política de AC que la aborda, la construyes una vez y necesitas desplegarla a través de treinta tenants. La importación es más rápida que recrearla treinta veces.</p>
+
+  <p>El patrón en los cinco: una política existe en algún lugar, quieres que exista en otro lugar, la plataforma hace la transferencia trivial.</p>
+
+  <h2>Cómo funciona la importación</h2>
+
+  <p>El flujo de trabajo de alto nivel:</p>
+
+  <ol>
+    <li><strong>Exportar desde un tenant origen.</strong> En el módulo de AC de Panoptica365, selecciona el tenant origen y elige exportar las políticas de Acceso Condicional. Panoptica365 lee las políticas de Entra ID vía la API Graph y produce una representación JSON estructurada.</li>
+
+    <li><strong>Elegir qué políticas importar.</strong> La exportación normalmente contiene todas las políticas de AC del tenant origen. Tú seleccionas las políticas específicas que quieres traer como plantillas — normalmente una o dos, no todas.</li>
+
+    <li><strong>Generalizar los GUIDs específicos del tenant.</strong> Este es el paso técnicamente interesante. Las políticas de Acceso Condicional referencian usuarios, grupos, y ubicaciones nombradas por GUID — y esos GUIDs son únicos para el tenant origen. Una política «Bloquear desde fuera de Canadá» en el tenant A referencia el GUID de ubicación nombrada <code>abc-123</code> para «Canadá»; el tenant B tiene un GUID distinto para la misma ubicación nombrada. Si importaras la política cruda, referenciaría un GUID inexistente en el tenant B y la importación fallaría o produciría una política rota.
+
+   <br><br>Panoptica365 maneja esto sustituyendo tokens de marcador de posición en el momento de la importación. Los GUIDs específicos del tenant en la exportación origen se reemplazan con marcadores como <code>{NAMED_LOCATION_CANADA}</code>. Cuando la plantilla luego se despliega al tenant B, Panoptica365 resuelve el marcador contra los GUIDs reales de ubicación nombrada del tenant B. Si el tenant B tiene una ubicación nombrada que coincide con el marcador, el despliegue procede; si no, se le pide al operador que cree una o que la reasigne a una ubicación existente.</li>
+
+    <li><strong>Nombrar y describir la plantilla.</strong> Dale un nombre y descripción de una línea estilo Panoptica365. La convención de nombres usada por las plantillas entregadas es <code>Panoptica365 - &lt;nombre descriptivo&gt;</code> — las plantillas personalizadas deberían seguir un patrón similar (<code>AcmeMSP - &lt;nombre descriptivo&gt;</code> o <code>&lt;nombre del MSP&gt; - &lt;nombre descriptivo&gt;</code>) para que sean distinguibles de las entregadas en la lista de políticas en los tenants de clientes.</li>
+
+    <li><strong>Guardar como plantilla en la biblioteca de Panoptica365.</strong> Desde este punto, la plantilla se comporta como cualquiera de las plantillas entregadas — está disponible para desplegar a cualquier tenant de cliente, soporta el despliegue Solo-informe-luego-Habilitado, y aparece en el detector de deriva.</li>
+  </ol>
+
+  <h2>La generalización de ubicaciones nombradas, específicamente</h2>
+
+  <p>El ejemplo del MSP mexicano de la lección 4 es el caso canónico. Recorre lo que pasa mecánicamente:</p>
+
+  <p>El MSP exporta la plantilla «Permitir acceso solo desde Canadá» desde uno de sus tenants de clientes canadienses (o desde la vista de plantillas entregadas de Panoptica365, dependiendo del camino de exportación). La política referencia el GUID de ubicación nombrada <code>xyz-canada-789</code> y el código de país <code>CA</code>.</p>
+
+  <p>En el flujo de importación de Panoptica365, la referencia a ubicación nombrada se convierte en un marcador de posición. La plantilla ahora contiene algo como:</p>
+
+  <pre><code>condition.locations.include = ["{TRUSTED_LOCATION}"]</code></pre>
+
+  <p>El MSP nombra esta plantilla personalizada «AcmeMSP - Permitir acceso solo desde México» y la guarda.</p>
+
+  <p>Para cada tenant de cliente mexicano, el MSP primero crea una ubicación nombrada llamada «México» con el código de país México. Luego despliega la plantilla AcmeMSP. En el momento del despliegue, Panoptica365 resuelve <code>{TRUSTED_LOCATION}</code> contra las ubicaciones nombradas del cliente y usa el GUID para la entrada «México». La política se crea en el tenant del cliente con la referencia de ubicación correcta.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="Al desplegar, el marcador TRUSTED_LOCATION se resuelve contra las ubicaciones nombradas del tenant de destino; si ninguna coincide, se le pide al operador que cree una.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="rArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- template placeholder -->
+        <rect x="22" y="92" width="202" height="48" rx="10" fill="#0E2640" stroke="#5CCBF4"/>
+        <text x="123" y="113" fill="#7DD9F9" font-size="11.5" font-weight="700" font-family="Geist Mono,monospace">{TRUSTED_LOCATION}</text>
+        <text x="123" y="131" fill="#6B85A6" font-size="11">marcador de la plantilla</text>
+        <text x="123" y="74" fill="#6B85A6" font-size="11" letter-spacing="1">AL DESPLEGAR</text>
+
+        <!-- resolve box -->
+        <rect x="262" y="84" width="176" height="64" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="350" y="110" fill="#C4D4E8" font-size="12.5" font-weight="600">Resolver contra las</text>
+        <text x="350" y="129" fill="#C4D4E8" font-size="12.5" font-weight="600">ubicaciones nombradas</text>
+
+        <!-- match branch -->
+        <rect x="498" y="38" width="200" height="58" rx="10" fill="#0C2A1E" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="598" y="61" fill="#2EE8A0" font-size="13" font-weight="700">Coincidencia</text>
+        <text x="598" y="79" fill="#8FE6C4" font-size="11">usar ese GUID, desplegar</text>
+
+        <!-- no-match branch -->
+        <rect x="498" y="136" width="200" height="64" rx="10" fill="#2B210C" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="598" y="159" fill="#FFC04D" font-size="13" font-weight="700">Sin coincidencia</text>
+        <text x="598" y="177" fill="#E6CD96" font-size="11">pedir al operador: crear</text>
+        <text x="598" y="192" fill="#E6CD96" font-size="11">o reasignar ubicación</text>
+      </g>
+      <path d="M224 116 H258" stroke="#335F92" stroke-width="2" marker-end="url(#rArr)"/>
+      <path d="M438 106 C470 92 470 74 496 66" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+      <path d="M438 126 C470 142 470 158 496 164" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#rArr)"/>
+    </svg>
+    <figcaption>El marcador se resuelve a un GUID real cuando la ubicación nombrada existe — y nunca falla en silencio cuando no.</figcaption>
+  </figure>
+
+  <p>Si un tenant de cliente todavía no tiene una ubicación nombrada «México», el despliegue le pide al operador que cree una (o que mapee el marcador de posición a una ubicación nombrada existente distinta). El sistema no falla en silencio ni crea una política rota.</p>
+
+  <p>Esta es la característica de la plataforma que hace que la lección 4 funcione a través de geografías. El mismo mecanismo se aplica a cualquier otra referencia específica del tenant en una plantilla importada — grupos de usuarios, ubicaciones de acceso condicional, nombres de fortaleza de autenticación, etc.</p>
+
+  <h2>Qué se exporta y qué no</h2>
+
+  <p>Vale la pena ser explícito: no todos los aspectos de una política de AC son portables.</p>
+
+  <p><strong>Cosas que se exportan limpiamente:</strong></p>
+  <ul>
+    <li>Nombre y estado de la política (Habilitada, Solo informe, Deshabilitada).</li>
+    <li>Inclusiones/exclusiones de usuarios y grupos (por referencia; el mecanismo de marcador maneja la traducción de GUID).</li>
+    <li>Objetivos de aplicación (por ID de app; los IDs de apps de primera parte de Microsoft son universales entre tenants).</li>
+    <li>Condiciones: ubicaciones (vía marcadores), aplicaciones cliente, plataformas, niveles de riesgo de inicio de sesión, niveles de riesgo de usuario.</li>
+    <li>Controles de concesión y controles de sesión.</li>
+    <li>Referencias de fortaleza de autenticación (por nombre, lo cual es consistente entre tenants).</li>
+  </ul>
+
+  <p><strong>Cosas que no se exportan de forma portable:</strong></p>
+  <ul>
+    <li><em>Exclusiones específicas de usuario</em> por ID de usuario individual (el usuario no existe en el tenant de destino). La exportación captura el <em>grupo</em> que contiene al usuario, pero las exclusiones individuales usuario-por-GUID típicamente se eliminan o se marcan como no transferibles.</li>
+    <li><em>Atributos de seguridad personalizados</em> que existen solo en el tenant origen.</li>
+    <li><em>Historial de resultados de solo-informe</em> — eso es un artefacto de correr la política en el tenant origen, no parte de la plantilla.</li>
+  </ul>
+
+  <p>El flujo de importación de Panoptica365 saca a la superficie cualquier elemento no portable durante el paso de importación. El operador decide si eliminarlo, generalizarlo, o aceptar la limitación.</p>
+
+  <h2>Cuándo <em>no</em> importar</h2>
+
+  <p>Algunas advertencias honestas — importar no siempre es el movimiento correcto:</p>
+
+  <p><strong>La política está rota o mal afinada en el origen.</strong> Si la política original ha acumulado basura (exclusiones olvidadas, objetivos obsoletos, métodos de autenticación deprecados), importarla extiende la basura a cada tenant de cliente. El movimiento correcto es limpiar la política origen primero, <em>luego</em> exportar e importar.</p>
+
+  <p><strong>La política es demasiado específica del cliente.</strong> Algunas políticas de AC son profundamente específicas del entorno de un cliente — sus grupos de usuarios específicos, sus aplicaciones específicas, su estado de cumplimiento específico. Intentar generalizar una política así en plantilla puede producir algo que no funcione del todo para el cliente nuevo y requiera ajustes por despliegue. Si la personalización por despliegue es sustancial, la plantilla añade menos valor que simplemente desplegar ad-hoc.</p>
+
+  <p><strong>La política depende de características solo-E5 y el tenant de destino es Business Premium.</strong> El AC basado en riesgo, las fortalezas de autenticación con requisitos resistentes al phishing, y las políticas conscientes de PIM a menudo asumen un tenant E5. Importarlas en un tenant de cliente Business Premium produce una política que no se aplica como se pretende (porque la señal subyacente no está disponible).</p>
+
+  <p><strong>La política está en la lista de exclusión del tenant origen por una razón obvia.</strong> Si la política en el origen está actualmente deshabilitada o tiene una exclusión amplia porque algo no funcionó, esa es información sobre si la política está lo bastante madura como para extenderse. Importar una política que el cliente origen apagó porque estaba rompiendo cosas es solo extender la rotura.</p>
+
+  <div class="callout caution">
+    <div class="clabel">El principio honesto</div>
+    <p>Importa políticas que han sido validadas, son limpias, son portables, y que el operador entiende bien. Las plantillas importadas heredan la reputación de tu MSP. Las plantillas malas cuestan más de lo que ahorran las políticas buenas.</p>
+  </div>
+
+  <h2>Mantener plantillas personalizadas</h2>
+
+  <p>Una plantilla personalizada necesita mantenimiento continuo — Microsoft cambia cosas, el entorno del cliente cambia, la política puede necesitar evolucionar. El MSP que importó la plantilla ahora es dueño de su ciclo de vida:</p>
+
+  <ul>
+    <li><strong>Cambios de esquema en Microsoft Graph.</strong> Microsoft ocasionalmente renombra propiedades de AC o cambia el esquema JSON. Las plantillas importadas pueden necesitar actualización para seguir los cambios de esquema. El detector de deriva de AC de Panoptica365 cubre las plantillas entregadas; las plantillas personalizadas necesitan que el MSP verifique periódicamente.</li>
+
+    <li><strong>Divergencia específica del cliente.</strong> Cuando el entorno de un cliente cambia (añade Intune, fusiona una filial, se expande a una región nueva), la plantilla que funcionaba perfectamente hace seis meses puede necesitar ajuste. El patrón es el mismo que para las plantillas entregadas — la detección de deriva saca las diferencias, el operador las aborda.</li>
+
+    <li><strong>Divergencia plantilla-vs-política-desplegada.</strong> Con el tiempo, los despliegues individuales de clientes pueden derivar de la plantilla (un admin hace un ajuste por-tenant). El detector de deriva de Panoptica365 lo señala; el MSP decide si (a) actualizar la plantilla para que coincida con la divergencia, o (b) revertir la política del cliente para que coincida con la plantilla, o (c) aceptar la divergencia como personalización específica del cliente.</li>
+  </ul>
+
+  <p>El costo de mantenimiento es real. Importar 15 plantillas personalizadas significa comprometerse a mantener 15 plantillas. La mayoría de los MSPs se benefician de un número pequeño de plantillas personalizadas cuidadosamente curadas en lugar de una colección grande no mantenida.</p>
+
+  <h2>La propuesta de valor del MSP</h2>
+
+  <p>La línea individual que captura por qué importa: <em>la mejor política de AC de cada cliente puede convertirse en la política de AC de línea base de cada cliente</em>. La política brillante del ingeniero senior no se queda encerrada en el tenant de un cliente; el endurecimiento regulatorio no se reconstruye treinta veces; la respuesta post-incidente no tiene que inventarse dos veces.</p>
+
+  <blockquote>La mecánica de la plataforma — exportar, generalizar, importar, desplegar — es la diferencia entre «el catálogo de Panoptica365» y «el catálogo de tu MSP, construido sobre los cimientos de Panoptica365». Para un MSP que se toma en serio el AC, esta es una de las características de producto con mayor palanca. Es por lo que las siete plantillas entregadas en la tarjeta 3 no son el techo — son el suelo, y el MSP construye encima.</blockquote>
+
+  <h2>Despliegue para una plantilla personalizada</h2>
+
+  <p>Igual que para cualquier plantilla entregada, con dos diferencias. Primero, un paso explícito de inspección pre-importación. Segundo, <strong>el paso manual de solo informe en el portal de Entra está fuertemente recomendado para el primer despliegue de cualquier plantilla personalizada, sin importar el tamaño del tenant</strong> — las plantillas importadas no están pre-validadas, y el operador no ha visto esta política específica aplicada antes.</p>
+
+  <ol start="0">
+    <li><strong>Inspección pre-importación.</strong> Antes de importar, audita la política origen. ¿Está limpia? ¿Está bien afinada? ¿Es la versión de esta política que el cliente está usando ahora mismo (y con la que está contento), o es un borrador más antiguo? ¿Son todas las referencias portables, o hay exclusiones usuario-por-GUID codificadas que no se transferirán? Arregla cualquier problema en el origen antes de importar.</li>
+    <li><strong>Importar.</strong> Saca la política del tenant origen. Resuelve los marcadores. Guarda como plantilla.</li>
+    <li><strong>Pre-despliegue en cada tenant de destino.</strong> Igual que para las plantillas entregadas (lección 1). Confirma que las ubicaciones nombradas existen, break-glass excluida, etc.</li>
+    <li><strong>Día 0</strong> — despliega vía Panoptica365 (crea la política en estado Habilitado). Abre inmediatamente el portal de Entra y cambia la política a solo informe.</li>
+    <li><strong>Días 1–N</strong> — revisión de solo informe. N es más largo para políticas más complejas; presupuesta 7-14 días para una plantilla personalizada sustancial.</li>
+    <li><strong>Día N+1</strong> — cambia la política de vuelta a Habilitada en el portal de Entra.</li>
+  </ol>
+
+  <p>La ventana de solo informe más larga para plantillas personalizadas refleja la incertidumbre adicional. Una plantilla entregada ha sido validada contra muchos tenants; una plantilla importada ha sido validada contra solo el tenant origen. La ventana de verificación pilla las diferencias entre los entornos origen y destino.</p>
+
+  <p>Una vez que una plantilla personalizada ha sido desplegada a varios tenants de clientes y verificado que funciona limpiamente, los despliegues posteriores pueden seguir el flujo de plantilla entregada (desplegar directamente, saltarse el cambio manual a solo informe) — la validación se ha acumulado.</p>
+
+  <h2>Qué monitorizar después de la aplicación</h2>
+
+  <p>Misma monitorización que para las plantillas entregadas, más una específica:</p>
+
+  <p><strong>Deriva de plantilla a través de la flota del MSP.</strong> Cuando múltiples clientes tienen la misma plantilla personalizada desplegada, la divergencia individual crea una pregunta de deriva a nivel de flota — ¿debería actualizarse la plantilla para coincidir con la forma de despliegue más común, o deberían los clientes atípicos realinearse con la plantilla? Panoptica365 saca a la superficie ambos tipos de deriva.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Estado estable saludable</div>
+    <p>El estado estable saludable es <em>divergencia cercana a cero</em> entre la plantilla y las políticas desplegadas. Una divergencia sustancial indica o bien (a) la plantilla necesita actualizarse, o (b) los despliegues se están modificando por cliente de formas que la plantilla no captura.</p>
+  </div>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>Las plantillas entregadas son el suelo, no el techo.</strong> Trata las siete plantillas de Panoptica365 como el punto de partida para cualquier cliente. Construye las propias plantillas del MSP encima de ese suelo para cualquier necesidad regional, regulatoria o específica del cliente.</p>
+
+  <p><strong>Valida antes de extender.</strong> Una plantilla importada mala multiplicada a través de treinta tenants de cliente es treinta políticas rotas. El paso de inspección pre-importación es el paso más importante del flujo de trabajo.</p>
+
+  <p><strong>Las plantillas personalizadas son una inversión, no una victoria gratis.</strong> Cada una que importas requiere mantenimiento continuo. Mejor tener cinco plantillas personalizadas bien mantenidas que cincuenta obsoletas.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>Lección 9: Operar AC a escala.</b> El cierre meta. Cómo evoluciona un conjunto de políticas de AC a lo largo de los años, cómo funciona la detección de deriva, cómo retirar exclusiones limpiamente, cómo el registro de auditoría de Panoptica365 hace tratable la operación a largo plazo.</div></div>
+  </div>
+
+  <p>Por ahora: el flujo de trabajo de importar plantillas es lo que convierte el módulo de AC de Panoptica365 de una biblioteca de proveedor en una biblioteca de tu MSP. Es la diferencia entre desplegar lo que entregamos y desplegar lo que tus ingenieros senior saben sobre tus clientes. Úsalo.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — referencia de la API de Microsoft Graph para exportación/importación de políticas de Acceso Condicional (<a href="https://learn.microsoft.com/en-us/graph/api/resources/conditionalaccesspolicy" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policy resource type</a>); ubicaciones nombradas de Acceso Condicional como objetos referenciados (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Locations</a>); IDs de objetos de Microsoft Graph entre tenants (<a href="https://learn.microsoft.com/en-us/graph/best-practices-concept" target="_blank" rel="noopener">Microsoft Learn — Object IDs and properties</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

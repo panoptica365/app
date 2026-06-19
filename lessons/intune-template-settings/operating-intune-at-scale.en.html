@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operating Intune at scale — drift, exclusions, lifecycle, the assignment-loss problem</title>
+<meta name="lesson:title" content="Operating Intune at scale — drift, exclusions, lifecycle, the assignment-loss problem">
+<meta name="lesson:subtitle" content="The most expensive operational pattern in Intune: how delete-and-recreate silently drops per-tenant exclusions, and how to prevent it.">
+<meta name="lesson:icon" content="settings-2">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Operating at scale</span></div>
+  <h1>Operating Intune at scale — drift, exclusions, lifecycle, the assignment-loss problem</h1>
+  <p class="dek">The most expensive operational pattern in Intune: how delete-and-recreate silently drops per-tenant exclusions, and how to prevent it.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="An Intents-style template update deletes the old policy and creates a new one; the per-tenant exclusion groups attached to the old policy do not transfer.">
+      <defs>
+        <radialGradient id="osBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="osArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#osBg)"/>
+
+      <!-- left: old policy with exclusions -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="70" y="96" width="240" height="148" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.5"/>
+        <text x="190" y="128" fill="#C4D4E8" font-size="16" font-weight="600">Old policy</text>
+        <rect x="98" y="148" width="184" height="34" rx="8" fill="#102A4C" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="190" y="170" fill="#FFC04D" font-size="13">Kiosk devices excluded</text>
+        <rect x="98" y="192" width="184" height="34" rx="8" fill="#102A4C" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="190" y="214" fill="#FFC04D" font-size="13">Service accounts excluded</text>
+      </g>
+
+      <!-- middle: delete-and-recreate -->
+      <path d="M330 170 H470" stroke="#335F92" stroke-width="2.5" marker-end="url(#osArr)"/>
+      <text x="400" y="150" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">delete</text>
+      <text x="400" y="200" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700">recreate</text>
+
+      <!-- right: new policy, exclusions gone -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="490" y="96" width="240" height="148" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="610" y="128" fill="#A8E1F8" font-size="16" font-weight="600">New policy</text>
+        <rect x="518" y="148" width="184" height="34" rx="8" fill="#0C2038" stroke="#33527A" stroke-dasharray="4 5"/>
+        <text x="610" y="170" fill="#52708F" font-size="13">exclusion dropped</text>
+        <rect x="518" y="192" width="184" height="34" rx="8" fill="#0C2038" stroke="#33527A" stroke-dasharray="4 5"/>
+        <text x="610" y="214" fill="#52708F" font-size="13">exclusion dropped</text>
+      </g>
+
+      <!-- the exclusions falling away -->
+      <g opacity="0.9">
+        <path d="M610 244 V300" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#osArr)"/>
+      </g>
+      <text x="610" y="322" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">silently lost</text>
+
+      <!-- consequence: lockouts -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="820" y="120" width="244" height="100" rx="14" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="942" y="160" fill="#FF8A98" font-size="16" font-weight="700">Unexplained</text>
+        <text x="942" y="186" fill="#FF8A98" font-size="16" font-weight="700">user lockouts</text>
+        <path d="M730 170 H812" stroke="#335F92" stroke-width="2.5" marker-end="url(#osArr)"/>
+      </g>
+      <text x="942" y="250" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="1">nobody noticed for six weeks</text>
+    </svg>
+    <figcaption>The Intents-style update deletes the old policy and builds a new one — the carefully configured per-tenant exclusions don't come along.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A growing MSP discovered in late 2025 that 12 of their customers had silently lost their per-tenant exclusion groups on the Account Protection Intune template. The exclusions had been carefully configured — kiosk devices excluded so they wouldn't get Windows Hello prompts they couldn't satisfy, specific service accounts excluded from policies that would have broken their workflows. Then someone updated the Account Protection template in Panoptica365 — modernised a few settings, added a new requirement — and pushed the update. The update redeployed the template across all customers. The Intents-style template's underlying behaviour is delete-and-recreate. The old per-tenant exclusion configurations were silently dropped.</p>
+
+  <p>Nobody noticed for six weeks. By then, several customers had reported unexplained user lockouts on devices that shouldn't have been in scope.</p>
+
+  <p>This is the most expensive operational pattern in Intune. The fix isn't difficult; the awareness is. This lesson is the closer for card 4 — how to operate Intune at scale, what drift means here, how exclusions decay, and the assignment-loss problem that's been called out in every lesson but deserves explicit treatment.</p>
+  </div>
+
+  <h2>The assignment-loss problem, in full</h2>
+
+  <p>Card 4 lesson 1 introduced this; it bears full treatment.</p>
+
+  <p>Intune templates come in three template-type families: Settings Catalog (<code>configurationPolicies</code>), Endpoint Security Intents (<code>intents</code>), and older Device Configurations (<code>deviceConfigurations</code>). When Panoptica365 deploys a template update across customer tenants, the underlying behaviour differs by type:</p>
+
+  <ul>
+    <li><strong>Settings Catalog policies</strong> — in-place update via Graph API PATCH. The policy ID stays the same; assignments are preserved. Safe.</li>
+    <li><strong>Device Configurations</strong> — usually in-place update. Mostly safe.</li>
+    <li><strong>Intents / Endpoint Security templates</strong> — <em>delete-and-recreate</em>. The old policy is removed and a new one created. Any per-tenant assignment exclusions configured against the old policy ID are not transferred — they're silently lost.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 232" role="img" aria-label="Three Intune template-type families and their update behaviour: Settings Catalog and Device Configurations update in place and preserve assignments; Intents-style templates delete and recreate, losing assignments.">
+      <rect width="720" height="232" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Settings Catalog -->
+        <g transform="translate(0,24)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Settings Catalog</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">configurationPolicies</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#0E2640" stroke="#2EE8A0"/>
+          <text x="400" y="24" fill="#2EE8A0" font-size="13.5" font-weight="600">In-place PATCH</text>
+          <text x="400" y="42" fill="#7FD9B8" font-size="11.5">assignments preserved · safe</text>
+        </g>
+        <!-- Device Configurations -->
+        <g transform="translate(0,90)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="56" y="24" fill="#C4D4E8" font-size="14" font-weight="600">Device Configurations</text>
+          <text x="56" y="42" fill="#6B85A6" font-size="11.5">deviceConfigurations</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#0E2640" stroke="#2EE8A0"/>
+          <text x="400" y="24" fill="#2EE8A0" font-size="13.5" font-weight="600">Usually in-place</text>
+          <text x="400" y="42" fill="#7FD9B8" font-size="11.5">mostly safe</text>
+        </g>
+        <!-- Intents -->
+        <g transform="translate(0,156)">
+          <rect x="36" y="0" width="300" height="52" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="56" y="24" fill="#FF8A98" font-size="14" font-weight="700">Intents / Endpoint Security</text>
+          <text x="56" y="42" fill="#E2A0AA" font-size="11.5">intents</text>
+          <rect x="380" y="0" width="304" height="52" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="400" y="24" fill="#FF8A98" font-size="13.5" font-weight="700">Delete-and-recreate</text>
+          <text x="400" y="42" fill="#E2A0AA" font-size="11.5">exclusions silently lost</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Three template-type families, three update behaviours. Only the Intents family loses per-tenant exclusions on update.</figcaption>
+  </figure>
+
+  <p>Of the 14 templates in the Panoptica365 library, this delete-and-recreate behaviour affects <strong>Account Protection Settings</strong> specifically (the only Intents-style template in the library). It also affects any imported Intents-style templates the MSP adds (lesson 10).</p>
+
+  <p>Microsoft has been working on switching Endpoint Security templates to a true PATCH model rather than delete-recreate, but as of mid-2026 the behaviour persists. Until Microsoft fixes the underlying API, the operator's responsibility is to work around it manually.</p>
+
+  <p>The operational discipline:</p>
+
+  <p><strong>Before updating any Intents-style template across the fleet:</strong></p>
+  <ol>
+    <li>Capture the current per-tenant assignments for the template by opening each affected customer's Intune portal and recording the assignment + exclusion groups manually. There is no fleet-wide deployment view in Panoptica365 today, so this is per-customer click-through work.</li>
+    <li>Note any non-default exclusions specifically. The standard "All Devices" assignment will redeploy correctly; bespoke per-customer exclusions are what get lost.</li>
+  </ol>
+
+  <p><strong>After the update:</strong></p>
+  <ol start="3">
+    <li>Verify assignments on each affected customer tenant.</li>
+    <li>For any customer where exclusions are missing, restore them manually.</li>
+  </ol>
+
+  <p>This is annoying, and there's no automated shortcut today — bulk-updating Intents-style templates across a fleet without the manual capture-and-replay step is a foot-cannon. Until Microsoft replaces the delete-recreate behaviour, the manual workflow is the only safe path.</p>
+
+  <div class="callout caution">
+    <div class="clabel">The takeaway</div>
+    <p>For the typical operator, the practical takeaway: <strong>before pushing any update to the Account Protection template</strong> (or any imported Intents-style template), inventory the affected customers' exclusions. Don't bulk-update Intents-style templates without the replay step.</p>
+  </div>
+
+  <h2>Drift detection on Intune templates</h2>
+
+  <p>Like CA, Intune templates drift over time. The drift categories are similar but the failure modes differ:</p>
+
+  <p><strong>State drift</strong> — a template's deployment state changed unexpectedly. Less common in Intune than CA (Intune doesn't have a Report-only equivalent state that can flip the same way) but possible: a customer's other admin might have deleted a policy entirely, or scoped its assignment so narrowly that it no longer applies to anyone.</p>
+
+  <p><strong>Scope drift</strong> — the assignment scope changed. New include groups added, exclude groups added, groups removed. This is the most consequential drift category for Intune because changing scope can dramatically change which devices the policy affects. A customer's other admin adding a broad exclusion group can effectively disable the policy without disabling it formally.</p>
+
+  <p><strong>Setting drift</strong> — individual settings within a template changed. A specific setting was tuned per-customer (a Defender exclusion path added, a firewall rule adjusted, a Windows Hello PIN minimum loosened). These are the legitimate per-customer customisations that <em>should</em> drift — but the operator needs to know about them.</p>
+
+  <p><strong>Configuration value drift</strong> — a Settings Catalog policy's value for a specific setting was changed centrally (a customer's admin clicked through and modified one specific value). Hardest to detect manually because the policy still looks "correct" at a high level; only setting-by-setting comparison catches it.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 196" role="img" aria-label="The four drift categories Panoptica365's drift detector covers for Intune templates: state, scope, setting, and configuration value.">
+      <rect width="720" height="196" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">FOUR DRIFT CATEGORIES</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="36" y="60" width="148" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="110" y="100" fill="#A8E1F8" font-size="14.5" font-weight="600">State</text>
+          <text x="110" y="124" fill="#6B85A6" font-size="11.5">deployment</text>
+          <text x="110" y="140" fill="#6B85A6" font-size="11.5">state changed</text>
+        </g>
+        <g>
+          <rect x="200" y="60" width="148" height="100" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="274" y="100" fill="#7DD9F9" font-size="14.5" font-weight="700">Scope</text>
+          <text x="274" y="124" fill="#6B85A6" font-size="11.5">assignment</text>
+          <text x="274" y="140" fill="#6B85A6" font-size="11.5">scope changed</text>
+        </g>
+        <g>
+          <rect x="364" y="60" width="148" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="438" y="100" fill="#A8E1F8" font-size="14.5" font-weight="600">Setting</text>
+          <text x="438" y="124" fill="#6B85A6" font-size="11.5">individual</text>
+          <text x="438" y="140" fill="#6B85A6" font-size="11.5">settings changed</text>
+        </g>
+        <g>
+          <rect x="528" y="60" width="156" height="100" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="606" y="100" fill="#A8E1F8" font-size="14.5" font-weight="600">Config value</text>
+          <text x="606" y="124" fill="#6B85A6" font-size="11.5">one value</text>
+          <text x="606" y="140" fill="#6B85A6" font-size="11.5">changed centrally</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The drift detector covers all four categories for the 14 bundled templates.</figcaption>
+  </figure>
+
+  <p>Panoptica365's drift detector covers all four categories for the 14 bundled templates. For imported custom templates (lesson 10), the operator's responsibility includes verifying drift detection is working — Panoptica365 surfaces drift for templates it has a reference for; if a custom template was imported into Panoptica365 properly, the reference is captured and drift detection works automatically.</p>
+
+  <p>The operator workflow for drift alerts:</p>
+
+  <ol>
+    <li><strong>Acknowledge the alert</strong> and identify the type (state / scope / setting / value).</li>
+    <li><strong>Identify the cause via audit log.</strong> Who made the change, when, from what role.</li>
+    <li><strong>Decide: accept or revert.</strong>
+      <ul>
+        <li>Legitimate per-customer customisation? Accept and update the reference (or accept that the customer has their own variant).</li>
+        <li>Unauthorised change or accidental modification? Revert to the template reference.</li>
+      </ul>
+    </li>
+    <li><strong>Document the decision</strong> in the customer's change log (Panoptica365 does this automatically).</li>
+  </ol>
+
+  <h2>Exclusions — the persistent decay problem</h2>
+
+  <p>Just like CA, Intune exclusions accumulate quietly. The mechanism that prevents it:</p>
+
+  <p><strong>Every exclusion has a sunset date.</strong> When an operator adds a device or group to an Intune template's exclusion list, Panoptica365 prompts for a justification and an expiration date. Default expiration is 180 days; operator can adjust.</p>
+
+  <p><strong>Every exclusion is reviewed before expiration.</strong> Panoptica365 alerts the responsible operator before the sunset date. Review: still needed? Renew with fresh justification? Or let it expire and bring the device back in scope?</p>
+
+  <p><strong>Group-based exclusions are audited periodically.</strong> Excluding "Kiosk Devices" (an Entra group) means anyone added to that group later inherits the exclusion. The group membership can change without the template changing. Periodic audits of the group membership are part of the discipline.</p>
+
+  <p>The patterns to avoid:</p>
+
+  <ul>
+    <li>"Permanent exclusion" with no expiration. Nothing is permanent; templates change, devices change, regulations change. Permanent exclusions become invisible security gaps.</li>
+    <li>"Exclude the IT department for convenience." If you're excluding admins from a hardening policy because they find it annoying, you've inverted the security model — the admins are the highest-value targets and need <em>more</em> hardening, not less.</li>
+    <li>"Exclude one device for a specific incident, never re-include." A device excluded for a temporary technical reason often stays excluded forever because nobody remembers the reason.</li>
+  </ul>
+
+  <p>The Panoptica365 exemption workflow makes adding exclusions slightly harder than ignoring them. That friction is intentional — it makes the bad patterns harder to commit to than the good ones.</p>
+
+  <h2>Lifecycle — how Intune templates evolve</h2>
+
+  <p>A customer's Intune deployment evolves as their business does. Events that should trigger Intune template review:</p>
+
+  <ul>
+    <li><strong>New device platform introduced.</strong> Customer acquires Mac fleet for a creative team. macOS templates need attention.</li>
+    <li><strong>Major Windows feature update.</strong> Windows 11 25H2 changes some settings' defaults; templates may need adjustment to enforce previous behaviours.</li>
+    <li><strong>New compliance framework.</strong> Customer signs a contract that demands CIS Microsoft 365 Foundations compliance; needs CIS-aligned templates imported.</li>
+    <li><strong>Office moves or business expands.</strong> New trusted IP ranges, new VPN endpoints, new business apps that need allowlisting.</li>
+    <li><strong>Incident response.</strong> Post-compromise, the customer's Intune posture typically hardens.</li>
+    <li><strong>Customer downsizes or merges.</strong> Device population changes; old templates may need cleanup.</li>
+    <li><strong>Microsoft retires or replaces a feature.</strong> Microsoft has been quietly retiring older Intune policy types in favour of Settings Catalog. Templates may need migration.</li>
+  </ul>
+
+  <p>For each customer, an <strong>annual Intune review</strong> is the right cadence:</p>
+
+  <ol>
+    <li>List all deployed Intune templates per customer.</li>
+    <li>For each template: still appropriate? Still needed? Settings still right?</li>
+    <li>Review exclusion lists. Each entry: still necessary? Sunset date still appropriate?</li>
+    <li>Review drift history. Were there changes in the past year that weren't fully resolved?</li>
+    <li>Compare against the current Panoptica365 bundled library. Templates the customer should be deploying but isn't? New templates added since last review?</li>
+    <li>Document the review.</li>
+  </ol>
+
+  <p>This is the same annual-review cadence card 3 lesson 9 recommended for CA. Same principles apply: it's an operating discipline, not optional, billable to the customer as part of the security service.</p>
+
+  <h2>Licensing dependencies</h2>
+
+  <p>Some Intune features require Intune Plan 2 (E3 or E5) rather than Intune Plan 1 (Business Premium). For the bundled Panoptica365 library, the templates work at Intune Plan 1 — they were curated to fit the Business Premium scope. But some advanced features the MSP might import don't:</p>
+
+  <ul>
+    <li><strong>Endpoint Privilege Management (EPM)</strong> — local admin elevation control. Requires Intune Plan 2 / E5.</li>
+    <li><strong>Remote Help</strong> — Intune-integrated remote support. Requires Intune Plan 2 / E5.</li>
+    <li><strong>Advanced Endpoint Analytics</strong> — deeper telemetry. Requires Intune Plan 2 / E5.</li>
+    <li><strong>Mobile Threat Defense integration</strong> — third-party MTD partners. Requires Intune Plan 1 minimum but configuration varies.</li>
+  </ul>
+
+  <p>When importing custom templates that depend on these features, verify the destination tenant has the licence. Deploying a Plan 2 feature to a Plan 1 tenant produces a silent failure — the policy exists but can't activate.</p>
+
+  <h2>What Panoptica365 surfaces</h2>
+
+  <p>There is no single "operating-at-scale" view in Panoptica365 today that aggregates the fleet across customers — be honest about that with your team and don't promise one to your customers. The platform's read model is per-tenant, and the operator's at-scale workflow today is a mix of three things:</p>
+
+  <ul>
+    <li><strong>Drift alerts per template per customer.</strong> Drift detection runs across deployed templates; when a customer's tenant diverges from the bundled (or imported) reference, an alert fires. This is the main "something changed somewhere across my fleet" signal Panoptica365 provides today.</li>
+    <li><strong>The Exemptions section.</strong> When an operator has approved exemptions across customer tenants, the Exemptions view lists them with the option to revoke. It's not a "pending review" queue — it's a record of what's been granted. The operator's discipline of periodically opening it and asking "are all of these still defensible?" is what turns it into a sunset workflow.</li>
+    <li><strong>Per-tenant dashboards, one at a time.</strong> Compliance count tile, devices list, Devices by OS — the same surface lesson 9 described. To do an "at-scale" review today, the operator clicks through tenants one by one.</li>
+  </ul>
+
+  <p>What does <em>not</em> exist today, in case the rest of this lesson led you to expect it:</p>
+
+  <ul>
+    <li>A cross-customer "fleet compliance" aggregation</li>
+    <li>A "template deployment state per customer per template" matrix view</li>
+    <li>A "recent deployment activity across all customers" timeline</li>
+    <li>A "devices in problematic compliance states" list</li>
+    <li>An exclusion-review queue with sunset dates</li>
+  </ul>
+
+  <p>The compliance-tile trend arrows give the operator a per-poll directional signal — useful for catching posture drift quickly without remembering yesterday's number. For now, that's the level of cross-customer visibility Panoptica365 provides; deeper aggregation requires the per-tenant click-through described above.</p>
+
+  <h2>The annual Intune review — recommended cadence</h2>
+
+  <p>For each customer, once per year (commonly synchronised with the annual security review and renewal conversation):</p>
+
+  <ol>
+    <li><strong>List all deployed Intune templates.</strong> What's enabled, what's deployed in audit mode, what was deployed but isn't actively in use.</li>
+    <li><strong>For each template, verify it's still appropriate.</strong> Conditions match the customer's current reality? Exclusions still defensible?</li>
+    <li><strong>Review the drift history.</strong> What changed in the past year? Was each change properly resolved (accepted with reference updated, or reverted)?</li>
+    <li><strong>Compare against the current Panoptica365 library.</strong> Bundled templates that should be deployed but aren't (newly added, recently updated)?</li>
+    <li><strong>Compare against the customer's current state.</strong> Has the customer's environment changed (new platforms, new licences, new regulatory obligations) in ways that suggest new templates?</li>
+    <li><strong>Document the review.</strong> The customer's IT director should have a record of the annual review and its conclusions.</li>
+  </ol>
+
+  <p>This is operating discipline. It's the work that keeps the customer's Intune posture from decaying over years. It's billable as part of the MSP's security service — and it's what differentiates a careful MSP from one that deploys and forgets.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The assignment-loss problem is the most consequential operational pitfall in Intune.</strong> Account Protection Settings (and any imported Intents-style template) requires the inventory-update-replay discipline. Skipping it is how customer exclusions evaporate without anyone noticing.</p>
+
+  <p><strong>Exclusion lists are silent debt.</strong> They accumulate, they decay, they become invisible security gaps. The exemption workflow with sunset dates is the tool to fight this; use it.</p>
+
+  <p><strong>Annual review is non-negotiable.</strong> Intune templates that were appropriate three years ago may not be appropriate today. Without a structured review cadence, customer Intune posture decays. Bill for the review; document it; make it visible to the customer.</p>
+
+  <h2>Closing card 4</h2>
+
+  <p>You've now seen the 14 Panoptica365 Intune templates and the operational mechanics that turn them into a working endpoint hardening practice.</p>
+
+  <p>The arc of card 4:</p>
+
+  <ol>
+    <li>Pre-flight for Intune templates — the discipline before any deployment.</li>
+    <li>Compliance policies — defining "compliant" across four platforms.</li>
+    <li>The Security Baseline — your curated Windows hardening bundle.</li>
+    <li>BitLocker Settings — disk encryption posture.</li>
+    <li>Defender for Endpoint configuration — Windows + macOS.</li>
+    <li>Firewall Settings — Windows network defence.</li>
+    <li>ASR Rules + Block mshta.exe — attack surface reduction.</li>
+    <li>Account Protection + Block MSA — credential hardening on the endpoint.</li>
+    <li>The compliance loop in production — drift, signals, monitoring.</li>
+    <li>Importing your own Intune templates — the customisation workflow.</li>
+    <li>Operating Intune at scale — drift, exclusions, lifecycle, the assignment-loss problem (this lesson).</li>
+  </ol>
+
+  <p>Card 5 (Exchange / Email hardening) starts next. That card shifts from the endpoint to the email surface — the EXO settings that protect the channel attackers use most.</p>
+
+  <p>For now: card 4's templates have given you the Windows-side hardening foundation. The compliance loop signals into CA. The customer's endpoint posture goes from factory-default to genuinely-hardened with the bundled library deployed. The MSP that gets this right closes the largest single avenue of attack against SMB Windows fleets.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Intune policy types and update behaviour (<a href="https://learn.microsoft.com/en-us/mem/intune/configuration/device-profiles" target="_blank" rel="noopener">Microsoft Learn — Intune policy types</a>); Endpoint Security templates and their update model (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-policy" target="_blank" rel="noopener">Microsoft Learn — Endpoint security policy</a>); Intune licence requirements per feature (<a href="https://learn.microsoft.com/en-us/mem/intune/fundamentals/licenses" target="_blank" rel="noopener">Microsoft Learn — Intune licensing</a>); Microsoft Graph API for policy assignment (<a href="https://learn.microsoft.com/en-us/graph/api/resources/intune-shared-deviceconfigurationassignment" target="_blank" rel="noopener">Microsoft Learn — Assignment resource type</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firewall Settings — defensa de red de Windows — Intune Template Settings</title>
+<meta name="lesson:title" content="Firewall Settings — defensa de red de Windows">
+<meta name="lesson:subtitle" content="51 ajustes en perfiles Dominio, Privado y Público — garantizar que Windows Defender Firewall esté activo, registrando y ajustado en cada contexto de red.">
+<meta name="lesson:icon" content="flame">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Firewall Settings</span></div>
+  <h1>Firewall Settings — defensa de red de Windows</h1>
+  <p class="dek">51 ajustes en perfiles Dominio, Privado y Público — garantizar que Windows Defender Firewall esté activo, registrando y ajustado en cada contexto de red.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Windows Defender Firewall mantiene tres perfiles de red — Dominio, Privado y Público — cada uno más estricto a medida que la red es menos de confianza.">
+      <defs>
+        <radialGradient id="fwBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="fwGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#2EE8A0"/><stop offset="50%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#FF5A6E"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#fwBg)"/>
+
+      <text x="560" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">UN FIREWALL · TRES PERFILES</text>
+
+      <!-- three profile pillars, tightening left to right -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Dominio -->
+        <g transform="translate(220,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text x="0" y="40" fill="#A8E1F8" font-size="20" font-weight="700">DOMINIO</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">red corporativa</text>
+          <g opacity="0.92"><rect x="-58" y="92" width="116" height="9" rx="4.5" fill="#2A7FA3"/><rect x="-58" y="108" width="80" height="9" rx="4.5" fill="#274B72"/><rect x="-58" y="124" width="48" height="9" rx="4.5" fill="#1F3C5C"/></g>
+        </g>
+        <!-- Privado -->
+        <g transform="translate(560,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#0E2640" stroke="#4A80BD" stroke-width="1.6"/>
+          <text x="0" y="40" fill="#A8E1F8" font-size="20" font-weight="700">PRIVADO</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">casa / de confianza</text>
+          <g opacity="0.92"><rect x="-58" y="92" width="86" height="9" rx="4.5" fill="#2A7FA3"/><rect x="-58" y="108" width="100" height="9" rx="4.5" fill="#335F92"/><rect x="-58" y="124" width="70" height="9" rx="4.5" fill="#274B72"/></g>
+        </g>
+        <!-- Público -->
+        <g transform="translate(900,108)">
+          <rect x="-120" y="0" width="240" height="150" rx="14" fill="#102A4C" stroke="#5CCBF4" stroke-width="2"/>
+          <text x="0" y="40" fill="#D0EFFD" font-size="20" font-weight="700">PÚBLICO</text>
+          <text x="0" y="72" fill="#7DD9F9" font-size="13">café · aeropuerto · hotel</text>
+          <g opacity="0.96"><rect x="-58" y="92" width="116" height="9" rx="4.5" fill="#5CCBF4"/><rect x="-58" y="108" width="116" height="9" rx="4.5" fill="#5CCBF4"/><rect x="-58" y="124" width="116" height="9" rx="4.5" fill="#5CCBF4"/></g>
+        </g>
+      </g>
+
+      <!-- tightening gradient bar -->
+      <rect x="100" y="288" width="920" height="8" rx="4" fill="url(#fwGrad)" opacity="0.85"/>
+      <text x="100" y="318" text-anchor="start" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">más permisivo</text>
+      <text x="1020" y="318" text-anchor="end" fill="#9DBEDD" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">el más estricto</text>
+    </svg>
+    <figcaption>Un firewall, tres perfiles — el perfil activo cambia con la red, más estricto a medida que la red es menos de confianza.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Si Defender for Endpoint es la capa que vigila archivos y procesos, el Windows Defender Firewall es la capa que vigila las conexiones de red. Las dos se complementan: Defender pilla el malware que ya está en el dispositivo; el Firewall impide que el malware llegue al dispositivo en primer lugar — o impide que el software comprometido en el dispositivo alcance su infraestructura de mando y control.</p>
+
+  <p>La plantilla Firewall Settings Windows de Panoptica365 es la configuración no-Security-Baseline más grande de la biblioteca, con 34KB y 51 ajustes distintos. Configura Windows Defender Firewall a través de los tres perfiles de red (Dominio, Privado, Público) más los ajustes globales, asegurando que el firewall está activo, registrando, y usando valores por defecto sensatos.</p>
+
+  <p>Esta lección recorre lo que se configura, el modelo de tres perfiles que hace confuso al Windows Defender Firewall, y las realidades operativas de hacer correr firewalls de host en producción.</p>
+  </div>
+
+  <h2>El modelo de tres perfiles — lo que hace que esta plantilla parezca grande</h2>
+
+  <p>Windows Defender Firewall tiene el diseño inusual de mantener tres perfiles de firewall separados, cada uno aplicado según la red a la que está conectado el dispositivo:</p>
+
+  <ul>
+    <li><strong>Perfil de Dominio</strong> — se aplica cuando el dispositivo está en una red que contiene un controlador de dominio al que está unido. Típicamente la red de la oficina corporativa.</li>
+    <li><strong>Perfil Privado</strong> — se aplica cuando el dispositivo está en una red que el usuario ha marcado como Privada (red de casa, pequeña oficina de confianza).</li>
+    <li><strong>Perfil Público</strong> — se aplica cuando el dispositivo está en una red marcada como Pública (cafetería, aeropuerto, hotel). El perfil por defecto para cualquier red no reconocida.</li>
+  </ul>
+
+  <p>Cada perfil tiene aproximadamente el mismo conjunto de ajustes configurables: habilitar/deshabilitar, acción entrante por defecto, acción saliente por defecto, modo silencioso, comportamiento de registro, ubicación del archivo de registro, tamaño del registro, permitir fusión con la política local. Así que los 51 ajustes de la plantilla son sobre todo <em>17 ajustes × 3 perfiles</em> con un puñado de ajustes globales superpuestos encima.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Los 51 ajustes son aproximadamente 17 ajustes repetidos en 3 perfiles, más un puñado de ajustes globales.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="48" width="120" height="54" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="100" y="72" fill="#A8E1F8" font-size="22" font-weight="700">17</text>
+        <text x="100" y="90" fill="#6B85A6" font-size="11">ajustes</text>
+
+        <text x="196" y="83" fill="#52708F" font-size="22" font-weight="500">×</text>
+
+        <rect x="226" y="48" width="120" height="54" rx="10" fill="#0E2640" stroke="#4A80BD"/>
+        <text x="286" y="72" fill="#A8E1F8" font-size="22" font-weight="700">3</text>
+        <text x="286" y="90" fill="#6B85A6" font-size="11">perfiles</text>
+
+        <text x="382" y="83" fill="#52708F" font-size="22" font-weight="500">+</text>
+
+        <rect x="412" y="48" width="150" height="54" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="487" y="72" fill="#C4D4E8" font-size="22" font-weight="700">globales</text>
+        <text x="487" y="90" fill="#6B85A6" font-size="11">puñado</text>
+
+        <text x="598" y="83" fill="#52708F" font-size="22" font-weight="500">≈</text>
+
+        <rect x="626" y="44" width="68" height="62" rx="10" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="660" y="74" fill="#7DD9F9" font-size="24" font-weight="700">51</text>
+        <text x="660" y="92" fill="#7DD9F9" font-size="11">total</text>
+      </g>
+      <text x="360" y="132" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">Por qué parece grande: los mismos ajustes, repetidos por perfil.</text>
+    </svg>
+    <figcaption>Aproximadamente 17 ajustes × 3 perfiles, más un puñado de ajustes globales, es lo que suma 51.</figcaption>
+  </figure>
+
+  <p>La razón por la que los tres perfiles necesitan configuración explícita es que el perfil Público en particular necesita ser más estricto que el de Dominio. Un dispositivo en la red corporativa tiene vecinos de confianza e infraestructura de confianza; un dispositivo en la red de una cafetería comparte la LAN con extraños. La acción por defecto para tráfico entrante debe diferir en consecuencia.</p>
+
+  <h2>Lo que configura la plantilla, por perfil</h2>
+
+  <p>Para <strong>cada uno de los tres perfiles</strong>, la plantilla establece:</p>
+
+  <ul>
+    <li><strong><code>enablefirewall</code></strong> — Firewall habilitado en este perfil.</li>
+    <li><strong><code>defaultinboundaction</code></strong> — Bloquear el tráfico entrante por defecto (la baseline segura; las reglas específicas de permitir se ponen encima).</li>
+    <li><strong><code>defaultoutboundaction</code></strong> — Permitir el tráfico saliente por defecto (la postura típica para dispositivos cliente; las reglas de bloqueo saliente se ponen encima).</li>
+    <li><strong><code>disablestealthmode</code></strong> — Modo silencioso habilitado (no, el ajuste tiene un nombre confuso — <code>disablestealthmode: false</code> significa que el modo silencioso SÍ está activo). El modo silencioso significa que el dispositivo no responde a sondeos de red (escaneos de puertos, eco ICMP, etc.), lo que lo hace menos descubrible para atacantes en el mismo segmento de red.</li>
+    <li><strong><code>disablestealthmodeipsecsecuredpacketexemption</code></strong> — Los paquetes asegurados con IPSec están exentos del modo silencioso (así las conexiones IPSec siguen funcionando incluso con el modo silencioso activado).</li>
+    <li><strong><code>disableunicastresponsestomulticastbroadcast</code></strong> — Deshabilita las respuestas unicast a multicast/broadcast — cierra un pequeño vector de divulgación de información.</li>
+    <li><strong><code>disableinboundnotifications</code></strong> — No mostrar al usuario notificaciones de bloqueo entrante. Es la elección laxa; la versión estricta notificaría al usuario cuando algo intentara alcanzarle.</li>
+    <li><strong><code>enablelogdroppedpackets</code></strong> — Registrar los paquetes descartados por el firewall. Importante para la respuesta a incidentes.</li>
+    <li><strong><code>enablelogsuccessconnections</code></strong> — Registrar conexiones exitosas. Pesado en disco pero útil para análisis forense.</li>
+    <li><strong><code>enablelogignoredrules</code></strong> — Registrar reglas que estaban configuradas pero fueron ignoradas (p. ej., reglas deshabilitadas que habrían coincidido). Diagnóstico.</li>
+    <li><strong><code>logfilepath</code></strong> — Dónde va el archivo de registro (típicamente <code>%systemroot%\system32\logfiles\firewall\pfirewall.log</code> o similar).</li>
+    <li><strong><code>logmaxfilesize</code></strong> — Tamaño máximo del registro del firewall antes de que rote.</li>
+    <li><strong><code>allowlocalpolicymerge</code></strong> — Si las reglas de firewall configuradas localmente pueden fusionarse con la política central. Típicamente <code>false</code> (la política gestionada centralmente gana; los usuarios no pueden añadir sus propias reglas).</li>
+    <li><strong><code>allowlocalipsecpolicymerge</code></strong> — Igual, para la política IPSec.</li>
+    <li><strong><code>authappsallowuserprefmerge</code></strong> — Si las aplicaciones autorizadas pueden fusionarse con las preferencias del usuario. Típicamente <code>false</code>.</li>
+    <li><strong><code>globalportsallowuserprefmerge</code></strong> — Si las reglas globales de puertos pueden fusionarse con las preferencias del usuario.</li>
+  </ul>
+
+  <p>A través de los tres perfiles, eso suma aproximadamente 51 ajustes, con variaciones menores entre Dominio (más permisivo — la red corporativa es de confianza), Privado (medio) y Público (el más estricto — la red de la cafetería es hostil).</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Perfil</th><th>Cuándo se aplica</th><th>Postura relativa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Dominio</strong></td><td>Red con un controlador de dominio unido — la red de la oficina corporativa</td><td>Más permisivo — la red corporativa es de confianza</td></tr>
+        <tr><td><strong>Privado</strong></td><td>Red que el usuario marcó como Privada — casa, pequeña oficina de confianza</td><td>Medio</td></tr>
+        <tr><td><strong>Público</strong></td><td>Red marcada como Pública, o cualquier red no reconocida — cafetería, aeropuerto, hotel</td><td>El más estricto — la red de la cafetería es hostil</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Ajustes globales del firewall</h2>
+
+  <p>Además de los ajustes por perfil, la plantilla configura algunos ajustes globales que afectan a los tres perfiles:</p>
+
+  <ul>
+    <li><strong><code>crlcheck</code></strong> — Comportamiento de comprobación de Listas de Revocación de Certificados para la evaluación de reglas del firewall. Asegura que los certificados revocados no se aceptan para autenticación.</li>
+    <li><strong><code>disablestatefulftp</code></strong> — Filtrado FTP con estado. Endurecimiento moderno — el soporte FTP con estado introduce complejidad de parseo que se ha explotado históricamente.</li>
+    <li><strong><code>presharedkeyencoding</code></strong> — Codificación para claves precompartidas de IPSec (típicamente UTF-8).</li>
+  </ul>
+
+  <p>Estos ajustes globales son elecciones deliberadas de endurecimiento que cierran vectores de ataque históricos en el propio componente del firewall de Windows.</p>
+
+  <h2>Las elecciones opinionadas a conocer</h2>
+
+  <p>Un puñado de ajustes de esta plantilla que afectan a la experiencia del usuario o tienen implicaciones específicas de seguridad:</p>
+
+  <p><strong>Modo silencioso habilitado.</strong> El dispositivo no responderá a sondeos de red. Significa que el descubrimiento de red estándar (ping, escaneos de puertos) no verá el dispositivo. Ayuda en redes hostiles; mayormente invisible para los usuarios; ocasionalmente confunde a ingenieros de red que intentan diagnosticar desde otra máquina («¿por qué este PC no responde a ping?»). Documéntalo si el equipo de IT del cliente depende del ping para monitorización.</p>
+
+  <p><strong>Notificaciones entrantes deshabilitadas.</strong> Los usuarios no ven el pop-up «Windows Defender Firewall ha bloqueado algunas características de esta aplicación». Es más amigable — los pop-ups son molestos y la mayoría de los usuarios hacen clic a través sin entender. El compromiso: un usuario instalando una aplicación legítima que necesita una excepción entrante no se le preguntará para añadir una; el operador necesitará añadir la excepción centralmente. Para escenarios de pequeña empresa, este suele ser el compromiso correcto (excepciones gestionadas por el operador &gt; excepciones gestionadas por el usuario).</p>
+
+  <p><strong>Fusión con la política local deshabilitada.</strong> Los usuarios (incluso los que tienen admin local) no pueden añadir sus propias reglas de firewall que entren en conflicto con la política central. Es la elección segura, pero ocasionalmente sorprende a usuarios avanzados que solían poder permitir sus propias aplicaciones. La mitigación es la misma que arriba — añade excepciones legítimas centralmente según vayan surgiendo.</p>
+
+  <p><strong>El registro es verboso.</strong> <code>enablelogdroppedpackets</code>, <code>enablelogsuccessconnections</code> y <code>enablelogignoredrules</code> están todos activados. Esto genera actividad sustancial en el registro del firewall del dispositivo. El archivo de registro rota al tamaño máximo configurado, así que no llena el disco indefinidamente, pero los dispositivos que hacen actividad de red legítima de alto volumen verán escrituras de registro significativas. El beneficio es la respuesta a incidentes — cuando algo va mal, el registro del firewall es uno de los artefactos forenses más útiles disponibles.</p>
+
+  <h2>Qué puede romperse</h2>
+
+  <p>El despliegue del firewall puede romper cosas de formas que el despliegue de Defender raramente hace, porque el firewall se sienta en la ruta de red de cada conexión:</p>
+
+  <p><strong>Servicios entrantes legítimos.</strong> Cualquier cosa en el dispositivo que escuche conexiones entrantes (un servidor web de desarrollo en localhost, un controlador de impresora compartido por red, una herramienta de gestión remota, una aplicación de línea-de-negocio heredada que usa conexiones peer-to-peer) necesita una regla explícita de permitir. Sin una, la conexión se bloquea. El <code>defaultinboundaction: block</code> de la plantilla de Panoptica365 hace esto estricto por diseño — pero significa que los casos de uso entrante necesitan excepciones.</p>
+
+  <p><strong>Compartición de archivos e impresoras.</strong> La compartición de archivos SMB de Windows depende de reglas entrantes específicas. Los valores por defecto de la plantilla los manejan correctamente para configuraciones estándar, pero clientes con configuraciones SMB no estándar (servidores Samba antiguos específicos, puertos no estándar) pueden necesitar ajustes.</p>
+
+  <p><strong>Aplicaciones de red personalizadas.</strong> Las aplicaciones específicas de industria (imagen médica, CAD con servidores de licencias compartidas, sistemas de control de fabricación) a menudo tienen comportamientos de red no estándar. Los valores por defecto estrictos de la plantilla pueden romperlas. El arreglo son excepciones de firewall por aplicación añadidas a la política desplegada por cliente.</p>
+
+  <p><strong>Descubrimiento de red en entornos sin dominio.</strong> Un usuario que intenta encontrar una impresora de red en una red de perfil Privado puede tener dificultades porque el modo silencioso y el bloqueo entrante por defecto dificultan el descubrimiento. Normalmente está bien con procedimientos apropiados de instalación de impresoras; puede surgir como queja en entornos de cliente menos maduros.</p>
+
+  <h2>Despliegue</h2>
+
+  <p>Despliegue por grupo piloto de la comprobación previa de la lección 1, con atención extra a los flujos de trabajo de negocio dependientes de la red:</p>
+
+  <ol>
+    <li><strong>Día 0</strong> — despliega en 3–5 dispositivos piloto. <em>Crítico</em>: elige dispositivos que ejerciten los flujos de red del cliente (recursos compartidos de archivos, impresoras, aplicaciones de línea-de-negocio con componentes de red).</li>
+    <li><strong>Días 1–7</strong> — verifica el éxito del despliegue en el portal de Intune. Prueba cada flujo dependiente de red en los dispositivos piloto: imprimir, acceso a recursos compartidos, aplicaciones de negocio, VPN, escritorio remoto. <em>Cualquier cosa</em> relacionada con la red debería probarse.</li>
+    <li><strong>Días 7–14</strong> — observa los dispositivos piloto. La primera semana es cuando emerge la rotura obvia; la segunda semana es cuando los flujos de una-vez-a-la-semana y de una-vez-al-mes exponen problemas más sutiles.</li>
+    <li><strong>Día 14</strong> — despliegue más amplio si el piloto está limpio.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 168" role="img" aria-label="Una cronología de despliegue del firewall en cuatro etapas: Día 0 despliegue piloto, Días 1 a 7 verificación, Días 7 a 14 observación, Día 14 despliegue más amplio.">
+      <rect width="720" height="168" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="80" y1="70" x2="640" y2="70" stroke="#1F3C5C" stroke-width="2"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Día 0 -->
+        <circle cx="100" cy="70" r="9" fill="#0E2640" stroke="#5CCBF4" stroke-width="2"/>
+        <text x="100" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Día 0</text>
+        <text x="100" y="100" fill="#6B85A6" font-size="11">desplegar a</text>
+        <text x="100" y="114" fill="#6B85A6" font-size="11">3–5 pilotos</text>
+        <!-- Días 1-7 -->
+        <circle cx="280" cy="70" r="9" fill="#0E2640" stroke="#4A80BD" stroke-width="2"/>
+        <text x="280" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Días 1–7</text>
+        <text x="280" y="100" fill="#6B85A6" font-size="11">verificar +</text>
+        <text x="280" y="114" fill="#6B85A6" font-size="11">probar flujos</text>
+        <!-- Días 7-14 -->
+        <circle cx="460" cy="70" r="9" fill="#0E2640" stroke="#4A80BD" stroke-width="2"/>
+        <text x="460" y="44" fill="#A8E1F8" font-size="13" font-weight="700">Días 7–14</text>
+        <text x="460" y="100" fill="#6B85A6" font-size="11">observar los</text>
+        <text x="460" y="114" fill="#6B85A6" font-size="11">dispositivos piloto</text>
+        <!-- Día 14 -->
+        <circle cx="640" cy="70" r="9" fill="#10243B" stroke="#2EE8A0" stroke-width="2"/>
+        <text x="640" y="44" fill="#7DECC2" font-size="13" font-weight="700">Día 14</text>
+        <text x="640" y="100" fill="#6B85A6" font-size="11">más amplio</text>
+        <text x="640" y="114" fill="#6B85A6" font-size="11">si limpio</text>
+      </g>
+      <text x="360" y="150" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">14 días es la ventana mínima — los flujos mensuales o trimestrales pueden necesitar 30.</text>
+    </svg>
+    <figcaption>El despliegue en cuatro etapas — 14 días es el mínimo; los flujos mensuales o trimestrales pueden necesitar una ventana de 30 días.</figcaption>
+  </figure>
+
+  <p>Para los cambios de firewall específicamente, la ventana de despliegue de 14 días es el mínimo. Un cliente con flujos de procesamiento por lotes mensuales o informes trimestrales puede necesitar una ventana de 30 días antes de que puedas decir con confianza «no se rompió nada».</p>
+
+  <h2>Qué monitorizar tras la aplicación</h2>
+
+  <p><strong>Firewall habilitado por dispositivo por perfil.</strong> Debería estar 100% habilitado en los tres perfiles tras el despliegue. Los dispositivos que muestran el firewall deshabilitado en algún perfil son dispositivos donde la plantilla falló al aplicarse (poco común) o donde un admin local lo ha deshabilitado (más común — investiga).</p>
+
+  <p><strong>Logs de paquetes descartados.</strong> El registro verboso significa que el log del firewall está lleno de entradas de paquetes descartados. La mayoría son ruido (escaneo de fondo de Internet pegando al dispositivo). Señales reales a vigilar: ráfagas de paquetes descartados desde una IP interna específica (podría indicar un dispositivo interno comprometido sondeando), descartes repetidos desde la misma fuente externa (podría indicar un escaneo dirigido), descartes de protocolos de apariencia legítima (podría indicar una aplicación mal configurada).</p>
+
+  <p><strong>Rotura de flujos reportada por el usuario.</strong> Rastrea cada queja de «X dejó de funcionar tras el despliegue del firewall». Algunas son rotura real que requiere excepciones por aplicación; algunas son coincidencia; algunas son error de usuario. Documenta cada una.</p>
+
+  <p><strong>Deriva sobre la plantilla.</strong> Como otras plantillas, la plantilla Firewall Settings puede derivar si otro admin del cliente la modifica. La deriva puede ser peligrosa aquí — ampliar la acción entrante por defecto o deshabilitar el modo silencioso reduciría la seguridad materialmente.</p>
+
+  <h2>La plantilla Block mshta.exe es adyacente al firewall</h2>
+
+  <p>La biblioteca de Panoptica365 incluye una plantilla separada — Block mshta.exe outbound connections — que vive en la misma familia de plantillas <code>endpointSecurityFirewall</code> que la plantilla principal Firewall Settings. Se cubre en la lección 7 (junto con ASR Rules) porque conceptualmente es una regla de reducción-de-superficie-de-ataque más que una configuración general de firewall. Vale la pena saber: cuando un operador abre el portal de Intune buscando configuraciones relacionadas con el firewall, verá tanto la plantilla principal Firewall Settings como la plantilla Block mshta.exe en la misma lista. Sirven a propósitos distintos.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>Dos cosas reales, y lo que no está ahí.</p>
+
+  <p><strong>Lo que Panoptica365 expone:</strong></p>
+
+  <ul>
+    <li><strong>Deriva sobre la plantilla Firewall Settings.</strong> Mismo modelo que el resto: si la plantilla desplegada de un cliente diverge de la referencia de Panoptica365 — alguien abre la consola de Intune y deshabilita el modo silencioso, abre un bloqueo entrante, baja el registro — el detector de deriva se dispara y el operador puede revertir, reaplicar o aceptar.</li>
+    <li><strong>Detecciones de Defender XDR</strong> (cuando la ingestión de Defender XDR está configurada según la tarjeta 1 lección 4) — los incidentes que incorporan conexiones bloqueadas por el firewall en su contexto fluyen al motor de alertas. Esto no es «eventos de firewall»; son incidentes de Microsoft de más alto nivel que pueden referenciar actividad de firewall.</li>
+  </ul>
+
+  <p><strong>Lo que Panoptica365 <em>no</em> expone:</strong> estado de firewall habilitado por dispositivo, estado por perfil (Dominio/Privado/Público) por dispositivo, eventos brutos del log del firewall. Nada de eso vive en el panel. La señal de cumplimiento de Intune incluye <code>activeFirewallRequired: true</code>, así que un dispositivo con el firewall apagado se enrolla en el contador general de conforme/no-conforme — pero no puedes mirar «qué dispositivos específicamente tienen qué perfil apagado» desde Panoptica365. Eso es un drill-down al portal de Intune y a la consola de Defender.</p>
+
+  <p>El propio archivo de registro del firewall es un artefacto Windows local que los respondedores de incidentes extraen cuando investigan un dispositivo específico. No ingerido por Panoptica365 — para la telemetría de defensa de red a lo largo del parque, la superficie visible es la cartera de alertas de Defender XDR.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <div class="callout caution">
+    <div class="clabel">El mayor riesgo de rotura de la tarjeta 4</div>
+    <p><strong>El despliegue del firewall es la plantilla con más probabilidad de romper algo en la tarjeta 4.</strong> Cualquier cosa que escuche en la red o que viva en comportamiento de red no estándar puede verse afectada. Planifica una ventana de despliegue de 14–30 días con pruebas exhaustivas de flujos.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">El modelo de tres perfiles es real</div>
+    <p><strong>El modelo de tres perfiles es real y vale la pena entenderlo.</strong> Cuando un usuario se queja «el firewall está bloqueando [X]», la primera pregunta es <em>¿qué perfil está activo cuando ocurre esto?</em> El mismo dispositivo se comporta de forma distinta en el Wi-Fi de la oficina vs. el Wi-Fi de la cafetería porque el perfil activo cambia.</p>
+  </div>
+
+  <p><strong>El modo silencioso y los valores por defecto de bloqueo entrante son las elecciones estrictas.</strong> Documéntalos con el cliente. La estrictez es el punto — la alternativa es el valor por defecto laissez-faire que dio a los atacantes descubrimiento de red fácil durante dos décadas.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Lección 7: ASR Rules + Block mshta.exe</b> — Reducción de superficie de ataque — las características preventivas de bloqueo de comportamiento que pillan amenazas antes de que se entreguen al disco.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Lección 8: Account Protection + Block MSA</b> — Windows Hello for Business, Credential Guard, bloqueo de adiciones de MSA personales.</div></div>
+  </div>
+
+  <p>Por ahora: la plantilla Firewall es la compañera de capa de red para la plantilla de capa de archivos de Defender. Juntas constituyen la capa de defensa activa en endpoints Windows. Despliega con pruebas exhaustivas de flujos; tolera la ventana de despliegue de 14–30 días; resiste la tentación de debilitar los valores por defecto estrictos.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la configuración de Windows Defender Firewall vía Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/endpoint-security-firewall-policy" target="_blank" rel="noopener">Microsoft Learn — Configure Windows Defender Firewall via Intune</a>); modelo de perfiles del Windows Defender Firewall (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/windows-firewall-with-advanced-security" target="_blank" rel="noopener">Microsoft Learn — Windows Defender Firewall with Advanced Security</a>); referencia de registro del Firewall (<a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/configure-firewall-logging" target="_blank" rel="noopener">Microsoft Learn — Firewall logging</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

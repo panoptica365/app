@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connectez votre PSA — Guides Panoptica365</title>
+<meta name="lesson:title" content="Connectez votre PSA">
+<meta name="lesson:subtitle" content="Intégration Autotask native : identifiants, valeurs par défaut des billets, correspondance locataire-entreprise et résolution bidirectionnelle.">
+<meta name="lesson:icon" content="ticket">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Connectez votre PSA</span></div>
+  <h1>Connectez votre PSA</h1>
+  <p class="dek">Intégration Autotask native : identifiants, valeurs par défaut des billets, correspondance locataire-entreprise et résolution bidirectionnelle.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une alerte Panoptica365 devient un billet Autotask; fermer le billet résout l'alerte, et résoudre l'alerte peut fermer le billet — dans les deux sens.">
+      <defs>
+        <radialGradient id="psaBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="psaCard" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="psaFwd" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+        <marker id="psaBack" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#psaBg)"/>
+
+      <!-- left: Panoptica365 alert -->
+      <g transform="translate(150,110)">
+        <rect x="0" y="0" width="270" height="120" rx="16" fill="url(#psaCard)" stroke="#2A6F9E" stroke-width="1.6"/>
+        <circle cx="40" cy="44" r="14" fill="none" stroke="#5CCBF4" stroke-width="2.4"/><circle cx="40" cy="44" r="4" fill="#5CCBF4"/>
+        <text x="68" y="40" fill="#EAF7FE" font-family="Geist,Inter,sans-serif" font-size="19" font-weight="600">Panoptica365</text>
+        <text x="68" y="64" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="14">alerte</text>
+        <rect x="24" y="86" width="222" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="24" y="100" width="150" height="8" rx="4" fill="#13304E"/>
+      </g>
+      <text x="285" y="262" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2.5">L'ALERTE</text>
+
+      <!-- right: Autotask ticket -->
+      <g transform="translate(700,110)">
+        <rect x="0" y="0" width="270" height="120" rx="16" fill="url(#psaCard)" stroke="#335F92" stroke-width="1.6"/>
+        <rect x="24" y="28" width="34" height="34" rx="7" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <path d="M31 45 l6 6 l14 -16" fill="none" stroke="#5CCBF4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="72" y="40" fill="#EAF7FE" font-family="Geist,Inter,sans-serif" font-size="19" font-weight="600">Autotask</text>
+        <text x="72" y="64" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="14">billet</text>
+        <rect x="24" y="86" width="222" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="24" y="100" width="170" height="8" rx="4" fill="#13304E"/>
+      </g>
+      <text x="835" y="262" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2.5">LE BILLET</text>
+
+      <!-- bi-directional flows -->
+      <path d="M430 152 H695" stroke="#5CCBF4" stroke-width="2.6" marker-end="url(#psaFwd)"/>
+      <text x="562" y="142" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13">alerte → billet créé</text>
+      <path d="M695 196 H430" stroke="#2EE8A0" stroke-width="2.6" marker-end="url(#psaBack)"/>
+      <text x="562" y="218" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12.5">fermé d'un côté → résolu des deux</text>
+    </svg>
+    <figcaption>Une alerte devient un billet dans la bonne entreprise; fermez-le d'un côté et l'autre se résout aussi.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Si votre boîte tourne sur un PSA, les alertes devraient être des billets — créés dans la bonne entreprise, à la bonne priorité, et fermés depuis l'un ou l'autre côté. Panoptica365 s'intègre nativement à <strong>Autotask</strong> (Paramètres → Intégration PSA, rôle Administrateur).</p>
+  </div>
+
+  <h2>1. Identifiants</h2>
+
+  <p>Saisissez votre <strong>nom d'utilisateur API</strong> Autotask, votre <strong>identifiant de suivi</strong> et votre <strong>secret API</strong>, puis cliquez sur <strong>Tester la connexion</strong>. En cas de succès, l'intégration découvre et enregistre votre zone Autotask : <em>« Connecté — zone … »</em>. Le secret est en écriture seule après l'enregistrement — le champ affiche <em>« Enregistré — laisser vide pour conserver l'actuel »</em>.</p>
+
+  <h2>2. Valeurs par défaut des billets</h2>
+
+  <p>Définissez à quoi ressemble un billet Panoptica365 dans votre univers :</p>
+
+  <ul>
+    <li><strong>File d'attente</strong>, <strong>Source</strong>, <strong>Statut d'un nouveau billet</strong> et <strong>Visibilité des notes</strong> pour les billets créés.</li>
+    <li><strong>Statut lors de la fermeture depuis Panoptica365</strong> — le statut appliqué quand Panoptica365 ferme un billet.</li>
+    <li><strong>Statuts considérés comme « fermés »</strong> — l'ensemble des statuts Autotask qui comptent comme « terminé ». Quand votre équipe déplace un billet dans l'un de ceux-ci, l'alerte liée se résout automatiquement. Le statut de fermeture doit lui-même faire partie de cet ensemble — le formulaire l'exige.</li>
+    <li><strong>Priorité selon la gravité</strong> — une ligne par gravité d'alerte (sévère, élevée, moyenne, faible, info) vers vos priorités Autotask.</li>
+    <li><strong>Décalage de l'échéance (heures)</strong> — le nombre d'heures avant l'échéance du billet (24 par défaut).</li>
+    <li><strong>Langue des billets</strong> — en/fr/es pour le corps des billets.</li>
+    <li><strong>Entreprise par défaut (alertes au niveau MSP)</strong> — où atterrissent les alertes à l'échelle du parc (sans locataire).</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 132" role="img" aria-label="Les trois étapes de configuration dans l'ordre : identifiants, puis valeurs par défaut des billets, puis correspondance locataire-entreprise.">
+      <rect width="720" height="132" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="stepArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(36,40)">
+          <rect x="0" y="0" width="172" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <circle cx="26" cy="28" r="13" fill="#10243B" stroke="#4A80BD"/><text x="26" y="33" fill="#5CCBF4" font-size="14" font-weight="700">1</text>
+          <text x="104" y="25" fill="#A8E1F8" font-size="14" font-weight="600">Identifiants</text>
+          <text x="104" y="43" fill="#6B85A6" font-size="11">tester la connexion</text>
+        </g>
+        <path d="M214 68 H252" stroke="#335F92" stroke-width="2" marker-end="url(#stepArr)"/>
+        <g transform="translate(262,40)">
+          <rect x="0" y="0" width="172" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <circle cx="26" cy="28" r="13" fill="#10243B" stroke="#4A80BD"/><text x="26" y="33" fill="#5CCBF4" font-size="14" font-weight="700">2</text>
+          <text x="104" y="25" fill="#A8E1F8" font-size="13.5" font-weight="600">Valeurs par défaut</text>
+          <text x="104" y="43" fill="#6B85A6" font-size="11">file · statut · priorité</text>
+        </g>
+        <path d="M440 68 H478" stroke="#335F92" stroke-width="2" marker-end="url(#stepArr)"/>
+        <g transform="translate(488,40)">
+          <rect x="0" y="0" width="196" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <circle cx="26" cy="28" r="13" fill="#10243B" stroke="#4A80BD"/><text x="26" y="33" fill="#5CCBF4" font-size="14" font-weight="700">3</text>
+          <text x="116" y="25" fill="#A8E1F8" font-size="13.5" font-weight="600">Locataire → entreprise</text>
+          <text x="116" y="43" fill="#6B85A6" font-size="11">associer &amp; enregistrer</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les trois sections de la page Intégration PSA, dans l'ordre où vous les remplissez.</figcaption>
+  </figure>
+
+  <h2>3. Correspondance locataire → entreprise</h2>
+
+  <p>Le tableau de correspondance associe chaque locataire Panoptica365 à une entreprise Autotask. Utilisez <strong>Proposer des correspondances</strong> pour l'appariement automatique par nom (il considère à la fois le nom d'affichage et le champ Nom PSA du locataire), corrigez ce qu'il a manqué avec le sélecteur d'entreprises avec recherche, et cliquez sur <strong>Enregistrer la correspondance</strong> — toutes les lignes en un seul lot. Le pied de page compte les locataires non associés : ceux-là retombent sur la livraison par <strong>courriel</strong> (votre Adresse courriel PSA) au lieu de billets par API, alors terminez la correspondance.</p>
+
+  <h2>Le comportement au quotidien</h2>
+
+  <ul>
+    <li><strong>Un billet par problème.</strong> Les alertes se dédupliquent par paire (locataire, stratégie d'alerte) : si le même problème se redéclenche pendant que son billet est ouvert, la nouvelle occurrence est <strong>ajoutée en note</strong> au billet existant, pas levée en doublon. Votre tableau reste lisible pendant un incident bruyant.</li>
+    <li><strong>Résolution bidirectionnelle.</strong> Fermez (ou complétez) le billet dans Autotask → l'alerte se résout dans Panoptica365 à la prochaine synchronisation. Résolvez l'alerte dans Panoptica365 → une fenêtre demande <em>« Fermer le billet Autotask associé? »</em> — en opération groupée, elle ne demande qu'une fois pour tout le lot.</li>
+    <li><strong>Les alertes résolues par exemption ne deviennent jamais des billets.</strong> Le bruit supprimé reste entièrement hors du tableau.</li>
+    <li><strong>L'acheminement s'applique toujours.</strong> Seules les alertes dont la stratégie achemine vers <strong>PSA</strong> ou <strong>Les deux</strong> créent des billets (voir <em>Ajustez les stratégies d'alerte</em>).</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Un billet par problème : la première occurrence ouvre un billet; tant que ce billet est ouvert, les occurrences répétées sont ajoutées en notes au lieu de créer des doublons.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dedArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- first occurrence -->
+        <g transform="translate(40,40)">
+          <rect x="0" y="0" width="150" height="44" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="75" y="22" text-anchor="middle" fill="#C4D4E8" font-size="12.5" font-weight="600">1re occurrence</text>
+          <text x="75" y="38" text-anchor="middle" fill="#6B85A6" font-size="10.5">(locataire, stratégie)</text>
+        </g>
+        <path d="M190 62 H236" stroke="#5C7796" stroke-width="2" marker-end="url(#dedArr)"/>
+        <text x="213" y="52" text-anchor="middle" fill="#7DD9F9" font-size="11">ouvre</text>
+        <!-- the open ticket -->
+        <g transform="translate(244,28)">
+          <rect x="0" y="0" width="200" height="144" rx="11" fill="#10243B" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="13.5" font-weight="700">Un billet ouvert</text>
+          <line x1="20" y1="40" x2="180" y2="40" stroke="#1F3C5C"/>
+          <text x="20" y="64" fill="#8FB0D6" font-size="11">— note : récurrence</text>
+          <text x="20" y="86" fill="#8FB0D6" font-size="11">— note : récurrence</text>
+          <text x="20" y="108" fill="#8FB0D6" font-size="11">— note : récurrence</text>
+          <text x="20" y="132" fill="#52708F" font-size="10.5">ajouté, pas dédoublé</text>
+        </g>
+        <!-- repeat occurrences -->
+        <g transform="translate(530,40)">
+          <rect x="0" y="0" width="150" height="44" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="75" y="22" text-anchor="middle" fill="#C4D4E8" font-size="12.5" font-weight="600">Se redéclenche</text>
+          <text x="75" y="38" text-anchor="middle" fill="#6B85A6" font-size="10.5">billet encore ouvert</text>
+        </g>
+        <path d="M530 62 H452" stroke="#5C7796" stroke-width="2" marker-end="url(#dedArr)"/>
+        <text x="491" y="52" text-anchor="middle" fill="#7DD9F9" font-size="11">ajout</text>
+      </g>
+    </svg>
+    <figcaption>Tant que le billet est ouvert, les occurrences répétées arrivent en notes — un billet par (locataire, stratégie).</figcaption>
+  </figure>
+
+  <h2>État</h2>
+
+  <p>La page de paramètres affiche l'<strong>État</strong> de l'intégration : dernière synchronisation, billets liés ouverts, erreurs de synchronisation et état de l'authentification. Si l'authentification Autotask commence à échouer, vous verrez <em>« Échec de l'authentification Autotask depuis … »</em>, une alerte système se déclenche, et les alertes destinées aux billets retombent automatiquement sur l'adresse courriel PSA jusqu'au rétablissement — la livraison se dégrade, elle ne disparaît jamais. C'est aussi pourquoi l'Adresse courriel PSA devrait rester configurée même une fois l'intégration native en service.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 180" role="img" aria-label="Quand l'authentification Autotask échoue, les alertes destinées aux billets retombent sur l'adresse courriel PSA jusqu'au rétablissement; la livraison se dégrade mais ne disparaît jamais.">
+      <rect width="720" height="180" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="fbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker>
+        <marker id="fbWarn" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FFC04D"/></marker>
+      </defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- alert -->
+        <rect x="40" y="68" width="154" height="48" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="117" y="91" fill="#C4D4E8" font-size="12.5" font-weight="600">Alerte destinée</text>
+        <text x="117" y="107" fill="#C4D4E8" font-size="12.5" font-weight="600">à un billet</text>
+        <!-- normal path -->
+        <path d="M194 80 H372" stroke="#5C7796" stroke-width="2" marker-end="url(#fbArr)"/>
+        <text x="283" y="70" fill="#7DD9F9" font-size="11">auth OK → billet API</text>
+        <rect x="380" y="40" width="170" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="465" y="65" fill="#A8E1F8" font-size="13" font-weight="600">Billet Autotask</text>
+        <!-- fallback path -->
+        <path d="M194 104 H372" stroke="#FFC04D" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#fbWarn)"/>
+        <text x="283" y="128" fill="#FFC04D" font-size="11">échec → courriel PSA</text>
+        <rect x="380" y="100" width="170" height="40" rx="9" fill="#0E2236" stroke="#FFC04D"/>
+        <text x="465" y="125" fill="#FFC04D" font-size="12.5" font-weight="600">Adresse courriel PSA</text>
+        <!-- never disappears -->
+        <text x="630" y="76" fill="#2EE8A0" font-size="11.5" font-weight="600">livraison</text>
+        <text x="630" y="94" fill="#2EE8A0" font-size="11.5" font-weight="600">jamais coupée</text>
+      </g>
+    </svg>
+    <figcaption>Si l'authentification Autotask échoue, les alertes retombent sur l'adresse courriel PSA jusqu'au rétablissement — la livraison se dégrade, jamais ne disparaît.</figcaption>
+  </figure>
+
+  <p>Vous utilisez un autre PSA? Prenez la voie courriel : la plupart des PSA convertissent les courriels en billets, et le Texte d'attribution avec <code>${PSA_NAME}</code> (voir <em>Configurez les notifications</em>) permet à votre PSA d'acheminer automatiquement ces courriels à la bonne entreprise.</p>
+
+</div>
+</body>
+</html>

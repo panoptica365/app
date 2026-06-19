@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le tableau de bord du locataire — Guides Panoptica365</title>
+<meta name="lesson:title" content="Le tableau de bord du locataire">
+<meta name="lesson:subtitle" content="Six onglets, deux zones : les cartes de métriques, les panneaux de détail, et où vit chaque flux de travail.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Le tableau de bord du locataire</span></div>
+  <h1>Le tableau de bord du locataire</h1>
+  <p class="dek">Six onglets, deux zones : les cartes de métriques, les panneaux de détail, et où vit chaque flux de travail.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La disposition d'un tableau de bord de locataire : une rangée de six onglets au-dessus de deux zones empilées — une grille de cartes de métriques et les panneaux de détail en dessous.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- six tabs -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="60" y="36" width="158" height="40" rx="8" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="139" y="61" fill="#7DD9F9" font-size="13.5" font-weight="700">Vue d'ensemble</text></g>
+        <g><rect x="230" y="36" width="138" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="299" y="61" fill="#A8E1F8" font-size="13.5">Alertes</text></g>
+        <g><rect x="380" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="459" y="61" fill="#A8E1F8" font-size="13.5">Stratégies AC</text></g>
+        <g><rect x="550" y="36" width="172" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="636" y="61" fill="#A8E1F8" font-size="13.5">Stratégies Intune</text></g>
+        <g><rect x="734" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="813" y="61" fill="#A8E1F8" font-size="13.5">Applications</text></g>
+        <g><rect x="904" y="36" width="156" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="982" y="61" fill="#A8E1F8" font-size="13.5">Journal</text></g>
+      </g>
+
+      <!-- zone 1: metric cards grid -->
+      <text x="60" y="108" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CARTES DE MÉTRIQUES</text>
+      <g>
+        <rect x="60" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="304" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="548" y="120" width="232" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <rect x="792" y="120" width="268" height="62" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <!-- little status dots: triage surface -->
+        <circle cx="276" cy="136" r="5" fill="#2EE8A0"/>
+        <circle cx="520" cy="136" r="5" fill="#FFC04D"/>
+        <circle cx="764" cy="136" r="5" fill="#FF5A6E"/>
+        <circle cx="1044" cy="136" r="5" fill="#2EE8A0"/>
+        <g fill="#52708F">
+          <rect x="74" y="148" width="120" height="7" rx="3.5"/><rect x="74" y="163" width="78" height="6" rx="3"/>
+          <rect x="318" y="148" width="120" height="7" rx="3.5"/><rect x="318" y="163" width="78" height="6" rx="3"/>
+          <rect x="562" y="148" width="120" height="7" rx="3.5"/><rect x="562" y="163" width="78" height="6" rx="3"/>
+          <rect x="806" y="148" width="150" height="7" rx="3.5"/><rect x="806" y="163" width="96" height="6" rx="3"/>
+        </g>
+      </g>
+
+      <!-- zone 2: drill-down panels -->
+      <text x="60" y="216" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANNEAUX DE DÉTAIL</text>
+      <g>
+        <rect x="60" y="228" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 245 l8 -7 8 7" fill="none" stroke="#5CCBF4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="241" width="220" height="7" rx="3.5" fill="#52708F"/>
+        <rect x="60" y="272" width="1000" height="34" rx="7" fill="#081829" stroke="#1F3C5C"/>
+        <path d="M78 286 l8 7 8 -7" fill="none" stroke="#52708F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="106" y="285" width="260" height="7" rx="3.5" fill="#52708F"/>
+      </g>
+    </svg>
+    <figcaption>Les deux zones du tableau de bord : les cartes de métriques en haut pour le triage, les panneaux de détail repliables en dessous pour le détail.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Cliquez sur un locataire dans la Console principale et vous atterrissez sur son tableau de bord. C'est la page la plus riche de Panoptica365 — tout ce qui est connu d'un locataire, organisé en six onglets :</p>
+  </div>
+
+  <ol>
+    <li><strong>Vue d'ensemble</strong> — l'instantané de configuration et d'activité (ce guide).</li>
+    <li><strong>Alertes</strong> — les alertes de ce locataire, même flux de travail que la page Alertes globale.</li>
+    <li><strong>Stratégies AC</strong> — les modèles d'accès conditionnel affectés à ce locataire (guide dédié).</li>
+    <li><strong>Stratégies Intune</strong> — les modèles Intune déployés sur ce locataire (guide dédié).</li>
+    <li><strong>Applications</strong> — l'inventaire des applications d'entreprise et le flux d'approbation (guide dédié).</li>
+    <li><strong>Journal des changements</strong> — l'historique de chaque changement apporté à ce locataire, autant ceux faits par Panoptica365 (déploiements, applications de paramètres) que ceux consignés manuellement par les opérateurs. Les alertes de dérive renvoient aux entrées d'ici quand un changement les explique.</li>
+  </ol>
+
+  <h2>L'onglet Vue d'ensemble : les cartes de métriques</h2>
+
+  <p>La zone du haut est une grille de cartes à consulter d'un coup d'œil. Ce qui apparaît dépend de ce que le locataire possède, mais attendez-vous à :</p>
+
+  <ul>
+    <li><strong>Score de sécurité</strong> — avec la moyenne comparative des locataires de taille similaire.</li>
+    <li><strong>Identité</strong> : Utilisateurs totaux, Licenciés, <strong>Admins globaux</strong> (vert à 2 ou moins, rouge au-delà de 5 — le nombre compte), pourcentage <strong>AMF inscrite</strong> (vert à 90 % et plus), Utilisateurs à risque, Inactifs (90 j).</li>
+    <li><strong>Contrôle d'accès</strong> : Stratégies AC (réparties activées/désactivées), Défauts de sécurité actifs ou non.</li>
+    <li><strong>Appareils</strong> : pourcentage d'Appareils conformes avec flèche de tendance, Appareils inactifs (90 j), état de synchronisation Entra Connect.</li>
+    <li><strong>Collaboration</strong> : Sites SP, <strong>Liens anonymes</strong> (gravité élevée s'il y en a), comptes OneDrive, Équipes (réparties publiques/privées).</li>
+    <li><strong>Courriel</strong> : Boîtes aux lettres, activité Courriel (7 j), <strong>Règles de boîte de réception</strong> — avec un indicateur de transfert externe, l'un des signaux de compromission les plus courants.</li>
+    <li><strong>Apps et DNS</strong> : Apps enregistrées, Apps d'entreprise, Domaines avec l'état de validation MX/SPF/DMARC/Autodiscover.</li>
+  </ul>
+
+  <p>Traitez les cartes comme une surface de triage : tout ce qui est rouge ou jaune est une question qui mérite une réponse.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Une grille de cartes où deux cartes portent une couleur : Admins globaux en rouge au-delà de 5, AMF inscrite en vert à 90 % et plus.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LA COULEUR EST LE SIGNAL DE TRIAGE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- green card: MFA Registration 90%+ -->
+        <rect x="48" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.6"/>
+        <circle cx="318" cy="90" r="6" fill="#2EE8A0"/>
+        <text x="72" y="100" fill="#C4D4E8" font-size="14">AMF inscrite</text>
+        <text x="72" y="158" fill="#2EE8A0" font-size="40" font-weight="700">92 %</text>
+        <text x="72" y="190" fill="#6B85A6" font-size="12.5">vert à 90 % et plus</text>
+        <!-- red card: Global Admins above 5 -->
+        <rect x="376" y="64" width="296" height="148" rx="11" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle cx="646" cy="90" r="6" fill="#FF5A6E"/>
+        <text x="400" y="100" fill="#C4D4E8" font-size="14">Admins globaux</text>
+        <text x="400" y="158" fill="#FF8A98" font-size="40" font-weight="700">7</text>
+        <text x="400" y="190" fill="#6B85A6" font-size="12.5">rouge au-delà de 5 — le nombre compte</text>
+      </g>
+    </svg>
+    <figcaption>Deux des cartes que le texte signale : vert quand l'AMF inscrite atteint 90 % et plus, rouge quand les Admins globaux dépassent 5.</figcaption>
+  </figure>
+
+  <h2>L'onglet Vue d'ensemble : les panneaux de détail</h2>
+
+  <p>Sous les cartes, des panneaux repliables portent le détail derrière chaque carte : la répartition des licences, la liste réelle des administrateurs globaux, les utilisateurs sans AMF, le détail de chaque stratégie AC, le tableau complet des appareils Intune, les principales boîtes aux lettres par stockage, les liens de partage anonymes par site, toutes les règles de boîte de réception regroupées par utilisateur, les listes d'utilisateurs et d'appareils inactifs, les applications enregistrées et tierces, et les enregistrements DNS par domaine.</p>
+
+  <p>Vous utiliserez ces panneaux constamment pendant les évaluations et les conversations avec les clients — « vous avez quatre administrateurs globaux et deux d'entre eux sont des comptes sans licence dont personne n'est responsable » sort directement d'ici.</p>
+
+  <h2>Fraîcheur des données</h2>
+
+  <p>Tout ce qui figure sur la Vue d'ensemble reflète la <strong>dernière interrogation</strong> (l'intervalle que vous fixez par locataire, 1 à 60 minutes, plus des cycles plus lents pour les données lourdes). Si vous venez d'intégrer le locataire, donnez quelques minutes à la première interrogation; si une carte semble périmée, vérifiez <strong>Dernière interrogation</strong> sur la page Locataires.</p>
+
+  <h2>Et ensuite</h2>
+
+  <p>Un premier passage sensé sur un locataire fraîchement intégré : survolez la Vue d'ensemble à la recherche de tout ce qui est alarmant, puis travaillez <strong>Applications</strong> (approuvez ce en quoi vous avez confiance), puis <strong>Stratégies AC</strong> et <strong>Stratégies Intune</strong> (déployez vos références), puis <strong>Sécurité</strong> (la surface des paramètres à l'échelle du locataire, depuis la barre latérale). Les quatre prochains guides parcourent chacun de ces volets.</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">1</div><div class="xt"><b>Applications</b> — approuvez ce en quoi vous avez confiance.</div></div>
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Stratégies AC</b> — déployez vos références.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Stratégies Intune</b> — déployez vos références.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Sécurité</b> — la surface des paramètres à l'échelle du locataire, depuis la barre latérale.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

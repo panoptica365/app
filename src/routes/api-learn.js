@@ -196,17 +196,22 @@ router.get('/lessons/:topicSlug/:lessonSlug', async (req, res) => {
       return res.status(404).json({ error: 'Lesson not found' });
     }
     const locale = localeFromReq(req);
-    const content = learn.getLessonContent(topicSlug, lessonSlug, locale);
-    if (!content) return res.status(404).json({ error: 'Lesson not found' });
+    // Serve the locale the operator asked for, falling back to en only if that
+    // file is genuinely missing (all three exist today). The iframe loads the
+    // file directly from the /learn-assets static mount.
+    const served = learn.lessonFileExists(topicSlug, lessonSlug, locale)
+      ? locale
+      : learn.DEFAULT_LOCALE;
+    const meta = learn.getLessonMeta(topicSlug, lessonSlug, served);
 
     res.json({
       lesson_id: `${topicSlug}/${lessonSlug}`,
       topic_slug: topicSlug,
       slug: lessonSlug,
-      title: content.title,
-      subtitle: content.subtitle,
+      title: meta.title,
+      subtitle: meta.subtitle,
       last_updated: learn.getLessonMaxLastUpdated(topicSlug, lessonSlug),
-      body_markdown: content.body,
+      html_url: `/learn-assets/${encodeURIComponent(topicSlug)}/${encodeURIComponent(lessonSlug)}.${served}.html`,
     });
   } catch (err) {
     console.error('[Learn] GET /lessons/:topic/:lesson failed:', err.message);

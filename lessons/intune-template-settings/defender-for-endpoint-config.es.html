@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuración de Defender for Endpoint — Windows + macOS</title>
+<meta name="lesson:title" content="Configuración de Defender for Endpoint — Windows + macOS">
+<meta name="lesson:subtitle" content="28 ajustes Windows y 3 macOS que endurecen los valores de fábrica de Defender Antivirus frente al robo de credenciales, AiTM y preparación de ransomware.">
+<meta name="lesson:icon" content="shield">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de plantillas de Intune</span> <span class="sep">·</span> <span>Configuración de Defender for Endpoint</span></div>
+  <h1>Configuración de Defender for Endpoint — Windows + macOS</h1>
+  <p class="dek">28 ajustes Windows y 3 macOS que endurecen los valores de fábrica de Defender Antivirus frente al robo de credenciales, AiTM y preparación de ransomware.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Dos plantillas Defender Settings — Windows con 28 ajustes y macOS con 3 — desplegadas a través del área Endpoint Security de Intune como configuración de Microsoft Defender Antivirus.">
+      <defs>
+        <radialGradient id="deBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="deShield" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="100%" stop-color="#2A7FA3"/></linearGradient>
+        <marker id="deArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#deBg)"/>
+
+      <!-- left: the two templates -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="58" y="78" width="270" height="84" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <text x="80" y="112" fill="#A8E1F8" font-size="17" font-weight="600">Defender Settings Windows</text>
+        <text x="80" y="140" fill="#7DD9F9" font-size="14">28 ajustes antivirus</text>
+
+        <rect x="58" y="180" width="270" height="84" rx="12" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="80" y="214" fill="#C4D4E8" font-size="17" font-weight="600">Defender Settings macOS</text>
+        <text x="80" y="242" fill="#5CCBF4" font-size="14">3 ajustes</text>
+      </g>
+
+      <!-- arrows into the pipeline -->
+      <path d="M328 120 C400 120 410 170 470 170" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#deArr)"/>
+      <path d="M328 222 C400 222 410 170 470 170" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#deArr)"/>
+
+      <!-- center label -->
+      <text x="400" y="92" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DESPLEGADO VIA INTUNE</text>
+      <text x="400" y="262" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ENDPOINT SECURITY</text>
+
+      <!-- right: the shield (Defender Antivirus) -->
+      <g transform="translate(770,170)">
+        <circle r="124" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="90" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <path d="M0 -74 L62 -48 V12 C62 52 34 78 0 92 C-34 78 -62 52 -62 12 V-48 Z" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.8"/>
+        <path d="M0 -54 L44 -34 V10 C44 40 24 60 0 70 C-24 60 -44 40 -44 10 V-34 Z" fill="url(#deShield)" opacity="0.32"/>
+        <path d="M-22 6 L-6 24 L26 -16" fill="none" stroke="#EAF7FE" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="770" y="312" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">MICROSOFT DEFENDER ANTIVIRUS</text>
+    </svg>
+    <figcaption>Dos plantillas — 28 ajustes para Windows, 3 para macOS — desplegadas a través del área Endpoint Security de Intune para afinar Defender Antivirus.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un endpoint Windows con Microsoft Defender Antivirus corriendo en su modo de fábrica está razonablemente protegido contra malware drive-by. Está mucho menos protegido contra el tipo de ataques que la tarjeta 2 pasó siete lecciones describiendo — robo de credenciales, AiTM, continuación BEC, preparación de ransomware — porque la configuración por defecto deja varias de las capacidades de detección más fuertes de Defender mal afinadas.</p>
+
+  <p>Las plantillas Defender Settings de Panoptica365 existen para endurecer esa configuración por defecto. La plantilla Windows configura 28 comportamientos específicos de Defender Antivirus; la plantilla macOS configura tres. Ambas son necesarias si el cliente tiene dispositivos en la plataforma correspondiente.</p>
+
+  <p>Esta lección recorre lo que cada plantilla configura, las elecciones que importan, y las realidades operativas de hacer correr Defender a escala de producción.</p>
+  </div>
+
+  <h2>Defender Settings Windows — qué configura</h2>
+
+  <p>La plantilla Defender Settings Windows de Panoptica365 usa el tipo de plantilla Settings Catalog (<code>configurationPolicies</code>) con plataformas puestas en <code>windows10</code> y tecnologías <code>mdm,microsoftSense</code>. El <code>templateDisplayName</code> es «Microsoft Defender Antivirus» y la familia de la plantilla es <code>endpointSecurityAntivirus</code>. En otras palabras: esto es fundamentalmente una configuración de Defender <em>Antivirus</em>, desplegada a través del área de política Endpoint Security de Intune (la misma superficie donde viven las configuraciones de MDE / Defender XDR). El marcador de tecnología <code>microsoftSense</code> señala que la plantilla integra con la cartera de Defender for Endpoint; no significa que la plantilla configure ajustes de la capa EDR. Cada uno de los 28 ajustes afina el comportamiento de Defender Antivirus.</p>
+
+  <p>Los valores específicos de esta plantilla no son arbitrarios — la mayoría siguen la <a href="https://jeffreyappel.nl/tag/mde-series/" target="_blank" rel="noopener">serie MDE de Jeffrey Appel</a>, una referencia práctica de endurecimiento ampliamente citada en la comunidad de seguridad M365. Appel es un MVP de seguridad de Microsoft que recorre los ajustes individuales de Defender con el razonamiento detrás de cada uno. Por eso la postura de la plantilla aterriza en el extremo agresivo de lo que Microsoft considera razonable en lugar de en el término medio — sigue una baseline curada por expertos en lugar de valores improvisados. Los operadores que quieran entender por qué un ajuste es como es, o necesiten defender una elección ante un cliente, pueden encontrar el escrito correspondiente en la serie.</p>
+
+  <p>Los ajustes se agrupan en cuatro clústeres funcionales:</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Los 28 ajustes Windows se agrupan en cuatro clústeres funcionales: protección en la nube y firmas, monitorización de comportamiento y cobertura, programación y rendimiento, endurecimiento del endpoint y de Defender.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">28 AJUSTES WINDOWS · CUATRO CLÚSTERES</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="28" y="62" width="156" height="108" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="106" y="92" fill="#7DD9F9" font-size="22" font-weight="700">1</text>
+          <text x="106" y="120" fill="#C4D4E8" font-size="12">Protección</text>
+          <text x="106" y="138" fill="#C4D4E8" font-size="12">en la nube</text>
+        </g>
+        <g>
+          <rect x="200" y="62" width="156" height="108" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="278" y="92" fill="#7DD9F9" font-size="22" font-weight="700">2</text>
+          <text x="278" y="120" fill="#C4D4E8" font-size="12">Comportamiento</text>
+          <text x="278" y="138" fill="#C4D4E8" font-size="12">&amp; cobertura</text>
+        </g>
+        <g>
+          <rect x="372" y="62" width="156" height="108" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="450" y="92" fill="#7DD9F9" font-size="22" font-weight="700">3</text>
+          <text x="450" y="120" fill="#C4D4E8" font-size="12">Programación</text>
+          <text x="450" y="138" fill="#C4D4E8" font-size="12">&amp; rendimiento</text>
+        </g>
+        <g>
+          <rect x="544" y="62" width="148" height="108" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="618" y="92" fill="#7DD9F9" font-size="22" font-weight="700">4</text>
+          <text x="618" y="120" fill="#C4D4E8" font-size="12">Endurecimiento</text>
+          <text x="618" y="138" fill="#C4D4E8" font-size="12">&amp; Defender</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Los 28 ajustes Windows se ordenan en cuatro clústeres funcionales.</figcaption>
+  </figure>
+
+  <h3>1. Protección en la nube y ciclo de vida de las firmas</h3>
+
+  <p>Los ajustes más consecuentes. La capacidad moderna de detección de Defender depende fuertemente de la protección entregada por la nube — la coincidencia de patrones, el análisis de comportamiento y la inteligencia de amenazas ocurren en la nube de Microsoft, no en el dispositivo.</p>
+
+  <ul>
+    <li><strong><code>allowcloudprotection</code></strong> — protección en la nube habilitada.</li>
+    <li><strong><code>cloudblocklevel</code></strong> = <strong>High Plus</strong> (valor 4). La escala de Microsoft va Default → Moderate → High → High Plus → Zero Tolerance. La plantilla se salta el medio y aterriza en el segundo más agresivo. Más bloqueos, más falsos positivos, más confianza en que los archivos sospechosos se detienen.</li>
+    <li><strong><code>cloudextendedtimeout</code></strong> = <strong>50 segundos</strong>. Defender esperará hasta 50 segundos por un veredicto en la nube sobre un archivo sospechoso antes de caer en una decisión local. El valor por defecto de Microsoft es 0 (no esperar nada). 50 está en el extremo alto de lo que Microsoft considera razonable — la plantilla valora un análisis más profundo sobre un veredicto más ágil.</li>
+    <li><strong><code>submitsamplesconsent</code></strong> = <strong>Enviar todas las muestras automáticamente</strong> (valor 3). Existen cuatro opciones: «Preguntar siempre» (0), «Enviar muestras seguras» (1, la baseline típica), «No enviar nunca» (2) y «Enviar todas las muestras» (3). La plantilla escoge la opción más agresiva. Esto significa que <em>cualquier</em> archivo sospechoso — incluyendo contenido potencialmente sensible — puede subirse a Microsoft para análisis. Vale la pena saberlo para clientes con requisitos estrictos de residencia de datos o privacidad; algunos querrán bajarlo a 1.</li>
+    <li><strong><code>signatureupdateinterval</code></strong> = <strong>1 hora</strong>. El valor por defecto de Microsoft es una vez al día. Poner esto en 1 hora significa que Defender tira de actualizaciones de firmas 24× más frecuentemente. Es agresivo — cierra la ventana entre que una nueva firma está disponible y el dispositivo la tiene, aproximadamente al tiempo de un solo ciclo de sincronización. Tiene algunas implicaciones de ancho de banda en redes lentas pero la mayoría de los parques no lo notarán.</li>
+    <li><strong><code>checkforsignaturesbeforerunningscan</code></strong> — ejecuta una actualización de firmas antes de cualquier escaneo programado, asegurando que el escaneo usa las últimas definiciones.</li>
+    <li><strong><code>signatureoutofdate</code></strong> — no está en esta plantilla directamente, pero la política de cumplimiento de Windows (lección 2) comprueba firmas obsoletas, cerrando el bucle.</li>
+  </ul>
+
+  <h3>2. Monitorización de comportamiento y cobertura de protección</h3>
+
+  <p>Ajustes que aseguran que Defender está realmente vigilando las cosas que necesitan ser vigiladas:</p>
+
+  <ul>
+    <li><strong><code>allowbehaviormonitoring</code></strong> — detección basada en comportamiento habilitada (atrapa comportamiento malicioso incluso cuando el archivo no se reconoce).</li>
+    <li><strong><code>allowrealtimemonitoring</code></strong> — escaneo en tiempo real de la actividad de archivos.</li>
+    <li><strong><code>realtimescandirection</code></strong> = <strong>0</strong> (monitorizar todos los archivos, tanto entrantes como salientes). Las otras opciones (1 = solo entrantes, 2 = solo salientes) crearían puntos ciegos; la plantilla mantiene intencionadamente cobertura bidireccional.</li>
+    <li><strong><code>allowioavprotection</code></strong> — protección IOAV (Internet/Outlook Attachment) habilitada. Escanea contenido descargado por las rutas de Internet Explorer / Edge / adjuntos de Outlook.</li>
+    <li><strong><code>allowarchivescanning</code></strong> — escanea dentro de .zip, .tar, .rar, etc.</li>
+    <li><strong><code>allowemailscanning</code></strong> — escanea adjuntos de correo a nivel del cliente de correo local.</li>
+    <li><strong><code>allowscriptscanning</code></strong> — escanea la ejecución de scripts (PowerShell, JScript, VBScript).</li>
+    <li><strong><code>allowscanningnetworkfiles</code></strong> — escanea archivos accedidos a través de recursos de red.</li>
+    <li><strong><code>allowfullscanonmappednetworkdrives</code></strong> = <strong>DESHABILITADO</strong>. Los escaneos completos programados excluyen explícitamente las unidades de red mapeadas. Es una elección deliberada — escanear completamente unidades mapeadas puede llevar una eternidad, puede martillear el servidor de archivos y tiende a producir detecciones espurias en archivos compartidos. El escaneo en tiempo real de archivos de red (vía <code>allowscanningnetworkfiles</code> arriba) sigue aplicándose; solo la pasada pesada programada los salta.</li>
+    <li><strong><code>allowfullscanremovabledrivescanning</code></strong> — los escaneos programados incluyen unidades extraíbles (memorias USB, SSDs externos).</li>
+    <li><strong><code>enablenetworkprotection</code></strong> — Network Protection (la característica de Defender que bloquea conexiones a URLs maliciosas conocidas, complementando a SmartScreen).</li>
+    <li><strong><code>puaprotection</code></strong> = habilitado en modo <strong>block</strong>. La otra opción (audit, valor 2) registraría sin bloquear. La plantilla escoge block — pilla grayware (bundleware, adware, secuestradores de navegador) y previene la instalación en lugar de solo registrar.</li>
+  </ul>
+
+  <p>El ajuste <code>enablenetworkprotection</code> merece destacarse específicamente — es la característica de Defender que pilla los sitios de phishing AiTM cuando los datos de reputación de URL de SmartScreen los marcan. El recorrido de AiTM en la lección 3 de la tarjeta 2 mencionaba esto como una de las mitigaciones secundarias. La plantilla lo activa.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 180" role="img" aria-label="Con Network Protection habilitado, una conexión a una URL de phishing AiTM maliciosa conocida marcada por los datos de reputación de SmartScreen se bloquea.">
+      <rect width="720" height="180" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="npArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="32" y="62" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="107" y="86" fill="#C4D4E8" font-size="14" font-weight="600">Dispositivo</text>
+        <text x="107" y="104" fill="#6B85A6" font-size="11.5">abre un enlace</text>
+
+        <rect x="285" y="56" width="150" height="68" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="360" y="82" fill="#7DD9F9" font-size="14" font-weight="700">Network Protection</text>
+        <text x="360" y="100" fill="#A8E1F8" font-size="11.5">reputación SmartScreen</text>
+
+        <rect x="538" y="62" width="150" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="613" y="86" fill="#FF8A98" font-size="14" font-weight="700">Sitio AiTM</text>
+        <text x="613" y="104" fill="#E2A0AA" font-size="11.5">URL maliciosa</text>
+      </g>
+      <path d="M182 90 H285" stroke="#5C7796" stroke-width="2" marker-end="url(#npArr)"/>
+      <!-- blocked connection -->
+      <path d="M435 90 H538" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="5 5"/>
+      <g transform="translate(486,90)">
+        <circle r="14" fill="#2A0F16" stroke="#FF5A6E" stroke-width="2"/>
+        <path d="M-7 -7 L7 7 M7 -7 L-7 7" stroke="#FF5A6E" stroke-width="2.4" stroke-linecap="round"/>
+      </g>
+      <text x="486" y="138" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11">conexión bloqueada</text>
+    </svg>
+    <figcaption>Network Protection bloquea la conexión cuando los datos de reputación de SmartScreen marcan la URL como maliciosa.</figcaption>
+  </figure>
+
+  <h3>3. Programación de escaneos y rendimiento</h3>
+
+  <p>Ajustes que controlan <em>cuándo</em> y <em>con qué agresividad</em> Defender consume los recursos del dispositivo:</p>
+
+  <ul>
+    <li><strong><code>schedulequickscantime</code></strong> = <strong>600</strong> (minutos desde medianoche) = <strong>10:00 AM</strong>. No fuera de horario — deliberadamente media mañana. El razonamiento: los portátiles de pequeña empresa suelen estar apagados por la noche. Programar un escaneo a las 2 AM significa que la mayoría de los dispositivos se lo pierden y tienen que esperar al siguiente turno. Las 10 AM pega en una ventana donde la mayoría de los dispositivos están encendidos, con sesión iniciada y conectados a redes rápidas. El usuario nota una pequeña subida de CPU durante el escaneo, pero la alternativa es escaneos que nunca corren.</li>
+    <li><strong><code>avgcpuloadfactor</code></strong> = <strong>20</strong> (por ciento). Defender usará hasta el 20% de CPU durante los escaneos — conservador, prioriza el rendimiento percibido por el usuario sobre la velocidad del escaneo. El valor por defecto de Microsoft es 50%. El ajuste más bajo significa que los escaneos llevan más tiempo pero no hacen que el dispositivo se sienta lento.</li>
+    <li><strong><code>enablelowcpupriority</code></strong> — los escaneos de Defender corren con baja prioridad de proceso cuando es posible.</li>
+    <li><strong><code>scanparameter</code></strong> = <strong>1</strong> (escaneo rápido, no completo). Los escaneos completos pueden llevar horas; los escaneos rápidos cubren las rutas de infección de alta probabilidad en minutos.</li>
+    <li><strong><code>disablecatchupquickscan</code></strong> = <strong>0</strong> (los escaneos rápidos de recuperación <strong>sí</strong> están permitidos). Un dispositivo que estaba apagado cuando le tocaba el escaneo rápido programado lo ejecutará en la siguiente oportunidad. No deshabilites el catchup.</li>
+    <li><strong><code>disablecatchupfullscan</code></strong> = <strong>0</strong> (los escaneos completos de recuperación <strong>sí</strong> están permitidos). Misma lógica, para escaneos completos.</li>
+    <li><strong><code>randomizescheduletasktimes</code></strong> — aleatoriza los tiempos de inicio de escaneos a través del parque para evitar que todos los dispositivos escaneen simultáneamente y disparen la carga de infraestructura.</li>
+  </ul>
+
+  <h3>4. Endurecimiento del endpoint y endurecimiento interno de Defender</h3>
+
+  <p>Un puñado de ajustes que protegen al propio Defender de ser manipulado:</p>
+
+  <ul>
+    <li><strong><code>disablelocaladminmerge</code></strong> = <strong>1</strong> (la fusión con admin local <strong>deshabilitada</strong>). Los administradores locales no pueden sobrescribir la política gestionada centralmente. Sin esto, un admin local podría deshabilitar la protección en tiempo real en el dispositivo.</li>
+    <li><strong><code>allowdatagramprocessingonwinserver</code></strong> = <strong>1</strong> (habilitado). Procesamiento de datagramas en instalaciones Windows Server (un caso límite de nicho donde Defender se comporta ligeramente diferente en SKUs de servidor vs SKUs de estación de trabajo).</li>
+    <li><strong><code>allowuseruiaccess</code></strong> = <strong>1</strong> (acceso a la UI de usuario <strong>habilitado</strong>). Los usuarios no-admin pueden ver la interfaz de Defender — ver los resultados de los escaneos recientes, ver qué se bloqueó, ver el historial de amenazas. Es una elección de <em>usabilidad</em>, no de endurecimiento (bloquear la UI a los usuarios sería más restrictivo). La plantilla valora la transparencia para el usuario final sobre ocultarle Defender.</li>
+  </ul>
+
+  <p>El ajuste <code>disablelocaladminmerge</code> es el crítico para la seguridad de este grupo. Sin él, un usuario con derechos de admin local en su dispositivo puede deshabilitar Defender por completo — lo que silenciosamente rompería la señal de cumplimiento (ya que la política de cumplimiento de Windows exige Defender habilitado). Ponerlo en disable-merge asegura que gana la política central.</p>
+
+  <h2>Defender Settings macOS — qué configura</h2>
+
+  <p>La plantilla macOS es dramáticamente más simple que la de Windows — tres ajustes frente a treinta. Esto refleja la realidad de que Defender for Endpoint en macOS tiene una superficie mucho más pequeña que en Windows, y la mayoría de la configuración de Defender para macOS ocurre en la fase de instalación/incorporación en lugar de vía política de Intune.</p>
+
+  <p>Los tres ajustes:</p>
+
+  <ul>
+    <li><strong><code>com.apple.managedclient.preferences_enabled</code></strong> — Defender habilitado en macOS.</li>
+    <li><strong><code>com.apple.managedclient.preferences_enablerealtimeprotection</code></strong> — protección en tiempo real habilitada.</li>
+    <li><strong><code>com.apple.managedclient.preferences_automaticsamplesubmission</code></strong> — envío automático de muestras a Microsoft para análisis.</li>
+  </ul>
+
+  <p>Eso es todo. El cliente de Defender for Endpoint en macOS es ampliamente autoconfigurable una vez instalado; esta plantilla está principalmente ahí para asegurar que las tres cosas esenciales están activadas.</p>
+
+  <p>Lo que <em>no</em> está en la plantilla macOS:</p>
+
+  <ul>
+    <li>Sin ajuste de nivel de bloqueo en la nube (Defender de macOS usa la protección en la nube de Microsoft por defecto y no expone un mando granular de nivel-de-bloqueo vía MDM).</li>
+    <li>Sin programación de escaneos — el comportamiento de escaneo de Defender en macOS es bajo-acceso, no programado.</li>
+    <li>Sin controles específicos de tipo de escaneo — Defender de macOS no expone escaneo de archivos, escaneo de correo, escaneo de archivos de red como mandos separados.</li>
+    <li>Sin ajustes explícitos de protección contra manipulación — el sandboxing de macOS maneja mucho de esto a nivel del SO.</li>
+  </ul>
+
+  <p>Si la postura macOS de un cliente demanda más de lo que estos tres ajustes pueden expresar, la configuración se estratifica en la instalación de Defender for Endpoint (p. ej., vía la configuración del paquete de incorporación) o vía perfiles de configuración macOS separados fuera del ámbito de esta plantilla.</p>
+
+  <h2>El emparejamiento con la política de cumplimiento</h2>
+
+  <p>Las configuraciones de Defender solo importan si la política de cumplimiento realmente las comprueba. La política de cumplimiento de Windows de Panoptica365 (lección 2) comprueba:</p>
+
+  <ul>
+    <li><code>defenderEnabled: true</code> — Defender debe estar habilitado. La plantilla Defender Settings se lo asegura.</li>
+    <li><code>rtpEnabled: true</code> — protección en tiempo real habilitada. El <code>allowrealtimemonitoring</code> de la plantilla Defender Settings la entrega.</li>
+    <li><code>antivirusRequired: true</code> y <code>antiSpywareRequired: true</code> — antivirus y motores anti-spyware requeridos. Defender proporciona ambos.</li>
+    <li><code>signatureOutOfDate: true</code> — marca dispositivos con firmas obsoletas. El intervalo más rápido de actualización de firmas de la plantilla Defender Settings reduce la ventana para esto.</li>
+    <li><code>deviceThreatProtectionEnabled: true</code> en nivel «low» — Defender for Endpoint reporta sin amenazas de alta confianza. La plantilla Defender Settings no configura esto directamente (es un estado, no un ajuste), pero las configuraciones ayudan a reducir las probabilidades de que los dispositivos sean marcados.</li>
+  </ul>
+
+  <p>Así que las dos plantillas trabajan juntas: la plantilla de configuración hace al dispositivo merecedor de cumplimiento; la política de cumplimiento verifica que el dispositivo alcanza el listón.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="La plantilla de configuración hace al dispositivo merecedor de cumplimiento; la política de cumplimiento verifica que el dispositivo alcanza el listón.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="40" y="62" width="200" height="76" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="92" fill="#A8E1F8" font-size="14.5" font-weight="600">Defender Settings</text>
+        <text x="140" y="114" fill="#C4D4E8" font-size="12">hace al dispositivo</text>
+        <text x="140" y="130" fill="#C4D4E8" font-size="12">merecedor de cumplimiento</text>
+
+        <rect x="290" y="74" width="140" height="52" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="98" fill="#C4D4E8" font-size="13" font-weight="600">Dispositivo</text>
+        <text x="360" y="116" fill="#6B85A6" font-size="11.5">configurado</text>
+
+        <rect x="480" y="62" width="200" height="76" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="580" y="92" fill="#7DD9F9" font-size="14.5" font-weight="700">Política de cumplimiento</text>
+        <text x="580" y="114" fill="#C4D4E8" font-size="12">verifica que el dispositivo</text>
+        <text x="580" y="130" fill="#C4D4E8" font-size="12">alcanza el listón</text>
+      </g>
+      <path d="M240 100 H290" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <path d="M430 100 H480" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <text x="360" y="166" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">las dos plantillas trabajan juntas</text>
+    </svg>
+    <figcaption>La configuración merece el cumplimiento; la política de cumplimiento confirma que el dispositivo alcanza el listón.</figcaption>
+  </figure>
+
+  <p>El par macOS es más ligero — la política de cumplimiento macOS de Panoptica365 no incluye <code>deviceThreatProtectionEnabled</code> porque Defender for Endpoint en macOS no siempre está instalado en escenarios de pequeña empresa. La plantilla Defender Settings macOS, cuando se despliega, configura lo que Defender está ahí para configurar, pero la presencia de Defender no es en sí misma un requisito de cumplimiento.</p>
+
+  <h2>Qué puede romperse</h2>
+
+  <p>Las configuraciones de Defender son mayormente seguras pero vale la pena conocer:</p>
+
+  <p><strong>Falsos positivos de protección en la nube.</strong> Niveles agresivos de bloqueo en la nube (más altos que el por defecto) atrapan más amenazas pero también marcan más archivos legítimos como sospechosos. Fuentes habituales de falsos positivos: aplicaciones de negocio construidas a medida, versiones más antiguas de herramientas comunes, software de nicho. El arreglo son las <em>exclusiones</em> — excluir rutas o archivos específicos del escaneo vía el ajuste de exclusiones de Defender (no directamente en la plantilla de Panoptica365; se configura por cliente según se necesite).</p>
+
+  <p><strong>Quejas de rendimiento en dispositivos más antiguos.</strong> El escaneo en tiempo real + monitorización de comportamiento + escaneo de archivos comprimidos es más pesado que los valores por defecto de fábrica. Dispositivos con 4GB de RAM y HDDs giratorios pueden sentirse más lentos con la plantilla activa. Los ajustes <code>avgcpuloadfactor</code> y <code>enablelowcpupriority</code> ayudan, pero el problema subyacente es hardware antiguo. El arreglo honesto es actualizar el hardware; el workaround son las exclusiones.</p>
+
+  <p><strong>Network Protection bloqueando URLs legítimas.</strong> Cuando <code>enablenetworkprotection</code> está activado, ocasionalmente una URL legítima de negocio queda atrapada (falso positivo en la inteligencia de amenazas de Microsoft). El usuario ve una pantalla de «este sitio está bloqueado». El arreglo es una lista de permitidos personalizada en la lista de URLs permitidas de Defender, configurada vía un ajuste separado de Defender Settings por cliente.</p>
+
+  <p><strong>Escaneo de PowerShell + scripts legítimos.</strong> <code>allowscriptscanning</code> atrapa PowerShell malicioso, pero también atrapa algunos scripts legítimos pesados (automatización de admin, scripts operativos grandes de IT). El rendimiento puede degradarse para usuarios que los ejecutan. Las exclusiones son por cliente según se necesite.</p>
+
+  <h2>Despliegue</h2>
+
+  <p>Despliegue por grupo piloto de la comprobación previa de la lección 1:</p>
+
+  <ol>
+    <li><strong>Día 0</strong> — despliega la plantilla Windows en un grupo piloto de 3–5 dispositivos. Despliega la plantilla macOS si el cliente tiene Macs.</li>
+    <li><strong>Días 1–7</strong> — verifica el despliegue en el portal de Intune (contadores de éxito). Haz una comprobación puntual en los dispositivos piloto — abre la UI de Defender, confirma que la Protección en la Nube aparece habilitada, las definiciones de firmas están al día, la protección en tiempo real está activa.</li>
+    <li><strong>Días 7–14</strong> — observa el comportamiento de los dispositivos piloto. Vigila bloqueos falsos positivos, quejas de rendimiento, fallos de actualización de firmas.</li>
+    <li><strong>Día 14</strong> — despliegue más amplio si el piloto está limpio.</li>
+  </ol>
+
+  <p>La plantilla Defender está entre las más seguras de desplegar porque Microsoft tiene décadas de experiencia afinando Defender para compatibilidad. La mayoría de los clientes no ven cambios de comportamiento visibles al usuario; el trabajo ocurre en los procesos de fondo de Defender.</p>
+
+  <h2>Qué monitorizar tras la aplicación</h2>
+
+  <p><strong>Defender habilitado / deshabilitado por dispositivo.</strong> Debería estar 100% habilitado en el parque Windows tras el despliegue. Los dispositivos que muestran Defender deshabilitado son dispositivos donde la plantilla falló al aplicarse o donde la manipulación por admin local lo deshabilitó — investiga.</p>
+
+  <p><strong>Frescura de firmas.</strong> Los dispositivos que reportan firmas obsoletas (más de 24 horas) normalmente indican problemas de conectividad, mecanismo de actualización de firmas roto o — raramente — el propio Defender ha sido deshabilitado por otro producto. Vigila esto en el estado de cumplimiento de Intune para el dispositivo (signature-out-of-date es uno de los controles que ejecuta la política de cumplimiento de Windows de Panoptica365); un dispositivo que se sale del conforme se enrollará en el tile del contador general de cumplimiento, pero la antigüedad de firmas por dispositivo no es una vista dedicada en Panoptica365.</p>
+
+  <p><strong>Detecciones de amenazas de Defender.</strong> Los picos de detecciones a menudo se correlacionan con una oleada de phishing pegando al cliente, o con un único usuario haciendo clic repetidamente a través de bloqueos de Network Protection (sugiriendo que está siendo atacado). Investiga el patrón de la fuente.</p>
+
+  <p><strong>Falsos positivos reportados por usuarios.</strong> Rastrea cada uno. Algunos necesitan exclusiones; algunos son amenazas reales que el usuario identificó mal como legítimas.</p>
+
+  <p><strong>Deriva sobre la plantilla.</strong> Los ajustes de Defender son un objetivo habitual de deriva. Otro admin del cliente puede haber bajado el nivel de bloqueo en la nube, o habilitado características que la plantilla no habilita. El detector de deriva de Panoptica365 lo marca.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>Dos cosas reales, y una larga lista de cosas que no ve.</p>
+
+  <p><strong>Lo que Panoptica365 expone:</strong></p>
+
+  <ul>
+    <li><strong>Detecciones de Defender XDR como alertas.</strong> Cuando la ingestión de Defender XDR del cliente está configurada (tarjeta 1 lección 4), los incidentes y las alertas de alta severidad fluyen al motor de alertas de Panoptica365, donde se exponen a través del mismo panel y cartera de correos que otras alertas de seguridad. Esta es la fuente de detecciones por cliente — pero vive en la superficie de alertas, no en una vista por dispositivo.</li>
+    <li><strong>Deriva sobre la plantilla Defender Settings.</strong> Si el tenant de un cliente se desvía de la plantilla desplegada — alguien ajustó el nivel de bloqueo en la nube, habilitó características que la plantilla no habilita, deshabilitó la protección contra manipulación — el detector de deriva se dispara. Revertir, reaplicar o aceptar, igual que el resto del flujo de deriva.</li>
+  </ul>
+
+  <p><strong>Lo que Panoptica365 <em>no</em> expone</strong> (por si el currículo te llevó a esperarlo):</p>
+
+  <ul>
+    <li>Estado de Defender habilitado por dispositivo</li>
+    <li>Antigüedad de firmas por dispositivo</li>
+    <li>Estado de protección en tiempo real por dispositivo</li>
+    <li>Cualquier postura de Defender por dispositivo en absoluto</li>
+  </ul>
+
+  <p>La visibilidad por dispositivo del estado de Defender vive en el portal de Microsoft 365 Defender y en la hoja de dispositivo de Intune. Esa es la superficie de diagnóstico hoy. El papel de Panoptica365 es alertas (cuando algo malo pasa) y deriva (cuando la configuración se debilita) — no reportes de postura por dispositivo.</p>
+
+  <p>El papel de Defender XDR en este par de plantillas es exponer los <em>eventos de detección</em> que la configuración permite encontrar a Defender. La tarjeta 1 lección 4 cubrió XDR; aquí, la plantilla Defender Settings es lo que hace que las señales de XDR realmente lleguen — sin la configuración apropiada de Defender, el flujo de señales de XDR es flaco.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>La configuración de Defender importa tanto como la presencia de Defender.</strong> Una instalación de Defender por defecto de fábrica es significativamente más débil que una correctamente configurada. La plantilla de Panoptica365 es la diferencia. Despliégala en cada parque Windows.</p>
+
+  <p><strong>La protección en la nube es el clúster más consecuente.</strong> De los 28 ajustes Windows, los de protección en la nube (nivel de bloqueo High Plus, consentimiento de envío-de-todas-las-muestras, timeout en la nube de 50 segundos, intervalo de firmas de 1 hora) mueven más la aguja. También son los más agresivos de la plantilla — si estás personalizando para un cliente regulado o con preocupaciones de residencia de datos, el ajuste de envío de muestras (actualmente «Enviar todas las muestras») es el primero a considerar bajar a «Enviar muestras seguras».</p>
+
+  <p><strong>La protección contra manipulación importa operacionalmente.</strong> <code>disablelocaladminmerge</code> previene que un usuario con admin local deshabilite Defender. Sin él, la señal de cumplimiento es frágil — un usuario puede romper su propio cumplimiento apagando Defender, y la política central no puede sobrescribirlo.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Firewall Settings (Windows)</b> — configuración del firewall de host — la otra mitad de la defensa de red del endpoint Windows.</div></div>
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>ASR Rules + Block mshta.exe</b> — reglas de reducción de superficie de ataque — las características preventivas de bloqueo de comportamiento de Defender.</div></div>
+  </div>
+
+  <p>Por ahora: Defender Settings es la configuración que hace que Defender realmente defienda. Despliégala en cada parque Windows; despliega el equivalente macOS donde aplique; empareja ambas con la política de cumplimiento correspondiente.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — la mayoría de los valores de Defender Settings Windows de Panoptica365 siguen la serie MDE de Jeffrey Appel (<a href="https://jeffreyappel.nl/tag/mde-series/" target="_blank" rel="noopener">jeffreyappel.nl/tag/mde-series</a>), la referencia práctica de endurecimiento M365 sobre la que está construida la plantilla. Microsoft Learn sobre la configuración de Defender Antivirus vía Intune (<a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-antivirus-windows" target="_blank" rel="noopener">Microsoft Learn — Configure Defender Antivirus</a>); protección entregada por la nube y niveles de bloqueo en la nube (<a href="https://learn.microsoft.com/en-us/defender-endpoint/cloud-protection-microsoft-defender-antivirus" target="_blank" rel="noopener">Microsoft Learn — Cloud-delivered protection</a>); Network Protection (<a href="https://learn.microsoft.com/en-us/defender-endpoint/network-protection" target="_blank" rel="noopener">Microsoft Learn — Network protection</a>); Defender for Endpoint en macOS (<a href="https://learn.microsoft.com/en-us/defender-endpoint/microsoft-defender-endpoint-mac" target="_blank" rel="noopener">Microsoft Learn — Defender for Endpoint on macOS</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

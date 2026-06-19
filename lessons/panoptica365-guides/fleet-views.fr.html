@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vues de parc — Carte thermique, Activité quotidienne et SharePoint — Guides Panoptica365</title>
+<meta name="lesson:title" content="Vues de parc — Carte thermique, Activité quotidienne et SharePoint">
+<meta name="lesson:subtitle" content="Les surfaces multilocataires : la posture en grille, la météo d'authentification du jour, et les audits de partage.">
+<meta name="lesson:icon" content="layout-grid">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Vues de parc</span></div>
+  <h1>Vues de parc — Carte thermique, Activité quotidienne et SharePoint</h1>
+  <p class="dek">Les surfaces multilocataires : la posture en grille, la météo d'authentification du jour, et les audits de partage.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Les pages par locataire à gauche cèdent la place à trois vues de parc multilocataires : une grille de points d'état, deux graphiques en beigne et une liste d'événements de partage.">
+      <defs>
+        <radialGradient id="fvBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="fvArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#fvBg)"/>
+
+      <!-- left: one tenant -->
+      <g transform="translate(70,118)">
+        <rect x="0" y="0" width="150" height="104" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <rect x="18" y="18" width="114" height="9" rx="4.5" fill="#2A7FA3"/>
+        <rect x="18" y="38" width="92" height="7" rx="3.5" fill="#274B72"/>
+        <rect x="18" y="54" width="100" height="7" rx="3.5" fill="#274B72"/>
+        <rect x="18" y="70" width="78" height="7" rx="3.5" fill="#274B72"/>
+        <text x="75" y="-12" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">UN LOCATAIRE</text>
+      </g>
+
+      <!-- arrow -->
+      <path d="M250 170 H360" stroke="#335F92" stroke-width="2.5" marker-end="url(#fvArr)"/>
+      <text x="305" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">le parc</text>
+
+      <!-- right: three fleet views -->
+      <!-- view 1: heatmap grid of dots -->
+      <g transform="translate(400,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">CARTE THERMIQUE</text>
+        <g>
+          <circle cx="34" cy="40" r="8" fill="#2EE8A0"/><circle cx="73" cy="40" r="8" fill="#FF5A6E"/><circle cx="112" cy="40" r="8" fill="#FFC04D"/><circle cx="151" cy="40" r="8" fill="#2EE8A0"/>
+          <circle cx="34" cy="78" r="8" fill="#FFC04D"/><circle cx="73" cy="78" r="8" fill="#2EE8A0"/><circle cx="112" cy="78" r="8" fill="#2EE8A0"/><circle cx="151" cy="78" r="8" fill="#52708F"/>
+          <circle cx="34" cy="116" r="8" fill="#2EE8A0"/><circle cx="73" cy="116" r="8" fill="#2EE8A0"/><circle cx="112" cy="116" r="8" fill="#FF5A6E"/><circle cx="151" cy="116" r="8" fill="#2EE8A0"/>
+        </g>
+      </g>
+
+      <!-- view 2: two donuts -->
+      <g transform="translate(626,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">ACTIVITÉ QUOTIDIENNE</text>
+        <g transform="translate(56,84)">
+          <circle r="34" fill="none" stroke="#16314F" stroke-width="14"/>
+          <circle r="34" fill="none" stroke="#5CCBF4" stroke-width="14" stroke-dasharray="120 214" transform="rotate(-90)"/>
+        </g>
+        <g transform="translate(134,84)">
+          <circle r="34" fill="none" stroke="#16314F" stroke-width="14"/>
+          <circle r="34" fill="none" stroke="#A8E1F8" stroke-width="14" stroke-dasharray="78 214" transform="rotate(-90)"/>
+        </g>
+      </g>
+
+      <!-- view 3: sharing events list -->
+      <g transform="translate(852,86)">
+        <rect x="0" y="0" width="190" height="168" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="95" y="-12" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1.5">SHAREPOINT</text>
+        <g>
+          <rect x="22" y="32" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="35" width="120" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="62" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="65" width="100" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="92" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="95" width="112" height="8" rx="4" fill="#274B72"/>
+          <rect x="22" y="122" width="14" height="14" rx="3" fill="none" stroke="#5CCBF4" stroke-width="1.5"/><rect x="46" y="125" width="86" height="8" rx="4" fill="#274B72"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les pages par locataire disent comment va un client; trois vues de parc disent comment va le parc entier.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Les pages par locataire répondent à « comment va ce client? ». Trois pages répondent à la question du MSP : « comment va le <em>parc</em>, et où investir mes efforts ensuite? »</p>
+  </div>
+
+  <h2>Carte thermique</h2>
+
+  <p>La <strong>Carte thermique</strong> (barre latérale), c'est chaque locataire géré × chaque contrôle de sécurité surveillé, sous forme de grille de points d'état.</p>
+
+  <p>En haut, le <strong>score du parc</strong> — le pourcentage des contrôles <em>applicables</em> qui sont conformes à travers les locataires gérés — avec trois cartes de statistiques : locataires gérés, locataires aux données périmées, et exemptions actives. « Applicables » compte : les contrôles qu'un locataire ne peut pas avoir (restreints par licence, non pertinents) sont classés <em>Non disponible</em>, pas en échec.</p>
+
+  <p>Les deux bandeaux en dessous sont là où se trouve le levier :</p>
+
+  <ul>
+    <li><strong>Variations — plus grands changements sur 7 jours.</strong> Quels locataires ont le plus régressé (ou progressé) cette semaine. Un locataire qui perd cinq points, c'est une conversation à avoir <em>maintenant</em>.</li>
+    <li><strong>Faiblesses générales — candidats à une campagne.</strong> Les contrôles rouges ou non configurés chez le plus de locataires. C'est votre liste de campagnes de remédiation : un contrôle, corrigé partout, en une seule passe. Cliquez sur une ligne pour le panneau de campagne — locataires touchés, détails du contrôle, et liens directs vers la page Sécurité de chaque locataire.</li>
+  </ul>
+
+  <p>La grille elle-même démarre repliée en catégories; cliquez sur un en-tête de catégorie pour la déplier en colonnes par contrôle. Légende des points : <strong>Sain</strong> (vert), <strong>En dérive</strong> (rouge), <strong>Non configuré</strong> (jaune), <strong>Non disponible sur ce locataire</strong> (gris), <strong>Aucune donnée</strong> (périmé). Cliquez sur n'importe quel point pour aller directement à ce locataire et ce contrôle sur la page Sécurité.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="La disposition de la Carte thermique : un score du parc et trois cartes de statistiques en haut, un bandeau Variations et un bandeau Faiblesses générales, puis une grille de locataires par contrôle avec une légende de points à cinq états.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- fleet score + stat cards -->
+        <rect x="24" y="20" width="150" height="52" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="99" y="44" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Score du parc</text>
+        <text x="99" y="62" text-anchor="middle" fill="#A8E1F8" font-size="11">% applicables conformes</text>
+        <rect x="188" y="20" width="160" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="268" y="42" text-anchor="middle" fill="#C4D4E8" font-size="12">Locataires gérés</text>
+        <text x="268" y="60" text-anchor="middle" fill="#6B85A6" font-size="11">Données périmées</text>
+        <rect x="362" y="20" width="160" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="442" y="51" text-anchor="middle" fill="#C4D4E8" font-size="12">Exemptions actives</text>
+
+        <!-- two strips -->
+        <rect x="24" y="88" width="320" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="40" y="113" fill="#A8E1F8" font-size="12" font-weight="600">Variations — changements sur 7 jours</text>
+        <rect x="356" y="88" width="340" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="372" y="113" fill="#A8E1F8" font-size="11.5" font-weight="600">Faiblesses générales — candidats à une campagne</text>
+
+        <!-- grid -->
+        <g transform="translate(24,150)">
+          <text x="0" y="-4" fill="#6B85A6" font-size="11" letter-spacing="1.5">LOCATAIRES × CONTRÔLES</text>
+          <g>
+            <circle cx="22" cy="20" r="9" fill="#2EE8A0"/><circle cx="64" cy="20" r="9" fill="#FF5A6E"/><circle cx="106" cy="20" r="9" fill="#FFC04D"/><circle cx="148" cy="20" r="9" fill="#2EE8A0"/><circle cx="190" cy="20" r="9" fill="#52708F"/><circle cx="232" cy="20" r="9" fill="#2EE8A0"/>
+            <circle cx="22" cy="54" r="9" fill="#FFC04D"/><circle cx="64" cy="54" r="9" fill="#2EE8A0"/><circle cx="106" cy="54" r="9" fill="#2EE8A0"/><circle cx="148" cy="54" r="9" fill="#FF5A6E"/><circle cx="190" cy="54" r="9" fill="#2EE8A0"/><circle cx="232" cy="54" r="9" fill="#2EE8A0"/>
+            <circle cx="22" cy="88" r="9" fill="#2EE8A0"/><circle cx="64" cy="88" r="9" fill="#2EE8A0"/><circle cx="106" cy="88" r="9" fill="#FF5A6E"/><circle cx="148" cy="88" r="9" fill="#2EE8A0"/><circle cx="190" cy="88" r="9" fill="#52708F"/><circle cx="232" cy="88" r="9" fill="#2EE8A0"/>
+          </g>
+        </g>
+
+        <!-- legend -->
+        <g transform="translate(320,168)" font-size="11.5">
+          <circle cx="8" cy="8" r="7" fill="#2EE8A0"/><text x="22" y="12" fill="#C4D4E8">Sain</text>
+          <circle cx="8" cy="34" r="7" fill="#FF5A6E"/><text x="22" y="38" fill="#C4D4E8">En dérive</text>
+          <circle cx="8" cy="60" r="7" fill="#FFC04D"/><text x="22" y="64" fill="#C4D4E8">Non configuré</text>
+          <circle cx="130" cy="8" r="7" fill="#52708F"/><text x="144" y="12" fill="#C4D4E8">Non disponible</text>
+          <circle cx="130" cy="34" r="7" fill="none" stroke="#52708F" stroke-width="1.5" stroke-dasharray="2 3"/><text x="144" y="38" fill="#C4D4E8">Aucune donnée</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Score du parc et cartes de statistiques en haut, les bandeaux Variations et Faiblesses générales, puis la grille locataire × contrôle avec sa légende à cinq états.</figcaption>
+  </figure>
+
+  <h2>Activité quotidienne</h2>
+
+  <p><strong>Activité quotidienne</strong> (barre latérale), c'est la météo d'authentification du jour : deux graphiques en beigne, <strong>Échecs de connexion — Aujourd'hui</strong> et <strong>Blocages AC — Aujourd'hui</strong>, segmentés par locataire.</p>
+
+  <p>La partie utile, c'est le calcul d'écart : la ligne de légende de chaque locataire montre le compte du jour contre sa propre moyenne mobile sur 7 jours — « moy. 12/jour » avec un pourcentage d'écart. Quarante échecs, c'est un mardi ordinaire pour un locataire de 200 postes et une pulvérisation de mots de passe pour un locataire de 12 postes; la référence fait la différence. Cliquez sur une ligne de légende pour le détail des événements : une évaluation IA du schéma, puis le tableau des événements (heure, utilisateur, application, IP, emplacement, erreur, niveau de risque), et cliquez sur n'importe quel événement pour le détail complet de la connexion.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="La disposition de l'Activité quotidienne : deux graphiques en beigne, Échecs de connexion Aujourd'hui et Blocages AC Aujourd'hui, chacun segmenté par locataire, avec une ligne de légende comparant le compte du jour à une moyenne sur 7 jours.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- donut 1 -->
+        <g transform="translate(150,118)">
+          <circle r="56" fill="none" stroke="#16314F" stroke-width="22"/>
+          <circle r="56" fill="none" stroke="#5CCBF4" stroke-width="22" stroke-dasharray="180 352" transform="rotate(-90)"/>
+          <circle r="56" fill="none" stroke="#A8E1F8" stroke-width="22" stroke-dasharray="90 352" stroke-dashoffset="-180" transform="rotate(-90)"/>
+          <text x="0" y="-78" fill="#7DD9F9" font-size="12.5" font-weight="600">Échecs de connexion — Auj.</text>
+        </g>
+        <!-- donut 2 -->
+        <g transform="translate(420,118)">
+          <circle r="56" fill="none" stroke="#16314F" stroke-width="22"/>
+          <circle r="56" fill="none" stroke="#5CCBF4" stroke-width="22" stroke-dasharray="120 352" transform="rotate(-90)"/>
+          <circle r="56" fill="none" stroke="#2A7FA3" stroke-width="22" stroke-dasharray="64 352" stroke-dashoffset="-120" transform="rotate(-90)"/>
+          <text x="0" y="-78" fill="#7DD9F9" font-size="13" font-weight="600">Blocages AC — Auj.</text>
+        </g>
+      </g>
+      <!-- legend row with baseline -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="540" y="78" width="156" height="84" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="558" cy="98" r="6" fill="#5CCBF4"/><text x="572" y="102" fill="#C4D4E8" font-size="12">Locataire A</text>
+        <text x="556" y="126" fill="#EEF4FC" font-size="13" font-weight="600">40 aujourd'hui</text>
+        <text x="556" y="146" fill="#6B85A6" font-size="11.5">moy. 12/jour</text>
+      </g>
+    </svg>
+    <figcaption>Deux beignes segmentés par locataire; chaque ligne de légende pèse le compte du jour contre la moyenne sur 7 jours du locataire.</figcaption>
+  </figure>
+
+  <p>Cette page est une surface de <em>contexte</em>, pas un système d'alarme — les vrais schémas d'attaque (pulvérisation, force brute, voyage impossible) déclenchent des alertes par eux-mêmes. Utilisez Activité quotidienne quand une ligne du résumé ou une alerte vous donne envie de voir l'allure du trafic du jour.</p>
+
+  <h2>SharePoint</h2>
+
+  <p><strong>SharePoint</strong> (barre latérale) agrège les événements d'audit de partage et d'accès à travers les locataires : création de liens anonymes, événements de partage externe, changements d'administrateurs de sites, détections de maliciels dans SharePoint/OneDrive, et changements de stratégies de partage. Elle complète les cartes de la Vue d'ensemble par locataire (Sites SP, Liens anonymes) avec la vue au niveau des événements — qui a créé ce lien anonyme, sur quel site, quand.</p>
+
+  <h2>Comment elles s'insèrent dans votre semaine</h2>
+
+  <p>Les alertes mènent votre journée; les vues de parc mènent votre semaine. Un rythme raisonnable : la Carte thermique une fois par semaine pour choisir une campagne (éliminer une faiblesse générale à l'échelle du parc), Variations pour attraper le locataire qui régresse, Activité quotidienne et SharePoint sur demande quand quelque chose pique votre curiosité. Tout cela reste en lecture seule — ces pages vous disent où agir; l'action se passe dans Sécurité, AC, Intune et la conversation avec le client.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Rythme</div>
+    <p>Les alertes mènent votre journée; les vues de parc mènent votre semaine. Ces pages vous disent où agir — l'action se passe dans Sécurité, AC, Intune et la conversation avec le client.</p>
+  </div>
+
+</div>
+</body>
+</html>

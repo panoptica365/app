@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why identity is the new perimeter — Welcome to M365 Cybersecurity</title>
+<meta name="lesson:title" content="Why identity is the new perimeter">
+<meta name="lesson:subtitle" content="How attackers bypassed the firewall by borrowing credentials — and why every sign-in is now your security boundary.">
+<meta name="lesson:icon" content="scan-face">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Welcome to M365 Cybersecurity</span> <span class="sep">·</span> <span>Identity is the perimeter</span></div>
+  <h1>Why identity is the new perimeter</h1>
+  <p class="dek">How attackers bypassed the firewall by borrowing credentials — and why every sign-in is now your security boundary.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The old castle-wall perimeter, crossed out, giving way to a glowing access fob.">
+      <defs>
+        <radialGradient id="ipBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="ipFob" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="ipSoft"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ipBg)"/>
+
+      <!-- left: the retired castle/wall -->
+      <g stroke="#33527A" stroke-width="2" fill="none" opacity="0.8">
+        <path d="M170 240 V150 h18 v-16 h18 v16 h18 v-16 h18 v16 h18 v-16 h18 v16 h18 v90 Z"/>
+        <rect x="208" y="196" width="34" height="44" rx="2"/>
+      </g>
+      <text x="240" y="276" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">THE WALL · 2006</text>
+      <line x1="150" y1="120" x2="330" y2="262" stroke="#FF5A6E" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+
+      <!-- arrow -->
+      <path d="M430 180 H650" stroke="#335F92" stroke-width="2.5" marker-end="url(#ipArr)"/>
+      <defs><marker id="ipArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+
+      <!-- right: the fob -->
+      <g transform="translate(820,170)">
+        <circle r="120" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="84" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <rect x="-46" y="-64" width="92" height="128" rx="16" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="0" cy="-18" r="20" fill="url(#ipFob)" filter="url(#ipSoft)" opacity="0.9"/>
+        <circle cx="0" cy="-18" r="10" fill="#EAF7FE"/>
+        <rect x="-22" y="20" width="44" height="7" rx="3.5" fill="#2A7FA3"/>
+        <rect x="-22" y="34" width="30" height="6" rx="3" fill="#1F3C5C"/>
+      </g>
+      <text x="820" y="312" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">THE FOB · 2026</text>
+    </svg>
+    <figcaption>The wall stopped being a wall a long time ago. The fob is everything.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>It's 2:14 AM. Your user's phone buzzes — Microsoft Authenticator wants to approve a sign-in. She's half asleep. She taps "Yes" to make the buzzing stop.</p>
+
+  <p>Eight hours later, your help desk notices something odd: every invoice email is being silently forwarded to a Gmail address nobody recognizes. It's been happening for three days.</p>
+
+  <p>That attack started with no malware. No exploit. No firewall breach. The attacker had her password (bought it, probably, off a breach dump from some unrelated SaaS app) and just kept buzzing her phone until she gave up. That's the whole attack. The "wall" around her company never came up — because the attacker never needed to climb it.</p>
+
+  <p>Welcome to security in 2026.</p>
+  </div>
+
+  <h2>The wall isn't where the data is anymore</h2>
+
+  <p>Twenty years ago, security looked like a building. Your data lived on a server in a closet down the hall. To get to it, an attacker had to physically get into the building, plug into the network, defeat the firewall, get past the AV, and exfiltrate the data — all while not setting off anything. We called this "defense in depth," and we drew it as concentric circles. The data was in the middle. The firewall was the outer ring. Life was simple. Life was also a lie, but never mind.</p>
+
+  <p>Today, your data lives in M365. Your users access it from a hotel Wi-Fi in Lisbon, a phone at a soccer game, an iPad on a kitchen counter, and occasionally — <em>occasionally</em> — a managed laptop on the office network. The firewall around the office now protects approximately nothing. There is no "inside" anymore. There's just credentials, sessions, and tokens.</p>
+
+  <p>This isn't a slogan. It's an org chart. Microsoft, Google, Amazon, Cloudflare, your bank, and the IRS all run on the same model now. The thing that decides whether a request is allowed isn't <em>where the request came from</em>. It's <em>who is making it</em>, <em>what device they're on</em>, <em>what they're trying to do</em>, and <em>whether anything looks weird right now</em>.</p>
+
+  <p>That set of questions — who, what, where, when, weird? — is what we mean by "identity is the perimeter."</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 120" role="img" aria-label="The five questions of identity: who, what, where, when, and weird.">
+      <rect width="720" height="120" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="60" y1="60" x2="660" y2="60" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="44" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="102" y="65" fill="#A8E1F8" font-size="15" font-weight="600">WHO</text></g>
+        <g><rect x="176" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="234" y="65" fill="#A8E1F8" font-size="15" font-weight="600">WHAT</text></g>
+        <g><rect x="308" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="366" y="65" fill="#A8E1F8" font-size="15" font-weight="600">WHERE</text></g>
+        <g><rect x="440" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="498" y="65" fill="#A8E1F8" font-size="15" font-weight="600">WHEN</text></g>
+        <g><rect x="572" y="40" width="104" height="40" rx="20" fill="#10243B" stroke="#5CCBF4"/><text x="624" y="65" fill="#7DD9F9" font-size="15" font-weight="700">WEIRD?</text></g>
+      </g>
+    </svg>
+    <figcaption>Every request is judged against these five questions — not against where it came from.</figcaption>
+  </figure>
+
+  <h2>The condo building, not the castle</h2>
+
+  <p>Forget medieval castles. Every security article in history has used the castle metaphor. The castle metaphor is exhausted. The castle metaphor needs to retire to a beach somewhere.</p>
+
+  <p>Think condo building.</p>
+
+  <p>In a condo, the front door is for everybody. The doorman doesn't ask if you "live here," because dozens of strangers walk in every day — Amazon couriers, the elevator repair guy, your visiting in-laws, the cleaner. What matters is your <strong>fob</strong>.</p>
+
+  <p>The fob unlocks your floor, your unit, the gym, and the parking. It does <em>not</em> unlock other floors, other units, the building manager's office, or the rooftop. If you lose it, the front desk disables it in their system, and it stops working for everyone at the same time. If your fob suddenly tries to use the gym at 3 AM after being used in the parking garage 90 seconds earlier in a way that's not physically possible — that's interesting. The system can notice that. The system can decide to say no.</p>
+
+  <p>That's the model. The "wall" stopped being a wall a long time ago. The fob is everything.</p>
+
+  <p>In M365 terms:</p>
+
+  <ul>
+    <li><strong>Entra ID</strong> is the front desk. It holds the master list of who has a fob and what each fob is allowed to do.</li>
+    <li><strong>MFA</strong> is the fob having a PIN you have to enter — proof that the person holding the fob is the one it was issued to, not someone who found it on a barstool.</li>
+    <li><strong>Conditional Access</strong> is the building computer that says "this fob is asking to enter the rooftop pool from a country it's never been to, at 3 AM, on an unmanaged device — say no."</li>
+    <li><strong>Defender XDR</strong> is the security guard who watches the camera feed for <em>patterns</em> — three different fobs hitting the same door in five minutes, somebody trying every door on the 14th floor, that kind of thing.</li>
+    <li><strong>Intune</strong> is the policy that says which fobs work on which devices, and what those devices have to look like (locked, encrypted, patched) before they're allowed to swipe in.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 380" role="img" aria-label="Mapping condo-building roles to Microsoft 365 services.">
+      <rect width="720" height="380" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="180" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">IN THE CONDO</text>
+      <text x="540" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">IN M365</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- rows -->
+        <g transform="translate(0,56)">
+          <rect x="40" y="0" width="280" height="48" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="29" fill="#C4D4E8" font-size="15">Front desk</text>
+          <path d="M330 24 H392" stroke="#335F92" stroke-width="2" marker-end="url(#mArr)"/>
+          <rect x="400" y="0" width="280" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="420" y="29" fill="#A8E1F8" font-size="15" font-weight="600">Entra ID</text>
+        </g>
+        <g transform="translate(0,118)">
+          <rect x="40" y="0" width="280" height="48" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="29" fill="#C4D4E8" font-size="15">Fob + its PIN</text>
+          <path d="M330 24 H392" stroke="#335F92" stroke-width="2" marker-end="url(#mArr)"/>
+          <rect x="400" y="0" width="280" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="420" y="29" fill="#A8E1F8" font-size="15" font-weight="600">MFA</text>
+        </g>
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="280" height="48" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="29" fill="#C4D4E8" font-size="15">Building computer</text>
+          <path d="M330 24 H392" stroke="#335F92" stroke-width="2" marker-end="url(#mArr)"/>
+          <rect x="400" y="0" width="280" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="420" y="29" fill="#A8E1F8" font-size="15" font-weight="600">Conditional Access</text>
+        </g>
+        <g transform="translate(0,242)">
+          <rect x="40" y="0" width="280" height="48" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="29" fill="#C4D4E8" font-size="15">Security guard on cameras</text>
+          <path d="M330 24 H392" stroke="#335F92" stroke-width="2" marker-end="url(#mArr)"/>
+          <rect x="400" y="0" width="280" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="420" y="29" fill="#A8E1F8" font-size="15" font-weight="600">Defender XDR</text>
+        </g>
+        <g transform="translate(0,304)">
+          <rect x="40" y="0" width="280" height="48" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="29" fill="#C4D4E8" font-size="15">Which fobs on which devices</text>
+          <path d="M330 24 H392" stroke="#335F92" stroke-width="2" marker-end="url(#mArr)"/>
+          <rect x="400" y="0" width="280" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="420" y="29" fill="#A8E1F8" font-size="15" font-weight="600">Intune</text>
+        </g>
+      </g>
+      <defs><marker id="mArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+    </svg>
+    <figcaption>The whole modern stack, in fob terms: each M365 service plays a role you already understand.</figcaption>
+  </figure>
+
+  <p>When a vendor at a trade show tells you "we secure your perimeter," what they actually mean — if they're talking about a modern stack — is <em>we make decisions about every fob swipe</em>. That's it. Anybody still selling you "the wall" is selling you something that protects an empty building.</p>
+
+  <h2>The 2026 attacker doesn't break things; they borrow them</h2>
+
+  <p>The mental shift here matters because the attacks have shifted with it.</p>
+
+  <p>In 2010 the attacker tried to break into your server. In 2026 the attacker tries to <em>be</em> your user. That's a softer attack — no exploit kit, no malware signature, sometimes no payload at all — but it's also much harder to see, because from the system's point of view, it just looks like a sign-in.</p>
+
+  <div class="stat-band">
+    <div class="stat"><div class="n">99.9%</div><div class="l">of automated account-compromise attacks are blocked by enabling MFA (Microsoft, 2019)</div></div>
+    <div class="stat"><div class="n">+146%</div><div class="l">rise in adversary-in-the-middle (AiTM) attacks during 2024 (Microsoft, 2025)</div></div>
+  </div>
+
+  <p>A few specific shapes this takes in 2026:</p>
+
+  <p><strong>Credential stuffing.</strong> The attacker buys a list of email/password pairs from a breach (LinkedIn, Adobe, MyFitnessPal, pick your favourite — they're all on the market for the cost of a coffee), and tries them against M365. About one in a hundred works, because people reuse passwords. This is the entire reason MFA exists. Microsoft has cited that enabling MFA blocks more than 99.9% of these automated account compromise attacks (Weinert, 2019, and the number has only become more accurate since).</p>
+
+  <p><strong>MFA fatigue.</strong> When MFA is enabled, the attacker buys the password anyway and just spams the user with Authenticator prompts in the middle of the night until they tap "Yes." This is exactly how Uber got owned in 2022. It's still working today. Number matching and additional context in the Authenticator app help. They don't solve it.</p>
+
+  <p><strong>AiTM phishing (adversary-in-the-middle).</strong> This is the big one in 2026. The attacker sends a phishing email with a link to a fake login page that <em>proxies</em> the real Microsoft sign-in page in real time. The user types their password. The fake page sends it to the real Microsoft. Microsoft sends back the MFA prompt. The fake page shows it to the user. The user approves. Microsoft sends back a <strong>session cookie</strong>. The fake page captures that cookie. Now the attacker has a perfectly valid, fully MFA'd session — they don't need the password or the MFA anymore, they have the <em>token</em>. They are, as far as M365 is concerned, the user. Microsoft tracked a <strong>146% increase in AiTM attacks in 2024</strong> (Microsoft Defender Threat Intelligence, 2025). The phishing kits that do this — Evilginx, Muraena, Modlishka — are open-source and free.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 268" role="img" aria-label="An adversary-in-the-middle attack: a proxy page relays the real Microsoft login and captures the session token.">
+      <rect width="720" height="268" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="aArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <!-- nodes -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="92" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="111" y="118" fill="#C4D4E8" font-size="14" font-weight="600">User</text>
+        <text x="111" y="136" fill="#6B85A6" font-size="11.5">types password</text>
+
+        <rect x="285" y="86" width="150" height="68" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="360" y="112" fill="#FF8A98" font-size="14" font-weight="700">Fake page</text>
+        <text x="360" y="130" fill="#E2A0AA" font-size="11.5">(real-time proxy)</text>
+
+        <rect x="534" y="92" width="150" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="609" y="118" fill="#A8E1F8" font-size="14" font-weight="600">Microsoft</text>
+        <text x="609" y="136" fill="#6B85A6" font-size="11.5">real sign-in</text>
+
+        <rect x="285" y="194" width="150" height="40" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="219" fill="#7DD9F9" font-size="12.5" font-weight="700">Token stolen</text>
+      </g>
+      <!-- flows -->
+      <path d="M186 112 H285" stroke="#5C7796" stroke-width="2" marker-end="url(#aArr)"/>
+      <path d="M435 108 H534" stroke="#5C7796" stroke-width="2" marker-end="url(#aArr)"/>
+      <path d="M534 132 H435" stroke="#5C7796" stroke-width="2" marker-end="url(#aArr)"/>
+      <text x="610" y="180" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">returns MFA + cookie</text>
+      <path d="M360 154 V194" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#aArr)"/>
+      <text x="360" y="254" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11">no password or MFA needed anymore</text>
+    </svg>
+    <figcaption>The user really does sign in — to a page that hands their live, MFA'd session straight to the attacker.</figcaption>
+  </figure>
+
+  <p><strong>OAuth consent phishing.</strong> Instead of stealing a password, the attacker asks the user to consent to a malicious app that requests permissions like "read all your mail" or "send mail as you." The user clicks "Accept" without reading the dialog (because they never read the dialog), and now there's a third-party app with persistent access to their mailbox, no password needed, no MFA needed. Removing the user's password doesn't kick the app out. Disabling the account doesn't always either.</p>
+
+  <p><strong>Device-code phishing.</strong> Microsoft's device-code flow exists for things like printers and TVs that don't have a keyboard. Attackers abuse it: they generate a device code, send the user a "please enter this code to verify yourself," and the user — being helpful — enters it. The attacker now has the user's full session on their own machine.</p>
+
+  <p>Every one of these attacks starts and ends with an identity. None of them touch the firewall.</p>
+
+  <p>We'll spend the entire next card (<em>Identity threats &amp; attack patterns</em>) digging into how each of these works in detail and what catches them. For now, the only point you need is: when we say identity is the perimeter, we don't mean it as a vibe. We mean the attacker is no longer breaking in. The attacker is being let in. Your job is to notice.</p>
+
+  <h2>What this means every single day</h2>
+
+  <p>Most operators we've worked with try to learn this stack the wrong way: they start by configuring something. They open the Defender portal. They see seventeen tabs. They pick one. They configure it. They feel productive.</p>
+
+  <p>That is, almost always, the wrong place to start.</p>
+
+  <p>The right place to start is: <em>what request looks suspicious, and what does our environment do about it?</em> If you can answer that for one user, on one device, you understand the stack. If you can't — even the most aggressively configured Defender tenant in the world won't save you, because nothing in it will be doing the job you think it's doing.</p>
+
+  <p>A few concrete things "identity is the perimeter" means for you, the operator:</p>
+
+  <p><strong>The thing you're protecting isn't the laptop. It's the session.</strong> Once a user is signed into M365, what they have is a session — a chunk of cryptographic state that says "this person is allowed to read mail until 4 PM." Modern attackers don't try to break MFA; they try to steal the session. Protecting it — with things like Conditional Access compliant-device requirements, Token Protection, and Continuous Access Evaluation — is the whole job. We'll dig into all of that in later lessons.</p>
+
+  <p><strong>MFA alone is not enough.</strong> This used to be a hot take. It's now consensus. The Microsoft Authenticator push you've been telling everyone to use is good — it stops the overwhelming majority of dumb credential-stuffing attacks — but it does <em>nothing</em> against an AiTM phishing site that proxies the prompt back to the user in real time. The real protection is <em>phishing-resistant MFA</em>: passkeys, FIDO2 keys, Windows Hello for Business. We'll cover what to push customers toward in the Conditional Access lesson.</p>
+
+  <p><strong>The "weird" signal matters as much as the credential.</strong> Your job is not just "is the password right." It's "does anything about this sign-in look unusual?" Different country than the user's been in for the last 30 days? Compliance state changed? IP address that 600 other compromised accounts also signed in from yesterday? Microsoft has all of this. Conditional Access can act on it. Defender XDR flags it. None of it has anything to do with the firewall.</p>
+
+  <p><strong>Service accounts are usually the worst-protected thing in your environment.</strong> Real users get MFA, get Conditional Access, get Defender for Endpoint on their laptop. Service accounts often have password authentication with no MFA, broad permissions, and no monitoring — because someone, somewhere, "didn't want to break the integration." Attackers know this. We will too.</p>
+
+  <p><strong>Your job is half configuration and half noticing.</strong> The configuration half is the one most documentation focuses on: pick the right Conditional Access policies, set the right Intune compliance rules, turn on Token Protection. The noticing half is what actually saves customers: looking at an alert and asking "wait, why did <em>this</em> user sign in from <em>that</em> country at <em>that</em> time?" Panoptica365 exists to make the noticing half tractable. The configuration half is still on you.</p>
+
+  <h2>What you should walk away with</h2>
+
+  <p>If you only remember one thing: the question "is this allowed?" no longer has a yes/no answer. It has an answer that depends on <em>who</em>, <em>what</em>, <em>where</em>, <em>when</em>, and <em>how weird does this look</em>. M365's job is to answer that question for every request. Your job, as the operator, is to make sure it's set up to answer it well — and to notice when its answers stop looking right.</p>
+
+  <p>The rest of this card maps the territory:</p>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">1</div><div class="xt"><b>The five surfaces M365 secures</b> — identity, endpoints, email, collaboration, cloud apps. What each is, what threats each faces.</div></div>
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Defender, Intune, Conditional Access — how they actually fit together</b> — the compliance loop and where each one lives.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Defender XDR — what it is, what it isn't</b> — XDR vs EDR vs SIEM, and why most MSPs never open the Defender portal.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Microsoft 365 licensing — what unlocks what</b> — because half the controls we'll discuss are gated behind specific SKUs.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Where Panoptica365 sits in this picture</b> — what we monitor, what we don't touch, and why we don't auto-fix.</div></div>
+  </div>
+
+  <p>After that, card 2 (<em>Identity threats &amp; attack patterns</em>) goes deep on the attacks we sketched above. Then we get into the actual controls.</p>
+
+  <p>For now: stop thinking about walls. Start thinking about fobs.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Identity Security Group on MFA blocking 99.9% of automated account compromise (<a href="https://techcommunity.microsoft.com/blog/microsoft-entra-blog/your-pa%24%24word-doesn%E2%80%99t-matter/731984" target="_blank" rel="noopener">Weinert, August 2019</a>); Microsoft Defender Threat Intelligence reporting a 146% rise in AiTM attacks during 2024 (<a href="https://www.microsoft.com/en-us/security/blog/" target="_blank" rel="noopener">Microsoft Security Blog</a>, 2025); Evilginx / Muraena / Modlishka kit landscape and detection reference: <a href="https://jeffreyappel.nl/" target="_blank" rel="noopener">Jeffrey Appel — AiTM/MFA phishing attacks in combination with new Microsoft protections, 2026 edition</a>.</p>
+  </div>
+
+</div>
+</body>
+</html>

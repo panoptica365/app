@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access review — who has admin, who's dormant, and your emergency way back in — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Access review — who has admin, who's dormant, and your emergency way back in">
+<meta name="lesson:subtitle" content="Review every privileged-role holder, disable or delete stale accounts, and set up break-glass accounts that bypass Conditional Access and shout the moment they're used.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-13">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Access review</span></div>
+  <h1>Access review — who has admin, who's dormant, and your emergency way back in</h1>
+  <p class="dek">Review every privileged-role holder, disable or delete stale accounts, and set up break-glass accounts that bypass Conditional Access and shout the moment they're used.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The Access review tab sits between Security and Applications, and holds two tables plus a break-glass workflow.">
+      <defs>
+        <radialGradient id="arBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="arKey" cx="50%" cy="45%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="arSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="arArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#arBg)"/>
+
+      <!-- tab strip: Security · Access review · Applications -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="92" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="182" y="76" fill="#6B85A6" font-size="15">Security</text></g>
+        <g><rect x="296" y="44" width="216" height="52" rx="11" fill="#10243B" stroke="#5CCBF4" stroke-width="1.8"/><text x="404" y="76" fill="#7DD9F9" font-size="16" font-weight="700">Access review</text></g>
+        <g><rect x="536" y="48" width="180" height="44" rx="10" fill="#0E2236" stroke="#33527A"/><text x="626" y="76" fill="#6B85A6" font-size="15">Applications</text></g>
+      </g>
+
+      <!-- two tables -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(150,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="14" font-weight="600">Table 1 · Admin roles</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+        <g transform="translate(414,138)">
+          <rect x="0" y="0" width="244" height="150" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="34" fill="#A8E1F8" font-size="14" font-weight="600">Table 2 · All accounts</text>
+          <line x1="20" y1="50" x2="224" y2="50" stroke="#1F3C5C"/>
+          <rect x="20" y="66" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="90" width="204" height="12" rx="3" fill="#1B3A5C"/>
+          <rect x="20" y="114" width="150" height="12" rx="3" fill="#1B3A5C"/>
+        </g>
+      </g>
+
+      <!-- break-glass workflow on the right -->
+      <g transform="translate(880,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="82" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <rect x="-30" y="-58" width="60" height="36" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <line x1="-30" y1="-40" x2="30" y2="-40" stroke="#FF5A6E" stroke-width="1.2" stroke-dasharray="3 4"/>
+        <circle cx="0" cy="14" r="26" fill="url(#arKey)" filter="url(#arSoft)" opacity="0.9"/>
+        <circle cx="0" cy="6" r="9" fill="#0E2640"/>
+        <rect x="-3" y="10" width="6" height="26" rx="2" fill="#0E2640"/>
+        <rect x="2" y="26" width="10" height="5" rx="2" fill="#0E2640"/>
+        <rect x="2" y="34" width="8" height="5" rx="2" fill="#0E2640"/>
+      </g>
+      <text x="880" y="312" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">BREAK-GLASS</text>
+    </svg>
+    <figcaption>One tab between Security and Applications: two tables you read, plus the break-glass account you keep for emergencies.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The <strong>Access review</strong> tab on the tenant dashboard answers three questions you should be able to answer about any customer: <em>who holds administrative roles, which accounts are dead weight, and what happens if a Conditional Access policy locks everyone out.</em> It sits between <strong>Security</strong> and <strong>Applications</strong>, and it's two tables plus a break-glass workflow.</p>
+
+  <p>Everything that writes to the tenant here is operator-initiated, confirmed, and audited — Panoptica365 never disables or deletes an account on its own.</p>
+  </div>
+
+  <h2>Table 1 — Accounts with administrative roles</h2>
+
+  <p>This is a <strong>review-only</strong> roster of every account that holds a watched privileged role, grouped by tier (apex roles like Global Administrator first, then high, then medium). For each account you see its name (linked to the user's blade in Entra), UPN, the roles it holds, whether it's enabled, whether <strong>MFA</strong> is registered, and its last activity.</p>
+
+  <p>Two things to read carefully:</p>
+
+  <ul>
+    <li><strong>MFA registered</strong> shows <em>Yes</em>, <em>No</em>, or a dash. A dash means <em>we couldn't read a registration record for that account</em> — it is <strong>not</strong> the same as "no MFA". Don't act on a dash; act on a clear <em>No</em>.</li>
+    <li>The <strong>apex tier</strong> is where your attention belongs. A Global Administrator without MFA, or three more Global Admins than you remember creating, is the finding this table exists to surface.</li>
+  </ul>
+
+  <p>There are no action buttons on this table — it's a posture you read, then act on elsewhere (in Entra, or via Table 2 for non-privileged accounts).</p>
+
+  <h2>Table 2 — All user accounts</h2>
+
+  <p>Every account in the tenant, with filter pills: <strong>All</strong>, <strong>Members</strong>, <strong>Guests</strong>, <strong>Inactive</strong>. Columns are account + UPN, type, enabled, last activity, and actions.</p>
+
+  <p><strong>Inactivity</strong> is computed from Microsoft 365 usage reports, not directory sign-in logs — which means it <strong>works on Business Standard</strong>, where the sign-in logs are licensed away. The last-activity column shows the most recent date the account did anything across Exchange, SharePoint, OneDrive or Teams; if that's older than the threshold (90 days by default) the date turns red and the row is flagged <strong>Inactive</strong>. A guest who was invited but never accepted is labelled <strong>Never redeemed</strong> — the cleanest delete candidate there is.</p>
+
+  <p>If the tenant has <em>Display concealed user, group, and site names</em> turned on, the usage report comes back anonymized and we can't map activity to accounts. Rather than show you garbage, a note appears above the table with a link to turn the setting off.</p>
+
+  <h2>Disabling and deleting accounts</h2>
+
+  <p><strong>Disable</strong>, <strong>Enable</strong> and <strong>Delete</strong> are operator actions on Table 2. Each opens a confirm dialog that names the account, states what will happen, and reminds you the action is recorded in the audit log. Delete also tells you the account is <strong>recoverable in Entra for 30 days</strong> before removal is permanent.</p>
+
+  <p>The guards are enforced on the server, not just hidden in the UI:</p>
+
+  <ul>
+    <li><strong>Delete is refused for any account that holds an administrative role.</strong> Strip its roles in Entra first — this tool won't let you nuke an admin by accident.</li>
+    <li><strong>Disabling the last enabled Global Administrator is blocked.</strong> That's the one click that locks a tenant out of itself.</li>
+    <li>A <strong>break-glass account</strong> takes an extra confirmation before it can be disabled or deleted.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Server-side guards on the disable, enable and delete actions: delete is refused for admins, disabling the last Global Administrator is blocked, and break-glass accounts take an extra confirmation.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ENFORCED ON THE SERVER</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- guard 1 -->
+        <g transform="translate(36,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="14" font-weight="700">Delete an admin</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Refused</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">strip roles first</text>
+        </g>
+        <!-- guard 2 -->
+        <g transform="translate(260,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FF8A98" font-size="14" font-weight="700">Disable last GA</text>
+          <text x="100" y="92" fill="#FF5A6E" font-size="22" font-weight="700">Blocked</text>
+          <text x="100" y="124" fill="#E2A0AA" font-size="11.5">locks tenant out</text>
+        </g>
+        <!-- guard 3 -->
+        <g transform="translate(484,62)">
+          <rect x="0" y="0" width="200" height="150" rx="11" fill="#10243B" stroke="#FFC04D" stroke-width="1.5"/>
+          <text x="100" y="40" fill="#FFC04D" font-size="14" font-weight="700">Break-glass</text>
+          <text x="100" y="92" fill="#FFC04D" font-size="18" font-weight="700">Extra confirm</text>
+          <text x="100" y="124" fill="#D8C49A" font-size="11.5">before disable / delete</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Three guards live on the server, not just in the UI — so a careless click can't strand a tenant.</figcaption>
+  </figure>
+
+  <p>Every disable, enable and delete writes to the MSP audit log <strong>and</strong> the tenant's Change log, with the operator, the target UPN, the action and the outcome — so a careless or hostile action is always attributable after the fact.</p>
+
+  <h2>Break-glass accounts — emergency access done right</h2>
+
+  <p>A break-glass (emergency access) account is the credential you reach for when something has gone wrong: a misconfigured Conditional Access policy has locked out every normal admin, or your MFA provider is down. Its whole job is to <strong>bypass the Conditional Access policies</strong> so a human can always get back in and fix things.</p>
+
+  <p>Panoptica365 does this the way Microsoft recommends — with a dedicated <strong>group</strong>, not per-account edits. Open <strong>Break-glass accounts</strong> from the Access review tab. The first time, you'll be walked through it.</p>
+
+  <h3>Before you start</h3>
+
+  <p>Create the emergency account in Entra first:</p>
+
+  <ul>
+    <li><strong>Global Administrator</strong>, <strong>unlicensed</strong>, cloud-only, on the <strong>.onmicrosoft.com</strong> domain.</li>
+    <li>Give it a <strong>generic name</strong> — never "break glass", "emergency" or "admin". An obvious name is a beacon for an attacker who gets a foothold; pick something mundane (one operator uses <em>invoicing</em>). Name the group generically too, and keep only your emergency accounts in it.</li>
+    <li>Microsoft recommends keeping <strong>at least two</strong> emergency accounts.</li>
+  </ul>
+
+  <h3>Point Panoptica365 at the group</h3>
+
+  <p>Choose your dedicated security group from the picker — we show the name but key on the immutable group ID, so renaming it later won't break anything. There's a hard safety gate here: if you pick a group with more than a handful of members, Panoptica365 stops you, because excluding that group from Conditional Access would exempt <em>every member</em> — pointing at "All Staff" by mistake would exempt your whole company. It also checks the group is an assigned security group, not a dynamic one (you can't add members to a dynamic group).</p>
+
+  <p>On confirm, Panoptica365 <strong>excludes the group from every Conditional Access policy</strong> and shows you the result policy by policy — excluded, already excluded, or failed. If a write fails it tells you, rather than claiming success — because "excluded from 5 of 7" still means the account can be locked out by the other two. From then on, designating an account is just <strong>adding it to the group</strong>, and the coverage status shows <em>"Excluded from N of N policies."</em></p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Break-glass setup flow: a dedicated group is excluded from every Conditional Access policy, and a sign-in raises a severe alert.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bgArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1: dedicated group -->
+        <rect x="34" y="76" width="168" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="102" fill="#A8E1F8" font-size="14" font-weight="600">Dedicated group</text>
+        <text x="118" y="121" fill="#6B85A6" font-size="11.5">emergency accounts only</text>
+
+        <!-- step 2: excluded from every CA policy -->
+        <rect x="276" y="76" width="168" height="58" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="102" fill="#7DD9F9" font-size="13.5" font-weight="700">Excluded from</text>
+        <text x="360" y="121" fill="#7DD9F9" font-size="13.5" font-weight="700">every CA policy</text>
+
+        <!-- step 3: sign-in -> severe alert -->
+        <rect x="518" y="76" width="168" height="58" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.5"/>
+        <text x="602" y="102" fill="#FF8A98" font-size="14" font-weight="700">Sign-in</text>
+        <text x="602" y="121" fill="#FF8A98" font-size="13" font-weight="600">SEVERE alert</text>
+      </g>
+      <path d="M202 105 H276" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <path d="M444 105 H518" stroke="#5C7796" stroke-width="2" marker-end="url(#bgArr)"/>
+      <text x="360" y="170" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">designating an account = adding it to the group</text>
+    </svg>
+    <figcaption>Set the group once; from then on, a break-glass account is just a group member — and any sign-in is loud.</figcaption>
+  </figure>
+
+  <p>If the tenant is still on <strong>Security Defaults</strong> (no Conditional Access), exclusion is impossible — Security Defaults enforces MFA on everyone with no exclusions. Panoptica365 says so plainly and suggests moving to Conditional Access. You can still designate and monitor the account; the sign-in alert below works regardless.</p>
+
+  <h3>The sign-in alert</h3>
+
+  <p>The moment a break-glass account <strong>signs in</strong>, Panoptica365 raises a <strong>SEVERE</strong> alert — email and a PSA ticket if you have one wired up. A real break-glass login almost always means something broke or someone is somewhere they shouldn't be, so it's meant to be loud. Detection runs off the unified audit log, so it <strong>works without a Premium licence</strong>, and it matches on the account's stable identity — so it still fires even if you've changed the account's domain.</p>
+
+  <p>A single sign-in produces one alert (not one per audit record); repeat sign-ins the same day tick its recurrence count up until you resolve it.</p>
+
+  <h3>Coverage stays guaranteed</h3>
+
+  <p>New Conditional Access policies get created over time, and an exclusion can be removed. Panoptica365 keeps verifying that your break-glass group stays excluded from <strong>every</strong> policy and raises an alert if a gap opens — a new policy without the exclusion, or an exclusion that was stripped out. And because the exclusion is something <em>you</em> applied, Panoptica365 treats it as expected: it won't flag your own break-glass exclusion as Conditional Access drift.</p>
+
+  <h3>The one thing that has changed about break-glass</h3>
+
+  <p>Microsoft now <strong>enforces MFA on admin-portal sign-ins at the platform level — independent of Conditional Access.</strong> Excluding the account from every CA policy no longer removes the MFA prompt, and the old "no-MFA, just a vaulted password" model is gone. Register a <strong>phishing-resistant</strong> method on the account — a <strong>FIDO2 security key</strong> — and store it in the safe with the password. That's actually <em>better</em> for break-glass: a hardware key doesn't depend on the authenticator app or a phone signal, so it still works when the normal MFA path is the thing that's broken.</p>
+
+  <h2>When to use this</h2>
+
+  <ul>
+    <li><strong>At onboarding:</strong> review the admin roster, flag any admin without MFA, and set up two break-glass accounts with a dedicated group.</li>
+    <li><strong>Periodically:</strong> sweep Table 2 for inactive accounts and never-redeemed guests; disable or delete with the customer's nod.</li>
+    <li><strong>Whenever a break-glass alert fires:</strong> confirm it was a planned use. If it wasn't, you've just caught something.</li>
+    <li><strong>After creating new CA policies:</strong> check the break-glass coverage status (or wait for the gap alert) and re-apply if needed.</li>
+  </ul>
+
+</div>
+</body>
+</html>

@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.15 — 2026-06-19
+
+### New Look for Lessons + The Human Layer
+
+Every lesson in **Learn** — across all eight topics — has been rebuilt as a fully designed article with diagrams, callouts, and tables, and the Learn hub now displays them properly. Open any topic and click a lesson: it opens in a clean reading view with one smooth scrollbar, and it follows your app theme — light lessons when you're in light mode, dark when you're in dark. (The diagrams stay on their dark canvas by design, so they read like figures set into the page.) Everything else works as before — the blue "unread" dots, the *Updated* badges, and per-user read tracking — and lessons follow your language preference in English, French, and Spanish.
+
+### A clearer database health readout
+
+The **Database size** check in *Health* no longer flashes an amber warning just because a tenant's history has grown — a healthy, busy database is supposed to grow. It now simply reports the current size and the largest tables for reference, and never counts against overall health.
+
+---
+
 ## Version 0.2.14 — 2026-06-18
 
 ### Your data looks beautiful!

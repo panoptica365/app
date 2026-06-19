@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mailbox auditing — the forensic record you only miss when you need it — Email security settings</title>
+<meta name="lesson:title" content="Mailbox auditing — the forensic record you only miss when you need it">
+<meta name="lesson:subtitle" content="Enabling and verifying mailbox audit logs so you can reconstruct exactly what an attacker read, moved, or deleted during a breach.">
+<meta name="lesson:icon" content="eye">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Mailbox auditing</span></div>
+  <h1>Mailbox auditing — the forensic record you only miss when you need it</h1>
+  <p class="dek">Enabling and verifying mailbox audit logs so you can reconstruct exactly what an attacker read, moved, or deleted during a breach.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The Unified Audit Log records sign-ins, inbox rules, sent mail and searches — but the messages the attacker actually read are a blind spot because MailItemsAccessed was not audited.">
+      <defs>
+        <radialGradient id="mbBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="mbSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="mbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#mbBg)"/>
+
+      <text x="60" y="52" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">UNIFIED AUDIT LOG</text>
+
+      <!-- the four recorded lines -->
+      <g font-family="Geist,Inter,sans-serif" font-size="16">
+        <g transform="translate(60,84)">
+          <circle cx="11" cy="11" r="9" fill="none" stroke="#2EE8A0" stroke-width="2.2"/><path d="M7 11 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="34" y="17" fill="#C4D4E8">Sign-in events</text>
+        </g>
+        <g transform="translate(60,128)">
+          <circle cx="11" cy="11" r="9" fill="none" stroke="#2EE8A0" stroke-width="2.2"/><path d="M7 11 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="34" y="17" fill="#C4D4E8">Inbox-rule creation</text>
+        </g>
+        <g transform="translate(60,172)">
+          <circle cx="11" cy="11" r="9" fill="none" stroke="#2EE8A0" stroke-width="2.2"/><path d="M7 11 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="34" y="17" fill="#C4D4E8">Outbound messages sent</text>
+        </g>
+        <g transform="translate(60,216)">
+          <circle cx="11" cy="11" r="9" fill="none" stroke="#2EE8A0" stroke-width="2.2"/><path d="M7 11 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="34" y="17" fill="#C4D4E8">Search queries run</text>
+        </g>
+        <!-- the missing line -->
+        <g transform="translate(60,260)">
+          <circle cx="11" cy="11" r="9" fill="none" stroke="#FF5A6E" stroke-width="2.2"/><path d="M6 6 l10 10 M16 6 l-10 10" stroke="#FF5A6E" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="34" y="17" fill="#E2A0AA">Messages the attacker read</text>
+        </g>
+      </g>
+
+      <!-- the question and the blind spot -->
+      <g transform="translate(720,170)">
+        <circle r="128" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="92" fill="#0E2236" stroke="#FF5A6E" stroke-width="1.6"/>
+        <circle r="92" fill="#FF5A6E" filter="url(#mbSoft)" opacity="0.10"/>
+        <text x="0" y="-12" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="17" font-weight="700">What did the</text>
+        <text x="0" y="14" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="17" font-weight="700">attacker see?</text>
+        <text x="0" y="46" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="12.5" letter-spacing="1">MailItemsAccessed not audited</text>
+      </g>
+      <path d="M420 168 H588" stroke="#335F92" stroke-width="2.5" marker-end="url(#mbArr)"/>
+    </svg>
+    <figcaption>The log proves the attacker logged in, sent mail, and searched — but not which messages they actually opened.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A customer's controller gets phished on a Wednesday. The attacker has her mailbox for six days. The MSP catches the compromise on the following Tuesday — a partner calls about fraudulent wire instructions, the MSP confirms the breach, resets credentials, revokes sessions, opens an incident.</p>
+
+  <p>Now the question that determines everything downstream: <strong>what did the attacker see?</strong></p>
+
+  <p>The customer's lawyer needs to know. The insurance underwriter needs to know. The data-protection officer needs to know whether breach-notification thresholds got crossed. The customer's clients, contractors, and counterparties may need to be informed depending on what was in those messages. The wire fraud is already in motion — quantifying the <em>information disclosure</em> is the next step.</p>
+
+  <p>The MSP opens the Unified Audit Log. Sign-in events: present. Inbox-rule creation: present. Outbound messages sent by the attacker: present. Search queries the attacker ran inside the mailbox: present. The exact list of messages the attacker actually opened and read?</p>
+
+  <p>Nothing. Because <strong>MailItemsAccessed wasn't being audited.</strong></p>
+
+  <p>The default mailbox audit configuration Microsoft ships doesn't include MailItemsAccessed in the audited action list. The MSP can prove the attacker was logged in. The MSP can prove the attacker sent malicious mail. The MSP cannot prove which incoming messages the attacker read, which historical threads they exfiltrated, which confidential discussions they had visibility into.</p>
+
+  <p>The breach-notification scope balloons to "we have to assume everything." Six years of email. Every contract attachment, every M&amp;A discussion, every HR matter the controller had in her mailbox. The insurance claim ballooning by an order of magnitude. The disclosure obligations ballooning to match.</p>
+
+  <p>This is the cost of skipping mailbox audit posture work. This lesson is about not paying it.</p>
+  </div>
+
+  <h2>What mailbox auditing actually records</h2>
+
+  <p>Mailbox auditing is the per-mailbox property that determines which actions get logged to the Unified Audit Log when they occur in that mailbox. It's been on by default since 2019 — but "on" doesn't mean "logging everything," and the default action list is much narrower than most operators assume.</p>
+
+  <p>Three classes of actor get audited independently:</p>
+
+  <ul>
+    <li><strong>AuditOwner</strong> — actions performed by the mailbox's primary owner (i.e., the user signed into their own mailbox).</li>
+    <li><strong>AuditDelegate</strong> — actions performed by users with delegated access (assistants, shared-mailbox members, anyone with permissions on the mailbox).</li>
+    <li><strong>AuditAdmin</strong> — actions performed by administrators on the mailbox (via PowerShell, eDiscovery, etc.).</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Three classes of actor are audited independently: the owner, delegates, and admins, each with its own action list.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">AUDITED INDEPENDENTLY · EACH HAS ITS OWN ACTION LIST</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="40" y="58" width="200" height="104" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="140" y="92" fill="#A8E1F8" font-size="16" font-weight="700">AuditOwner</text>
+          <text x="140" y="120" fill="#C4D4E8" font-size="12.5">primary owner</text>
+          <text x="140" y="139" fill="#6B85A6" font-size="12">signed into own mailbox</text>
+        </g>
+        <g>
+          <rect x="260" y="58" width="200" height="104" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="360" y="92" fill="#A8E1F8" font-size="16" font-weight="700">AuditDelegate</text>
+          <text x="360" y="120" fill="#C4D4E8" font-size="12.5">delegated access</text>
+          <text x="360" y="139" fill="#6B85A6" font-size="12">assistants, shared members</text>
+        </g>
+        <g>
+          <rect x="480" y="58" width="200" height="104" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="580" y="92" fill="#A8E1F8" font-size="16" font-weight="700">AuditAdmin</text>
+          <text x="580" y="120" fill="#C4D4E8" font-size="12.5">administrators</text>
+          <text x="580" y="139" fill="#6B85A6" font-size="12">PowerShell, eDiscovery</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Owner, delegate, and admin activity are logged on three separate action lists.</figcaption>
+  </figure>
+
+  <p>Each is a list of audited actions. Microsoft's defaults include things like:</p>
+
+  <ul>
+    <li><strong>Update</strong> — message properties changed.</li>
+    <li><strong>Move</strong> / <strong>MoveToDeletedItems</strong> — message moved to a folder or to Deleted Items.</li>
+    <li><strong>SoftDelete</strong> / <strong>HardDelete</strong> — message deleted recoverably or permanently.</li>
+    <li><strong>SendAs</strong> / <strong>SendOnBehalf</strong> — message sent under another identity.</li>
+    <li><strong>Create</strong> — new item created (typically by admins/scripts).</li>
+    <li><strong>MailboxLogin</strong> — owner signing into the mailbox.</li>
+  </ul>
+
+  <p>What's <strong>not</strong> in the defaults (for most tenants) and matters most for forensics:</p>
+
+  <ul>
+    <li><strong>MailItemsAccessed</strong> — the message was opened or downloaded. This is the action that answers "what did the attacker see?" Without it in the audited list, you can't reconstruct read activity post-compromise.</li>
+    <li><strong>Send</strong> — message sent from the mailbox. The defaults log SendAs and SendOnBehalf but not the user's own Send action in some configurations. Worth verifying per mailbox.</li>
+    <li><strong>SearchQueryInitiatedExchange</strong> — search performed inside the mailbox. Tells you what the attacker was looking for.</li>
+  </ul>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Audited action</th><th>In the default list?</th><th>What it tells you</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Update</strong></td><td>Yes</td><td>Message properties changed</td></tr>
+        <tr><td><strong>Move / MoveToDeletedItems</strong></td><td>Yes</td><td>Message moved to a folder or Deleted Items</td></tr>
+        <tr><td><strong>SoftDelete / HardDelete</strong></td><td>Yes</td><td>Message deleted recoverably or permanently</td></tr>
+        <tr><td><strong>SendAs / SendOnBehalf</strong></td><td>Yes</td><td>Message sent under another identity</td></tr>
+        <tr><td><strong>Create</strong></td><td>Yes</td><td>New item created (typically admins/scripts)</td></tr>
+        <tr><td><strong>MailboxLogin</strong></td><td>Yes</td><td>Owner signing into the mailbox</td></tr>
+        <tr><td><strong>MailItemsAccessed</strong></td><td>No (most tenants)</td><td>Message opened or downloaded — "what did the attacker see?"</td></tr>
+        <tr><td><strong>Send</strong></td><td>No (some configs)</td><td>User's own Send action — verify per mailbox</td></tr>
+        <tr><td><strong>SearchQueryInitiatedExchange</strong></td><td>No (most tenants)</td><td>Search run inside the mailbox — what they were looking for</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>The Premium-audit gate (mostly closed for Business Premium now)</h2>
+
+  <p>MailItemsAccessed and SearchQueryInitiatedExchange used to be E5-only — labelled "Premium audit" actions. Microsoft expanded availability over 2024–2025 and these specific actions are now available in Microsoft 365 Business Premium tenants as well. The remaining E5-gated benefit is <strong>retention duration</strong>: Standard audit keeps records 180 days; Premium retention extends to 1 year by default. For SMB customers without E5, 180 days is usually enough for incident response (the controller-phish scenario above resolves within weeks), but it's worth knowing the limit when scoping a longer-tail investigation.</p>
+
+  <h2>Audit Bypass — the attacker's quiet exit</h2>
+
+  <p>There's a per-mailbox property called <code>AuditBypassEnabled</code>. When set to <code>$true</code> (via <code>Set-MailboxAuditBypassAssociation</code>), actions performed on that mailbox by the bypassed identity <em>do not get logged at all</em>. It's typically used for legitimate service accounts whose normal activity would generate audit noise.</p>
+
+  <p>It's also the attacker's dream property. A compromised account with admin rights can set its own mailbox (or another mailbox it's compromising) to AuditBypassEnabled=$true and then operate without leaving an audit trail. By the time the MSP investigates, the relevant events were never written.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Caution · the bypass list</div>
+    <p>The strict mailbox audit posture has a specific job here: <strong>catch unexpected <code>AuditBypassEnabled</code> flags</strong>. The bypass list should be empty or contain only known service accounts that have a documented reason to be there. Any mailbox you didn't expect to see in the bypass list is investigation-worthy.</p>
+  </div>
+
+  <h2>The strict mailbox audit posture — what it actually configures</h2>
+
+  <p>Two distinct things, which Panoptica365 monitors as two distinct security settings on the Exchange-category list:</p>
+
+  <p><strong>"Enable Mailbox Auditing for All Users"</strong> — verifies that every user mailbox in the tenant has <code>AuditEnabled=$true</code>. Microsoft turns this on by default for new tenants, but mailboxes inherited from older configurations, migrations, or specific provisioning scripts can have it disabled. If even one mailbox has auditing off, that mailbox is a blind spot. Panoptica365 checks the property across all mailboxes and reports compliant/non-compliant.</p>
+
+  <p><strong>"Strict Mailbox Audit Posture (Bypass + Action List)"</strong> — the more involved one. Two checks rolled into one setting:</p>
+
+  <ol>
+    <li><strong>Bypass list is clean.</strong> No mailbox has <code>AuditBypassEnabled=$true</code> unless explicitly approved. Any unexpected bypass entries fail the setting.</li>
+    <li><strong>Action list is comprehensive.</strong> The mailbox's <code>AuditOwner</code>, <code>AuditDelegate</code>, and <code>AuditAdmin</code> lists include the high-value actions (MailItemsAccessed, Send, SearchQueryInitiatedExchange, the deletion variants, the SendAs / SendOnBehalf variants). Mailboxes with the narrower default action list fail the setting.</li>
+  </ol>
+
+  <p>Both settings can be applied tenant-wide via PowerShell. The fundamental command is <code>Set-Mailbox &lt;identity&gt; -AuditEnabled $true -AuditOwner @{Add="MailItemsAccessed","Send","SearchQueryInitiatedExchange",...} -AuditLogAgeLimit 180.00:00:00</code>. Panoptica365's apply workflow runs this across every mailbox in the customer's tenant when the setting is pushed.</p>
+
+  <h2>The new-mailbox drift — the operational reality</h2>
+
+  <p>Here's the operational catch, and it's the canonical mailbox-audit drift scenario:</p>
+
+  <p>You apply the strict mailbox audit posture across the customer's 32 mailboxes. All 32 pass the check. Setting status: Monitored — OK. Two weeks later, the customer hires someone new. HR provisions the account through your standard process. Entra ID creates the user; M365 provisions the mailbox; the user signs in and starts working.</p>
+
+  <p>The newly-provisioned mailbox has Microsoft's default audit settings. Not the strict posture you configured for the existing 32. <strong>New mailboxes do not automatically inherit your audit configuration.</strong></p>
+
+  <p>Panoptica365's drift detector catches this. The next time the security settings poll runs, the check reports: "32 of 33 mailboxes have the strict audit posture. 1 does not." A drift alert fires.</p>
+
+  <p>You open the security setting, hit the apply action, and Panoptica365 reapplies the strict posture across all mailboxes — including the new one. Drift resolves. Setting goes back to Monitored — OK. The new mailbox now has the same audit posture as the rest of the fleet.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The drift-and-reapply loop: a new mailbox lands with default settings, the check reports 32 of 33 compliant, a drift alert fires, the operator reapplies, and the setting returns to monitored OK.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="34" y="96" width="158" height="58" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <text x="113" y="121" fill="#C4D4E8" font-size="13.5" font-weight="600">New mailbox</text>
+          <text x="113" y="140" fill="#6B85A6" font-size="11.5">default settings</text>
+        </g>
+        <g>
+          <rect x="258" y="40" width="204" height="58" rx="10" fill="#10243B" stroke="#FFC04D"/>
+          <text x="360" y="65" fill="#FFC04D" font-size="13.5" font-weight="700">Drift alert</text>
+          <text x="360" y="84" fill="#C4D4E8" font-size="11.5">32 of 33 compliant</text>
+        </g>
+        <g>
+          <rect x="528" y="96" width="158" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="607" y="121" fill="#A8E1F8" font-size="13.5" font-weight="700">Reapply</text>
+          <text x="607" y="140" fill="#6B85A6" font-size="11.5">all mailboxes</text>
+        </g>
+        <g>
+          <rect x="258" y="174" width="204" height="44" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="360" y="201" fill="#2EE8A0" font-size="13" font-weight="700">Monitored — OK</text>
+        </g>
+      </g>
+      <path d="M192 122 H256" stroke="#335F92" stroke-width="2" marker-end="url(#dArr)"/>
+      <path d="M462 75 C510 78 528 100 540 110" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M528 130 C470 150 420 165 410 172" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M280 174 C250 150 250 120 256 78" stroke="#335F92" stroke-width="2" stroke-dasharray="4 5" fill="none" marker-end="url(#dArr)"/>
+      <text x="150" y="62" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">expect within a day</text>
+    </svg>
+    <figcaption>Every new mailbox triggers the same loop: drift alert, reapply, back to monitored.</figcaption>
+  </figure>
+
+  <p>This is going to happen every time a new mailbox gets created. There's no Microsoft mechanism to auto-apply the strict posture at provisioning time; the operator's reapply step is the workaround. Plan for it in your onboarding workflow: when the customer adds a user, expect a drift alert within the day, and run the reapply.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Mailbox audit posture is one of the strongest examples of Panoptica365's drift-detection model on the Exchange side.</p>
+
+  <p><strong>Two security settings</strong> monitored per tenant:</p>
+  <ul>
+    <li>"Enable Mailbox Auditing for All Users" — checks <code>AuditEnabled</code> per mailbox.</li>
+    <li>"Strict Mailbox Audit Posture (Bypass + Action List)" — checks audit bypass list cleanliness and action-list comprehensiveness per mailbox.</li>
+  </ul>
+
+  <p><strong>Drift alerts</strong> when either setting moves from compliant to non-compliant — the new-mailbox case being the most common trigger. The alert shows up in the standard alert pipeline with attribution to the customer.</p>
+
+  <p><strong>The apply action</strong> on each setting, which runs the relevant PowerShell across all mailboxes in the customer's tenant to bring them back into compliance.</p>
+
+  <p>What Panoptica365 does <em>not</em> surface in the dashboard: per-mailbox audit configuration drill-down, the audit-event volume per mailbox, the actual audit log contents. For the audit log itself — what events have been recorded, what searches have been run, what the attacker actually accessed — drill into the Microsoft Purview audit log search in the Defender portal.</p>
+
+  <h2>What can break</h2>
+
+  <p><strong>The 180-day retention ceiling for incidents that surface late.</strong> A breach discovered six months after the fact can be partly outside the audit window — the earliest attacker activity may have already aged out. The fix is either E5 / Premium Audit for longer retention (most SMBs won't pay for this) or earlier detection (which is what the rest of the curriculum is about).</p>
+
+  <p><strong>Service account audit bypass entries you didn't document.</strong> Some legitimate service accounts have AuditBypassEnabled set for valid operational reasons — a backup tool that touches every mailbox, a third-party archiver, an integration platform. When the strict audit posture setting fires a drift alert about an unexpected bypass entry, the right response is to investigate, document the reason if legitimate, and add the account to an approved bypass exception list in your runbook. <em>Don't</em> just disable the drift check; that's how the legitimate-looking-but-malicious bypass entry slips through later.</p>
+
+  <p><strong>Audit-noise concerns from customers.</strong> Some customers ask "are you reading our employees' email?" when they hear the word "audit." The honest answer: mailbox auditing records <em>metadata about events</em> (who accessed what, when), not message content. The audit log entries say "user X opened message Y at 14:23"; they don't say what the message contained. Communicate this clearly to avoid the awkward conversation later.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Mailbox auditing is the forensic record you only miss when you need it.</strong> Customers don't ask about mailbox audit posture until they've been compromised and the lawyer is asking what data was exfiltrated. By then the audit configuration is set; you can't retroactively decide to have logged MailItemsAccessed. Set it strict, set it across all mailboxes, accept the drift-and-reapply rhythm as a permanent operating cost.</p>
+
+  <p><strong>New mailboxes are the recurring drift source.</strong> Every new user provisioned creates a mailbox with Microsoft's default audit settings — not your strict configuration. The drift alert is the signal; the reapply is the workflow. Onboarding playbooks should explicitly include "wait for Panoptica365 drift alert, run reapply" as a step.</p>
+
+  <p><strong>The Bypass list is the attacker's hiding place.</strong> Periodically — and certainly as part of any incident-response triage — audit the AuditBypassEnabled property across all mailboxes. An unexpected entry is investigation-worthy until proven legitimate. The strict audit posture catches the routine drift; the operator's eye catches the rare adversarial drift.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Lesson 7: Quarantine policies and user release.</b> Who gets to release quarantined messages, why the defaults are dangerous, and how attacker-targeted quarantine release becomes a BEC follow-on vector.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Lesson 8: Mail flow rules and MailTips.</b> Transport rules — the power they give operators and the abuse they enable when configured loosely.</div></div>
+  </div>
+
+  <p>For now: open the customer's security settings panel in Panoptica365. Find the two mailbox-audit settings. If they're not green, apply them now. The first apply may take a few minutes for a large mailbox count; subsequent applies (after new-mailbox drifts) are quick. Set the customer up for the right answer to the question the lawyer will eventually ask.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on mailbox auditing overview and default actions (<a href="https://learn.microsoft.com/en-us/purview/audit-mailboxes" target="_blank" rel="noopener">Microsoft Learn — Manage mailbox auditing</a>); Set-Mailbox audit parameters reference (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-mailbox" target="_blank" rel="noopener">Microsoft Learn — Set-Mailbox</a>); MailItemsAccessed and Premium audit availability changes (<a href="https://learn.microsoft.com/en-us/purview/audit-solutions-overview" target="_blank" rel="noopener">Microsoft Learn — Audit Solutions in Microsoft Purview</a>); Set-MailboxAuditBypassAssociation reference (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/set-mailboxauditbypassassociation" target="_blank" rel="noopener">Microsoft Learn — Set-MailboxAuditBypassAssociation</a>); Unified Audit Log search workflow (<a href="https://learn.microsoft.com/en-us/purview/audit-log-search" target="_blank" rel="noopener">Microsoft Learn — Audit log search</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

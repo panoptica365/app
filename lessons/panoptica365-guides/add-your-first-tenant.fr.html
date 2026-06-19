@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajoutez votre premier locataire — Guides Panoptica365</title>
+<meta name="lesson:title" content="Ajoutez votre premier locataire">
+<meta name="lesson:subtitle" content="Le flux de consentement administrateur du début à la fin : quel compte utiliser, ce qui est accordé, et ce qui se passe ensuite.">
+<meta name="lesson:icon" content="building-2">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Ajoutez votre premier locataire</span></div>
+  <h1>Ajoutez votre premier locataire</h1>
+  <p class="dek">Le flux de consentement administrateur du début à la fin : quel compte utiliser, ce qui est accordé, et ce qui se passe ensuite.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="L'aller-retour du consentement administrateur : du bouton Ajouter un locataire, vers la page de consentement administrateur de Microsoft, puis retour à la page Locataires.">
+      <defs>
+        <radialGradient id="atBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="atGlow" cx="50%" cy="45%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="atArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+        <marker id="atArrBack" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#atBg)"/>
+
+      <!-- left: Panoptica365 / Ajouter un locataire -->
+      <g transform="translate(40,108)">
+        <rect x="0" y="0" width="300" height="124" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="150" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PANOPTICA365</text>
+        <rect x="42" y="58" width="216" height="40" rx="20" fill="#10243B" stroke="#5CCBF4" stroke-width="1.5"/>
+        <text x="150" y="83" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13.5" font-weight="700">Ajouter un locataire</text>
+      </g>
+
+      <!-- center: consentement administrateur Microsoft -->
+      <g transform="translate(560,170)">
+        <circle r="116" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="80" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <circle r="46" fill="url(#atGlow)" opacity="0.16"/>
+        <rect x="-58" y="-44" width="116" height="88" rx="12" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <!-- key glyph: consent -->
+        <circle cx="-12" cy="0" r="15" fill="none" stroke="#A8E1F8" stroke-width="3"/>
+        <path d="M3 0 H34 M22 0 V14 M34 0 V14" stroke="#A8E1F8" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <text x="0" y="78" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="13.5" font-weight="600">Consentement admin.</text>
+        <text x="0" y="98" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">Connexion Microsoft</text>
+      </g>
+
+      <!-- right: retour à la page Locataires -->
+      <g transform="translate(790,108)">
+        <rect x="0" y="0" width="290" height="124" rx="14" fill="#0E2236" stroke="#335F92" stroke-width="1.4"/>
+        <text x="145" y="38" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PAGE LOCATAIRES</text>
+        <rect x="40" y="58" width="210" height="40" rx="9" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <text x="145" y="83" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">Consentement accordé</text>
+      </g>
+
+      <!-- arrows -->
+      <path d="M348 170 H440" stroke="#5CCBF4" stroke-width="2.6" marker-end="url(#atArr)"/>
+      <path d="M682 170 H782" stroke="#2EE8A0" stroke-width="2.6" marker-end="url(#atArrBack)"/>
+      <text x="394" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">redirection</text>
+      <text x="732" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">retour</text>
+    </svg>
+    <figcaption>Un seul aller-retour : cliquez sur Ajouter un locataire, consentez sur la page de Microsoft, revenez à la page Locataires.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Tout dans Panoptica365 commence par l'intégration d'un locataire. Le flux prend environ deux minutes de clics, plus quelques minutes de collecte de données en arrière-plan.</p>
+  </div>
+
+  <h2>Avant de commencer</h2>
+
+  <p>Il vous faut deux choses :</p>
+
+  <ul>
+    <li>Le rôle <strong>Administrateur</strong> dans Panoptica365 (le bouton <strong>Ajouter un locataire</strong> est réservé aux administrateurs).</li>
+    <li>Des identifiants capables d'accorder le consentement administrateur <strong>sur le locataire du client</strong> — soit un <strong>compte Administrateur général dans ce locataire</strong>, soit un compte doté d'une <strong>relation GDAP</strong> avec des droits suffisants pour consentir en son nom. Le point clé : quand Microsoft vous demande de vous connecter, utilisez les identifiants qui ont accès au locataire <em>cible</em> — pas votre propre locataire MSP, sauf si c'est lui que vous intégrez.</li>
+  </ul>
+
+  <h2>Étape par étape</h2>
+
+  <ol>
+    <li>Allez dans <strong>Locataires</strong> dans la barre latérale.</li>
+    <li>Cliquez sur <strong>Ajouter un locataire</strong> (en haut à droite).</li>
+    <li>La fenêtre <strong>Ajouter un locataire</strong> s'ouvre et vous demande de choisir un mode : <strong>Géré</strong> ou <strong>Audit seulement</strong>. En bref : Géré offre l'ensemble complet des fonctionnalités — interrogation planifiée, alertes, détection de dérive, capacité de pousser des paramètres AC / Intune / sécurité — et persiste indéfiniment. Audit seulement est un instantané en lecture seule pour les évaluations et les prospects, supprimé automatiquement après 14 jours plus une période de grâce de 7 jours. Choisissez <strong>avant</strong> de consentir : un locataire en audit seulement peut être converti en géré plus tard, mais un locataire géré ne peut jamais être converti en audit seulement. Le prochain guide couvre cette décision en détail.</li>
+    <li>Cliquez sur <strong>Continuer vers le consentement administrateur</strong>. Vous êtes redirigé vers la page de consentement administrateur de Microsoft.</li>
+    <li>Connectez-vous avec le compte Administrateur général ou le compte GDAP du locataire cible et acceptez les autorisations demandées. Cela accorde au principal de service de Panoptica365 un accès en lecture à la configuration du locataire (ainsi que les autorisations d'écriture utilisées par le déploiement de modèles).</li>
+    <li>Vous revenez sur la page Locataires avec une notification : <em>« Consentement administrateur accordé avec succès. »</em></li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="Les six étapes d'intégration en séquence : ouvrir Locataires, cliquer sur Ajouter un locataire, choisir un mode, continuer vers le consentement administrateur, se connecter et accepter, puis revenir à la page Locataires.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="sArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- step rows -->
+        <g transform="translate(0,28)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">1</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5">Ouvrez <tspan fill="#A8E1F8" font-weight="600">Locataires</tspan> dans la barre latérale</text>
+        </g>
+        <g transform="translate(0,82)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">2</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5">Cliquez sur <tspan fill="#A8E1F8" font-weight="600">Ajouter un locataire</tspan> (en haut à droite)</text>
+        </g>
+        <g transform="translate(0,136)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">3</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5">Choisissez un mode : <tspan fill="#A8E1F8" font-weight="600">Géré</tspan> ou <tspan fill="#A8E1F8" font-weight="600">Audit seulement</tspan></text>
+        </g>
+        <g transform="translate(0,190)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">4</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5"><tspan fill="#7DD9F9" font-weight="600">Continuer vers le consentement admin.</tspan> → Microsoft</text>
+        </g>
+        <g transform="translate(0,244)">
+          <circle cx="56" cy="24" r="15" fill="#153055" stroke="#4A80BD"/><text x="56" y="29" text-anchor="middle" fill="#5CCBF4" font-size="13" font-weight="700">5</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5">Connectez-vous (locataire cible) et acceptez</text>
+        </g>
+        <g transform="translate(0,298)">
+          <circle cx="56" cy="24" r="15" fill="#0E2236" stroke="#2EE8A0"/><text x="56" y="29" text-anchor="middle" fill="#2EE8A0" font-size="13" font-weight="700">6</text>
+          <rect x="92" y="2" width="588" height="44" rx="9" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.3"/><text x="112" y="29" fill="#C4D4E8" font-size="13.5">Retour à Locataires — <tspan fill="#2EE8A0" font-weight="600">consentement accordé</tspan></text>
+        </g>
+        <!-- connectors -->
+        <path d="M56 56 V66" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 110 V120" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 164 V174" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 218 V228" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+        <path d="M56 272 V282" stroke="#335F92" stroke-width="2" marker-end="url(#sArr)"/>
+      </g>
+    </svg>
+    <figcaption>La séquence exacte — six étapes, de la barre latérale à la notification de consentement accordé.</figcaption>
+  </figure>
+
+  <p>En coulisses, Panoptica365 attribue aussi les rôles <strong>Administrateur Exchange</strong> et <strong>Administrateur de conformité</strong> à son principal de service dans le nouveau locataire — ils sont nécessaires aux lecteurs Exchange et conformité. C'est automatique et au mieux des possibilités; si l'opération ne se termine pas, voyez le Dépannage ci-dessous.</p>
+
+  <h2>Ce qui se passe ensuite</h2>
+
+  <p>Le locataire apparaît immédiatement dans la liste avec un nom généré (vous corrigerez ça dans un instant) et une colonne <strong>Dernière interrogation</strong> vide. La première collecte de données démarre en arrière-plan. <strong>Accordez-lui quelques minutes</strong> — il n'y a pas de barre de progression; quand la première interrogation se termine, Dernière interrogation se remplit et le tableau de bord du locataire commence à montrer de vraies données.</p>
+
+  <p>Pendant que vous attendez, cliquez sur l'action de modification (crayon) du locataire et définissez :</p>
+
+  <ul>
+    <li><strong>Nom d'affichage</strong> — le nom du client que vous voulez voir partout.</li>
+    <li><strong>Nom PSA</strong> — le nom de l'entreprise tel qu'il apparaît dans votre PSA, utilisé pour l'attribution des billets (vous pouvez sauter cette étape jusqu'à la configuration de l'intégration PSA).</li>
+    <li><strong>Langue</strong> — la langue utilisée pour l'analyse IA et les rapports de ce locataire.</li>
+    <li><strong>Interrogation (min)</strong> — la fréquence d'interrogation du locataire (1 à 60 minutes).</li>
+  </ul>
+
+  <p>Cliquez ensuite sur <strong>Enregistrer</strong>, rendez-vous à la <strong>Console principale</strong>, et cliquez sur votre nouveau locataire pour ouvrir son tableau de bord.</p>
+
+  <h2>Dépannage</h2>
+
+  <p><strong>Le consentement échoue avec AADSTS650051.</strong> C'est assez fréquent lors d'une <em>première</em> tentative de consentement pour que Panoptica365 le gère pour vous : une fenêtre intitulée <em>« Le consentement ne s'est pas terminé — réessayez »</em> apparaît. C'est presque toujours un accroc temporaire du côté de Microsoft — cliquez sur <strong>Réessayer</strong> et la deuxième tentative aboutit généralement. Si l'échec persiste, dépliez <em>« Afficher les étapes de nettoyage »</em> dans cette fenêtre pour obtenir un script de nettoyage à copier-coller.</p>
+
+  <p><strong>Attribution de rôles incomplète.</strong> Si vous voyez une notification indiquant que le principal de service est peut-être encore en cours de propagation, attendez une minute, puis ouvrez la fenêtre de modification du locataire et cliquez sur <strong>Réattribuer les rôles Exchange</strong>.</p>
+
+  <p><strong>Mauvais compte.</strong> Si vous avez consenti par accident avec les identifiants du mauvais locataire, vous avez intégré le mauvais locataire. Supprimez-le (fenêtre de modification → <strong>Supprimer le client</strong>) et recommencez avec les bons identifiants.</p>
+
+</div>
+</body>
+</html>

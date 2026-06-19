@@ -43,6 +43,28 @@
     return d.toLocaleDateString(localeTag(), { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  // The light/dark theme to hand the lesson iframe. Ground truth is the theme
+  // stylesheet ACTUALLY applied to the shell (the <link id="theme-css"> href) —
+  // not PanopticaTheme.currentPref(), which reads the friendly prefs key. That
+  // key isn't written when the theme is applied from the saved DB pref on load
+  // (only the stylesheet + STORAGE_KEY flip), so currentPref() reported 'dark'
+  // on a light shell and the first lesson opened dark until prefs were re-saved.
+  function currentLessonTheme() {
+    try {
+      const link = document.getElementById('theme-css');
+      const href = (link && link.href) || '';
+      if (/panoptica-light/.test(href)) return 'light';
+      if (/panoptica-dark/.test(href)) return 'dark';
+    } catch (e) { /* ignore — fall through to the storage-keyed fallbacks */ }
+    try {
+      if (window.PanopticaTheme) {
+        if (window.PanopticaTheme.current && window.PanopticaTheme.current() === 'panoptica-light') return 'light';
+        if (window.PanopticaTheme.currentPref && window.PanopticaTheme.currentPref() === 'light') return 'light';
+      }
+    } catch (e) { /* ignore */ }
+    return 'dark';
+  }
+
   // ─── Init / teardown ───
   function init(params) {
     document.getElementById('learn-back')?.addEventListener('click', showIndex);
@@ -202,11 +224,28 @@
       '/api/learn/lessons/' + encodeURIComponent(topicSlug) + '/' + encodeURIComponent(lessonSlug) + '?lang=' + encodeURIComponent(lang())
     ).then((data) => {
       titleEl.textContent = data.title || '';
-      const html = (window.PanopticaLearnMarkdown && window.PanopticaLearnMarkdown.render)
-        ? window.PanopticaLearnMarkdown.render(data.body_markdown || '')
-        : esc(data.body_markdown || '');
-      body.innerHTML = '<div class="learn-modal-content">' + html + '</div>';
-      body.scrollTop = 0;
+
+      // The lesson is a standalone HTML doc served from /learn-assets. Render it
+      // in a sandboxed iframe (allow-same-origin only — NO allow-scripts; the
+      // lessons run no JS). The iframe FILLS the modal body and scrolls its own
+      // content — one native scrollbar. (We deliberately do NOT auto-size the
+      // frame to its content height: that left the frame a hair short, so it
+      // kept an inner scrollbar while the modal body scrolled the rest — the
+      // jumpy double-scrollbar.) Same-origin lets us inject the light/dark theme.
+      const frame = document.createElement('iframe');
+      frame.className = 'learn-lesson-frame';
+      frame.setAttribute('sandbox', 'allow-same-origin');
+      frame.setAttribute('title', data.title || '');
+      frame.src = data.html_url;
+
+      frame.addEventListener('load', () => {
+        try {
+          frame.contentDocument.documentElement.setAttribute('data-theme', currentLessonTheme()); // 'light' | 'dark'
+        } catch (e) { /* same-origin; should not throw */ }
+      });
+
+      body.innerHTML = '';
+      body.appendChild(frame);
     }).catch(() => {
       body.innerHTML = errorHtml();
     });

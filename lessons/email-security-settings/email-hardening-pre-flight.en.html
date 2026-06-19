@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email hardening pre-flight — what to know before you touch a single setting</title>
+<meta name="lesson:title" content="Email hardening pre-flight — what to know before you touch a single setting">
+<meta name="lesson:subtitle" content="Licensing reality, pre-work inventory, and the mistakes operators make before they even start hardening email.">
+<meta name="lesson:icon" content="clipboard-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Pre-flight</span></div>
+  <h1>Email hardening pre-flight — what to know before you touch a single setting</h1>
+  <p class="dek">Licensing reality, pre-work inventory, and the mistakes operators make before they even start hardening email.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A room with a low floor line marked 'what Microsoft ships' and a high ceiling line marked 'what the licence covers', with a posture bar rising from floor toward ceiling.">
+      <defs>
+        <radialGradient id="hfBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="hfBar" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#A8E1F8"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#hfBg)"/>
+
+      <!-- ceiling line: what the licence covers -->
+      <line x1="120" y1="70" x2="1000" y2="70" stroke="#5CCBF4" stroke-width="2.5" stroke-dasharray="2 9"/>
+      <text x="120" y="56" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600" letter-spacing="2">CEILING · WHAT THE LICENCE COVERS</text>
+
+      <!-- floor line: what Microsoft ships -->
+      <line x1="120" y1="270" x2="1000" y2="270" stroke="#52708F" stroke-width="2.5"/>
+      <text x="120" y="294" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="15" letter-spacing="2">FLOOR · WHAT MICROSOFT SHIPS</text>
+
+      <!-- posture bars rising floor toward ceiling -->
+      <g>
+        <rect x="300" y="200" width="58" height="70" rx="4" fill="url(#hfBar)" opacity="0.55"/>
+        <rect x="420" y="150" width="58" height="120" rx="4" fill="url(#hfBar)" opacity="0.7"/>
+        <rect x="540" y="110" width="58" height="160" rx="4" fill="url(#hfBar)" opacity="0.85"/>
+        <rect x="660" y="80" width="58" height="190" rx="4" fill="url(#hfBar)"/>
+      </g>
+      <!-- lift arrow -->
+      <path d="M790 250 V96" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round" marker-end="url(#hfArr)"/>
+      <defs><marker id="hfArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker></defs>
+      <text x="838" y="180" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">LIFT THE POSTURE</text>
+    </svg>
+    <figcaption>Microsoft ships the floor. The licence covers the ceiling. The work is lifting from one to the other.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A customer's controller gets an email from the CEO. Urgent — supplier in trouble, needs a wire of $84,000 to a new account by end of day. The controller wires it. Twelve hours later the actual CEO comes back from a flight and asks what the wire was for. The email was forged. The "supplier" was a Romanian mule account. The customer's insurance covers half. The customer's lawyer asks the MSP, politely at first and then less politely, why the email defences they're paying for didn't catch this.</p>
+
+  <p>The post-mortem is depressing in its specifics:</p>
+
+  <ul>
+    <li>The customer's domain had no DMARC record. SPF was set to <code>~all</code> (soft-fail), which Microsoft 365 accepted anyway because rejecting would have been "too disruptive."</li>
+    <li>The anti-phishing policy was Microsoft's default. Impersonation protection for the CEO was not turned on. Anti-spoofing wasn't tuned.</li>
+    <li>Safe Links was licensed (Business Premium includes Defender for Office 365 Plan 1) but had never been configured. The clickable link in the wire-instructions email was an unwrapped redirect to a credential-harvesting page.</li>
+    <li>Quarantine release was on Microsoft's per-user default, so even if the message had been quarantined, the controller could have released it herself.</li>
+    <li>The customer paid for all of this protection. Every month. For years.</li>
+  </ul>
+
+  <p>Card 5 is about closing that gap. The customer's email environment is the single most-attacked surface in M365 — phishing, BEC, impersonation, malware, OAuth consent attacks all arrive via email — and Microsoft's defaults are tuned for compatibility, not security. The work of card 5 is taking the defences that are <em>available</em> and <em>paid for</em> and actually <em>turning them on, tuned correctly, with the right discipline around the human workflows</em>.</p>
+
+  <p>This lesson is the pre-flight: the licensing reality, the inventory you need before you touch a setting, what M365 ships with already-configured, and the common mistakes operators make before they even start.</p>
+  </div>
+
+  <h2>The licensing reality — what you have, what you don't</h2>
+
+  <p>Email defence in M365 sits in three layered services. Knowing which the customer has is the prerequisite for everything else in card 5.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 290" role="img" aria-label="Three stacked layers: EOP at the base, MDO Plan 1 in the middle, MDO Plan 2 at the top.">
+      <rect width="720" height="290" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- top: MDO P2 -->
+        <rect x="190" y="34" width="340" height="58" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="60" text-anchor="middle" fill="#C4D4E8" font-size="15" font-weight="600">Defender for Office 365 Plan 2</text>
+        <text x="360" y="80" text-anchor="middle" fill="#6B85A6" font-size="12">E5 / A5 / G5 · enterprise</text>
+        <!-- middle: MDO P1 -->
+        <rect x="120" y="106" width="480" height="64" rx="9" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="360" y="134" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Defender for Office 365 Plan 1</text>
+        <text x="360" y="155" text-anchor="middle" fill="#7DD9F9" font-size="12.5">Business Premium · most SMB customers</text>
+        <!-- base: EOP -->
+        <rect x="56" y="184" width="608" height="70" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="214" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Exchange Online Protection</text>
+        <text x="360" y="235" text-anchor="middle" fill="#6B85A6" font-size="12.5">free · every M365 mailbox</text>
+      </g>
+    </svg>
+    <figcaption>Three layered services. Each tier sits on the one below it.</figcaption>
+  </figure>
+
+  <p><strong>Exchange Online Protection (EOP).</strong> Free, included with any M365 mailbox licence. EOP is the anti-spam, anti-malware, connection-filtering layer. It catches the bulk of obvious spam and known malware. Every M365 tenant has it. You don't pay extra for it, but you do still have to configure it — the defaults are deliberately permissive.</p>
+
+  <p><strong>Defender for Office 365 Plan 1 (MDO P1).</strong> Included with Microsoft 365 Business Premium, the licence almost every SMB MSP customer should be on. Adds Safe Links (URL rewriting and click-time evaluation), Safe Attachments (sandbox detonation of file attachments), real-time detections, and enhanced anti-phishing (mailbox intelligence, user impersonation protection, domain impersonation protection). This is the meaningful upgrade over EOP and the one customers are typically already paying for without realising it. Most of card 5 assumes you have P1.</p>
+
+  <p><strong>Defender for Office 365 Plan 2 (MDO P2).</strong> Included with Microsoft 365 E5 / A5 / G5 (enterprise-grade SKUs). Adds Threat Explorer, automated investigation and response, attack simulation training, and threat trackers. Almost no SMB customers have this. We'll mention P2 features in passing where relevant; we won't dwell on them. If your customer has E5 you'll know it, and you'll want to lean on the Microsoft Learn docs for those features specifically rather than expecting card 5 to cover them in depth.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Key point</div>
+    <p>The thing to internalise: Business Premium customers have a meaningful security upgrade over Business Standard, but the upgrade only counts if you actually turn it on. The wire-fraud customer in the opening anecdote was paying for P1 the entire time. The MSP just hadn't configured Safe Links.</p>
+  </div>
+
+  <h2>What M365 ships with, already-configured</h2>
+
+  <p>Microsoft does configure <em>some</em> email defences out of the box. The trick is knowing which ones, because they're often weaker than operators assume.</p>
+
+  <p><strong>Already on, with default values:</strong></p>
+
+  <ul>
+    <li>The default anti-spam inbound policy. Catches obvious spam (high spam confidence level). Bulk email threshold is set to 7 (mid-range — lets most marketing mail through). User-released quarantine is allowed.</li>
+    <li>The default anti-malware policy. Catches known-malicious attachments by hash match. Common file extensions blocked (.exe, .bat, .cmd, and a few more).</li>
+    <li>The default anti-phishing policy. Anti-spoofing enabled. Anti-phishing <em>user impersonation</em> protection — <strong>not configured by default</strong>. <em>Domain impersonation</em> protection — <strong>not configured by default</strong>.</li>
+    <li>Connection filter policy. No IP allow or block list by default.</li>
+    <li>Default DKIM. Microsoft auto-generates a DKIM key for the tenant's <code>onmicrosoft.com</code> domain only. Custom domains require manual setup.</li>
+  </ul>
+
+  <p><strong>Not configured by default — you have to turn these on:</strong></p>
+
+  <ul>
+    <li>Safe Links policies. Even with the P1 licence, Safe Links is not enabled for users until you create a policy and assign it to user groups.</li>
+    <li>Safe Attachments policies. Same — licence present, feature off until you configure.</li>
+    <li>DMARC. Customer's DNS, customer's responsibility (or the MSP's). M365 doesn't publish DMARC records for you.</li>
+    <li>DKIM for custom domains. The DKIM keys exist; you have to publish the CNAMEs in DNS and enable signing per domain.</li>
+    <li>Auto-forwarding to external domains. Microsoft tightened defaults in 2020 to block this, but per-customer exception lists may still exist from migration projects.</li>
+    <li>Outbound spam protection (custom restrictions). The default outbound policy is permissive — a compromised mailbox can send a lot of mail before tripping the default thresholds.</li>
+    <li>Mail flow rules (transport rules). None by default.</li>
+    <li>Mailbox audit logging in strict mode. Auditing is on by default since 2019, but the <em>strict</em> set of audited actions (the ones that catch BEC artefacts) needs explicit configuration.</li>
+  </ul>
+
+  <p>The pattern: Microsoft ships the floor. The licence covers the ceiling. Card 5 is about lifting the customer's posture from the floor to the ceiling.</p>
+
+  <h2>Inventory — know what you're hardening</h2>
+
+  <p>Before you touch a single setting, pull these facts about the customer's environment:</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="A pre-flight sequence of four inventory steps — mailboxes, domains, current mail flow, existing protection state — leading to a gate before any setting is changed.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="ivArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="26" y="50" width="118" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="85" y="80" fill="#A8E1F8" font-size="13.5" font-weight="600">Mailboxes</text></g>
+        <path d="M148 75 H170" stroke="#335F92" stroke-width="2" marker-end="url(#ivArr)"/>
+        <g><rect x="174" y="50" width="118" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="233" y="80" fill="#A8E1F8" font-size="13.5" font-weight="600">Domains</text></g>
+        <path d="M296 75 H318" stroke="#335F92" stroke-width="2" marker-end="url(#ivArr)"/>
+        <g><rect x="322" y="50" width="118" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="381" y="74" fill="#A8E1F8" font-size="13" font-weight="600">Mail flow</text><text x="381" y="90" fill="#6B85A6" font-size="11">(current)</text></g>
+        <path d="M444 75 H466" stroke="#335F92" stroke-width="2" marker-end="url(#ivArr)"/>
+        <g><rect x="470" y="50" width="118" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="529" y="74" fill="#A8E1F8" font-size="13" font-weight="600">Protection</text><text x="529" y="90" fill="#6B85A6" font-size="11">state</text></g>
+        <path d="M592 75 H614" stroke="#2EE8A0" stroke-width="2" marker-end="url(#ivArrG)"/>
+        <defs><marker id="ivArrG" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2EE8A0"/></marker></defs>
+        <g><rect x="618" y="48" width="78" height="54" rx="9" fill="#10243B" stroke="#2EE8A0" stroke-width="1.6"/><text x="657" y="72" fill="#2EE8A0" font-size="12" font-weight="700">Change a</text><text x="657" y="88" fill="#2EE8A0" font-size="12" font-weight="700">setting</text></g>
+      </g>
+      <text x="360" y="28" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PRE-FLIGHT INVENTORY · BEFORE YOU TOUCH A SETTING</text>
+    </svg>
+    <figcaption>Four facts to pull first. The gate to changing a setting opens only after them.</figcaption>
+  </figure>
+
+  <p><strong>Mailboxes.</strong> How many? Run <code>Get-Mailbox</code> in Exchange Online PowerShell or pull the count from the Microsoft 365 admin centre. Note the breakdown:</p>
+
+  <ul>
+    <li>User mailboxes (real humans).</li>
+    <li>Shared mailboxes (delegated access; often weakly protected and often the source of "the CEO's assistant got phished" stories).</li>
+    <li>Resource mailboxes (rooms, equipment).</li>
+    <li>Distribution groups and Microsoft 365 groups.</li>
+  </ul>
+
+  <p>For a small customer this is 10 to 50 entities; for a medium one, 100 to 300. Either way, <em>write the inventory down</em>. You'll come back to it for the quarantine release scope, the mailbox audit posture scope, and the impersonation protection scope.</p>
+
+  <p><strong>Domains.</strong> Every accepted domain in the tenant. The primary domain (used in user UPNs), the vanity domains (additional accepted domains the customer sends from), the legacy domains (from acquisitions or rebrands), the <code>onmicrosoft.com</code> default (the floor-level fallback). For each, note:</p>
+
+  <ul>
+    <li>Current SPF record (DNS TXT — start with <code>v=spf1 include:spf.protection.outlook.com -all</code> as the target end-state).</li>
+    <li>Current DKIM state (enabled per domain? CNAMEs published?).</li>
+    <li>Current DMARC record (published? <code>p=none</code> / <code>p=quarantine</code> / <code>p=reject</code>?).</li>
+    <li>Whether the domain is used outbound from M365 at all (some legacy domains exist only to receive; those need DMARC too).</li>
+  </ul>
+
+  <p><strong>Current mail flow.</strong> Open the Exchange admin centre, navigate to Mail flow → Rules. Read every rule. Document the purpose. Many customers have a sediment layer of transport rules from previous admins doing previous things — old "if subject contains [URGENT] then high importance" rules, old external-recipient warnings that don't trigger any more, old executable-blocking rules made obsolete by Safe Attachments. Lesson 8 is about taming this; for pre-flight, just know what's there.</p>
+
+  <p><strong>Existing protection state.</strong> A quick audit of the current posture using <code>Get-AntiPhishPolicy</code>, <code>Get-SafeLinksPolicy</code>, <code>Get-SafeAttachmentPolicy</code>, and <code>Get-HostedContentFilterPolicy</code> (the anti-spam policy). For each, note: is it the default Microsoft policy, or has the previous admin customised it? Custom policies in unknown states are the most common source of "we deployed Safe Links but nothing happened" tickets.</p>
+
+  <h2>What the customer expects</h2>
+
+  <p>This is the soft part of pre-flight, and the part operators skip. Email defence breaks customer workflows constantly — phishing-tuned defences catch some legitimate marketing email; tightened DMARC kicks the customer's own poorly-configured marketing platform out of the inbox; aggressive Safe Attachments delays an executive's important PDF by 90 seconds. Customers feel these as friction.</p>
+
+  <p>Document, in the ticket or change record, before deploying:</p>
+
+  <ul>
+    <li>Who at the customer is allowed to release quarantine messages? Default-everyone is dangerous; default-admin-only is restrictive. Often the right answer is "the controller's manager plus one or two trusted people," and that needs to be communicated and configured.</li>
+    <li>Are there senders the customer routinely receives email from that are likely to trip impersonation or anti-phishing controls? (Vendors whose domains are similar to the customer's; legitimate marketing platforms with weak DKIM; SaaS apps that send from third-party SMTP.)</li>
+    <li>Is there a domain that <em>should not be hardened</em> yet because the customer's marketing team uses a third-party platform to send under it and hasn't fixed their SPF? (Common; this is the right scope for a separate conversation.)</li>
+    <li>Are there compliance requirements that affect retention, legal hold, or quarantine policies? (Common in healthcare, finance, and government contracting.)</li>
+  </ul>
+
+  <h2>Common mistakes operators make before they even start</h2>
+
+  <p>Three patterns surface repeatedly:</p>
+
+  <p><strong>Assuming "Microsoft has us covered."</strong> They don't. The defaults are the floor, not the ceiling. Auditing the current state before assuming protection exists has saved more customers than any single policy change.</p>
+
+  <p><strong>Skipping DMARC because "it's complicated."</strong> It's not complicated, it's <em>involved</em> — there's a journey from <code>p=none</code> (observe) to <code>p=quarantine</code> to <code>p=reject</code> (enforce). Lesson 4 walks through it. Skipping DMARC is how the wire-fraud anecdote at the top of this lesson starts.</p>
+
+  <p><strong>Not auditing the customer's mail flow rules.</strong> Three years of accumulated transport rules from previous admins is a mess. Sometimes there's a rule routing mail from <code>*@finance.com</code> to a single mailbox because of a long-forgotten merger. Sometimes there's a rule disabling Safe Links on certain inbound mail because a vendor complained. Sometimes there's a rule auto-forwarding <em>anything</em> matching a regex to an external address because someone debugged a problem in 2021 and forgot to clean up. Find these. Document them. Fix or remove them. (Lesson 8.)</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Licensing reality is the prerequisite.</strong> Confirm what the customer has (EOP only / MDO P1 / MDO P2) before promising any of card 5's defences. Most SMB customers have MDO P1 via Business Premium; most aren't using it.</p>
+
+  <p><strong>Default-on does not mean default-secure.</strong> Microsoft ships a usable floor — anti-spam runs, known malware is blocked, basic anti-spoofing exists. None of it is tuned. The work of card 5 is lifting from the floor to the ceiling for each feature.</p>
+
+  <p><strong>Inventory before configuration.</strong> Mailboxes, domains, current SPF/DKIM/DMARC, existing mail flow rules, existing custom policies. Without this list, you'll configure half a hardening pass and re-break the half you missed when a customer ticket surfaces a rule you didn't know about.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">2</div><div class="xt"><b>Lesson 2: Anti-phishing policies.</b> User and domain impersonation protection, spoof intelligence, mailbox intelligence — turning Microsoft's default-off impersonation defence into something that actually catches the BEC anecdote at the top of this lesson.</div></div>
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Lesson 3: Safe Links and Safe Attachments.</b> The MDO P1 features customers paid for without using.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: SPF, DKIM, DMARC.</b> The authentication trio that would have caught the forged email in the opening story.</div></div>
+  </div>
+
+  <p>For now: write the inventory down, audit the current configuration, set the customer's expectations about what's about to change. The rest of card 5 builds on this foundation.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Exchange Online Protection overview (<a href="https://learn.microsoft.com/en-us/defender-office-365/eop-about" target="_blank" rel="noopener">Microsoft Learn — EOP overview</a>); Defender for Office 365 service description (<a href="https://learn.microsoft.com/en-us/office365/servicedescriptions/office-365-advanced-threat-protection-service-description" target="_blank" rel="noopener">Microsoft Learn — MDO service description</a>); Microsoft 365 Business Premium feature list (<a href="https://learn.microsoft.com/en-us/microsoft-365/business-premium/" target="_blank" rel="noopener">Microsoft Learn — Business Premium for SMB</a>); preset security policies reference (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>); blocking auto-forwarding to external domains (<a href="https://learn.microsoft.com/en-us/defender-office-365/outbound-spam-policies-external-email-forwarding" target="_blank" rel="noopener">Microsoft Learn — External email forwarding</a>); Set-MailboxAuditBypassAssociation and auditing baseline (<a href="https://learn.microsoft.com/en-us/purview/audit-mailboxes" target="_blank" rel="noopener">Microsoft Learn — Mailbox audit logging</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

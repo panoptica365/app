@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Durcir l'accès admin — MFA plus fort, sessions plus courtes — Modèles de politiques d'accès conditionnel</title>
+<meta name="lesson:title" content="Durcir l'accès admin — MFA plus fort, sessions plus courtes">
+<meta name="lesson:subtitle" content="Quatre modèles d'AC : MFA résistant au hameçonnage, sessions limitées et protection des portails admin.">
+<meta name="lesson:icon" content="user-lock">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Modèles de politiques d'accès conditionnel</span> <span class="sep">·</span> <span>Durcir l'accès admin</span></div>
+  <h1>Durcir l'accès admin — MFA plus fort, sessions plus courtes</h1>
+  <p class="dek">Quatre modèles d'AC : MFA résistant au hameçonnage, sessions limitées et protection des portails admin.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une identité admin privilégiée protégée sous quatre angles : MFA pour les admins, MFA aux portails admin, MFA pour la gestion Azure, et sessions de navigateur persistantes désactivées.">
+      <defs>
+        <radialGradient id="haBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="haCore" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <filter id="haSoft"><feGaussianBlur stdDeviation="5"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#haBg)"/>
+
+      <!-- center: the privileged admin identity -->
+      <g transform="translate(560,170)">
+        <circle r="150" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 9"/>
+        <circle r="112" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.6"/>
+        <circle r="64" fill="url(#haCore)" filter="url(#haSoft)" opacity="0.85"/>
+        <circle r="40" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="0" cy="-9" r="13" fill="#EAF7FE"/>
+        <path d="M-19 19 q19 -20 38 0" fill="none" stroke="#EAF7FE" stroke-width="3.4" stroke-linecap="round"/>
+      </g>
+      <text x="560" y="318" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">ADMIN PRIVILÉGIÉ</text>
+
+      <!-- four protections, one per side -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- top-left: MFA for admins -->
+        <g>
+          <rect x="86" y="58" width="244" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="208" y="86" fill="#A8E1F8" font-size="13.5" font-weight="600">MFA pour les admins</text>
+          <path d="M330 92 L470 150" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- top-right: MFA at admin portals -->
+        <g>
+          <rect x="784" y="58" width="244" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="906" y="86" fill="#A8E1F8" font-size="13.5" font-weight="600">MFA aux portails admin</text>
+          <path d="M790 92 L650 150" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- bottom-left: MFA for Azure mgmt -->
+        <g>
+          <rect x="86" y="236" width="244" height="46" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="208" y="264" fill="#A8E1F8" font-size="13.5" font-weight="600">MFA pour gestion Azure</text>
+          <path d="M330 248 L470 190" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+        <!-- bottom-right: no persistent sessions -->
+        <g>
+          <rect x="784" y="236" width="244" height="46" rx="11" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="906" y="264" fill="#7DD9F9" font-size="13.5" font-weight="700">Aucune session persistante</text>
+          <path d="M790 248 L650 190" stroke="#335F92" stroke-width="2" marker-end="url(#haArr)"/>
+        </g>
+      </g>
+      <defs><marker id="haArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+    </svg>
+    <figcaption>Quatre modèles durcissent les mêmes comptes admin sous quatre angles — trois renforcent le MFA, un raccourcit la session.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>En 2024, l'équipe Defender de Microsoft a analysé des événements de compromission à travers des milliers de tenants clients et a trouvé un patron qui n'avait pas changé depuis 2020 : les compromissions les plus dommageables impliquaient invariablement un compte avec des privilèges administratifs. La brèche qui commence avec un stagiaire en marketing hameçonné est mauvaise. La brèche qui commence avec un Global Admin hameçonné est catastrophique.</p>
+
+  <p>Les protections qui fonctionnent pour « les utilisateurs en général » ne fonctionnent pas toujours pour les admins spécifiquement. Un Global Admin qui complète le push Authenticator chaque matin a techniquement fait MFA, mais c'est aussi exactement l'utilisateur contre qui un kit d'hameçonnage AiTM est le plus disposé à investir des efforts. Un utilisateur privilégié connecté avec des sessions de navigateur persistantes peut garder cette session active pendant des jours, donnant à un attaquant qui compromet sa machine des jours d'accès. La surface d'attaque admin mérite sa propre attention.</p>
+
+  <p>Cette leçon couvre quatre modèles d'AC Panoptica365 qui, ensemble, durcissent la surface d'attaque admin sous quatre angles différents. Chaque modèle tient debout seul, mais en pratique ils sont déployés ensemble pour le même ensemble de comptes admin.</p>
+  </div>
+
+  <ul>
+    <li><strong>Panoptica365 - Require MFA for admins</strong> — MFA toujours exigé, pour les comptes admin, sur chaque app.</li>
+    <li><strong>Panoptica365 - Require MFA challenge Admin Portals</strong> — MFA exigé pour accéder aux portails admin, pour tous les utilisateurs (pas seulement les admins).</li>
+    <li><strong>Panoptica365 - Require MFA for Azure management</strong> — MFA exigé pour accéder aux points de terminaison de gestion Azure, pour tous les utilisateurs.</li>
+    <li><strong>Panoptica365 - Disable persistent browser sessions for Admins</strong> — Les sessions de navigateur d'admin ne survivent pas à la fermeture du navigateur.</li>
+  </ul>
+
+  <p>Les trois premières ajoutent une barre MFA plus forte à l'activité liée aux admins. La quatrième raccourcit la durée de vie de la session admin. Ensemble, elles appliquent un durcissement à quatre branches aux identités les plus conséquentes du tenant.</p>
+
+  <h2>Les quatre modèles, en détail</h2>
+
+  <h3>Exiger MFA pour les admins</h3>
+
+  <p>Description : <em>Tous les admins doivent utiliser MFA.</em> Octroi : Exiger MFA. Utilisateurs : Utilisateurs/groupes spécifiques (le groupe d'admins). Applications : Toutes les applications infonuagiques.</p>
+
+  <p>C'est l'équivalent-admin du modèle Exiger MFA pour tous les utilisateurs de la leçon 2. Le modèle de la leçon 2 couvre tout le monde; celui-ci s'assure que même si la leçon 2 n'est pas activée d'une manière ou d'une autre, les comptes admin ont encore le MFA appliqué. C'est la politique ceinture-et-bretelles pour les comptes à plus haute valeur.</p>
+
+  <p>La portée « Utilisateurs/groupes spécifiques » pointe typiquement vers un groupe de sécurité nommé quelque chose comme « Tenant Admins » ou « Identités privilégiées » — peu importe ce que le client utilise pour identifier les comptes admin dans son annuaire. Le groupe devrait inclure tous ceux qui ont des rôles d'admin au niveau de l'annuaire (Global Admin, User Admin, Helpdesk Admin, Exchange Admin, SharePoint Admin, etc.).</p>
+
+  <p>Quand ce modèle est déployé aux côtés du « Exiger MFA pour tous les utilisateurs » de la leçon 2, la politique admin est principalement redondante pour les connexions normales (la leçon 2 couvre déjà les comptes admin parce que les admins sont des utilisateurs). Mais la politique admin fournit une vérification de défense en profondeur critique : si la leçon 2 est jamais désactivée, affaiblie, ou a une liste d'exclusions qui grandit pour inclure des comptes admin par erreur, ce modèle les attrape encore.</p>
+
+  <h3>Exiger défi MFA Portails Admin</h3>
+
+  <p>Description : <em>Exiger défi MFA pour les admins accédant aux portails admin.</em> Octroi : Exiger MFA. Utilisateurs : Tous les utilisateurs. Applications : 1 app (Microsoft Admin Portals).</p>
+
+  <p>Ce modèle attaque le problème sous un angle différent : au lieu de restreindre <em>qui</em> doit MFA (le groupe d'utilisateurs admin), il restreint <em>quoi</em> doit MFA (les portails admin). Le service « Microsoft Admin Portals » dans Entra ID représente le groupement de portails face aux admins — centre d'administration Entra, centre d'administration Intune, centre d'administration Microsoft 365, centre d'administration Exchange, etc.</p>
+
+  <p>Pourquoi ça compte : une connexion à une application infonuagique régulière et une connexion au portail admin sont <em>des connexions différentes</em> du point de vue de Microsoft. Un utilisateur pourrait avoir déjà complété MFA il y a une heure quand il a ouvert Outlook, et ensuite cliquer dans le centre d'administration Entra sans être à nouveau défié. Le MFA précédemment complété satisfait la politique de la leçon 2 / leçon 5 parce qu'il est déjà MFA'd dans la session.</p>
+
+  <p>Ce modèle force un prompt MFA <em>frais</em> spécifiquement lors de l'accès aux portails admin — même si l'utilisateur est déjà connecté avec MFA ailleurs. L'intention est de s'assurer que l'utilisateur démontre sa présence actuelle spécifiquement au moment où il est sur le point d'effectuer une action de niveau admin. Un attaquant qui a volé un cookie de session il y a une heure n'a pas le MFA actuel; la politique l'attrape quand il essaie d'élever.</p>
+
+  <p>La portée « Utilisateurs : Tous les utilisateurs » est délibérée. Les utilisateurs normaux ne devraient pas accéder aux portails admin du tout, mais si un invité mal configuré ou un utilisateur GDAP délégué clique dedans, ils doivent MFA. Les admins qui ont déjà MFA'd récemment verront un prompt MFA supplémentaire; le coût de friction est petit, le bénéfice de sécurité est grand.</p>
+
+  <h3>Exiger MFA pour la gestion Azure</h3>
+
+  <p>Description : <em>La gestion Azure exige MFA.</em> Octroi : Exiger MFA. Utilisateurs : Tous les utilisateurs. Applications : 1 app (Microsoft Azure Management).</p>
+
+  <p>Même logique structurelle que le modèle portails admin, mais spécifiquement pour les points de terminaison de gestion Azure — portail Azure, Azure CLI, Azure PowerShell, API REST ARM, le tout. La gestion Azure est une surface particulièrement sensible parce que les ressources là-bas ont souvent une confiance implicite envers d'autres parties de l'infrastructure du client (identités gérées, attributions de rôle).</p>
+
+  <p>La raison d'un modèle séparé (vs le couvrir via la politique des portails admin) : la gestion Azure est suivie comme une application distincte dans Entra. Le centre d'administration M365 de Microsoft et la surface de gestion Azure de Microsoft sont des apps séparées, même si elles ont toutes deux l'air de « trucs admin ». Si vous voulez les deux couvertes, vous avez besoin des deux modèles.</p>
+
+  <p>Si un client n'utilise pas Azure du tout (aucun abonnement Azure, juste M365), ce modèle est techniquement inutile. Il est aussi inoffensif à activer — il ne se déclenche simplement pour aucune connexion. Déployez-le quand même pour la compatibilité future; le jour où le client ajoute un abonnement Azure, la politique est déjà en place.</p>
+
+  <h3>Désactiver les sessions de navigateur persistantes pour les Admins</h3>
+
+  <p>Description : <em>Les admins devront s'authentifier après avoir fermé leur navigateur.</em> Octroi : Aucun. Utilisateurs : Utilisateurs/groupes spécifiques (le groupe d'admins). Applications : Toutes les applications infonuagiques. Session : Session de navigateur persistante = Jamais persistante.</p>
+
+  <p>C'est un contrôle de session, pas un contrôle d'authentification. Les trois politiques ci-dessus gouvernent <em>si</em> le MFA arrive. Cette politique gouverne <em>combien de temps</em> une connexion reste valide.</p>
+
+  <p>Par défaut, quand un utilisateur se connecte et clique « Oui, gardez-moi connecté » ou quand le navigateur garde un cookie de session, la session peut persister à travers les redémarrages du navigateur. Fermez le navigateur à 17 h, ouvrez-le à 9 h le lendemain, vous êtes encore connecté — aucune ré-authentification nécessaire.</p>
+
+  <p>Pour les admins, c'est trop long. Un attaquant qui compromet le portable d'un admin après les heures a une fenêtre d'opportunité qui dure jusqu'à la prochaine fois que la session de l'admin expire naturellement — ce qui pourrait être des jours. Désactiver les sessions de navigateur persistantes pour les admins signifie que chaque fermeture de navigateur termine la session; l'admin se reconnecte à neuf quand il rouvre son navigateur.</p>
+
+  <p>Le coût de friction est réel (les admins se connectent plus souvent). Le bénéfice de sécurité est aussi réel : la fenêtre pendant laquelle un appareil volé ou une session détournée peut être utilisée se rétrécit dramatiquement. Pour les comptes au niveau admin, le compromis favorise la sécurité.</p>
+
+  <p>Cette politique est la chose la plus proche de « fréquence de connexion = chaque session » que Microsoft offre. Le mécanisme est légèrement différent (il désactive la persistance de session plutôt que de plafonner la durée de session) mais le résultat effectif est similaire.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 380" role="img" aria-label="Les quatre modèles de durcissement admin par portée et contrôle : à qui ils s'appliquent, quelles applications, et si le contrôle est un octroi ou un contrôle de session.">
+      <rect width="720" height="380" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="36" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">MODÈLE</text>
+        <text x="396" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">CADRÉ PAR</text>
+        <text x="556" y="32" fill="#6B85A6" font-size="12" letter-spacing="2">CONTRÔLE</text>
+        <line x1="36" y1="44" x2="684" y2="44" stroke="#1F3C5C" stroke-width="1.2"/>
+
+        <!-- row 1 -->
+        <g transform="translate(0,56)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">Exiger MFA pour les admins</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">toutes les apps infonuagiques</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Groupe d'utilisateurs</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Octroi : MFA</text>
+        </g>
+        <!-- row 2 -->
+        <g transform="translate(0,128)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">Défi MFA Portails Admin</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">Microsoft Admin Portals</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Application</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Octroi : MFA</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(0,200)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="56" y="26" fill="#A8E1F8" font-size="14" font-weight="600">MFA pour gestion Azure</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">Microsoft Azure Management</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Application</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#10243B" stroke="#33527A"/>
+          <text x="620" y="34" fill="#A8E1F8" font-size="12" text-anchor="middle">Octroi : MFA</text>
+        </g>
+        <!-- row 4 -->
+        <g transform="translate(0,272)">
+          <rect x="36" y="0" width="340" height="58" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="56" y="26" fill="#7DD9F9" font-size="14" font-weight="700">Désactiver sessions persistantes</text>
+          <text x="56" y="46" fill="#6B85A6" font-size="11.5">toutes les apps infonuagiques</text>
+          <text x="396" y="34" fill="#C4D4E8" font-size="12.5">Groupe d'utilisateurs</text>
+          <rect x="556" y="14" width="128" height="30" rx="15" fill="#0E2236" stroke="#5CCBF4"/>
+          <text x="620" y="34" fill="#7DD9F9" font-size="12" text-anchor="middle">Session</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Trois modèles se cadrent différemment et gouvernent le MFA; le quatrième est un contrôle de session — c'est pourquoi ils ne se fondent pas en une seule politique.</figcaption>
+  </figure>
+
+  <h2>Pourquoi quatre modèles, pas une grosse politique « durcir les admins »</h2>
+
+  <p>Question raisonnable : pourquoi ne pas combiner les quatre en un seul modèle?</p>
+
+  <p>Trois raisons :</p>
+
+  <p><strong>Différences de portée.</strong> La leçon 6.1 (Exiger MFA pour les admins) se cadre par <em>groupe d'utilisateurs</em> — elle s'applique aux admins peu importe quelle app ils utilisent. Les leçons 6.2 (Portails Admin) et 6.3 (gestion Azure) se cadrent par <em>application</em> — elles s'appliquent à quiconque accède à ces portails. La leçon 6.4 (Désactiver navigateur persistant) se cadre par groupe d'utilisateurs et applique un <em>contrôle de session</em> plutôt qu'un contrôle d'octroi. Ces différents modèles de cadrage ne se combinent pas proprement dans une seule politique d'AC.</p>
+
+  <p><strong>Application indépendante.</strong> Chaque modèle fournit une défense à une couche différente. MFA-admin couvre l'identité. MFA-portail couvre la présence fraîche. MFA-Azure couvre une app spécifique à haut risque. Session-navigateur couvre la persistance de session. Si l'un est mal configuré ou a une exclusion qui grandit avec le temps, les autres fournissent encore une couverture. Les séparer garde les modes d'échec indépendants.</p>
+
+  <p><strong>Clarté opérationnelle.</strong> Chaque modèle a son propre nom, sa propre description, sa propre piste d'audit. Quand le détecteur de dérive Panoptica365 signale un changement, l'opérateur sait exactement quelle protection a bougé. Un modèle monolithique « durcir les admins » obscurcirait quelle protection spécifique a changé.</p>
+
+  <h2>Ce que « admin » signifie pour ces modèles</h2>
+
+  <p>Le groupe d'utilisateurs admin est une définition spécifique au client. Pour la plupart des tenants, il devrait inclure :</p>
+
+  <ul>
+    <li><strong>Administrateur Global</strong> — contrôle complet de l'annuaire. Tous ceux dans ce rôle.</li>
+    <li><strong>Administrateur de rôle privilégié</strong> — peut gérer les attributions de rôle. Cible à haute valeur.</li>
+    <li><strong>Administrateur d'accès conditionnel</strong> — peut changer les politiques d'AC. Particulièrement dangereux s'il est compromis parce qu'il peut désactiver d'autres politiques.</li>
+    <li><strong>Administrateur de sécurité, Lecteur de sécurité</strong> — gère les alertes et configurations de sécurité.</li>
+    <li><strong>Administrateur Exchange, Administrateur SharePoint, Administrateur Teams</strong> — contrôlent des services spécifiques.</li>
+    <li><strong>Administrateur d'utilisateurs, Administrateur de Helpdesk</strong> — peuvent réinitialiser les mots de passe et gérer l'inscription MFA.</li>
+    <li><strong>Administrateur d'authentification</strong> — peut gérer les méthodes MFA.</li>
+  </ul>
+
+  <p>La liste spécifique du client dépend de sa structure. Un petit tenant peut n'avoir que deux admins. Un plus grand peut avoir une douzaine de rôles distincts. La bonne adhésion de groupe est « quiconque, s'il était compromis, pourrait causer des dommages significatifs ». Ça correspond habituellement à quiconque avec un rôle d'admin au niveau de l'annuaire plus quiconque avec des permissions de gérer des ressources privilégiées (abonnements Azure, sites SharePoint avec données sensibles, etc.).</p>
+
+  <div class="callout">
+    <div class="clabel">Tenants avec PIM activé</div>
+    <p><strong>Privileged Identity Management (PIM)</strong> — disponible seulement à E5 — change cette conversation. Avec PIM, les utilisateurs n'ont pas de rôles admin permanents; ils activent des rôles temporairement au besoin. Le groupe d'utilisateurs admin dans un tenant avec PIM activé peut être vide la majeure partie de la journée, peuplé seulement quand un utilisateur active un rôle.</p>
+    <p>Pour les tenants avec PIM, les modèles de durcissement admin devraient quand même cibler le <em>bassin</em> d'utilisateurs <em>éligibles</em> à activer des rôles admin, pas seulement les admins actuellement actifs. La protection doit être en place avant que l'utilisateur active, pas après.</p>
+  </div>
+
+  <h2>Forces d'authentification — quand passer de MFA à résistant à l'hameçonnage</h2>
+
+  <p>Les modèles ci-dessus utilisent tous « Exiger MFA » sans spécifier quelle méthode MFA. Par défaut, ça accepte n'importe quelle méthode MFA que l'utilisateur a inscrite — push Authenticator, SMS, voix, jeton matériel, etc.</p>
+
+  <p>Pour les admins, la bonne barre est <em>MFA résistant à l'hameçonnage</em> — clés FIDO2, passkeys, ou Windows Hello Entreprise. Les notifications push sont vulnérables à la fatigue (carte 2 leçon 2). Le SMS est vulnérable au SIM swap. La voix est vulnérable à l'ingénierie sociale. Seules les méthodes résistantes à l'hameçonnage sont immunisées au patron d'attaque AiTM de la carte 2 leçon 3.</p>
+
+  <p>Dans Entra ID, c'est configuré via les <strong>forces d'authentification</strong> — les politiques d'accès conditionnel peuvent spécifier quelle force d'authentification est exigée. Microsoft livre plusieurs forces d'authentification :</p>
+
+  <ul>
+    <li><em>Authentification multifacteur</em> (n'importe quelle méthode MFA)</li>
+    <li><em>MFA sans mot de passe</em> (n'importe quelle méthode sans mot de passe, y compris Windows Hello et Authenticator sans mot de passe)</li>
+    <li><em>MFA résistant à l'hameçonnage</em> (FIDO2, passkeys, basé sur certificat, Windows Hello Entreprise seulement)</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Trois forces d'authentification en ordre croissant : authentification multifacteur accepte n'importe quelle méthode; MFA sans mot de passe accepte les méthodes sans mot de passe; MFA résistant à l'hameçonnage accepte seulement FIDO2, passkeys, basé sur certificat et Windows Hello Entreprise.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- step 1 -->
+        <g transform="translate(40,168)">
+          <rect x="0" y="0" width="200" height="58" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="100" y="26" text-anchor="middle" fill="#C4D4E8" font-size="13" font-weight="600">Multifacteur</text>
+          <text x="100" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">toute méthode MFA</text>
+        </g>
+        <!-- step 2 -->
+        <g transform="translate(258,94)">
+          <rect x="0" y="0" width="200" height="58" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="600">MFA sans mot de passe</text>
+          <text x="100" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">méthodes sans mot de passe</text>
+        </g>
+        <!-- step 3 -->
+        <g transform="translate(476,20)">
+          <rect x="0" y="0" width="204" height="58" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+          <text x="102" y="26" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Résistant à l'hameçonnage</text>
+          <text x="102" y="44" text-anchor="middle" fill="#6B85A6" font-size="11">FIDO2 · passkeys · WHfB</text>
+        </g>
+        <!-- ascending connectors -->
+        <path d="M240 174 L262 152" stroke="#335F92" stroke-width="2" marker-end="url(#asArr)"/>
+        <path d="M458 100 L480 78" stroke="#5CCBF4" stroke-width="2" marker-end="url(#asArr)"/>
+        <text x="360" y="240" text-anchor="middle" fill="#6B85A6" font-size="11.5">barre admin plus forte &#8594;</text>
+      </g>
+      <defs><marker id="asArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+    </svg>
+    <figcaption>Les trois forces d'authentification livrées, de la plus faible à la plus forte — les admins appartiennent à l'échelon résistant à l'hameçonnage.</figcaption>
+  </figure>
+
+  <p>Les modèles MFA-admin Panoptica365 livrés utilisent l'octroi « Exiger MFA » par défaut, qui accepte n'importe quelle méthode MFA. Pour les clients qui veulent passer à résistant à l'hameçonnage pour les admins, la personnalisation est :</p>
+
+  <ol>
+    <li>Ouvrir la politique Exiger MFA pour les admins déployée dans le portail Entra.</li>
+    <li>Sous Contrôles d'octroi, changer « Exiger l'authentification multifacteur » à « Exiger la force d'authentification : MFA résistant à l'hameçonnage ».</li>
+    <li>Vérifier (en rapport uniquement ou en vérifiant les inscriptions de méthodes d'authentification admin) que les admins affectés ont des clés FIDO2 ou des passkeys inscrites.</li>
+    <li>Appliquer le changement.</li>
+  </ol>
+
+  <p>La même mise à niveau peut être appliquée aux modèles Portails Admin et gestion Azure si le client veut exiger MFA résistant à l'hameçonnage spécifiquement pour ces connexions à haute valeur.</p>
+
+  <p>Quand pousser cette mise à niveau :</p>
+
+  <ul>
+    <li>Clients qui ont déjà été compromis une fois (le durcissement post-incident).</li>
+    <li>Clients avec données réglementées (finance, santé, fournisseurs gouvernementaux).</li>
+    <li>Clients avec suffisamment de couverture Intune pour émettre des appareils gérés avec Windows Hello Entreprise.</li>
+    <li>Clients prêts à fournir des clés FIDO2 pour le personnel admin (typiquement un investissement matériel de 40 à 60 $ par admin).</li>
+  </ul>
+
+  <p>Pour les tenants sans ces moteurs, le défaut « Exiger MFA » est le bon point de départ. La mise à niveau résistante à l'hameçonnage est un chemin crédible en avant quand la posture de sécurité du client mûrit.</p>
+
+  <h2>Déploiement</h2>
+
+  <p>Les quatre modèles admin se déploient ensemble. Ils se déploient tous à l'état Activé.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Pré-déploiement</div>
+    <p>Pré-déploiement : confirmez que le groupe d'utilisateurs admin est bien défini, que le compte break-glass est exclu des quatre modèles, que les admins savent ce qui s'en vient. Plus important encore, <strong>vérifiez que chaque admin a un MFA résistant à l'hameçonnage inscrit</strong> (ou au moins push Authenticator). Si un admin n'a pas de MFA inscrit, il est verrouillé au moment où la politique s'applique.</p>
+  </div>
+
+  <p>Pour les tenants de petite entreprise avec un groupe d'admins petit, bien connu, et avec inscription MFA vérifiée, déployez et surveillez de près. Pour les tenants plus grands avec plusieurs admins, inscription MFA mixte, ou politiques d'AC existantes complexes, l'étape manuelle de rapport uniquement dans le portail Entra est recommandée. Déployez via Panoptica365 (crée à l'état Activé), puis dans le portail Entra basculez les quatre politiques en rapport uniquement. Exécutez une fenêtre de 3 à 7 jours.</p>
+
+  <p>Pendant la fenêtre de vérification (que ce soit rapport uniquement ou surveillance en direct après le déploiement), vérifiez les correspondances de chaque modèle :</p>
+
+  <ul>
+    <li>Exiger MFA pour les admins : devrait correspondre à chaque connexion d'admin.</li>
+    <li>Portails Admin : devrait correspondre à chaque accès aux portails admin (admin ou non-admin).</li>
+    <li>Gestion Azure : devrait correspondre aux accès au portail Azure / CLI.</li>
+    <li>Session de navigateur persistante : devrait correspondre à chaque session de navigateur admin.</li>
+  </ul>
+
+  <p>Pour chaque modèle : les correspondances sont-elles ce à quoi vous vous attendez? Des utilisateurs non-admin inattendus qui frappent les politiques des portails? Des admins sans activité récente sur les portails admin? Enquêtez sur les anomalies.</p>
+
+  <p>Après l'application, surveillez pendant deux semaines :</p>
+
+  <ul>
+    <li>Les connexions admin devraient compléter MFA plus fréquemment (les politiques portails-admin et gestion-Azure se déclencheront même quand l'admin est déjà MFA'd dans sa session générale).</li>
+    <li>Les admins qui rouvrent leurs navigateurs devraient voir des prompts de connexion frais (politique session-navigateur-persistante).</li>
+    <li>Aucun admin ne devrait être verrouillé — vérifiez après le déploiement que chaque admin s'est connecté avec succès.</li>
+  </ul>
+
+  <h2>À surveiller après l'application</h2>
+
+  <p><strong>Défis MFA admin échoués.</strong> Les rafales de MFA échoués sur des comptes admin sont les alertes à plus haute priorité dans votre file. Encore plus que pour les utilisateurs réguliers, c'est le patron qui précède une compromission sérieuse. Traitez avec urgence maximale.</p>
+
+  <p><strong>Connexions admin depuis des emplacements inattendus.</strong> Les alertes d'IP étrangère ou de déplacement impossible sur des comptes admin ne sont pas des événements « voyage en famille » — elles sont soit un travail admin planifié, soit une tentative de compromission. Vérifiez avant de résoudre.</p>
+
+  <p><strong>Dérive sur n'importe lequel des quatre modèles.</strong> Tout changement aux politiques admin — changement de portée, changement de contrôle, désactivation — devrait être audit-journalisé et révisé. Le détecteur de dérive AC de Panoptica365 couvre ça. La dérive de politique admin est la catégorie de dérive de plus haute gravité.</p>
+
+  <p><strong>Nouvelles méthodes ajoutées à l'authentification admin.</strong> Quand un admin ajoute une nouvelle méthode MFA, le patron d'attaquant post-compromission (carte 2 leçon 3 — enregistrer-une-nouvelle-méthode-MFA après AiTM) s'applique doublement pour les admins. Traitez les nouveaux enregistrements de méthodes d'authentification admin comme des événements demandant confirmation.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>Le widget Activité quotidienne montre le volume de défis MFA admin; le décompte de blocages d'AC s'élève avec les modèles admin qui s'appliquent. Spécifiquement :</p>
+
+  <ul>
+    <li>Prompts MFA admin (défis) — devraient être stables à quelques par admin par jour.</li>
+    <li>Blocages d'AC sur les modèles admin — devraient être rares; chacun est un admin ou non-admin qui essaie d'accéder à une surface admin sans MFA. Enquêtez sur chaque blocage.</li>
+    <li>Alertes de dérive sur n'importe lequel des quatre modèles — se déclenchent dans le cadre du pipeline de détection de dérive AC.</li>
+  </ul>
+
+  <p>Le moteur d'alertes Panoptica365 traite les alertes de compte admin à une gravité plus élevée que les alertes d'utilisateur régulier par défaut. Une alerte MFA-désactivé admin (un de ces modèles désactivé) est un événement à haute gravité; une connexion admin d'IP étrangère est à haute gravité; un enregistrement de nouvelle méthode d'auth admin est à haute gravité.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Quatre points à retenir pour le travail quotidien.</p>
+
+  <p><strong>Déployez ces quatre modèles comme un ensemble.</strong> Ils protègent différents angles du même problème. En déployer juste un ou deux laisse des trous dans la surface d'attaque admin.</p>
+
+  <p><strong>Définissez le groupe admin avec soin.</strong> Quiconque avec des rôles admin au niveau de l'annuaire, plus quiconque avec un accès privilégié à des ressources de haute valeur. Les tenants avec PIM activé devraient cibler le bassin d'<em>admins éligibles</em>, pas seulement les admins actuellement actifs.</p>
+
+  <p><strong>Le coût de friction est réel mais en vaut la peine.</strong> Les admins verront plus de prompts MFA, des connexions plus fréquentes. C'est le compromis voulu. L'alternative — politiques de connexion admin plus lâches pour la commodité — est exactement la brèche que les attaquants exploitent.</p>
+
+  <p><strong>Planifiez la mise à niveau au MFA résistant à l'hameçonnage.</strong> Les politiques admin-MFA par défaut « Exiger MFA » devraient être mises à niveau à « Exiger MFA résistant à l'hameçonnage » quand les admins ont des clés FIDO2 ou des passkeys inscrites. C'est la mise à niveau de sécurité unique à plus haut levier pour la posture admin de n'importe quel client.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">7</div><div class="xt"><b>Leçon 7 : Désactiver le flux de code d'appareil</b> — La défense Storm-2372, comme modèle d'AC dédié.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Leçon 8 : Importer vos propres modèles d'AC</b> — Comment personnaliser les modèles de durcissement admin (ou n'importe quoi d'autre) pour les préférences propres d'un MSP.</div></div>
+  </div>
+
+  <p>Pour l'instant : ces quatre modèles sont la fondation de la sécurité admin dans M365. Un client qui a les quatre déployés a une protection matériellement meilleure contre la classe de compromission la plus conséquente. Un client qui n'a que « Exiger MFA pour tous les utilisateurs » activé est encore exposé à la couche admin parce que les chemins spécifiques aux admins (accès portail, gestion Azure, persistance de session) ne sont pas couverts. Déployez les quatre modèles ensemble.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur l'accès conditionnel pour la protection des admins (<a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/best-practices" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policies and admins</a>); Microsoft Admin Portals comme cible d'AC (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps#microsoft-admin-portals" target="_blank" rel="noopener">Microsoft Learn — Microsoft Admin Portals app</a>); vue d'ensemble des forces d'authentification (<a href="https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-strengths" target="_blank" rel="noopener">Microsoft Learn — Conditional Access authentication strengths</a>); référence de contrôle de session pour les sessions de navigateur persistantes (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-session" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Session controls</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

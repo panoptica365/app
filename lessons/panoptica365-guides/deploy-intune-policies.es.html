@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Despliegue directivas de Intune — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Despliegue directivas de Intune">
+<meta name="lesson:subtitle" content="El mismo modelo de plantilla y deriva que en CA, aplicado a la configuración de dispositivos: asignar, desplegar, vigilar.">
+<meta name="lesson:icon" content="monitor-smartphone">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Despliegue directivas de Intune</span></div>
+  <h1>Despliegue directivas de Intune</h1>
+  <p class="dek">El mismo modelo de plantilla y deriva que en CA, aplicado a la configuración de dispositivos: asignar, desplegar, vigilar.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El ritmo de Intune: incorporar un inquilino, desplegar su línea base estándar y luego olvidarse mientras llegan las alertas de deriva.">
+      <defs>
+        <radialGradient id="inBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="inDev" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="inArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#inBg)"/>
+
+      <!-- step 1: onboard tenant -->
+      <g transform="translate(140,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <circle r="34" fill="none" stroke="#3A6FA0" stroke-width="1.1" stroke-dasharray="3 7"/>
+        <rect x="-20" y="-20" width="40" height="40" rx="7" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="0" cy="-4" r="8" fill="url(#inDev)"/>
+        <rect x="-11" y="8" width="22" height="5" rx="2.5" fill="#2A7FA3"/>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Incorporar inquilino</text>
+      </g>
+
+      <path d="M232 150 H338" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 2: deploy baseline -->
+      <g transform="translate(430,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <g stroke="#5CCBF4" stroke-width="1.5" fill="#10243B">
+          <rect x="-26" y="-24" width="34" height="22" rx="3"/>
+          <rect x="-6" y="-8" width="34" height="22" rx="3"/>
+          <rect x="-16" y="6" width="34" height="22" rx="3"/>
+        </g>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Desplegar la línea base</text>
+      </g>
+
+      <path d="M522 150 H628" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 3: forget it -->
+      <g transform="translate(720,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2236" stroke="#33527A" stroke-width="1.6"/>
+        <path d="M-22 0 a22 14 0 0 1 44 0" fill="none" stroke="#52708F" stroke-width="2"/>
+        <line x1="-22" y1="-2" x2="-32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <line x1="22" y1="-2" x2="32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <text x="0" y="6" fill="#6B85A6" font-size="20" font-weight="700">zzz</text>
+        <text x="0" y="98" fill="#A8C2DD" font-size="15" font-weight="600">Olvidarse</text>
+      </g>
+
+      <!-- drift alert loops back -->
+      <path d="M720 230 C 720 300, 430 300, 430 224" fill="none" stroke="#FFC04D" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#inArr)"/>
+      <text x="575" y="318" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">alerta de deriva cuando cambia una directiva desplegada</text>
+
+      <text x="980" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">EL RITMO</text>
+    </svg>
+    <figcaption>Incorporar, desplegar su línea base estándar, olvidarse — hasta que una alerta de deriva le hace volver.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Si ya leyó la guía de directivas de CA, esta le resultará familiar — a propósito. Los despliegues de Intune usan el mismo modelo de plantilla y deriva: una biblioteca que usted mantiene (barra lateral → <strong>Directivas de Intune</strong>), despliegues por inquilino y detección continua de deriva sobre lo que está activo.</p>
+
+  <p>Las plantillas en sí — qué opciones elegir, cómo es una línea base de Windows sensata — se tratan en la tarjeta <strong>Intune Template Settings</strong> de Aprender. Esta guía es la mecánica.</p>
+  </div>
+
+  <h2>Desplegar directivas en un inquilino</h2>
+
+  <ol>
+    <li>Abra el panel del inquilino → pestaña <strong>Directivas de Intune</strong>. En un inquilino nuevo: <em>«No hay plantillas de política Intune asignadas a este inquilino todavía. Haga clic en «Agregar políticas» para comenzar.»</em></li>
+    <li>Haga clic en <strong>Agregar políticas</strong>. El selector lista su biblioteca de plantillas de Intune — catálogos de configuración, configuraciones de dispositivo, directivas de cumplimiento, plantillas administrativas, líneas base de seguridad.</li>
+    <li>Seleccione las directivas a desplegar y elija el <strong>destino de asignación</strong>: <strong>Todos los usuarios</strong>, <strong>Todos los dispositivos</strong> o <strong>Ninguno</strong> (desplegar sin asignar y conectar la asignación en el portal más adelante).</li>
+    <li>Despliegue. Cada directiva se convierte en una tarjeta con su nombre, tipo, estado, destino de asignación y una insignia de desviación.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 188" role="img" aria-label="El flujo de despliegue en cuatro pasos: abrir la pestaña Directivas de Intune, hacer clic en Agregar políticas, seleccionar directivas y un destino de asignación, y luego desplegar para obtener una tarjeta por directiva.">
+      <rect width="720" height="188" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d1Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1 -->
+        <rect x="28" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="98" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="98" y="78" fill="#5CCBF4" font-size="12" font-weight="700">1</text>
+        <text x="98" y="104" fill="#C4D4E8" font-size="12.5">Directivas Intune</text>
+        <text x="98" y="121" fill="#6B85A6" font-size="11">pestaña</text>
+
+        <path d="M168 94 H192" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 2 -->
+        <rect x="200" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="270" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="270" y="78" fill="#5CCBF4" font-size="12" font-weight="700">2</text>
+        <text x="270" y="104" fill="#C4D4E8" font-size="12.5">Agregar</text>
+        <text x="270" y="121" fill="#6B85A6" font-size="11">desde la biblioteca</text>
+
+        <path d="M340 94 H364" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 3 -->
+        <rect x="372" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="442" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="442" y="78" fill="#5CCBF4" font-size="12" font-weight="700">3</text>
+        <text x="442" y="104" fill="#C4D4E8" font-size="12.5">Asignación</text>
+        <text x="442" y="121" fill="#6B85A6" font-size="11">Usuarios / Disp. / Ninguno</text>
+
+        <path d="M512 94 H536" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 4 -->
+        <rect x="544" y="52" width="148" height="84" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="618" cy="74" r="11" fill="#10243B" stroke="#5CCBF4"/><text x="618" y="78" fill="#7DD9F9" font-size="12" font-weight="700">4</text>
+        <text x="618" y="104" fill="#A8E1F8" font-size="12.5" font-weight="600">Desplegar</text>
+        <text x="618" y="121" fill="#6B85A6" font-size="11">una tarjeta por directiva</text>
+      </g>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">FLUJO DE DESPLIEGUE</text>
+    </svg>
+    <figcaption>Cuatro pasos, de una pestaña vacía a una tarjeta por directiva desplegada.</figcaption>
+  </figure>
+
+  <h2>Detección de deriva</h2>
+
+  <p>El ciclo de deriva compara cada directiva desplegada con su plantilla, exactamente igual que en CA:</p>
+
+  <ul>
+    <li><strong>OK</strong> — la directiva activa coincide.</li>
+    <li><strong>con desviación</strong> — alguien cambió un ajuste del lado del inquilino.</li>
+    <li><strong>aceptada</strong> — desviación revisada y aceptada por un operador.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 132" role="img" aria-label="Los tres estados de deriva de una directiva desplegada: OK cuando coincide con la plantilla, con desviación cuando se cambió un ajuste del lado del inquilino, y aceptada cuando un operador revisó la desviación.">
+      <rect width="720" height="132" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- ok -->
+        <rect x="36" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <circle cx="74" cy="71" r="9" fill="none" stroke="#2EE8A0" stroke-width="2"/>
+        <path d="M70 71 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <text x="98" y="68" text-anchor="start" fill="#2EE8A0" font-size="14" font-weight="700">OK</text>
+        <text x="98" y="84" text-anchor="start" fill="#6B85A6" font-size="11">coincide con la plantilla</text>
+
+        <!-- drifted -->
+        <rect x="260" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+        <path d="M298 65 l5 9 h-10 z" fill="none" stroke="#FFC04D" stroke-width="2" stroke-linejoin="round"/>
+        <text x="322" y="68" text-anchor="start" fill="#FFC04D" font-size="14" font-weight="700">con desviación</text>
+        <text x="322" y="84" text-anchor="start" fill="#6B85A6" font-size="11">cambió lado inquilino</text>
+
+        <!-- accepted -->
+        <rect x="484" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="522" cy="71" r="9" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M518 71 l3 3 l5 -6" fill="none" stroke="#5CCBF4" stroke-width="2" stroke-linecap="round"/>
+        <text x="546" y="68" text-anchor="start" fill="#7DD9F9" font-size="14" font-weight="700">aceptada</text>
+        <text x="546" y="84" text-anchor="start" fill="#6B85A6" font-size="11">revisada por operador</text>
+      </g>
+      <text x="360" y="28" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ESTADOS DE DERIVA</text>
+    </svg>
+    <figcaption>Cada directiva desplegada lleva uno de los tres estados de deriva.</figcaption>
+  </figure>
+
+  <p>Acciones por tarjeta: <strong>Verificar desviación</strong> (comparar ahora), <strong>Desplegar</strong> (volver a aplicar) y <strong>Aceptar</strong> (abrir el modal de aceptación).</p>
+
+  <h2>Aceptar una desviación de Intune</h2>
+
+  <p>El modal de aceptación ofrece los mismos dos caminos que en CA:</p>
+
+  <ul>
+    <li><strong>Aceptar con vencimiento</strong> <em>(recomendado)</em> — aceptada hasta la fecha que elija (180 días por defecto), con motivo obligatorio. La aceptación aparece en la página de <strong>Exenciones</strong>. Tenga en cuenta que las exenciones de Intune son <strong>a nivel de toda la directiva</strong> — aceptan la desviación actual del despliegue como un todo, no como una excepción por usuario.</li>
+    <li><strong>Aceptar una vez, para siempre</strong> — indefinida; solo vuelve a dispararse si la desviación cambia de forma.</li>
+  </ul>
+
+  <p>Cuando una exención caduca o se revoca, el siguiente ciclo de deriva de Intune vuelve a marcar el despliegue como desviado y exige una nueva revisión. Nada queda aceptado en silencio.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Una precaución importante</div>
+    <p>Evite editar directamente en el portal de Intune las directivas desplegadas por Panoptica365 para hacer ajustes por inquilino (grupos de exclusión adicionales, cambios puntuales de configuración). El trabajo de la plataforma es hacer converger las directivas activas de vuelta a la plantilla — las personalizaciones hechas en el portal o bien disparan alertas de desviación perpetuas o bien se sobrescriben en el siguiente despliegue. Si un inquilino necesita de verdad una variación, hágala explícita: una plantilla aparte, o una desviación aceptada, documentada y acotada en el tiempo.</p>
+  </div>
+
+  <h2>Adoptar la configuración existente en su sitio (origen del inquilino)</h2>
+
+  <p>Igual que con CA, puede adoptar las configuraciones de Intune <strong>existentes</strong> de un inquilino en lugar de enviar primero sus plantillas. En la pestaña <strong>Directivas de Intune</strong>, haga clic en <strong>Importar la configuración existente</strong>. Panoptica lee las configuraciones vigentes en el inquilino — para los mismos tipos que admite su biblioteca (catálogos de configuración, configuraciones de dispositivos, directivas de cumplimiento, plantillas administrativas, líneas base de seguridad) — y crea una tarjeta <strong>Origen: inquilino</strong> (borde rojo y distintivo) para cada una que aún no administra. Todo lo que implementó desde una plantilla se reconoce por su identificador de objeto y se omite, por lo que nunca obtiene duplicados; volver a hacer clic es seguro.</p>
+
+  <p>Cada tarjeta se registra tal como se encontró — la configuración <strong>y sus asignaciones</strong> — y se vigila ante cualquier cambio. La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em>. La deriva de Intune se detecta en la supervisión <strong>diaria</strong>: a diferencia de las directivas de AC nuevas, los cambios de Intune no están en el flujo del registro de auditoría, por lo que no hay una vía con latencia de minutos — la reconciliación diaria es la red de seguridad.</p>
+
+  <p>Abra las <strong>Acciones</strong> de una tarjeta para tres opciones:</p>
+
+  <ol>
+    <li><strong>Dejar de supervisar</strong> — quita la tarjeta; nunca toca el inquilino.</li>
+    <li><strong>Desactivar en el inquilino</strong> — Intune no tiene un interruptor global de «apagado», así que Panoptica <strong>registra primero el conjunto completo de asignaciones</strong> y luego quita todas las asignaciones para que la configuración no se aplique a nadie. <strong>Restaurar</strong> vuelve a aplicar exactamente las asignaciones. Ese registro previo es lo que hace que desactivar sea reversible — sin él, quitar las asignaciones sería una puerta de un solo sentido.</li>
+    <li><strong>Eliminar del inquilino</strong> — quita permanentemente la configuración; eliminar le pide que escriba su propio nombre.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Las tres Acciones de una tarjeta de origen del inquilino: dejar de supervisar nunca toca el inquilino; desactivar registra primero las asignaciones y luego las quita, Restaurar las vuelve a aplicar; eliminar quita permanentemente la configuración y pide que escriba su propio nombre.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d3Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker></defs>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ACCIONES DE UNA TARJETA DE ORIGEN DEL INQUILINO</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- stop monitoring -->
+        <rect x="32" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="136" y="86" text-anchor="middle" fill="#C4D4E8" font-size="12.5" font-weight="600">Dejar de supervisar</text>
+        <line x1="60" y1="100" x2="212" y2="100" stroke="#1F3C5C"/>
+        <text x="136" y="128" text-anchor="middle" fill="#6B85A6" font-size="11.5">quita la tarjeta</text>
+        <text x="136" y="148" text-anchor="middle" fill="#2EE8A0" font-size="11.5">no toca el inquilino</text>
+
+        <!-- deactivate -->
+        <rect x="256" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="360" y="86" text-anchor="middle" fill="#FFC04D" font-size="12.5" font-weight="600">Desactivar</text>
+        <line x1="284" y1="100" x2="436" y2="100" stroke="#1F3C5C"/>
+        <text x="360" y="124" text-anchor="middle" fill="#C4D4E8" font-size="11.5">1. registrar asignaciones</text>
+        <text x="360" y="144" text-anchor="middle" fill="#6B85A6" font-size="11.5">2. quitar las asignaciones</text>
+        <text x="360" y="174" text-anchor="middle" fill="#7DD9F9" font-size="11.5">Restaurar las reaplica</text>
+
+        <!-- delete -->
+        <rect x="480" y="56" width="208" height="146" rx="10" fill="#1C0D12" stroke="#FF5A6E" stroke-width="1.3"/>
+        <text x="584" y="86" text-anchor="middle" fill="#FF8A98" font-size="12.5" font-weight="600">Eliminar del inquilino</text>
+        <line x1="508" y1="100" x2="660" y2="100" stroke="#3A2030"/>
+        <text x="584" y="128" text-anchor="middle" fill="#E2A0AA" font-size="11.5">quita permanentemente</text>
+        <text x="584" y="148" text-anchor="middle" fill="#6B85A6" font-size="11.5">escriba su nombre para confirmar</text>
+      </g>
+    </svg>
+    <figcaption>Tres acciones, de lo inofensivo a lo permanente — solo eliminar es irreversible.</figcaption>
+  </figure>
+
+  <p>Las tres acciones quedan registradas en el registro de auditoría del MSP y en el registro de cambios del inquilino. Y como con CA, Panoptica vigila cada inquilino en busca de una configuración de Intune creada <strong>fuera de Panoptica</strong> y la presenta como una tarjeta de origen del inquilino junto con una alerta.</p>
+
+  <h2>El ritmo</h2>
+
+  <p>Incorporar el inquilino → desplegar su línea base estándar de Intune → olvidarse. A partir de ahí, las alertas de desviación llegan cuando alguien cambia una directiva desplegada en el inquilino del cliente, y la tarjeta <strong>Dispositivos que cumplen</strong> de la pestaña Resumen le dice si los dispositivos realmente alcanzan el listón que usted fijó.</p>
+
+</div>
+</body>
+</html>

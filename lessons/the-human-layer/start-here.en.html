@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start here — The Human Layer</title>
+<meta name="lesson:title" content="Start here: the human layer">
+<meta name="lesson:subtitle" content="What this topic is, why it sits next to the technical lessons, and the one idea that runs through all of it.">
+<meta name="lesson:icon" content="compass">
+<meta name="lesson:last_updated" content="2026-06-18">
+<link rel="stylesheet" href="the-human-layer.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>The Human Layer</span> <span class="sep">·</span> <span>Start here</span></div>
+  <h1>The human layer</h1>
+  <p class="dek">You've spent a lot of lessons on the machine. This part of the curriculum is about the person operating it — because that's the layer attackers, bad days, and burnout all aim for.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A stack of cool technical layers with a warm human layer glowing above them.">
+      <defs>
+        <radialGradient id="warmGlow" cx="50%" cy="20%" r="80%">
+          <stop offset="0%" stop-color="#E8C07D" stop-opacity="0.30"/>
+          <stop offset="100%" stop-color="#E8C07D" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="bgI" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/>
+        </linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#bgI)"/>
+      <rect width="1120" height="340" fill="url(#warmGlow)"/>
+
+      <!-- technical layers, cool, lower stack -->
+      <g opacity="0.9">
+        <rect x="210" y="232" width="700" height="20" rx="6" fill="#0E2640" stroke="#274B72"/>
+        <rect x="250" y="200" width="620" height="20" rx="6" fill="#0E2640" stroke="#2A6F9E"/>
+        <rect x="290" y="168" width="540" height="20" rx="6" fill="#0E2640" stroke="#3A6FA0"/>
+      </g>
+      <g fill="#5CCBF4" opacity="0.7">
+        <circle cx="230" cy="242" r="3"/><circle cx="890" cy="242" r="3"/>
+        <circle cx="270" cy="210" r="3"/><circle cx="850" cy="210" r="3"/>
+        <circle cx="310" cy="178" r="3"/><circle cx="810" cy="178" r="3"/>
+      </g>
+      <text x="560" y="285" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="3">CONFIGS · POLICIES · SIGNALS</text>
+
+      <!-- human layer: warm heartbeat above the stack -->
+      <path d="M250 96 H470 l18 -34 22 70 20 -52 16 36 H880"
+            fill="none" stroke="#E8C07D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+      <circle cx="560" cy="96" r="5" fill="#E8C07D"/>
+      <text x="560" y="48" text-anchor="middle" fill="#E8C07D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">THE HUMAN LAYER</text>
+    </svg>
+    <figcaption>Every technical layer is operated, configured, and trusted by a person. That person is the layer this topic is about.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The rest of this curriculum makes you better at the machine — identity, Conditional Access, Intune, email, Secure Score. This topic is about something the dashboards never show you: the person doing the work.</p>
+
+  <p>It matters more than it looks. The most expensive breaches usually don't start with a clever exploit; they start with a tired person, a rushed message, a culture where nobody felt safe saying "I think I clicked something." And the most resilient teams aren't the ones with the most tools — they're the ones who communicate clearly, recover from mistakes without blame, and don't burn out their best people in eighteen months.</p>
+
+  <p>So we're going to talk about the unglamorous, decisive stuff: attention, trust, communication, burnout, recognition, growth, and what "enough" actually looks like. None of it shows up in a config export. All of it shows up in your results.</p>
+  </div>
+
+  <h2>Two lenses, every time</h2>
+
+  <p>Every article in this topic looks at its subject through two windows — because the same idea lands differently depending on where you sit.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Two lenses: Leading it for owners, Living it for team members.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <rect x="22" y="22" width="320" height="156" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+      <rect x="22" y="22" width="320" height="4" rx="2" fill="#5CCBF4"/>
+      <text x="44" y="62" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700" letter-spacing="2">LEADING IT</text>
+      <text x="44" y="92" fill="#9FB6D2" font-family="Geist,Inter,sans-serif" font-size="14">If you run the shop —</text>
+      <text x="44" y="114" fill="#9FB6D2" font-family="Geist,Inter,sans-serif" font-size="14">the culture, the systems,</text>
+      <text x="44" y="136" fill="#9FB6D2" font-family="Geist,Inter,sans-serif" font-size="14">the example you set.</text>
+
+      <rect x="378" y="22" width="320" height="156" rx="10" fill="#1A1606" stroke="#7A6233"/>
+      <rect x="378" y="22" width="320" height="4" rx="2" fill="#E8C07D"/>
+      <text x="400" y="62" fill="#E8C07D" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="700" letter-spacing="2">LIVING IT</text>
+      <text x="400" y="92" fill="#C9B488" font-family="Geist,Inter,sans-serif" font-size="14">If you're on the team —</text>
+      <text x="400" y="114" fill="#C9B488" font-family="Geist,Inter,sans-serif" font-size="14">what's in your hands,</text>
+      <text x="400" y="136" fill="#C9B488" font-family="Geist,Inter,sans-serif" font-size="14">today, at your seat.</text>
+    </svg>
+    <figcaption>"Living it" is not the junior version. It's the same idea, owned from a different chair.</figcaption>
+  </figure>
+
+  <p>If you own the MSP, the <strong>Leading it</strong> sections are about the culture and systems only you can set. If you're three months into an L1 seat, the <strong>Living it</strong> sections are about the surprising amount that's already in your hands. Read both — the best owners understand what the work feels like from the bench, and the best technicians understand what their owner is trying to build.</p>
+
+  <h2>A thread of old voices</h2>
+
+  <p>We lean on a small board of advisors who spent their lives on this human layer — Dale Carnegie on relationships, Stephen Covey on habits, David Maister on trust, and a handful of others. Their ideas are paraphrased and credited, never lifted; you'll find a short <em>Sources</em> list at the foot of every article.</p>
+
+  <p>And running underneath all of it is the oldest practical philosophy we have: the <strong>Stoics</strong>. Marcus Aurelius ran an empire through plague and war with a notebook full of reminders to himself. Epictetus, born a slave, taught a single idea so durable it became the backbone of modern resilience: <em>some things are up to us, and some are not — and almost all our peace depends on telling the two apart.</em></p>
+
+  <blockquote class="pull">
+    "You have power over your mind — not outside events. Realize this, and you will find strength."
+    <cite>commonly attributed to Marcus Aurelius · Meditations</cite>
+  </blockquote>
+
+  <p>In this work — where the threat landscape, the client, and the calendar are mostly <em>not</em> up to you — that idea isn't a poster. It's a survival skill. We'll come back to it, lightly, wherever it earns its place, and leave it alone where it doesn't.</p>
+
+  <div class="callout">
+    <p><strong>How to read this topic.</strong> There's no required order, but if you're new, start with <em>Own your circle</em> — it's the keystone. After that, follow whatever title speaks to the week you're having. Each piece stands on its own in about five minutes.</p>
+  </div>
+
+  <div class="try">
+    <div class="label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/><path d="M9 21h6"/></svg>
+      Before you go on
+    </div>
+    <p>Pick the one word from this list that describes your team's hardest problem right now: <i>attention, trust, communication, burnout, recognition, growth, or "enough."</i> Start with that article.</p>
+  </div>
+
+  <div class="sources">
+    <h4>Sources &amp; further reading</h4>
+    <ul>
+      <li>Marcus Aurelius, <cite>Meditations</cite>; Epictetus, <cite>Enchiridion</cite> (public-domain Stoic texts).</li>
+      <li>Dale Carnegie, <cite>How to Win Friends and Influence People</cite>; Stephen R. Covey, <cite>The 7 Habits of Highly Effective People</cite>; David Maister, <cite>The Trusted Advisor</cite> — the recurring modern voices in this topic.</li>
+    </ul>
+    <p class="note">The widely circulated "you have power over your mind" line is a popular modern rendering of Marcus Aurelius and is labelled as such rather than presented as a verified translation.</p>
+  </div>
+
+</div>
+</body>
+</html>

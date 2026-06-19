@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapper le curriculum sur la note — ce qui fait bouger le chiffre et ce qui ne le fait pas — Secure Score</title>
+<meta name="lesson:title" content="Mapper le curriculum sur la note — ce qui fait bouger le chiffre et ce qui ne le fait pas">
+<meta name="lesson:subtitle" content="Quels contrôles des cartes 3 à 5 se traduisent en recommandations Secure Score à fort impact, et comment prioriser pour gagner le plus de points.">
+<meta name="lesson:icon" content="git-compare">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Mapper le curriculum sur la note</span></div>
+  <h1>Mapper le curriculum sur la note — ce qui fait bouger le chiffre et ce qui ne le fait pas</h1>
+  <p class="dek">Quels contrôles des cartes 3 à 5 se traduisent en recommandations Secure Score à fort impact, et comment prioriser pour gagner le plus de points.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Trois cartes du curriculum — Conditional Access, Intune et Courriel — qui alimentent une jauge Secure Score passant de 58 pour cent vers 88 pour cent.">
+      <defs>
+        <radialGradient id="msBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="msArc" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#msBg)"/>
+
+      <!-- left: the three implementation cards -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(70,84)">
+          <rect width="232" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="24" fill="#6B85A6" font-size="11" letter-spacing="1.5">CARTE 3</text>
+          <text x="20" y="42" fill="#A8E1F8" font-size="15" font-weight="600">Conditional Access</text>
+        </g>
+        <g transform="translate(70,144)">
+          <rect width="232" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="24" fill="#6B85A6" font-size="11" letter-spacing="1.5">CARTE 4</text>
+          <text x="20" y="42" fill="#A8E1F8" font-size="15" font-weight="600">Intune</text>
+        </g>
+        <g transform="translate(70,204)">
+          <rect width="232" height="52" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="20" y="24" fill="#6B85A6" font-size="11" letter-spacing="1.5">CARTE 5</text>
+          <text x="20" y="42" fill="#A8E1F8" font-size="15" font-weight="600">Courriel &amp; collaboration</text>
+        </g>
+      </g>
+
+      <!-- arrows feeding the gauge -->
+      <defs><marker id="msArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <path d="M310 110 C 430 110, 470 158, 590 170" stroke="#335F92" stroke-width="2.4" fill="none" marker-end="url(#msArr)"/>
+      <path d="M310 170 H 590" stroke="#335F92" stroke-width="2.4" fill="none" marker-end="url(#msArr)"/>
+      <path d="M310 230 C 430 230, 470 182, 590 170" stroke="#335F92" stroke-width="2.4" fill="none" marker-end="url(#msArr)"/>
+
+      <!-- right: the score gauge -->
+      <g transform="translate(840,180)">
+        <path d="M -150 0 A 150 150 0 0 1 150 0" fill="none" stroke="#1F3C5C" stroke-width="20" stroke-linecap="round"/>
+        <path d="M -150 0 A 150 150 0 0 1 138 -58" fill="none" stroke="url(#msArc)" stroke-width="20" stroke-linecap="round"/>
+        <text x="0" y="-10" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="40" font-weight="700">58 → 88%</text>
+        <text x="0" y="22" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">SECURE SCORE</text>
+        <text x="-150" y="34" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">basse</text>
+        <text x="150" y="34" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">haute</text>
+      </g>
+    </svg>
+    <figcaption>Les trois cartes d'implémentation sont le moteur de la note — le curriculum, c'est l'intrant de la couche de mesure.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un membre du conseil d'administration d'un client, fraîchement sensibilisé à la cybersécurité dans une conférence, demande au MSP un plan écrit pour « améliorer significativement notre Secure Score au prochain trimestre ». Le client est actuellement à 58 %. Le membre du conseil veut 80 % pour la prochaine réunion. Le MSP a environ douze semaines de temps opérateur à mettre là-dessus, étalées sur son carnet de clients normal.</p>
+
+  <p>Le MSP fait quoi en premier?</p>
+
+  <p>C'est la question d'opérateur la plus fréquente sur Secure Score, et elle a une réponse précise : implémenter la <strong>demi-douzaine à fort impact</strong> — les six recommandations qui font le plus bouger la Secure Score d'un client PME tout en produisant une vraie amélioration de sécurité. La demi-douzaine, c'est là où vit l'essentiel de l'écart entre un tenant à 58 % et un tenant à 88 %. Le reste, c'est du crédit partiel, des items conditionnés par licence, et la longue traîne de plus petites recommandations.</p>
+
+  <p>Cette leçon mappe le travail des cartes 3, 4 et 5 sur des recommandations Secure Score précises, identifie la demi-douzaine, et donne un aperçu de ce qui n'apparaît pas du tout dans la note (la leçon 4 couvre ça en profondeur).</p>
+  </div>
+
+  <h2>La vue d'ensemble — où vit la note</h2>
+
+  <p>L'essentiel de la Secure Score d'un tenant PME se trouve dans trois zones, chacune correspondant à une des cartes d'implémentation de ce curriculum :</p>
+
+  <ul>
+    <li><strong>Recommandations Identité</strong> (carte 3 — Conditional Access). MFA, blocages d'authentification héritée, protection admin, posture de connexion. Pour un tenant PME Business Premium, les recommandations d'identité contribuent typiquement à 30-40 % du maximum atteignable.</li>
+    <li><strong>Recommandations Appareils</strong> (carte 4 — Intune). Conformité d'appareil, BitLocker, règles ASR, configuration de Defender for Endpoint. À peu près 25-35 % du maximum atteignable.</li>
+    <li><strong>Recommandations Applications</strong> (carte 5 — Courriel et collaboration). Anti-hameçonnage, Safe Links / Safe Attachments, audit de boîtes aux lettres, politique de quarantaine, contrôles de transfert automatique. À peu près 25-30 % du maximum atteignable.</li>
+    <li><strong>Recommandations Données</strong> (sensitivity labels, DLP, rétention). Surtout sous licence E5; pour les tenants Business Premium, elles sont typiquement Risk Accepted (leçon 2). Petite contribution au maximum atteignable en pratique.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Les trois zones de la note en bandes proportionnelles du maximum atteignable : identité 30 à 40 pour cent, appareils 25 à 35 pour cent, applications 25 à 30 pour cent, les données un petit reste.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="38" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">PART DU MAXIMUM ATTEIGNABLE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,62)">
+          <text x="0" y="-2" fill="#A8E1F8" font-size="14" font-weight="600">Identité — carte 3</text>
+          <rect x="220" y="-16" width="440" height="22" rx="5" fill="#0E2236" stroke="#1F3C5C"/>
+          <rect x="220" y="-16" width="176" height="22" rx="5" fill="#5CCBF4"/>
+          <text x="404" y="0" fill="#A8E1F8" font-size="12">30–40 %</text>
+        </g>
+        <g transform="translate(40,114)">
+          <text x="0" y="-2" fill="#A8E1F8" font-size="14" font-weight="600">Appareils — carte 4</text>
+          <rect x="220" y="-16" width="440" height="22" rx="5" fill="#0E2236" stroke="#1F3C5C"/>
+          <rect x="220" y="-16" width="154" height="22" rx="5" fill="#2A7FA3"/>
+          <text x="382" y="0" fill="#A8E1F8" font-size="12">25–35 %</text>
+        </g>
+        <g transform="translate(40,166)">
+          <text x="0" y="-2" fill="#A8E1F8" font-size="14" font-weight="600">Applications — carte 5</text>
+          <rect x="220" y="-16" width="440" height="22" rx="5" fill="#0E2236" stroke="#1F3C5C"/>
+          <rect x="220" y="-16" width="143" height="22" rx="5" fill="#2EE8A0"/>
+          <text x="371" y="0" fill="#A8E1F8" font-size="12">25–30 %</text>
+        </g>
+        <g transform="translate(40,218)">
+          <text x="0" y="-2" fill="#52708F" font-size="14" font-weight="600">Données (surtout E5)</text>
+          <rect x="220" y="-16" width="440" height="22" rx="5" fill="#0E2236" stroke="#1F3C5C"/>
+          <rect x="220" y="-16" width="40" height="22" rx="5" fill="#52708F"/>
+          <text x="268" y="0" fill="#52708F" font-size="12">petite</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Pour une PME Business Premium, les points vivent dans Identité, Appareils et Applications; les Données sont surtout sous licence E5 et petites en pratique.</figcaption>
+  </figure>
+
+  <p>La forme de la note d'un client PME : l'essentiel des points est dans Identité, Appareils, et Applications. Le client à 41 % a des trous dans les trois; le client à 88 % a couvert les items à fort impact dans chacun. La demi-douzaine ci-dessous tire un ou deux items de chacune des trois cartes d'implémentation.</p>
+
+  <h2>La demi-douzaine à fort impact</h2>
+
+  <p>Ces six recommandations font le plus bouger la note pour les clients PME qui roulent Business Premium avec l'écosystème Microsoft complet. Implémenter les six explique routinièrement l'essentiel de l'écart entre un tenant à base de référence basse et un tenant à 80 % et plus.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Recommandation</th><th>Source du curriculum</th><th>Forme de notation</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1</strong></td><td><strong>Exiger MFA pour tous les utilisateurs</strong></td><td>Carte 3 leçon 2</td><td>Crédit partiel par utilisateur; plein à 100 %</td></tr>
+        <tr><td><strong>2</strong></td><td><strong>Bloquer l'authentification héritée</strong></td><td>Carte 3 leçon 3</td><td>Binaire — bloquée à l'échelle du tenant ou non</td></tr>
+        <tr><td><strong>3</strong></td><td><strong>Activer BitLocker pour les disques OS</strong></td><td>Carte 4 leçon 4</td><td>Par appareil; plein quand chaque appareil Windows géré est chiffré</td></tr>
+        <tr><td><strong>4</strong></td><td><strong>Activer les règles ASR en mode Block</strong></td><td>Carte 4 leçon 7</td><td>Plusieurs règles notées individuellement</td></tr>
+        <tr><td><strong>5</strong></td><td><strong>Activer l'audit des boîtes aux lettres pour tous</strong></td><td>Carte 5 leçon 6</td><td>Binaire — chaque boîte auditée ou non</td></tr>
+        <tr><td><strong>6</strong></td><td><strong>Activer la politique de sécurité prédéfinie Standard ou Strict</strong></td><td>Carte 5 leçons 3, 7, 10</td><td>Bundle — déplace plusieurs recommandations d'un coup</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>1. Exiger MFA pour tous les utilisateurs — carte 3 leçon 2.</strong> Typiquement le plus gros gain Secure Score disponible sur n'importe quel tenant. La recommandation donne du crédit partiel par utilisateur : plein crédit quand 100 % des utilisateurs sont appliqués. Les utilisateurs non appliqués (dirigeants qui exigent des exceptions, comptes de service, contractuels) coûtent du crédit partiel. Le patron d'implémentation de la carte 3 — déployer le modèle CA « Require MFA for all users », porter sur tous les utilisateurs, gérer les exceptions via la discipline d'inclusion/exclusion par utilisateur — pousse directement cette recommandation vers le plein crédit.</p>
+
+  <p><strong>2. Bloquer l'authentification héritée — carte 3 leçon 3.</strong> Le deuxième plus gros gain côté identité. L'authentification héritée contourne MFA; la bloquer ferme le trou. La recommandation est notée en binaire — soit l'authentification héritée est bloquée à l'échelle du tenant via Conditional Access, soit non. L'implémentation mappe directement sur le modèle CA « Block legacy authentication » de la carte 3 leçon 3. Pas de crédit partiel; un déploiement de politique fait bouger l'aiguille en une étape.</p>
+
+  <p><strong>3. Activer BitLocker pour les disques OS — carte 4 leçon 4.</strong> Le plus gros gain côté appareil sur la plupart des flottes Windows. Noté par appareil : plein crédit quand chaque appareil Windows géré a BitLocker actif sur le volume OS. Le modèle BitLocker Settings de la carte 4 configure ça via Intune; le crédit par appareil s'accumule à mesure que les appareils chiffrent. Les clients avec des flottes en état mixte (certains chiffrés, d'autres non) obtiennent du crédit partiel; arriver au plein exige le travail opérationnel de mettre les appareils non chiffrés en ligne.</p>
+
+  <p><strong>4. Activer les règles ASR en mode Block — carte 4 leçon 7.</strong> Plusieurs règles ASR sont notées individuellement — chaque règle activée en mode Block contribue à la note. Le modèle ASR Rules Standard de la carte 4 déploie les 19 règles ASR en mode Block par défaut; déployer ce modèle (et confirmer que les règles s'appliquent à tous les appareils gérés) pousse plusieurs recommandations par règle au plein crédit simultanément. C'est le grappin de recommandations où un déploiement débloque le plus d'items de note distincts.</p>
+
+  <p><strong>5. Activer l'audit des boîtes aux lettres pour tous les utilisateurs — carte 5 leçon 6.</strong> Noté en binaire : chaque boîte aux lettres du tenant a soit le journal d'audit activé, soit non. Le paramètre d'audit de boîte aux lettres de la carte 5 leçon 6 pousse ça à l'échelle du tenant via Panoptica365. Les nouvelles boîtes aux lettres dérivent vers les paramètres d'audit par défaut (l'exemple canonique de la carte 5); réappliquer la posture stricte restaure le plein crédit. La recommandation est aussi un des items les plus à fort impact pour la préparation forensique — note et sécurité s'alignent proprement ici.</p>
+
+  <p><strong>6. Activer la politique de sécurité prédéfinie Standard ou Strict — carte 5 leçons 3, 7 et 10.</strong> C'est le multiplicateur en bundle. La politique de sécurité prédéfinie de Microsoft configure anti-hameçonnage, Safe Links, Safe Attachments, anti-maliciel, et politiques de quarantaine en une fois. Activer Standard ou Strict sur le tenant déplace plusieurs recommandations Secure Score distinctes au plein crédit simultanément — typiquement un swing de 5-10 points sur un tenant Business Premium. L'implémentation, c'est trois clics dans le portail Defender; c'est la recommandation au plus haut effet par effort de tout le curriculum.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Où l'écart se ferme</div>
+    <p>Ces six items, implémentés de bout en bout sur un client qui part à 41 %, font routinièrement bouger ce client dans la fourchette 75-85 %. L'écart qui reste pour atteindre 88 % et plus vient de la longue traîne de plus petites recommandations (items à crédit partiel, règles ASR additionnelles hors de l'ensemble standard, plus petits réglages anti-hameçonnage, items conditionnés par licence gérés via Risk Accepted, remédiation de vulnérabilités qui doit se faire continuellement, etc.).</p>
+  </div>
+
+  <h2>L'activation DKIM — la quasi-incluse dans la demi-douzaine</h2>
+
+  <p>Vaut la peine d'être nommée séparément parce que c'est l'item d'authentification courriel couvert par la carte 5 mais qui n'a pas fait la demi-douzaine :</p>
+
+  <p><strong>Activer la signature DKIM pour tous les domaines personnalisés — carte 5 leçon 4.</strong> Ça <em>est</em> une recommandation Secure Score, notée séparément, et raisonnablement à forte valeur. Elle n'est pas dans la demi-douzaine parce que le travail d'implémentation par domaine — publier des CNAME DNS pour chaque domaine accepté, activer la signature par domaine dans le portail M365 — est une tâche opérationnelle plus impliquée que les items de la demi-douzaine, et la contribution à la note par tenant est plus petite que chacune des six au-dessus. Mais elle devrait être sur la liste à court terme de l'opérateur pour n'importe quel client qui roule la pile courriel complète.</p>
+
+  <p>Vaut la peine d'être explicite sur ce qui est noté et ce qui ne l'est pas côté authentification courriel : <strong>l'activation DKIM est notée</strong> (Microsoft peut vérifier la bascule côté tenant et les enregistrements DNS publiés). <strong>La publication SPF n'est pas notée comme recommandation Secure Score de la façon que les opérateurs supposent parfois</strong> — même si SPF est critique pour le portrait d'authentification courriel plus large. <strong>La publication DMARC et tout le parcours <code>p=none → p=quarantine → p=reject</code> ne sont pas notés du tout</strong> — Microsoft ne peut pas vérifier de façon fiable ce qui se trouve à <code>_dmarc.client.com</code> pour des domaines externes arbitraires. Le travail DMARC compte pour la sécurité; il ne fait juste pas bouger la note. La leçon 4 de cette carte couvre ça et d'autres travaux non notés mais critiques en profondeur.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Items d'authentification courriel par statut de notation : l'activation DKIM est notée; la publication SPF et le parcours d'application DMARC ne sont pas notés.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="190" y="36" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">NOTÉ</text>
+      <text x="520" y="36" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">NON NOTÉ</text>
+      <line x1="360" y1="52" x2="360" y2="176" stroke="#1F3C5C" stroke-width="1.5" stroke-dasharray="4 5"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,62)">
+          <rect width="300" height="46" rx="9" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="20" y="29" fill="#9FF0CF" font-size="14" font-weight="600">Activation DKIM</text>
+        </g>
+        <g transform="translate(380,62)">
+          <rect width="300" height="46" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="29" fill="#C4D4E8" font-size="14">Publication SPF</text>
+        </g>
+        <g transform="translate(380,120)">
+          <rect width="300" height="46" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="20" y="21" fill="#C4D4E8" font-size="13">Parcours DMARC</text>
+          <text x="20" y="38" fill="#6B85A6" font-size="11.5">p=none → quarantine → reject</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Côté authentification courriel, seule la bascule DKIM est vérifiable — et donc notée.</figcaption>
+  </figure>
+
+  <h2>La longue traîne — items à crédit partiel et conditionnés par licence</h2>
+
+  <p>Au-delà de la demi-douzaine, des dizaines de plus petites recommandations contribuent à la note. Quelques exemples :</p>
+
+  <ul>
+    <li><strong>MFA pour les rôles administratifs</strong> — distinct de « MFA pour tous les utilisateurs »; souvent déjà couvert si la politique tous-utilisateurs est en place, mais nommé comme sa propre recommandation.</li>
+    <li><strong>Désactiver des méthodes de connexion individuelles</strong> (MFA par SMS, MFA par appel vocal) — petites recommandations par méthode.</li>
+    <li><strong>Règles ASR précises qui ne sont pas dans l'ensemble standard</strong> — règles additionnelles qui ne font pas partie des 19 du modèle ASR de la carte 4 mais qui sont notées individuellement.</li>
+    <li><strong>Remédiation de vulnérabilités</strong> — recommandations par CVE pilotées par MDVM qui vont et viennent à mesure que Microsoft détecte de nouvelles vulnérabilités sur les terminaux gérés (la cause de mouvement de note quotidien de la leçon 2).</li>
+    <li><strong>Configurer la politique anti-pourriel sortante pour restreindre</strong> — carte 5 leçon 9; plus petite contribution individuelle.</li>
+    <li><strong>Désactiver Basic Auth pour la soumission SMTP</strong> — carte 5 leçon 9; petit mais suivi.</li>
+    <li><strong>Bloquer le transfert automatique externe</strong> — carte 5 leçon 5; petit mais suivi.</li>
+  </ul>
+
+  <p>Ces items ne font pas beaucoup bouger la note individuellement, mais en agrégat, ils expliquent l'écart entre un tenant à 80 % et un tenant à 88 %. Le travail d'amener un client de « assez bon » à « exemplaire », c'est le travail de moudre à travers cette longue traîne — dont la majeure partie a déjà été couverte par le curriculum dans les cartes 3, 4 et 5.</p>
+
+  <h2>Ce qui N'EST PAS dans la note — l'aperçu</h2>
+
+  <p>Pour devancer la question naturelle de l'opérateur : une bonne partie du travail des cartes 3, 4 et 5 n'apparaît pas du tout dans la Secure Score. La leçon 4 couvre ça en détail, mais la liste principale :</p>
+
+  <ul>
+    <li><strong>La publication DMARC et tout le parcours d'application</strong> — côté DNS; non noté.</li>
+    <li><strong>La publication SPF</strong> — non notée comme vérification DNS validée.</li>
+    <li><strong>Listes d'expéditeurs de confiance anti-hameçonnage spécifiques au client</strong> — le <em>préréglage</em> est noté; le réglage par client ne l'est pas.</li>
+    <li><strong>Hygiène des règles de flux de courrier</strong> — le travail d'auditer les règles de transport trimestriellement; non noté.</li>
+    <li><strong>Exceptions de transfert automatique Remote Domain par domaine</strong> — le blocage à l'échelle du tenant est noté; la discipline du registre d'exceptions ne l'est pas.</li>
+    <li><strong>Détection et triage de dérive</strong> — le rythme opérationnel au cœur des cartes 4 et 5; non noté.</li>
+    <li><strong>Revues annuelles de dette de configuration</strong> — le travail d'audit; non noté.</li>
+    <li><strong>Maintenance du registre d'exceptions client</strong> — la discipline qui compose; non notée.</li>
+    <li><strong>Formation à la sensibilisation à la sécurité et simulations d'hameçonnage</strong> — même quand elles sont exécutées; non notées directement (« Attack Simulation Training », fonctionnalité E5 connexe, est notée si vous l'avez, mais le travail de sensibilisation lui-même ne l'est pas).</li>
+    <li><strong>Capacité de réponse aux incidents</strong> — la discipline hors plateforme d'avoir un runbook, de l'avoir testé, d'avoir un contact hors heures de bureau — rien de tout ça n'est noté.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">Ce que la note ne mesure pas</div>
+    <p>Ce n'est pas une plainte sur la note; c'est un fait sur ce que la note mesure. Un tenant à 92 % sans discipline opérationnelle est moins sécurisé qu'un tenant à 82 % avec un MSP qui répond aux alertes de dérive en quelques heures et fait des revues annuelles. La leçon 4 rend ça explicite.</p>
+  </div>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>La demi-douzaine, c'est là où vit le plan d'amélioration client.</strong> Quand un client demande « comment on améliore notre note? » — et il va le demander — la réponse, ce sont les six items au-dessus, en ordre d'effet. L'essentiel de l'écart entre un tenant à base de référence basse et un tenant PME en santé vit dans ces six recommandations. Documentez la demi-douzaine comme plan abouti; amenez-le aux rencontres de renouvellement comme chemin d'amélioration visible.</p>
+
+  <p><strong>Le curriculum, c'est le moteur de la note.</strong> L'essentiel du travail des cartes 3, 4 et 5 fait directement monter la Secure Score. Les opérateurs qui ont intériorisé le curriculum ont déjà fait — ou savent exactement comment faire — le travail qui fait bouger le pourcentage. Secure Score n'est pas un projet séparé; c'est la couche de mesure par-dessus le travail que le curriculum enseigne.</p>
+
+  <p><strong>La discipline opérationnelle ne note pas. Faites-la quand même.</strong> Une fraction significative de la valeur sécurité livrée par un bon MSP n'apparaît pas du tout dans Secure Score — triage de dérive, revues annuelles, gestion des exceptions client, application DMARC, hygiène des règles de flux de courrier. Les clients vous mesurent par la note parce que c'est le chiffre qu'ils peuvent voir; vous devez savoir que le travail non noté, c'est ce qui les garde en sécurité entre les instantanés.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Leçon 4 : Où Secure Score induit en erreur</b> — les angles morts, les pièges du jeu de score, et l'histoire du 92 % qui s'est fait BEC. Pourquoi courir après le 100 % est le mauvais objectif — et à quoi ressemble le bon.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Leçon 5 : Secure Score face client</b> — comment utiliser le pourcentage dans les conversations de renouvellement, le rapport de base de référence, et le récit de tendance.</div></div>
+  </div>
+
+  <p>Pour l'instant : ouvrez le tableau de bord principal de Panoptica365, trouvez le client avec la plus basse Secure Score de votre carnet. C'est le client pour qui vous devriez écrire le plan demi-douzaine cette semaine. Six recommandations, chacune mappée sur une leçon de la carte 3 / 4 / 5, chacune avec une implémentation définie. À la prochaine conversation de renouvellement, la note de ce client a bougé.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur le catalogue de recommandations Microsoft Secure Score (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — Improvement actions</a>); notation des recommandations Conditional Access pour MFA et auth héritée (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-policy-common" target="_blank" rel="noopener">Microsoft Learn — Conditional Access Secure Score recommendations</a>); recommandations BitLocker et conformité Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/security-baseline-settings-mdm-all" target="_blank" rel="noopener">Microsoft Learn — Intune Secure Score recommendations</a>); référence Secure Score des règles de réduction de surface d'attaque (<a href="https://learn.microsoft.com/en-us/defender-endpoint/enable-attack-surface-reduction" target="_blank" rel="noopener">Microsoft Learn — Enable ASR rules</a>); recommandation d'audit de boîtes aux lettres (<a href="https://learn.microsoft.com/en-us/purview/audit-mailboxes" target="_blank" rel="noopener">Microsoft Learn — Enable mailbox auditing</a>); impact Secure Score de la politique de sécurité prédéfinie (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>); recommandation de signature DKIM (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dkim-configure" target="_blank" rel="noopener">Microsoft Learn — Use DKIM to validate outbound email</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

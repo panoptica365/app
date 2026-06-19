@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work the alerts — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Work the alerts">
+<meta name="lesson:subtitle" content="Your actual day-to-day: triage, the detail slideout, AI analysis, the Identity Timeline, and resolving with discipline.">
+<meta name="lesson:icon" content="bell-ring">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Work the alerts</span></div>
+  <h1>Work the alerts</h1>
+  <p class="dek">Your actual day-to-day: triage, the detail slideout, AI analysis, the Identity Timeline, and resolving with discipline.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The alert lifecycle: a new alert moves to investigating, then to either resolved or false positive.">
+      <defs>
+        <radialGradient id="waBg" cx="50%" cy="32%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="waBell" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="waArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#waBg)"/>
+
+      <!-- left: the bell / incoming alert -->
+      <g transform="translate(150,170)">
+        <circle r="96" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="66" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <g transform="translate(0,-6)">
+          <path d="M0 -42 C26 -42 38 -22 38 4 L46 22 H-46 L-38 4 C-38 -22 -26 -42 0 -42 Z" fill="url(#waBell)" opacity="0.92"/>
+          <path d="M-12 30 a12 12 0 0 0 24 0 Z" fill="#5CCBF4"/>
+          <circle cx="0" cy="-48" r="6" fill="#EAF7FE"/>
+        </g>
+      </g>
+      <text x="150" y="306" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="3">ONE QUEUE</text>
+
+      <!-- pipeline of states -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(330,150)">
+          <rect x="0" y="0" width="150" height="56" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="75" y="34" fill="#7DD9F9" font-size="16" font-weight="700">New</text>
+        </g>
+        <path d="M488 178 H560" stroke="#335F92" stroke-width="2.5" marker-end="url(#waArr)"/>
+        <g transform="translate(566,150)">
+          <rect x="0" y="0" width="174" height="56" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="87" y="34" fill="#A8E1F8" font-size="16" font-weight="600">Investigating</text>
+        </g>
+        <path d="M748 178 H820" stroke="#335F92" stroke-width="2.5" marker-end="url(#waArr)"/>
+
+        <g transform="translate(826,108)">
+          <rect x="0" y="0" width="178" height="50" rx="12" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="89" y="31" fill="#2EE8A0" font-size="15" font-weight="600">Resolved</text>
+        </g>
+        <g transform="translate(826,182)">
+          <rect x="0" y="0" width="178" height="50" rx="12" fill="#0E2236" stroke="#52708F"/>
+          <text x="89" y="31" fill="#A8C0D8" font-size="15" font-weight="600">False Positive</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>One queue, one lifecycle: every alert moves from New to Investigating, then to Resolved or False Positive.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Everything else in Panoptica365 exists to feed this page. Alerts are how the platform talks to you: drift, risky sign-ins, audit-log events, Defender incidents, configuration changes — all normalized into one queue with AI analysis attached.</p>
+  </div>
+
+  <h2>The queue</h2>
+
+  <p><strong>Alerts</strong> (sidebar) shows every alert across the fleet; the <strong>Alerts tab</strong> on a tenant dashboard shows the same thing scoped to one tenant. The filter bar covers tenant, severity, status, category, and whether resolved alerts are shown.</p>
+
+  <ul>
+    <li><strong>Severities</strong>: info, low, medium, high, severe.</li>
+    <li><strong>Statuses</strong>: <strong>New</strong> → <strong>Investigating</strong> → <strong>Resolved</strong> or <strong>False Positive</strong>.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 110" role="img" aria-label="The five severities, from info to severe.">
+      <rect width="720" height="110" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="40" y="40" width="116" height="40" rx="20" fill="#0E2236" stroke="#33527A"/><text x="98" y="65" fill="#A8C0D8" font-size="14" font-weight="600">info</text></g>
+        <g><rect x="168" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#2A6F9E"/><text x="226" y="65" fill="#A8E1F8" font-size="14" font-weight="600">low</text></g>
+        <g><rect x="296" y="40" width="116" height="40" rx="20" fill="#0E2640" stroke="#5CCBF4"/><text x="354" y="65" fill="#7DD9F9" font-size="14" font-weight="600">medium</text></g>
+        <g><rect x="424" y="40" width="116" height="40" rx="20" fill="#231408" stroke="#FFC04D"/><text x="482" y="65" fill="#FFC04D" font-size="14" font-weight="600">high</text></g>
+        <g><rect x="552" y="40" width="116" height="40" rx="20" fill="#2A0F16" stroke="#FF5A6E"/><text x="610" y="65" fill="#FF8A98" font-size="14" font-weight="700">severe</text></g>
+      </g>
+    </svg>
+    <figcaption>The five severities the filter bar offers, from lowest to highest.</figcaption>
+  </figure>
+
+  <p>Each row shows the severity badge, tenant (or <em>MSP-wide scope</em> for fleet-level alerts like Message Center items), the message, category, time, a recurrence count, and the status pill.</p>
+
+  <h2>Triage, including in bulk</h2>
+
+  <p>Select alerts with the checkboxes and use the bulk bar: <strong>Mark Investigating</strong>, <strong>Mark Resolved</strong>, <strong>Mark False Positive</strong>, or <strong>Merge</strong>. Merge rolls 2+ related alerts from the same tenant into one parent — useful when a noisy incident produced a dozen siblings. You'll be offered a sensible title and can write your own.</p>
+
+  <p>When you resolve alerts that have linked PSA tickets, one modal asks once: <em>close the linked tickets too, or leave them open?</em> — and applies your choice to the whole batch.</p>
+
+  <h2>The slideout: where investigation happens</h2>
+
+  <p>Click a row and the detail slideout opens:</p>
+
+  <ul>
+    <li><strong>Details</strong> — the structured facts of the event.</li>
+    <li><strong>AI Analysis</strong> — Claude's read of the alert: what likely happened, how serious it is, and what to check. This is your starting point, not your conclusion.</li>
+    <li><strong>Raw Data</strong> — the underlying event payload when you need ground truth.</li>
+    <li><strong>Timeline</strong> — recurrences of this alert over time.</li>
+    <li><strong>Linked Operator Change</strong> — if a logged change in the tenant Change Log explains this alert (within the attribution window), it's linked here. "Drift detected" plus "Jacques deployed an updated template 40 minutes earlier" is a closed case.</li>
+    <li><strong>Notes</strong> — your investigation notes, kept with the alert.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="The detail slideout's six panels: Details, AI Analysis, Raw Data, Timeline, Linked Operator Change, and Notes.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DETAIL SLIDEOUT</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(0,56)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="60" y="30" fill="#A8E1F8" font-size="15" font-weight="600">Details</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#10243B" stroke="#5CCBF4"/><text x="394" y="30" fill="#7DD9F9" font-size="15" font-weight="600">AI Analysis</text>
+        </g>
+        <g transform="translate(0,118)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="15">Raw Data</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="394" y="30" fill="#C4D4E8" font-size="15">Timeline</text>
+        </g>
+        <g transform="translate(0,180)">
+          <rect x="40" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="15">Linked Operator Change</text>
+          <rect x="374" y="0" width="306" height="50" rx="9" fill="#0E2236" stroke="#33527A"/><text x="394" y="30" fill="#C4D4E8" font-size="15">Notes</text>
+        </g>
+        <g transform="translate(0,242)">
+          <rect x="40" y="0" width="640" height="52" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <g transform="translate(64,26)">
+            <path d="M0 -7 L13 -12 L26 -7 L13 -2 Z" fill="#5CCBF4"/>
+            <path d="M21 -5 V3 a8 4 0 0 1 -16 0 V-5" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          </g>
+          <text x="98" y="31" fill="#C4D4E8" font-size="14.5">Alert Explainer — <tspan fill="#A8E1F8" font-style="italic">About this alert</tspan>, by the policy name</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The slideout's panels, plus the graduation-cap Alert Explainer next to the policy name.</figcaption>
+  </figure>
+
+  <p>Next to the policy name you'll find the <strong>graduation-cap icon</strong> — the Alert Explainer. It opens <em>About this alert</em>: what this alert type is, why it matters, the attack vectors behind it, what to do, and an example scenario. In your language, written for the tier-1 tech you delegate to.</p>
+
+  <h2>The Identity Timeline</h2>
+
+  <p>For any user-bearing alert, open the <strong>Identity Timeline</strong> from the slideout. It assembles, for that user, a single timeline across four sources — sign-ins, unified audit log events, Defender incidents, and related alerts — over a 24-hour or 7-day window, then has Claude correlate it: <em>possible compromise, brute force, password spray, failed auth only,</em> or <em>inconclusive</em>, with reasoning.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Four sources — sign-ins, unified audit log, Defender incidents, and related alerts — feed a single timeline that Claude correlates.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="itArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- four sources -->
+        <g transform="translate(40,40)"><rect width="148" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="74" y="28" fill="#C4D4E8" font-size="13.5">Sign-ins</text></g>
+        <g transform="translate(40,96)"><rect width="148" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="74" y="28" fill="#C4D4E8" font-size="13.5">Unified audit log</text></g>
+        <g transform="translate(40,152)"><rect width="148" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="74" y="28" fill="#C4D4E8" font-size="13.5">Defender incidents</text></g>
+        <g transform="translate(40,208)"></g>
+        <g transform="translate(244,124)"><rect width="148" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="74" y="28" fill="#C4D4E8" font-size="13.5">Related alerts</text></g>
+
+        <!-- timeline assembly node -->
+        <g transform="translate(430,86)"><rect width="118" height="58" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="59" y="34" fill="#A8E1F8" font-size="14" font-weight="600">Timeline</text></g>
+        <!-- claude correlate -->
+        <g transform="translate(566,86)"><rect width="114" height="58" rx="10" fill="#10243B" stroke="#5CCBF4"/><text x="57" y="30" fill="#7DD9F9" font-size="13.5" font-weight="700">Claude</text><text x="57" y="48" fill="#A8E1F8" font-size="11.5">correlates</text></g>
+      </g>
+      <!-- arrows from sources into timeline -->
+      <path d="M188 62 C300 62 320 110 430 112" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M188 118 H430" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M188 174 C300 174 320 124 430 120" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M392 146 C410 138 414 130 430 124" fill="none" stroke="#335F92" stroke-width="1.8" marker-end="url(#itArr)"/>
+      <path d="M548 115 H566" stroke="#5CCBF4" stroke-width="2" marker-end="url(#itArr)"/>
+    </svg>
+    <figcaption>Four sources assembled into one per-user timeline, then correlated by Claude.</figcaption>
+  </figure>
+
+  <p>It's deliberately conservative — it will not narrate a compromise that isn't supported by the events. Deep links take you to the user in Entra and the incident in Defender; <strong>Re-analyze</strong> (Operator role and up) reruns the correlation after things change.</p>
+
+  <h2>Resolution discipline</h2>
+
+  <p>Two habits make the difference between a tuned system and a noisy one:</p>
+
+  <ol>
+    <li><strong>False Positive is a signal, not a shrug.</strong> If an alert type keeps producing false positives for a known, legitimate pattern, stop resolving them one by one — create an exemption or tune the policy (next two guides).</li>
+    <li><strong>Resolve with the ticket.</strong> If you run a PSA, let the bi-directional sync do its work: closing the Autotask ticket resolves the alert, and vice versa. One record of work, not two half-records.</li>
+  </ol>
+
+</div>
+</body>
+</html>

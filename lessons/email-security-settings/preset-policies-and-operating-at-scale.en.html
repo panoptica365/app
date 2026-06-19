@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preset security policies and operating email security at scale — Email security settings</title>
+<meta name="lesson:title" content="Preset security policies and operating email security at scale">
+<meta name="lesson:subtitle" content="Using Microsoft's Standard and Strict preset policies to enforce consistent email security posture across every managed tenant.">
+<meta name="lesson:icon" content="layers">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email security settings</span> <span class="sep">·</span> <span>Preset policies &amp; operating at scale</span></div>
+  <h1>Preset security policies and operating email security at scale</h1>
+  <p class="dek">Using Microsoft's Standard and Strict preset policies to enforce consistent email security posture across every managed tenant.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A book of 28 customer tenants, configured once, with drift alerts surfacing into a single triage queue instead of a manual Monday-morning inspection.">
+      <defs>
+        <radialGradient id="psBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="psQueue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <marker id="psArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#2A7FA3"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#psBg)"/>
+
+      <!-- left: the book of 28 tenants, configured once -->
+      <text x="250" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">28 TENANTS · CONFIGURED ONCE</text>
+      <g>
+        <!-- 4 x 7 grid of small tenant tiles -->
+        <g fill="#0E2640" stroke="#2A6F9E" stroke-width="1">
+          <rect x="96"  y="76" width="58" height="34" rx="5"/><rect x="166" y="76" width="58" height="34" rx="5"/><rect x="236" y="76" width="58" height="34" rx="5"/><rect x="306" y="76" width="58" height="34" rx="5"/>
+          <rect x="96"  y="120" width="58" height="34" rx="5"/><rect x="166" y="120" width="58" height="34" rx="5"/><rect x="236" y="120" width="58" height="34" rx="5"/><rect x="306" y="120" width="58" height="34" rx="5"/>
+          <rect x="96"  y="164" width="58" height="34" rx="5"/><rect x="166" y="164" width="58" height="34" rx="5"/><rect x="236" y="164" width="58" height="34" rx="5"/><rect x="306" y="164" width="58" height="34" rx="5"/>
+          <rect x="96"  y="208" width="58" height="34" rx="5"/><rect x="166" y="208" width="58" height="34" rx="5"/><rect x="236" y="208" width="58" height="34" rx="5"/><rect x="306" y="208" width="58" height="34" rx="5"/>
+          <rect x="96"  y="252" width="58" height="34" rx="5"/><rect x="166" y="252" width="58" height="34" rx="5"/><rect x="236" y="252" width="58" height="34" rx="5"/><rect x="306" y="252" width="58" height="34" rx="5"/>
+          <rect x="96"  y="296" width="58" height="22" rx="5"/><rect x="166" y="296" width="58" height="22" rx="5"/><rect x="236" y="296" width="58" height="22" rx="5"/><rect x="306" y="296" width="58" height="22" rx="5"/>
+        </g>
+        <!-- a few green status dots; two drifting (warn / danger) -->
+        <g>
+          <circle cx="110" cy="93"  r="4" fill="#2EE8A0"/><circle cx="180" cy="93"  r="4" fill="#2EE8A0"/><circle cx="250" cy="93"  r="4" fill="#2EE8A0"/><circle cx="320" cy="93"  r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="137" r="4" fill="#2EE8A0"/><circle cx="180" cy="137" r="4" fill="#FFC04D"/><circle cx="250" cy="137" r="4" fill="#2EE8A0"/><circle cx="320" cy="137" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="181" r="4" fill="#2EE8A0"/><circle cx="180" cy="181" r="4" fill="#2EE8A0"/><circle cx="250" cy="181" r="4" fill="#2EE8A0"/><circle cx="320" cy="181" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="225" r="4" fill="#2EE8A0"/><circle cx="180" cy="225" r="4" fill="#2EE8A0"/><circle cx="250" cy="225" r="4" fill="#FF5A6E"/><circle cx="320" cy="225" r="4" fill="#2EE8A0"/>
+          <circle cx="110" cy="269" r="4" fill="#2EE8A0"/><circle cx="180" cy="269" r="4" fill="#2EE8A0"/><circle cx="250" cy="269" r="4" fill="#2EE8A0"/><circle cx="320" cy="269" r="4" fill="#2EE8A0"/>
+        </g>
+      </g>
+
+      <!-- middle: drift alerts flow to the queue -->
+      <g font-family="Geist,Inter,sans-serif">
+        <path d="M396 154 C 470 154, 470 130, 540 130" stroke="#FFC04D" stroke-width="2" fill="none" marker-end="url(#psArr)" opacity="0.9"/>
+        <path d="M396 242 C 470 242, 470 196, 540 196" stroke="#FF5A6E" stroke-width="2" fill="none" marker-end="url(#psArr)" opacity="0.9"/>
+        <text x="466" y="100" text-anchor="middle" fill="#52708F" font-size="12">drift alerts</text>
+      </g>
+
+      <!-- right: the triage queue -->
+      <text x="800" y="52" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">ONE TRIAGE QUEUE</text>
+      <rect x="592" y="76" width="416" height="232" rx="12" fill="url(#psQueue)" stroke="#335F92"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <g><rect x="612" y="96"  width="376" height="42" rx="7" fill="#0E2236" stroke="#5A3A12"/><circle cx="636" cy="117" r="5" fill="#FFC04D"/><text x="656" y="113" fill="#C4D4E8" font-size="13.5">MailTips disabled</text><text x="656" y="129" fill="#6B85A6" font-size="11.5">Customer · Exchange setting drifted</text></g>
+        <g><rect x="612" y="148" width="376" height="42" rx="7" fill="#0E2236" stroke="#5A1A22"/><circle cx="636" cy="169" r="5" fill="#FF5A6E"/><text x="656" y="165" fill="#C4D4E8" font-size="13.5">Outbound spam action weakened</text><text x="656" y="181" fill="#6B85A6" font-size="11.5">Customer · review before applying</text></g>
+        <g><rect x="612" y="200" width="376" height="42" rx="7" fill="#0E2236" stroke="#1F3C5C"/><circle cx="636" cy="221" r="5" fill="#2EE8A0"/><text x="656" y="217" fill="#C4D4E8" font-size="13.5">New mailbox · audit posture</text><text x="656" y="233" fill="#6B85A6" font-size="11.5">Customer · routine — apply</text></g>
+        <text x="800" y="282" text-anchor="middle" fill="#52708F" font-size="12">the changes come find you</text>
+      </g>
+    </svg>
+    <figcaption>Configure each tenant once; let drift surface into a single queue, instead of opening 28 dashboards every Monday.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A junior tech, two weeks into the job, asks the senior on a Tuesday afternoon: "When did you last look at Customer X's security settings?"</p>
+
+  <p>The senior thinks for a second. "Honestly? Their annual review six months ago. Before that, the onboarding back in 2024."</p>
+
+  <p>"So you don't <em>check</em> them?"</p>
+
+  <p>"I don't <em>check</em>. Panoptica365 checks. Every poll cycle, every setting, every customer. If anything drifts — somebody flips off MailTips because a user complained, a new mailbox gets created and doesn't inherit the strict audit posture, the outbound spam policy action gets weakened — I get an alert. I act on the alert. Then I move on. The settings panel is where I go <em>when an alert fires</em>, not somewhere I patrol."</p>
+
+  <p>"So you really set it and forget it?"</p>
+
+  <p>"Set it, configure it, document the exceptions in the customer's notes, then yes — let the drift detector do the watching. The alerts queue is where I spend my time. That's the whole point of the model. Without it, I'd be opening 28 customer dashboards every Monday morning to verify nothing changed. With it, the changes come find me."</p>
+
+  <p>This lesson is about how that scales. The Standard and Strict preset security policies that give you most of card 5's controls in one bundle. The alert-driven operational model that turns a 28-customer book into a manageable triage queue rather than a manual-inspection chore. The annual deep dive that catches the things drift detection can't. And the customer-specific exception ledger that keeps you from re-doing the same per-tenant work every year.</p>
+  </div>
+
+  <h2>Microsoft's preset security policies — Built-in, Standard, Strict</h2>
+
+  <p>Microsoft ships three preset security policy levels in Defender for Office 365. Each is a bundle of pre-configured policies covering anti-spam, anti-phishing, anti-malware, Safe Links, and Safe Attachments — all the MDO surfaces card 5 has covered. Each preset includes the <em>settings</em>, the <em>scoping</em> (who gets which preset), and the <em>quarantine policy mappings</em> for the messages those settings catch.</p>
+
+  <ul>
+    <li><strong>Built-in protection</strong> — minimal baseline. Applies to every mailbox in every tenant automatically. Not configurable. This is the floor.</li>
+    <li><strong>Standard preset</strong> — sensible defaults for most customers. User impersonation protection enabled with reasonable thresholds. Anti-phishing actions set to quarantine. Safe Links and Safe Attachments enabled with Dynamic Delivery. Quarantine policies set to AdminOnlyAccessPolicy for high-confidence phish, malware, and spoof. This is the right choice for the majority of SMB tenants.</li>
+    <li><strong>Strict preset</strong> — tighter thresholds across the board. Anti-phishing more aggressive (more messages get quarantined). Bulk threshold lower (more bulk mail gets caught). AdminOnlyAccessPolicy extended to Phishing (not just High-confidence). This is the right choice for regulated industries, higher-risk customers (legal, finance, accounting), or customers with a recent compromise history.</li>
+  </ul>
+
+  <p>For both Standard and Strict, you assign the preset to users, groups, or domains. The preset then drives the configuration for those scopes. Whatever isn't covered by Standard or Strict falls back to Built-in protection.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 360" role="img" aria-label="Three preset levels stacked from Built-in protection at the floor, to Standard, to Strict at the tightest, with what each layer adds.">
+      <rect width="720" height="360" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">THREE PRESET LEVELS</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Built-in (floor) -->
+        <rect x="60" y="252" width="600" height="78" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="84" y="284" fill="#C4D4E8" font-size="16" font-weight="700">Built-in protection</text>
+        <text x="84" y="308" fill="#6B85A6" font-size="13">Minimal baseline · every mailbox · not configurable · the floor</text>
+
+        <!-- Standard -->
+        <rect x="100" y="156" width="560" height="80" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="124" y="188" fill="#A8E1F8" font-size="16" font-weight="700">Standard preset</text>
+        <text x="124" y="212" fill="#6B85A6" font-size="13">Sensible defaults · quarantine actions · the majority of SMB tenants</text>
+
+        <!-- Strict -->
+        <rect x="140" y="60" width="520" height="80" rx="9" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="164" y="92" fill="#7DD9F9" font-size="16" font-weight="700">Strict preset</text>
+        <text x="164" y="116" fill="#6B85A6" font-size="13">Tighter thresholds · regulated, higher-risk, post-compromise</text>
+      </g>
+    </svg>
+    <figcaption>Built-in is the floor everyone gets; Standard and Strict are the configurable bundles you assign on top.</figcaption>
+  </figure>
+
+  <h2>What's actually in the Standard preset</h2>
+
+  <p>Worth being concrete about, because most of card 5 maps directly to settings the preset configures:</p>
+
+  <ul>
+    <li><strong>Anti-phishing</strong> — user impersonation enabled (configure protected users explicitly), domain impersonation enabled, anti-spoofing on, mailbox intelligence enabled. Actions on detection: quarantine.</li>
+    <li><strong>Safe Links</strong> — protection enabled, click-time URL checking on, user override disabled, Office apps protection on (the SafeLinks-for-Office expansion).</li>
+    <li><strong>Safe Attachments</strong> — protection enabled, Dynamic Delivery action.</li>
+    <li><strong>Anti-malware</strong> — common attachment block list applied.</li>
+    <li><strong>Anti-spam (inbound)</strong> — bulk threshold and spam thresholds set to Standard's mid-range values.</li>
+    <li><strong>Quarantine policy mapping</strong> — AdminOnlyAccessPolicy for High-confidence phish, Malware, Spoof; DefaultFullAccessWithNotificationPolicy for Spam and Bulk.</li>
+  </ul>
+
+  <p>What Standard does <em>not</em> configure (you have to handle these separately even with the preset):</p>
+
+  <ul>
+    <li>The list of users protected by impersonation protection (preset enables the feature; you specify who).</li>
+    <li>Custom trusted-senders entries (per-customer, per-relationship).</li>
+    <li>The outbound spam policy (separate from the preset).</li>
+    <li>Mailbox audit posture, MailTips, Remote Domain forwarding control, SMTP AUTH submission disable — these all live outside the preset and need their own configuration. These are the seven Exchange-category settings Panoptica365 monitors.</li>
+  </ul>
+
+  <h2>Standard vs Strict — when to use which</h2>
+
+  <p>The honest framing:</p>
+
+  <p><strong>Use Standard for:</strong></p>
+  <ul>
+    <li>The default SMB customer</li>
+    <li>Any tenant where you haven't been asked for stricter defences</li>
+    <li>Customers without specific regulatory drivers</li>
+    <li>The first deployment to a new customer (you can tighten later)</li>
+  </ul>
+
+  <p><strong>Use Strict for:</strong></p>
+  <ul>
+    <li>Customers in regulated industries — healthcare, finance, legal, government contracting</li>
+    <li>Customers with a history of compromises in the past 12 months</li>
+    <li>Customers where the business value of email-borne data is high (M&amp;A, IP-heavy, deal-driven)</li>
+    <li>Customers who've asked for "the strongest protection you can give us" (and accepted the trade-offs in the customer conversation)</li>
+  </ul>
+
+  <p>You can also mix per user/group scope. The CEO, CFO, and finance team get Strict; the rest of the company gets Standard. This is reasonable when one part of the org has higher target value than the rest.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="A side-by-side comparison of the Standard and Strict presets across anti-phishing aggressiveness, bulk threshold, AdminOnly quarantine scope, and the customer fit each is for.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="270" y="40" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Standard</text>
+        <text x="540" y="40" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Strict</text>
+        <line x1="405" y1="56" x2="405" y2="280" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- rows -->
+        <g fill="#52708F" font-size="12.5" text-anchor="end">
+          <text x="148" y="92">Anti-phishing</text>
+          <text x="148" y="142">Bulk threshold</text>
+          <text x="148" y="192">AdminOnly quarantine</text>
+          <text x="148" y="242">Best fit</text>
+        </g>
+        <line x1="60" y1="108" x2="660" y2="108" stroke="#13283F"/>
+        <line x1="60" y1="158" x2="660" y2="158" stroke="#13283F"/>
+        <line x1="60" y1="208" x2="660" y2="208" stroke="#13283F"/>
+
+        <g fill="#C4D4E8" font-size="13" text-anchor="middle">
+          <text x="270" y="92">Reasonable thresholds</text>
+          <text x="270" y="142">Mid-range</text>
+          <text x="270" y="192">High-confidence phish</text>
+          <text x="270" y="234">Default SMB,</text>
+          <text x="270" y="252">no specific drivers</text>
+        </g>
+        <g fill="#A8E1F8" font-size="13" text-anchor="middle">
+          <text x="540" y="92" font-weight="600">More aggressive</text>
+          <text x="540" y="142" font-weight="600">Lower</text>
+          <text x="540" y="192" font-weight="600">+ Phishing too</text>
+          <text x="540" y="234" font-weight="600">Regulated, higher-risk,</text>
+          <text x="540" y="252" font-weight="600">post-compromise</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Strict tightens every threshold and extends AdminOnly quarantine to Phishing, not just high-confidence phish.</figcaption>
+  </figure>
+
+  <h2>The preset + custom overlay pattern</h2>
+
+  <p>Presets give you a defensible default; custom policies give you tenant-specific tuning. The pattern that works at MSP scale:</p>
+
+  <ol>
+    <li><strong>Deploy a preset (Standard or Strict) as the foundation</strong> to all users.</li>
+    <li><strong>Layer a custom policy with higher priority</strong> that adds the customer-specific bits: the named protected users for impersonation, the trusted-senders list for legitimate partners, the per-customer thresholds where they diverge from the preset.</li>
+    <li><strong>Treat the preset as untouchable</strong> — when a customer asks for a change, the change goes in the custom overlay, not the preset.</li>
+  </ol>
+
+  <p>This keeps the preset's curated tuning intact (so Microsoft's updates to it flow through automatically) while letting you tailor where it matters. The trade-off is having two policies per customer instead of one; the upside is that you can answer "is this customer still on Microsoft's recommended baseline?" with a yes.</p>
+
+  <div class="callout caution">
+    <div class="clabel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Preset rule names are timestamped
+    </div>
+    <p>One quirk worth knowing: <strong>preset policy rule names are timestamped</strong>. When you create a preset, Microsoft generates rule names that include the creation timestamp — <code>Standard Preset Security Policy123456789...</code>. If you script preset creation or look up presets via PowerShell, use wildcard matching (<code>Get-EOPProtectionPolicyRule -Identity 'Standard*'</code>) rather than exact names, because the name will be unique per tenant and per creation event.</p>
+  </div>
+
+  <h2>Operating at scale — the alert-driven model</h2>
+
+  <p>Card 5 ships with seven Exchange-category security settings Panoptica365 monitors per tenant:</p>
+
+  <ol>
+    <li>Disable Automatic Forwarding to External Domains (Critical)</li>
+    <li>Enable Mailbox Auditing for All Users (Critical)</li>
+    <li>Enable Preset Security Policy (Standard or Strict) — MDO (Critical)</li>
+    <li>Strict Mailbox Audit Posture (Bypass + Action List) (Critical)</li>
+    <li>Enable MailTips (All Tips + External Recipients) (High)</li>
+    <li>Configure Anti-Spam Outbound Policy (Restrict Compromised Accounts) (High)</li>
+    <li>Disable Basic Auth for SMTP AUTH Submission (High)</li>
+  </ol>
+
+  <p>Once configured at a customer tenant, you don't need to revisit them on any schedule. Panoptica365 polls every setting on every customer continuously. When a setting drifts from its configured value — somebody flips MailTips off in the Exchange admin centre, a new mailbox is created without the strict audit posture, the outbound spam policy gets weakened in response to a false-positive ticket — Panoptica365 fires a drift alert. The alert goes to the operator team via the standard pipeline: it shows up in the alerts dashboard, it generates an email notification, it's attributed to the specific customer with the specific setting that changed.</p>
+
+  <p>The operator's at-scale workflow is therefore reactive, not proactive:</p>
+
+  <ul>
+    <li><strong>Triage the alerts queue.</strong> Open the alerts dashboard at whatever cadence makes sense for the team (most MSPs glance daily; the alert email notifications mean nothing slips by even if you don't). Every drift alert is something a customer's tenant did that you should know about.</li>
+    <li><strong>For each alert, decide the response.</strong> Open the affected security setting. Read the History tab — what was the previous value, what's the new value, when did it change, who or what likely caused it. Decide:
+      <ul>
+        <li><strong>Apply</strong> — reset to the recommended value. The default action; appropriate when the drift is a routine accident or a known event (new mailbox provisioned, etc.).</li>
+        <li><strong>Accept the drift</strong> — leave the new value in place, document the reason. Appropriate when the change is an intentional customer-driven decision that you've validated.</li>
+        <li><strong>Investigate further</strong> — when the drift pattern is suspicious enough to warrant a deeper look before responding. Compromised admin account, unauthorised configuration change, unexpected pattern across multiple settings.</li>
+      </ul>
+    </li>
+    <li><strong>Document non-routine decisions in the customer's notes.</strong> Routine "new mailbox drifted, reapplied" doesn't need much. Accepted drifts always need a reason in the ledger (covered below). This is what makes the annual review tractable.</li>
+  </ul>
+
+  <p>This is what makes the model work at MSP scale. You're not manually inspecting customer postures every Monday; you're responding to a small number of alerts per week as they surface. A 28-customer book typically generates a handful of drift alerts per week — most of them the routine new-mailbox cases that resolve with an apply click. The alerts that aren't routine are by definition the ones worth your attention.</p>
+
+  <div class="callout insight">
+    <div class="clabel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>
+      The whole point of the model
+    </div>
+    <p>You're not manually inspecting customer postures every Monday; you're responding to a small number of alerts per week as they surface. The alerts that aren't routine are by definition the ones worth your attention.</p>
+  </div>
+
+  <h2>The annual review — what to verify in depth</h2>
+
+  <p>The weekly drift review catches the operational drift — new mailboxes, accidental disables, Microsoft default changes. It doesn't catch <em>configuration debt</em>: customer-specific exceptions that accumulated, trusted-sender entries that no longer serve a purpose, per-mailbox SMTP AUTH overrides for printers that have since been replaced, Remote Domain entries for partners the customer no longer works with.</p>
+
+  <p>Once per year, per customer — synchronised with the security review or contract renewal conversation — do the deeper audit:</p>
+
+  <ul>
+    <li><strong>Anti-phishing protected users.</strong> Is the list still current? Has the CFO changed? Is there a new controller? Are there ex-employees still in the list?</li>
+    <li><strong>Trusted senders.</strong> Each entry should have a documented reason. Entries without a reason get removed.</li>
+    <li><strong>Remote Domain entries</strong> (per-domain auto-forward exceptions). Each one should reference a documented business relationship. Old entries for ex-partners get removed.</li>
+    <li><strong>Per-mailbox SMTP AUTH overrides.</strong> Each should have a documented legacy device or app. Devices that no longer exist; apps that have been replaced — remove the override.</li>
+    <li><strong>Transport rules.</strong> The four-question audit from lesson 8 — purpose, owner, still-needed, defence impact — applied to every rule.</li>
+    <li><strong>Custom quarantine policies.</strong> Same audit pattern.</li>
+    <li><strong>Mail flow rules</strong> added by the customer since the last review. Did anything new appear that you didn't authorise?</li>
+    <li><strong>The customer's mailbox count.</strong> Is it growing or shrinking? Are there abandoned mailboxes (ex-employees) that should be cleaned up?</li>
+  </ul>
+
+  <p>Document the findings. Remove the dead weight. Reaffirm the surviving exceptions. The annual review is how you stop the customer's configuration from becoming a graveyard of decisions made by people who no longer remember why.</p>
+
+  <h2>Customer-specific exceptions — the ledger</h2>
+
+  <p>Every customer accumulates legitimate exceptions over time. The discipline that keeps the at-scale model sane is <em>writing them down in one place per customer</em>.</p>
+
+  <p>A minimal customer exception ledger:</p>
+
+  <ul>
+    <li><strong>Anti-phishing trusted senders</strong> — domain, scoped protection, reason, added date, approving operator.</li>
+    <li><strong>Quarantine policy exceptions</strong> — non-default policy assignments, reason, approving operator.</li>
+    <li><strong>Remote Domain auto-forward exceptions</strong> — domain, reason, approving operator.</li>
+    <li><strong>Per-mailbox SMTP AUTH overrides</strong> — mailbox, device/app, reason, planned migration target, approving operator.</li>
+    <li><strong>Transport rules</strong> — rule name, purpose, owner, last reviewed date.</li>
+    <li><strong>Custom mail flow rules</strong> — same.</li>
+    <li><strong>Preset security policy customisations</strong> — what's overridden in the custom overlay, why.</li>
+  </ul>
+
+  <p>This is a document, not a configuration system. Markdown, Word doc, ticket-system page — whatever the MSP uses. The point is that any operator picking up the customer's account can read the ledger and understand why every exception exists, and the annual review has a checklist to work against.</p>
+
+  <p>Without the ledger, every annual review starts from scratch — operators have to reverse-engineer the customer's configuration to understand whether each exception is still needed. With the ledger, the review takes an hour instead of a day.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>The Panoptica365 customer dashboard surfaces, per tenant:</p>
+
+  <ul>
+    <li><strong>All security settings with current state</strong> (green / drift / unmonitored). The Exchange-category section contains card 5's seven settings; other sections handle other surfaces.</li>
+    <li><strong>History per setting</strong> — what the value has been over time, when it changed.</li>
+    <li><strong>Apply action per setting</strong> — reapply the recommended value when drift is detected.</li>
+    <li><strong>The standard alert pipeline</strong> for high-severity events: Restricted Users events from the outbound spam policy, suspicious transport rule creation, suspicious inbox rule patterns, Defender XDR-ingested incidents from MDO.</li>
+  </ul>
+
+  <p>What Panoptica365 does <em>not</em> surface in the dashboard: a cross-customer fleet aggregation, a "every customer at a glance" matrix, a comparison view between two customers' settings, a built-in customer-exception ledger. The cross-customer work is per-customer click-through, one Monday-morning review at a time. The ledger lives outside Panoptica365 — in the MSP's documentation system, the ticket platform, or wherever the customer notes are kept.</p>
+
+  <h2>What can break (at scale)</h2>
+
+  <p><strong>Customer-specific tuning gets lost when staff turns over.</strong> The operator who configured the customer two years ago left; the operator inheriting the account doesn't know why the trusted senders list looks the way it does. The exception ledger is the antidote. Make creating ledger entries part of the change workflow — no exception goes in without a ledger note.</p>
+
+  <p><strong>Microsoft updates the preset defaults and customers behave differently.</strong> Microsoft occasionally tightens or loosens preset configurations. Customers using presets get the new behaviour automatically. Sometimes this is good (free improvement); sometimes it surprises users who experienced a behaviour change they don't understand. Watching Microsoft's email-security release notes is worth doing; communicating major preset changes to customers proactively is the differentiator.</p>
+
+  <p><strong>Drift alerts pile up unaddressed during busy weeks.</strong> When the team is under-resourced, drift alerts are the easy thing to deprioritise — "I'll get to that on Friday." The cost is invisible until a real compromise pattern is sitting in the queue waiting to be triaged. Treat alert triage as non-optional; route alert notifications somewhere everyone sees them; assign clear ownership for each tenant or shift.</p>
+
+  <p><strong>Annual reviews stretch from annual to "whenever we get to it."</strong> The drift detector covers the operational drift, but it doesn't catch configuration debt — stale trusted senders, abandoned Remote Domain entries, per-mailbox SMTP AUTH overrides for printers that were retired. The annual review is the only thing that catches those. Calendar them; bill for them; make them a deliverable customers see in their service report.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Presets are the foundation; customisation is the differentiator.</strong> Deploy Standard or Strict to every customer as the default. Layer a custom overlay for the customer-specific protected users, trusted senders, and tuning where it matters. Treat the preset as Microsoft's curated baseline that you don't touch; treat the overlay as the place customer-specific decisions live.</p>
+
+  <p><strong>Drift detection turns at-scale email security from impossible to reactive.</strong> Without drift detection, the only honest way to operate 28 customers' email postures would be a manual inspection routine no MSP can sustain. With drift detection, you configure once, document the exceptions, and let the alerts come find you. The operator's job becomes triaging a small queue of real events — not patrolling for hypothetical drift.</p>
+
+  <p><strong>The exception ledger is the unsexy discipline that compounds.</strong> Every legitimate exception documented is one fewer mystery for the operator who inherits the customer. Every annual review with a ledger is an hour instead of a day. The MSPs that win at this scale aren't the ones with the cleverest defences — they're the ones who write things down and look at them once a year.</p>
+
+  <h2>Closing card 5</h2>
+
+  <p>You've now seen the email-hardening posture across ten lessons:</p>
+
+  <ol>
+    <li>Pre-flight inventory and licensing reality</li>
+    <li>Anti-phishing impersonation protection — the SMB BEC gap</li>
+    <li>Safe Links and Safe Attachments — the MDO P1 features customers pay for</li>
+    <li>SPF, DKIM, DMARC — the email authentication trio</li>
+    <li>Auto-forwarding and inbox rules — the post-compromise indicator pair</li>
+    <li>Mailbox auditing — the forensic record you only miss when you need it</li>
+    <li>Quarantine policies and user release — where good defaults go to die</li>
+    <li>Mail flow rules and MailTips — the surgical tools and the warning lights</li>
+    <li>Outbound spam and SMTP AUTH — controlling the blast radius</li>
+    <li>Preset security policies and operating at scale — what we just covered</li>
+  </ol>
+
+  <p>The arc: turn on what the customer paid for, configure it correctly, watch for drift, document the exceptions, review annually. Email security is not about deploying a silver bullet — it's about layered defences applied with discipline. The customer who never gets BEC'd is the one whose MSP did all ten lessons of work, not the one who turned on Safe Links and called it done.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Card 6: Secure Score</b> — Microsoft's tenant-wide security posture metric, how to interpret it, where it misleads, and how the MSP work in cards 3, 4, and 5 maps to specific Secure Score recommendations.</div></div>
+  </div>
+
+  <p>For now: open Panoptica365's alerts queue. Triage anything sitting there. If the queue is short — most weeks it is — close the tab and go do something else. That's how the model is supposed to feel. The drift detector is doing the watching so you don't have to.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on preset security policies overview (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>); Standard and Strict preset configuration differences (<a href="https://learn.microsoft.com/en-us/defender-office-365/recommended-settings-for-eop-and-office365" target="_blank" rel="noopener">Microsoft Learn — Recommended settings for EOP and MDO</a>); preset security policies management via PowerShell (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Manage preset security policies</a>); built-in protection scope reference (<a href="https://learn.microsoft.com/en-us/defender-office-365/mdo-support-teams-about" target="_blank" rel="noopener">Microsoft Learn — Built-in protection</a>); EOPProtectionPolicyRule cmdlet for preset rules (<a href="https://learn.microsoft.com/en-us/powershell/module/exchange/get-eopprotectionpolicyrule" target="_blank" rel="noopener">Microsoft Learn — Get-EOPProtectionPolicyRule</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

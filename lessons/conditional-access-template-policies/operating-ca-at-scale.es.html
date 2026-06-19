@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operar AC a escala — deriva, exclusiones, ciclo de vida — Conditional Access template policies</title>
+<meta name="lesson:title" content="Operar AC a escala — deriva, exclusiones, ciclo de vida">
+<meta name="lesson:subtitle" content="Cómo las políticas de AC se degradan con los años: detección de deriva, exclusiones expirantes y revisiones de ciclo.">
+<meta name="lesson:icon" content="gauge">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Conditional Access template policies</span> <span class="sep">·</span> <span>Operar AC a escala</span></div>
+  <h1>Operar AC a escala — deriva, exclusiones, ciclo de vida</h1>
+  <p class="dek">Cómo las políticas de AC se degradan con los años: detección de deriva, exclusiones expirantes y revisiones de ciclo.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una política desplegada en 2022 mostrada como habilitada, mientras debajo diecinueve entradas de exclusión se acumulan silenciosamente a lo largo de cuatro años.">
+      <defs>
+        <radialGradient id="caBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#13294A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="caFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#52708F"/><stop offset="100%" stop-color="#FFC04D"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#caBg)"/>
+
+      <!-- The policy badge: still "enabled" -->
+      <g transform="translate(150,86)">
+        <rect x="0" y="0" width="320" height="168" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <text x="24" y="40" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Exigir MFA — todos los usuarios</text>
+        <g transform="translate(24,62)">
+          <circle cx="7" cy="7" r="7" fill="#2EE8A0"/>
+          <text x="24" y="12" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">HABILITADA</text>
+        </g>
+        <text x="24" y="106" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Informe de cumplimiento: MFA aplicado</text>
+        <text x="24" y="128" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">En su sitio desde 2022</text>
+      </g>
+
+      <!-- The silent accumulation underneath -->
+      <text x="660" y="74" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1.5">LO QUE EL INFORME NO MUESTRA</text>
+      <g transform="translate(620,92)">
+        <line x1="20" y1="0" x2="20" y2="180" stroke="#274B72" stroke-width="1.5"/>
+        <!-- 19 exclusion ticks accumulating left (early) to right (recent) -->
+        <g fill="#FFC04D" opacity="0.85">
+          <rect x="44" y="14" width="18" height="18" rx="3"/>
+          <rect x="70" y="14" width="18" height="18" rx="3"/>
+          <rect x="96" y="14" width="18" height="18" rx="3"/>
+          <rect x="122" y="14" width="18" height="18" rx="3"/>
+          <rect x="148" y="14" width="18" height="18" rx="3"/>
+          <rect x="174" y="14" width="18" height="18" rx="3"/>
+          <rect x="200" y="14" width="18" height="18" rx="3"/>
+          <rect x="226" y="14" width="18" height="18" rx="3"/>
+          <rect x="252" y="14" width="18" height="18" rx="3"/>
+          <rect x="278" y="14" width="18" height="18" rx="3"/>
+          <rect x="44" y="40" width="18" height="18" rx="3"/>
+          <rect x="70" y="40" width="18" height="18" rx="3"/>
+          <rect x="96" y="40" width="18" height="18" rx="3"/>
+          <rect x="122" y="40" width="18" height="18" rx="3"/>
+          <rect x="148" y="40" width="18" height="18" rx="3"/>
+          <rect x="174" y="40" width="18" height="18" rx="3"/>
+          <rect x="200" y="40" width="18" height="18" rx="3"/>
+          <rect x="226" y="40" width="18" height="18" rx="3"/>
+          <rect x="252" y="40" width="18" height="18" rx="3"/>
+        </g>
+        <text x="44" y="92" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="26" font-weight="700">19 exclusiones</text>
+        <text x="44" y="118" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12.5">acumuladas en cuatro años · un tercio de la base de usuarios</text>
+        <text x="44" y="158" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">3 se fueron · 2 cuenta de servicio retirada · 8 puntuales de pandemia</text>
+      </g>
+    </svg>
+    <figcaption>La política está activada. El informe dice «aplicado». Debajo, las exclusiones que nadie recuerda se siguen apilando.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>En abril de 2026, un MSP de Calgary descubrió que uno de sus clientes de larga data — una pequeña firma de contabilidad con treinta usuarios — había estado operando con una política «Exigir MFA para todos los usuarios» que silenciosamente había acumulado 19 entradas de exclusión a lo largo de cuatro años. Tres de los usuarios excluidos se habían ido de la empresa. Dos estaban excluidos para una cuenta de servicio que se había retirado en 2023. Ocho eran excepciones puntuales añadidas durante la pandemia y nunca eliminadas.</p>
+
+  <p>La política estaba <em>habilitada</em>. El informe de cumplimiento mostraba <em>MFA aplicado para todos los usuarios</em>. La pista de auditoría decía <em>la política ha estado en su sitio desde 2022</em>. Ninguna de esas cosas decía toda la verdad. La política técnicamente estaba activada, pero un tercio de la base de usuarios había acumulado silenciosamente exenciones que nadie recordaba.</p>
+
+  <p>Esta es la realidad operativa de hacer correr Acceso Condicional durante años en lugar de semanas. Las ocho lecciones anteriores en la tarjeta 3 explicaron qué hace cada plantilla y cómo desplegarla. Esta lección trata sobre lo que pasa después — cómo evoluciona, decae, y se mantiene fiable un conjunto de políticas de AC a lo largo de años de operación en tenants de clientes.</p>
+
+  <p>Tres temas: deriva, exclusiones, y ciclo de vida. Cada uno merece su propia atención. Cada uno es algo con lo que Panoptica365 ayuda pero no puede resolver por sí solo — el operador tiene que estar en el bucle.</p>
+  </div>
+
+  <h2>Deriva — cuando una política desplegada deja de coincidir con su plantilla</h2>
+
+  <p>Una política de AC que desplegaste el martes pasado puede no ser la misma política hoy. Microsoft puede cambiar el esquema subyacente. Un usuario admin delegado puede modificarla. Un técnico que usa GDAP en tu MSP puede ajustarla. Otro admin del cliente (a menudo desconocido para tu MSP) puede editarla. La política deriva.</p>
+
+  <p>La deriva toma varias formas:</p>
+
+  <p><strong>Deriva de esquema</strong> — Microsoft cambia el esquema subyacente de la política de AC, añade campos nuevos, deprecia los antiguos. La política que desplegaste hace dos años puede tener campos que ya no existen en la API actual, o puede faltarle campos que ahora se esperan. La deriva de esquema es del tipo lento; se acumula a lo largo de años.</p>
+
+  <p><strong>Deriva de estado</strong> — el estado de la política cambió (Habilitado → Solo informe, o viceversa, o Deshabilitado). Esto puede pasar accidentalmente durante la resolución de problemas, intencionalmente durante una ventana de mantenimiento, o maliciosamente si un atacante tiene acceso admin. La deriva de estado es binaria y fácil de detectar.</p>
+
+  <p><strong>Deriva de alcance</strong> — las inclusiones o exclusiones de usuarios/grupos cambiaron. Nuevos usuarios añadidos, usuarios que se fueron eliminados, nuevos grupos dentro o antiguos fuera. Este es el tipo de deriva que acumula exclusiones. La deriva de alcance es la más consecuente porque es la más fácil de leer mal — «la política sigue activada, ¿cuál es el problema?»</p>
+
+  <p><strong>Deriva de control</strong> — los controles de concesión o sesión cambiaron. «Exigir MFA» podría haberse cambiado a «Exigir MFA O dispositivo conforme», o la política podría haberse debilitado añadiendo un override de frecuencia de sesión. La deriva de control es la más difícil de detectar a simple vista porque la política sigue pareciendo correcta en el portal.</p>
+
+  <p><strong>Deriva de condición</strong> — las condiciones de la política cambiaron. La lista de ubicaciones de confianza, la lista de plataformas, la lista de aplicaciones cliente. Menos común pero posible.</p>
+
+  <p>El detector de deriva de AC de Panoptica365 cubre las cinco categorías. El detector lee periódicamente el estado actual de cada política desplegada vía la API Graph y lo compara con la línea base de la plantilla (o con el estado previo conocido como bueno para políticas personalizadas). Las diferencias se disparan como alertas de deriva.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="El detector de deriva lee el estado actual de la política vía la API Graph, lo compara con la línea base de la plantilla, y dispara una alerta de deriva ante cualquier diferencia entre las cinco categorías.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- current state via Graph -->
+        <rect x="36" y="44" width="180" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="126" y="70" fill="#C4D4E8" font-size="13.5" font-weight="600">Política actual</text>
+        <text x="126" y="88" fill="#6B85A6" font-size="11">leída vía la API Graph</text>
+
+        <!-- template baseline -->
+        <rect x="36" y="150" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="126" y="176" fill="#A8E1F8" font-size="13.5" font-weight="600">Línea base</text>
+        <text x="126" y="194" fill="#6B85A6" font-size="11">plantilla o conocido-bueno</text>
+
+        <!-- comparator -->
+        <rect x="290" y="97" width="150" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="365" y="123" fill="#7DD9F9" font-size="14" font-weight="700">Comparar</text>
+        <text x="365" y="141" fill="#6B85A6" font-size="11">cinco categorías</text>
+
+        <!-- alert -->
+        <rect x="512" y="97" width="172" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="598" y="123" fill="#C4D4E8" font-size="13.5" font-weight="600">Alerta de deriva</text>
+        <text x="598" y="141" fill="#6B85A6" font-size="11">ante cualquier diferencia</text>
+      </g>
+      <path d="M216 72 H262 Q278 72 278 100 V112" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M216 178 H262 Q278 178 278 150 V138" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#dArr)"/>
+      <path d="M440 125 H512" stroke="#335F92" stroke-width="2" marker-end="url(#dArr)"/>
+      <!-- five categories caption -->
+      <text x="365" y="226" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">esquema · estado · alcance · control · condición</text>
+    </svg>
+    <figcaption>Leer la política en vivo, compararla con la línea base entre cinco categorías, alertar ante cualquier diferencia.</figcaption>
+  </figure>
+
+  <p>El flujo de trabajo del operador para una alerta de deriva:</p>
+
+  <ol>
+    <li><strong>Acusar recibo de la alerta.</strong> ¿Qué tipo de deriva? ¿Estado, alcance, control, condición, esquema?</li>
+    <li><strong>Identificar la causa.</strong> Mira el registro de auditoría: quién hizo el cambio, cuándo, desde qué rol. Panoptica365 registra la cadena completa de atribución.</li>
+    <li><strong>Decidir: rollback o aceptar.</strong> Si el cambio fue legítimo (el cliente pidió una exclusión específica, un mantenimiento conocido), acepta y actualiza la plantilla/línea base para que coincida. Si el cambio fue no autorizado o no intencionado, haz rollback.</li>
+    <li><strong>Documentar.</strong> Tanto si hiciste rollback como si aceptaste, el cambio ahora es visible en tu registro operativo. El próximo operador que mire esta política puede ver lo que pasó.</li>
+  </ol>
+
+  <p>La parte más difícil es el paso 3 — decidir qué es legítimo vs. qué no lo es. En un MSP sano, cada cambio de AC debería tener un ticket correspondiente. Si una alerta de deriva se dispara y no hay ticket que la explique, o tienes una brecha de documentación o un cambio no autorizado. Ambas merecen investigación.</p>
+
+  <h2>Exclusiones — la deuda silenciosa</h2>
+
+  <p>La historia de la firma de contabilidad de arriba es el patrón estándar. Las exclusiones se añaden una a una, cada una con una razón defendible en el momento, ninguna con una fecha de retiro. A lo largo de los años se acumulan. Eventualmente, un tercio de la base de usuarios queda excluida de una política que creías que los estaba protegiendo.</p>
+
+  <p>El mecanismo que arregla esto:</p>
+
+  <p><strong>Cada exclusión tiene una fecha de retiro.</strong> El sistema de exenciones de Panoptica365 lo soporta directamente. Cuando un operador añade a un usuario a la lista de exclusión de una política de AC (o acepta un evento de deriva que añadió una exclusión), el sistema requiere una justificación y una fecha de expiración. Por defecto, la expiración es de 180 días desde la adición. El operador puede acortar o alargar, pero no puede dejarla abierta.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Una línea de tiempo de exclusión: añadida con una justificación, por defecto 180 días, un recordatorio de revisión se dispara antes de la fecha de retiro, luego el usuario se renueva o se trae de vuelta a la política.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <!-- baseline -->
+      <line x1="70" y1="96" x2="650" y2="96" stroke="#274B72" stroke-width="2"/>
+      <path d="M650 96 H664" stroke="#5CCBF4" stroke-width="2" marker-end="url(#eArr)"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- added -->
+        <circle cx="120" cy="96" r="9" fill="#5CCBF4"/>
+        <text x="120" y="66" fill="#A8E1F8" font-size="13" font-weight="600">Añadida</text>
+        <text x="120" y="132" fill="#6B85A6" font-size="11.5">+ justificación</text>
+
+        <!-- default 180 -->
+        <rect x="214" y="80" width="192" height="32" rx="8" fill="#0E2236" stroke="#33527A"/>
+        <text x="310" y="101" fill="#C4D4E8" font-size="12.5">180 días por defecto</text>
+
+        <!-- review reminder -->
+        <circle cx="470" cy="96" r="9" fill="#FFC04D"/>
+        <text x="470" y="66" fill="#FFC04D" font-size="13" font-weight="600">Revisión</text>
+        <text x="470" y="132" fill="#6B85A6" font-size="11.5">antes del retiro</text>
+
+        <!-- sunset -->
+        <circle cx="600" cy="96" r="9" fill="none" stroke="#52708F" stroke-width="2.5"/>
+        <text x="600" y="66" fill="#52708F" font-size="13" font-weight="600">Retiro</text>
+        <text x="600" y="132" fill="#52708F" font-size="11.5">renovar o devolver</text>
+      </g>
+    </svg>
+    <figcaption>Ninguna exclusión queda abierta: lleva una justificación, un retiro por defecto de 180 días, y un recordatorio de revisión antes de expirar.</figcaption>
+  </figure>
+
+  <p><strong>Cada exclusión se revisa antes de la expiración.</strong> Antes de la fecha de retiro, Panoptica365 alerta al operador responsable. Este revisa: ¿la exclusión todavía es necesaria? ¿Debería renovarse (con una nueva justificación)? ¿O debería expirar y traer al usuario de vuelta al alcance de la política? La revisión activa previene el patrón de acumulación silenciosa.</p>
+
+  <p><strong>Las exclusiones basadas en grupos son auditables.</strong> Muchas políticas excluyen un grupo entero («Cuentas break-glass», «Cuentas de servicio»). La pertenencia a esos grupos puede cambiar sin que la propia política de AC cambie — y el nuevo miembro queda ahora silenciosamente excluido. Las auditorías periódicas de la <em>pertenencia</em> a los grupos de exclusión son parte de la disciplina operativa.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Principio honesto</div>
+    <p>El principio honesto: una política de AC con una lista de exclusión vacía es el objetivo. Cada entrada en la lista de exclusión es una brecha de seguridad conocida. La lista debería ser auditable, justificada, y revisada en una cadencia regular.</p>
+  </div>
+
+  <p>El patrón que <em>no</em> hay que adoptar:</p>
+
+  <ul>
+    <li>«Vamos a añadir la exclusión por ahora y la revisamos después.» (Después no llega nunca.)</li>
+    <li>«Excluyamos al departamento de IT por conveniencia.» (Acabas de deshabilitar la política para todos los que tienen acceso admin — exactamente la forma equivocada.)</li>
+    <li>«Lleva ahí años, debe ser intencional.» (O lleva ahí años porque nadie la quitó.)</li>
+  </ul>
+
+  <p>El flujo de revisión de exenciones de Panoptica365 existe específicamente para prevenir estos patrones. Úsalo. La fricción de «tienes que añadir una justificación y un retiro» es el diseño — hace los patrones malos más difíciles de cometer que los buenos.</p>
+
+  <h2>Ciclo de vida — cómo evoluciona una política de AC a lo largo de los años</h2>
+
+  <p>Una política de AC no es un despliegue de una sola vez. Es una configuración que vive junto al negocio del cliente todo el tiempo que dure la relación. A lo largo de los años, el cliente cambia:</p>
+
+  <ul>
+    <li><strong>Contrata y despide.</strong> La población de usuarios cambia. Los grupos ganan y pierden miembros. Los roles cambian.</li>
+    <li><strong>Adquiere otras empresas.</strong> Un tenant nuevo se fusiona (o no). Nuevos usuarios llegan en masa con diferente equipamiento y diferentes posturas de AC existentes.</li>
+    <li><strong>Abre nuevas oficinas.</strong> Nuevas entradas de ubicación de confianza. Nuevos rangos de IP. Nuevos patrones de viaje.</li>
+    <li><strong>Adopta nuevas apps.</strong> Nuevas apps en la lista de aplicaciones en la nube. Nuevas integraciones OAuth. Nuevas cuentas de servicio.</li>
+    <li><strong>Actualiza sus licencias.</strong> Business Standard → Business Premium → E5. Cada actualización desbloquea nuevas características de AC (AC de dispositivo conforme en Premium, AC basado en riesgo en E5). El conjunto de políticas de AC debería evolucionar para usar las nuevas capacidades.</li>
+    <li><strong>Sufre un incidente.</strong> Post-incidente, la postura de AC típicamente se endurece.</li>
+    <li><strong>Se enfrenta a un nuevo requisito regulatorio.</strong> Alguna nueva obligación de cumplimiento requiere una nueva política de AC.</li>
+    <li><strong>Reduce tamaño.</strong> La población de usuarios se reduce. Algunos usuarios se van. La política de AC necesita limpieza.</li>
+  </ul>
+
+  <p>Cada uno de estos es un evento relevante para AC. El MSP que está corriendo AC bien se pasa por el conjunto de políticas de AC:</p>
+
+  <ul>
+    <li><strong>Trimestralmente</strong> — revisa cada política. ¿Las condiciones siguen siendo correctas? ¿Las exclusiones siguen siendo necesarias? ¿El cliente está usando las licencias que tiene?</li>
+    <li><strong>En cada hito de la relación con el cliente</strong> — incorporación, renovación, adquisición importante, reducción de tamaño.</li>
+    <li><strong>Después de cualquier incidente</strong> — las revisiones post-incidente sacan a la superficie brechas de AC que necesitan cerrarse.</li>
+    <li><strong>Cuando Microsoft entrega nuevas características de AC</strong> — periódicamente Microsoft añade nuevas capacidades (Token Protection se hizo GA en 2024; la condición de flujos de autenticación siguió en 2025). Las nuevas capacidades deberían disparar una revisión de «¿podría esto fortalecer el conjunto de políticas de AC?».</li>
+  </ul>
+
+  <p>Esta es la meta-carga de trabajo de operar AC a escala. Las plantillas entregadas son el punto de partida. La detección de deriva y la revisión de exclusión mantienen las políticas desplegadas fiables. La revisión de ciclo de vida mantiene el conjunto de políticas <em>relevante</em> — fuerte contra el panorama de amenazas actual, no el panorama de amenazas de 2023.</p>
+
+  <h2>Lo que Panoptica365 hace y no hace</h2>
+
+  <p>Para ser claro sobre el rol de la plataforma:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Panoptica365 hace</th><th>Panoptica365 no hace</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Detección de deriva en cada política de AC desplegada. Alertas en deriva de estado, alcance, control, condición, y esquema.</td>
+          <td>Decidir si un evento de deriva es legítimo o no autorizado. El operador decide.</td>
+        </tr>
+        <tr>
+          <td>El flujo de trabajo de revisión de exención / exclusión. Justificaciones, retiros, recordatorios, pista de auditoría.</td>
+          <td>Decidir si una exclusión debería renovarse o expirar. El operador decide.</td>
+        </tr>
+        <tr>
+          <td>Registro de auditoría para cada mutación de política de AC (desplegar, modificar, deshabilitar, excluir). Quién, cuándo, desde qué rol, con qué razón.</td>
+          <td>Generar nuevas políticas de AC en respuesta a nuevas amenazas. El operador lo hace (usando el flujo de importación de la tarjeta 8 si es necesario).</td>
+        </tr>
+        <tr>
+          <td>El widget de Actividad Diaria que muestra el volumen de bloqueos de AC en casi-tiempo-real a través de la flota del MSP.</td>
+          <td>Reemplazar al admin de AC existente del cliente. Si el cliente tiene su propio admin que también está modificando políticas, Panoptica365 saca los cambios — pero no los previene.</td>
+        </tr>
+        <tr>
+          <td>Vista entre tenants: ver el estado de las políticas de AC en cada cliente de un vistazo.</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Una sola consola Panoptica365 leyendo el estado de las políticas de AC en cada tenant de cliente de la flota del MSP de un vistazo.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <!-- console -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="270" y="26" width="180" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="360" y="50" fill="#7DD9F9" font-size="14" font-weight="700">Panoptica365</text>
+        <text x="360" y="68" fill="#6B85A6" font-size="11">vista entre tenants</text>
+      </g>
+      <!-- fleet of tenants -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(40,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Cliente A</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(186,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Cliente B</text><circle cx="60" cy="44" r="5" fill="#FFC04D"/></g>
+        <g transform="translate(332,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Cliente C</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(478,150)"><rect width="120" height="60" rx="9" fill="#0E2236" stroke="#33527A"/><text x="60" y="30" fill="#C4D4E8" font-size="12.5">Cliente D</text><circle cx="60" cy="44" r="5" fill="#2EE8A0"/></g>
+        <g transform="translate(600,150)"><rect width="80" height="60" rx="9" fill="#0C2038" stroke="#274B72" stroke-dasharray="3 5"/><text x="40" y="36" fill="#52708F" font-size="14">…</text></g>
+      </g>
+      <!-- links -->
+      <g stroke="#335F92" stroke-width="1.6" fill="none">
+        <path d="M320 82 L100 150" marker-end="url(#fArr)"/>
+        <path d="M340 82 L246 150" marker-end="url(#fArr)"/>
+        <path d="M360 82 V150" marker-end="url(#fArr)"/>
+        <path d="M380 82 L538 150" marker-end="url(#fArr)"/>
+        <path d="M400 82 L630 150" marker-end="url(#fArr)"/>
+      </g>
+      <text x="360" y="122" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">estado de las políticas de AC, leído en toda la flota</text>
+    </svg>
+    <figcaption>Una consola, toda la cartera: el estado de las políticas de AC en cada tenant de cliente, visible de un vistazo.</figcaption>
+  </figure>
+
+  <p>La línea es: Panoptica365 hace que el estado de AC entre clientes sea <em>visible</em>. El trabajo del operador es interpretar lo que ve y actuar sobre ello.</p>
+
+  <h2>La revisión anual de AC — una cadencia recomendada</h2>
+
+  <p>Para cada cliente, una vez al año (a menudo programado con la conversación de renovación anual), ejecuta una revisión explícita de AC:</p>
+
+  <ol>
+    <li><strong>Lista todas las políticas de AC desplegadas.</strong> Qué está habilitado, qué está en solo-informe, qué está deshabilitado.</li>
+    <li><strong>Para cada política, revisa la lista de exclusión.</strong> Cada entrada: ¿todavía es necesaria? ¿Fecha de retiro todavía apropiada?</li>
+    <li><strong>Para cada política, comprueba el historial de deriva del último año.</strong> ¿Hubo algún evento de deriva que no resolviste completamente? ¿Algún patrón que sugiera un historial de cambios no autorizados?</li>
+    <li><strong>Compara con la biblioteca actual de plantillas de Panoptica365.</strong> ¿Hay plantillas que deberían desplegarse pero no lo están (políticas recién entregadas, imports recientemente añadidos)?</li>
+    <li><strong>Compara con el estado actual del cliente.</strong> ¿Ha cambiado algo (nuevas licencias, nuevas apps, nuevas regulaciones) que sugiera nuevas políticas?</li>
+    <li><strong>Documenta la revisión.</strong> El director de IT del cliente debería saber que esta revisión ocurrió, qué se encontró, y qué se cambió.</li>
+  </ol>
+
+  <p>Este ciclo anual es lo que evita que AC se convierta en un despliegue de una sola vez que decae a lo largo de los años. También es lo que el cliente necesita demostrar a un auditor, una aseguradora, o un regulador: «revisamos nuestros controles de acceso anualmente, y aquí está el registro».</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte para el trabajo diario y anual.</p>
+
+  <p><strong>Las alertas de deriva no son ruido de fondo.</strong> Cada una es o un cambio autorizado (acusar recibo y aceptar) o un cambio no autorizado (investigar y hacer rollback). Ambos requieren atención del operador. La integridad del conjunto de políticas de AC depende de que cada evento de deriva sea resuelto limpiamente.</p>
+
+  <p><strong>Las listas de exclusión deberían ser el conjunto más pequeño posible.</strong> Cada entrada es una brecha de seguridad conocida. El flujo de exención con retiros es tu herramienta para mantener la lista recortada. Resiste el impulso de añadir exclusiones «permanentes»; nada es permanente.</p>
+
+  <p><strong>La revisión anual de AC es parte de la relación con el cliente.</strong> No es opcional ni «bueno tenerlo». Es la disciplina operativa que mantiene la postura de AC del cliente fiable. Factúrala. Documéntala. Hazla visible al cliente.</p>
+
+  <h2>Cerrando la tarjeta 3</h2>
+
+  <p>Has visto ahora las nueve plantillas de Acceso Condicional que Panoptica365 entrega, más la mecánica de la plataforma (importar, deriva, exclusiones, ciclo de vida) que convierten la biblioteca de plantillas en un sistema operativo.</p>
+
+  <p>El arco de la tarjeta:</p>
+
+  <ol>
+    <li>Lista de comprobación previa al despliegue — antes de cualquier plantilla, haz estas cinco cosas.</li>
+    <li>Exigir MFA para todos los usuarios — el fundamento.</li>
+    <li>Bloquear autenticación heredada — cerrar el bypass de auth básica.</li>
+    <li>Ubicación de confianza O dispositivo conforme — la política geográfica inteligente.</li>
+    <li>Conforme O híbrido O MFA — la política OR de señales de confianza, y la elección de estrategia con la #2.</li>
+    <li>Endurecer el acceso de admin — cuatro plantillas de admin como conjunto coherente.</li>
+    <li>Deshabilitar el flujo de código de dispositivo — la defensa contra Storm-2372.</li>
+    <li>Importar tus propias plantillas — el superpoder de personalización de Panoptica365.</li>
+    <li>Operar AC a escala — deriva, exclusiones, ciclo de vida (esta lección).</li>
+  </ol>
+
+  <p>La tarjeta 4 (ajustes de plantillas de Intune) comienza a continuación. La tarjeta 4 cubre el lado dispositivo del par de señal-de-confianza — las políticas y configuraciones que hacen que la señal de «dispositivo conforme» en las tarjetas 3.4 y 3.5 signifique realmente algo. Sin cumplimiento fiable, las políticas de AC con condición OR degeneran en políticas de condición única. La tarjeta 4 es donde el cumplimiento se vuelve real.</p>
+
+  <p>Por ahora: lee las políticas, despliégalas con la disciplina previa al despliegue, monitorízalas con detección de deriva, y convive con ellas a través de los años usando retiros de exclusión y revisiones anuales. AC a escala no es glamoroso, pero la postura de seguridad del cliente vive o muere en ello.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre gestión de políticas de Acceso Condicional y registro de auditoría (<a href="https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-audit-logs" target="_blank" rel="noopener">Microsoft Learn — Audit logs in Entra ID</a>); versionado de políticas de AC y pista de auditoría (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/howto-conditional-access-policies-audit" target="_blank" rel="noopener">Microsoft Learn — Conditional Access change history</a>); API de Microsoft Graph para el estado de políticas de AC (<a href="https://learn.microsoft.com/en-us/graph/api/resources/conditionalaccesspolicy" target="_blank" rel="noopener">Microsoft Learn — Conditional Access policy resource</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

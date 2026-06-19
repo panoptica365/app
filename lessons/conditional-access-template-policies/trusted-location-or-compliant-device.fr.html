@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emplacement de confiance OU appareil conforme — la politique géo intelligente — Modèles de politiques d'accès conditionnel</title>
+<meta name="lesson:title" content="Emplacement de confiance OU appareil conforme — la politique géo intelligente">
+<meta name="lesson:subtitle" content="Abandonnez le blocage par pays et ses exclusions pour une politique géo qui fait confiance à l'appareil, pas au lieu.">
+<meta name="lesson:icon" content="map-pin">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Modèles de politiques d'accès conditionnel</span> <span class="sep">·</span> <span>Emplacement de confiance OU appareil conforme</span></div>
+  <h1>Emplacement de confiance OU appareil conforme — la politique géo intelligente</h1>
+  <p class="dek">Abandonnez le blocage par pays et ses exclusions pour une politique géo qui fait confiance à l'appareil, pas au lieu.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Une connexion est autorisée si elle vient d'un emplacement de confiance OU d'un appareil conforme; échouer aux deux est bloqué.">
+      <defs>
+        <radialGradient id="tlBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="tlGrant" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="tlArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tlBg)"/>
+
+      <!-- two trust signals on the left -->
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(170,86)">
+          <rect x="-130" y="0" width="260" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="-100" cy="32" r="15" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+          <path d="M-100 24 a8 8 0 0 1 0 16 a8 8 0 0 1 0 -16 M-100 32 l0 8" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="-74" y="28" fill="#C4D4E8" font-size="14" font-weight="600">Emplacement de confiance</text>
+          <text x="-74" y="48" fill="#6B85A6" font-size="12">IP du bureau / pays</text>
+        </g>
+        <g transform="translate(170,190)">
+          <rect x="-130" y="0" width="260" height="64" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <rect x="-110" y="16" width="24" height="34" rx="4" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+          <path d="M-104 33 l5 6 l9 -12" fill="none" stroke="#2EE8A0" stroke-width="2.2"/>
+          <text x="-74" y="28" fill="#C4D4E8" font-size="14" font-weight="600">Appareil conforme</text>
+          <text x="-74" y="48" fill="#6B85A6" font-size="12">inscrit à Intune</text>
+        </g>
+      </g>
+
+      <!-- OR node -->
+      <g transform="translate(490,170)">
+        <circle r="46" fill="#10243B" stroke="#5CCBF4" stroke-width="1.8"/>
+        <text x="0" y="9" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="24" font-weight="700" letter-spacing="2">OU</text>
+      </g>
+      <path d="M300 118 Q400 134 448 160" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#tlArr)"/>
+      <path d="M300 222 Q400 206 448 180" stroke="#335F92" stroke-width="2.5" fill="none" marker-end="url(#tlArr)"/>
+
+      <!-- either true -> grant -->
+      <path d="M538 158 H700" stroke="#2A7FA3" stroke-width="2.5" marker-end="url(#tlArr)"/>
+      <g transform="translate(870,158)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="-104" y="-36" width="208" height="72" rx="14" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-66" cy="0" r="17" fill="url(#tlGrant)"/>
+        <path d="M-73 0 l5 6 l10 -13" fill="none" stroke="#071221" stroke-width="2.4"/>
+        <text x="26" y="-2" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Accès</text>
+        <text x="26" y="20" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">accordé</text>
+      </g>
+
+      <!-- both false -> blocked -->
+      <path d="M490 216 V272 H700" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="5 5" fill="none" marker-end="url(#tlArr)"/>
+      <text x="600" y="294" text-anchor="middle" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="13">échec aux deux → bloqué</text>
+    </svg>
+    <figcaption>L'un ou l'autre signal suffit. Une connexion qui échoue aux deux — emplacement de confiance et appareil conforme — est celle que la politique refuse.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un MSP qu'on a récemment audité avait une politique d'accès conditionnel sur le tenant d'un client qui disait, simplement, « bloquer la connexion depuis l'extérieur du Canada ». Elle avait été déployée il y a deux ans. La liste d'exclusions avait grandi à trente-huit entrées.</p>
+
+  <p>Espagne (pour les vacances du contrôleur en 2023).<br>
+  États-Unis (pour le vendeur qui voyage aux salons professionnels).<br>
+  France (pour la visite familiale du dirigeant, mise en place il y a un an).<br>
+  Mexique (pour le voyage d'hiver du comptable).<br>
+  Italie (encore active depuis deux étés, quand le CFO a visité sa famille pendant trois semaines).</p>
+
+  <p>La plupart de ces exclusions étaient obsolètes. Le vendeur n'était pas allé à un salon américain depuis huit mois, mais l'exception pour les États-Unis était encore en vigueur. L'exclusion pour l'Espagne était pour un contractuel qui n'y travaillait plus. L'exclusion pour l'Italie existait parce que personne ne s'était souvenu de l'enlever.</p>
+
+  <p>Chaque exclusion était un trou dans la politique géo. Ensemble, elles équivalaient à « la politique géo est activée, mais tout l'hémisphère occidental plus la majeure partie de l'Europe est exclu pour divers utilisateurs pour des durées inconnues ». Quelle que soit la sécurité que la politique était censée fournir, elle avait été tranquillement échangée un billet du service d'aide à la fois.</p>
+
+  <p>Cette leçon est la politique qui n'accumule pas ce genre de dette.</p>
+  </div>
+
+  <div class="callout">
+    <div class="clabel">Le modèle</div>
+    <p><strong>Panoptica365 - Only allow access from Canada.</strong> Description : <em>Connexions seulement depuis le Canada ou depuis des appareils conformes.</em> Octroi : Aucun (bloquer). Utilisateurs : Tous les utilisateurs. Applications : Toutes les applications infonuagiques. Conditions : Emplacements = 1 emplacement (l'emplacement nommé « Canada »).</p>
+  </div>
+
+  <p>Le titre de la leçon dit « Canada » parce que c'est le défaut; en pratique, c'est le modèle pour <em>n'importe quel</em> patron emplacement-de-confiance-plus-appareil-conforme. On couvrira la personnalisation géographique plus tard dans la leçon.</p>
+
+  <h2>Le patron OU est tout l'intérêt</h2>
+
+  <p>La plupart des outils de sécurité MSP livrent un modèle « bloquer hors emplacement de confiance » qui paraît direct : définir un emplacement nommé, et bloquer les connexions depuis n'importe où ailleurs. Simple, défendable, correspond au modèle de sécurité.</p>
+
+  <p>Ça crée aussi le problème d'accumulation d'exceptions. Chaque voyageur est une exception. Chaque contractuel est une exception. Chaque vacance de dirigeant est une exception. Les exceptions s'accumulent, ne se font jamais retirer, et la politique devient tranquillement une défense fine comme du papier.</p>
+
+  <p>Le modèle Panoptica365 n'utilise pas ce patron. Il utilise <strong>(emplacement-de-confiance) OU (appareil-conforme)</strong>. Le contrôle d'octroi est configuré de sorte qu'une connexion satisfait à la politique si <em>l'une ou l'autre</em> condition est vraie :</p>
+
+  <ul>
+    <li>La connexion est depuis un emplacement nommé de confiance (les IP du bureau, la plage du pays, peu importe ce que vous avez défini), OU</li>
+    <li>L'appareil de l'utilisateur est marqué comme conforme dans Intune.</li>
+  </ul>
+
+  <p>Les deux conditions prouvent la même intention sous-jacente — l'utilisateur a démontré qu'il opère depuis un contexte digne de confiance — et l'une ou l'autre est suffisante. Échouer aux deux signifie que la politique refuse la connexion.</p>
+
+  <p>La conséquence : les voyageurs sur des portables gérés ne déclenchent pas la politique, parce que leur appareil satisfait au OU. Les voyageurs sur des appareils personnels, <em>eux</em>, déclenchent la politique. La distinction que la politique applique n'est plus « canadien ou non »; c'est « contexte digne de confiance ou non ». C'est la bonne distinction.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 300" role="img" aria-label="Le blocage géo naïf accumule les exceptions; le patron OU n'en a besoin d'aucune.">
+      <rect width="720" height="300" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="360" y1="40" x2="360" y2="276" stroke="#1F3C5C" stroke-width="1"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- left: naive geo-block -->
+        <text x="180" y="36" text-anchor="middle" fill="#E2A0AA" font-size="12.5" font-weight="700" letter-spacing="1">BLOCAGE GÉO NAÏF</text>
+        <rect x="40" y="56" width="280" height="40" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="180" y="81" text-anchor="middle" fill="#FF8A98" font-size="13.5" font-weight="600">Bloquer hors emplacement</text>
+        <g fill="#0E2236" stroke="#33527A">
+          <rect x="60" y="112" width="240" height="26" rx="6"/>
+          <rect x="60" y="146" width="240" height="26" rx="6"/>
+          <rect x="60" y="180" width="240" height="26" rx="6"/>
+          <rect x="60" y="214" width="240" height="26" rx="6"/>
+        </g>
+        <g font-size="12" fill="#6B85A6">
+          <text x="74" y="129">+ exception : Espagne</text>
+          <text x="74" y="163">+ exception : États-Unis</text>
+          <text x="74" y="197">+ exception : France</text>
+          <text x="74" y="231">+ exception : Italie …</text>
+        </g>
+        <text x="180" y="262" text-anchor="middle" fill="#E2A0AA" font-size="12" font-style="italic">les exceptions s'accumulent</text>
+
+        <!-- right: OR-pattern -->
+        <text x="540" y="36" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="700" letter-spacing="1">PATRON OU</text>
+        <rect x="400" y="56" width="280" height="40" rx="9" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <text x="540" y="81" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="600">Emplacement OU appareil conforme</text>
+        <g transform="translate(0,150)">
+          <rect x="420" y="0" width="240" height="36" rx="8" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="540" y="23" text-anchor="middle" fill="#A8E1F8" font-size="12">Voyageurs sur portables gérés : OK</text>
+        </g>
+        <g transform="translate(0,200)">
+          <rect x="430" y="0" width="220" height="36" rx="8" fill="#0E2236" stroke="#2EE8A0"/>
+          <text x="540" y="23" text-anchor="middle" fill="#9FF2D2" font-size="13" font-weight="600">aucune liste d'exclusions</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Même intention, deux designs : l'un fait croître une liste d'exclusions un billet à la fois, l'autre n'en a besoin d'aucune.</figcaption>
+  </figure>
+
+  <h2>Ce que ça veut dire en pratique</h2>
+
+  <p>Un vendeur en voyage d'affaires un mardi à Chicago :</p>
+
+  <ul>
+    <li>Politique géo naïve : bloquée. Appel au service d'aide. Exception ajoutée pour les États-Unis. Exception oubliée dans six semaines.</li>
+    <li>Modèle Panoptica365 : non bloquée si son portable géré est inscrit à Intune et conforme. Pas d'exception nécessaire. Pas d'appel au service d'aide.</li>
+  </ul>
+
+  <p>Un utilisateur sur son téléphone personnel essayant de se connecter à Outlook pendant qu'il visite sa famille à Paris :</p>
+
+  <ul>
+    <li>Politique géo naïve : bloquée. Appel au service d'aide. Exception ajoutée pour la France. Exception oubliée.</li>
+    <li>Modèle Panoptica365 : bloquée (parce que le téléphone personnel n'est pas conforme). L'utilisateur peut retourner au portable géré, ou attendre d'être de retour à la maison. <em>Aucune exception ajoutée; aucune dette de sécurité accumulée.</em></li>
+  </ul>
+
+  <p>Un nouvel attaquant qui essaie de se connecter au compte d'un utilisateur depuis l'Europe de l'Est :</p>
+
+  <ul>
+    <li>Politique géo naïve : bloquée. Avec succès.</li>
+    <li>Modèle Panoptica365 : bloquée (l'appareil de l'attaquant n'est pas conforme; l'emplacement de l'attaquant n'est pas de confiance). Avec succès.</li>
+  </ul>
+
+  <p>La politique applique la même frontière de sécurité que le client voulait — les connexions sont restreintes aux contextes dignes de confiance — sans la dette d'opérations.</p>
+
+  <h2>Ce que le modèle présume</h2>
+
+  <p>Pour que le patron de condition OU fonctionne, <strong>la conformité Intune doit être en place et fiable.</strong> Si le client n'a pas Intune (Business Standard ou en dessous), ou a Intune mais n'a pas inscrit d'appareils ou configuré de politiques de conformité, alors le chemin « appareil-conforme » du OU est essentiellement vide. Chaque connexion retombe sur la vérification d'emplacement, la politique se comporte comme un blocage géo naïf, et l'accumulation d'exceptions revient.</p>
+
+  <p>Donc les prérequis :</p>
+
+  <ul>
+    <li><strong>Intune Plan 1 ou au-dessus</strong> (base Business Premium).</li>
+    <li><strong>Politiques de conformité configurées</strong> pour les plateformes d'appareils que le client utilise (Windows, iOS, Android, macOS).</li>
+    <li><strong>Appareils inscrits</strong> — une fraction significative de la base d'utilisateurs sur des appareils gérés.</li>
+    <li><strong>Évaluation de conformité fonctionnelle</strong> — appareils qui rapportent conformes quand ils devraient l'être.</li>
+  </ul>
+
+  <p>La carte 4 (paramètres de modèles Intune) couvre le côté conformité en détail. Pour le modèle d'AC ici, l'opérateur doit vérifier que la conformité est fiable avant de basculer la politique de rapport uniquement à Activé. Le pré-déploiement (leçon 1) couvre ça.</p>
+
+  <h2>Le défaut Canada n'est qu'un défaut — personnalisez par client</h2>
+
+  <p>Le modèle livré nomme « Canada » parce que Panoptica365 a été construit originalement dans un contexte MSP canadien. Pour les clients non canadiens, l'emplacement nommé doit être personnalisé :</p>
+
+  <ul>
+    <li>Un MSP qui sert des clients au Mexique définit un emplacement nommé « Mexique » avec les plages IP pertinentes et le code de pays, et importe une version personnalisée de ce modèle avec cet emplacement sélectionné.</li>
+    <li>Un MSP français définit « France » ou « UE » selon les patrons de voyage.</li>
+    <li>Un MSP multi-région avec des clients américains et canadiens peut avoir des modèles séparés par région.</li>
+  </ul>
+
+  <p>La mécanique de personnalisation est couverte dans la leçon 8 (Importer vos propres modèles d'AC). Pour l'instant : le <em>concept</em> du modèle est portable. L'emplacement est paramétrable. Le patron de condition OU reste le même peu importe la géographie.</p>
+
+  <h2>Ce que l'opérateur décide au déploiement</h2>
+
+  <p>Quand vous déployez ce modèle, l'opérateur répond à quatre questions :</p>
+
+  <h3>1. Quel est l'emplacement de confiance?</h3>
+
+  <p>Pour la plupart des clients, c'est leur pays, défini comme le code de pays (Microsoft maintient les correspondances pays-vers-IP). Pour les clients avec des emplacements de bureau spécifiques seulement, ce sont les plages IP de bureau comme emplacements nommés séparés. Pour les clients multi-régions, plusieurs emplacements nommés.</p>
+
+  <p>L'emplacement de confiance devrait être l'endroit où <em>la grande majorité</em> des connexions légitimes proviennent. Si votre client fait affaire dans plusieurs pays, définissez chacun. S'il a des travailleurs à distance qui travaillent vraiment de partout, le chemin basé sur l'emplacement est moins utile et vous appuyez plus fort sur le chemin appareil-conforme.</p>
+
+  <h3>2. Qui est couvert?</h3>
+
+  <p>Défaut : tous les utilisateurs. Même logique qu'Exiger MFA pour tous les utilisateurs (leçon 2). Les vrais utilisateurs sont couverts; les comptes de service sont exclus par nom avec justification documentée.</p>
+
+  <h3>3. Quelles sont les applications?</h3>
+
+  <p>Défaut : toutes les applications infonuagiques. La politique s'applique à chaque connexion peu importe l'application. Il n'y a pas de bonne raison de la cadrer plus étroitement pour la plupart des clients.</p>
+
+  <h3>4. La conformité Intune fonctionne-t-elle vraiment?</h3>
+
+  <p>Si la réponse est « oui », déployez le modèle tel quel.</p>
+
+  <p>Si la réponse est « non, mais ça le sera bientôt », déployez avec la conformité Intune encore en cours de déploiement et acceptez que jusqu'à ce que la conformité soit en place, le chemin OU est vide et la politique se comporte comme un blocage géo strict. Mettez un rappel de calendrier pour vérifier après le déploiement d'Intune.</p>
+
+  <p>Si la réponse est « non, et ça ne le sera pas bientôt » (parce que le client n'a pas acheté de licences Intune), alors ce modèle est le mauvais choix pour ce client. Utilisez Exiger MFA pour tous les utilisateurs (leçon 2) et acceptez que le contexte géographique n'est pas appliqué.</p>
+
+  <h2>Déploiement</h2>
+
+  <p>Ce modèle se déploie à l'état Activé. Pour les tenants de petite entreprise sans dirigeants qui voyagent à l'international et avec une posture de conformité Intune fiable, déployez et surveillez de près — l'inventaire pré-déploiement devrait avoir attrapé les exceptions typiques.</p>
+
+  <p>Pour les tenants avec des voyageurs internationaux fréquents ou où la conformité Intune est encore en cours de déploiement, l'étape manuelle de rapport uniquement dans le portail Entra est recommandée. La raison : les patrons de voyage se cachent dans des cycles mensuels et trimestriels. Une fenêtre de 3 jours rate le dirigeant qui visite sa famille toutes les six semaines. Budgétez une fenêtre de rapport uniquement de 14 jours si vous prenez cette route.</p>
+
+  <p>Pendant la fenêtre de vérification (que ce soit rapport uniquement ou surveillance en direct après le déploiement), cherchez les blocages et classez chacun :</p>
+
+  <ul>
+    <li>Voyage hors emplacement de confiance sur un appareil conforme → la politique <em>ne les</em> aurait <em>pas</em> bloqués (bon — le patron OU fait son travail).</li>
+    <li>Voyage hors emplacement de confiance sur un appareil non conforme → bloqué. Était-ce un voyage légitime? Si oui, l'utilisateur a besoin d'être sur un appareil géré, ou cet utilisateur est un candidat à l'exclusion. Si le patron de voyage est rare, planifiez de gérer via exemption avec une date de coucher de soleil; s'il est fréquent, cet utilisateur a besoin d'un appareil inscrit à Intune.</li>
+    <li>Connexion depuis l'extérieur de l'emplacement de confiance, sans bonne explication → attaquant potentiel. Enquêtez.</li>
+  </ul>
+
+  <p>Corrigez les exclusions pour les voyageurs légitimes sans appareil géré (avec dates de coucher de soleil dans Panoptica365). Adressez les problèmes de conformité d'appareil pour les utilisateurs qui devraient être sur des appareils gérés mais ne le sont pas.</p>
+
+  <h2>À surveiller après l'application</h2>
+
+  <p><strong>Connexions bloquées par cette politique.</strong> Devrait être rare en régime permanent. Chaque blocage est une opportunité de demander : était-ce une vraie attaque, ou un utilisateur légitime sans appareil conforme? L'anneau Activité quotidienne fait remonter les blocages d'AC en quasi-temps-réel.</p>
+
+  <p><strong>La liste d'exclusions.</strong> Devrait être stable. Nouvelles entrées apparaissant sans votre connaissance signifient que quelqu'un — un autre admin, un technicien du service d'aide, un utilisateur GDAP délégué — ajoute des exceptions. Enquêtez. La piste d'audit Panoptica365 fait remonter qui, quand et pourquoi pour chaque mutation de politique.</p>
+
+  <p><strong>Changements d'IP de l'emplacement de confiance.</strong> Si l'IP du bureau du client change (migration ISP, ouverture de bureau de succursale), la définition d'emplacement nommé a besoin d'être mise à jour. Jusqu'à ce qu'elle le soit, les connexions légitimes depuis la nouvelle IP seront traitées comme emplacement-non-de-confiance. La première plainte après un déménagement de bureau est habituellement celle-ci.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>Trois catégories de signaux :</p>
+
+  <p><strong>Connexions réussies d'IP étrangère</strong> — quand le chemin emplacement-de-confiance de la politique a échoué mais que le chemin appareil-conforme a réussi. Pas un problème (c'est la politique qui fonctionne), mais c'est un signal qui vaut la peine d'être connu — l'utilisateur voyage.</p>
+
+  <p><strong>Connexions d'IP étrangère bloquées</strong> — l'anneau Activité quotidienne montre le décompte de blocages d'AC. Faible en régime permanent; une pointe soudaine suggère une tentative de credential stuffing contre ce client.</p>
+
+  <p><strong>Dérive sur la définition d'emplacement nommé.</strong> Si la liste d'IP ou de pays de l'emplacement nommé change de manière inattendue, Panoptica365 alerte. C'est une façon silencieuse d'attaquer une politique — élargir l'emplacement de confiance jusqu'à ce que l'IP de l'attaquant s'y intègre.</p>
+
+  <h2>Le patron retiré, nommé explicitement</h2>
+
+  <p>Plusieurs MSP (nous y compris, dans des itérations antérieures de ce modèle) ont livré un modèle naïf de blocage géo. On ne le fait plus, pour les raisons ci-dessus. L'anecdote d'audit de l'ouverture de cette leçon est réelle, récente et pas inhabituelle. Si vous héritez d'un client qui a l'ancien patron en place — un blocage géo strict avec une longue liste d'exclusions — le bon mouvement est :</p>
+
+  <ol>
+    <li>Inventoriez les exclusions existantes.</li>
+    <li>Identifiez lesquelles n'étaient jamais nécessaires en premier lieu (utilisateurs partis depuis longtemps, projets complétés).</li>
+    <li>Pour les légitimes restantes, vérifiez la couverture Intune et migrez ces utilisateurs vers des appareils conformes.</li>
+    <li>Remplacez le blocage géo naïf par ce modèle.</li>
+    <li>Retirez la liste d'exclusions — elle devrait être vide après la migration, sauf pour les comptes de service documentés.</li>
+  </ol>
+
+  <p>C'est une des nettoyages à plus fort levier que vous pouvez faire sur un tenant hérité. La posture de sécurité avant/après est dramatiquement différente même si l'<em>intention</em> des deux politiques est la même.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>La condition OU est la leçon.</strong> Chaque fois que vous voyez une politique qui a une seule vérification binaire (emplacement seulement, appareil seulement, MFA seulement), demandez-vous si une condition OU servirait la même intention de sécurité avec moins de fardeau d'opérations. Souvent ce sera le cas. Le modèle de cette leçon est l'exemple canonique; le même patron apparaît dans la leçon 5.</p>
+
+  <p><strong>N'ajoutez pas d'exclusions géographiques à ce modèle.</strong> Si un utilisateur voyage vraiment et qu'il est sur un appareil non conforme, la bonne réponse est « votre appareil a besoin d'être conforme », pas « laissez-moi ajouter l'Italie à la liste d'exceptions ». Tout l'intérêt de la condition OU est de rendre les exclusions inutiles. Ajouter des exclusions défait le design.</p>
+
+  <p><strong>Vérifiez que la conformité Intune est réelle avant de déployer.</strong> Si la conformité ne fonctionne pas, ce modèle dégénère en blocage géo naïf. Le pré-déploiement de la leçon 1 couvre la vérification Intune; ne le sautez pas.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Leçon 5 : Conforme OU hybride OU MFA.</b> L'application plus large du patron de condition OU — trois signaux de confiance comme chemins alternatifs. Même principe de design, portée plus large.</div></div>
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Leçon 8 : Importer vos propres modèles d'AC.</b> Comment un MSP en dehors du Canada personnalise l'emplacement nommé de ce modèle pour sa propre géographie.</div></div>
+  </div>
+
+  <p>Pour l'instant : c'est le modèle qui remplace le patron d'accumulation d'exceptions. Héritez d'un tenant avec un blocage géo naïf, migrez-le vers ce modèle, et la posture d'AC du client devient tranquillement plus sécurisée <em>et</em> moins de travail à opérer. Les deux choses comptent.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur les emplacements nommés en accès conditionnel (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-assignment-network" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Locations</a>); sémantique d'octroi OU de l'accès conditionnel (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Grant</a>); signal de conformité d'appareil Intune en accès conditionnel (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Device compliance</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

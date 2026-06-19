@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Despliegue directivas de Acceso Condicional — Guías Panoptica365</title>
+<meta name="lesson:title" content="Despliegue directivas de Acceso Condicional">
+<meta name="lesson:subtitle" content="Asigne plantillas desde su biblioteca, despliéguelas en el inquilino y deje que la detección de deriva las custodie después.">
+<meta name="lesson:icon" content="key-round">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías Panoptica365</span> <span class="sep">·</span> <span>Despliegue directivas de Acceso Condicional</span></div>
+  <h1>Despliegue directivas de Acceso Condicional</h1>
+  <p class="dek">Asigne plantillas desde su biblioteca, despliéguelas en el inquilino y deje que la detección de deriva las custodie después.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El ciclo de vida del Acceso Condicional en Panoptica365: una biblioteca de plantillas, asignada a un inquilino, desplegada y luego vigilada para siempre.">
+      <defs>
+        <radialGradient id="caBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="caShield" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="caArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#caBg)"/>
+
+      <!-- 1: biblioteca de plantillas -->
+      <g transform="translate(72,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="14" y="14" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="44" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="14" y="74" width="90" height="20" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="148" text-anchor="middle" fill="#6B85A6" font-size="11.5" letter-spacing="1">BIBLIOTECA DE PLANTILLAS</text>
+      </g>
+      <path d="M204 170 H300" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="252" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">asignar</text>
+
+      <!-- 2: inquilino -->
+      <g transform="translate(316,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 24 L92 44 V94 H26 V44 Z" fill="none" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="44" y="66" width="30" height="28" fill="#102A4C" stroke="#2A7FA3"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="13" letter-spacing="2">INQUILINO</text>
+      </g>
+      <path d="M448 170 H544" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="496" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">desplegar</text>
+
+      <!-- 3: directiva activa como escudo -->
+      <g transform="translate(620,108)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="128" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M59 16 L94 30 V62 C94 88 78 104 59 112 C40 104 24 88 24 62 V30 Z" fill="url(#caShield)" opacity="0.92"/>
+        <path d="M44 60 L55 72 L76 46" fill="none" stroke="#071221" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="150" text-anchor="middle" fill="#A8E1F8" font-size="12.5" letter-spacing="1">DIRECTIVA ACTIVA</text>
+      </g>
+      <path d="M752 170 H848" stroke="#335F92" stroke-width="2.5" marker-end="url(#caArr)"/>
+      <text x="800" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">vigilar</text>
+
+      <!-- 4: vigilancia de deriva -->
+      <g transform="translate(984,170)">
+        <circle r="80" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="56" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <path d="M-44 0 C-22 -34 22 -34 44 0 C22 34 -22 34 -44 0 Z" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle r="15" fill="url(#caShield)"/>
+        <circle r="6" fill="#EAF7FE"/>
+        <text x="0" y="106" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" font-weight="600" letter-spacing="1">VIGILANCIA DE DERIVA</text>
+      </g>
+    </svg>
+    <figcaption>El ciclo de vida de CA en Panoptica365: una plantilla de su biblioteca, asignada a un inquilino, desplegada y luego vigilada en busca de deriva — para siempre.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>El Acceso Condicional es donde Panoptica365 deja de ser una cámara y se convierte en una barrera de protección. Usted mantiene una <strong>biblioteca de plantillas</strong> de directivas de CA (barra lateral → <strong>Directivas de CA</strong>), asigna plantillas a inquilinos, las despliega, y Panoptica365 vigila después las directivas activas en busca de deriva — para siempre.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Antes de desplegar</div>
+    <p>Antes de su primer despliegue real, lea la lección de la <em>lista de verificación previa</em> en la tarjeta de Acceso Condicional de Aprender. Las cuentas de emergencia (break-glass) y el inventario de cuentas de servicio no son opcionales. Una directiva de CA desplegada con prisas puede dejar fuera a un cliente entero.</p>
+  </div>
+
+  <h2>Asignar plantillas a un inquilino</h2>
+
+  <ol>
+    <li>Abra el panel del inquilino → pestaña <strong>Directivas de CA</strong>. En un inquilino recién incorporado verá <em>«Aún no hay plantillas de política CA asignadas a este inquilino.»</em></li>
+    <li>Haga clic en <strong>Asignar plantilla</strong>. Un selector lista su biblioteca de plantillas (menos lo que ya esté asignado).</li>
+    <li>Marque las plantillas que quiera — o <strong>Seleccionar todo</strong> — y confirme.</li>
+  </ol>
+
+  <p>Cada asignación se convierte en una tarjeta en la pestaña, con el nombre de la plantilla, una insignia de estado de desviación, los controles de <strong>Concesión</strong>, los <strong>Usuarios</strong> y <strong>Aplicaciones</strong> de destino, un desplegable de enrutamiento de <strong>Alertas</strong> (correo, PSA, ambos o ninguno — por asignación) y la <strong>Última verificación</strong>.</p>
+
+  <h2>Desplegar</h2>
+
+  <p>Una plantilla asignada todavía no está activa. En la tarjeta de la asignación:</p>
+
+  <ul>
+    <li><strong>Desplegar</strong> — crea la directiva activa en el inquilino a partir de la plantilla. Los marcadores específicos del inquilino (como las ubicaciones con nombre) se resuelven en el momento del despliegue.</li>
+    <li><strong>Verificar desviación</strong> — compara la directiva activa con la plantilla ahora mismo, bajo demanda (el ciclo programado de deriva también lo hace continuamente).</li>
+  </ul>
+
+  <p>Despliegue primero en <strong>modo solo informe</strong> cuando la plantilla esté configurada así, observe el impacto en los inicios de sesión y luego pase a Activado — esa disciplina se trata en las lecciones de CA.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="La disciplina de despliegue: desplegar en modo solo informe primero, observar el impacto en los inicios de sesión, luego pasar a Activado.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="dpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="28" y="44" width="196" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="126" y="71" fill="#A8E1F8" font-size="13" font-weight="600">Modo solo informe</text>
+
+        <rect x="262" y="44" width="196" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="71" fill="#C4D4E8" font-size="12">Observar inicios de sesión</text>
+
+        <rect x="496" y="44" width="196" height="44" rx="22" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="594" y="71" fill="#7DD9F9" font-size="13" font-weight="700">Pasar a Activado</text>
+      </g>
+      <path d="M224 66 H262" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+      <path d="M458 66 H496" stroke="#335F92" stroke-width="2" marker-end="url(#dpArr)"/>
+    </svg>
+    <figcaption>La disciplina de despliegue cuando la plantilla lo permite: solo informe primero, observar, luego activar.</figcaption>
+  </figure>
+
+  <h2>La deriva: las insignias</h2>
+
+  <p>Cada tarjeta de asignación lleva una insignia de estado:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Insignia</th><th>Qué significa</th></tr></thead>
+      <tbody>
+        <tr><td><strong>OK</strong></td><td>la directiva activa coincide con la plantilla.</td></tr>
+        <tr><td><strong>con desviación</strong></td><td>algo cambió en el inquilino; la directiva ya no coincide.</td></tr>
+        <tr><td><strong>aceptada</strong></td><td>la desviación existe, pero un operador la revisó y la aceptó.</td></tr>
+        <tr><td><strong>faltante</strong></td><td>la directiva no existe en el inquilino (eliminada, o nunca desplegada).</td></tr>
+        <tr><td><strong>no verificada</strong></td><td>aún sin comparar.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Cuando se detecta una desviación, también recibe una <strong>alerta</strong> por el enrutamiento que eligió, con análisis de IA adjunto. El registro de desviaciones de la tarjeta muestra la cronología: qué campo cambió, esperado vs. real, eventos de desactivación o eliminación, y remediaciones.</p>
+
+  <h2>Responder a la deriva</h2>
+
+  <p>Tiene tres opciones honestas:</p>
+
+  <ol>
+    <li><strong>Aplicar plantilla</strong> (también mostrado como <strong>Remediar</strong>) — sobrescribe la directiva activa con la plantilla. <strong>Advertencia, y el botón habla en serio:</strong> esto borra los <code>excludeUsers</code> / <code>excludeGroups</code> propios del inquilino que se añadieron directamente en el portal. Si esas exclusiones son legítimas, deben vivir en la plantilla o como exenciones, no como ediciones hechas en la consola de Microsoft.</li>
+    <li><strong>Aceptar la desviación.</strong> Hacer clic en una directiva con desviación abre <strong>Aceptar desviación de política CA</strong>, que muestra lo esperado vs. lo real campo por campo, con dos caminos:
+      <ul>
+        <li><strong>Aceptar con vencimiento</strong> <em>(recomendado)</em> — la desviación queda aceptada hasta la fecha que elija (180 días por defecto), con un <strong>motivo obligatorio</strong>, y los principales excluidos pasan a la tabla de <strong>Exenciones</strong>, de modo que los evaluadores de alertas los omiten hasta el vencimiento. Acotado en el tiempo, documentado, auditable.</li>
+        <li><strong>Aceptar una vez, para siempre</strong> — aceptada indefinidamente; solo vuelve a dispararse si cambia la firma de la desviación. Úselo con moderación.</li>
+      </ul>
+    </li>
+    <li><strong>Actualizar la plantilla</strong> — si el cambio es en realidad correcto para todos los inquilinos, corríjalo en el origen, en la biblioteca de Directivas de CA.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Las tres opciones para responder a la deriva: aplicar la plantilla, aceptar la desviación, o actualizar la plantilla.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- aplicar plantilla -->
+        <rect x="28" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="131" y="70" text-anchor="middle" fill="#C4D4E8" font-size="13.5" font-weight="600">Aplicar plantilla</text>
+        <text x="131" y="92" text-anchor="middle" fill="#6B85A6" font-size="11.5">sobrescribe la activa</text>
+        <text x="131" y="108" text-anchor="middle" fill="#6B85A6" font-size="11.5">con la plantilla</text>
+        <text x="131" y="136" text-anchor="middle" fill="#FF8A98" font-size="11.5">borra exclusiones del</text>
+        <text x="131" y="151" text-anchor="middle" fill="#FF8A98" font-size="11.5">inquilino</text>
+
+        <!-- aceptar la desviacion -->
+        <rect x="257" y="40" width="206" height="120" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="70" text-anchor="middle" fill="#A8E1F8" font-size="13.5" font-weight="600">Aceptar la desviación</text>
+        <text x="360" y="96" text-anchor="middle" fill="#2EE8A0" font-size="11.5">con vencimiento — motivo</text>
+        <text x="360" y="111" text-anchor="middle" fill="#2EE8A0" font-size="11.5">obligatorio, acotada</text>
+        <text x="360" y="137" text-anchor="middle" fill="#6B85A6" font-size="11.5">o una vez, para siempre</text>
+        <text x="360" y="152" text-anchor="middle" fill="#6B85A6" font-size="11.5">(con moderación)</text>
+
+        <!-- actualizar la plantilla -->
+        <rect x="486" y="40" width="206" height="120" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="589" y="70" text-anchor="middle" fill="#C4D4E8" font-size="13" font-weight="600">Actualizar la plantilla</text>
+        <text x="589" y="96" text-anchor="middle" fill="#6B85A6" font-size="11.5">¿correcto para todos los</text>
+        <text x="589" y="111" text-anchor="middle" fill="#6B85A6" font-size="11.5">inquilinos? corríjalo en el</text>
+        <text x="589" y="126" text-anchor="middle" fill="#6B85A6" font-size="11.5">origen, en la biblioteca</text>
+        <text x="589" y="141" text-anchor="middle" fill="#6B85A6" font-size="11.5">de Directivas de CA</text>
+      </g>
+    </svg>
+    <figcaption>Tres respuestas honestas a una directiva con desviación — cada una registrada en el registro de auditoría.</figcaption>
+  </figure>
+
+  <h2>Adoptar la configuración existente en su sitio (origen del inquilino)</h2>
+
+  <p>A veces incorpora un inquilino que <strong>ya tiene</strong> sus propias directivas de Acceso Condicional — directivas que usted no envió desde su biblioteca. No está obligado a imponer sus plantillas el primer día. <strong>Importar la configuración existente</strong> le permite adoptar lo que ya está allí y supervisarlo primero — una etapa deliberada de «supervisar lo que hay aquí, no imponer todavía».</p>
+
+  <p>En la pestaña <strong>Directivas de AC</strong>, haga clic en <strong>Importar la configuración existente</strong>. Panoptica lee las directivas de AC vigentes en el inquilino y crea una tarjeta para cada una que aún no administra, marcada como <strong>Origen: inquilino</strong> (borde izquierdo rojo y distintivo) para distinguirlas de sus plantillas implementadas. Registra el estado actual de cada directiva como estado inicial y vigila los cambios a partir de ahí.</p>
+
+  <p>Algunos puntos que conviene saber:</p>
+
+  <ul>
+    <li><strong>Sin duplicados.</strong> Las directivas que ya implementó desde una plantilla se reconocen por su identificador de objeto y se omiten — incluso si las renombró en el inquilino. El botón permanece disponible, y volver a hacer clic es seguro: solo se adopta lo que es genuinamente nuevo.</li>
+    <li><strong>Las directivas administradas por Microsoft</strong> también se adoptan, señaladas como tales. Donde Microsoft rechaza un cambio, la acción se degrada con elegancia («administrada por Microsoft, no se puede cambiar aquí») en lugar de fallar. Los <strong>valores predeterminados de seguridad</strong> <em>no</em> son una directiva — se muestran como un simple indicador activado/desactivado, nunca como una tarjeta.</li>
+    <li><strong>Deriva respecto al estado original.</strong> La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em> — no «se desvía de su estándar», porque todavía no hay una plantilla detrás. La supervisión diaria detecta los cambios; una directiva de AC totalmente nueva creada directamente en la consola se detecta en minutos.</li>
+  </ul>
+
+  <h3>Qué puede hacer con una tarjeta de origen del inquilino</h3>
+
+  <p>Abra las <strong>Acciones</strong> de una tarjeta para tres opciones distintas:</p>
+
+  <ol>
+    <li><strong>Dejar de supervisar</strong> — quita la tarjeta y deja de vigilarla. <strong>Esto nunca modifica el inquilino</strong> — es una acción solo de Panoptica.</li>
+    <li><strong>Desactivar en el inquilino</strong> — desactiva la directiva de forma reversible (la pone como <em>deshabilitada</em>). La tarjeta permanece, marcada como Inactiva, y <strong>Restaurar</strong> la devuelve exactamente a su estado. De forma predeterminada, una tarjeta desactivada solo alerta si alguien la reactiva fuera de Panoptica.</li>
+    <li><strong>Eliminar del inquilino</strong> — quita permanentemente la directiva del inquilino. La confirmación es proporcional al riesgo: eliminar le pide que escriba su propio nombre.</li>
+  </ol>
+
+  <p>Cada una de estas acciones queda registrada en el registro de auditoría y en el registro de cambios del inquilino, con su nombre y el nombre de la directiva.</p>
+
+  <h3>Vigilar lo que aparezca más tarde</h3>
+
+  <p>Más allá de la adopción, Panoptica vigila <strong>cada</strong> inquilino — con plantillas o sin ellas — en busca de una directiva de AC que aparezca <strong>fuera de Panoptica</strong> (creada directamente en la consola de Entra). Cuando surge, se convierte en una tarjeta de origen del inquilino y activa una alerta <em>«configuración creada fuera de Panoptica»</em>, para que un cambio hecho al margen de su proceso no se le escape. A medida que después implemente sus propios estándares, puede desactivar o eliminar las directivas nativas desordenadas — o simplemente seguir supervisándolas.</p>
+
+  <h2>Nota operativa</h2>
+
+  <div class="callout insight">
+    <div class="clabel">Nota operativa</div>
+    <p>La deriva en una directiva de CA es una de las alertas más valiosas que produce la plataforma. Un técnico de soporte que excluye «temporalmente» a un usuario de la MFA es exactamente así como empiezan las brechas — y exactamente lo que esto detecta. No se acostumbre a aceptar desviaciones por reflejo; cada aceptación debería tener un motivo que le resulte cómodo leer en el registro de auditoría dentro de un año.</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El bucle de cumplimiento en producción — deriva, señales y qué vigilar</title>
+<meta name="lesson:title" content="El bucle de cumplimiento en producción — deriva, señales y qué vigilar">
+<meta name="lesson:subtitle" content="Cómo se comporta realmente la señal de cumplimiento Intune→Entra→AC en producción: tiempos, modos de fallo y lo que expone Panoptica365.">
+<meta name="lesson:icon" content="repeat">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Ajustes de plantillas de Intune</span> <span class="sep">·</span> <span>El bucle de cumplimiento en producción</span></div>
+  <h1>El bucle de cumplimiento en producción — deriva, señales y qué vigilar</h1>
+  <p class="dek">Cómo se comporta realmente la señal de cumplimiento Intune→Entra→AC en producción: tiempos, modos de fallo y lo que expone Panoptica365.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El bucle de cumplimiento en producción: dispositivo, Intune, Entra y Acceso Condicional en ciclo, con el retraso desde el cambio de estado hasta el inicio de sesión yendo de segundos a unas ocho horas.">
+      <defs>
+        <radialGradient id="clBg" cx="50%" cy="38%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="clArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#clBg)"/>
+
+      <!-- the four nodes of the loop, laid out as a cycle -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Device (left) -->
+        <g transform="translate(170,170)">
+          <rect x="-92" y="-44" width="184" height="88" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.6"/>
+          <text x="0" y="-6" fill="#C4D4E8" font-size="18" font-weight="600">Dispositivo</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="12">evalúa su estado</text>
+        </g>
+        <!-- Intune (upper mid) -->
+        <g transform="translate(450,86)">
+          <rect x="-92" y="-40" width="184" height="80" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="18" font-weight="600">Intune</text>
+          <text x="0" y="22" fill="#6B85A6" font-size="12">recibe el reporte</text>
+        </g>
+        <!-- Entra (right mid) -->
+        <g transform="translate(730,86)">
+          <rect x="-92" y="-40" width="184" height="80" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+          <text x="0" y="-2" fill="#A8E1F8" font-size="18" font-weight="600">Entra ID</text>
+          <text x="0" y="22" fill="#6B85A6" font-size="12">registro de dispositivo</text>
+        </g>
+        <!-- Conditional Access (right) -->
+        <g transform="translate(950,170)">
+          <rect x="-100" y="-44" width="200" height="88" rx="14" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="0" y="-6" fill="#7DD9F9" font-size="17" font-weight="700">Acceso Condicional</text>
+          <text x="0" y="18" fill="#6B85A6" font-size="11.5">lee el estado al iniciar sesión</text>
+        </g>
+      </g>
+
+      <!-- flow arrows around the cycle -->
+      <g fill="none" stroke="#5CCBF4" stroke-width="2.4">
+        <path d="M246 126 C300 108 326 100 354 100" marker-end="url(#clArr)"/>
+        <path d="M542 86 H634" marker-end="url(#clArr)"/>
+        <path d="M822 100 C884 100 920 100 920 124" marker-end="url(#clArr)"/>
+      </g>
+      <!-- re-eval return arrow (CA back to device) -->
+      <path d="M886 214 C700 296 440 296 254 214" fill="none" stroke="#2A7FA3" stroke-width="2" stroke-dasharray="5 6" marker-end="url(#clArr)"/>
+      <text x="570" y="278" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13">reevaluación en la próxima sincronización</text>
+
+      <!-- step labels on the forward arrows -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle" fill="#9FB4CE" font-size="12">
+        <text x="300" y="150">reporta estado</text>
+        <text x="588" y="70" font-size="11">escribe cumplimiento</text>
+        <text x="884" y="90">lee al iniciar sesión</text>
+      </g>
+
+      <!-- lag legend -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="378" y="300" width="364" height="30" rx="15" fill="#0C2038" stroke="#1F3C5C"/>
+        <text x="560" y="320" text-anchor="middle" fill="#A8E1F8" font-size="13.5">retraso acumulado: segundos a ~8 horas</text>
+      </g>
+    </svg>
+    <figcaption>El bucle tal como corre en producción: dispositivo a Intune a Entra a Acceso Condicional, con el nuevo estado reflejado entre segundos y unas ocho horas después.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La tarjeta 1 lección 3 describió el bucle de cumplimiento como un diagrama de cinco pasos: Intune fija política en el dispositivo → el dispositivo reporta estado → Intune escribe cumplimiento a Entra → AC lee cumplimiento → AC decide. Limpio y abstracto.</p>
+
+  <p>En producción, el bucle es más enmarañado. Los dispositivos se van fuera de línea y el bucle se pausa. Las políticas se actualizan y los dispositivos tardan horas en reevaluarse. La evaluación de cumplimiento depende de señales que a su vez dependen de otras señales (Defender debe reportar saludable <em>y</em> las firmas deben estar al día <em>y</em> el firewall debe estar activo...). Cuando algo se rompe, la pregunta raramente es «¿está roto el bucle de cumplimiento?» — es «<em>¿cuál</em> de la docena de cosas que podrían ir mal ha ido mal?».</p>
+
+  <p>Esta lección recorre cómo se comporta realmente el bucle de cumplimiento en producción: de dónde vienen las señales, con qué frecuencia se actualizan, qué pinta tienen los modos de fallo, y cómo Panoptica365 expone los patrones que importan.</p>
+  </div>
+
+  <h2>El flujo de señal, con tiempos</h2>
+
+  <p>El estado de cumplimiento visible en una política de AC en el momento de iniciar sesión ha viajado a través de varios sistemas con sus propias cadencias de actualización:</p>
+
+  <ol>
+    <li><strong>El dispositivo evalúa su propio estado</strong> contra la política de cumplimiento asignada. En Windows, esto típicamente ocurre al arrancar el dispositivo, al iniciar sesión el usuario, en la sincronización con Intune (cada 8 horas por defecto), y bajo demanda si el usuario o el admin disparan una sincronización. Las plataformas móviles tienen cadencias similares pero separadas.</li>
+    <li><strong>El dispositivo reporta su estado de cumplimiento a Intune.</strong> Es la llamada de red desde el dispositivo → Intune. Requiere que el dispositivo esté en línea; se encola si está fuera de línea.</li>
+    <li><strong>Intune escribe el atributo de cumplimiento al registro de dispositivo de Entra ID.</strong> Es un paso de sincronización Intune → Entra. Típicamente casi en tiempo real cuando ambos servicios están sanos pero puede tener retraso durante periodos de alta carga.</li>
+    <li><strong>AC lee el registro de dispositivo de Entra al iniciar sesión.</strong> Es el momento de la evaluación. AC mira el estado actual de cumplimiento del dispositivo en Entra.</li>
+  </ol>
+
+  <p>El retraso acumulado entre «el estado del dispositivo cambia» y «AC refleja el nuevo estado al iniciar sesión» puede estar en cualquier sitio desde segundos hasta unas 8 horas, dependiendo de en qué punto del ciclo ocurra el cambio. Para la mayoría de los escenarios operativos, el retraso está en el rango de minutos-a-horas.</p>
+
+  <p>Esto importa porque los usuarios a veces reportan «arreglé el problema pero sigo bloqueado» — y la respuesta normalmente es «la señal todavía no se ha propagado; inténtalo de nuevo en 30 minutos». Conocer los tiempos te ayuda a establecer las expectativas del usuario correctamente.</p>
+
+  <h2>Los modos de fallo</h2>
+
+  <p>El bucle se rompe de formas identificables. Cada una tiene una remediación distinta.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Los cinco modos de fallo del bucle de cumplimiento nombrados en la lección: Aún no evaluado, No conforme persistente, Flapping, Conforme pero roto, y Roto silenciosamente.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CINCO FORMAS EN QUE EL BUCLE SE ROMPE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(40,58)">
+          <rect x="0" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="18" y="26" fill="#C4D4E8" font-size="14">«Aún no evaluado»</text>
+        </g>
+        <g transform="translate(368,58)">
+          <rect x="0" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="18" y="26" fill="#FFC04D" font-size="14">«No conforme» persistente</text>
+        </g>
+        <g transform="translate(40,108)">
+          <rect x="0" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+          <text x="18" y="26" fill="#FFC04D" font-size="14">Flapping de cumplimiento</text>
+        </g>
+        <g transform="translate(368,108)">
+          <rect x="0" y="0" width="312" height="40" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="18" y="26" fill="#C4D4E8" font-size="14">Conforme pero roto</text>
+        </g>
+        <g transform="translate(40,158)">
+          <rect x="0" y="0" width="640" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="18" y="28" fill="#FF8A98" font-size="14" font-weight="600">Bucle roto silenciosamente</text>
+          <text x="372" y="28" fill="#E2A0AA" font-size="11.5">parece bien, no lo está</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Cada modo de fallo tiene una pinta distinta y necesita una respuesta distinta — el peligroso es el que nunca se anuncia.</figcaption>
+  </figure>
+
+  <h3>«Aún no evaluado»</h3>
+
+  <p>Un dispositivo muestra estado de cumplimiento «Aún no evaluado» en el registro de dispositivo de Entra. Hay cuatro razones distintas por las que esto puede ocurrir, y necesitan respuestas distintas:</p>
+
+  <ul>
+    <li><strong>El dispositivo es totalmente nuevo en Intune</strong> — recién inscrito, la primera evaluación no ha completado. Se resolverá por sí solo dentro del primer ciclo de sincronización de 8 horas.</li>
+    <li><strong>El dispositivo no se ha sincronizado con Intune en mucho tiempo</strong> — probablemente fuera de línea. Se resolverá cuando el dispositivo vuelva en línea y se resincronice.</li>
+    <li><strong>El cliente de Intune del dispositivo está roto y no sincroniza.</strong> <em>No</em> se resolverá por sí solo — necesita intervención del operador (forzar sincronización, reparar el cliente, o reinscribir).</li>
+    <li><strong>El dispositivo no está realmente gestionado por Intune en absoluto.</strong> El ejemplo clásico: un Windows Server que está incorporado en Microsoft Defender for Endpoint pero nunca se ha inscrito en Intune. El servidor aparece en la lista de Dispositivos Gestionados por Intune porque Entra sabe de él, pero no tiene política de cumplimiento de Intune asignada y nunca obtendrá un veredicto de cumplimiento por mucho que esperes. Lo mismo ocurre con dispositivos registrados en Entra pero no inscritos en MDM, dispositivos en un estado de confianza híbrido donde la inscripción en MDM falló, y dispositivos gestionados por otro MDM (raro en pequeña empresa, pero posible). Estos aparecen como «no evaluados» para siempre — no es un estado transitorio, es uno estructural.</li>
+  </ul>
+
+  <p>Las políticas de AC típicamente tratan «Aún no evaluado» como <strong>no conforme</strong>. Es el valor por defecto seguro — un dispositivo cuyo estado desconocemos no debería recibir acceso de dispositivo-conforme. Las implicaciones difieren según la razón:</p>
+
+  <ul>
+    <li>Para las dos primeras razones (transitorias), los usuarios pueden estar bloqueados temporalmente y el acceso se restaura una vez que la evaluación completa. Planifica para esto — la incorporación de dispositivos nuevos no debería ocurrir un viernes por la tarde si el usuario necesita iniciar sesión durante el fin de semana.</li>
+    <li>Para la tercera razón (cliente roto), los usuarios siguen bloqueados hasta que el problema subyacente se arregle. Investiga por dispositivo.</li>
+    <li>Para la cuarta razón (no gestionado por Intune), el dispositivo <em>permanentemente</em> fallará cualquier política de AC que exija dispositivo conforme. Esto normalmente no importa para servidores (no inician sesión en M365 interactivamente), pero ocasionalmente sorprende a un operador que ha puesto un ámbito de AC «exigir dispositivo conforme» que accidentalmente incluye cuentas de servicio corriendo en esos servidores. Si alguna vez ves una cuenta de servicio bloqueada por AC que funcionaba ayer, comprueba si el dispositivo en el que corre está gestionado por Intune — si no lo está, la política de AC y el estado de inscripción del dispositivo son fundamentalmente incompatibles.</li>
+  </ul>
+
+  <h3>«No conforme» persistente</h3>
+
+  <p>Un dispositivo muestra no conforme durante horas o días y no se recupera. Causas:</p>
+
+  <ul>
+    <li>Un ajuste requerido no está realmente en su sitio. Defender está deshabilitado, BitLocker está apagado, el firewall está deshabilitado. La comprobación de cumplimiento está pillando la brecha correctamente.</li>
+    <li>Un ajuste requerido está en su sitio pero la evaluación de Intune lo reporta mal. Habitual con: las firmas de Defender brevemente obsoletas durante una actualización, BitLocker temporalmente deshabilitado para una operación de recuperación, el firewall brevemente apagado durante un reinicio de servicio.</li>
+    <li>El reporte del dispositivo está fuera de sincronía. El dispositivo está realmente bien pero su estado auto-reportado no se ha refrescado.</li>
+  </ul>
+
+  <p>Para no conformidad persistente que dure más de 24 horas, el flujo es:</p>
+
+  <ol>
+    <li>Comprueba el portal de Intune para la razón concreta del fallo. El estado de cumplimiento muestra <em>por qué</em> el dispositivo es no conforme — qué comprobación específica falló.</li>
+    <li>Verifica en el propio dispositivo. Usa <code>Get-MpComputerStatus</code> (PowerShell) para el estado de Defender, <code>manage-bde -status</code> para BitLocker, la UI de Defender Firewall para el estado del firewall.</li>
+    <li>Si el dispositivo es genuinamente no conforme, arregla el problema subyacente. Reactiva Defender, completa el cifrado de BitLocker, vuelve a encender el firewall.</li>
+    <li>Si el dispositivo está bien pero Intune lo reporta mal, fuerza una sincronización (Ajustes → Cuentas → Acceder al trabajo o centro educativo → Sincronizar, o ejecuta <code>dsregcmd /sync</code> en PowerShell). Espera 30 minutos a que el nuevo estado se propague.</li>
+    <li>Si la sincronización no lo resuelve, el cliente de Intune del dispositivo puede necesitar reparación o reinscripción.</li>
+  </ol>
+
+  <h3>Flapping de cumplimiento</h3>
+
+  <p>Un dispositivo oscila entre conforme y no conforme rápidamente — cada pocas horas, cada día, en su propio calendario. Esto es «flapping» y es uno de los patrones más molestos de diagnosticar. Causas habituales:</p>
+
+  <ul>
+    <li><strong>Tiempos de las firmas de Defender.</strong> Las firmas de Defender expiran en una cadencia regular. Si la actualización llega ligeramente después de la evaluación de cumplimiento, el dispositivo pasa a no conforme brevemente hasta que llega la siguiente actualización de firmas.</li>
+    <li><strong>Conflicto entre perfiles de configuración.</strong> Dos perfiles de configuración de Intune configuran el mismo ajuste de forma distinta. El dispositivo alterna entre los dos estados según cuál se aplicó más recientemente.</li>
+    <li><strong>Deshabilitación iniciada por el usuario.</strong> Un usuario con derechos de admin local deshabilita Defender (u otro servicio requerido), la comprobación de cumplimiento lo pilla, el dispositivo es no conforme. El usuario vuelve a encender Defender (o se reinicia automáticamente según un calendario). El dispositivo vuelve a conforme. Se repite.</li>
+    <li><strong>Condición de carrera en los tiempos de sincronización.</strong> La evaluación de cumplimiento corre en un calendario ligeramente distinto al de la aplicación del perfil de configuración. Un dispositivo que está justo al borde de un umbral puede oscilar de un lado a otro según qué comprobación ocurrió más recientemente.</li>
+  </ul>
+
+  <p>El flapping suele arreglarse identificando la causa subyacente. Detectarlo hoy es manual — observa el historial de cumplimiento por-dispositivo del portal de Intune para dispositivos que han oscilado de estado varias veces en una ventana corta, e investiga esos específicamente.</p>
+
+  <h3>Conforme pero roto</h3>
+
+  <p>Un dispositivo muestra conforme pero el usuario no puede iniciar sesión en M365. La política de AC está exigiendo dispositivo conforme, el dispositivo es conforme, y sin embargo el inicio de sesión falla. Esto es raro pero pasa. Causas:</p>
+
+  <ul>
+    <li><strong>Objeto de dispositivo en Entra obsoleto.</strong> El registro de dispositivo en Entra está duplicado o huérfano de inscripciones anteriores. AC lee un registro de dispositivo distinto del que Intune está reportando.</li>
+    <li><strong>Discrepancia de estado de confianza.</strong> La unión híbrida a Azure AD está rota; el dispositivo cree que está unido en híbrido pero Entra tiene una vista distinta.</li>
+    <li><strong>Discrepancia de condición de política de AC.</strong> La política de AC lee una señal de cumplimiento específica que es distinta del estado general de cumplimiento.</li>
+  </ul>
+
+  <p>Para estos casos, el dispositivo normalmente necesita ser limpiado — desunir y reunir Entra, reparar el estado de confianza, o eliminar el registro de dispositivo huérfano manualmente.</p>
+
+  <h3>Bucle de cumplimiento roto silenciosamente</h3>
+
+  <p>El peor modo de fallo: el bucle parece estar funcionando pero no lo está. Un dispositivo es no conforme en el SO pero Intune lo está reportando conforme. AC concede acceso. Nadie lo nota porque nada aflora como problema.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Por qué este es peligroso</div>
+    <p>Las causas suelen ser estructurales — cliente de Intune manipulado, malware afectando al agente de reporte, estado profundamente roto de una inscripción chapuza. Estos casos son raros pero merece la pena conocerlos: no asumas que el estado de cumplimiento es verdadero solo porque se reporte como verdadero. Comprobaciones puntuales periódicas en dispositivos aleatorios, comparando el estado reportado con el estado real, son una práctica útil de auditoría.</p>
+  </div>
+
+  <h2>El papel de Windows Health Monitoring</h2>
+
+  <p>La biblioteca de Panoptica365 incluye una pequeña plantilla (595 bytes) llamada <strong>Windows Health Monitoring</strong>. Hace una sola cosa:</p>
+
+  <ul>
+    <li>Habilita <code>allowDeviceHealthMonitoring</code>.</li>
+    <li>Limita la monitorización a <code>bootPerformance,windowsUpdates</code>.</li>
+  </ul>
+
+  <p>Esta plantilla configura Windows para recoger telemetría de salud sobre el rendimiento de arranque y la actividad de Windows Update. Los datos alimentan a la vista de salud de dispositivo de Intune y a Endpoint Analytics si el cliente lo tiene habilitado.</p>
+
+  <p>No es un control de seguridad. Es un control de <em>observabilidad</em>. Le cuenta al operador cómo se está comportando el parque Windows del cliente a lo largo del tiempo — arranques lentos, fallos frecuentes, fallos repetidos de actualización. Los datos son útiles para diagnóstico proactivo («este dispositivo va a fallar pronto»), no para evaluación de cumplimiento.</p>
+
+  <p>Para los propósitos del bucle de cumplimiento de Panoptica365, Windows Health Monitoring es esencialmente invisible — los datos no fluyen al estado de cumplimiento. Pero vale la pena saber que la plantilla existe y qué hace, porque los operadores que miren el portal de Intune la verán desplegada junto a las plantillas de seguridad.</p>
+
+  <h2>Cómo expone Panoptica365 el bucle de cumplimiento</h2>
+
+  <p>El panel del cliente de Panoptica365 toma una rebanada deliberadamente fina del bucle de cumplimiento. Tres superficies, todas de alto nivel:</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 210" role="img" aria-label="Las tres superficies de alto nivel que Panoptica365 muestra para el bucle de cumplimiento: la lista de Dispositivos Gestionados por Intune, el tile Dispositivos Conformes, y Dispositivos por SO.">
+      <rect width="720" height="210" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="360" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LAS TRES SUPERFICIES DE PANOPTICA365</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Managed Devices list -->
+        <g transform="translate(36,60)">
+          <rect x="0" y="0" width="200" height="118" rx="10" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="11.5" font-weight="600">Dispositivos Gestionados</text>
+          <line x1="20" y1="44" x2="180" y2="44" stroke="#1F3C5C"/>
+          <line x1="20" y1="68" x2="180" y2="68" stroke="#1F3C5C"/>
+          <line x1="20" y1="92" x2="180" y2="92" stroke="#1F3C5C"/>
+          <circle cx="30" cy="56" r="4" fill="#2EE8A0"/><text x="44" y="60" fill="#6B85A6" font-size="11">SO · estado · sinc.</text>
+          <circle cx="30" cy="80" r="4" fill="#FFC04D"/><text x="44" y="84" fill="#6B85A6" font-size="11">SO · estado · sinc.</text>
+          <circle cx="30" cy="104" r="4" fill="#52708F"/><text x="44" y="108" fill="#6B85A6" font-size="11">SO · estado · sinc.</text>
+        </g>
+        <!-- Compliant Devices tile -->
+        <g transform="translate(260,60)">
+          <rect x="0" y="0" width="200" height="118" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="12" font-weight="600">Dispositivos Conformes</text>
+          <text x="100" y="82" text-anchor="middle" fill="#2EE8A0" font-size="38" font-weight="700">94%</text>
+          <text x="100" y="106" text-anchor="middle" fill="#6B85A6" font-size="10.5">X de Y conformes, Z sin eval.</text>
+        </g>
+        <!-- Devices by OS -->
+        <g transform="translate(484,60)">
+          <rect x="0" y="0" width="200" height="118" rx="10" fill="#0E2236" stroke="#2A6F9E"/>
+          <text x="100" y="26" text-anchor="middle" fill="#A8E1F8" font-size="12.5" font-weight="600">Dispositivos por SO</text>
+          <rect x="24" y="42" width="120" height="12" rx="6" fill="#5CCBF4"/><text x="156" y="52" fill="#9FB4CE" font-size="11">Win</text>
+          <rect x="24" y="62" width="64" height="12" rx="6" fill="#2A7FA3"/><text x="100" y="72" fill="#9FB4CE" font-size="11">Win Server</text>
+          <rect x="24" y="82" width="44" height="12" rx="6" fill="#52708F"/><text x="80" y="92" fill="#9FB4CE" font-size="11">iOS</text>
+          <rect x="24" y="102" width="30" height="12" rx="6" fill="#6B85A6"/><text x="66" y="112" fill="#9FB4CE" font-size="11">Android</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Toda la rebanada del panel: una lista de dispositivos para escanear, un porcentaje como titular, y un desglose por SO — nada más pesado.</figcaption>
+  </figure>
+
+  <p><strong>La lista de Dispositivos Gestionados por Intune.</strong> Cada dispositivo inscrito en Intune, con SO, estado actual de cumplimiento (conforme / no conforme / no evaluado), usuario asignado y timestamp de la última sincronización. El cubo «no evaluado» también cubre dispositivos que Intune no gestiona en absoluto (como Windows Server) — aparecen en la lista porque Entra sabe de ellos, pero nunca obtienen un veredicto de cumplimiento. La tabla que escaneas cuando algo huele mal.</p>
+
+  <p><strong>El tile «Dispositivos Conformes».</strong> Porcentaje como titular (p. ej., «94%» o «60%»), coloreado por postura — verde cuando saludable, rojo cuando débil. El subtítulo dice «X de Y conformes, Z no evaluados», dándote tres números en una línea: cuántos dispositivos evaluó Panoptica365, cuántos de esos pasaron, y cuántos dispositivos inscritos nunca obtuvieron veredicto en absoluto. El denominador del porcentaje es el conjunto evaluado; los no evaluados se exponen por separado en lugar de tirar la ratio hacia abajo. Aparece una flecha de tendencia cuando el porcentaje se mueve entre sondeos — roja hacia abajo en una caída, verde hacia arriba en una mejora. El punto: no tienes que recordar el número de ayer para saber en qué dirección se está moviendo el cliente.</p>
+
+  <p><strong>Dispositivos por SO.</strong> Un desglose por cuenta por sistema operativo (Windows, Windows Server, iOS, Android, etc.). Útil para comprobar la mezcla de plataformas y para notar cuando una cuenta se mueve inesperadamente (un Mac nuevo aparece, un grupo de dispositivos Windows desaparece).</p>
+
+  <p>Esa es la superficie. Panoptica365 <strong>no</strong> expone, en el panel, las cosas que podrías esperar de un «panel de cumplimiento» en el sentido más pesado:</p>
+
+  <ul>
+    <li>Un desglose de «principales razones de no conformidad» a lo largo del parque</li>
+    <li>Una cola de triaje de «no conforme durante más de 24 horas»</li>
+    <li>Una lista de dispositivos en flapping</li>
+    <li>Llamadas explícitas a la razón de fallo por-dispositivo</li>
+  </ul>
+
+  <p>Esas investigaciones ocurren en el propio portal de Intune, dispositivo a dispositivo. El reparto es intencional: Panoptica365 te dice <em>que</em> el cumplimiento se está moviendo — el contador cayó, un dispositivo cayó a desconocido, la postura general del tenant se está debilitando. La consola de Intune de Microsoft te dice <em>por qué</em> — qué comprobación específica falló, qué ajuste falta, cuál fue el último error del dispositivo.</p>
+
+  <div class="callout insight">
+    <div class="clabel">El reparto, en una línea</div>
+    <p>La implicación para los operadores: usa la vista de cumplimiento de Panoptica365 como cable trampa (escaneo diario, busca cambios) e Intune como la consola de diagnóstico (profundiza una vez que algo parezca mal). Saltarse cualquiera de los lados rompe el flujo — Panoptica365 sola te da la señal sin el diagnóstico; Intune sola te hace iniciar sesión en 30 portales uno a uno para notar la señal en primer lugar.</p>
+  </div>
+
+  <h2>Qué hacen los operadores realmente con esto</h2>
+
+  <p>El flujo de trabajo del día-a-día del operador en torno al bucle de cumplimiento:</p>
+
+  <p><strong>Comprobación matinal (semanal como mínimo, diaria como ideal):</strong> abre el panel del cliente. Mira el tile de dispositivos (contador de conformes, contador de evaluados, total). Si la ratio de conformes ha caído frente a lo que recuerdas de ayer, o la brecha de «desconocidos» se ha ensanchado, escanea la lista de Dispositivos Gestionados por Intune buscando outliers — dispositivos que cayeron a desconocido, dispositivos con timestamps de última sincronización obsoletos, dispositivos que no reconoces.</p>
+
+  <p><strong>Triaje por incidente:</strong> cuando un usuario reporta que no puede iniciar sesión en M365 porque su dispositivo no es conforme, el playbook es el triaje de modo de fallo del principio de esta lección. Abre el dispositivo en el portal de Intune, lee la razón concreta del fallo, verifica en el dispositivo, fuerza la sincronización si es necesario, arregla el problema subyacente.</p>
+
+  <p><strong>Revisión mensual:</strong> para cada cliente, abre el portal de Intune y mira las razones de cumplimiento por-dispositivo a lo largo de los dispositivos no conformes. Reconocimiento de patrones manual: si «Defender deshabilitado» aparece en dispositivos a lo largo de varios clientes, puede haber un script de despliegue o herramienta de RMM deshabilitando Defender inadvertidamente. Si «BitLocker no habilitado» está apareciendo, puede haber hardware (dispositivos sin TPM) que no está pillando la plantilla de BitLocker. Este es trabajo genuinamente manual hoy — Panoptica365 no agrega las razones para ti a lo largo del parque, así que el reconocimiento de patrones depende de que el operador haga los drill-downs.</p>
+
+  <p><strong>Auditoría trimestral:</strong> haz una comprobación puntual de unos pocos dispositivos conformes aleatorios por cliente. Compara el estado reportado con el estado real. Confirma que el bucle está funcionando para esos dispositivos. Normalmente todo bien; ocasionalmente saca a la luz el modo de fallo «roto silenciosamente» que nada más pilla.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>El bucle de cumplimiento tiene tiempos. Comunícaselo a los usuarios.</strong> Cuando un usuario arregla su dispositivo y sigue bloqueado, la explicación más probable es el retraso de propagación, no un problema más profundo. Decirle que espere 30 minutos y vuelva a intentarlo resuelve la mayoría de los casos.</p>
+
+  <p><strong>La no conformidad persistente es una cola de triaje, no un arreglo único.</strong> Los dispositivos aparecen en no conformidad por muchas razones; algunos necesitan atención inmediata (brecha de seguridad), algunos necesitan paciencia (retraso de sincronización), algunos necesitan remediación (cliente de Intune roto). Trata la lista como una responsabilidad operativa recurrente.</p>
+
+  <p><strong>Haz comprobaciones puntuales del caso roto silenciosamente trimestralmente.</strong> El fallo más insidioso del bucle de cumplimiento es el que nunca aflora como problema. Las auditorías de dispositivos aleatorios lo pillan donde nada más lo hace.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">10</div><div class="xt"><b>Importar tus propias plantillas de Intune</b> — cuando la biblioteca empaquetada no cubre lo que necesitas.</div></div>
+    <div class="xl"><div class="xnum">11</div><div class="xt"><b>Operar Intune a escala</b> — deriva, exclusiones, ciclo de vida.</div></div>
+  </div>
+
+  <p>Por ahora: el bucle de cumplimiento es la base que hace que todo en la tarjeta 4 sea <em>valioso</em>. Sin monitorizarlo en producción, las plantillas se despliegan pero su efecto es invisible. Trata el panel de cumplimiento como una superficie operativa diaria.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre la cadencia de evaluación de políticas de cumplimiento (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Compliance policies</a>); referencia de los tiempos de sincronización de Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/remote-actions/device-sync" target="_blank" rel="noopener">Microsoft Learn — Common ways to use Intune</a>); monitorización de salud de dispositivos (<a href="https://learn.microsoft.com/en-us/mem/analytics/overview" target="_blank" rel="noopener">Microsoft Learn — Endpoint Analytics</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

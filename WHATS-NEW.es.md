@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.15 — 2026-06-19
+
+### Nuevo aspecto para las lecciones + La capa humana
+
+Cada lección de **Aprender** — en los ocho temas — se ha rehecho como un artículo con diseño completo, con diagramas, recuadros y tablas, y el centro Aprender ahora las muestra correctamente. Abra cualquier tema y haga clic en una lección: se abre en una vista de lectura limpia con una sola barra de desplazamiento fluida, y sigue el tema de su aplicación — lecciones claras en modo claro, oscuras en modo oscuro. (Los diagramas permanecen sobre su lienzo oscuro, por diseño, para leerse como figuras integradas en la página.) Todo lo demás funciona como antes — los puntos azules de «sin leer», las insignias *Actualizado* y el seguimiento de lectura por usuario — y las lecciones siguen su preferencia de idioma en español, inglés y francés.
+
+### Un informe de estado de la base de datos más claro
+
+La comprobación **Tamaño de la base de datos** en *Estado* ya no muestra una advertencia ámbar solo porque el historial de un inquilino haya crecido — una base de datos sana y activa debe crecer. Ahora simplemente informa el tamaño actual y las tablas más grandes, como referencia, y nunca afecta al estado de salud general.
+
+---
+
 ## Versión 0.2.14 — 2026-06-18
 
 ### ¡Sus datos se ven hermosos!

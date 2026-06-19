@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Defender, Intune, Acceso Condicional — cómo encajan de verdad — Welcome to M365 Cybersecurity</title>
+<meta name="lesson:title" content="Defender, Intune, Acceso Condicional — cómo encajan de verdad">
+<meta name="lesson:subtitle" content="El bucle de cumplimiento en cinco pasos: cómo Intune, Defender y el Acceso Condicional se pasan el relevo en Entra para tomar cada decisión de inicio de sesión.">
+<meta name="lesson:icon" content="puzzle">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Welcome to M365 Cybersecurity</span> <span class="sep">·</span> <span>Cómo encajan</span></div>
+  <h1>Defender, Intune, Acceso Condicional — cómo encajan de verdad</h1>
+  <p class="dek">El bucle de cumplimiento en cinco pasos: cómo Intune, Defender y el Acceso Condicional se pasan el relevo en Entra para tomar cada decisión de inicio de sesión.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="El bucle de cumplimiento: Intune impone una política en el dispositivo, el dispositivo reporta su estado, Intune escribe un atributo de cumplimiento sobre el registro del dispositivo en Entra, el Acceso Condicional lo lee al iniciar sesión, y luego el AC decide.">
+      <defs>
+        <radialGradient id="flBg" cx="50%" cy="38%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="flArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#flBg)"/>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- paso 1 -->
+        <rect x="60" y="118" width="178" height="104" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="84" cy="142" r="13" fill="#10243B" stroke="#4A80BD"/><text x="84" y="147" fill="#5CCBF4" font-size="13" font-weight="700">1</text>
+        <text x="149" y="172" fill="#A8E1F8" font-size="14.5" font-weight="600">Intune</text>
+        <text x="149" y="192" fill="#6B85A6" font-size="11.5">impone una política</text>
+        <text x="149" y="208" fill="#6B85A6" font-size="11.5">en el dispositivo</text>
+
+        <!-- paso 2 -->
+        <rect x="300" y="118" width="178" height="104" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="324" cy="142" r="13" fill="#102A4C" stroke="#4A80BD"/><text x="324" y="147" fill="#5CCBF4" font-size="13" font-weight="700">2</text>
+        <text x="389" y="172" fill="#C4D4E8" font-size="14.5" font-weight="600">Dispositivo</text>
+        <text x="389" y="192" fill="#6B85A6" font-size="11.5">reporta su estado</text>
+        <text x="389" y="208" fill="#6B85A6" font-size="11.5">conforme / no</text>
+
+        <!-- paso 3: el registro del dispositivo en Entra (el puente) -->
+        <rect x="540" y="118" width="178" height="104" rx="12" fill="#102A4C" stroke="#4A80BD" stroke-width="1.6"/>
+        <circle cx="564" cy="142" r="13" fill="#0E2640" stroke="#5CCBF4"/><text x="564" y="147" fill="#7DD9F9" font-size="13" font-weight="700">3</text>
+        <text x="629" y="166" fill="#D0EFFD" font-size="14.5" font-weight="700">Entra ID</text>
+        <text x="629" y="186" fill="#A8E1F8" font-size="11">registro del disp.</text>
+        <text x="629" y="204" fill="#5CCBF4" font-size="11" letter-spacing="1.5">EL PUENTE</text>
+
+        <!-- paso 4 -->
+        <rect x="780" y="118" width="178" height="104" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="804" cy="142" r="13" fill="#10243B" stroke="#4A80BD"/><text x="804" y="147" fill="#5CCBF4" font-size="13" font-weight="700">4</text>
+        <text x="869" y="166" fill="#A8E1F8" font-size="14.5" font-weight="600">Acceso</text>
+        <text x="869" y="184" fill="#A8E1F8" font-size="14.5" font-weight="600">Condicional</text>
+        <text x="869" y="204" fill="#6B85A6" font-size="11.5">lee las señales</text>
+
+        <!-- paso 5: decisión -->
+        <rect x="780" y="250" width="178" height="60" rx="12" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="800" cy="280" r="13" fill="#10243B" stroke="#5CCBF4"/><text x="800" y="285" fill="#7DD9F9" font-size="13" font-weight="700">5</text>
+        <text x="872" y="286" fill="#7DD9F9" font-size="13" font-weight="700">El AC decide</text>
+      </g>
+
+      <!-- flechas 1->2->3->4 -->
+      <path d="M238 170 H300" stroke="#5CCBF4" stroke-width="2.2" marker-end="url(#flArr)"/>
+      <path d="M478 170 H540" stroke="#5CCBF4" stroke-width="2.2" marker-end="url(#flArr)"/>
+      <path d="M718 170 H780" stroke="#5CCBF4" stroke-width="2.2" marker-end="url(#flArr)"/>
+      <path d="M869 222 V250" stroke="#5CCBF4" stroke-width="2.2" marker-end="url(#flArr)"/>
+
+      <text x="149" y="92" text-anchor="middle" fill="#93A8C4" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="2.5">LA SEÑAL DE CONFIANZA SE FORMA</text>
+      <text x="869" y="92" text-anchor="middle" fill="#93A8C4" font-family="Geist,Inter,sans-serif" font-size="11" letter-spacing="2.5">LA SEÑAL SE LEE AL INICIAR SESIÓN</text>
+    </svg>
+    <figcaption>Cinco pasos. Tres productos. Un resultado — una decisión en la puerta.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Recibes un ticket a las 9:14 de la mañana. <em>«Karen no puede iniciar sesión en Outlook desde su portátil. Acaba de cambiar su contraseña la semana pasada. Ayuda, por favor.»</em></p>
+
+  <p>Abres tres pestañas del navegador. La primera es el portal de administración de Entra — miras los registros de inicio de sesión de Karen. La segunda es el portal de Intune — miras el estado de cumplimiento de su dispositivo. La tercera es el portal de Defender XDR — buscas alertas sobre su cuenta.</p>
+
+  <p>Tres portales. Tres equipos diferentes valen la UI. Tres modelos mentales distintos. Y la respuesta a «por qué Karen no puede iniciar sesión» vive en algún lugar de los tres.</p>
+
+  <p>Esta lección es por qué existen esos tres portales, cuál es el trabajo real de cada uno, y cómo encontrar la respuesta al ticket de Karen sin mirar tu reloj cada tres minutos.</p>
+  </div>
+
+  <h2>El bucle de cumplimiento</h2>
+
+  <p>Si solo te llevas un diagrama de todo este programa, debería ser este. Es el <em>bucle de cumplimiento</em>, y es el mecanismo central de la seguridad moderna en M365.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 480" role="img" aria-label="El bucle de cumplimiento en cinco pasos: Intune impone una política en el dispositivo, el dispositivo reporta su estado a Intune, Intune escribe un atributo conforme o no conforme sobre el registro del dispositivo en Entra ID, el usuario inicia sesión y el Acceso Condicional lee el atributo de cumplimiento más el riesgo de usuario y de inicio de sesión desde Entra ID Protection, luego el AC decide permitir, bloquear, permitir-con-MFA, o permitir con controles de sesión.">
+      <rect width="720" height="480" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="clArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5CCBF4"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- 1 -->
+        <g transform="translate(0,28)">
+          <rect x="70" y="0" width="580" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <circle cx="100" cy="28" r="14" fill="#10243B" stroke="#4A80BD"/><text x="100" y="33" text-anchor="middle" fill="#5CCBF4" font-size="14" font-weight="700">1</text>
+          <text x="132" y="33" fill="#C4D4E8" font-size="13.5">Intune impone una política: cifrado activado, SO al día, AV en ejecución.</text>
+        </g>
+        <path d="M360 88 V108" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+        <!-- 2 -->
+        <g transform="translate(0,112)">
+          <rect x="70" y="0" width="580" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+          <circle cx="100" cy="28" r="14" fill="#102A4C" stroke="#4A80BD"/><text x="100" y="33" text-anchor="middle" fill="#5CCBF4" font-size="14" font-weight="700">2</text>
+          <text x="132" y="33" fill="#C4D4E8" font-size="13.5">El dispositivo reporta su estado a Intune (conforme / no conforme).</text>
+        </g>
+        <path d="M360 172 V192" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+        <!-- 3 (wrapped to two lines so nothing overflows) -->
+        <g transform="translate(0,196)">
+          <rect x="70" y="0" width="580" height="74" rx="10" fill="#102A4C" stroke="#4A80BD" stroke-width="1.5"/>
+          <circle cx="100" cy="37" r="14" fill="#0E2640" stroke="#5CCBF4"/><text x="100" y="42" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">3</text>
+          <text x="132" y="32" fill="#D0EFFD" font-size="13.5">Intune escribe «conforme» / «no conforme»</text>
+          <text x="132" y="54" fill="#D0EFFD" font-size="13.5">en el registro del dispositivo en Entra.</text>
+        </g>
+        <path d="M360 274 V294" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+        <!-- 4 -->
+        <g transform="translate(0,298)">
+          <rect x="70" y="0" width="580" height="74" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+          <circle cx="100" cy="37" r="14" fill="#10243B" stroke="#4A80BD"/><text x="100" y="42" text-anchor="middle" fill="#5CCBF4" font-size="14" font-weight="700">4</text>
+          <text x="132" y="29" fill="#C4D4E8" font-size="13.5">El usuario inicia sesión. El Acceso Condicional lee</text>
+          <text x="132" y="49" fill="#C4D4E8" font-size="13.5">el atributo de cumplimiento, más el riesgo de</text>
+          <text x="132" y="67" fill="#93A8C4" font-size="12.5">usuario / inicio de sesión desde Entra ID Protection.</text>
+        </g>
+        <path d="M360 376 V396" stroke="#5CCBF4" stroke-width="2" marker-end="url(#clArr)"/>
+        <!-- 5 -->
+        <g transform="translate(0,400)">
+          <rect x="70" y="0" width="580" height="56" rx="10" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.4"/>
+          <circle cx="100" cy="28" r="14" fill="#10243B" stroke="#5CCBF4"/><text x="100" y="33" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">5</text>
+          <text x="132" y="33" fill="#7DD9F9" font-size="13.5" font-weight="600">El AC decide: permitir, bloquear, con-MFA, o controles de sesión.</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Cinco pasos, tres productos, un bucle — cada inicio de sesión en M365 lo recorre.</figcaption>
+  </figure>
+
+  <p>Cinco pasos. Tres productos. Un resultado — una decisión en la puerta.</p>
+
+  <p>Fíjate en lo que el diagrama también te está diciendo: <strong>el Acceso Condicional no configura el dispositivo, e Intune no permite ni bloquea inicios de sesión</strong>. Cada uno hace exactamente una cosa, y se pasan el relevo a través del atributo de cumplimiento sobre el registro del dispositivo en Entra. El registro del dispositivo en Entra es el puente.</p>
+
+  <p>Esta separación es por qué «no puedo iniciar sesión» puede ser un problema de AC, un problema de Intune <em>o</em> un problema de Defender — y al usuario todos le parecen lo mismo.</p>
+
+  <h2>El trabajo real de cada uno</h2>
+
+  <p>Recorre el bucle.</p>
+
+  <h3>Intune — la autoridad del estado del dispositivo</h3>
+
+  <p>El trabajo de Intune es <em>configurar dispositivos y verificar su estado</em>. No toma decisiones de inicio de sesión. No pilla malware. No bloquea phishing. No investiga incidentes.</p>
+
+  <p>Sí hace:</p>
+
+  <ul>
+    <li><strong>Configurar</strong> el dispositivo: empuja BitLocker, empuja políticas de Defender, empuja ajustes del navegador, empuja instalaciones de aplicaciones, empuja el fondo de pantalla si te sientes cruel.</li>
+    <li><strong>Aplicar políticas de cumplimiento</strong>: pone el listón de lo que «sano» significa (versión de Windows ≥ X, BitLocker activado, firma de AV ≤ N días, sin jailbreak).</li>
+    <li><strong>Reportar el estado de cumplimiento</strong>: el dispositivo recorre sus políticas, las pasa o las falla, y lo reporta hacia arriba. Ese estado aterriza como <code>isCompliant: true/false</code> sobre el registro del dispositivo en Entra.</li>
+    <li><strong>Disparar el despliegue de Defender for Endpoint</strong>: en la mayoría de los entornos modernos, Intune es lo que instala y configura Defender en cada dispositivo.</li>
+  </ul>
+
+  <p>Si una política de Acceso Condicional dice «requerir dispositivo conforme», Intune es la <em>fuente de la respuesta</em> para ese requisito. Si Intune se equivoca sobre el estado de un dispositivo, el AC se equivocará sobre el inicio de sesión.</p>
+
+  <p><strong>Dónde se configura:</strong> <code>intune.microsoft.com</code> — el centro de administración de Microsoft Intune. (Nombre anterior: Microsoft Endpoint Manager. Aún más anterior: SCCM-en-Internet.)</p>
+
+  <h3>Defender — la capa de detección de amenazas y respuesta</h3>
+
+  <p>El trabajo de Defender es <em>detectar comportamiento malicioso y responder a él</em>. No configura dispositivos (eso lo hace Intune). No toma decisiones de inicio de sesión (eso lo hace el AC). Lo que Defender hace es <em>vigilar</em> y, cuando la correlación es lo bastante fuerte, <em>reaccionar</em>.</p>
+
+  <p>«Defender» en realidad es una familia de productos:</p>
+
+  <ul>
+    <li><strong>Defender for Endpoint</strong> — se ejecuta en el dispositivo. Monitorización de comportamiento, EDR, remediación automática. Esto es lo que pilla procesos tipo ransomware, cadenas de scripts sospechosas, robo de credenciales.</li>
+    <li><strong>Defender for Office 365</strong> — se ejecuta sobre el flujo de correo y SharePoint. Anti-phishing, Safe Links, Safe Attachments.</li>
+    <li><strong>Defender for Cloud Apps</strong> — se ejecuta sobre los SaaS registrados. Análisis del comportamiento del usuario, monitorización de consentimientos OAuth.</li>
+    <li><strong>Defender for Identity</strong> — se ejecuta contra AD local (y sincronización híbrida). Pilla patrones de robo de credenciales y movimiento lateral.</li>
+    <li><strong>Defender XDR</strong> — la capa de <em>correlación</em> que toma las señales de todo lo anterior y las convierte en incidentes. (Lección entera sobre esto justo después — lección 4.)</li>
+  </ul>
+
+  <p>Defender normalmente no bloquea un inicio de sesión individual por sí mismo. Lo que <em>sí hace</em> es alimentar señales de riesgo en Entra ID Protection, que el Acceso Condicional puede leer en el momento de evaluación de la política («el riesgo de este usuario es alto → exigir cambio de contraseña»). La señal fluye en la misma dirección que el estado de cumplimiento de Intune — hacia Entra, donde el AC la lee. Mismo puente, señal distinta.</p>
+
+  <p>Defender XDR <em>sí puede</em> tomar acción directa a través de Attack Disruption — deshabilitar un usuario, revocar sus tokens, contener un dispositivo. Eso es una excepción a la regla «Defender vigila, AC decide», y es una excepción deliberada (solo correlación de alta confianza).</p>
+
+  <p><strong>Dónde se configura:</strong> <code>security.microsoft.com</code> — el portal de Microsoft Defender. (Nombre anterior: Microsoft 365 Defender. Anterior: ATP. Aún más anterior: «lo renombramos el mes que viene».)</p>
+
+  <h3>Acceso Condicional — el punto de decisión de la política</h3>
+
+  <p>El trabajo del AC es <em>evaluar cada inicio de sesión contra un conjunto de condiciones</em> y decidir qué hacer. Es el único producto de los tres que toma una decisión de sí / no en tiempo de ejecución.</p>
+
+  <p>Una política de AC tiene cuatro partes:</p>
+
+  <ul>
+    <li><strong>Quién</strong> — a qué usuarios o grupos se aplica (incluir / excluir).</li>
+    <li><strong>Qué</strong> — qué aplicaciones o acciones (Exchange, SharePoint, «todas las aplicaciones en la nube», operaciones administrativas sensibles).</li>
+    <li><strong>Condiciones</strong> — el contexto: estado del dispositivo, ubicación, riesgo del inicio de sesión, riesgo del usuario, aplicación cliente, plataforma.</li>
+    <li><strong>Controles</strong> — qué hacer si la política coincide: bloquear, exigir MFA, exigir dispositivo conforme, exigir Hybrid join, aplicar controles de sesión (frecuencia de inicio de sesión, Token Protection).</li>
+  </ul>
+
+  <p>Las decisiones que toma el AC son <em>la</em> frontera de seguridad de M365 en la práctica. Si tienes una buena política de AC en su sitio — «los usuarios pueden leer correo solo desde un dispositivo conforme, o después de MFA desde una ubicación de confianza» — la mayoría de las amenazas de la tarjeta 2 fallan directamente o disparan detección en algún otro punto de la pila.</p>
+
+  <p>Lo que el AC NO hace:</p>
+
+  <ul>
+    <li>No configura dispositivos. (Intune.)</li>
+    <li>No pilla malware. (Defender for Endpoint.)</li>
+    <li>No bloquea correos de phishing. (Defender for Office 365.)</li>
+    <li>No investiga incidentes. (Defender XDR.)</li>
+  </ul>
+
+  <p><strong>Dónde se configura:</strong> <code>entra.microsoft.com</code> (o el más antiguo <code>portal.azure.com</code> → Entra ID → Seguridad → Acceso Condicional). El centro de administración de Microsoft Entra.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 270" role="img" aria-label="Dónde vive cada uno de los tres productos y qué hace: Intune configura dispositivos y verifica su estado en intune.microsoft.com; Defender vigila y reacciona en security.microsoft.com; el Acceso Condicional evalúa cada inicio de sesión y decide en entra.microsoft.com.">
+      <rect width="720" height="270" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <text x="360" y="34" text-anchor="middle" fill="#6B85A6" font-size="11" letter-spacing="1.5">TRES PRODUCTOS · TRES TRABAJOS · TRES PORTALES</text>
+
+        <!-- Intune -->
+        <g transform="translate(28,58)">
+          <rect x="0" y="0" width="208" height="178" rx="11" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="104" y="36" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Intune</text>
+          <text x="104" y="62" text-anchor="middle" fill="#6B85A6" font-size="10.5" letter-spacing="0.5">AUTORIDAD DEL ESTADO</text>
+          <line x1="22" y1="78" x2="186" y2="78" stroke="#1F3C5C"/>
+          <text x="104" y="104" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Configura dispositivos</text>
+          <text x="104" y="126" text-anchor="middle" fill="#C4D4E8" font-size="12.5">y verifica su estado</text>
+          <text x="104" y="158" text-anchor="middle" fill="#5CCBF4" font-family="Geist Mono,monospace" font-size="11">intune.microsoft.com</text>
+        </g>
+
+        <!-- Defender -->
+        <g transform="translate(256,58)">
+          <rect x="0" y="0" width="208" height="178" rx="11" fill="#0E2236" stroke="#33527A"/>
+          <text x="104" y="36" text-anchor="middle" fill="#A8E1F8" font-size="16" font-weight="700">Defender</text>
+          <text x="104" y="62" text-anchor="middle" fill="#6B85A6" font-size="10.5" letter-spacing="0.5">DETECTA Y RESPONDE</text>
+          <line x1="22" y1="78" x2="186" y2="78" stroke="#1F3C5C"/>
+          <text x="104" y="104" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Vigila, y reacciona cuando</text>
+          <text x="104" y="126" text-anchor="middle" fill="#C4D4E8" font-size="12.5">la correlación es fuerte</text>
+          <text x="104" y="158" text-anchor="middle" fill="#5CCBF4" font-family="Geist Mono,monospace" font-size="11">security.microsoft.com</text>
+        </g>
+
+        <!-- Acceso Condicional -->
+        <g transform="translate(484,58)">
+          <rect x="0" y="0" width="208" height="178" rx="11" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.5"/>
+          <text x="104" y="36" text-anchor="middle" fill="#D0EFFD" font-size="15" font-weight="700">Acceso Condicional</text>
+          <text x="104" y="62" text-anchor="middle" fill="#6B85A6" font-size="10.5" letter-spacing="0.5">PUNTO DE DECISIÓN</text>
+          <line x1="22" y1="78" x2="186" y2="78" stroke="#274B72"/>
+          <text x="104" y="104" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Evalúa cada inicio de sesión,</text>
+          <text x="104" y="126" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="600">toma la decisión sí / no</text>
+          <text x="104" y="158" text-anchor="middle" fill="#5CCBF4" font-family="Geist Mono,monospace" font-size="11">entra.microsoft.com</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Cada producto hace exactamente un trabajo — y cada uno vive en su propio portal.</figcaption>
+  </figure>
+
+  <h2>Tres portales, un modelo mental</h2>
+
+  <p>La dispersión a tres portales es real. Microsoft lleva años prometiendo consolidarlos. No lo han hecho, y se puede argumentar que no lo harán, porque cada portal tiene una audiencia distinta dentro de Microsoft (equipo de Endpoint, equipo de Seguridad, equipo de Identidad) y una cadencia de lanzamiento distinta.</p>
+
+  <p>El modelo mental que hace la dispersión manejable:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Pregunta</th><th>Portal</th></tr></thead>
+      <tbody>
+        <tr><td>«¿Está sano este dispositivo?»</td><td>Intune</td></tr>
+        <tr><td>«¿Está pasando algo malicioso?»</td><td>Defender</td></tr>
+        <tr><td>«¿Se permitió este inicio de sesión, y por qué?»</td><td>Entra (registros de inicio de sesión + Acceso Condicional)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Cuando vuelves al ticket de Karen, la pregunta «¿por qué no puede iniciar sesión?» se descompone por portal:</p>
+
+  <ul>
+    <li>Si el <strong>registro de inicio de sesión en Entra</strong> dice «bloqueado por la política de Acceso Condicional <em>X</em>» → problema de AC. Abre esa política en Entra, mira las condiciones coincidentes, encuentra la que está fallando.</li>
+    <li>Si el inicio de sesión tuvo éxito pero Outlook está lanzando errores de acceso, y el <strong>dispositivo muestra no conforme en Intune</strong> → problema de Intune. Abre la política de cumplimiento, mira qué está fallando en el dispositivo (probablemente BitLocker desactivado o SO no actualizado).</li>
+    <li>Si el <strong>inicio de sesión está permitido y el dispositivo es conforme</strong>, pero el usuario está siendo expulsado repetidamente y hay <strong>alertas de Defender</strong> sobre la cuenta → probablemente revocación de token por Defender XDR Attack Disruption. Lo cual, en algún sitio bajo la frustración, es algo <em>bueno</em> — alguien acaba de hacerle phishing a Karen y el sistema lo pilló.</li>
+  </ul>
+
+  <p>Mismo ticket, tres causas raíz completamente distintas, tres remediaciones completamente distintas.</p>
+
+  <h2>Malas configuraciones comunes, y cómo se manifiestan</h2>
+
+  <p>Una pequeña guía de campo, porque estas aparecen una y otra vez.</p>
+
+  <p><strong>Política de AC que excluye al grupo equivocado.</strong> «Exigir MFA para todos los usuarios» con la exclusión «Invitados» aplicada por error a un grupo sincronizado que incluye a parte del personal. La mitad del personal no recibe la aplicación de MFA. La alerta de MFA-deshabilitado en Panoptica365 va a dispararse sobre esos usuarios; antes de asumir que es un problema de métodos de autenticación por usuario, comprueba la lista de exclusión del AC. El fallo casi siempre está al nivel de la política, no al nivel del usuario.</p>
+
+  <p><strong>Política de cumplimiento de Intune demasiado laxa.</strong> «Exigir BitLocker» suena bien, pero si la política no <em>falla</em> el dispositivo cuando BitLocker está desactivado, los dispositivos pueden reportar conformes sin estar realmente cifrados. Comprueba las condiciones de fallo de la política de cumplimiento, no solo su estado objetivo. Una política de cumplimiento sin dientes es peor que ninguna política — te da una falsa confianza.</p>
+
+  <p><strong>Defender for Endpoint no desplegado en todos los dispositivos.</strong> Intune <em>se supone</em> que empuja Defender, pero los grupos de exclusión, las variantes de SO, o los dispositivos pre-Intune se cuelan. Aparecen dispositivos en Intune pero no en Defender. El inventario de dispositivos de Defender XDR y la lista de dispositivos de Intune deberían coincidir dentro de un par de puntos porcentuales; si difieren significativamente, falta algo. Haz esa reconciliación periódicamente.</p>
+
+  <p><strong>Política de AC «Report-only» dejada para siempre.</strong> El modo Report-only es genial para probar — el AC evalúa la política y registra lo que habría pasado, pero no aplica de verdad. El error es entregar una política en Report-only y olvidarse de cambiarla a On. La política «existe» pero no aplica nada. El detector de deriva de AC de Panoptica365 no marca esto por su cuenta; tienes que comprobar el estado de la política a mano. Sí, es molesto. Sí, lo sabemos.</p>
+
+  <p><strong>Defender alerta sobre un usuario pero el AC no recoge el riesgo.</strong> Entra ID Protection P2 es necesario para AC basado en riesgo. Si el cliente está en Business Premium (solo P1), el AC no puede leer la señal de riesgo del usuario aunque Defender la esté generando. La alerta se queda ahí. El usuario inicia sesión de todas formas. Este es uno de los argumentos más fuertes para subir a E5 los tenants de mayor riesgo — cubierto en la lección 5.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Dos puntos prácticos.</p>
+
+  <p><strong>Cuando algo va mal, nombra la capa primero.</strong> «El inicio de sesión falló» no es una causa raíz; es un síntoma. La causa raíz vive en el AC, en Intune, en Defender, o directamente en los métodos de autenticación del usuario. Identificar la capa antes de empezar a cambiar ajustes es la diferencia entre un arreglo de 10 minutos y una pesca de 90 minutos a través de tres portales.</p>
+
+  <p><strong>La mayor parte de tu <em>tiempo</em> en esta pila se irá en Acceso Condicional.</strong> Intune se configura-y-se-revisa. Defender se ejecuta en gran parte solo. El AC necesita atención continua — cada aplicación nueva, cada grupo nuevo de usuarios, cada requisito nuevo de cumplimiento crea presión sobre el conjunto de políticas de AC. Por eso la tarjeta 3 está dedicada enteramente a las políticas-plantilla de AC. Las otras herramientas se configuran; el AC se <em>opera</em>.</p>
+
+  <h2>Lo que viene</h2>
+
+  <ul>
+    <li><strong>Lección 4: Defender XDR — qué es, qué no es.</strong> Lo hemos tocado como la capa de correlación; la lección 4 es la inmersión profunda sobre por qué XDR no es EDR, no es SIEM, y no es un producto único.</li>
+    <li><strong>Lección 5: Licencias de Microsoft 365 — qué desbloquea qué.</strong> La razón por la que Entra ID Protection (y el AC basado en riesgo) no está disponible en todos los tenants.</li>
+    <li><strong>Lección 6: Dónde encaja Panoptica365 en este cuadro.</strong> Pista: no reemplaza a ninguno de estos tres portales. Solo hace manejable la mitad-observación del trabajo.</li>
+  </ul>
+
+  <p>Por ahora: tres portales, tres trabajos, un bucle. Intune produce señales de confianza. Defender produce señales de riesgo. El Acceso Condicional lee ambas y decide. Cada inicio de sesión en M365 recorre ese bucle.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre el bucle de cumplimiento de Acceso Condicional y la evaluación del estado del dispositivo (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-policies" target="_blank" rel="noopener">Microsoft Learn — Construir una política de Acceso Condicional</a>); Microsoft Learn — mecánicas de Attack Disruption de Defender XDR (<a href="https://learn.microsoft.com/en-us/defender-xdr/automatic-attack-disruption" target="_blank" rel="noopener">Microsoft Learn — Automatic attack disruption</a>); referencia de las políticas de cumplimiento de Intune (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Use compliance policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

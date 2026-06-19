@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device-code abuse — the printer that wasn't a printer — Identity threats &amp; attack patterns</title>
+<meta name="lesson:title" content="Device-code abuse — the printer that wasn't a printer">
+<meta name="lesson:subtitle" content="State-sponsored actors (Storm-2372) weaponise the legitimate device-code auth flow to steal tokens without ever touching a password.">
+<meta name="lesson:icon" content="smartphone">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Identity threats &amp; attack patterns</span> <span class="sep">·</span> <span>Device-code abuse</span></div>
+  <h1>Device-code abuse — the printer that wasn't a printer</h1>
+  <p class="dek">State-sponsored actors (Storm-2372) weaponise the legitimate device-code auth flow to steal tokens without ever touching a password.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A short user code on a printer screen flows to a phone at microsoft.com/devicelogin — but the device receiving the token is the attacker's laptop, not the printer.">
+      <defs>
+        <radialGradient id="dcBg" cx="50%" cy="32%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="dcSoft"><feGaussianBlur stdDeviation="4"/></filter>
+        <marker id="dcArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="dcArrBad" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dcBg)"/>
+
+      <!-- left: printer showing a code -->
+      <g transform="translate(110,96)">
+        <rect x="0" y="0" width="150" height="150" rx="14" fill="#0E2640" stroke="#33527A" stroke-width="1.6"/>
+        <rect x="20" y="22" width="110" height="46" rx="6" fill="#04101E" stroke="#2A6F9E"/>
+        <text x="75" y="51" text-anchor="middle" fill="#A8E1F8" font-family="Geist Mono,Geist,monospace" font-size="20" font-weight="600" letter-spacing="2">B7XK-9MNP</text>
+        <rect x="20" y="86" width="110" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="20" y="104" width="78" height="8" rx="4" fill="#1F3C5C"/>
+        <rect x="20" y="124" width="110" height="10" rx="3" fill="#102A4C"/>
+      </g>
+      <text x="185" y="278" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">THE PRINTER</text>
+
+      <!-- middle: phone at devicelogin -->
+      <path d="M276 170 H392" stroke="#335F92" stroke-width="2.4" marker-end="url(#dcArr)"/>
+      <text x="334" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">enter the code</text>
+      <g transform="translate(420,86)">
+        <rect x="0" y="0" width="120" height="168" rx="18" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.6"/>
+        <rect x="14" y="20" width="92" height="128" rx="6" fill="#04101E" stroke="#2A7FA3"/>
+        <text x="60" y="48" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="10.5">devicelogin</text>
+        <circle cx="60" cy="86" r="20" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M51 86 l7 7 l12 -14" fill="none" stroke="#2EE8A0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="60" y="128" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="9.5">password · MFA</text>
+      </g>
+      <text x="480" y="278" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">THE USER</text>
+
+      <!-- right: token goes to attacker laptop -->
+      <path d="M560 170 H690" stroke="#FF5A6E" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#dcArrBad)"/>
+      <text x="625" y="156" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="11.5">token</text>
+      <g transform="translate(720,104)">
+        <rect x="0" y="0" width="220" height="132" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <rect x="22" y="22" width="176" height="74" rx="6" fill="#1A0A0E" stroke="#FF5A6E" opacity="0.7"/>
+        <rect x="6" y="100" width="208" height="10" rx="3" fill="#3A1820"/>
+        <circle cx="110" cy="59" r="20" fill="none" stroke="#FF8A98" stroke-width="2" filter="url(#dcSoft)" opacity="0.85"/>
+        <text x="110" y="65" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="22" font-weight="700">!</text>
+      </g>
+      <text x="830" y="278" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">THE ATTACKER'S LAPTOP</text>
+    </svg>
+    <figcaption>The user really signs in at Microsoft's real page — but the device that walks away with the token is the attacker's.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Somewhere in your customer's office, a printer signs in to Microsoft 365 to scan-to-email. That printer can't have a keyboard. It can't type a password. It can't tap a phone for MFA. Microsoft solved this years ago with the <em>device code flow</em>: the device displays a short alphanumeric code on its screen, the user goes to <code>microsoft.com/devicelogin</code> on their phone or laptop, enters the code, signs in normally, and Microsoft hands the device a token. The printer can now send mail. Nobody had to retype a password into a device with no keyboard.</p>
+
+  <p>It is a clever, legitimate feature. It is also the attack vector behind Storm-2372 — a Russia-aligned threat actor that has been running device-code phishing campaigns against governments, NGOs, IT services, defence, telecoms, healthcare, higher education and energy targets across Europe, North America, Africa and the Middle East since August 2024. As of February 2025, Microsoft observed Storm-2372 evolving the attack to acquire Primary Refresh Tokens (PRTs) by registering attacker-controlled devices inside the victim's tenant.</p>
+
+  <p>This lesson is how a printer-friendly authentication feature becomes an attack tool, and the one Conditional Access policy that shuts it down for customers who don't have printers.</p>
+  </div>
+
+  <h2>The legitimate device-code flow</h2>
+
+  <p>To understand the attack, walk through the legitimate version first.</p>
+
+  <p>A printer (or smart TV, IoT device, PowerShell session on a server, scripted automation, etc.) wants to authenticate as a user. It cannot present a sign-in UI itself.</p>
+
+  <p><strong>Step 1: Device requests a code.</strong> The device calls Microsoft's <code>/devicecode</code> endpoint and receives back two things: a short <em>user code</em> (eight or so alphanumeric characters like <code>B7XK-9MNP</code>) and a longer <em>device code</em> (a long opaque string the device keeps internally). The device also gets a URL — <code>microsoft.com/devicelogin</code>.</p>
+
+  <p><strong>Step 2: Device displays the user code.</strong> The printer's screen shows: "Go to <code>microsoft.com/devicelogin</code> and enter code <code>B7XK-9MNP</code> to sign in."</p>
+
+  <p><strong>Step 3: User goes to that URL on their phone or laptop.</strong> Authenticates normally to Microsoft. When prompted, enters the user code. Microsoft now associates that code with the user's signed-in identity.</p>
+
+  <p><strong>Step 4: Device polls Microsoft's token endpoint.</strong> Once the user has entered the code, Microsoft hands the device a token. The device can now sign in as the user.</p>
+
+  <p>It works. It's legitimate. Microsoft has documented the flow extensively. The flaw is that <em>steps 2 through 4 don't actually require the device to be in the same room as the user</em>. The "device" can be the attacker's laptop in Bucharest. The "user code" can be sent via WhatsApp. The user has no way of knowing what device the code is going to authenticate.</p>
+
+  <h2>The attack</h2>
+
+  <p>Now the attack version, which is structurally identical:</p>
+
+  <p><strong>Step 1: Attacker's laptop requests a device code.</strong> They call Microsoft's <code>/devicecode</code> endpoint with a client ID — typically one of Microsoft's well-known legitimate first-party application IDs (Outlook, Teams, Microsoft Graph PowerShell, Microsoft Authentication Broker). Microsoft returns the user code and the device code.</p>
+
+  <p><strong>Step 2: Attacker sends the user code to the victim.</strong> Via WhatsApp, Teams, Signal, or email. Storm-2372 typically poses as a "prominent person relevant to the target" — a journalist arranging an interview, an investor scheduling a call, a researcher inviting collaboration. The pretext culminates in: "I've set up a Teams meeting for us. Please go to <code>microsoft.com/devicelogin</code> and enter the code <code>B7XK-9MNP</code> to join."</p>
+
+  <p><strong>Step 3: Victim, expecting a legitimate Teams meeting invite flow, goes to the URL and enters the code.</strong> They're now on Microsoft's <em>real</em> devicelogin page. They authenticate normally — password, MFA, the whole regular flow. There is no fake login page. There is no proxy. The page is genuinely Microsoft's. The user code, however, is the attacker's.</p>
+
+  <p><strong>Step 4: Microsoft authorises the attacker's laptop as that user.</strong> The attacker now has an access token — issued legitimately, by Microsoft, after the victim correctly completed MFA. From Microsoft's perspective, this is a fully valid sign-in.</p>
+
+  <p><strong>Step 5: Attacker reads mail, exfiltrates data, etc.</strong></p>
+
+  <p>The user's experience is: they thought they were joining a Teams meeting. The meeting didn't happen. They closed the tab. They got owned.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="The legitimate flow and the attack flow side by side: identical steps, but in the attack the device requesting the code is the attacker's laptop and the code reaches the victim by chat message.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <marker id="fArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="fArrBad" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <line x1="360" y1="50" x2="360" y2="296" stroke="#1F3C5C" stroke-width="1.4" stroke-dasharray="3 6"/>
+      <text x="186" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LEGITIMATE</text>
+      <text x="534" y="34" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">THE ATTACK</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- legitimate column -->
+        <g transform="translate(36,52)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">Printer requests a code</text>
+        </g>
+        <g transform="translate(36,114)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">Code shown on its screen</text>
+        </g>
+        <g transform="translate(36,176)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">User enters code, signs in + MFA</text>
+        </g>
+        <g transform="translate(36,238)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="150" y="28" fill="#A8E1F8" font-size="13" font-weight="600">Printer gets the token</text>
+        </g>
+        <path d="M186 96 V114" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+        <path d="M186 158 V176" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+        <path d="M186 220 V238" stroke="#335F92" stroke-width="2" marker-end="url(#fArr)"/>
+
+        <!-- attack column -->
+        <g transform="translate(384,52)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="150" y="28" fill="#FF8A98" font-size="13">Attacker's laptop requests a code</text>
+        </g>
+        <g transform="translate(384,114)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/><text x="150" y="28" fill="#E2A0AA" font-size="13">Code sent by chat to victim</text>
+        </g>
+        <g transform="translate(384,176)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#0E2236" stroke="#33527A"/><text x="150" y="28" fill="#C4D4E8" font-size="13">Victim enters code, signs in + MFA</text>
+        </g>
+        <g transform="translate(384,238)">
+          <rect x="0" y="0" width="300" height="44" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/><text x="150" y="28" fill="#FF8A98" font-size="13" font-weight="700">Attacker's laptop gets the token</text>
+        </g>
+        <path d="M534 96 V114" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+        <path d="M534 158 V176" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+        <path d="M534 220 V238" stroke="#FF5A6E" stroke-width="2" marker-end="url(#fArrBad)"/>
+      </g>
+    </svg>
+    <figcaption>Structurally identical steps. The only differences: who requests the code, and how the code reaches the person who signs in.</figcaption>
+  </figure>
+
+  <h2>Why this defeats MFA</h2>
+
+  <p>MFA happens between <em>the victim and Microsoft</em> in step 3. The victim completes it correctly. The MFA prompt asks "Approve sign-in from the device that started this flow?" — but the device that started this flow is the <em>attacker's</em> laptop. The victim can't tell from the prompt that the device isn't theirs, because the device-code flow doesn't surface any meaningful information about the requesting device in the user's MFA experience.</p>
+
+  <p>Microsoft's MFA validates user presence and correct credentials. It does not validate intent ("did this user actually want to sign this attacker's machine in?"). The device-code flow uses MFA as designed and still produces a compromise, because the <em>consent to the sign-in</em> and the <em>authentication of the sign-in</em> happen on different machines.</p>
+
+  <p>This is structurally the same problem as AiTM (lesson 3): the authentication is technically correct but it ends up benefiting the wrong party. The difference is that AiTM intercepts the user's session cookie; device-code phishing has Microsoft <em>legitimately issue</em> an attacker-bound token. There is no theft. There is no malware. There is no proxy. It is all official.</p>
+
+  <h2>Storm-2372's recent evolution</h2>
+
+  <p>In August 2024 Microsoft started tracking Storm-2372's device-code campaigns. Initial campaigns were straightforward — phish for an Outlook or Microsoft Graph PowerShell token, read mail.</p>
+
+  <p>On February 14, 2025, Microsoft observed the actor shift to a much more dangerous variant: using the specific client ID for the <strong>Microsoft Authentication Broker</strong>. When the device-code flow is run against the Authentication Broker, the resulting refresh token can be exchanged for a fresh token at the <em>device registration service</em>, which lets the attacker register their own machine as a device in the victim's Entra ID tenant.</p>
+
+  <p>A registered device in Entra ID can request a Primary Refresh Token (PRT) — the credential M365 issues to managed Windows devices to keep a user signed in. With a PRT, the attacker has the same kind of access a fully enrolled corporate laptop has. They can sign in to anything in M365 without further MFA prompts, because the PRT is what <em>replaces</em> MFA for managed-device sign-ins.</p>
+
+  <p>In other words, the attacker turned a single device-code phish into an <em>enrolled device</em> in the customer's tenant. Going from "I have a token for a few hours" to "I have a managed-device identity that will keep producing tokens" is a step change in persistence — similar to what OAuth consent phishing (lesson 4) gives the attacker, but achieved through a completely different mechanism.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 140" role="img" aria-label="The Storm-2372 escalation: a device-code phish against the Authentication Broker leads to registering an attacker device, which yields a Primary Refresh Token and persistent access.">
+      <rect width="720" height="140" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FFC04D"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g transform="translate(20,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="75" y="22" fill="#A8E1F8" font-size="12" font-weight="600">Device-code phish</text>
+          <text x="75" y="38" fill="#6B85A6" font-size="10.5">Auth Broker client ID</text>
+        </g>
+        <g transform="translate(206,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#1F1604" stroke="#FFC04D"/>
+          <text x="75" y="22" fill="#FFD27A" font-size="12" font-weight="600">Register a device</text>
+          <text x="75" y="38" fill="#A98A4A" font-size="10.5">in the victim tenant</text>
+        </g>
+        <g transform="translate(392,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#1F1604" stroke="#FFC04D"/>
+          <text x="75" y="22" fill="#FFD27A" font-size="12" font-weight="600">Obtain a PRT</text>
+          <text x="75" y="38" fill="#A98A4A" font-size="10.5">replaces MFA</text>
+        </g>
+        <g transform="translate(550,48)">
+          <rect x="0" y="0" width="150" height="48" rx="9" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="75" y="22" fill="#FF8A98" font-size="12" font-weight="700">Persistent access</text>
+          <text x="75" y="38" fill="#E2A0AA" font-size="10.5">keeps producing tokens</text>
+        </g>
+        <path d="M170 72 H206" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+        <path d="M356 72 H392" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+        <path d="M542 72 H550" stroke="#FFC04D" stroke-width="2" marker-end="url(#eArr)"/>
+      </g>
+    </svg>
+    <figcaption>The 2025 evolution: one phish turns into an enrolled device, a PRT, and access that keeps renewing itself.</figcaption>
+  </figure>
+
+  <h2>What this looks like in M365 telemetry</h2>
+
+  <p>The device-code flow is logged. The sign-in log in Entra ID records:</p>
+
+  <ul>
+    <li><strong>Authentication protocol: Device Code.</strong> This is the give-away. Very few real customer workloads use device code flow as their primary sign-in method.</li>
+    <li><strong>Client ID.</strong> Tells you what application was being authorised. The Microsoft Authentication Broker ID (<code>29d9ed98-a469-4536-ade2-f981bc1d605e</code>) showing up here is a strong signal — that's the Storm-2372 evolution.</li>
+    <li><strong>Source IP.</strong> Often a residential proxy or known-hostile geography.</li>
+    <li><strong>User agent.</strong> Often default Python or curl-style — automation, not a real client.</li>
+  </ul>
+
+  <p>If you grep the Entra sign-in log for <code>authenticationProtocol == "deviceCode"</code>, you should see almost zero results in a healthy tenant unless there are documented IoT/automation use cases. Every hit is worth investigating.</p>
+
+  <p>The follow-on activity — sudden registration of a new device in the tenant, new authentication methods registered, mailbox-permission changes — is louder and easier to detect than the device-code sign-in itself.</p>
+
+  <h2>What Defender does about it</h2>
+
+  <p>Microsoft Defender for Office 365's Safe Links can catch the <em>delivery</em> of the phishing message if it's email-based, but Storm-2372's pretext is typically a chat message in Teams, WhatsApp, or Signal, which Defender for Office 365 doesn't see.</p>
+
+  <p>Defender XDR can correlate the device-code sign-in with downstream anomalies — new device registration, suspicious Graph queries, mailbox exfiltration — and assign Attack Disruption confidence if the pattern matches. The Microsoft Threat Intelligence team has published detection queries that customers with Defender XDR can deploy in advanced hunting to look for the specific Storm-2372 indicators.</p>
+
+  <p>The cleanest defensive control, however, is configuration: prevent the device-code flow from being usable for most users in the first place.</p>
+
+  <h2>The Conditional Access policy that shuts this down</h2>
+
+  <p>In Conditional Access, there's a condition called <strong>Authentication flows</strong> (preview through 2024, generally available in 2025). Inside that condition, one of the toggles is <strong>Device code flow</strong>. You can write a CA policy that says:</p>
+
+  <blockquote>Block all users from completing the device code authentication flow, with the following exceptions: [specific accounts that legitimately need it, like the printer's service account or the helpdesk account that runs PowerShell automation against multiple tenants].</blockquote>
+
+  <p>That's the policy. Set it on the customer's tenant, exclude any service accounts that legitimately need device code (most tenants have none), and Storm-2372's entire playbook stops working for that tenant.</p>
+
+  <p>This is one of the highest-leverage single CA policies available in Entra ID P1 (Business Premium and above). Microsoft started publicly recommending it after the Storm-2372 disclosure in February 2025, and as of mid-2026 it should be considered table-stakes for any tenant that doesn't have a documented device-code use case.</p>
+
+  <p>The follow-on cleanup, if you discover the policy wasn't in place and an attack happened: revoke the user's tokens (covered in lesson 3's response section), de-register any attacker-controlled devices from the tenant's device list, audit and clean up authentication methods, and reset the user's password.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Panoptica365's UAL ingestion pipeline includes device-code-related signals as part of the broader detection catalogue:</p>
+
+  <p><strong>Suspicious device-code sign-ins.</strong> When a sign-in completes with <code>authenticationProtocol == "deviceCode"</code> and the source isn't a documented IoT account, the alert can fire — depending on tenant configuration.</p>
+
+  <p><strong>New device registered.</strong> When a previously-unseen device appears in the tenant's device list (the post-Storm-2372 attack signature), the registration event is in the Entra audit log and Panoptica365 surfaces it.</p>
+
+  <p><strong>New authentication method registered.</strong> As with most identity attacks, the post-compromise attacker often adds their own MFA method. This alert covers the device-code attack chain as well as the AiTM and credential-stuffing chains.</p>
+
+  <p><strong>Defender XDR ingestion</strong> picks up correlated incidents when Microsoft has scored the activity as suspicious.</p>
+
+  <p>The triage approach: when a foreign-IP sign-in or a new-device-registered alert fires, check whether the sign-in's authentication protocol was Device Code. If yes, treat as Storm-2372-style attack until proven otherwise.</p>
+
+  <h2>Defending the customer</h2>
+
+  <p>Layered, in order of impact:</p>
+
+  <p><strong>Block device code flow via Conditional Access for users who don't need it.</strong> Single policy, immediate effect. The vast majority of customer tenants have zero legitimate device-code use cases. The few that do (the printer, the PowerShell automation account) can be excluded individually. Don't leave this exposed.</p>
+
+  <p><strong>For tenants that do need device code (rare), require it to come from trusted locations or compliant devices.</strong> The Conditional Access condition combines with the others — you can require "device code flow only from the office IP range" or "only on Intune-compliant devices." Heavier configuration but possible.</p>
+
+  <p><strong>Educate users about chat-based pretexts.</strong> The Storm-2372 attack chain depends on the user trusting a WhatsApp/Signal/Teams message enough to follow instructions. Train users (especially executives and people in roles like grants, journalism, research, or any external-facing function) that <strong>anyone asking them to go to <code>microsoft.com/devicelogin</code> and enter a code via a chat message is almost certainly an attacker</strong>. There is no legitimate reason an external party should ever send a device code via chat.</p>
+
+  <p><strong>Monitor for the <code>deviceCode</code> protocol in the sign-in log.</strong> This should be a near-zero baseline in most tenants. Anything non-zero is worth examining.</p>
+
+  <p><strong>Detect post-compromise indicators.</strong> New device registration events, new authentication methods, suspicious mailbox activity — these are the follow-on signals that fire louder than the initial device-code sign-in.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Add "block device code flow" to the customer onboarding checklist.</strong> This is one of the cheap, high-impact Conditional Access policies that should be on every Business Premium tenant by default. Panoptica365's CA template library is the right place to ship this; if it isn't already in your library, add it before next customer onboarding.</p>
+
+  <p><strong>Storm-2372's evolution from "steal a token" to "register a device" is the pattern to watch.</strong> When attackers find new ways to convert short-lived access into persistent access, the threat compounds. The same logic applies to consent phishing (lesson 4) and to the post-AiTM "register a new MFA method" trick (lesson 3). The persistence variants are where simple compromises become extended incidents.</p>
+
+  <p><strong>Device-code phishing is best caught upstream.</strong> Once the token is issued, you're chasing the attacker's footprint. The CA policy that prevents the flow from being usable is <em>the</em> defence; everything after that is mopping up.</p>
+
+  <div class="callout insight">
+    <div class="clabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></svg>The one-line defence</div>
+    <p>The device-code flow is a legitimate feature being abused at scale by a sophisticated actor. The defence is configuration, not detection. Set the Conditional Access policy. Train your users to never enter a device code from a chat message. Watch the sign-in log for the protocol you don't expect to see.</p>
+  </div>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>Business email compromise</b> — where most of these attacks end: not in the dramatic compromise itself, but in the quiet, weeks-long manipulation of finance emails that follows. BEC is what makes all five of the preceding attacks profitable for attackers.</div></div>
+  </div>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Security Blog on Storm-2372 device-code phishing campaign (<a href="https://www.microsoft.com/en-us/security/blog/2025/02/13/storm-2372-conducts-device-code-phishing-campaign/" target="_blank" rel="noopener">Microsoft Security Blog — Storm-2372 conducts device code phishing campaign, February 2025</a>); device code flow technical reference (<a href="https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-device-code" target="_blank" rel="noopener">Microsoft Learn — OAuth 2.0 device code flow</a>); Conditional Access "authentication flows" condition (<a href="https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-cloud-apps#authentication-flows" target="_blank" rel="noopener">Microsoft Learn — Conditional Access: Authentication flows</a>); Storm-2372 evolution to Authentication Broker / PRT theft (<a href="https://www.microsoft.com/en-us/security/blog/2025/02/13/storm-2372-conducts-device-code-phishing-campaign/" target="_blank" rel="noopener">Microsoft Threat Intelligence — Storm-2372 update, February 2025</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

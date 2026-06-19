@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comment la note est calculée — Secure Score</title>
+<meta name="lesson:title" content="Comment la note est calculée — points, crédit partiel, et pourquoi elle bouge toute seule">
+<meta name="lesson:subtitle" content="La mécanique sous le pourcentage : points, crédit partiel, conditionnement par licence, et pourquoi la note bouge sans que vous changiez quoi que ce soit.">
+<meta name="lesson:icon" content="calculator">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Secure Score</span> <span class="sep">·</span> <span>Comment la note est calculée</span></div>
+  <h1>Comment la note est calculée — points, crédit partiel, et pourquoi elle bouge toute seule</h1>
+  <p class="dek">La mécanique sous le pourcentage : points, crédit partiel, conditionnement par licence, et pourquoi la note bouge sans que vous changiez quoi que ce soit.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La Secure Score en fraction — 988,2 obtenus sur 1113,0 possibles, égale 88,79 pour cent — montrée comme une cible mobile.">
+      <defs>
+        <radialGradient id="ssBg" cx="50%" cy="34%" r="80%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="ssCore" cx="50%" cy="45%" r="60%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ssBg)"/>
+
+      <!-- left: the fraction -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="250" y="150" fill="#A8E1F8" font-size="46" font-weight="700">988,2</text>
+        <text x="250" y="168" fill="#52708F" font-size="13" letter-spacing="1.5">POINTS OBTENUS</text>
+        <line x1="150" y1="190" x2="350" y2="190" stroke="#335F92" stroke-width="2.5"/>
+        <text x="250" y="244" fill="#C4D4E8" font-size="46" font-weight="700">1113,0</text>
+        <text x="250" y="262" fill="#52708F" font-size="13" letter-spacing="1.5">MAX POSSIBLE</text>
+      </g>
+
+      <!-- equals -->
+      <text x="430" y="185" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="44">=</text>
+
+      <!-- right: target dial reading 88,79% -->
+      <g transform="translate(770,170)">
+        <circle r="124" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="96" fill="none" stroke="#3A6FA0" stroke-width="1.1" opacity="0.7"/>
+        <circle r="68" fill="none" stroke="#5CCBF4" stroke-width="1.4" opacity="0.85"/>
+        <circle r="14" fill="url(#ssCore)"/>
+        <!-- moving-target needle -->
+        <line x1="0" y1="0" x2="58" y2="-44" stroke="#7DD9F9" stroke-width="3" stroke-linecap="round"/>
+        <text x="0" y="120" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="44" font-weight="700">88,79 %</text>
+      </g>
+      <text x="770" y="318" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">UNE CIBLE MOBILE</text>
+    </svg>
+    <figcaption>Le pourcentage, ce sont les points obtenus sur le max applicable — et la note comme le max bougent tous les deux.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Une opératrice ouvre Panoptica365 un lundi matin. Le vendredi précédent, elle avait Client X à exactement 88,79 %. Ce matin, le même client affiche 86,94 %. Rien n'a changé chez le client pendant la fin de semaine — pas de nouvelles boîtes aux lettres, pas de modification de politique, aucune activité admin du tout selon le Tenant Change Log. La Secure Score du client a chuté de presque deux points sans que personne touche à rien.</p>
+
+  <p>Elle a déjà vu ça. C'est l'énigme Secure Score la plus fréquente que les opérateurs rencontrent, et la réponse est presque toujours quelque chose du côté Microsoft. Ils ont ajouté une nouvelle recommandation, ils ont changé comment une existante est notée, ils en ont retiré une et le calcul a bougé, une fonctionnalité conditionnée à une licence est devenue disponible et le maximum atteignable a bougé — ou, le plus souvent pour les clients qui roulent Defender for Endpoint, une nouvelle vulnérabilité a été détectée dans un logiciel installé sur un appareil géré, faisant chuter la note jusqu'à ce que les correctifs soient appliqués.</p>
+
+  <p>La Secure Score n'est pas une mesure statique du tenant. C'est une <em>cible mobile</em> — l'ensemble de recommandations de Microsoft évolue continuellement, l'état de licence du tenant change occasionnellement, et le calcul sous le pourcentage bouge en conséquence. Les opérateurs qui comprennent la mécanique peuvent lire le mouvement correctement; ceux qui ne la comprennent pas finissent à courir après de la dérive fantôme qui n'en est pas vraiment.</p>
+
+  <p>Cette leçon fait le tour du calcul sous le pourcentage, la mécanique du crédit partiel, le conditionnement par licence qui affecte le max, et les cinq raisons les plus fréquentes pour lesquelles la note bouge du jour au lendemain.</p>
+  </div>
+
+  <h2>Le calcul de base</h2>
+
+  <p>Le pourcentage est sans complication :</p>
+
+  <pre><code>Secure Score % = (points obtenus à travers toutes les recommandations applicables) ÷ (max possible) × 100</code></pre>
+
+  <p>Prenez un exemple hypothétique : un tenant dont la tuile Secure Score affiche <code>88,79 %</code> avec <code>988,2 / 1113,0</code> en dessous. Le numérateur (988,2), ce sont les points que le tenant a vraiment obtenus. Le dénominateur (1113,0), c'est le max possible — la somme des valeurs en points pour chaque recommandation qui s'applique à ce tenant compte tenu de sa licence. Le pourcentage est 988,2 ÷ 1113,0 × 100 = 88,79 %.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="La formule de la Secure Score déroulée : 988,2 divisé par 1113,0, fois 100, égale 88,79 pour cent.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- earned -->
+        <rect x="40" y="62" width="150" height="76" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="115" y="106" fill="#A8E1F8" font-size="26" font-weight="700">988,2</text>
+        <text x="115" y="126" fill="#6B85A6" font-size="11" letter-spacing="1.5">OBTENUS</text>
+
+        <text x="222" y="110" fill="#6B85A6" font-size="30">÷</text>
+
+        <!-- max -->
+        <rect x="254" y="62" width="150" height="76" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="329" y="106" fill="#C4D4E8" font-size="26" font-weight="700">1113,0</text>
+        <text x="329" y="126" fill="#6B85A6" font-size="11" letter-spacing="1.5">MAX POSSIBLE</text>
+
+        <text x="436" y="110" fill="#6B85A6" font-size="22">× 100</text>
+
+        <text x="520" y="110" fill="#6B85A6" font-size="30">=</text>
+
+        <!-- result -->
+        <rect x="554" y="62" width="126" height="76" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="617" y="106" fill="#7DD9F9" font-size="26" font-weight="700">88,79 %</text>
+        <text x="617" y="126" fill="#6B85A6" font-size="11" letter-spacing="1.5">SECURE SCORE</text>
+      </g>
+    </svg>
+    <figcaption>Toute la formule, déroulée avec les chiffres d'exemple du texte.</figcaption>
+  </figure>
+
+  <p>Deux choses à remarquer sur ce dénominateur :</p>
+
+  <ul>
+    <li><strong>C'est le max <em>applicable</em>, pas le max absolu.</strong> Les recommandations pour lesquelles le tenant n'est pas licencié ne contribuent pas au dénominateur. Un tenant Business Premium ne se fait pas gonfler son dénominateur par des recommandations E5 comme Sensitivity Labels ou Insider Risk Management — elles ne s'appliquent simplement pas. C'est juste et important : ça veut dire que votre client n'est pas pénalisé de ne pas avoir un palier de licence qu'il ne paie pas.</li>
+    <li><strong>Il change quand Microsoft change son ensemble de recommandations.</strong> Si Microsoft ajoute une nouvelle recommandation qui vaut 10 points, votre dénominateur monte de 10, votre numérateur reste pareil (vous n'avez pas encore implémenté la nouvelle recommandation), et votre pourcentage descend légèrement. C'est le mécanisme derrière la plupart des mystères « la note a baissé sans qu'on change rien ».</li>
+  </ul>
+
+  <h2>Le crédit partiel — ce que ça veut vraiment dire</h2>
+
+  <p>Plusieurs recommandations Secure Score donnent un <strong>crédit partiel</strong> selon à quel point le tenant a implémenté la recommandation. Le pourcentage que vous voyez sur une recommandation dans le portail — disons « 8,5 / 10 points obtenus » — reflète typiquement l'implémentation partielle.</p>
+
+  <p>Le patron de crédit partiel le plus fréquent, c'est la <strong>couverture par utilisateur</strong>. La recommandation « Exiger MFA pour tous les utilisateurs » ne bascule pas juste sur on ou off; elle se met à l'échelle avec la fraction des utilisateurs qui ont vraiment MFA appliqué. Si vous avez 40 utilisateurs et que 36 sont appliqués, vous obtenez 36/40 du max de la recommandation en points. Les quatre utilisateurs qui restent (le dirigeant qui a insisté pour une exception, le compte de service, les deux contractuels que vous avez oubliés) vous coûtent des points partiels.</p>
+
+  <p>D'autres patrons de crédit partiel :</p>
+
+  <ul>
+    <li><strong>Couverture par politique.</strong> « S'assurer que toutes les politiques anti-hameçonnage utilisent mailbox intelligence » donne plein crédit seulement si <em>toutes</em> les politiques anti-hameçonnage du tenant ont la fonctionnalité activée — crédit partiel pour celles qui l'ont.</li>
+    <li><strong>Basé sur seuil.</strong> Certaines recommandations mesurent des valeurs qui doivent atteindre un seuil. « S'assurer que votre politique de risque de connexion est activée » peut donner un crédit partiel selon la portion de la base d'utilisateurs couverte par la politique.</li>
+    <li><strong>Basé sur temps.</strong> Une poignée de recommandations vérifient que les journaux d'audit sont conservés au moins N jours — crédit partiel si vous conservez moins que la durée recommandée.</li>
+  </ul>
+
+  <p>Ça compte pour deux flux de travail opérateur :</p>
+
+  <p><strong>Lire une recommandation correctement.</strong> Quand vous voyez une recommandation qui affiche 80 % de son max, ça ne veut pas dire « on a essayé mais on a un peu raté ». C'est probablement « on a couvert 80 % des cibles et quatre utilisateurs / politiques / configurations précis ne sont pas couverts ». Creuser dans la recommandation dans le portail révèle typiquement exactement quel sous-ensemble manque.</p>
+
+  <p><strong>Faire bouger la note efficacement.</strong> Quand vous planifiez la prochaine passe de travail sécurité pour un client, les recommandations en crédit partiel sont souvent les fruits qui pendent le plus bas. Une recommandation à 8,5/10 peut juste avoir besoin que vous appliquiez MFA sur un compte de service supplémentaire pour réclamer les 1,5 points qui restent. C'est un changement de cinq minutes pour un mouvement mesurable de la note. Les repérer fait partie du travail de la leçon 3.</p>
+
+  <h2>Les recommandations conditionnées par licence et le flux « Risk Accepted »</h2>
+
+  <p>Microsoft Secure Score inclut des recommandations qui exigent des licences précises pour être implémentées. Exemples :</p>
+
+  <ul>
+    <li><strong>Déploiement de Defender for Identity</strong> (exige Defender for Identity en autonome ou E5 avec le bundle).</li>
+    <li><strong>Customer Lockbox</strong> (E5).</li>
+    <li><strong>Politiques d'étiquetage automatique et de classification de données</strong> (Information Protection P2 / E5 Compliance).</li>
+    <li><strong>Politiques de risque de connexion</strong> (Entra ID P2).</li>
+    <li><strong>Politiques de risque utilisateur</strong> (Entra ID P2).</li>
+    <li><strong>Insider Risk Management</strong> (E5).</li>
+    <li><strong>Attack Simulation Training</strong> (E5).</li>
+  </ul>
+
+  <p>Voici la partie qui prend les opérateurs par surprise : <strong>ces recommandations apparaissent quand même dans la liste de recommandations du tenant et contribuent quand même au dénominateur max même quand le tenant n'a pas la licence requise</strong>. Ouvrez la Secure Score d'un tenant Business Premium dans le portail Defender et vous verrez Defender for Identity, Customer Lockbox, Auto-labeling, et d'autres items conditionnés à E5 assis dans la liste avec <code>0 / X points</code> à côté. Ils tirent le pourcentage vers le bas malgré qu'ils soient impossibles à implémenter en Business Premium.</p>
+
+  <p>Microsoft donne aux opérateurs trois statuts alternatifs pour gérer les recommandations qu'ils ne peuvent pas ou ne veulent pas implémenter :</p>
+
+  <ul>
+    <li><strong>Resolved through third party</strong> (« résolu par un tiers »). À utiliser quand un outil non-Microsoft gère la même fonction de sécurité. Microsoft donne plein crédit pour la recommandation comme si vous l'aviez implémentée. Cas d'usage honnêtes : un MDR tiers qui couvre la fonction Defender for Identity; un produit DLP tiers qui couvre la recommandation d'étiquetage de Microsoft. Cas d'usage malhonnêtes — et les opérateurs le font — c'est de marquer des choses « tiers » sans qu'aucun tiers ne fournisse vraiment la fonction. La note monte, la sécurité non.</li>
+
+    <li><strong>Risk accepted</strong> (« risque accepté »). À utiliser quand vous avez revu la recommandation et décidé de ne pas l'implémenter (souvent parce que la licence n'est pas là, ou parce que le profil de risque du client ne justifie pas le coût opérationnel). La recommandation reste dans le max à zéro point, mais elle est documentée comme une décision délibérée plutôt qu'un item non traité. Cadrage honnête dans les conversations avec les clients : « on a revu ça, voici pourquoi on a accepté le risque ».</li>
+
+    <li><strong>Planned</strong> (« planifié »). À utiliser quand vous vous êtes engagés à implémenter selon un échéancier mais que vous ne l'avez pas encore fait. Aucun point accordé, mais la recommandation est marquée comme travail en file.</li>
+  </ul>
+
+  <p>Pour la plupart des tenants Business Premium, <strong>la plupart des recommandations conditionnées par licence sont marquées Risk accepted</strong> — le client n'a pas la licence, le MSP a documenté la décision, et la recommandation ne se lit plus comme « négligée ». Le pourcentage de Secure Score ne monte pas en faisant du Risk accepted; c'est la documentation qui monte.</p>
+
+  <p>Le flux Risk Accepted fait partie de l'hygiène opérateur. Périodiquement (la leçon 6 couvre la cadence), revoyez la liste Risk Accepted et confirmez que le raisonnement tient toujours. Si un client met plus tard à niveau vers E5, plusieurs items Risk Accepted deviennent implémentables et l'opérateur devrait revisiter les décisions. Si le profil de risque d'un client change, pareil.</p>
+
+  <p><strong>Pourquoi ça compte pour la comparaison entre tenants.</strong> Deux tenants Business Premium peuvent avoir des configurations identiques mais des Secure Score différentes selon combien de recommandations l'opérateur a marquées Risk accepted ou Resolved through third party. Un tenant où l'opérateur a fait le travail d'hygiène Risk-Accepted affichera un pourcentage plus bas mais plus honnête qu'un tenant où des items non licenciés et non touchés sont assis à zéro sans aucune décision enregistrée. Servez-vous du pourcentage comme point de départ de la conversation sur <em>ce que l'opérateur a fait avec chaque recommandation</em> — pas comme chiffre de comparaison directe.</p>
+
+  <h2>La ventilation par catégorie</h2>
+
+  <p>Sous le pourcentage principal, Microsoft décompose la note en catégories — typiquement Identité, Appareils, Applications, et Données. Chaque catégorie a son sous-total : points obtenus vs max possible à l'intérieur de cette catégorie.</p>
+
+  <p>La vue par catégorie est utile à des fins diagnostiques. Un client avec une note globale de 88 % pourrait avoir :</p>
+
+  <ul>
+    <li>Identité à 95 % (MFA, auth héritée, protection admin tous en bon état)</li>
+    <li>Appareils à 92 % (modèles Intune bien déployés)</li>
+    <li>Applications à 78 % (configurations côté courriel partiellement manquantes)</li>
+    <li>Données à 65 % (DLP, sensitivity labels non touchés — fréquent pour les tenants Business Premium qui n'ont pas la licence)</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 260" role="img" aria-label="La ventilation par catégorie d'exemple : Identité 95 pour cent, Appareils 92 pour cent, Applications 78 pour cent, Données 65 pour cent.">
+      <rect width="720" height="260" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="36" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">SOUS-TOTAUX PAR CATÉGORIE · 88 % GLOBAL</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Identité 95 -->
+        <text x="40" y="78" fill="#C4D4E8" font-size="13">Identité</text>
+        <rect x="180" y="64" width="440" height="20" rx="10" fill="#0E2236" stroke="#1F3C5C"/>
+        <rect x="180" y="64" width="418" height="20" rx="10" fill="#2EE8A0"/>
+        <text x="634" y="79" fill="#7DD9F9" font-size="13" font-weight="700">95 %</text>
+        <!-- Appareils 92 -->
+        <text x="40" y="124" fill="#C4D4E8" font-size="13">Appareils</text>
+        <rect x="180" y="110" width="440" height="20" rx="10" fill="#0E2236" stroke="#1F3C5C"/>
+        <rect x="180" y="110" width="405" height="20" rx="10" fill="#2EE8A0"/>
+        <text x="634" y="125" fill="#7DD9F9" font-size="13" font-weight="700">92 %</text>
+        <!-- Applications 78 -->
+        <text x="40" y="170" fill="#C4D4E8" font-size="13">Applications</text>
+        <rect x="180" y="156" width="440" height="20" rx="10" fill="#0E2236" stroke="#1F3C5C"/>
+        <rect x="180" y="156" width="343" height="20" rx="10" fill="#5CCBF4"/>
+        <text x="634" y="171" fill="#7DD9F9" font-size="13" font-weight="700">78 %</text>
+        <!-- Données 65 -->
+        <text x="40" y="216" fill="#C4D4E8" font-size="13">Données</text>
+        <rect x="180" y="202" width="440" height="20" rx="10" fill="#0E2236" stroke="#1F3C5C"/>
+        <rect x="180" y="202" width="286" height="20" rx="10" fill="#FFC04D"/>
+        <text x="634" y="217" fill="#7DD9F9" font-size="13" font-weight="700">65 %</text>
+      </g>
+    </svg>
+    <figcaption>Lire les catégories vous dit où la note vit et où sont les trous.</figcaption>
+  </figure>
+
+  <p>Lire les catégories vous dit <em>où</em> la note vit et <em>où</em> sont les trous. Un opérateur qui fait une revue avant renouvellement peut se servir de la ventilation par catégorie pour focaliser le travail du prochain trimestre — « Identité est solide, c'est dans Applications que se trouve le gain du prochain trimestre » — plutôt que de traiter le pourcentage principal comme seul signal.</p>
+
+  <h2>Pourquoi la note bouge toute seule — les six raisons les plus fréquentes</h2>
+
+  <p>Retour à l'anecdote d'ouverture. La chute du lundi matin de 88,79 % à 86,94 % sans aucun changement côté tenant. Six explications plausibles :</p>
+
+  <p><strong>1. Une nouvelle vulnérabilité a été détectée dans un logiciel installé.</strong> Pour les clients qui roulent Defender for Endpoint, Microsoft Defender Vulnerability Management (MDVM) alimente Secure Score. Quand une nouvelle CVE est annoncée touchant un logiciel qui roule sur un terminal géré — une mise à jour Windows, une version de Chrome, une release d'Acrobat Reader, le client SQL sur le serveur de fichiers — la note descend jusqu'à ce que le correctif soit déployé. C'est la cause <em>la plus fréquente</em> de chutes de note du jour au lendemain sur les tenants déployés avec MDE, parce que le monde produit des nouvelles CVE constamment et les correctifs traînent derrière la détection de quelques jours. La bonne nouvelle : quand le RMM roule son cycle de correctifs et que le logiciel vulnérable se met à jour, les points reviennent.</p>
+
+  <p><strong>2. Microsoft a ajouté une nouvelle recommandation.</strong> Microsoft introduit de nouvelles recommandations à mesure que le paysage de sécurité évolue — un nouveau patron de menace, une nouvelle fonctionnalité Defender, une nouvelle exigence de conformité. La nouvelle recommandation contribue au max (dénominateur monte); le tenant ne l'a pas encore implémentée (numérateur inchangé); le pourcentage descend. L'historique de changements de Secure Score dans le portail Microsoft 365 Defender montre ce qui a été ajouté.</p>
+
+  <p><strong>3. Microsoft a retiré ou re-pondéré une recommandation existante.</strong> Moins fréquent mais réel. Une recommandation que Microsoft considère obsolète est retirée; le max rétrécit; le pourcentage bouge. Une recommandation est re-pondérée (la valeur en points change); même effet.</p>
+
+  <p><strong>4. La licence du tenant a changé.</strong> Si le client a ajouté ou retiré des licences pendant la fin de semaine (une nouvelle embauche activée, un départ désactivé, un échange de SKU de licence), l'ensemble de recommandations applicables a bougé, et le max a bougé en conséquence.</p>
+
+  <p><strong>5. La configuration du tenant a changé du côté Microsoft.</strong> Certaines recommandations vérifient une configuration que Microsoft gère ou pour laquelle Microsoft met à jour les défauts. Quand Microsoft resserre ou relâche un défaut, les recommandations qui notent contre ce défaut peuvent bouger.</p>
+
+  <p><strong>6. La configuration du tenant a changé du côté de l'opérateur.</strong> Soit délibérée (dérive que vous devriez enquêter via le Tenant Change Log et les alertes de dérive de Panoptica365) soit accidentelle (quelqu'un a désactivé quelque chose qu'il n'aurait pas dû). C'est le cas où la note vous dit quelque chose sur <em>votre</em> client précisément.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 280" role="img" aria-label="Les six raisons réparties en deux groupes : côté Microsoft un, deux, trois et cinq; côté tenant quatre et six.">
+      <rect width="720" height="280" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- Microsoft side -->
+        <rect x="28" y="48" width="320" height="208" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="48" y="80" fill="#A8E1F8" font-size="13" font-weight="700" letter-spacing="1.5">CÔTÉ MICROSOFT</text>
+        <text x="48" y="120" fill="#C4D4E8" font-size="13">1 · Nouvelle vulnérabilité détectée</text>
+        <text x="48" y="152" fill="#C4D4E8" font-size="13">2 · Nouvelle recommandation ajoutée</text>
+        <text x="48" y="184" fill="#C4D4E8" font-size="13">3 · Recommandation retirée / re-pondérée</text>
+        <text x="48" y="216" fill="#C4D4E8" font-size="13">5 · Config / défaut changé côté Microsoft</text>
+
+        <!-- Tenant side -->
+        <rect x="372" y="48" width="320" height="208" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="392" y="80" fill="#7DD9F9" font-size="12.5" font-weight="700" letter-spacing="1">CÔTÉ TENANT — VOUS CONTRÔLEZ</text>
+        <text x="392" y="120" fill="#C4D4E8" font-size="13">4 · Licence du tenant changée</text>
+        <text x="392" y="152" fill="#C4D4E8" font-size="13">6 · Config changée côté opérateur</text>
+        <text x="392" y="196" fill="#6B85A6" font-size="12">Écartez 4 et 6 d'abord;</text>
+        <text x="392" y="216" fill="#6B85A6" font-size="12">si ni l'un ni l'autre, c'est Microsoft.</text>
+      </g>
+    </svg>
+    <figcaption>Écartez les deux causes que vous contrôlez; quand aucune ne colle, le mouvement est presque toujours côté Microsoft.</figcaption>
+  </figure>
+
+  <p>Quand la note bouge et que vous ne pouvez pas l'expliquer à partir des cas 4 et 6 (les causes côté tenant que vous contrôlez), la réponse est presque toujours 1, 2, 3 ou 5 — côté Microsoft. L'historique de changements de Secure Score dans le portail Defender, c'est là où vous confirmez.</p>
+
+  <h2>Vérifier avec le portail Microsoft Defender</h2>
+
+  <p>Quand la note bouge de façon inattendue, le flux diagnostique, c'est :</p>
+
+  <ol>
+    <li><strong>Ouvrez le portail Microsoft 365 Defender</strong> pour le client (<code>security.microsoft.com</code> → Secure Score).</li>
+    <li><strong>Regardez l'onglet History.</strong> Microsoft montre les changements de note récents avec les deltas sous-jacents au niveau de la recommandation.</li>
+    <li><strong>Pour chaque recommandation dont le statut a changé :</strong> cliquez dedans. Lisez la description, l'historique d'action, le détail par cible (si c'est une recommandation par utilisateur / par politique avec crédit partiel).</li>
+    <li><strong>Faites le recoupement avec le Tenant Change Log de Panoptica365</strong> pour confirmer si le changement vient du côté opérateur ou du côté Microsoft.</li>
+  </ol>
+
+  <p>C'est du travail par tenant. Il n'y a pas de vue « qu'est-ce qui a changé à travers les 30 clients cette semaine » à l'échelle de la flotte dans le portail Microsoft; chaque client est enquêté individuellement quand sa note bouge assez pour mériter un coup d'œil.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Point à retenir 1</div>
+    <p><strong>Le mouvement de la note est habituellement du côté Microsoft, pas du côté client.</strong> Une Secure Score qui descend sans aucun changement côté tenant, c'est le plus souvent une nouvelle vulnérabilité qui apparaît sur un terminal géré (le cycle de correctifs rattrape; les points reviennent), ou Microsoft qui ajoute / re-pondère une recommandation. Vérifiez l'onglet History dans le portail Defender avant de supposer que la sécurité du client a vraiment régressé.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">Point à retenir 2</div>
+    <p><strong>Le crédit partiel est l'ami de l'opérateur.</strong> Les recommandations à 80-95 % de leur max sont habituellement à un ou deux changements ciblés du plein crédit. Les travailler, c'est le chemin le plus efficace vers un mouvement de note. Les recommandations à 0 % sont typiquement les gros items architecturaux qui demandent plus de travail.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">Point à retenir 3</div>
+    <p><strong>Les recommandations conditionnées par licence restent dans le max — les gérer via Risk Accepted fait partie de l'hygiène opérateur.</strong> La Secure Score d'un client Business Premium inclut des recommandations E5 (Defender for Identity, Customer Lockbox, Auto-labeling, etc.) assises à zéro point. Le travail de l'opérateur, c'est de décider quoi faire avec chacune : implémenter (si possible), Resolved through third party (si un outil couvre la fonction), Risk accepted (avec une raison documentée), ou Planned (si planifié). Les items conditionnés par licence et non touchés tirent la note vers le bas sans contribuer à la valeur sécurité — des décisions Risk Accepted explicites font lire le pourcentage plus honnêtement et créent la piste d'audit que les clients veulent au renouvellement.</p>
+  </div>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Leçon 3 : Mapper le curriculum sur la note</b> — Quelles recommandations du catalogue Microsoft correspondent au travail que vous avez déjà fait dans les cartes 3, 4 et 5 — et la demi-douzaine à fort impact qui fait bouger l'essentiel de la note pour un client PME.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Leçon 4 : Où Secure Score induit en erreur</b> — Les angles morts, le piège du jeu de score, et le travail qui n'apparaît dans aucun chiffre.</div></div>
+  </div>
+
+  <p>Pour l'instant : prenez le client dont la note vous intrigue le plus. Ouvrez le portail Defender pour ce tenant. Lisez l'onglet History. La plupart du temps, ce qui avait l'air d'une dérive, c'est en fait Microsoft qui change les poteaux de but — et lire la note sous cet angle change la façon dont vous agissez dessus.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur comment Microsoft Secure Score est calculée (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-improvement-actions" target="_blank" rel="noopener">Microsoft Learn — How Secure Score is calculated</a>); mécanique du crédit partiel et de la notation des recommandations (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-history-metrics-trends" target="_blank" rel="noopener">Microsoft Learn — Track your Microsoft Secure Score history</a>); données et catégories Secure Score (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score" target="_blank" rel="noopener">Microsoft Learn — Microsoft Secure Score overview</a>); recommandations conditionnées par licence et permissions requises (<a href="https://learn.microsoft.com/en-us/defender-xdr/microsoft-secure-score-required-permissions" target="_blank" rel="noopener">Microsoft Learn — Required licenses and permissions</a>); référence de l'API Secure Score pour l'accès programmatique (<a href="https://learn.microsoft.com/en-us/graph/api/resources/securescore" target="_blank" rel="noopener">Microsoft Learn — Secure Score API in Graph</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

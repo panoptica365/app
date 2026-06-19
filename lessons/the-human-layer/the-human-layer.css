@@ -1,0 +1,201 @@
+/* ════════════════════════════════════════════════════════════
+   The Human Layer — shared stylesheet
+   Topic-specific reading theme for Panoptica365's Learn hub.
+   Mirrors the panoptica-dark tokens but adds warmth (serif display,
+   amber "Living it" accent) to distinguish this topic from the
+   technical curriculum. Single source of truth — every article in
+   this topic links this file; do not inline per-article styles.
+   ════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  /* Panoptica dark tokens (mirrored from public/css/themes/panoptica-dark.css) */
+  --p-accent-bright:#7DD9F9; --p-accent:#5CCBF4; --p-accent-deep:#2A7FA3;
+  --p-accent-pale:#A8E1F8; --p-accent-glow-rgba:rgba(92,203,244,.40);
+  --p-bg:#1D3A62; --p-surface:#081829; --p-surface-alt:#0C2038;
+  --p-surface-deep:#071221; --p-surface-elevated:#153055;
+  --p-text:#EEF4FC; --p-text-secondary:#B0C4DF; --p-text-muted:#6B85A6; --p-text-dim:#425C7E;
+  --p-border:#1F3C5C; --p-border-strong:#335F92; --p-border-accent:#4A80BD;
+  --p-warm:#B0C4DF; --p-danger:#FF5A6E; --p-success:#2EE8A0;
+  /* warm reflective accent — used ONLY in The Human Layer */
+  --hl-warm:#E8C07D; --hl-warm-soft:rgba(232,192,125,.14); --hl-warm-line:rgba(232,192,125,.45);
+  --hl-cool-soft:rgba(92,203,244,.10); --hl-cool-line:rgba(92,203,244,.45);
+  --font-body:'Geist','Inter',system-ui,sans-serif;
+  --font-serif:'Fraunces',Georgia,'Times New Roman',serif;
+  --corner:10px;
+}
+
+/* ── Light theme ──────────────────────────────────────────────
+   Surfaces/text/borders flip to the app's light palette, the cyan accent
+   deepens for contrast on a light surface, and the warm "Living it" amber
+   deepens just enough that its labels read on light. Values mirrored from
+   public/css/themes/panoptica-light.css (the single source of truth). The
+   renderer sets data-theme="light" on the iframe's <html> when the app pref is
+   light; absent it, lessons render dark as before. The inline <svg> diagrams
+   keep their authored dark palette by design (self-contained dark figure cards
+   on the light surface). */
+:root[data-theme="light"]{
+  --p-accent-bright:#2A9CCB; --p-accent:#1684B5; --p-accent-deep:#0B6C9A;
+  --p-accent-pale:#7DC4DD; --p-accent-glow-rgba:rgba(22,132,181,.28);
+  --p-bg:#E8EEF5; --p-surface:#FFFFFF; --p-surface-alt:#F4F7FB;
+  --p-surface-deep:#DCE3EE; --p-surface-elevated:#FFFFFF;
+  --p-text:#14202E; --p-text-secondary:#4C5E7A; --p-text-muted:#7388A2; --p-text-dim:#9CABBE;
+  --p-border:#C5CFDC; --p-border-strong:#9CABBE; --p-border-accent:#5CCBF4;
+  --p-danger:#D43A4F; --p-success:#1FB87C;
+  /* Warm accent stays amber, deepened so its labels read on light; the soft/
+     line tints carry through unchanged. */
+  --hl-warm:#B07D12;
+}
+/* Light page glow — keep it warm to match the topic's amber identity. */
+:root[data-theme="light"] body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(232,192,125,.14) 0%, transparent 60%),
+    var(--p-surface);
+}
+/* Pale cyan used as TEXT can't carry on near-white — deepen those spots. */
+:root[data-theme="light"] em,
+:root[data-theme="light"] .pull,
+:root[data-theme="light"] .moves li i{ color:var(--p-accent-deep); }
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #14305280 0%, transparent 60%),
+    var(--p-surface);
+  color:var(--p-text);
+  font-family:var(--font-body);
+  line-height:1.7;
+  font-size:17px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 22px 90px;}
+
+/* ── eyebrow ── */
+.eyebrow{
+  font-family:var(--font-body);font-weight:600;font-size:.72rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--p-accent);display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;margin:42px 0 14px;
+}
+.eyebrow .num{
+  color:var(--p-surface-deep);background:var(--p-accent);border-radius:4px;
+  padding:2px 7px;font-size:.7rem;letter-spacing:.06em;
+}
+.eyebrow .sep{color:var(--p-text-dim);letter-spacing:0;}
+
+h1{
+  font-family:var(--font-serif);font-optical-sizing:auto;font-weight:500;
+  font-size:2.7rem;line-height:1.1;letter-spacing:-.01em;margin:.1em 0 .35em;color:var(--p-text);
+}
+.dek{
+  font-family:var(--font-serif);font-weight:400;font-size:1.28rem;line-height:1.45;
+  color:var(--p-text-secondary);margin:0 0 30px;max-width:36em;
+}
+
+/* ── figures ── */
+figure{margin:0 0 14px;}
+.figsmall{margin:26px 0;}
+.hero{
+  width:100%;height:auto;display:block;border-radius:var(--corner);
+  border:1px solid var(--p-border);background:var(--p-surface-deep);
+}
+svg.diagram{width:100%;height:auto;display:block;}
+figcaption{
+  color:var(--p-text-muted);font-size:.8rem;margin-top:8px;text-align:center;font-style:italic;
+}
+
+/* ── body text ── */
+p{margin:0 0 20px;color:var(--p-text);}
+.lead p:first-of-type{font-size:1.06rem;}
+strong{color:var(--p-text);font-weight:600;}
+em{color:var(--p-accent-pale);font-style:italic;}
+
+h2{
+  font-family:var(--font-serif);font-weight:600;font-size:1.6rem;line-height:1.2;
+  margin:46px 0 16px;color:var(--p-text);letter-spacing:-.01em;
+}
+
+/* ── pull quote ── */
+.pull{
+  font-family:var(--font-serif);font-weight:400;font-size:1.5rem;line-height:1.4;
+  color:var(--p-accent-pale);border-left:3px solid var(--p-accent);
+  padding:6px 0 6px 24px;margin:34px 0;font-style:italic;
+}
+.pull cite{
+  display:block;font-family:var(--font-body);font-style:normal;font-size:.82rem;
+  letter-spacing:.04em;color:var(--p-text-muted);margin-top:12px;text-transform:uppercase;
+}
+
+/* ── lens cards (Leading it / Living it) ── */
+.lens{
+  border:1px solid var(--p-border);border-radius:var(--corner);
+  background:linear-gradient(180deg,var(--p-surface-alt),var(--p-surface));
+  padding:26px 28px 8px;margin:30px 0;position:relative;overflow:hidden;
+}
+.lens::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+.lens.leading::before{background:linear-gradient(90deg,var(--p-accent),transparent);}
+.lens.living::before{background:linear-gradient(90deg,var(--hl-warm),transparent);}
+.lens-tag{
+  display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:.74rem;
+  letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:999px;margin-bottom:6px;
+}
+.lens.leading .lens-tag{color:var(--p-accent);background:var(--hl-cool-soft);border:1px solid var(--hl-cool-line);}
+.lens.living .lens-tag{color:var(--hl-warm);background:var(--hl-warm-soft);border:1px solid var(--hl-warm-line);}
+.lens-tag svg{width:15px;height:15px;}
+.lens h3{font-family:var(--font-serif);font-weight:600;font-size:1.32rem;margin:8px 0 14px;color:var(--p-text);}
+.lens p{color:var(--p-text-secondary);}
+.lens .who{font-size:.82rem;color:var(--p-text-muted);margin:-2px 0 16px;letter-spacing:.02em;}
+
+/* practice list */
+.moves{list-style:none;margin:8px 0 22px;padding:0;}
+.moves li{position:relative;padding:0 0 16px 30px;color:var(--p-text-secondary);}
+.moves li b{color:var(--p-text);font-weight:600;}
+.moves li i{color:var(--p-accent-pale);font-style:italic;}
+.moves li::before{content:"";position:absolute;left:2px;top:9px;width:9px;height:9px;border-radius:50%;}
+.lens.leading .moves li::before{background:var(--p-accent);box-shadow:0 0 0 4px var(--hl-cool-soft);}
+.lens.living .moves li::before{background:var(--hl-warm);box-shadow:0 0 0 4px var(--hl-warm-soft);}
+
+/* ── generic callout / scene ── */
+.callout{
+  border:1px solid var(--p-border);border-left:3px solid var(--p-accent);
+  background:var(--p-surface-deep);border-radius:var(--corner);padding:18px 24px;margin:30px 0;
+  color:var(--p-text-secondary);
+}
+.callout p:last-child{margin-bottom:0;}
+
+/* ── stat band ── */
+.stat-band{display:flex;gap:18px;flex-wrap:wrap;margin:30px 0;}
+.stat{
+  flex:1 1 150px;border:1px solid var(--p-border);border-radius:var(--corner);
+  background:var(--p-surface-deep);padding:18px 20px;
+}
+.stat .n{font-family:var(--font-serif);font-weight:600;font-size:2.1rem;color:var(--p-accent);line-height:1;}
+.stat .l{font-size:.86rem;color:var(--p-text-secondary);margin-top:8px;}
+
+/* ── two-column text ── */
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:26px 0;}
+.twocol .col{border:1px solid var(--p-border);border-radius:var(--corner);background:var(--p-surface-deep);padding:18px 22px;}
+.twocol h4{margin:0 0 10px;font-family:var(--font-body);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;}
+.twocol .col p{color:var(--p-text-secondary);font-size:.96rem;margin:0;}
+@media (max-width:620px){.twocol{grid-template-columns:1fr;}}
+
+/* ── try-this box ── */
+.try{
+  border:1px dashed var(--p-border-strong);border-radius:var(--corner);
+  background:var(--p-surface-deep);padding:22px 26px;margin:36px 0 10px;
+}
+.try .label{
+  font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--hl-warm);margin-bottom:8px;display:flex;align-items:center;gap:8px;
+}
+.try .label svg{width:16px;height:16px;}
+.try p{margin:0;color:var(--p-text);font-size:1.05rem;}
+
+/* ── sources footer ── */
+.sources{margin-top:54px;padding-top:22px;border-top:1px solid var(--p-border);font-size:.86rem;color:var(--p-text-muted);}
+.sources h4{font-family:var(--font-body);font-weight:600;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--p-text-secondary);margin:0 0 12px;}
+.sources ul{margin:0;padding-left:18px;}
+.sources li{margin-bottom:7px;line-height:1.5;}
+.sources cite{color:var(--p-text-secondary);font-style:italic;}
+.sources .note{margin-top:14px;font-style:italic;color:var(--p-text-dim);font-size:.82rem;}

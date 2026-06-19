@@ -33,6 +33,7 @@ const path = require('path');
 const config = require('../config/default');
 const db = require('./db/database');
 const i18n = require('./i18n');
+const auth = require('./auth');
 
 // Routes
 const authRoutes = require('./routes/auth');
@@ -328,6 +329,41 @@ app.use('/api/security', securityApiRoutes);
 app.use('/api/heatmap', heatmapApiRoutes);
 app.use('/api/global-trends', globalTrendsApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
+
+// Learn lesson assets — the standalone lesson HTML + its two stylesheets,
+// served straight to the sandboxed iframe in the lesson modal. Auth-gated like
+// the rest of the app; serves ONLY .html/.css (so topic.json stays private),
+// denies dotfiles/AppleDouble (`._*`) and directory listings, and rejects any
+// path that isn't one of those extensions. The whole lessons/ tree is mounted
+// so the lessons' as-authored relative links resolve (../learn-base.css, etc.).
+app.use(
+  '/learn-assets',
+  auth.requireAuth,
+  (req, res, next) => {
+    // Reject dotfile segments (incl. macOS `._*`) and anything that isn't an
+    // .html/.css file. A bare directory request has no extension → 404.
+    if (req.path.split('/').some((seg) => seg.startsWith('.'))) {
+      return res.status(404).end();
+    }
+    if (!/\.(html|css)$/i.test(req.path)) return res.status(404).end();
+    next();
+  },
+  express.static(path.join(__dirname, '..', 'lessons'), {
+    index: false,
+    dotfiles: 'deny',
+    redirect: false,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      }
+      // First-party static; a short private cache is plenty.
+      res.setHeader('Cache-Control', 'private, max-age=300');
+    },
+  })
+);
+
 app.use('/api/learn', learnApiRoutes);
 app.use('/api/applications', applicationsApiRoutes);
 app.use('/api/access-review', accessReviewApiRoutes);

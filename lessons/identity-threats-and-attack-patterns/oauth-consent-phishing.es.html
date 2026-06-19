@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phishing por consentimiento OAuth — el ataque que sobrevive a un restablecimiento de contraseña — Amenazas de identidad y patrones de ataque</title>
+<meta name="lesson:title" content="Phishing por consentimiento OAuth — el ataque que sobrevive a un restablecimiento de contraseña">
+<meta name="lesson:subtitle" content="Engañar a usuarios para que otorguen permisos OAuth a una app maliciosa da acceso persistente al buzón que sobrevive a cualquier cambio de contraseña.">
+<meta name="lesson:icon" content="link">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Amenazas de identidad y patrones de ataque</span> <span class="sep">·</span> <span>Phishing por consentimiento OAuth</span></div>
+  <h1>Phishing por consentimiento OAuth — el ataque que sobrevive a un restablecimiento de contraseña</h1>
+  <p class="dek">Engañar a usuarios para que otorguen permisos OAuth a una app maliciosa da acceso persistente al buzón que sobrevive a cualquier cambio de contraseña.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un clic de consentimiento entrega a una app maliciosa un token de actualización, y a la derecha el restablecimiento de la contraseña no rompe el acceso de la app.">
+      <defs>
+        <radialGradient id="ocBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="ocTok" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="ocArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ocBg)"/>
+
+      <!-- izquierda: el clic de consentimiento -->
+      <g transform="translate(70,86)">
+        <rect x="0" y="0" width="270" height="168" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="22" y="36" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">PerformanceReview-Pro</text>
+        <line x1="22" y1="50" x2="248" y2="50" stroke="#1F3C5C"/>
+        <text x="22" y="76" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Leer tu correo</text>
+        <text x="22" y="98" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Enviar correo en tu nombre</text>
+        <text x="22" y="120" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Mantener acceso a tus datos</text>
+        <rect x="150" y="134" width="98" height="26" rx="13" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="199" y="152" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Aceptar</text>
+      </g>
+
+      <!-- centro: token emitido -->
+      <path d="M360 170 H470" stroke="#335F92" stroke-width="2.5" marker-end="url(#ocArr)"/>
+      <text x="415" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">concede</text>
+      <g transform="translate(560,170)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="58" fill="url(#ocTok)" opacity="0.18"/>
+        <rect x="-58" y="-26" width="116" height="52" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-34" cy="0" r="11" fill="url(#ocTok)"/>
+        <rect x="-16" y="-9" width="56" height="6" rx="3" fill="#2A7FA3"/>
+        <rect x="-16" y="3" width="40" height="6" rx="3" fill="#1F3C5C"/>
+      </g>
+      <text x="560" y="296" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="1">TOKEN DE ACTUALIZACIÓN</text>
+
+      <!-- derecha: el restablecimiento no lo rompe -->
+      <path d="M652 170 H770" stroke="#335F92" stroke-width="2.5" marker-end="url(#ocArr)"/>
+      <g transform="translate(870,170)">
+        <rect x="-90" y="-78" width="180" height="156" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <!-- ícono llave -->
+        <g transform="translate(0,-30)" stroke="#52708F" stroke-width="2.4" fill="none">
+          <circle cx="-14" cy="0" r="13"/>
+          <path d="M-1 0 H34 M26 0 V14 M14 0 V10"/>
+        </g>
+        <line x1="-58" y1="-66" x2="58" y2="22" stroke="#FF5A6E" stroke-width="3.4" stroke-linecap="round" opacity="0.9"/>
+        <text x="0" y="40" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">Contraseña restablecida</text>
+        <text x="0" y="60" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5">el acceso sobrevive</text>
+      </g>
+    </svg>
+    <figcaption>Un clic concede un token de actualización atado a la app — restablecer la contraseña deja intacto el acceso del atacante.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un usuario recibe un correo: «Ver archivo compartido en PerformanceReview-Pro». Hace clic. Un diálogo de consentimiento de Microsoft de apariencia familiar aparece. El diálogo dice: «PerformanceReview-Pro quiere permiso para: leer tu correo, enviar correo en tu nombre, leer todos los archivos a los que tienes acceso». El usuario tiene prisa. Hace clic en «Aceptar».</p>
+
+  <p>No hay contraseña que escribir. Ni prompt de MFA. Nada que <em>parezca</em> un ataque. El diálogo se ve como los diálogos de consentimiento que el usuario ve una vez al mes para aplicaciones legítimas. Dos segundos y un clic, y el usuario acaba de entregar a un atacante acceso persistente a su buzón y a sus archivos.</p>
+
+  <p>Tres semanas más tarde, el equipo de seguridad restablece la contraseña del usuario por culpa de alguna alerta sin relación. El atacante sigue dentro del buzón. Porque el atacante nunca necesitó la contraseña.</p>
+
+  <p>Esto es el phishing por consentimiento OAuth, y es el ataque peligroso más silencioso del ecosistema de M365.</p>
+  </div>
+
+  <h2>Por qué este ataque es estructuralmente distinto</h2>
+
+  <p>Cada otro ataque en esta tarjeta depende de obtener la <em>autenticación</em> del usuario — su contraseña, su MFA, su cookie de sesión. El usuario cambia su contraseña y el ataque termina.</p>
+
+  <p>El phishing por consentimiento OAuth no toca la autenticación. Convence al usuario para que conceda a una aplicación de terceros <em>permiso</em> para acceder a sus datos en su nombre. Microsoft emite a esa aplicación un token de actualización que está atado a la <em>aplicación</em>, no a la contraseña del usuario. La aplicación ahora puede pedir tokens de acceso frescos cuando quiera, indefinidamente, hasta que o bien el usuario revoque el consentimiento o un administrador deshabilite el registro empresarial de la aplicación.</p>
+
+  <p>Restablecer la contraseña del usuario no revoca el consentimiento. Deshabilitar la cuenta del usuario no siempre revoca el consentimiento (depende de la configuración). Forzar al usuario a rehacer MFA no revoca el consentimiento. El consentimiento es el ataque, y el consentimiento se pega.</p>
+
+  <p>Eso es lo que hace este ataque únicamente valioso para los atacantes en 2026: <em>la persistencia</em>. La mayoría de los compromisos terminan en el restablecimiento de la contraseña. Este no.</p>
+
+  <div class="callout insight">
+    <div class="clabel">El giro estructural</div>
+    <p>Cada otro ataque roba <strong>autenticación</strong> — y muere en un restablecimiento de contraseña. Este roba <strong>permiso</strong>. El consentimiento es el ataque, y el consentimiento se pega.</p>
+  </div>
+
+  <h2>El flujo OAuth, brevemente</h2>
+
+  <p>OAuth 2.0 es el protocolo legítimo que te permite decir «quiero usar esta aplicación de calendario, y la aplicación de calendario necesita leer mi calendario de Outlook». En lugar de darle a la aplicación tu contraseña de Microsoft (lo que sería imprudente), inicias sesión en Microsoft, Microsoft pregunta si estás seguro de querer darle a la aplicación los permisos específicos que está pidiendo, y si dices que sí, Microsoft le entrega a la aplicación un token que puede usar para actuar en tu nombre para esos permisos específicos.</p>
+
+  <p>Este es un <em>buen</em> protocolo. Cada integración legítima de productividad lo usa — tu plugin de Zoom, tu Calendly, tu Trello, tu asistente de IA de la semana. El patrón está bien.</p>
+
+  <p>El ataque abusa del patrón. El atacante registra una aplicación maliciosa en Entra ID (o bien en su propio tenant o en un tenant comprometido), le pone un nombre convincente, y engaña a los usuarios para que consientan a ella. El protocolo funciona correctamente; el usuario hizo clic en el botón. Desde la perspectiva de Microsoft, el consentimiento es legítimo.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="El flujo OAuth legítimo: el usuario inicia sesión en Microsoft, Microsoft pide conceder permisos, el usuario dice que sí, y Microsoft le entrega a la app un token para actuar en nombre del usuario.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="ofArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="100" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="111" y="124" fill="#C4D4E8" font-size="14" font-weight="600">App</text>
+        <text x="111" y="143" fill="#6B85A6" font-size="11.5">quiere acceso</text>
+
+        <rect x="285" y="100" width="150" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="124" fill="#A8E1F8" font-size="14" font-weight="600">Microsoft</text>
+        <text x="360" y="143" fill="#6B85A6" font-size="11.5">pregunta al usuario</text>
+
+        <rect x="534" y="100" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="609" y="124" fill="#C4D4E8" font-size="14" font-weight="600">Usuario</text>
+        <text x="609" y="143" fill="#6B85A6" font-size="11.5">dice que sí</text>
+      </g>
+      <path d="M186 122 H285" stroke="#5C7796" stroke-width="2" marker-end="url(#ofArr)"/>
+      <path d="M435 134 H534" stroke="#5C7796" stroke-width="2" marker-end="url(#ofArr)"/>
+      <path d="M534 156 C420 224, 200 224, 130 164" stroke="#2EE8A0" stroke-width="2" fill="none" marker-end="url(#ofArr)"/>
+      <text x="360" y="222" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="11.5">Microsoft entrega a la app un token para esos permisos</text>
+    </svg>
+    <figcaption>El protocolo es legítimo — autorizas permisos específicos y la app obtiene un token delimitado. El ataque abusa de este mismo patrón.</figcaption>
+  </figure>
+
+  <h2>Qué permisos importan</h2>
+
+  <p>No todos los ámbitos OAuth son igualmente peligrosos. El catálogo de permisos de Microsoft Graph es enorme, y un atajo útil para el triaje es mirar tres cosas:</p>
+
+  <p><strong>Permisos delegados vs permisos de aplicación.</strong> Los permisos delegados actúan <em>como el usuario</em> — la aplicación puede hacer lo que el usuario puede hacer. Los permisos de aplicación son <em>autónomos</em> — la aplicación puede actuar en nombre del tenant entero sin que un usuario esté presente. Los permisos de aplicación son mucho más peligrosos y requieren consentimiento de administrador (no los puedes aprobar como usuario regular). La mayoría de los ataques de phishing por consentimiento se dirigen a los permisos delegados porque pasan por un flujo de consentimiento de usuario normal.</p>
+
+  <p><strong>Read vs ReadWrite.</strong> Un ámbito <code>Mail.Read</code> le permite a la aplicación leer correo. Un ámbito <code>Mail.ReadWrite</code> le permite enviar correo y modificar el estado del buzón. Read solo es malo; ReadWrite es mucho peor. Busca <code>.ReadWrite</code>, <code>.Send</code>, <code>.Manage</code>, <code>.All</code> en los ámbitos solicitados — esos son los de alto valor.</p>
+
+  <p><strong>Mail, Files, Contacts, Calendar — los ámbitos de datos.</strong> <code>Mail.ReadWrite</code>, <code>Files.ReadWrite.All</code>, <code>Contacts.Read</code>, <code>Calendars.Read</code>. Esto es lo que quieren los atacantes. Una aplicación maliciosa con <code>Mail.ReadWrite</code> puede leer cada correo que el usuario tenga y enviar correo como él. Eso es suficiente para correr una operación de BEC completamente a través de OAuth, sin que ninguna contraseña cambie de manos.</p>
+
+  <p><strong>El ámbito asesino: <code>offline_access</code>.</strong> Este es el que concede un token de actualización. Sin él, la aplicación solo puede actuar mientras el usuario esté interactuando. Con él, la aplicación puede actuar sobre los datos del usuario indefinidamente, incluso cuando el usuario no esté en línea. Casi cada aplicación legítima de productividad lo solicita, y por eso no parece sospechoso. Casi cada maliciosa también.</p>
+
+  <div class="callout caution">
+    <div class="clabel">La combinación firma</div>
+    <p><code>Mail.ReadWrite</code> + <code>offline_access</code> es el equivalente OAuth de «preparación de ransomware». Hay aplicaciones legítimas que la necesitan, pero la mayoría no, y las aplicaciones atacantes casi siempre sí.</p>
+  </div>
+
+  <h2>Qué ve el usuario</h2>
+
+  <p>El diálogo de consentimiento es la última línea de defensa de Microsoft, y funciona solo en la medida en que el usuario lo lea.</p>
+
+  <p>La mayoría de los usuarios ven algo así y hacen clic en Aceptar sin leer:</p>
+
+  <blockquote><strong>PerformanceReview-Pro</strong> quiere:<br>
+  · Iniciar tu sesión y leer tu perfil<br>
+  · Leer tu correo<br>
+  · Tener acceso completo a tu buzón<br>
+  · Mantener acceso a los datos a los que le has dado acceso<br>
+  · Leer todos los archivos a los que tienes acceso</blockquote>
+
+  <p>Si el usuario lee, las señales de aviso están ahí. «Leer tu correo» no es algo que la mayoría de las aplicaciones necesiten. «Tener acceso completo a tu buzón» es la asesina. «Mantener acceso a los datos a los que le has dado acceso» es el ámbito <code>offline_access</code> con otro nombre.</p>
+
+  <p>Pero la gente no lee los diálogos de consentimiento. La investigación de Microsoft sobre su guía de phishing por consentimiento es inequívoca al respecto: los usuarios hacen clic a través de los diálogos casi universalmente si el nombre de la aplicación parece plausible. El diálogo es un control de defensa en profundidad; no es, por sí mismo, la defensa.</p>
+
+  <h2>Cómo registra el atacante la aplicación maliciosa</h2>
+
+  <p>Dos caminos, ambos comunes:</p>
+
+  <p><strong>Camino 1: registrar en su propio tenant.</strong> El atacante crea un tenant gratuito de desarrollador de Microsoft, registra una aplicación allí, y configura la aplicación para soportar autenticación multi-tenant. La aplicación puede entonces invocarse contra los usuarios de cualquier otro tenant. El atacante controla la aplicación y recibe todos los tokens consentidos a ella.</p>
+
+  <p><strong>Camino 2: registrar en un tenant previamente comprometido.</strong> Si el atacante ya ha vulnerado un tenant (vía AiTM, credential stuffing, o lo que sea), puede registrar una aplicación allí y luego usar esa aplicación para hacer phishing a usuarios de otros tenants. El campo <code>publisher</code> de la aplicación muestra el nombre del tenant comprometido, lo que a veces añade una capa de falsa legitimidad («ah, esto es de un proveedor con el que trabajamos»).</p>
+
+  <p>En ambos casos, la aplicación maliciosa termina siendo reportada a Microsoft y deshabilitada — pero «termina» es de días a semanas, y el atacante ya tiene los tokens de consentimiento para entonces. Deshabilitar la aplicación después no revoca retroactivamente los tokens ya emitidos.</p>
+
+  <h2>Cómo llega el correo</h2>
+
+  <p>El correo de phishing es típicamente uno de tres pretextos:</p>
+
+  <p><strong>El pretexto «archivo compartido».</strong> «Ver archivo compartido en [Nombre de aplicación plausible]». El clic lleva a un diálogo de consentimiento para una aplicación que supuestamente aloja el archivo.</p>
+
+  <p><strong>El pretexto «tu herramienta de IA/seguridad/productividad».</strong> «Tu cuenta ha sido aprovisionada para [Herramienta plausible]». El clic lleva a un diálogo de consentimiento bajo el pretexto de incorporación.</p>
+
+  <p><strong>El pretexto OAuth-como-bypass-de-MFA.</strong> «Inicia sesión para verificar tu identidad para RRHH / IT / Finanzas». La variante más sofisticada. El usuario piensa que se está autenticando; en realidad está consintiendo.</p>
+
+  <p>Los tres presentan el <em>diálogo real de consentimiento de Microsoft</em> porque el atacante está usando el protocolo OAuth legítimo contra los endpoints reales de Microsoft. No hay una barra de URL falsa que notar. La única señal disponible para el usuario es el <em>contenido</em> del diálogo de consentimiento — que, como ya se ha establecido, no lee.</p>
+
+  <h2>Qué hace Microsoft al respecto</h2>
+
+  <p>Algunas defensas están en su sitio por defecto; otras requieren configuración.</p>
+
+  <p><strong>Verificación del editor de la aplicación.</strong> Microsoft ofrece una insignia «editor verificado» para aplicaciones de organizaciones confirmadas. Los usuarios pueden configurarse para que solo consientan a aplicaciones verificadas. Esto es significativo — verificarse requiere un registro de Microsoft Partner y algún papeleo no trivial — pero las aplicaciones no verificadas siguen estando permitidas por defecto en la mayoría de los tenants.</p>
+
+  <p><strong>Políticas de consentimiento del usuario (Entra ID).</strong> El administrador puede restringir qué permisos pueden consentir los usuarios sin aprobación del administrador. Microsoft revisó estas opciones a finales de 2024 / 2025, así que el menú en el portal de Entra hoy se ve así:</p>
+
+  <ul>
+    <li><em>No permitir el consentimiento del usuario.</em> Todo requiere aprobación del administrador. Muy seguro, a menudo demasiado restrictivo para organizaciones con integraciones legítimas de productividad.</li>
+    <li><em>Permitir el consentimiento del usuario para aplicaciones de editores verificados, para permisos seleccionados.</em> Los usuarios pueden consentir a aplicaciones de editores verificados o a aplicaciones registradas en la propia organización del usuario, y solo para permisos que Microsoft clasifica como «de bajo impacto». El terreno medio explícito y predecible.</li>
+    <li><em>Dejar que Microsoft gestione los ajustes de consentimiento</em> (la opción recomendada de Microsoft a partir de 2025, y el nuevo valor por defecto en tenants frescos). Microsoft actualiza automáticamente la política de consentimiento del tenant para alinearse con sus directrices actuales. Un sub-interruptor — <em>Habilitar consentimiento del usuario para clientes de correo populares</em> — permite a los usuarios consentir a aplicaciones populares de correo de terceros para permisos específicos de Mail (Apple Mail, Thunderbird y similares). El sub-interruptor es una concesión de usabilidad que la mayoría de los tenants necesitan, pero afloja la política en el rincón de permisos de Mail de la superficie.</li>
+  </ul>
+
+  <p>La antigua opción «Permitir el consentimiento del usuario para todas las aplicaciones» que quizá recuerdes del portal de Entra más antiguo ha sido retirada. Esa retirada es en sí misma un reconocimiento por parte de Microsoft de que la era de permisivo-por-defecto ha terminado.</p>
+
+  <p>Para un MSP que gestiona tenants de clientes, <strong>la opción de editores-verificados-y-bajo-impacto suele seguir siendo la mejor elección</strong> — no porque sea más segura que la opción gestionada por Microsoft en términos absolutos, sino porque es <em>predecible</em>. Sabes exactamente cuál es tu política; tú controlas cuándo cambia; el rastro de auditoría es tuyo. «Dejar que Microsoft gestione» es apropiado para tenants sin MSP que quieren mantenerse al día con los valores por defecto cambiantes de Microsoft; para tenants que tú gestionas, quieres ser tú quien decide qué cambia y cuándo — y quieres que cualquier cambio de política aterrice en tu registro de cambios, no en las notas de versión de Microsoft.</p>
+
+  <p>Cualquiera de las dos opciones no-bloqueantes que elijas, la mayor parte de los ataques de phishing por consentimiento OAuth fallan en la etapa del diálogo de consentimiento porque la aplicación maliciosa no es de un editor verificado y no está pidiendo un permiso de «bajo impacto».</p>
+
+  <p><strong>Flujo de aprobación del administrador.</strong> Cuando los usuarios intentan consentir a una aplicación que excede sus permisos permitidos, pueden enviar una «solicitud de consentimiento del administrador» en su lugar. El administrador revisa y aprueba o rechaza. Añade un paso de revisión humana antes de que aplicaciones de alto permiso entren en el tenant.</p>
+
+  <p><strong>Descubrimiento de aplicaciones anómalas de Defender for Cloud Apps.</strong> MDA (E5 o como complemento) detecta comportamiento inusual de aplicación — una aplicación que de repente empieza a acceder a muchos más buzones de lo habitual, o una aplicación que no se veía ayer pero está exfiltrando datos hoy. Las alertas se disparan sobre la anomalía <em>comportamental</em>, que pilla incluso aplicaciones que lograron pasar por el diálogo de consentimiento.</p>
+
+  <p><strong>Attack Disruption de Defender XDR</strong> también cubre incidentes de abuso OAuth — cuando MDA + correlación de inicio de sesión alcanza alta confianza de que una aplicación consentida está exfiltrando, Disruption puede deshabilitar la aplicación y revocar sus tokens.</p>
+
+  <h2>Cómo es realmente la revocación</h2>
+
+  <p>Cuando descubres una aplicación consentida maliciosa — o bien vía una alerta o porque el cliente reportó comportamiento extraño — los pasos son:</p>
+
+  <ol>
+    <li><strong>Identificar la aplicación en Entra ID.</strong> Aplicaciones empresariales → buscar por nombre o por registro reciente → encontrar la maliciosa. Confirmar los permisos sospechosos (Mail.ReadWrite + offline_access es la firma clásica).</li>
+    <li><strong>Retirar el consentimiento del usuario.</strong> Por cada usuario afectado, el consentimiento está en su colección <code>oauth2PermissionGrants</code>. El administrador puede revocar por usuario o a nivel de toda la organización.</li>
+    <li><strong>Deshabilitar o eliminar el principal de servicio de la aplicación.</strong> Esto detiene la aplicación de autenticarse en absoluto. Hecho desde el blade de aplicaciones empresariales.</li>
+    <li><strong>Revocar todos los tokens de actualización de los usuarios afectados.</strong> Este es el paso <em>crítico</em>. Hasta que los tokens de actualización se revoquen, el atacante puede seguir generando tokens de acceso. Usa <code>Revoke-AzureADUserAllRefreshToken</code> (heredado) o la llamada equivalente a la API de Graph. Nota que Microsoft está en medio de una evolución de cómo funciona esto — algunos tokens de actualización están vinculados a aplicaciones específicas y sobreviven a la revocación a nivel de usuario. El movimiento más seguro es invalidar también la contraseña del usuario, aunque estrictamente eso no deshabilite la aplicación.</li>
+    <li><strong>Auditar los buzones afectados.</strong> Mira correo enviado, reglas de reenvío, descargas de archivos, cualquier cosa que la aplicación pudiera haber hecho mientras tuvo acceso. Trátalo como un compromiso confirmado y ejecuta el manual completo de recuperación de BEC (lección 6).</li>
+    <li><strong>Bloquear la URL de respuesta de la aplicación o el tenant de la aplicación.</strong> Si la aplicación maliciosa está registrada en un tenant conocido-malo, puedes usar Acceso Condicional para bloquear inicios de sesión a ese tenant.</li>
+  </ol>
+
+  <p>La limpieza completa es más involucrada que para un compromiso de restablecimiento de contraseña. Ese es el punto del ataque — lo eligen los atacantes porque es difícil de limpiar.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>El phishing por consentimiento OAuth sale a la superficie en Panoptica365 a través de varios tipos de alertas:</p>
+
+  <p><strong>Alertas de nuevas concesiones OAuth.</strong> Cuando un usuario consiente a una nueva aplicación en el tenant de un cliente, el consentimiento aparece en el Unified Audit Log y Panoptica365 puede sacarlo a la superficie (especialmente si los permisos solicitados incluyen <code>Mail.ReadWrite</code>, <code>Files.ReadWrite.All</code>, o <code>offline_access</code>). La alerta exacta depende de si se usó el patrón concesión-de-usuario o concesión-de-administrador.</p>
+
+  <p><strong>Anomalías de Defender for Cloud Apps</strong> ingeridas vía Defender XDR. Cuando MDA detecta que una aplicación previamente consentida se está comportando de forma anómala (volumen inusual de lecturas de buzón, actividad súbita en una región donde la aplicación nunca había estado antes, etc.), la alerta resultante fluye a Panoptica365.</p>
+
+  <p><strong>Actividad sospechosa de aplicación correlacionada con inicios de sesión.</strong> Cuando la cuenta del mismo usuario muestra una concesión OAuth + un evento de seguimiento como una concesión de permisos de buzón o una regla de reenvío, ambas alertas aparecerán cerca una de la otra. Trátalas como el mismo incidente.</p>
+
+  <p>Lo que Panoptica365 no hace actualmente es un inventario completo de aplicaciones OAuth por tenant con puntuación de riesgo. Por ahora, el flujo de trabajo manual es: cuando una alerta se dispara, abre la vista de aplicaciones empresariales del portal de Entra para el tenant del cliente, filtra por consentidas recientemente, y revisa.</p>
+
+  <h2>Defender al cliente</h2>
+
+  <p>Defensas en capas, por orden de impacto:</p>
+
+  <p><strong>Configurar el consentimiento del usuario en «editores verificados, solo permisos de bajo impacto».</strong> Este es el cambio de configuración con mayor palanca. Elimina la mayor parte del phishing por consentimiento en la etapa del diálogo. Para tenants gestionados por MSP, esta opción explícita es preferible a «Dejar que Microsoft gestione» porque tú controlas la política y cualquier cambio aterriza en tu rastro de auditoría en lugar de las notas de versión de Microsoft. Configurar una vez por tenant.</p>
+
+  <p><strong>Implementar el flujo de aprobación del administrador.</strong> Cuando los usuarios quieren consentir a aplicaciones más allá del ámbito permitido, envían una solicitud. El administrador revisa. Añade una comprobación de sentido común sin bloquear aplicaciones legítimas.</p>
+
+  <p><strong>Inventariar las aplicaciones consentidas existentes periódicamente.</strong> Cada tenant de Entra de cliente tiene una lista de aplicaciones empresariales. Revísala trimestralmente. Busca aplicaciones con nombres que no reconozcas, aplicaciones con permisos amplios, aplicaciones que fueron concedidas por usuarios que no deberían consentir a aplicaciones con permisos amplios. Quita cualquier cosa sospechosa.</p>
+
+  <p><strong>Entrenar a los usuarios para que lean los diálogos de consentimiento.</strong> Específicamente: cualquier cosa pidiendo <code>Mail.ReadWrite</code> o <code>Files.ReadWrite.All</code> de un editor desconocido es casi siempre maliciosa. Este es uno de los pocos entrenamientos de seguridad que tiene una acción concreta («mira los permisos, luego o haz clic en Cancelar o consulta con IT primero»).</p>
+
+  <p><strong>Usar Acceso Condicional para exigir aprobación del administrador para nuevos inicios de sesión de aplicación.</strong> Una política de AC puede exigir aprobación del administrador antes del primer inicio de sesión de un usuario a una aplicación recién registrada. Ralentiza significativamente el ataque.</p>
+
+  <p><strong>Para tenants E5, activar Defender for Cloud Apps y configurar políticas de gobernanza de aplicaciones.</strong> MDA puede poner en cuarentena aplicaciones de alto riesgo automáticamente y alertar sobre comportamiento anómalo. Vale la pena activarlo.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Tres puntos para llevarte.</p>
+
+  <p><strong>El consentimiento se pega; trátalo como instalar software.</strong> Una vez que un usuario consiente a una aplicación, esa aplicación tiene acceso hasta que alguien lo revoque explícitamente. Trata el consentimiento OAuth como tratarías instalar software en un endpoint — revisar, aprobar, documentar. En cualquier sitio donde los usuarios de un cliente puedan auto-consentir ampliamente, tienes un agujero.</p>
+
+  <p><strong>Mail.ReadWrite + offline_access es el equivalente OAuth de «preparación de ransomware».</strong> Cuando ves esta combinación de ámbitos en una aplicación, mírala largo. Hay aplicaciones legítimas que la necesitan, pero la mayoría no, y las aplicaciones atacantes casi siempre sí.</p>
+
+  <p><strong>La limpieza es más difícil que para compromisos de contraseñas.</strong> Planifica en consecuencia. Cuando se dispare la alerta, dedícale más tiempo del que dedicarías a un incidente de restablecimiento de contraseña, porque los pasos son: identificar la aplicación, revocar consentimientos por usuario, deshabilitar el principal de servicio, revocar tokens de actualización, auditar los datos afectados, y restablecer la contraseña del usuario por si acaso. Trata cada incidente de aplicación-consentida-maliciosa como un proyecto pequeño, no un arreglo rápido.</p>
+
+  <h2>Lo que viene</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Abuso del código de dispositivo</b> — Estrechamente relacionado con el phishing por consentimiento en el sentido de que abusa de un flujo de autenticación legítimo de Microsoft. Storm-2372 — el actor vinculado a Rusia — ha estado corriendo campañas de código de dispositivo a escala desde agosto de 2024.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>BEC</b> — Donde el acceso adquirido por OAuth a menudo termina — monitorización silenciosa de buzón, manipulación de facturas, fraude de transferencia.</div></div>
+  </div>
+
+  <p>Por ahora: el phishing por consentimiento OAuth es el compromiso persistente más silencioso del catálogo M365. Las defensas están a nivel de configuración — fijar las restricciones de consentimiento del usuario correctamente y la mayoría de los ataques fallan en el diálogo. La limpieza está implicada. La lección para los clientes es que no todas las amenazas necesitan usar la contraseña.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — Microsoft Learn sobre ajustes de consentimiento de usuario y administrador (<a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent" target="_blank" rel="noopener">Microsoft Learn — Configure user consent settings</a>); patrones de phishing por consentimiento OAuth (<a href="https://learn.microsoft.com/en-us/defender-office-365/detect-and-remediate-illicit-consent-grants" target="_blank" rel="noopener">Microsoft Learn — Illicit consent grant attacks</a>); referencia de permisos de Microsoft Graph (<a href="https://learn.microsoft.com/en-us/graph/permissions-reference" target="_blank" rel="noopener">Microsoft Graph permissions reference</a>); gobernanza de aplicaciones de Defender for Cloud Apps (<a href="https://learn.microsoft.com/en-us/defender-cloud-apps/app-governance-manage-app-governance" target="_blank" rel="noopener">Microsoft Learn — App governance</a>); procedimiento de revocación de tokens de actualización (<a href="https://learn.microsoft.com/en-us/entra/identity/users/users-revoke-access" target="_blank" rel="noopener">Microsoft Learn — Revoke user access in an emergency</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

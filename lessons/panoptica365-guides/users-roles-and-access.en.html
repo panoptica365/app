@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Users, roles and access — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Users, roles and access">
+<meta name="lesson:subtitle" content="Three tiers gated by Entra groups: who can do what, how to set it up, and how it's enforced.">
+<meta name="lesson:icon" content="users">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Users, roles and access</span></div>
+  <h1>Users, roles and access</h1>
+  <p class="dek">Three tiers gated by Entra groups: who can do what, how to set it up, and how it's enforced.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Three Entra security groups — Admins, Operators, Viewers — feeding into three Panoptica365 access tiers.">
+      <defs>
+        <radialGradient id="urBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="urArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#urBg)"/>
+
+      <!-- left: Entra groups -->
+      <text x="250" y="58" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">ENTRA ID GROUPS</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="120" y="86" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="116" fill="#C4D4E8" font-size="15">Panoptica Admins</text></g>
+        <g><rect x="120" y="146" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="176" fill="#C4D4E8" font-size="15">Panoptica Operators</text></g>
+        <g><rect x="120" y="206" width="260" height="48" rx="10" fill="#0E2236" stroke="#33527A"/><text x="250" y="236" fill="#C4D4E8" font-size="15">Panoptica Viewers</text></g>
+      </g>
+
+      <!-- arrows -->
+      <path d="M388 110 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+      <path d="M388 170 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+      <path d="M388 230 H470" stroke="#335F92" stroke-width="2.4" marker-end="url(#urArr)"/>
+
+      <!-- right: tiers -->
+      <text x="700" y="58" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">PANOPTICA365 TIERS</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="500" y="86" width="280" height="48" rx="10" fill="#10243B" stroke="#5CCBF4"/><text x="640" y="111" fill="#7DD9F9" font-size="15" font-weight="700">Admin</text><text x="640" y="127" fill="#6B85A6" font-size="11">full control</text></g>
+        <g><rect x="500" y="146" width="280" height="48" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="640" y="171" fill="#A8E1F8" font-size="15" font-weight="600">Operator</text><text x="640" y="187" fill="#6B85A6" font-size="11">the working tier</text></g>
+        <g><rect x="500" y="206" width="280" height="48" rx="10" fill="#0E2640" stroke="#2A6F9E"/><text x="640" y="231" fill="#A8E1F8" font-size="15" font-weight="600">Viewer</text><text x="640" y="247" fill="#6B85A6" font-size="11">read-only</text></g>
+      </g>
+
+      <!-- sign-in gate note -->
+      <g transform="translate(900,90)">
+        <rect x="0" y="0" width="180" height="160" rx="12" fill="#0E2236" stroke="#1F3C5C"/>
+        <circle cx="90" cy="52" r="26" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <rect x="78" y="46" width="24" height="20" rx="3" fill="#5CCBF4"/>
+        <path d="M82 46 v-6 a8 8 0 0 1 16 0 v6" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <text x="90" y="104" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12">In none of the</text>
+        <text x="90" y="122" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="12">three groups?</text>
+        <text x="90" y="144" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">No sign-in</text>
+      </g>
+    </svg>
+    <figcaption>Three groups, three tiers. Membership in your MSP tenant's Entra ID decides what each operator can do.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Panoptica365 doesn't keep its own password database. Operators sign in with their Microsoft accounts, and what they're allowed to do is decided by <strong>Entra ID group membership</strong> in your MSP tenant. Three groups, three tiers.</p>
+  </div>
+
+  <h2>The three roles</h2>
+
+  <p><strong>Admin</strong> — full control. Manages tenants (add, edit, delete), all of Settings, alert policy editing, and the audit log. The only role that can onboard or delete a tenant.</p>
+
+  <p><strong>Operator</strong> — the working tier. Deploys CA and Intune templates, applies security settings, accepts drift and creates exemptions, resolves and manages alerts, reruns AI analyses. Cannot touch Settings or tenant lifecycle.</p>
+
+  <p><strong>Viewer</strong> — read-only. Sees dashboards, alerts, reports, heatmap, Learn — everything visible, nothing mutable. Right for techs in training, auditors, or a customer-facing screen.</p>
+
+  <p>Sign-in itself is gated by the same groups: an account in none of the three groups cannot log in at all.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="What each role can do: Admin, Operator and Viewer compared across tenant lifecycle, Settings, deploys and alerts, and read-only visibility.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs>
+        <g id="urYes"><circle r="9" fill="none" stroke="#2EE8A0" stroke-width="2"/><path d="M-4 0 L-1 3 L4.5 -3.5" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+        <g id="urNo"><circle r="9" fill="none" stroke="#52708F" stroke-width="2"/><path d="M-3.5 -3.5 L3.5 3.5 M3.5 -3.5 L-3.5 3.5" stroke="#52708F" stroke-width="2" stroke-linecap="round"/></g>
+      </defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- header -->
+        <text x="36" y="44" fill="#6B85A6" font-size="12" letter-spacing="1.5">CAN DO</text>
+        <text x="438" y="44" text-anchor="middle" fill="#7DD9F9" font-size="13" font-weight="700">Admin</text>
+        <text x="558" y="44" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="600">Operator</text>
+        <text x="666" y="44" text-anchor="middle" fill="#A8E1F8" font-size="13" font-weight="600">Viewer</text>
+        <line x1="36" y1="58" x2="684" y2="58" stroke="#1F3C5C" stroke-width="1.5"/>
+
+        <!-- rows -->
+        <g transform="translate(0,86)"><text x="36" y="5" fill="#C4D4E8" font-size="14">Tenant lifecycle (add / delete)</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,134)"><text x="36" y="5" fill="#C4D4E8" font-size="14">Settings &amp; alert policy editing</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,182)"><text x="36" y="5" fill="#C4D4E8" font-size="14">Deploy, apply, accept, resolve</text><use href="#urYes" x="438" y="0"/><use href="#urYes" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+        <g transform="translate(0,230)"><text x="36" y="5" fill="#C4D4E8" font-size="14">View dashboards, alerts, reports</text><use href="#urYes" x="438" y="0"/><use href="#urYes" x="558" y="0"/><use href="#urYes" x="666" y="0"/></g>
+        <g transform="translate(0,278)"><text x="36" y="5" fill="#C4D4E8" font-size="14">Audit log</text><use href="#urYes" x="438" y="0"/><use href="#urNo" x="558" y="0"/><use href="#urNo" x="666" y="0"/></g>
+      </g>
+      <line x1="498" y1="64" x2="498" y2="296" stroke="#0E2640" stroke-width="1"/>
+      <line x1="610" y1="64" x2="610" y2="296" stroke="#0E2640" stroke-width="1"/>
+    </svg>
+    <figcaption>Admin has full control; Operator is the working tier; Viewer is read-only. If a user lands in multiple groups, they get the highest tier.</figcaption>
+  </figure>
+
+  <h2>Setting it up</h2>
+
+  <ol>
+    <li>In <strong>your MSP tenant's</strong> Entra ID, create three security groups (e.g. <em>Panoptica Admins</em>, <em>Panoptica Operators</em>, <em>Panoptica Viewers</em>) and add your people.</li>
+    <li>In <strong>Settings → Access Control</strong>, paste each group's object ID into the matching field: <strong>Admins</strong>, <strong>Operators</strong>, <strong>Viewers</strong>.</li>
+    <li>Click the verify button next to each — it resolves the group's display name via Graph, confirming you pasted the right GUID.</li>
+    <li>Save. From then on, membership changes in Entra take effect on next login — managing who can do what in Panoptica365 is just managing group membership, which your shop already knows how to do.</li>
+  </ol>
+
+  <p>If a user lands in multiple groups, they get the highest tier they qualify for.</p>
+
+  <h2>How enforcement works</h2>
+
+  <p>Two layers, and it's worth knowing both:</p>
+
+  <ul>
+    <li><strong>The UI adapts.</strong> Your role badge shows in the sidebar; the System section (Settings, Audit Log) is hidden for non-admins; admin-only buttons (Add Tenant, Delete Tenant, policy editing) disappear or disable; some fields render visible-but-readonly for lower tiers.</li>
+    <li><strong>The server enforces.</strong> Every mutating API endpoint checks the role server-side. The hidden button isn't the security boundary — the 403 is. And every denied attempt is written to the MSP audit log.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Two enforcement layers: the UI hides controls, but the server-side 403 is the real security boundary, and denied attempts are logged.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="urArr2" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- layer 1: UI -->
+        <rect x="40" y="40" width="280" height="150" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="180" y="68" fill="#6B85A6" font-size="12" letter-spacing="1.5">LAYER 1</text>
+        <text x="180" y="92" fill="#C4D4E8" font-size="15" font-weight="600">The UI adapts</text>
+        <text x="180" y="122" fill="#8FA6C2" font-size="12.5">Buttons hidden or disabled</text>
+        <text x="180" y="142" fill="#8FA6C2" font-size="12.5">Fields visible-but-readonly</text>
+        <text x="180" y="168" fill="#FFC04D" font-size="11.5">convenience, not the boundary</text>
+
+        <!-- layer 2: server -->
+        <rect x="400" y="40" width="280" height="150" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <text x="540" y="68" fill="#6B85A6" font-size="12" letter-spacing="1.5">LAYER 2</text>
+        <text x="540" y="92" fill="#A8E1F8" font-size="15" font-weight="700">The server enforces</text>
+        <text x="540" y="122" fill="#9FD8F2" font-size="12.5">Role checked server-side</text>
+        <text x="540" y="148" fill="#FF8A98" font-size="20" font-weight="700">403</text>
+        <text x="540" y="170" fill="#7DD9F9" font-size="11.5">the real security boundary · logged</text>
+      </g>
+      <path d="M320 115 H400" stroke="#5C7796" stroke-width="2" marker-end="url(#urArr2)"/>
+    </svg>
+    <figcaption>The hidden button is convenience; the server-side 403 is the security boundary — and every denied attempt is written to the MSP audit log.</figcaption>
+  </figure>
+
+  <p>So if someone on your team reports a missing button, check their group membership before filing a bug.</p>
+
+  <h2>Accountability</h2>
+
+  <p>Every meaningful operator action — template deploys, settings changes, drift acceptances, alert resolutions, tenant lifecycle, and those 403s — is recorded in the <strong>Audit Log</strong> with actor, timestamp and outcome (see <em>System administration</em>). The role model decides who <em>can</em> act; the audit log records who <em>did</em>.</p>
+
+  <h2>Practical advice</h2>
+
+  <ul>
+    <li><strong>Be stingy with Admin.</strong> Most of the daily work — deploy, accept, resolve — is Operator-level by design. Two admins is plenty for most shops.</li>
+    <li><strong>Use Viewer deliberately.</strong> It's a safe way to give visibility to juniors, auditors, or a NOC screen without handing anyone a trigger.</li>
+    <li><strong>Review membership when people change roles</strong> — it's an Entra group like any other, and it deserves the same joiner-mover-leaver discipline you give customer tenants.</li>
+  </ul>
+
+</div>
+</body>
+</html>

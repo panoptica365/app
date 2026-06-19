@@ -542,11 +542,13 @@ async function checkWorkerLiveness(lang) {
   };
 }
 
-// ─── DB size (Reliability P0, 2026-06-12) ───
+// ─── DB size (Reliability P0, 2026-06-12; size threshold removed 2026-06-19) ───
 //
-// Per-table rows + bytes from information_schema, warn when the schema total
-// crosses config.db.sizeWarnGb (env DB_SIZE_WARN_GB, default 10). TABLE_ROWS /
-// DATA_LENGTH are InnoDB estimates — fine for a trend sentry, not an audit.
+// Per-table rows + bytes from information_schema, reported for visibility only.
+// There is NO size threshold: MySQL/InnoDB scales to hundreds of GB, and a fixed
+// GB "warn" just produced a permanent amber on any healthy, growing book. This
+// check always reports 'ok' and never affects the overall health rollup.
+// TABLE_ROWS / DATA_LENGTH are InnoDB estimates — fine for a readout, not an audit.
 const DB_SIZE_TOP_TABLES = 12;
 
 async function checkDbSize(lang) {
@@ -585,23 +587,16 @@ async function checkDbSize(lang) {
     });
 
     const totalBytes = Number(totals?.total_bytes || 0);
-    const warnGb = config.db.sizeWarnGb;
     const totalGb = totalBytes / (1024 ** 3);
-    const state = totalGb >= warnGb ? 'warn' : 'ok';
-
-    const summary = state === 'ok'
-      ? t('health.db_size.summary.ok', { lang, gb: totalGb.toFixed(2), tables: totals?.table_count ?? 0 })
-      : t('health.db_size.summary.warn', { lang, gb: totalGb.toFixed(2), warnGb });
 
     return {
       id: 'db_size',
       label: t('health.db_size.label', { lang }),
-      state,
-      summary,
+      state: 'ok',
+      summary: t('health.db_size.summary.ok', { lang, gb: totalGb.toFixed(2), tables: totals?.table_count ?? 0 }),
       detail: {
         total_bytes: totalBytes,
         table_count: totals?.table_count ?? 0,
-        warn_threshold_gb: warnGb,
         top_tables: rows.map(r => ({
           table: r.table_name,
           rows: Number(r.table_rows || 0),
@@ -614,7 +609,7 @@ async function checkDbSize(lang) {
     return {
       id: 'db_size',
       label: t('health.db_size.label', { lang }),
-      state: 'warn',
+      state: 'ok',
       summary: t('health.db_size.summary.unknown', { lang }),
       detail: { error: err.message || String(err) },
     };

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licencias de Microsoft 365 — qué desbloquea qué — Welcome to M365 Cybersecurity</title>
+<meta name="lesson:title" content="Licencias de Microsoft 365 — qué desbloquea qué">
+<meta name="lesson:subtitle" content="De Business Basic a E5 — qué nivel de SKU desbloquea el Acceso Condicional, Intune, Defender for Endpoint y la protección de identidad basada en riesgo.">
+<meta name="lesson:icon" content="key">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Welcome to M365 Cybersecurity</span> <span class="sep">·</span> <span>Licencias de Microsoft 365</span></div>
+  <h1>Licencias de Microsoft 365 — qué desbloquea qué</h1>
+  <p class="dek">De Business Basic a E5 — qué nivel de SKU desbloquea el Acceso Condicional, Intune, Defender for Endpoint y la protección de identidad basada en riesgo.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Una escalera de cinco niveles de licencia de Microsoft 365 — Business Basic, Standard, Premium, E3 y E5 — que sube de izquierda a derecha, con Business Premium resaltado como base de seguridad.">
+      <defs>
+        <radialGradient id="lcBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="lcPrem" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2640"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#lcBg)"/>
+
+      <!-- baseline -->
+      <line x1="80" y1="296" x2="1040" y2="296" stroke="#1F3C5C" stroke-width="1.5"/>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Business Basic -->
+        <g>
+          <rect x="96" y="226" width="156" height="70" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="174" y="256" fill="#C4D4E8" font-size="15" font-weight="600">Business</text>
+          <text x="174" y="276" fill="#C4D4E8" font-size="15" font-weight="600">Basic</text>
+        </g>
+        <!-- Business Standard -->
+        <g>
+          <rect x="284" y="186" width="156" height="110" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="362" y="216" fill="#C4D4E8" font-size="15" font-weight="600">Business</text>
+          <text x="362" y="236" fill="#C4D4E8" font-size="15" font-weight="600">Standard</text>
+        </g>
+        <!-- Business Premium (highlighted) -->
+        <g>
+          <rect x="472" y="132" width="156" height="164" rx="9" fill="url(#lcPrem)" stroke="#5CCBF4" stroke-width="1.8"/>
+          <text x="550" y="162" fill="#A8E1F8" font-size="15" font-weight="700">Business</text>
+          <text x="550" y="182" fill="#A8E1F8" font-size="15" font-weight="700">Premium</text>
+          <rect x="486" y="200" width="128" height="22" rx="11" fill="#10243B" stroke="#2EE8A0"/>
+          <text x="550" y="215" fill="#2EE8A0" font-size="11" font-weight="600" letter-spacing="0.5">BASE PYME</text>
+        </g>
+        <!-- E3 -->
+        <g>
+          <rect x="660" y="92" width="156" height="204" rx="9" fill="#0E2236" stroke="#33527A"/>
+          <text x="738" y="124" fill="#C4D4E8" font-size="15" font-weight="600">Microsoft</text>
+          <text x="738" y="144" fill="#C4D4E8" font-size="15" font-weight="600">365 E3</text>
+        </g>
+        <!-- E5 -->
+        <g>
+          <rect x="848" y="52" width="156" height="244" rx="9" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+          <text x="926" y="84" fill="#A8E1F8" font-size="15" font-weight="700">Microsoft</text>
+          <text x="926" y="104" fill="#A8E1F8" font-size="15" font-weight="700">365 E5</text>
+          <rect x="862" y="122" width="128" height="22" rx="11" fill="#0E2236" stroke="#5CCBF4"/>
+          <text x="926" y="137" fill="#7DD9F9" font-size="11" font-weight="600" letter-spacing="0.5">PILA COMPLETA</text>
+        </g>
+      </g>
+
+      <!-- rising arrow -->
+      <path d="M120 252 Q560 40 1000 96" fill="none" stroke="#2A7FA3" stroke-width="2" stroke-dasharray="2 7" opacity="0.7"/>
+      <text x="560" y="324" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="1.5">MÁS CAPACIDAD DE SEGURIDAD →</text>
+    </svg>
+    <figcaption>La escalera de licencias, en el orden en que Microsoft la vende — y dónde empiezan de verdad las herramientas de seguridad.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La estrategia de licencias de Microsoft puede resumirse en una frase: <em>llevar más clientes a Business Premium o E5</em>.</p>
+
+  <p>Una vez que ves la estrategia, el catálogo entero de licencias empieza a tener sentido. ¿Por qué Business Standard sigue conspicuamente con pocos recursos en seguridad? Porque Microsoft quiere que los clientes Standard suban a Premium. ¿Por qué a E3 le siguen añadiendo funciones en cada subida de precio? Porque Microsoft quiere convertir a E3 en el paso obvio entre Premium y E5. ¿Por qué E5 mantiene las capacidades más interesantes de Defender bloqueadas detrás de sí? Porque ahí está el margen.</p>
+
+  <p>Te lo digo desde el principio porque las decisiones de licencia son la conversación con mayor palanca que un MSP tiene con un cliente. Acierta el nivel y la mayoría de los controles de este programa simplemente funcionan. Falla el nivel — deja a un cliente en Business Standard, por ejemplo — y aproximadamente la mitad de lo que has aprendido en las tarjetas 2 a 6 se vuelve inaccesible, no importa cuánto te esfuerces.</p>
+
+  <p>Esta lección es el mapa de licencias, una lectura honesta de cada nivel, y cómo usar el nivel en las conversaciones con clientes.</p>
+  </div>
+
+  <h2>La tarjeta de precios actual (efectiva el 1 de julio de 2026)</h2>
+
+  <p>Microsoft acaba de subir precios en la mayoría de los niveles. Compromiso anual, por usuario, por mes, en USD:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nivel</th><th>Precio (post-julio 2026)</th><th>Precio anterior</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Business Basic</td><td>~6 $</td><td>~6 $ (estable)</td></tr>
+        <tr><td>Business Standard</td><td>14 $</td><td>12,50 $</td></tr>
+        <tr><td><strong>Business Premium</strong></td><td><strong>22 $</strong></td><td><strong>22 $ (estable)</strong></td></tr>
+        <tr><td>Microsoft 365 E3</td><td>39 $</td><td>36 $</td></tr>
+        <tr><td>Microsoft 365 E5</td><td>60 $</td><td>57 $</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Fíjate en lo que hizo Microsoft. <strong>Business Premium no subió.</strong> Business Standard subió un 12 %. E3 y E5 subieron un 8 % y un 5 % respectivamente. El mantenimiento del precio de Premium no es generosidad; es una señal. Quieren que los clientes Standard encuentren Premium incluso más atractivo, y acaban de añadir una lista significativa de capacidades a Premium y E3 al mismo tiempo. El precio <em>es</em> el marketing.</p>
+
+  <h2>Qué desbloquea cada nivel realmente (solo seguridad)</h2>
+
+  <p>La matriz completa de funciones es enorme. Abajo está la rebanada de solo-seguridad — las partes que importan para el programa que estás leyendo.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="Mapa de capacidades de seguridad: dónde el Acceso Condicional, Intune, Defender for Endpoint Plan 2 y Entra ID P2 se vuelven disponibles por primera vez a través de los niveles.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- column headers -->
+        <text x="40" y="34" fill="#6B85A6" font-size="12" letter-spacing="0.5">CAPACIDAD DE SEGURIDAD</text>
+        <text x="436" y="34" text-anchor="middle" fill="#6B85A6" font-size="11.5" letter-spacing="0.5">DISPONIBLE DESDE</text>
+        <line x1="40" y1="44" x2="680" y2="44" stroke="#1F3C5C" stroke-width="1"/>
+
+        <!-- rows -->
+        <g>
+          <text x="40" y="78" fill="#C4D4E8" font-size="14">Exchange Online Protection</text>
+          <rect x="372" y="62" width="128" height="26" rx="13" fill="#0E2236" stroke="#33527A"/><text x="436" y="79" text-anchor="middle" fill="#C4D4E8" font-size="12.5">Business Basic</text>
+        </g>
+        <g>
+          <text x="40" y="118" fill="#C4D4E8" font-size="14">Acceso Condicional · Intune</text>
+          <rect x="372" y="102" width="184" height="26" rx="13" fill="#10243B" stroke="#5CCBF4"/><text x="464" y="119" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="600">Business Premium</text>
+        </g>
+        <g>
+          <text x="40" y="158" fill="#C4D4E8" font-size="14">Defender for Business (EDR)</text>
+          <rect x="372" y="142" width="184" height="26" rx="13" fill="#10243B" stroke="#5CCBF4"/><text x="464" y="159" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="600">Business Premium</text>
+        </g>
+        <g>
+          <text x="40" y="198" fill="#C4D4E8" font-size="14">Defender for Endpoint Plan 2</text>
+          <rect x="372" y="182" width="128" height="26" rx="13" fill="#0E2640" stroke="#2A6F9E"/><text x="436" y="199" text-anchor="middle" fill="#A8E1F8" font-size="12.5" font-weight="600">Microsoft 365 E5</text>
+        </g>
+        <g>
+          <text x="40" y="238" fill="#C4D4E8" font-size="14">Entra ID P2 (Identity Protection)</text>
+          <rect x="372" y="222" width="128" height="26" rx="13" fill="#0E2640" stroke="#2A6F9E"/><text x="436" y="239" text-anchor="middle" fill="#A8E1F8" font-size="12.5" font-weight="600">Microsoft 365 E5</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Los controles en los que se apoya este programa, y el nivel más bajo que realmente desbloquea cada uno.</figcaption>
+  </figure>
+
+  <h3>Business Basic — ~6 $/usuario/mes</h3>
+
+  <p>Correo y las apps de Office Web. <strong>Exchange Online Protection (EOP)</strong> para anti-spam y anti-malware básico sobre el flujo de correo. Sin Acceso Condicional. Sin aplicación de MFA a nivel de licencia (puedes seguir habilitando los valores por defecto de seguridad, pero son toscos). Sin Intune. Sin Defender más allá de EOP.</p>
+
+  <p>En términos de seguridad, Business Basic es «M365 está técnicamente presente». Si un cliente está en este nivel y tú eres responsable de su seguridad, lo <em>estás protegiendo con las herramientas que él posee</em>, que es decir casi ninguna.</p>
+
+  <h3>Business Standard — 14 $/usuario/mes (post-julio 2026)</h3>
+
+  <p>Añade las apps de Office de escritorio y algunas funciones de negocio (Bookings, Forms, MileIQ). En el lado de seguridad, <strong>idéntico a Basic.</strong> Sin Intune. Sin Defender for Business. Sin Entra ID P1. Sin Acceso Condicional.</p>
+
+  <div class="callout caution">
+    <p>Este es el nivel trampa. Los clientes piensan que están «en Office 365» y asumen que eso incluye seguridad. No lo hace. Los clientes Standard no pueden usar Acceso Condicional, no pueden gestionar dispositivos a través de Intune, no pueden aplicar anti-phishing significativo más allá de la base de EOP. Si un cliente está en Standard y un atacante le hace phishing, tus opciones de respuesta se limitan a «restablecer su contraseña» — que ya hemos establecido (lección 1, tarjeta 2) que no es suficiente en 2026.</p>
+  </div>
+
+  <h3>Business Premium — 22 $/usuario/mes</h3>
+
+  <p>El primer nivel con herramientas de seguridad reales, y el nivel más importante de toda esta lección.</p>
+
+  <ul>
+    <li><strong>Intune Plan 1</strong> — gestión de dispositivos completa, políticas de cumplimiento, despliegue de aplicaciones.</li>
+    <li><strong>Defender for Business</strong> — EDR enfocado en PYME con gestión de políticas simplificada. Menos capaz que Defender for Endpoint Plan 2, pero cubre el modelo de amenazas para la mayoría de las PYME.</li>
+    <li><strong>Entra ID P1</strong> — <em>Acceso Condicional</em>, más restablecimiento de contraseña de autoservicio, grupos dinámicos, asignación de licencias basada en grupos.</li>
+    <li><strong>Defender for Office 365 Plan 1</strong> — políticas anti-phishing, Safe Links, Safe Attachments, protección contra suplantación. (Añadido a Premium y E3 a finales de 2025.)</li>
+    <li><strong>Information Protection P1</strong> — etiquetas de confidencialidad (clasificación manual).</li>
+    <li><strong>Cumplimiento de Microsoft Purview</strong> — retención básica y eDiscovery (limitado).</li>
+  </ul>
+
+  <p>Business Premium es la <strong>base de seguridad PYME</strong>. Es el nivel más bajo donde los controles de este programa son en su mayoría utilizables. Si un cliente tiene menos de 300 usuarios y está en cualquier cosa por debajo de Premium, tu primera conversación con él debería ser sobre subirlo. Premium también es un nivel con precio fijo — Microsoft lo está dejando en 22 $ específicamente para hacer esta conversación más fácil.</p>
+
+  <p>Las dos brechas notables en Premium que los operadores sienten:</p>
+
+  <p><strong>Sin Entra ID P2.</strong> P2 es donde vive Identity Protection (puntuación basada en riesgo de usuarios e inicios de sesión). El Acceso Condicional basado en riesgo — «bloquear el inicio de sesión cuando el riesgo del usuario es alto» — no está disponible en Premium. Puedes exigir MFA en general, pero no puedes escalar dinámicamente basándote en la propia telemetría de riesgo de Microsoft.</p>
+
+  <p><strong>Sin Defender XDR completo.</strong> Defender for Business te da EDR para terminales pero no es lo mismo que Defender for Endpoint Plan 2, y muchas de las capacidades más profundas de correlación entre productos de Defender XDR (Threat Explorer, Custom Detection Rules a escala, advanced hunting con retención larga) son funciones de Plan 2 / E5.</p>
+
+  <p>Para el 80 % de los clientes PYME, esas brechas no importan en el día a día. Para el otro 20 % — industrias reguladas, clientes con datos sensibles, clientes que ya han sido vulnerados una vez — importan mucho.</p>
+
+  <h3>Microsoft 365 E3 — 39 $/usuario/mes (post-julio 2026)</h3>
+
+  <p>Diseñado para organizaciones más grandes o aquellas que quieren la pila completa de Microsoft sin el salto a Defender for Endpoint Plan 2 / Entra ID P2 de E5. E3 ha ido siendo mejorado paulatinamente — finales de 2025 añadió Defender for Office 365 Plan 1 e Intune Plan 2, más Remote Help y Intune Advanced Analytics.</p>
+
+  <p>Comparado con Business Premium, E3 añade:</p>
+
+  <ul>
+    <li><strong>Intune Plan 2</strong> — Remote Help, funciones avanzadas de gestión de dispositivos.</li>
+    <li><strong>Microsoft Defender Antivirus</strong> incluido (este es el AV de Windows que viene con el sistema — <em>no</em> Defender for Endpoint).</li>
+    <li><strong>Funciones de Office 365 E3</strong> — límites de buzón más altos, archivado, cumplimiento más avanzado.</li>
+    <li><strong>Sin tope de usuarios</strong> — Business Premium está topado en 300 usuarios.</li>
+  </ul>
+
+  <p>Lo que E3 <em>no</em> te da que podrías pensar:</p>
+
+  <ul>
+    <li><strong>Defender for Endpoint Plan 2</strong> (EDR con acciones de respuesta avanzadas) — solo E5.</li>
+    <li><strong>Entra ID P2</strong> (Identity Protection) — solo E5.</li>
+    <li><strong>Defender for Identity</strong>, <strong>Defender for Cloud Apps</strong> — solo E5.</li>
+    <li><strong>Defender XDR completo</strong> — parcial en E3; completo solo en E5.</li>
+  </ul>
+
+  <div class="callout caution">
+    <p>E3 es, de manera algo incómoda, <em>menos seguro que Business Premium</em> en el eje de EDR. Business Premium viene con Defender for Business; E3 viene solo con el Defender Antivirus de Windows. El cliente correcto de E3 empareja su licencia con Defender for Endpoint Plan 1 o 2 como complemento, o sube a E5.</p>
+  </div>
+
+  <p>Por eso «E3 vs Business Premium» es una conversación real con el cliente, y no una con una respuesta de una línea. Muchas PYME terminan mejor protegidas en Premium que en E3 porque Premium viene con un EDR real por defecto.</p>
+
+  <h3>Microsoft 365 E5 — 60 $/usuario/mes (post-julio 2026)</h3>
+
+  <p>La pila completa.</p>
+
+  <ul>
+    <li><strong>Defender for Endpoint Plan 2</strong> — el EDR completo con advanced hunting, automatic investigation, seis meses de retención de telemetría, integración completa con XDR.</li>
+    <li><strong>Defender for Identity</strong> — monitorización de AD local.</li>
+    <li><strong>Defender for Cloud Apps</strong> — monitorización a nivel de SaaS y descubrimiento de shadow IT.</li>
+    <li><strong>Defender for Office 365 Plan 2</strong> — añade Threat Explorer, Attack Simulation Training, Automated Investigation and Response.</li>
+    <li><strong>Entra ID P2</strong> — Identity Protection (puntuación de riesgo), Privileged Identity Management (PIM), revisiones de acceso.</li>
+    <li><strong>Insider Risk Management</strong> — el módulo de Purview para la fuga de datos por insiders.</li>
+    <li><strong>Cloud PKI</strong> — autoridad de certificación alojada por Microsoft.</li>
+    <li><strong>Microsoft Security Copilot agents</strong> (despliegue en 2026) — asistencia de flujo de trabajo de seguridad impulsada por IA a través de Defender, Entra, Intune, Purview.</li>
+  </ul>
+
+  <p>E5 es correcto para clientes que tienen un equipo de seguridad real, cargas de trabajo reguladas, o que le han pedido a su MSP que «sea el SOC». La mayoría de las PYME no necesitan E5; algunas sí lo necesitan, sin duda.</p>
+
+  <h2>Cuándo E5 vale la pena de verdad</h2>
+
+  <p>El pitch honesto de E5 no es «más funciones por más dinero». Son <em>tres capacidades específicas que no están disponibles por debajo de E5</em>.</p>
+
+  <p><strong>Acceso Condicional basado en riesgo.</strong> Entra ID P2 (solo E5) le da al Acceso Condicional la capacidad de leer el riesgo del usuario y el riesgo del inicio de sesión desde Entra ID Protection en el momento de la política. Eso significa que puedes escribir «bloquear inicio de sesión cuando el riesgo del usuario es alto» en lugar de «exigir MFA siempre». Es la diferencia entre MFA de instrumento contundente y seguridad contextual. Para clientes que ven con frecuencia ataques sofisticados de identidad, esto importa.</p>
+
+  <p><strong>Defender for Endpoint Plan 2.</strong> El EDR completo. La cobertura de detección comportamental en Plan 2 es materialmente más profunda que Defender for Business (Premium) o Defender Antivirus solo (E3). Incluye Live Response (shell remoto a un dispositivo para investigación), Threat &amp; Vulnerability Management completo, seis meses de retención de telemetría.</p>
+
+  <p><strong>Privileged Identity Management (PIM).</strong> Elevación administrativa justo-a-tiempo. Los administradores no tienen Global Admin permanente; solicitan elevación, aprueban mediante flujo, y el rol se revoca automáticamente después de un tiempo definido. Para cualquier cliente donde la amenaza interna es real (casi siempre lo es), PIM es una de las mejores mitigaciones disponibles y existe solo en E5.</p>
+
+  <p>Si un cliente no se beneficia de al menos dos de esas tres, E5 probablemente es excesivo. Véndele Business Premium con una explicación clara de <em>por qué</em> — ese es un pitch más honesto que subirle por razones de ingresos.</p>
+
+  <h2>Lo que significa la subida de precio de julio de 2026 para las conversaciones con clientes</h2>
+
+  <p>Vas a tener conversaciones sobre precios con la mayoría de tus clientes en los próximos 6–9 meses. Algunas cosas a tener en cuenta.</p>
+
+  <p><strong>El diferencial de precio entre Standard y Premium acaba de encogerse.</strong> Premium está a 22 $, Standard a 14 $. La brecha era de 9,50 $; ahora es de 8 $. El argumento para subir clientes de Standard a Premium acaba de hacerse un 16 % más barato de hacer. Úsalo.</p>
+
+  <p><strong>Los clientes solo-E3 deberían evaluarse para presión de subida.</strong> Los clientes de E3 que pagan 39 $ están gastando casi el doble de lo que cuesta Premium pero están obteniendo <em>menos cobertura de EDR</em> en sus terminales. Muchos deberían o bien bajar a Premium (si tienen menos de 300 usuarios) o subir a E5. Quedarse en E3 sin Defender for Endpoint Plan 2 como complemento es un terreno medio de seguridad que debería revisitarse.</p>
+
+  <p><strong>E5 ahora es un cliente de 60 $.</strong> Las conversaciones de renovación a 60 $ son distintas de las de 57 $. Asegúrate de que el cliente está <em>usando de verdad</em> lo suficiente de la pila de E5 para justificarlo — ¿PIM activado y configurado? ¿Identity Protection alimentando realmente políticas de AC basadas en riesgo? ¿Defender XDR siendo revisado semanalmente? Si tres de esas respuestas son «no», el cliente podría estar pagando por capacidades que no está operando, y tienes una conversación sobre o bien ajustar el tamaño de su licencia <em>o</em> ayudarle a operar lo que posee.</p>
+
+  <h2>Lo que esto significa para el operador</h2>
+
+  <p>Dos puntos prácticos.</p>
+
+  <p><strong>Conoce el nivel de licencia antes de proponer un control.</strong> «Activa el Acceso Condicional basado en riesgo» es una recomendación excelente, salvo que no existe por debajo de E5. Recomendar controles a los que el cliente no tiene acceso es un problema de credibilidad. La consciencia de licencias en las alertas de Panoptica365 (la capa de análisis con IA) es en parte para evitar esto — pero tú, el operador, también deberías interiorizar qué controles requieren qué nivel.</p>
+
+  <p><strong>La conversación sobre la licencia forma parte de la conversación sobre la seguridad.</strong> Los MSP que tratan el nivel de licencia como una pregunta de ventas y la seguridad como una pregunta técnica separada se pierden esto. La licencia <em>es</em> la frontera de seguridad. Si no puedes habilitar Acceso Condicional, no puedes hacer cumplir fronteras de identidad. Si no puedes desplegar Defender for Endpoint, no puedes responder de forma significativa al ransomware. Vender Business Premium es vender seguridad; vender Business Standard es vender un producto distinto del que el cliente cree que está comprando.</p>
+
+  <h2>Lo que viene</h2>
+
+  <ul>
+    <li><strong>Lección 6: Dónde encaja Panoptica365 en este cuadro.</strong> La última lección de orientación antes de meternos en las amenazas y los controles reales.</li>
+  </ul>
+
+  <p>Después arranca la tarjeta 2 (<em>Amenazas de identidad y patrones de ataque</em>). Para entonces, cuando una alerta recomiende «MFA resistente al phishing» o «AC basado en riesgo» o «Defender for Identity», sabrás si el cliente puede actuar sobre esa recomendación o si la recomendación misma es una conversación de subida de licencia disfrazada.</p>
+
+  <p>Por ahora: las licencias no son un detalle de facturación. Son la frontera de seguridad. Vende Business Premium. Trata Standard como una brecha de seguridad. Trata E5 como un gasto justificado solo cuando el cliente está usando de verdad sus tres capacidades diferenciadas.</p>
+
+  <div class="sources">
+    <h4>Fuentes</h4>
+    <p>Fuentes de los datos en esta lección — cambios de precio y funciones de Microsoft 365 efectivos el 1 de julio de 2026 (<a href="https://www.microsoft.com/en-us/microsoft-365/blog/2025/12/04/advancing-microsoft-365-new-capabilities-and-pricing-update/" target="_blank" rel="noopener">Microsoft 365 Blog — Advancing Microsoft 365, diciembre de 2025</a>); matrices de comparación de planes y funciones de Microsoft 365 (<a href="https://www.microsoft.com/en-us/microsoft-365/enterprise/microsoft-365-plans-and-pricing" target="_blank" rel="noopener">Compare Microsoft 365 Enterprise Plans and Pricing</a>); análisis Business Premium vs E3 (<a href="https://www.trustedtechteam.com/blogs/microsoft-365/business-premium-vs-e3" target="_blank" rel="noopener">TrustedTech — Business Premium or E3?</a>); resumen de cambios de precio de Microsoft 365 en 2026 (<a href="https://blog.cloudcapsule.io/blog/microsoft-365-pricing-changes-in-2026-what-you-really-need-to-know" target="_blank" rel="noopener">CloudCapsule 2026 pricing analysis</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OAuth consent phishing — the attack that survives a password reset — Identity threats &amp; attack patterns</title>
+<meta name="lesson:title" content="OAuth consent phishing — the attack that survives a password reset">
+<meta name="lesson:subtitle" content="Tricking users into granting a malicious app OAuth permissions gives attackers persistent mailbox access that outlasts any password change.">
+<meta name="lesson:icon" content="link">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Identity threats &amp; attack patterns</span> <span class="sep">·</span> <span>OAuth consent phishing</span></div>
+  <h1>OAuth consent phishing — the attack that survives a password reset</h1>
+  <p class="dek">Tricking users into granting a malicious app OAuth permissions gives attackers persistent mailbox access that outlasts any password change.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A consent click hands a malicious app a refresh token, and a password reset on the left fails to break the app's access on the right.">
+      <defs>
+        <radialGradient id="ocBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="ocTok" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="ocArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#ocBg)"/>
+
+      <!-- left: the consent click -->
+      <g transform="translate(70,86)">
+        <rect x="0" y="0" width="270" height="168" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="22" y="36" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">PerformanceReview-Pro</text>
+        <line x1="22" y1="50" x2="248" y2="50" stroke="#1F3C5C"/>
+        <text x="22" y="76" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Read your mail</text>
+        <text x="22" y="98" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Send mail as you</text>
+        <text x="22" y="120" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12.5">Maintain access to your data</text>
+        <rect x="150" y="134" width="98" height="26" rx="13" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="199" y="152" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Accept</text>
+      </g>
+
+      <!-- middle: token issued -->
+      <path d="M360 170 H470" stroke="#335F92" stroke-width="2.5" marker-end="url(#ocArr)"/>
+      <text x="415" y="156" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12">grants</text>
+      <g transform="translate(560,170)">
+        <circle r="92" fill="none" stroke="#274B72" stroke-width="1" stroke-dasharray="3 8"/>
+        <circle r="58" fill="url(#ocTok)" opacity="0.18"/>
+        <rect x="-58" y="-26" width="116" height="52" rx="10" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.6"/>
+        <circle cx="-34" cy="0" r="11" fill="url(#ocTok)"/>
+        <rect x="-16" y="-9" width="56" height="6" rx="3" fill="#2A7FA3"/>
+        <rect x="-16" y="3" width="40" height="6" rx="3" fill="#1F3C5C"/>
+      </g>
+      <text x="560" y="296" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">REFRESH TOKEN</text>
+
+      <!-- right: password reset doesn't break it -->
+      <path d="M652 170 H770" stroke="#335F92" stroke-width="2.5" marker-end="url(#ocArr)"/>
+      <g transform="translate(870,170)">
+        <rect x="-90" y="-78" width="180" height="156" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <!-- key icon -->
+        <g transform="translate(0,-30)" stroke="#52708F" stroke-width="2.4" fill="none">
+          <circle cx="-14" cy="0" r="13"/>
+          <path d="M-1 0 H34 M26 0 V14 M14 0 V10"/>
+        </g>
+        <line x1="-58" y1="-66" x2="58" y2="22" stroke="#FF5A6E" stroke-width="3.4" stroke-linecap="round" opacity="0.9"/>
+        <text x="0" y="40" text-anchor="middle" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">Password reset</text>
+        <text x="0" y="60" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5">access survives</text>
+      </g>
+    </svg>
+    <figcaption>One click grants a refresh token tied to the app — so resetting the password leaves the attacker's access intact.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A user gets an email: "View shared file in PerformanceReview-Pro." They click. A familiar-looking Microsoft consent dialog pops up. The dialog says, "PerformanceReview-Pro would like permission to: read your mail, send email as you, read all files you have access to." The user is in a hurry. They click "Accept."</p>
+
+  <p>There is no password to type. No MFA prompt. Nothing that <em>feels</em> like an attack. The dialog looks like the consent dialogs the user sees once a month for legitimate apps. Two seconds and a click, and the user has just handed an attacker persistent access to their mailbox and files.</p>
+
+  <p>Three weeks later, the security team resets the user's password because of some unrelated alert. The attacker is still inside the mailbox. Because the attacker never needed the password.</p>
+
+  <p>This is OAuth consent phishing, and it is the quietest dangerous attack in the M365 ecosystem.</p>
+  </div>
+
+  <h2>Why this attack is structurally different</h2>
+
+  <p>Every other attack in this card relies on getting the user's <em>authentication</em> — their password, their MFA, their session cookie. The user changes their password and the attack ends.</p>
+
+  <p>OAuth consent phishing doesn't touch authentication. It convinces the user to grant a third-party application <em>permission</em> to access their data on their behalf. Microsoft issues that application a refresh token that's tied to the <em>application</em>, not to the user's password. The application can now request fresh access tokens whenever it wants, indefinitely, until either the user revokes the consent or an admin disables the application's enterprise registration.</p>
+
+  <p>Resetting the user's password doesn't revoke the consent. Disabling the user's account doesn't always revoke the consent (depending on the configuration). Forcing the user to re-MFA doesn't revoke the consent. The consent is the attack, and the consent is sticky.</p>
+
+  <p>That's what makes this attack uniquely valuable to attackers in 2026: <em>persistence</em>. Most compromises end at password reset. This one doesn't.</p>
+
+  <div class="callout insight">
+    <div class="clabel">The structural twist</div>
+    <p>Every other attack steals <strong>authentication</strong> — and dies at a password reset. This one steals <strong>permission</strong>. The consent is the attack, and the consent is sticky.</p>
+  </div>
+
+  <h2>The OAuth flow, briefly</h2>
+
+  <p>OAuth 2.0 is the legitimate protocol that lets you say "I want to use this calendar app, and the calendar app needs to read my Outlook calendar." Instead of giving the app your Microsoft password (which would be reckless), you log in to Microsoft, Microsoft asks if you're sure you want to give the app the specific permissions it's asking for, and if you say yes, Microsoft hands the app a token it can use to act on your behalf for those specific permissions.</p>
+
+  <p>This is a <em>good</em> protocol. Every legitimate productivity integration uses it — your Zoom plugin, your Calendly, your Trello, your AI assistant of the week. The pattern is fine.</p>
+
+  <p>The attack abuses the pattern. The attacker registers a malicious app in Entra ID (either their own tenant or a compromised tenant), gives it a convincing name, and tricks users into consenting to it. The protocol works correctly; the user clicked the button. From Microsoft's perspective, the consent is legitimate.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="The legitimate OAuth flow: user logs in to Microsoft, Microsoft asks to grant permissions, the user says yes, and Microsoft hands the app a token to act on the user's behalf.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="ofArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="36" y="100" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="111" y="124" fill="#C4D4E8" font-size="14" font-weight="600">App</text>
+        <text x="111" y="143" fill="#6B85A6" font-size="11.5">wants access</text>
+
+        <rect x="285" y="100" width="150" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="360" y="124" fill="#A8E1F8" font-size="14" font-weight="600">Microsoft</text>
+        <text x="360" y="143" fill="#6B85A6" font-size="11.5">asks the user</text>
+
+        <rect x="534" y="100" width="150" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="609" y="124" fill="#C4D4E8" font-size="14" font-weight="600">User</text>
+        <text x="609" y="143" fill="#6B85A6" font-size="11.5">says yes</text>
+      </g>
+      <path d="M186 122 H285" stroke="#5C7796" stroke-width="2" marker-end="url(#ofArr)"/>
+      <path d="M435 134 H534" stroke="#5C7796" stroke-width="2" marker-end="url(#ofArr)"/>
+      <path d="M534 156 C420 224, 200 224, 130 164" stroke="#2EE8A0" stroke-width="2" fill="none" marker-end="url(#ofArr)"/>
+      <text x="360" y="222" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="11.5">Microsoft hands the app a token for those permissions</text>
+    </svg>
+    <figcaption>The protocol is legitimate — you authorize specific permissions and the app gets a scoped token. The attack abuses this exact pattern.</figcaption>
+  </figure>
+
+  <h2>What permissions matter</h2>
+
+  <p>Not all OAuth scopes are equally dangerous. The Microsoft Graph permission catalogue is sprawling, and a useful triage shortcut is to look at three things:</p>
+
+  <p><strong>Delegated vs. application permissions.</strong> Delegated permissions act <em>as the user</em> — the app can do whatever the user can do. Application permissions are <em>standalone</em> — the app can act on behalf of the entire tenant without a user being present. Application permissions are far more dangerous and require admin consent (you can't approve them as a regular user). Most consent-phishing attacks target delegated permissions because those go through a normal user consent flow.</p>
+
+  <p><strong>Read vs. ReadWrite.</strong> A <code>Mail.Read</code> scope lets the app read mail. A <code>Mail.ReadWrite</code> scope lets it send mail and modify mailbox state. Read alone is bad; ReadWrite is much worse. Look for <code>.ReadWrite</code>, <code>.Send</code>, <code>.Manage</code>, <code>.All</code> in the requested scopes — those are the high-value ones.</p>
+
+  <p><strong>Mail, Files, Contacts, Calendar — the data scopes.</strong> <code>Mail.ReadWrite</code>, <code>Files.ReadWrite.All</code>, <code>Contacts.Read</code>, <code>Calendars.Read</code>. These are what attackers want. A malicious app with <code>Mail.ReadWrite</code> can read every email the user has and send mail as them. That's enough to run a BEC operation entirely through OAuth, with no password ever changing hands.</p>
+
+  <p><strong>The killer scope: <code>offline_access</code>.</strong> This is the one that grants a refresh token. Without it, the app can only act while the user is interacting. With it, the app can act on the user's data indefinitely, even when the user isn't online. Almost every legitimate productivity app requests this, which is why it doesn't look suspicious. Almost every malicious one does too.</p>
+
+  <div class="callout caution">
+    <div class="clabel">The signature combo</div>
+    <p><code>Mail.ReadWrite</code> + <code>offline_access</code> is the OAuth equivalent of "ransomware-staging." There are legitimate apps that need it, but most don't, and the attacker apps almost always do.</p>
+  </div>
+
+  <h2>What the user sees</h2>
+
+  <p>The consent dialog is Microsoft's last line of defence, and it works only as well as the user reads it.</p>
+
+  <p>Most users see something like this and click Accept without reading:</p>
+
+  <blockquote><strong>PerformanceReview-Pro</strong> wants to:<br>
+  · Sign you in and read your profile<br>
+  · Read your mail<br>
+  · Have full access to your mailbox<br>
+  · Maintain access to data you have given it access to<br>
+  · Read all files that you have access to</blockquote>
+
+  <p>If the user reads, the warning signs are there. "Read your mail" is not a thing most apps need. "Have full access to your mailbox" is the killer. "Maintain access to data you have given it access to" is the <code>offline_access</code> scope by another name.</p>
+
+  <p>But people don't read consent dialogs. Microsoft's research from their consent-phishing guidance is unambiguous on this: users click through dialogs almost universally if the app name looks plausible. The dialog is a defence-in-depth control; it is not, by itself, the defence.</p>
+
+  <h2>How an attacker registers the malicious app</h2>
+
+  <p>Two paths, both common:</p>
+
+  <p><strong>Path 1: register in their own tenant.</strong> The attacker creates a free Microsoft developer tenant, registers an app there, and configures the app to support multi-tenant authentication. The app can then be invoked against any other tenant's users. The attacker controls the app and receives all the tokens consented to it.</p>
+
+  <p><strong>Path 2: register in a previously compromised tenant.</strong> If the attacker has already breached one tenant (via AiTM, credential stuffing, or anything else), they can register an app there and then use that app to phish users at other tenants. The app's <code>publisher</code> field shows the compromised tenant's name, which sometimes adds a layer of false legitimacy ("oh, this is from a vendor we work with").</p>
+
+  <p>In either case, the malicious app eventually gets reported to Microsoft and disabled — but "eventually" is days to weeks, and the attacker has the consent tokens by then. Disabling the app afterward does not retroactively revoke already-issued tokens.</p>
+
+  <h2>How the email arrives</h2>
+
+  <p>The phishing email is typically one of three pretexts:</p>
+
+  <p><strong>The "shared file" pretext.</strong> "View shared file in [Plausible App Name]." Click leads to a consent dialog for an app that allegedly hosts the file.</p>
+
+  <p><strong>The "your AI/security/productivity tool" pretext.</strong> "Your account has been provisioned for [Plausible Tool]." Click leads to a consent dialog under the guise of onboarding.</p>
+
+  <p><strong>The OAuth-as-MFA-bypass pretext.</strong> "Sign in to verify your identity for HR / IT / Finance." Most sophisticated variant. The user thinks they're authenticating; they're actually consenting.</p>
+
+  <p>All three present the <em>real Microsoft consent dialog</em> because the attacker is using the legitimate OAuth protocol against Microsoft's actual endpoints. There is no fake URL bar to notice. The only signal available to the user is the <em>content</em> of the consent dialog — which, as established, they're not reading.</p>
+
+  <h2>What Microsoft does about it</h2>
+
+  <p>A few defences are in place by default; some require configuration.</p>
+
+  <p><strong>App publisher verification.</strong> Microsoft offers a "publisher verified" badge for apps from confirmed organisations. Users can be configured to only consent to verified apps. This is meaningful — getting verified requires a Microsoft Partner registration and some non-trivial paperwork — but unverified apps are still allowed by default in most tenants.</p>
+
+  <p><strong>User consent policies (Entra ID).</strong> The admin can restrict what permissions users can consent to without admin approval. Microsoft revised these options in late 2024 / 2025, so the menu in the Entra portal today looks like this:</p>
+
+  <ul>
+    <li><em>Do not allow user consent.</em> Everything requires admin approval. Very secure, often too restrictive for organisations with legitimate productivity integrations.</li>
+    <li><em>Allow user consent for apps from verified publishers, for selected permissions.</em> Users can consent to verified-publisher apps or apps registered in the user's own organisation, and only for permissions Microsoft classifies as "low impact." The explicit, predictable middle ground.</li>
+    <li><em>Let Microsoft manage your consent settings</em> (Microsoft's recommended option as of 2025, and the new default in fresh tenants). Microsoft auto-updates the tenant's consent policy to align with their current guidance. A sub-toggle — <em>Enable user consent for popular Mail clients</em> — allows users to consent to popular third-party mail apps for specific Mail permissions (Apple Mail, Thunderbird and similar). The sub-toggle is a usability concession most tenants need, but it does loosen the policy in the Mail-permissions corner of the surface.</li>
+  </ul>
+
+  <p>The old "Allow user consent for all apps" option you may remember from the older Entra portal has been retired. That removal is itself a Microsoft acknowledgement that the default-permissive era is over.</p>
+
+  <p>For an MSP managing customer tenants, <strong>the verified-publishers-and-low-impact option is usually still the better choice</strong> — not because it's safer than the Microsoft-managed option in absolute terms, but because it's <em>predictable</em>. You know exactly what your policy is; you control when it changes; the audit trail is yours. "Let Microsoft manage" is appropriate for tenants without an MSP that want to stay current with Microsoft's evolving defaults; for tenants you manage, you want to be the one who decides what changes and when — and you want any policy shift to land in your change log, not Microsoft's release notes.</p>
+
+  <p>Whichever of the two non-blocking options you pick, the bulk of OAuth consent phishing attacks fail at the consent dialog stage because the malicious app isn't from a verified publisher and isn't asking for a "low impact" permission.</p>
+
+  <p><strong>Admin consent workflow.</strong> When a user tries to consent to an app that exceeds their allowed permissions, they can submit an "admin consent request" instead. The admin reviews and either approves or rejects. This adds a human review step before high-permission apps get into the tenant.</p>
+
+  <p><strong>Defender for Cloud Apps anomalous app discovery.</strong> MDA (E5 or as an add-on) detects unusual app behaviour — an app that suddenly starts accessing far more mailboxes than usual, or an app that wasn't seen yesterday but is exfiltrating data today. Alerts fire on the <em>behavioural</em> anomaly, which catches even apps that managed to slip through the consent dialog.</p>
+
+  <p><strong>Defender XDR Attack Disruption</strong> also covers OAuth-abuse incidents — when MDA + sign-in correlation reaches high confidence that a consented app is exfiltrating, Disruption can disable the app and revoke its tokens.</p>
+
+  <h2>What revocation actually looks like</h2>
+
+  <p>When you discover a malicious consented app — either via an alert or because the customer reported odd behaviour — the steps are:</p>
+
+  <ol>
+    <li><strong>Identify the app in Entra ID.</strong> Enterprise applications → search by name or by recent registration → find the malicious one. Confirm the suspicious permissions (Mail.ReadWrite + offline_access is the classic signature).</li>
+    <li><strong>Remove the user's consent.</strong> For each affected user, the consent is in their <code>oauth2PermissionGrants</code> collection. The admin can revoke per-user or organisation-wide.</li>
+    <li><strong>Disable or delete the application's service principal.</strong> This stops the application from authenticating at all. Done from the enterprise applications blade.</li>
+    <li><strong>Revoke all refresh tokens for affected users.</strong> This is the <em>critical</em> step. Until the refresh tokens are revoked, the attacker can still mint access tokens. Use <code>Revoke-AzureADUserAllRefreshToken</code> (legacy) or the equivalent Graph API call. Note that Microsoft is in the middle of evolving how this works — some refresh tokens are bound to specific apps and survive user-level revocation. The safest move is to invalidate the user's password as well, even though that doesn't strictly disable the app.</li>
+    <li><strong>Audit the affected mailboxes.</strong> Look for sent mail, forwarding rules, file downloads, anything the app might have done while it had access. Treat this as a confirmed compromise and run the full BEC-recovery playbook (lesson 6).</li>
+    <li><strong>Block the app's reply URL or the app's tenant.</strong> If the malicious app is registered in a known-bad tenant, you can use Conditional Access to block sign-ins to that tenant.</li>
+  </ol>
+
+  <p>The whole cleanup is more involved than a password-reset compromise. That's the point of the attack — it's chosen by attackers because it's hard to clean up.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>OAuth consent phishing surfaces in Panoptica365 through several alert types:</p>
+
+  <p><strong>New OAuth grant alerts.</strong> When a user consents to a new app in a customer's tenant, the consent appears in the Unified Audit Log and Panoptica365 can surface it (especially if the requested permissions include <code>Mail.ReadWrite</code>, <code>Files.ReadWrite.All</code>, or <code>offline_access</code>). The exact alert depends on whether the user-grant or admin-grant pattern was used.</p>
+
+  <p><strong>Defender for Cloud Apps anomalies</strong> ingested via Defender XDR. When MDA detects that a previously-consented app is behaving anomalously (unusual volume of mailbox reads, sudden activity in a region the app has never been before, etc.), the resulting alert flows into Panoptica365.</p>
+
+  <p><strong>Suspicious app activity correlated with sign-ins.</strong> When the same user's account shows OAuth grant + a follow-on event like a mailbox-permission grant or forwarding rule, both alerts will appear close together. Treat them as the same incident.</p>
+
+  <p>What Panoptica365 doesn't currently do is full per-tenant OAuth app inventory with risk scoring. The manual workflow today: when an alert fires, open the Entra portal's enterprise applications view for the customer's tenant, filter by recently consented, and review.</p>
+
+  <h2>Defending the customer</h2>
+
+  <p>Layered defences, in order of impact:</p>
+
+  <p><strong>Set user consent to "verified publishers, low-impact permissions only."</strong> This is the single highest-leverage configuration change. Eliminates most consent phishing at the dialog stage. For MSP-managed tenants, this explicit option is preferable to "Let Microsoft manage" because you control the policy and any change to it lands in your audit trail rather than Microsoft's release notes. Configure once per tenant.</p>
+
+  <p><strong>Implement admin consent workflow.</strong> When users want to consent to apps beyond the allowed scope, they submit a request. Admin reviews. Adds a sanity check without blocking legitimate apps.</p>
+
+  <p><strong>Inventory existing consented apps periodically.</strong> Every customer's Entra tenant has an enterprise applications list. Review quarterly. Look for apps with names you don't recognise, apps with broad permissions, apps that were granted by users who shouldn't be consenting to broad-permission apps. Remove anything suspicious.</p>
+
+  <p><strong>Train users to read consent dialogs.</strong> Specifically: anything asking for <code>Mail.ReadWrite</code> or <code>Files.ReadWrite.All</code> from an unfamiliar publisher is almost always malicious. This is one of the few security trainings that has a concrete action ("look at the permissions, then either click Cancel or check with IT first").</p>
+
+  <p><strong>Use Conditional Access to require admin approval for new app sign-ins.</strong> A CA policy can require admin approval before a user's first sign-in to a newly-registered app. Slows down the attack significantly.</p>
+
+  <p><strong>For E5 tenants, enable Defender for Cloud Apps and configure app-governance policies.</strong> MDA can quarantine high-risk apps automatically and alert on anomalous behaviour. Worth enabling.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Consent is sticky; treat it like installing software.</strong> Once a user consents to an app, that app has access until somebody explicitly revokes it. Treat OAuth consent the way you'd treat installing software on an endpoint — review, approve, document. Anywhere a customer's users can self-consent broadly, you have a hole.</p>
+
+  <p><strong>Mail.ReadWrite + offline_access is the OAuth equivalent of "ransomware-staging."</strong> When you see this scope combo on an app, take a long look. There are legitimate apps that need it, but most don't, and the attacker apps almost always do.</p>
+
+  <p><strong>Cleanup is harder than for password compromises.</strong> Plan accordingly. When the alert fires, allow more time than you would for a password-reset incident, because the steps are: identify the app, revoke per-user consents, disable the service principal, revoke refresh tokens, audit affected data, and reset the user's password just in case. Treat each consented-malicious-app incident as a small project, not a quick fix.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Device-code abuse</b> — Closely related to consent phishing in the sense that it abuses a legitimate Microsoft authentication flow. Storm-2372 — the Russia-linked actor — has been running device-code campaigns at scale since August 2024.</div></div>
+    <div class="xl"><div class="xnum">6</div><div class="xt"><b>BEC</b> — Where OAuth-acquired access often ends up — silent inbox monitoring, invoice manipulation, wire fraud.</div></div>
+  </div>
+
+  <p>For now: OAuth consent phishing is the quietest persistent compromise in the M365 catalogue. The defences are configuration-level — set user consent restrictions correctly and most attacks fail at the dialog. The cleanup is involved. The lesson for customers is that not every threat needs to use the password.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on user and admin consent settings (<a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent" target="_blank" rel="noopener">Microsoft Learn — Configure user consent settings</a>); OAuth consent phishing patterns (<a href="https://learn.microsoft.com/en-us/defender-office-365/detect-and-remediate-illicit-consent-grants" target="_blank" rel="noopener">Microsoft Learn — Illicit consent grant attacks</a>); Microsoft Graph permission reference (<a href="https://learn.microsoft.com/en-us/graph/permissions-reference" target="_blank" rel="noopener">Microsoft Graph permissions reference</a>); Defender for Cloud Apps app governance (<a href="https://learn.microsoft.com/en-us/defender-cloud-apps/app-governance-manage-app-governance" target="_blank" rel="noopener">Microsoft Learn — App governance</a>); refresh-token revocation procedure (<a href="https://learn.microsoft.com/en-us/entra/identity/users/users-revoke-access" target="_blank" rel="noopener">Microsoft Learn — Revoke user access in an emergency</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

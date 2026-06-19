@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administración del sistema — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Administración del sistema">
+<meta name="lesson:subtitle" content="El resto de la Configuración y las superficies del sistema: feed del Centro de mensajes, marca, licencias, diagnóstico, estado, actualizaciones y el registro de auditoría.">
+<meta name="lesson:icon" content="wrench">
+<meta name="lesson:last_updated" content="2026-06-07">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Administración del sistema</span></div>
+  <h1>Administración del sistema</h1>
+  <p class="dek">El resto de la Configuración y las superficies del sistema: feed del Centro de mensajes, marca, licencias, diagnóstico, estado, actualizaciones y el registro de auditoría.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un mapa de dónde vive la administración del sistema: el grupo Configuración, la sección Sistema de la barra lateral y el punto de estado de la cabecera.">
+      <defs>
+        <radialGradient id="saBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="saCard" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10243B"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#saBg)"/>
+
+      <!-- header strip with the health dot -->
+      <rect x="60" y="36" width="1000" height="44" rx="9" fill="#0C2038" stroke="#1F3C5C"/>
+      <circle cx="1018" cy="58" r="9" fill="#2EE8A0"/>
+      <text x="996" y="63" text-anchor="end" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CABECERA</text>
+      <text x="1018" y="98" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="11.5" font-weight="600">Punto de estado</text>
+
+      <!-- Settings card -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="120" y="118" width="420" height="190" rx="12" fill="url(#saCard)" stroke="#2A6F9E"/>
+        <text x="144" y="146" fill="#A8E1F8" font-size="14" font-weight="700" letter-spacing="1">CONFIGURACIÓN</text>
+        <g fill="#C4D4E8" font-size="13.5">
+          <text x="144" y="178">Feed de mensajes de Microsoft</text>
+          <text x="144" y="206">Marca de los informes</text>
+          <text x="144" y="234">Clave API de Anthropic</text>
+          <text x="144" y="262">Licencias</text>
+        </g>
+        <g fill="#5CCBF4"><circle cx="132" cy="174" r="3"/><circle cx="132" cy="202" r="3"/><circle cx="132" cy="230" r="3"/><circle cx="132" cy="258" r="3"/></g>
+      </g>
+
+      <!-- System card -->
+      <g font-family="Geist,Inter,sans-serif">
+        <rect x="580" y="118" width="420" height="190" rx="12" fill="url(#saCard)" stroke="#33527A"/>
+        <text x="604" y="146" fill="#7DD9F9" font-size="14" font-weight="700" letter-spacing="1">SISTEMA</text>
+        <g fill="#C4D4E8" font-size="13.5">
+          <text x="604" y="178">Diagnóstico</text>
+          <text x="604" y="206">Espacio en disco</text>
+          <text x="604" y="234">Registro de auditoría</text>
+        </g>
+        <g fill="#5CCBF4"><circle cx="592" cy="174" r="3"/><circle cx="592" cy="202" r="3"/><circle cx="592" cy="230" r="3"/></g>
+        <text x="604" y="280" fill="#52708F" font-size="11.5" letter-spacing="1">BARRA LATERAL · ADMIN</text>
+      </g>
+    </svg>
+    <figcaption>Dónde vive todo esto: el grupo Configuración, la sección Sistema de la barra lateral y el punto de estado de la cabecera.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La guía de cierre: todo lo que un Administrador toca de vez en cuando y no a diario. Todo vive en <strong>Configuración</strong> y en la sección <strong>Sistema</strong> de la barra lateral.</p>
+  </div>
+
+  <h2>Feed de mensajes de Microsoft</h2>
+
+  <p>Microsoft anuncia los cambios de plataforma en el Centro de mensajes — incluidos cambios que alterarán configuraciones que usted supervisa. <strong>Configuración → Feed de mensajes de Microsoft</strong> le permite elegir <strong>un inquilino de origen</strong> cuyo Centro de mensajes Panoptica365 lee a diario. Claude filtra el feed buscando elementos relevantes para la configuración supervisada, y los relevantes llegan como <strong>una sola alerta a nivel de MSP</strong> (no spam por inquilino). Elija como origen su propio inquilino de MSP o su cliente más representativo; el contenido del feed es el mismo en todo Microsoft.</p>
+
+  <h2>Marca de los informes</h2>
+
+  <p><strong>Configuración → Marca de los informes</strong> — el nombre de su empresa (la línea <em>«Preparado por ___»</em> en portadas y pies de página) y su logotipo (PNG transparente, máximo 2 MB, redimensionado automáticamente). Configúrelo una vez, antes del primer entregable para un cliente.</p>
+
+  <h2>Clave API de Claude</h2>
+
+  <p><strong>Configuración → Clave API de Anthropic</strong> — la clave detrás de todas las funciones de IA (análisis de alertas, resúmenes, triaje, narrativas de informes). La rotación es indolora: pegue la nueva clave, <strong>Probar clave</strong> y luego <strong>Guardar</strong> — el proceso en ejecución la toma de inmediato, sin reinicio.</p>
+
+  <h2>Licencias</h2>
+
+  <p><strong>Configuración → Licencias</strong> — vista de solo lectura de sus puestos con licencia, el uso actual en los inquilinos supervisados, el nivel y el vencimiento, con un botón <strong>Actualizar ahora</strong>. Si se pasa de puestos, lo dice sin rodeos; contacte con su proveedor para añadir puestos.</p>
+
+  <h2>Diagnóstico y disco</h2>
+
+  <p><strong>Diagnóstico</strong> captura un paquete de soporte — registros, resúmenes de configuración, estado de la base de datos — para investigar problemas junto con el soporte. Los paquetes están <strong>redactados</strong>: sin secretos, contraseñas ni credenciales. Capture, descargue y adjúntelo a su correo de soporte.</p>
+
+  <p><strong>Espacio en disco</strong> muestra el almacenamiento del servidor con avisos al 80 % y estado rojo al 90 % — en esos niveles aparece además un banner en la parte superior de la aplicación. No lo ignore; un disco lleno se lleva la supervisión por delante.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Umbrales del espacio en disco: avisos al 80 % y estado rojo al 90 %.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="40" y="40" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ESPACIO EN DISCO</text>
+      <!-- bar track -->
+      <rect x="40" y="62" width="640" height="26" rx="13" fill="#0C2038" stroke="#1F3C5C"/>
+      <!-- threshold markers at 80% and 90% of the 640-wide track -->
+      <line x1="552" y1="54" x2="552" y2="98" stroke="#FFC04D" stroke-width="2"/>
+      <line x1="616" y1="54" x2="616" y2="98" stroke="#FF5A6E" stroke-width="2"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="552" y="120" fill="#FFC04D" font-size="13" font-weight="600">80 %</text>
+        <text x="552" y="138" fill="#6B85A6" font-size="11">aviso</text>
+        <text x="616" y="120" fill="#FF5A6E" font-size="13" font-weight="700">90 %</text>
+        <text x="640" y="138" fill="#6B85A6" font-size="11">estado rojo</text>
+      </g>
+    </svg>
+    <figcaption>Los dos umbrales que nombra el texto: un aviso al 80 % y un estado rojo al 90 %.</figcaption>
+  </figure>
+
+  <h2>Indicador de estado</h2>
+
+  <p>El punto de estado de color en la cabecera es el estado de la propia plataforma: <strong>Correcto</strong>, <strong>Degradado</strong> o <strong>Roto</strong>. Haga clic para abrir el modal Estado del sistema — comprobaciones por componente, para que «Degradado» se convierta en «qué subsistema, exactamente». Si las alertas parecen sospechosamente calladas, este es el primer clic. <em>Todos los sistemas funcionan con normalidad</em> es la respuesta que quiere ver.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 140" role="img" aria-label="Los tres estados del punto de estado de la cabecera: Correcto, Degradado y Roto.">
+      <rect width="720" height="140" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <circle cx="160" cy="58" r="16" fill="#2EE8A0"/>
+          <text x="160" y="100" fill="#2EE8A0" font-size="14" font-weight="600">Correcto</text>
+        </g>
+        <g>
+          <circle cx="360" cy="58" r="16" fill="#FFC04D"/>
+          <text x="360" y="100" fill="#FFC04D" font-size="14" font-weight="600">Degradado</text>
+        </g>
+        <g>
+          <circle cx="560" cy="58" r="16" fill="#FF5A6E"/>
+          <text x="560" y="100" fill="#FF5A6E" font-size="14" font-weight="600">Roto</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>El punto de la cabecera tiene tres estados. Haga clic para abrir el modal Estado del sistema, por componente.</figcaption>
+  </figure>
+
+  <h2>Actualizaciones y Novedades</h2>
+
+  <p>Tras una actualización, un aviso anuncia la nueva versión y el modal <strong>Novedades en Panoptica365</strong> resume lo que cambió — en su idioma. Lleva treinta segundos y con frecuencia revela funciones que de otro modo pasarían desapercibidas (estas guías llegaron precisamente en una de esas, de hecho).</p>
+
+  <h2>El Registro de auditoría</h2>
+
+  <p><strong>Registro de auditoría</strong> (barra lateral → Sistema, Administrador) es el registro de rendición de cuentas, en dos vistas:</p>
+
+  <ul>
+    <li><strong>Auditoría MSP</strong> — las acciones de los operadores sobre la propia plataforma: inicios de sesión, CRUD de plantillas, cambios de configuración, denegaciones de rol (403), ciclo de vida de inquilinos, exportaciones. Filtre por categoría, actor, descripción, intervalo de fechas y resultado; las tarjetas de resumen muestran el volumen y los fallos de los últimos 30 días.</li>
+    <li><strong>Cronología unificada</strong> — los eventos de auditoría MSP intercalados con los eventos de cambio por inquilino (despliegues automáticos y cambios registrados a mano) en un solo flujo. Es la vista de «qué pasó hacia las 3 de la tarde del martes», que une <em>quién hizo qué en Panoptica365</em> con <em>qué cambió en los inquilinos</em>.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Las dos vistas del Registro de auditoría: Auditoría MSP y los eventos de cambio por inquilino intercalados en una sola Cronología unificada.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="auArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- two sources -->
+        <rect x="40" y="40" width="252" height="48" rx="9" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="60" y="62" fill="#A8E1F8" font-size="14" font-weight="600">Auditoría MSP</text>
+        <text x="60" y="79" fill="#6B85A6" font-size="11">acciones en la plataforma</text>
+
+        <rect x="40" y="152" width="252" height="48" rx="9" fill="#0E2236" stroke="#33527A"/>
+        <text x="60" y="174" fill="#C4D4E8" font-size="14" font-weight="600">Cambios por inquilino</text>
+        <text x="60" y="191" fill="#6B85A6" font-size="11">despliegues + cambios</text>
+
+        <!-- merge arrows -->
+        <path d="M292 64 C372 64 388 120 448 120" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#auArr)"/>
+        <path d="M292 176 C372 176 388 120 448 120" stroke="#335F92" stroke-width="2" fill="none" marker-end="url(#auArr)"/>
+
+        <!-- unified stream -->
+        <rect x="460" y="92" width="220" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="570" y="116" text-anchor="middle" fill="#7DD9F9" font-size="13.5" font-weight="700">Cronología unificada</text>
+        <text x="570" y="135" text-anchor="middle" fill="#6B85A6" font-size="11">un solo flujo intercalado</text>
+      </g>
+    </svg>
+    <figcaption>Dos vistas de un mismo registro: Auditoría MSP sola, o las dos fuentes intercaladas en la Cronología unificada.</figcaption>
+  </figure>
+
+  <p>Haga clic en cualquier fila para ver el detalle completo: actor, IP, sesión, destino, metadatos.</p>
+
+  <div class="callout insight">
+    <div class="clabel">El recorrido completo</div>
+    <p>Ese es el recorrido completo. A partir de aquí, el resto de Aprender cubre el conocimiento de <em>seguridad</em> detrás de la plataforma — diseño de Acceso Condicional, líneas base de Intune, seguridad del correo, Puntuación de seguridad y los patrones de ataque que sus alertas vigilan. Añada inquilinos, despliegue sus líneas base, ajuste las alertas — y deje que la plataforma haga las rondas.</p>
+  </div>
+
+</div>
+</body>
+</html>

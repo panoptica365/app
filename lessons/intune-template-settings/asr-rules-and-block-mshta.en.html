@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASR Rules + Block mshta.exe — attack surface reduction — Intune Template Settings</title>
+<meta name="lesson:title" content="ASR Rules + Block mshta.exe — attack surface reduction">
+<meta name="lesson:subtitle" content="19 ASR rules all in Block mode plus a mshta.exe firewall rule — blocking the behavioural chains malware uses before signatures can detect them.">
+<meta name="lesson:icon" content="bug">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>ASR Rules + Block mshta.exe</span></div>
+  <h1>ASR Rules + Block mshta.exe — attack surface reduction</h1>
+  <p class="dek">19 ASR rules all in Block mode plus a mshta.exe firewall rule — blocking the behavioural chains malware uses before signatures can detect them.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The malware delivery chain: a Word macro spawns PowerShell, which downloads and runs an executable that establishes a foothold.">
+      <defs>
+        <radialGradient id="asrBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="asrArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#asrBg)"/>
+
+      <text x="560" y="56" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">EACH STEP IS LEGITIMATE WINDOWS FUNCTIONALITY</text>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Word -->
+        <g transform="translate(80,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Word</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">+ macro</text>
+        </g>
+        <path d="M236 170 H290" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- PowerShell -->
+        <g transform="translate(298,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">PowerShell</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">spawned</text>
+        </g>
+        <path d="M454 170 H508" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Download -->
+        <g transform="translate(516,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Download</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">remote .exe</text>
+        </g>
+        <path d="M672 170 H726" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Execute -->
+        <g transform="translate(734,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Execute</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">+ persistence</text>
+        </g>
+        <path d="M890 170 H944" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Foothold -->
+        <g transform="translate(952,124)">
+          <rect width="128" height="92" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="64" y="40" fill="#FF8A98" font-size="15" font-weight="700">Foothold</text>
+          <text x="64" y="62" fill="#E2A0AA" font-size="12">attacker in</text>
+        </g>
+      </g>
+
+      <text x="560" y="284" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">…but the combination almost always means malware</text>
+    </svg>
+    <figcaption>Every link in the chain is allowed on its own; ASR rules block the combination.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A common pattern in malware delivery: a user opens a Word document attached to a phishing email. The document contains a macro. The macro spawns a PowerShell process. The PowerShell process downloads an executable from a remote server. The executable runs, establishes persistence, and the attacker has a foothold on the device.</p>
+
+  <p>Every step in that chain is <em>legitimate Windows functionality</em>. Word can have macros. Macros can call PowerShell. PowerShell can download files. Files can execute. Each step, taken in isolation, is something a developer or a power user might legitimately do. But the <em>combination</em> — Word → macro → PowerShell → download → execute — is a behaviour pattern that almost never has a legitimate business reason and almost always indicates malware delivery.</p>
+
+  <p>Attack Surface Reduction (ASR) rules are Microsoft's mechanism for catching exactly these behavioural patterns. Rather than identifying specific malicious files, ASR rules block the <em>combinations</em> of legitimate-but-unusual actions that malicious code uses to chain into a successful compromise.</p>
+
+  <p>This lesson covers the Panoptica365 ASR Rules Standard template (the comprehensive ASR ruleset) and the related Block mshta.exe outbound connections template (a focused firewall rule that complements the ASR ruleset). Together they form the pre-emptive behaviour-based defence layer on Windows endpoints.</p>
+  </div>
+
+  <h2>The ASR Rules Standard template</h2>
+
+  <p>The template configures <strong>19 ASR rules — all in Block mode</strong> — plus Controlled Folder Access (in a different mode; see below). It uses the Settings Catalog template type with <code>endpointSecurityAttackSurfaceReduction</code> as the family. The template's posture, in one line: pretty much block everything.</p>
+
+  <p>The 19 rules, grouped by what they catch:</p>
+
+  <h3>Office-based malware delivery (the most common attack chain)</h3>
+
+  <ul>
+    <li><strong>Block all Office applications from creating child processes.</strong> Word, Excel, PowerPoint, etc. shouldn't be spawning processes. When they do, it's almost always a macro launching something malicious.</li>
+    <li><strong>Block Office applications from creating executable content.</strong> Office apps writing .exe / .dll files to disk is highly suspicious.</li>
+    <li><strong>Block Office applications from injecting code into other processes.</strong> Code injection from Office into other processes is a classic malware technique.</li>
+    <li><strong>Block Office communication app from creating child processes.</strong> Outlook specifically — Outlook spawning processes is even more rare than other Office apps.</li>
+    <li><strong>Block Win32 API calls from Office macros.</strong> Macros that call into the Win32 API directly are doing something a normal business macro wouldn't.</li>
+    <li><strong>Block JavaScript or VBScript from launching downloaded executable content.</strong> Downloaded scripts launching downloaded executables is the heart of "drive-by" malware delivery.</li>
+    <li><strong>Block execution of potentially obfuscated scripts.</strong> Heavily obfuscated PowerShell or VBScript is a strong malware signal — legitimate scripts have no reason to obfuscate themselves.</li>
+  </ul>
+
+  <h3>Document-reader-based delivery</h3>
+
+  <ul>
+    <li><strong>Block Adobe Reader from creating child processes.</strong> Adobe Reader is a parallel attack vector to Office — malicious PDFs sometimes embed scripts or invoke launchers that spawn child processes. Same defensive logic as the Office rules: a PDF reader has no business spawning other processes.</li>
+  </ul>
+
+  <h3>Email-based delivery</h3>
+
+  <ul>
+    <li><strong>Block executable content from email client and webmail.</strong> Email attachments that are executables (or that download executables) shouldn't be running directly from the mail client.</li>
+  </ul>
+
+  <h3>Credential theft</h3>
+
+  <ul>
+    <li><strong>Block credential stealing from Windows Local Security Authority subsystem (LSASS).</strong> This catches Mimikatz-style attacks where malware tries to dump credentials from LSASS memory. Highly diagnostic — a process accessing LSASS for credential extraction almost always indicates compromise. This rule in the Panoptica365 template ships with one per-rule exclusion: <code>wazuh-agent.exe</code>. Wazuh is an open-source SIEM/XDR agent that legitimately reads LSASS for credential monitoring; without the exclusion, the agent itself would be blocked by the very rule it depends on observing. Concrete example of how a per-rule exclusion works in practice: the rule still fires for everything else, but Wazuh gets a permanent free pass.</li>
+  </ul>
+
+  <h3>Persistence, lateral movement, and defense evasion</h3>
+
+  <ul>
+    <li><strong>Block persistence through WMI event subscription.</strong> WMI event subscription is a stealthy persistence technique malware uses to survive reboots; legitimate apps almost never use it.</li>
+    <li><strong>Block process creations from PsExec and WMI commands.</strong> PsExec and WMI-based remote execution are common lateral movement tools.</li>
+    <li><strong>Block rebooting machine in Safe Mode.</strong> Some ransomware reboots into Safe Mode to disable security products before encrypting.</li>
+    <li><strong>Block use of copied or impersonated system tools.</strong> Malware sometimes copies legitimate system binaries (like cmd.exe) to other locations and runs them from there, evading some detection rules.</li>
+  </ul>
+
+  <h3>USB and removable media</h3>
+
+  <ul>
+    <li><strong>Block untrusted and unsigned processes that run from USB.</strong> USB-delivered malware is a long-standing vector; this rule catches unsigned executables launching from removable drives.</li>
+  </ul>
+
+  <h3>Server-specific</h3>
+
+  <ul>
+    <li><strong>Block web shell creation for servers.</strong> Specifically for Windows Server installs — catches malicious file uploads that drop web shells (PHP, ASPX) onto IIS or other web servers.</li>
+  </ul>
+
+  <h3>Driver and exploitation defense</h3>
+
+  <ul>
+    <li><strong>Block abuse of exploited vulnerable signed drivers.</strong> Catches malware that uses known-vulnerable signed kernel drivers as a vector for privilege escalation. Microsoft maintains the list of vulnerable drivers.</li>
+    <li><strong>Block executable files running unless they meet prevalence, age, or trusted list criterion.</strong> A files-without-pedigree rule — executables that are too new, too rare, or not on a known-safe list get blocked. Catches novel malware variants; can false-positive on legitimate niche software.</li>
+  </ul>
+
+  <h3>Ransomware-specific</h3>
+
+  <ul>
+    <li><strong>Use advanced protection against ransomware.</strong> A behavioural rule that catches encryption patterns characteristic of ransomware.</li>
+  </ul>
+
+  <h2>Controlled Folder Access — the deliberate exception</h2>
+
+  <p>Adjacent to the 19 ASR rules, the template also enables <strong>Controlled Folder Access (CFA)</strong> — but in <strong>Audit Mode</strong>, not Block. This is the one place where the template explicitly steps back from the "block everything" posture, and it's intentional.</p>
+
+  <p>CFA restricts which apps can write to protected folders (Documents, Pictures, Desktop, etc.). In Block mode, apps not on the allowlist get prevented from modifying files in those locations. In Audit Mode, those same writes are <em>logged</em> but not blocked — Defender records who tried to write what to a protected folder, but the write proceeds.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Why Audit, not Block</div>
+    <p>Too many legitimate applications write to protected folders on a normal Windows device. Backup tools, sync clients, creative apps, productivity tools auto-saving — running CFA in Block out of the gate generates an avalanche of help-desk tickets. Audit Mode keeps the visibility without breaking workflows.</p>
+  </div>
+
+  <p>The reason for Audit Mode: too many legitimate applications write to protected folders on a normal Windows device. Backup tools writing to user documents, sync clients (Dropbox, Google Drive, OneDrive), creative apps writing project files to Documents, productivity tools auto-saving — the list is long. Running CFA in Block mode out of the gate generates an avalanche of help-desk tickets ("my OneDrive stopped syncing," "my backup is failing," "Photoshop won't save"). Audit Mode keeps the visibility (you can see what's being attempted) without breaking workflows.</p>
+
+  <p>Operators who want stronger ransomware protection can flip CFA to Block mode per customer after building an allowlist of legitimate apps for that environment. The template ships in Audit so the default deployment doesn't cause workflow breakage; the Block-mode upgrade is a per-customer hardening step, not a fleet-wide default.</p>
+
+  <h2>ASR rule modes — the crucial distinction</h2>
+
+  <p>Every ASR rule can be set to one of four modes:</p>
+
+  <ul>
+    <li><strong>Audit</strong> — the rule evaluates and logs matches, but doesn't block. Used for testing and discovery.</li>
+    <li><strong>Block</strong> — the rule evaluates and blocks matching behaviour. The production mode.</li>
+    <li><strong>Warn</strong> — the rule warns the user when matching behaviour occurs; the user can override and proceed. Available for some rules; intermediate between Audit and Block.</li>
+    <li><strong>Not configured / Off</strong> — the rule isn't active.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="The four ASR rule modes, from off to block: Off, Audit, Warn, and Block.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="60" y1="100" x2="660" y2="100" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="48" y="78" width="124" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+          <text x="110" y="100" fill="#6B85A6" font-size="14" font-weight="600">Off</text>
+          <text x="110" y="148" fill="#52708F" font-size="11.5">not active</text>
+        </g>
+        <g>
+          <rect x="188" y="78" width="124" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="250" y="100" fill="#A8E1F8" font-size="14" font-weight="600">Audit</text>
+          <text x="250" y="148" fill="#52708F" font-size="11.5">logs, no block</text>
+        </g>
+        <g>
+          <rect x="328" y="78" width="124" height="44" rx="22" fill="#1F1A0E" stroke="#FFC04D"/>
+          <text x="390" y="100" fill="#FFC04D" font-size="14" font-weight="600">Warn</text>
+          <text x="390" y="148" fill="#52708F" font-size="11.5">user can override</text>
+        </g>
+        <g>
+          <rect x="468" y="76" width="124" height="48" rx="24" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="530" y="100" fill="#7DD9F9" font-size="14" font-weight="700">Block</text>
+          <text x="530" y="148" fill="#7DD9F9" font-size="11.5">production mode</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>The four modes. The template ships all 19 rules in Block — CFA is the only one in Audit.</figcaption>
+  </figure>
+
+  <p>The Panoptica365 ASR Rules Standard template sets <strong>all 19 ASR rules to Block</strong> out of the gate. Controlled Folder Access is the only one in Audit (see the previous section). The template's authors picked rules specifically because they have low false-positive rates in 2026 — Microsoft has tuned them for years, and the chosen ruleset avoids the more historically problematic rules. The template's design intent is direct-to-Block deployment.</p>
+
+  <p><strong>The operational reality</strong>: even with carefully-selected rules, deploying ASR rules to Block on a fleet that's never had them will occasionally catch legitimate-but-unusual business activity that the template's authors couldn't predict. Industry-specific software, niche tools, custom-built internal apps with weird Office macro patterns — these can still trigger rules and get blocked, breaking user workflows.</p>
+
+  <p>Two acceptable approaches, depending on the customer:</p>
+
+  <p><strong>Direct-to-Block (the template's default).</strong> Deploy as the template ships — all rules in Block. Suitable for customers whose app inventory you know well, who run mainstream business software, who don't have legacy custom apps with weird Office or LOLBin patterns. Most SMB tenants fit this profile. Be ready to add per-rule exclusions as legitimate breakage surfaces.</p>
+
+  <p><strong>Audit-mode pre-flight (the cautious option).</strong> For customers with unknown or unusual software inventory — industrial control vendors, custom-built line-of-business apps, healthcare-specific software, anything outside the mainstream SaaS world — flip each rule to Audit before deployment, monitor for 14–30 days, build the exclusion list, then flip to Block:</p>
+
+  <ol>
+    <li>Modify the template per-customer to set each rule to Audit before deployment.</li>
+    <li>Run in Audit mode for 14–30 days. Pull audit logs every few days.</li>
+    <li>For each rule that fired against legitimate activity, add a per-rule exclusion for the affected process or file (the LSASS rule's Wazuh exclusion above is the model).</li>
+    <li>Once the audit period is clean, flip the rules back to Block.</li>
+  </ol>
+
+  <p>The choice between direct-to-Block and Audit-pre-flight is per-customer. The template ships in direct-to-Block because that's the right answer for the majority of SMB tenants; operators who know a customer's environment is unusual should reach for the Audit pre-flight instead.</p>
+
+  <h2>The Block mshta.exe template — the focused complement</h2>
+
+  <p>Adjacent to the ASR Rules template is a separate, focused template: <strong>Panoptica365 - Block mshta.exe outbound connections.</strong></p>
+
+  <p>The template's description is unusually thorough: <em>"Blocking outbound connections from mshta.exe has minimal user impact but significantly reduces attack surface by preventing a commonly abused LOLBin from reaching external payloads and C2 servers."</em></p>
+
+  <p>The acronym LOLBin stands for <strong>Living Off the Land Binary</strong> — a legitimate Windows binary that attackers abuse to do malicious things. mshta.exe is the classic example: it's a built-in Windows utility for executing HTML Application (.hta) files, and it's been part of Windows for decades. Almost no legitimate business workflow uses mshta.exe in 2026; almost every malware family that runs on Windows includes mshta.exe as one of its execution vectors because it's already on every Windows device, it's signed by Microsoft, and it can be invoked from many contexts (Office macros, scheduled tasks, command-line, scripts).</p>
+
+  <p>The template blocks <strong>outbound network connections</strong> specifically from mshta.exe. That is: mshta.exe can still run if a legitimate use case invokes it, but it can't reach external C2 infrastructure or download payloads from the internet. The malicious-use case becomes severely degraded.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="The Block mshta.exe rule: mshta.exe is still allowed to run locally, but its outbound connection to external C2 and payload servers is blocked.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="msArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- mshta still runs -->
+        <rect x="48" y="86" width="184" height="58" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+        <text x="140" y="110" fill="#C4D4E8" font-size="14.5" font-weight="600">mshta.exe</text>
+        <text x="140" y="130" fill="#7BE6BE" font-size="12">still runs locally</text>
+
+        <!-- internet -->
+        <rect x="486" y="86" width="186" height="58" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="579" y="106" fill="#C4D4E8" font-size="14" font-weight="600">External C2 /</text>
+        <text x="579" y="126" fill="#C4D4E8" font-size="14" font-weight="600">payload servers</text>
+      </g>
+      <!-- blocked outbound -->
+      <path d="M232 115 H486" stroke="#FF5A6E" stroke-width="2.4" stroke-dasharray="6 6"/>
+      <g transform="translate(359,115)">
+        <circle r="22" fill="#2A0F16" stroke="#FF5A6E" stroke-width="2"/>
+        <line x1="-11" y1="-11" x2="11" y2="11" stroke="#FF5A6E" stroke-width="2.4"/>
+      </g>
+      <text x="359" y="180" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">outbound connections blocked</text>
+      <text x="359" y="50" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">FIREWALL RULE · LOLBIN DEFENCE</text>
+    </svg>
+    <figcaption>The binary keeps running for legitimate callers; only its path to external payloads and C2 is cut.</figcaption>
+  </figure>
+
+  <p>The template uses the same <code>endpointSecurityFirewall</code> family as the main Firewall Settings template (lesson 6). It's technically a firewall rule rather than an ASR rule, but conceptually it's an attack-surface-reduction control — it removes a specific path that attackers rely on.</p>
+
+  <p>This is the right pattern for LOLBin defence: identify the legitimate-but-rarely-used Windows binaries that attackers love, and surgically restrict the specific behaviour that makes them useful for attack. The Panoptica365 library currently ships this template for mshta.exe specifically; similar templates could be built for other LOLBins (cscript.exe, wscript.exe, certutil.exe, regsvr32.exe, msbuild.exe, installutil.exe, rundll32.exe — there's a long list). For now, mshta.exe is the one that's bundled.</p>
+
+  <h2>What can break</h2>
+
+  <p>ASR rules and the mshta.exe block can produce false positives. The most common categories:</p>
+
+  <p><strong>Custom internal apps that do things they shouldn't.</strong> A custom-built business application that includes Office macros doing weird things, or that uses mshta.exe for some legacy reason, or that calls Win32 APIs from Excel for performance, will get blocked. The fix is per-app exclusions in the ASR rule configuration.</p>
+
+  <p><strong>Niche software vendors with poor coding practices.</strong> Some commercial software (especially older, niche, or industry-specific) violates ASR rules as part of normal operation. The vendor's installer launches PowerShell, the vendor's main app injects code into other processes, etc. Fixes are vendor-specific exclusions.</p>
+
+  <p><strong>PsExec / WMI-based remote management tools.</strong> Some legitimate remote management tools use PsExec or WMI-based remote execution, which gets caught by the corresponding ASR rule. If a customer's IT team uses these tools, they need exclusions.</p>
+
+  <p><strong>Custom PowerShell scripts that download and execute.</strong> A legitimate internal automation that downloads a payload and executes it (e.g., an installer kicked off by a logon script) will trigger the JavaScript/VBScript-downloaded-executable rule. Exclusions or rewriting the automation.</p>
+
+  <p><strong>Anti-ransomware Controlled Folder Access.</strong> With the template's default of CFA in Audit Mode, nothing breaks — the writes are logged but allowed. The "what would break if CFA were in Block mode" list is long though: backup software writing to user documents, sync clients (Dropbox, Google Drive, OneDrive — OneDrive is usually on Microsoft's default allowlist), creative tools writing to Documents, productivity apps auto-saving. This is exactly why the template deliberately ships CFA in Audit: blocking these out of the gate would generate a flood of help-desk tickets. Operators who later flip CFA to Block for a specific customer should build the allowlist from the Audit-mode logs first.</p>
+
+  <h2>Rollout</h2>
+
+  <p>For mainstream SMB tenants (familiar app inventory, standard SaaS-heavy environment), the template's direct-to-Block default is the right deployment posture:</p>
+
+  <ol>
+    <li><strong>Day 0</strong> — deploy the template as it ships (all 19 ASR rules in Block, CFA in Audit). Pilot group first per lesson 1's pre-flight.</li>
+    <li><strong>Days 1–14</strong> — monitor for help-desk tickets and Defender block events. False positives that need exclusions will surface as user-reported workflow breakage ("X stopped working after the update"). Triage each: false positive (add exclusion), true positive (investigate as a security incident), edge case (decide per case).</li>
+    <li><strong>Day 14+</strong> — expand assignment from pilot group to full scope once the pilot devices are clean. Continue monitoring for the first 30 days and add exclusions as new ones surface.</li>
+  </ol>
+
+  <p>For customers with unusual software inventory (industrial control, healthcare-specific, custom line-of-business apps with legacy patterns), use the Audit pre-flight from the previous section instead — flip each rule to Audit, run for 14–30 days, build exclusions, then flip to Block.</p>
+
+  <p><strong>Controlled Folder Access</strong> ships in Audit by design. Operators wanting to enable it in Block mode (stronger ransomware protection) should do so per-customer after building an allowlist of legitimate apps writing to protected folders. This is a hardening upgrade, not part of the standard rollout.</p>
+
+  <p><strong>The Block mshta.exe template</strong> can deploy directly without an Audit window — the failure surface is so narrow that almost no legitimate workflows use mshta.exe in 2026.</p>
+
+  <h2>What to monitor after enforcement</h2>
+
+  <p><strong>ASR rule matches per rule per device.</strong> Once in Block mode, matches should be rare. Spikes indicate either malware activity (real positives) or legitimate-but-undocumented activity that needs an exclusion.</p>
+
+  <p><strong>User-reported workflow breakage.</strong> Track every "X stopped working" complaint. Triage by likely ASR cause; document each exclusion added.</p>
+
+  <p><strong>Controlled Folder Access audit events.</strong> Even in Audit mode, CFA logs every protected-folder write attempt by a non-allowlisted app. This is useful intel — it shows you exactly which apps would have been blocked if CFA were in Block mode. If you ever decide to flip CFA to Block for a customer, the audit log is your pre-built allowlist source. Look for: backup tools, sync clients (Dropbox, Google Drive, OneDrive), creative apps, productivity tools auto-saving to Documents.</p>
+
+  <p><strong>mshta.exe outbound block events in the firewall log.</strong> Should be very low volume in normal operation. Spikes are interesting — either a real malware attempt blocked successfully, or a legitimate-but-rare use case that needs an exclusion.</p>
+
+  <p><strong>Drift on either template.</strong> Both templates are common targets for "an admin disabled this because [user complaint]." Drift detection flags these.</p>
+
+  <h2>The customer conversation</h2>
+
+  <p>When proposing ASR rules to a customer, the honest pitch:</p>
+
+  <ul>
+    <li>These rules catch the specific behaviour patterns malware uses to chain together a successful compromise — Office-macro-to-PowerShell-to-download-to-execute, LSASS credential theft, USB-delivered payloads, ransomware encryption patterns.</li>
+    <li>The template's defaults block aggressively; we expect this to fit most environments cleanly, with occasional per-app exclusions for legitimate-but-unusual workflows.</li>
+    <li>If your environment has unusual line-of-business apps — anything custom-built, industry-specific, or with weird Office-macro patterns — we'll run a 14–30 day Audit-mode pre-flight before flipping to Block, so we find any legitimate workflows that would break before they actually break.</li>
+    <li>Controlled Folder Access is enabled in Audit Mode (logging only). Stronger ransomware protection (CFA in Block) is a separate hardening upgrade we can apply once we've inventoried the apps that legitimately write to protected folders on your fleet.</li>
+  </ul>
+
+  <p>For tenants in specific industries — healthcare, finance, government contracting — ASR Rules are often a regulatory expectation. For tenants without those drivers, ASR Rules are still strongly recommended; the value proposition is clearer if you can name specific attacks the customer has been concerned about.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>The template ships aggressive — 19 ASR rules in Block, CFA in Audit — and is intended to deploy as-is on mainstream SMB tenants.</strong> Reach for the Audit-pre-flight pattern when you don't know the customer's app inventory, when the customer runs unusual line-of-business software, or when previous deployments have flagged false-positive breakage. Don't reach for it as a default — the template's design intent is direct-to-Block.</p>
+
+  <p><strong>The Block mshta.exe template is the model for LOLBin defence.</strong> Surgical, focused, narrow blast radius. As Microsoft adds more LOLBin coverage to its built-in defences, this kind of focused supplementary rule may become less necessary — but for now, mshta.exe specifically is a known attacker favourite and the block is well-targeted.</p>
+
+  <p><strong>Maintain exclusion lists per customer.</strong> Every ASR exclusion is per-customer (because each customer has different business apps and different niche software). Panoptica365's exemption system can track these; they need ongoing maintenance as the customer's app inventory changes.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Account Protection + Block MSA</b> — Windows Hello for Business, Credential Guard, blocking personal Microsoft Account additions on managed devices.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>The compliance loop in production</b> — how all these templates surface as signals.</div></div>
+  </div>
+
+  <p>For now: ASR Rules + Block mshta.exe form the pre-emptive behaviour-based defence layer. Deploy as the template ships for mainstream tenants (direct-to-Block, CFA in Audit); use the Audit-mode pre-flight when the customer's environment is unusual. The discipline of knowing <em>which posture fits which customer</em> is what makes this template add value rather than friction.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on ASR rules (<a href="https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-reference" target="_blank" rel="noopener">Microsoft Learn — Attack surface reduction rules reference</a>); ASR rule deployment guidance (<a href="https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-deployment" target="_blank" rel="noopener">Microsoft Learn — ASR rules deployment</a>); Controlled Folder Access (<a href="https://learn.microsoft.com/en-us/defender-endpoint/controlled-folders" target="_blank" rel="noopener">Microsoft Learn — Controlled Folder Access</a>); LOLBin reference (<a href="https://lolbas-project.github.io/" target="_blank" rel="noopener">LOLBAS project</a>); mshta.exe attack vector context (<a href="https://attack.mitre.org/techniques/T1218/005/" target="_blank" rel="noopener">MITRE ATT&CK — Mshta</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

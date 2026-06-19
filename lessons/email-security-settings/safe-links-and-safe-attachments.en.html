@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Safe Links and Safe Attachments — Email Security Settings</title>
+<meta name="lesson:title" content="Safe Links and Safe Attachments — what your customer paid for and isn't using">
+<meta name="lesson:subtitle" content="Turning on Defender for Office 365 link wrapping and attachment sandboxing — and understanding what they catch and don't.">
+<meta name="lesson:icon" content="link">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Email Security Settings</span> <span class="sep">·</span> <span>Safe Links &amp; Safe Attachments</span></div>
+  <h1>Safe Links and Safe Attachments — what your customer paid for and isn't using</h1>
+  <p class="dek">Turning on Defender for Office 365 link wrapping and attachment sandboxing — and understanding what they catch and don't.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A licensed but dormant Defender for Office 365 toggle, switched off, while a phishing email's PDF link runs unimpeded.">
+      <defs>
+        <radialGradient id="slBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="slToggle" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#0E2236"/></linearGradient>
+        <filter id="slGlow"><feGaussianBlur stdDeviation="4"/></filter>
+      </defs>
+      <rect width="1120" height="340" fill="url(#slBg)"/>
+
+      <!-- left: licensed but OFF -->
+      <g transform="translate(170,118)">
+        <text x="60" y="-26" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">LICENSED · DORMANT</text>
+        <rect x="0" y="0" width="120" height="56" rx="28" fill="url(#slToggle)" stroke="#33527A" stroke-width="2"/>
+        <circle cx="28" cy="28" r="19" fill="#52708F"/>
+        <text x="60" y="92" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="14">Defender for Office 365</text>
+        <text x="60" y="112" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">OFF</text>
+      </g>
+
+      <!-- middle: the unchecked attack chain -->
+      <g transform="translate(430,128)">
+        <rect x="0" y="0" width="148" height="84" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="74" y="34" text-anchor="middle" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">Invoice PDF</text>
+        <text x="74" y="56" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">&#8220;View payment portal&#8221;</text>
+        <rect x="34" y="64" width="80" height="13" rx="6.5" fill="#102A4C" stroke="#5CCBF4" stroke-width="1"/>
+      </g>
+      <path d="M578 170 H700" stroke="#5C7796" stroke-width="2.5" marker-end="url(#slArr)"/>
+      <defs><marker id="slArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+
+      <!-- right: the harvester -->
+      <g transform="translate(708,118)">
+        <circle cx="120" cy="56" r="106" fill="none" stroke="#3A1018" stroke-width="1" stroke-dasharray="3 8"/>
+        <rect x="40" y="6" width="160" height="100" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.8"/>
+        <rect x="40" y="6" width="160" height="24" rx="12" fill="#3A1018"/>
+        <circle cx="56" cy="18" r="4" fill="#FF8A98"/>
+        <rect x="62" y="44" width="116" height="11" rx="5.5" fill="#1D2733"/>
+        <rect x="62" y="62" width="116" height="11" rx="5.5" fill="#1D2733"/>
+        <rect x="62" y="82" width="60" height="13" rx="6.5" fill="#5C2330"/>
+        <text x="120" y="142" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600" letter-spacing="2">CREDENTIAL HARVEST</text>
+      </g>
+    </svg>
+    <figcaption>Two years licensed, never configured — the features sat dormant while the attack chain ran end-to-end.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>An accounting firm receives an invoice email from a supplier they actually work with. The supplier's domain authenticates correctly. The display name matches. The attached file is a PDF that opens to look like a normal invoice. The PDF contains a button: "View payment portal." The user clicks the button. The button is a hyperlink. The hyperlink goes to a credential-harvester that looks pixel-perfect like Microsoft's sign-in page, hosted on a freshly-registered domain with a brand-new Let's Encrypt certificate. The user types their M365 password. The attacker captures it, plus the session cookie via Evilginx2. Twenty minutes later the attacker is reading the user's email and adding an inbox rule to hide their tracks.</p>
+
+  <p>The customer has Microsoft 365 Business Premium. They've been paying for Defender for Office 365 Plan 1 for two years. Safe Links would have wrapped that PDF's hyperlink at delivery time. Safe Attachments would have detonated the PDF in a sandbox before it ever reached the user. Neither was configured. The features the customer paid for sat dormant while the attack chain ran end-to-end.</p>
+
+  <p>This lesson is about turning those features on, understanding what they catch, and being honest about what they don't.</p>
+  </div>
+
+  <h2>Safe Links — how the wrapping actually works</h2>
+
+  <p>When Safe Links is enabled, every URL in an inbound email gets <em>rewritten</em> at delivery time. The original <code>https://realdomain.com/path</code> becomes something like <code>https://nam04.safelinks.protection.outlook.com/?url=https%3A%2F%2Frealdomain.com%2Fpath&amp;...</code>. The user sees the original URL when they hover (most clients display the wrapped text but resolve to the original on hover); they see the original destination if they click and Microsoft passes the check.</p>
+
+  <p>At click time, three things happen:</p>
+
+  <ol>
+    <li><strong>Microsoft's threat intelligence checks the destination URL</strong> against Defender's reputation database. Known-malicious URLs are blocked at click time, even if the URL was clean at delivery.</li>
+    <li><strong>For unknown URLs, Microsoft may detonate them in real time</strong> — fetching the destination from a sandbox, evaluating the page behaviour, and deciding whether to allow or block.</li>
+    <li><strong>The user is allowed through, blocked with a warning page, or shown a "be careful" interstitial</strong> depending on the verdict.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 260" role="img" aria-label="Safe Links time-of-click flow: a wrapped URL is checked against threat intelligence, unknown URLs may be detonated, and the verdict allows, warns, or blocks the user.">
+      <rect width="720" height="260" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="clArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- click -->
+        <rect x="26" y="100" width="118" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="85" y="126" fill="#C4D4E8" font-size="13.5" font-weight="600">User clicks</text>
+        <text x="85" y="144" fill="#6B85A6" font-size="11">wrapped URL</text>
+        <!-- threat intel -->
+        <rect x="200" y="34" width="150" height="54" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="275" y="58" fill="#A8E1F8" font-size="13" font-weight="600">Threat intel</text>
+        <text x="275" y="76" fill="#6B85A6" font-size="11">reputation check</text>
+        <!-- detonation -->
+        <rect x="200" y="168" width="150" height="54" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="275" y="192" fill="#A8E1F8" font-size="13" font-weight="600">Real-time detonation</text>
+        <text x="275" y="210" fill="#6B85A6" font-size="11">unknown URLs</text>
+        <!-- verdict outcomes -->
+        <rect x="430" y="22" width="118" height="40" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+        <text x="489" y="47" fill="#2EE8A0" font-size="12.5" font-weight="600">Allow</text>
+        <rect x="430" y="110" width="118" height="40" rx="10" fill="#0E2236" stroke="#FFC04D"/>
+        <text x="489" y="135" fill="#FFC04D" font-size="12.5" font-weight="600">Be careful</text>
+        <rect x="430" y="198" width="118" height="40" rx="10" fill="#2A0F16" stroke="#FF5A6E"/>
+        <text x="489" y="223" fill="#FF8A98" font-size="12.5" font-weight="700">Block</text>
+      </g>
+      <path d="M144 122 C175 110 175 70 200 62" fill="none" stroke="#5C7796" stroke-width="2" marker-end="url(#clArr)"/>
+      <path d="M144 134 C175 150 175 188 200 195" fill="none" stroke="#5C7796" stroke-width="2" marker-end="url(#clArr)"/>
+      <path d="M350 52 C390 48 400 44 430 42" fill="none" stroke="#5C7796" stroke-width="1.8" marker-end="url(#clArr)"/>
+      <path d="M350 130 H430" stroke="#5C7796" stroke-width="1.8" marker-end="url(#clArr)"/>
+      <path d="M350 200 C390 204 400 214 430 216" fill="none" stroke="#5C7796" stroke-width="1.8" marker-end="url(#clArr)"/>
+    </svg>
+    <figcaption>At click time: threat-intel check first, real-time detonation for unknown URLs, then allow, warn, or block.</figcaption>
+  </figure>
+
+  <p>This is the value over a static blocklist. A phishing link that was clean at 9:00 AM (when the email was delivered) and turned malicious at 3:00 PM (when threat intel picked it up) gets caught at the 4:00 PM click. The same domain blocked across one customer tenant is blocked across every Defender-protected tenant, in seconds.</p>
+
+  <p><strong>Settings worth knowing:</strong></p>
+
+  <ul>
+    <li><strong>"Track user clicks"</strong> — telemetry on who clicked what. On. The data shows up in MDO threat reports.</li>
+    <li><strong>"Do not rewrite the following URLs"</strong> — exclusion list for legitimate URLs that break when wrapped. Use sparingly; this is the Safe Links equivalent of the trusted-senders list (and the same discipline applies — don't bypass without a reason).</li>
+    <li><strong>"Let users click through to the original URL"</strong> — when Safe Links blocks something, this setting controls whether users can override. For hardening, this should be <strong>off</strong>. Letting users click through means they will, and the wrapper becomes decorative.</li>
+    <li><strong>"Display the organization branding"</strong> — cosmetic; lets you put the customer's logo on the warning page. Worth doing for the conversation it starts when a user sees it.</li>
+  </ul>
+
+  <h2>Safe Attachments — the detonation sandbox</h2>
+
+  <p>When Safe Attachments is enabled, inbound emails with attachments get held in a Microsoft sandbox. The attachment is opened, its behaviour observed (process spawning, network calls, registry writes, macro execution, all of it), and a verdict produced. Common scan times are under a minute; complex files can take longer.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 268" role="img" aria-label="Safe Attachments detonation sandbox: an inbound attachment is held, opened, its behaviour observed, and a verdict drives one of four per-policy actions.">
+      <rect width="720" height="268" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="saArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <!-- inbound attachment -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="24" y="104" width="116" height="60" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="82" y="130" fill="#C4D4E8" font-size="13" font-weight="600">Attachment</text>
+        <text x="82" y="148" fill="#6B85A6" font-size="11">held inbound</text>
+      </g>
+      <path d="M140 134 H196" stroke="#5C7796" stroke-width="2" marker-end="url(#saArr)"/>
+      <!-- sandbox -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="200" y="58" width="190" height="152" rx="12" fill="#0E2640" stroke="#2A6F9E" stroke-dasharray="5 5"/>
+        <text x="295" y="84" fill="#A8E1F8" font-size="13.5" font-weight="700" letter-spacing="1">SANDBOX</text>
+        <rect x="222" y="100" width="146" height="22" rx="6" fill="#102A4C"/><text x="295" y="115" fill="#C4D4E8" font-size="11">process spawning</text>
+        <rect x="222" y="128" width="146" height="22" rx="6" fill="#102A4C"/><text x="295" y="143" fill="#C4D4E8" font-size="11">network calls</text>
+        <rect x="222" y="156" width="146" height="22" rx="6" fill="#102A4C"/><text x="295" y="171" fill="#C4D4E8" font-size="11">registry writes</text>
+        <rect x="222" y="184" width="146" height="20" rx="6" fill="#102A4C"/><text x="295" y="198" fill="#C4D4E8" font-size="11">macro execution</text>
+      </g>
+      <path d="M390 134 H446" stroke="#5C7796" stroke-width="2" marker-end="url(#saArr)"/>
+      <!-- verdict actions -->
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <text x="588" y="40" fill="#5CCBF4" font-size="11.5" letter-spacing="2">VERDICT &#8594; ACTION</text>
+        <rect x="450" y="54" width="246" height="34" rx="8" fill="#2A0F16" stroke="#FF5A6E"/><text x="573" y="76" fill="#FF8A98" font-size="12" font-weight="600">Block</text>
+        <rect x="450" y="96" width="246" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="573" y="118" fill="#C4D4E8" font-size="12">Replace</text>
+        <rect x="450" y="138" width="246" height="34" rx="8" fill="#10243B" stroke="#5CCBF4"/><text x="573" y="160" fill="#7DD9F9" font-size="12" font-weight="700">Dynamic Delivery</text>
+        <rect x="450" y="180" width="246" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="573" y="202" fill="#C4D4E8" font-size="12">Monitor</text>
+      </g>
+    </svg>
+    <figcaption>The attachment is held, opened, and watched in the sandbox; the verdict drives one of four per-policy actions.</figcaption>
+  </figure>
+
+  <p>The verdict drives one of four actions, chosen per-policy:</p>
+
+  <ul>
+    <li><strong>Block</strong> — malicious attachments stop delivery entirely; the email arrives without the attachment, or doesn't arrive at all (configurable).</li>
+    <li><strong>Replace</strong> — the attachment is removed, the email body still arrives, with a notification explaining what happened.</li>
+    <li><strong>Dynamic Delivery</strong> — the email arrives immediately with a placeholder, the real attachment is added once the sandbox completes. The user can read the email body while the scan runs. Best balance of security and user experience for SMB.</li>
+    <li><strong>Monitor</strong> — audit-only; the attachment is delivered unchanged, but malicious verdicts are logged. Useful for testing; not a production posture.</li>
+  </ul>
+
+  <p>For most SMB tenants, <strong>Dynamic Delivery</strong> is the right action. Users get the email body immediately (no "where's my email?" tickets), the attachment shows up a minute later, and malicious attachments never arrive at all.</p>
+
+  <p><strong>Safe Documents</strong> is a related feature in Microsoft 365 Apps for enterprise (E5-level licensing) that opens documents from external sources in Protected View and scans them via Microsoft Defender for Endpoint before letting users edit. Worth knowing about; not in Business Premium.</p>
+
+  <h2>SafeLinks-for-Office — links inside docs and Teams</h2>
+
+  <p>Safe Links was originally email-only. But attackers figured out you could deliver a clean email with a clean Word document, and put the malicious link <em>inside</em> the Word document. The link never got wrapped because Safe Links didn't touch the document. The user opens Word, clicks the link, gets phished. End run around Safe Links.</p>
+
+  <p>Microsoft fixed this. <strong>SafeLinks-for-Office</strong> extends URL evaluation into:</p>
+
+  <ul>
+    <li>Word, Excel, PowerPoint, OneNote (desktop and web)</li>
+    <li>Microsoft Teams chats, channels, and posts</li>
+    <li>Visio (desktop and web)</li>
+  </ul>
+
+  <p>When a user clicks a link inside any of those, the URL gets checked against Microsoft's threat intelligence in the same way an email-delivered link would. This closes the most-common evasion path.</p>
+
+  <p><strong>Setting:</strong> "Protect Office 365 apps" — should be <strong>on</strong> in the Safe Links policy. It's part of the Standard preset; with custom policies, you have to remember to enable it.</p>
+
+  <h2>What they catch, what they miss — be honest</h2>
+
+  <p>Safe Links and Safe Attachments are layered defences, not silver bullets. The opening anecdote is real because both features have real limits.</p>
+
+  <p><strong>Safe Links catches:</strong></p>
+
+  <ul>
+    <li>URLs to known-malicious destinations</li>
+    <li>URLs to destinations that turn malicious between delivery and click</li>
+    <li>URLs to brand-new domains with characteristics Microsoft's ML recognises (registration age, hosting reputation, content fingerprint)</li>
+    <li>URLs that evade pre-click static analysis but fail dynamic detonation</li>
+  </ul>
+
+  <p><strong>Safe Links misses:</strong></p>
+
+  <ul>
+    <li>Brand-new phishing domains with valid TLS, no threat-intel coverage yet, and Microsoft-perfect login UI. The opening anecdote's credential-harvester is exactly this case. Safe Links checks; threat intel hasn't categorised the domain yet; the page renders fine in the sandbox; the URL passes. The user lands on the phish.</li>
+    <li>Legitimate-but-compromised business sites. A legitimate WordPress site gets hijacked, attacker hosts the credential-harvester on the legitimate domain for six hours, Safe Links sees a domain with good reputation and passes the URL.</li>
+    <li>URLs delivered out-of-band (SMS, WhatsApp, the user typing in a URL they remember from a phone call). Safe Links only protects what flows through M365's email or document surfaces.</li>
+  </ul>
+
+  <p><strong>Safe Attachments catches:</strong></p>
+
+  <ul>
+    <li>Malware with recognisable behaviour patterns in a sandbox</li>
+    <li>Documents with malicious macros that execute on open</li>
+    <li>Files with known-malicious hashes</li>
+    <li>Files that match Microsoft's ML detection signatures for novel malware</li>
+  </ul>
+
+  <p><strong>Safe Attachments misses:</strong></p>
+
+  <ul>
+    <li>Password-protected archives. Microsoft can't open <code>.zip</code> files with passwords; the sandbox can't detonate what it can't unwrap. Attackers know this and use it constantly. The password is helpfully provided in the email body: "Password: 12345."</li>
+    <li>Files that detect the sandbox environment and behave benignly inside. Some malware checks for virtualisation indicators, mouse movement, or specific Office processes before activating.</li>
+    <li>Living-off-the-land payloads. The attachment itself isn't malicious; it triggers a workflow that uses legitimate Windows binaries (mshta.exe, certutil.exe, PowerShell) to do harm. The sandbox sees nothing wrong with the document.</li>
+    <li>Cloud-based payloads. The document doesn't contain malware; it contains a link to a cloud-hosted payload that loads at execution time. Safe Attachments sees a clean document; Safe Links may or may not catch the cloud link depending on reputation.</li>
+  </ul>
+
+  <div class="callout caution">
+    <div class="clabel">The takeaway</div>
+    <p>These features are <em>necessary but not sufficient</em>. They catch the bulk of mass-market phishing and malware. They don't catch a determined attacker building a custom AiTM workflow against your customer. That's why the rest of the curriculum exists — Conditional Access, phishing-resistant MFA, anti-phishing impersonation protection, user training. Layered defence. Safe Links and Safe Attachments are two of the layers.</p>
+  </div>
+
+  <h2>Configuration — the practical bit</h2>
+
+  <p>By default, neither feature has a policy assigned to anyone. You have to create the policies and assign them to user groups.</p>
+
+  <p><strong>For most SMB customers, the right starting configuration:</strong></p>
+
+  <ul>
+    <li>Apply the <strong>Standard preset security policy</strong> to all users. This creates Safe Links and Safe Attachments policies with Microsoft's curated defaults, assigns them to all users in the tenant, and turns on SafeLinks-for-Office. Done in three clicks.</li>
+    <li>If the customer has higher-risk profile (finance, legal, healthcare, government contracting), apply <strong>Strict</strong> instead.</li>
+  </ul>
+
+  <p><strong>For customers needing custom configuration:</strong></p>
+
+  <ul>
+    <li>Create a custom Safe Links policy with the settings above (track clicks on, no user override, Office apps protection on, no rewrite exclusions unless needed).</li>
+    <li>Create a custom Safe Attachments policy with <strong>Dynamic Delivery</strong> as the action.</li>
+    <li>Assign both to all users (or to the right scope; lesson 10 covers preset-and-overlay scoping).</li>
+  </ul>
+
+  <p>The preset approach is right for most. The custom approach is for customers with specific exclusions to manage or specific actions to tune.</p>
+
+  <h2>What can break</h2>
+
+  <p><strong>The "Safe Links is blocking our vendor portal" ticket.</strong> A legitimate vendor's portal URL gets wrapped, the wrapped URL doesn't render correctly because the vendor's site uses session tokens that don't survive the wrap, the user can't get in. The fix is adding the vendor's domain to the "do not rewrite" list — <em>not</em> turning off Safe Links for the user. (Same discipline as trusted-senders in lesson 2.)</p>
+
+  <p><strong>Attachment delivery delay complaints.</strong> Without Dynamic Delivery, users wait up to a minute for the attachment to scan before the email arrives. Frustrating for executives expecting an attachment to be there <em>now</em>. Dynamic Delivery solves this — email body arrives immediately, attachment fills in. If Dynamic Delivery isn't enabled, expect tickets in the first week.</p>
+
+  <p><strong>Macro-heavy legitimate documents getting flagged.</strong> A legitimate Excel macro that does something unusual (a complex automation workflow, a reporting tool with macros) can trigger Safe Attachments. The fix is either an attachment-level allow (rare; specific file hash) or a sender-level allow (more common; trusted partner). Same discipline as anti-phishing trusted-senders applies — check if there's a reason the file is being flagged before adding the exception.</p>
+
+  <h2>Rollout</h2>
+
+  <p>For Safe Links specifically, deploy via the <strong>Standard or Strict preset</strong> for the entire user base from day 0. The blocking action only fires on actually-malicious URLs, so collateral damage is rare. The most common breakage is the "vendor portal" case above, which surfaces as tickets in the first week and gets resolved with targeted exclusions.</p>
+
+  <p>For Safe Attachments, the same applies — preset deployment, Dynamic Delivery action so users don't notice the scan delay, exclusions for known macro-heavy legitimate workflows added as they surface.</p>
+
+  <p>The Audit-mode rollout pattern (lesson 1 of card 4) does not really apply here — these features are too low-impact to warrant a 30-day audit window. Direct deployment is the norm.</p>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Two things relevant to this lesson:</p>
+
+  <ul>
+    <li><strong>Drift on the preset security policy enablement.</strong> If a customer's tenant has Safe Links and Safe Attachments deployed via the Standard or Strict preset (the recommended path), Panoptica365 watches whether the preset stays enabled. Somebody turning off the preset — by mistake or in response to a customer complaint — fires a drift alert. The operator can revert, reapply, or accept.</li>
+    <li><strong>Defender for Office 365 detection events flow through Defender XDR.</strong> When Safe Links blocks a URL at click time or Safe Attachments quarantines a malicious file, the underlying detection event is part of Microsoft's MDO telemetry. When Defender XDR ingestion is configured for the customer (card 1 lesson 4), high-severity MDO incidents flow into Panoptica365's alert engine.</li>
+  </ul>
+
+  <p>What Panoptica365 does not surface today: per-user click rates through Safe Links, per-attachment scan results, the Defender portal's threat tracker views. Those are Microsoft Defender portal surfaces; drill in there for the deep diagnostic.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>These are the features customers paid for and aren't using.</strong> Most SMB customers with Business Premium have Safe Links and Safe Attachments licensed. Most have them unconfigured. The single highest-leverage move for an MSP onboarding a new customer is enabling the Standard preset — three clicks, immediate value, no per-user setup.</p>
+
+  <p><strong>Be honest about the limits.</strong> Safe Links and Safe Attachments catch the mass-market phishing and malware that hits SMB tenants daily. They don't catch a determined custom AiTM operation, a password-protected archive, or a sandbox-evading payload. Tell customers that. The layered-defence story (Safe Links + impersonation protection + Conditional Access + phishing-resistant MFA + user training) is the right pitch — not "we turned on Safe Links and you're now bulletproof."</p>
+
+  <p><strong>Dynamic Delivery is the right Safe Attachments action.</strong> Blocking attachment delivery while the sandbox scans is the difference between users tolerating Safe Attachments and users hating it. Set the action to Dynamic Delivery; email body arrives instantly; attachment fills in; nobody notices the security work.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: SPF, DKIM, DMARC.</b> The authentication trio that closes the spoofing-side gap. The other half of what anti-phishing and Safe Links don't catch.</div></div>
+    <div class="xl"><div class="xnum">5</div><div class="xt"><b>Lesson 5: Auto-forwarding and inbox rules.</b> The post-compromise indicator pair — what happens after an attacker is already inside, and how to spot them.</div></div>
+  </div>
+
+  <p>For now: open the customer's Defender portal. Look at the preset security policies surface. If the Standard or Strict preset isn't enabled, you've found the highest-impact change you can make this week. Three clicks. The features the customer is already paying for finally start doing their job.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on Safe Links overview (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-links-about" target="_blank" rel="noopener">Microsoft Learn — Safe Links in Defender for Office 365</a>); Safe Links policy configuration (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-links-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Set up Safe Links policies</a>); Safe Attachments overview and policy settings (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-attachments-about" target="_blank" rel="noopener">Microsoft Learn — Safe Attachments</a>); Dynamic Delivery action explained (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-attachments-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Dynamic Delivery in Safe Attachments</a>); SafeLinks-for-Office and Teams coverage (<a href="https://learn.microsoft.com/en-us/defender-office-365/safe-links-about#safe-links-settings-for-email-messages" target="_blank" rel="noopener">Microsoft Learn — Safe Links for Microsoft Teams</a>); preset security policies bundle (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

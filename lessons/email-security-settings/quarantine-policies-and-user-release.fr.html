@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Politiques de quarantaine et libération par l'utilisateur — Paramètres de sécurité courriel</title>
+<meta name="lesson:title" content="Politiques de quarantaine et libération par l'utilisateur — là où les bons défauts vont mourir">
+<meta name="lesson:subtitle" content="Restreindre les permissions de libération de quarantaine pour que les utilisateurs finaux ne puissent pas libérer eux-mêmes du hameçonnage à haute confiance.">
+<meta name="lesson:icon" content="inbox">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Paramètres de sécurité courriel</span> <span class="sep">·</span> <span>Politiques de quarantaine et libération par l'utilisateur</span></div>
+  <h1>Politiques de quarantaine et libération par l'utilisateur — là où les bons défauts vont mourir</h1>
+  <p class="dek">Restreindre les permissions de libération de quarantaine pour que les utilisateurs finaux ne puissent pas libérer eux-mêmes du hameçonnage à haute confiance.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Un courriel de notification de quarantaine listant un message en quarantaine avec un bouton Libérer à côté, et un clic envoyant le message dans la boîte de réception.">
+      <defs>
+        <radialGradient id="qpBg" cx="50%" cy="32%" r="82%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <filter id="qpSoft"><feGaussianBlur stdDeviation="5"/></filter>
+        <marker id="qpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#qpBg)"/>
+
+      <!-- left: the quarantine notification email -->
+      <text x="300" y="58" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">NOTIFICATION DE QUARANTAINE</text>
+      <g transform="translate(110,76)">
+        <rect x="0" y="0" width="380" height="206" rx="14" fill="#0E2236" stroke="#33527A" stroke-width="1.4"/>
+        <text x="22" y="38" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Vous avez 3 messages en quarantaine</text>
+        <line x1="22" y1="52" x2="358" y2="52" stroke="#1F3C5C"/>
+        <g font-family="Geist,Inter,sans-serif">
+          <rect x="22" y="66" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="86" fill="#6B85A6" font-size="12.5">infolettre · digest hebdo</text>
+          <rect x="278" y="66" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="86" text-anchor="middle" fill="#A8E1F8" font-size="12">Libérer</text>
+
+          <rect x="22" y="104" width="246" height="30" rx="7" fill="#102A4C" opacity="0.6"/>
+          <text x="34" y="124" fill="#6B85A6" font-size="12.5">promo · solde printemps</text>
+          <rect x="278" y="104" width="80" height="30" rx="7" fill="#0E2640" stroke="#2A7FA3"/>
+          <text x="318" y="124" text-anchor="middle" fill="#A8E1F8" font-size="12">Libérer</text>
+
+          <rect x="22" y="146" width="246" height="38" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+          <text x="34" y="164" fill="#FF8A98" font-size="12.5" font-weight="600">expéditeur inconnu</text>
+          <text x="34" y="179" fill="#E2A0AA" font-size="11">« Votre enveloppe DocuSign est prête »</text>
+          <rect x="278" y="148" width="80" height="34" rx="8" fill="#102A4C" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="318" y="170" text-anchor="middle" fill="#7DD9F9" font-size="12.5" font-weight="700">Libérer</text>
+          <circle cx="368" cy="148" r="9" fill="#5CCBF4" filter="url(#qpSoft)" opacity="0.8"/>
+        </g>
+      </g>
+
+      <!-- one click arrow -->
+      <text x="610" y="150" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">un clic</text>
+      <path d="M540 168 H690" stroke="#FF5A6E" stroke-width="3" stroke-linecap="round" marker-end="url(#qpArr)"/>
+
+      <!-- right: the inbox -->
+      <text x="880" y="58" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="3">LA BOÎTE DE RÉCEPTION</text>
+      <g transform="translate(720,76)">
+        <rect x="0" y="0" width="300" height="206" rx="14" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.4"/>
+        <g transform="translate(110,60)" stroke="#5CCBF4" stroke-width="2.4" fill="none">
+          <rect x="0" y="0" width="80" height="56" rx="6"/>
+          <path d="M0 6 L40 34 L80 6"/>
+        </g>
+        <rect x="68" y="150" width="164" height="34" rx="8" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="150" y="172" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">hameçonnage livré</text>
+      </g>
+    </svg>
+    <figcaption>La quarantaine a fonctionné. Puis le bouton Libérer de l'utilisateur l'a défaite.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>L'assistante du PDG d'un client reçoit un courriel quotidien de notification de quarantaine de la part de Microsoft. Sujet : « Vous avez 3 messages en quarantaine. » Le corps liste trois messages avec l'expéditeur, le sujet, et un bouton Libérer à côté de chacun.</p>
+
+  <p>Un des trois vient de quelqu'un qu'elle ne reconnaît pas, avec un sujet comme « Votre enveloppe DocuSign est prête pour signature. » Elle n'attendait pas d'enveloppe DocuSign. Mais le PDG signe des choses tout le temps, et elle gère son calendrier, et peut-être que c'est quelque chose qu'il doit voir, et elle ne veut pas avoir l'air de l'assistante qui a bloqué quelque chose d'important. Elle clique sur Libérer.</p>
+
+  <p>Le message arrive dans sa boîte de réception. Elle l'ouvre. Elle clique sur le lien à l'effigie DocuSign. Le lien va vers un récolteur d'identifiants tournant sur un domaine fraîchement enregistré avec un certificat Let's Encrypt valide. Elle tape les identifiants du PDG, parce que le PDG lui avait demandé de gérer DocuSign pour lui, et elle a le mot de passe. L'attaquant capture à la fois l'identifiant et le cookie de session. Douze minutes plus tard, l'attaquant est dans la boîte aux lettres du PDG.</p>
+
+  <p>L'assistante a fait exactement ce que la notification de quarantaine par défaut de Microsoft l'<em>invitait à faire</em>. Elle avait un bouton Libérer. Elle l'a utilisé.</p>
+
+  <p>C'est le vecteur de suivi BEC qui reçoit moins d'attention qu'il ne le mérite : même quand Defender met avec succès en quarantaine un courriel d'hameçonnage, l'utilisateur du client lui-même peut le libérer dans la boîte de réception en un clic. La défense contre l'hameçonnage existe; la défense contre l'utilisateur qui défait la défense, c'est ce dont cette leçon parle.</p>
+  </div>
+
+  <h2>Les quatre (ou cinq) catégories de quarantaine</h2>
+
+  <p>Microsoft classe les messages en quarantaine en catégories distinctes, chacune avec ses propres règles de libération par défaut. Connaître les catégories compte parce que la bonne configuration est <em>spécifique à la catégorie</em>.</p>
+
+  <ul>
+    <li><strong>Spam</strong> (pourriel à faible confiance) — messages que Microsoft soupçonne d'être du pourriel avec confiance modérée. Défaut : les utilisateurs peuvent libérer avec notification.</li>
+    <li><strong>Pourriel à haute confiance</strong> — Microsoft est plus certain. Défaut : les utilisateurs peuvent libérer avec notification.</li>
+    <li><strong>Bulk</strong> — courrier de masse style infolettre. Défaut : les utilisateurs peuvent libérer avec notification.</li>
+    <li><strong>Phishing</strong> — Microsoft soupçonne que c'est une tentative d'hameçonnage. Défaut : l'admin doit libérer.</li>
+    <li><strong>Hameçonnage à haute confiance</strong> — Microsoft est hautement confiant. Défaut : l'admin doit libérer; le message ne peut pas être libéré par les utilisateurs.</li>
+    <li><strong>Maliciel</strong> — pièce jointe ou lien a correspondu à un patron malveillant. Défaut : l'admin doit libérer.</li>
+    <li><strong>Spoof</strong> — l'authentification de l'expéditeur (SPF/DKIM/DMARC) a échoué d'une façon qui suggère une usurpation d'expéditeur. Défaut variable selon la configuration du tenant.</li>
+  </ul>
+
+  <p>Les défauts sont raisonnables pour les catégories à haute confiance (l'admin doit libérer) et <em>dangereux</em> pour celles à plus faible confiance (les utilisateurs peuvent libérer). L'anecdote d'ouverture est arrivée parce que l'assistante a reçu un message classé comme Phishing (pas haute confiance) avec la configuration plus ancienne par défaut qui laissait les utilisateurs libérer l'hameçonnage à plus faible confiance — et Microsoft a resserré les défauts depuis, mais les tenants clients qui ont été configurés il y a des années peuvent encore porter les paramètres plus permissifs.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="Les catégories de quarantaine séparées en deux groupes selon la règle de libération par défaut : catégories à plus faible confiance où les utilisateurs peuvent libérer, et catégories à plus haute confiance où l'admin doit libérer.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="186" y="34" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1" font-weight="600">UTILISATEURS PEUVENT LIBÉRER</text>
+      <text x="186" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(plus faible confiance)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="56" y="70" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="95" fill="#C4D4E8" font-size="14">Spam</text></g>
+        <g><rect x="56" y="120" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="145" fill="#C4D4E8" font-size="13.5">Pourriel à haute confiance</text></g>
+        <g><rect x="56" y="170" width="260" height="40" rx="9" fill="#0E2236" stroke="#FFC04D" stroke-opacity="0.6"/><text x="186" y="195" fill="#C4D4E8" font-size="14">Bulk</text></g>
+      </g>
+      <text x="534" y="34" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="11.5" letter-spacing="1" font-weight="600">L'ADMIN DOIT LIBÉRER</text>
+      <text x="534" y="52" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">(plus haute confiance / dangereux)</text>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g><rect x="404" y="70" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="95" fill="#A8E1F8" font-size="14">Phishing</text></g>
+        <g><rect x="404" y="120" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="145" fill="#A8E1F8" font-size="13.5">Hameçonnage à haute confiance</text></g>
+        <g><rect x="404" y="170" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="195" fill="#A8E1F8" font-size="14">Maliciel</text></g>
+        <g><rect x="404" y="220" width="260" height="40" rx="9" fill="#0E2640" stroke="#2A6F9E"/><text x="534" y="245" fill="#A8E1F8" font-size="14">Spoof</text></g>
+      </g>
+      <text x="534" y="290" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11" font-style="italic">Défaut Spoof variable selon le tenant</text>
+    </svg>
+    <figcaption>Règles de libération par défaut séparées par confiance — la bonne configuration est spécifique à la catégorie.</figcaption>
+  </figure>
+
+  <h2>Politiques de quarantaine — l'objet de configuration</h2>
+
+  <p>Une <strong>politique de quarantaine</strong> dans M365 est l'objet qui définit ce que les utilisateurs sont autorisés à faire avec les messages en quarantaine. Microsoft livre trois politiques préréglées; vous pouvez en créer des personnalisées.</p>
+
+  <p>Les préréglages :</p>
+
+  <ul>
+    <li><strong>AdminOnlyAccessPolicy</strong> — les utilisateurs n'obtiennent aucune capacité de libération du tout. Ils peuvent voir les messages en quarantaine (si la notification est activée) mais ne peuvent pas les libérer. L'admin est le seul qui peut. La posture la plus stricte.</li>
+    <li><strong>DefaultFullAccessPolicy</strong> — les utilisateurs peuvent demander une libération (l'admin approuve encore) et peuvent prévisualiser les messages. Pas de notifications.</li>
+    <li><strong>DefaultFullAccessWithNotificationPolicy</strong> — pareil que DefaultFullAccessPolicy mais avec les notifications de quarantaine activées. Le défaut le plus permissif de Microsoft.</li>
+  </ul>
+
+  <p>Les politiques personnalisées vous laissent panacher : activer des actions spécifiques (demander libération, prévisualiser, bloquer l'expéditeur), spécifier si les notifications sont envoyées, et choisir à quel point la cadence de notification est agressive.</p>
+
+  <p>La configuration qui compte pour le durcissement PME : <strong>appliquer AdminOnlyAccessPolicy aux catégories dangereuses</strong> (Phishing, hameçonnage à haute confiance, Maliciel, Spoof). Les utilisateurs ne peuvent jamais libérer les messages dans ces catégories sans l'approbation de l'opérateur. Pour les catégories à plus faible confiance (Spam, Bulk), la DefaultFullAccessWithNotificationPolicy plus permissive est défendable — ce sont habituellement du courriel marketing ou du bruit, et donner aux utilisateurs un libre-service pour ceux-là réduit la charge du support.</p>
+
+  <div class="callout insight">
+    <div class="clabel">La règle de durcissement</div>
+    <p>Appliquez <strong>AdminOnlyAccessPolicy</strong> à Phishing, hameçonnage à haute confiance, Maliciel et Spoof. Les utilisateurs ne peuvent jamais libérer les messages dans ces catégories sans l'approbation de l'opérateur.</p>
+  </div>
+
+  <h2>Cadence des notifications de quarantaine</h2>
+
+  <p>Séparément des politiques elles-mêmes, M365 contrôle à quelle fréquence les utilisateurs reçoivent le courriel digest « vous avez des messages en quarantaine ». La fréquence de notification peut être réglée par politique de quarantaine (dans les configurations plus récentes) ou via un paramètre global (dans les plus anciennes).</p>
+
+  <p>Cadences communes :</p>
+
+  <ul>
+    <li><strong>Quotidien</strong> — le défaut. Un courriel par jour avec les messages mis en quarantaine de la journée.</li>
+    <li><strong>Toutes les 4 heures</strong> — plus agressif; pour les boîtes aux lettres à fort volume.</li>
+    <li><strong>Désactivé</strong> — aucune notification du tout. Les utilisateurs doivent activement vérifier le portail de quarantaine s'ils veulent voir ce qui a été bloqué.</li>
+  </ul>
+
+  <p>Pour les clients PME, quotidien est habituellement le bon équilibre. Des notifications plus fréquentes génèrent du bruit; désactivé génère des tickets « je n'ai jamais reçu X » parce que les utilisateurs ne pensent pas à vérifier le portail.</p>
+
+  <h2>Le suivi BEC — pourquoi les défauts comptent</h2>
+
+  <p>L'anecdote d'ouverture n'est pas hypothétique. C'est le deuxième vecteur de suivi le plus commun après le transfert automatique (leçon 5). La séquence d'attaque est cohérente à travers les incidents :</p>
+
+  <ol>
+    <li>L'attaquant envoie un courriel d'hameçonnage construit pour avoir l'air d'une communication d'affaires légitime (DocuSign, facture, RH interne, expiration de mot de passe TI).</li>
+    <li>Le courriel atterrit en quarantaine parce que le classificateur anti-hameçonnage de Microsoft le signale — mais avec une classification Phishing (pas haute confiance), parce que le message est techniquement bien formé et utilise une infrastructure d'hébergement légitime.</li>
+    <li>L'utilisateur reçoit la notification de quarantaine, voit un sujet d'apparence plausible d'affaires, ne veut pas retarder quelque chose d'important, clique Libérer.</li>
+    <li>Le message arrive dans la boîte de réception. L'utilisateur clique sur le lien. Les identifiants sont capturés. Le cookie de session est capturé. La boîte aux lettres est compromise.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 250" role="img" aria-label="La séquence de suivi BEC : un courriel d'hameçonnage atterrit en quarantaine, l'utilisateur le libère, clique sur le lien, et la boîte aux lettres est compromise.">
+      <rect width="720" height="250" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="bArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="100" width="138" height="56" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="99" y="126" fill="#C4D4E8" font-size="13" font-weight="600">Hameçonnage</text>
+        <text x="99" y="144" fill="#6B85A6" font-size="11">classé Phishing</text>
+
+        <rect x="206" y="100" width="138" height="56" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="275" y="126" fill="#7DD9F9" font-size="13" font-weight="600">Quarantaine</text>
+        <text x="275" y="144" fill="#6B85A6" font-size="11">la défense tient</text>
+
+        <rect x="382" y="100" width="138" height="56" rx="10" fill="#2A1A0A" stroke="#FFC04D" stroke-width="1.4"/>
+        <text x="451" y="126" fill="#FFD27A" font-size="12.5" font-weight="600">L'usager libère</text>
+        <text x="451" y="144" fill="#C9A468" font-size="11">clique le lien</text>
+
+        <rect x="558" y="100" width="138" height="56" rx="10" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+        <text x="627" y="126" fill="#FF8A98" font-size="13" font-weight="700">Boîte</text>
+        <text x="627" y="144" fill="#E2A0AA" font-size="11">compromise</text>
+      </g>
+      <path d="M168 128 H206" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M344 128 H382" stroke="#5C7796" stroke-width="2" marker-end="url(#bArr)"/>
+      <path d="M520 128 H558" stroke="#FF5A6E" stroke-width="2" marker-end="url(#bArr)"/>
+      <text x="451" y="200" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="11">identifiant + cookie de session capturés</text>
+    </svg>
+    <figcaption>La défense de la quarantaine tient — jusqu'à ce que le clic Libérer de l'utilisateur achève la livraison du message.</figcaption>
+  </figure>
+
+  <p>La défense, c'est de retirer le bouton Libérer pour les catégories dangereuses. Configurez tout de Phishing, hameçonnage à haute confiance, Maliciel, et Spoof à AdminOnlyAccessPolicy. La notification peut encore venir (pour que l'utilisateur sache que son courriel a été mis en quarantaine et puisse demander à l'opérateur d'enquêter), mais le bouton Libérer n'est pas là. L'utilisateur doit appeler le support.</p>
+
+  <p>Ça ajoute de la charge opérationnelle — les opérateurs traitent maintenant les tickets « libérer mon message en quarantaine ». Le compromis est intentionnel : chaque ticket de demande-de-libération est une occasion de regarder le message, vérifier qu'il est légitime, et soit le libérer soit utiliser la conversation pour éduquer l'utilisateur sur ce qu'il a presque cliqué. La conversation de cinq minutes est pas chère; l'incident de fraude par virement est cher.</p>
+
+  <h2>Les politiques de sécurité prédéfinies rendent ça plus facile</h2>
+
+  <p>Les politiques de sécurité prédéfinies de Microsoft (Standard et Strict — la leçon 10 les couvre en détail) incluent des configurations de politique de quarantaine. Le préréglage Standard assigne la politique d'accès stricte (AdminOnlyAccessPolicy) aux catégories Hameçonnage à haute confiance, Maliciel et Spoof par défaut. Le préréglage Strict étend ça à Phishing aussi.</p>
+
+  <p>Si vous avez appliqué le préréglage Standard ou Strict au client (couvert dans la leçon 3 et la leçon 10), la configuration de quarantaine est partiellement gérée. Ce que les préréglages ne remplacent pas, c'est la cadence et le mappage de politique par catégorie pour Spam et Bulk — ce sont encore des décisions spécifiques au tenant.</p>
+
+  <p>Ce qu'il faut retenir : si vous déployez les politiques de sécurité prédéfinies et que vous ne personnalisez pas davantage la quarantaine, vous avez déjà obtenu le blocage de libération des catégories dangereuses. Si vous configurez les politiques de quarantaine indépendamment des préréglages, vous devez rendre l'assignation AdminOnly explicite pour chaque catégorie dangereuse.</p>
+
+  <h2>Le flux de travail opérateur — libérer pour le compte de l'utilisateur</h2>
+
+  <p>Quand AdminOnlyAccessPolicy est en place et qu'un utilisateur appelle pour demander une libération :</p>
+
+  <ol>
+    <li><strong>Ouvrez le portail de quarantaine</strong> (portail Defender → Email &amp; collaboration → Review → Quarantine). Cherchez le message par destinataire, expéditeur, ou sujet.</li>
+    <li><strong>Prévisualisez le message</strong> avant de libérer. Lisez le corps. Regardez les liens. Regardez les détails de l'expéditeur — y compris l'adresse expéditrice réelle (pas juste le nom d'affichage). Regardez les en-têtes si le message est à la limite.</li>
+    <li><strong>Vérifiez avec l'utilisateur</strong> ce à quoi il s'attendait. « Vous dites que c'est de Bob sur la facture — est-ce que ça correspond à ce que Bob enverrait normalement? Est-ce que le lien va où vous l'attendez? »</li>
+    <li><strong>Libérez si légitime; rapportez-comme-hameçonnage sinon.</strong> Le portail Defender de Microsoft vous laisse libérer avec une option de « soumettre à Microsoft pour révision » — ça entraîne le classificateur Microsoft et aide des messages légitimes similaires à passer automatiquement à l'avenir.</li>
+  </ol>
+
+  <p>C'est un flux de travail de 3 à 5 minutes par requête. Pour les clients avec beaucoup de libérations, traitez-les par lots — gérez la file une ou deux fois par jour plutôt que de réagir à chaque appel. Pour les clients à fort volume, envisagez de resserrer le réglage anti-hameçonnage ou anti-pourriel pour que moins de messages légitimes atterrissent en quarantaine.</p>
+
+  <h2>Ce que Panoptica365 voit</h2>
+
+  <p>La configuration des politiques de quarantaine fait partie de ce que les <strong>politiques de sécurité prédéfinies</strong> gouvernent. Le paramètre de sécurité Panoptica365 « Enable Preset Security Policy (Standard or Strict) — MDO » pousse l'activation du préréglage sur le tenant du client, et le détecteur de dérive surveille s'il reste activé. Si un admin du client ouvre le portail Defender et désactive le préréglage — ou crée une politique de quarantaine personnalisée avec des droits de libération permissifs qui remplacent le préréglage — le signal de dérive est l'avertissement précoce.</p>
+
+  <p><strong>Les alertes Defender XDR</strong> coulent dans le moteur d'alertes de Panoptica365 quand MDO fait remonter des événements de haute gravité liés aux libérations de quarantaine initiées par l'utilisateur de messages suspects. Celles-ci apparaissent dans le pipeline d'alertes standard.</p>
+
+  <p>Ce que Panoptica365 ne fait <em>pas</em> remonter dans le tableau de bord : des explorateurs de file de quarantaine par tenant, un flux d'approbation de demande-de-libération par message, un historique d'activité de libération par utilisateur. La file de quarantaine elle-même, la prévisualisation par message, l'action d'approbation de libération — tout ça se passe dans le portail Microsoft Defender. Panoptica365 surveille la <em>configuration</em> du système de quarantaine; l'<em>opération</em> de la file de quarantaine est une surface Microsoft.</p>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p><strong>Plaintes de clients sur des messages « pris dans la quarantaine ».</strong> Quand AdminOnlyAccessPolicy est en place, les utilisateurs ne peuvent vraiment pas libérer leurs propres messages. Ils vont appeler. Certains clients vivent ça comme une dégradation. Encadrez-le explicitement pendant la conversation avec le client comme « on vous protège du patron d'attaque AiTM-et-libération; le compromis, c'est que vous nous appelez pour libérer les messages ambigus, et on prend cinq minutes pour vérifier ». La plupart des clients acceptent ça une fois le compromis expliqué.</p>
+
+  <p><strong>Courriel marketing ou transactionnel légitime mis en quarantaine de façon répétée.</strong> Factures de fournisseurs, enveloppes DocuSign, invitations de calendrier de tiers — n'importe quel système qui envoie du courrier avec des caractéristiques que Microsoft note comme adjacentes à l'hameçonnage. La correction est soit d'authentifier l'expéditeur correctement (leçon 4), soit d'ajouter le domaine de l'expéditeur à la liste d'expéditeurs de confiance anti-hameçonnage (leçon 2). Pas de créer une politique de quarantaine permissive.</p>
+
+  <p><strong>Notifications de quarantaine qui vont dans les indésirables.</strong> Les utilisateurs mettent parfois en place des règles qui déplacent tous les courriels d'expéditeurs « noreply@ » vers les indésirables, y compris le digest de quarantaine de Microsoft. Puis ils se plaignent qu'ils ne savent pas pour les messages en quarantaine. Diagnostiquez pendant l'accueil et éduquez l'utilisateur.</p>
+
+  <p><strong>Anciennes politiques de quarantaine personnalisées laissées par d'anciens admins.</strong> Certains tenants clients ont des politiques de quarantaine personnalisées héritées de migrations ou de MSP précédents. Auditez-les pendant le pré-vol (leçon 1) et soit alignez-les avec le modèle de préréglage Standard/Strict, soit reconstruisez-les explicitement.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>La libération de quarantaine par défaut est un vecteur de suivi BEC.</strong> Les défauts de Microsoft laissent les utilisateurs libérer eux-mêmes les messages d'hameçonnage à plus faible confiance. L'assistante dans l'histoire d'ouverture est la victime récurrente. Mettez AdminOnlyAccessPolicy sur Phishing, hameçonnage à haute confiance, Maliciel et Spoof — au minimum.</p>
+
+  <p><strong>Soit vous déployez les préréglages, soit vous configurez explicitement les politiques de quarantaine.</strong> Le préréglage Standard ou Strict gère la configuration de libération admin-seulement pour les catégories dangereuses. Si vous n'utilisez pas les préréglages, chaque catégorie a besoin d'une assignation de politique explicite. Il n'y a pas de troisième option qui soit sûre.</p>
+
+  <p><strong>Libérer-pour-le-compte-de est un flux de travail opérateur de cinq minutes, et ça vaut la peine de le faire correctement.</strong> Quand les utilisateurs appellent pour libérer un message, c'est le moment de vérifier l'expéditeur, prévisualiser le lien, et soit libérer avec confiance, soit utiliser l'appel pour éduquer. La charge opérationnelle est réelle mais proportionnelle à la protection — et les conversations elles-mêmes entraînent les utilisateurs des clients à être plus sceptiques face au prochain hameçonnage.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <ul>
+    <li><strong>Leçon 8 : Règles de flux de courrier et MailTips.</strong> Les règles de transport — l'objet de configuration qui donne aux opérateurs un contrôle chirurgical sur la gestion des messages, et le patron d'abus quand utilisées trop largement.</li>
+    <li><strong>Leçon 9 : Pourriel sortant et SMTP AUTH.</strong> Les contrôles du rayon d'impact post-compromission — ce qui arrive quand la boîte aux lettres d'un client est celle qui envoie l'hameçonnage.</li>
+  </ul>
+
+  <p>Pour l'instant : ouvrez les politiques de quarantaine du client dans le portail Defender. Vérifiez que Phishing, hameçonnage à haute confiance, Maliciel et Spoof sont mappés à AdminOnlyAccessPolicy (ou que la politique de sécurité prédéfinie est activée et fournit le même effet). Vérifiez que la cadence de notification est quotidienne, pas désactivée. L'assistante dans l'histoire d'ouverture n'obtient pas son bouton Libérer cette semaine; vous dormez mieux par conséquent.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur la vue d'ensemble des politiques de quarantaine (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies" target="_blank" rel="noopener">Microsoft Learn — Quarantine policies</a>); créer et assigner des politiques de quarantaine personnalisées (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies-configure" target="_blank" rel="noopener">Microsoft Learn — Manage quarantine policies</a>); référence de comportement de libération de quarantaine par l'utilisateur (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-end-user" target="_blank" rel="noopener">Microsoft Learn — Quarantine user permissions</a>); configuration des notifications de quarantaine (<a href="https://learn.microsoft.com/en-us/defender-office-365/quarantine-policies#quarantine-notifications" target="_blank" rel="noopener">Microsoft Learn — Quarantine notifications</a>); politiques de sécurité prédéfinies et leurs effets sur la quarantaine (<a href="https://learn.microsoft.com/en-us/defender-office-365/preset-security-policies" target="_blank" rel="noopener">Microsoft Learn — Preset security policies</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

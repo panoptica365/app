@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compliance policies — defining "compliant" across four platforms — Intune Template Settings</title>
+<meta name="lesson:title" content="Compliance policies — defining &quot;compliant&quot; across four platforms">
+<meta name="lesson:subtitle" content="The four Panoptica365 compliance policies — Windows, iOS, Android, macOS — and the minimum bar each one enforces.">
+<meta name="lesson:icon" content="monitor-check">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Compliance policies</span></div>
+  <h1>Compliance policies — defining "compliant" across four platforms</h1>
+  <p class="dek">The four Panoptica365 compliance policies — Windows, iOS, Android, macOS — and the minimum bar each one enforces.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Four compliance policies — Windows, iOS/iPadOS, Android, and macOS — each defining a minimum bar.">
+      <defs>
+        <radialGradient id="cpBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="cpBar" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#2A7FA3"/><stop offset="100%" stop-color="#5CCBF4"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#cpBg)"/>
+
+      <!-- the minimum bar line that runs across all four -->
+      <line x1="120" y1="208" x2="1000" y2="208" stroke="#5CCBF4" stroke-width="1.6" stroke-dasharray="2 7" opacity="0.8"/>
+      <text x="1010" y="212" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="1">MIN BAR</text>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Windows -->
+        <g transform="translate(220,0)">
+          <rect x="-66" y="150" width="132" height="58" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <rect x="-66" y="60" width="132" height="90" rx="6" fill="#0E2640" stroke="#2A6F9E" stroke-dasharray="3 5"/>
+          <text x="0" y="106" fill="#6B85A6" font-size="11.5">configuration</text>
+          <text x="0" y="123" fill="#6B85A6" font-size="11.5">hardens above</text>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">Windows</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">7 checks</text>
+        </g>
+        <!-- iOS -->
+        <g transform="translate(450,0)">
+          <rect x="-66" y="172" width="132" height="36" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">iOS/iPadOS</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">light by design</text>
+        </g>
+        <!-- Android -->
+        <g transform="translate(670,0)">
+          <rect x="-66" y="170" width="132" height="38" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">Android</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">AOSP Device Owner</text>
+        </g>
+        <!-- macOS -->
+        <g transform="translate(890,0)">
+          <rect x="-66" y="166" width="132" height="42" rx="6" fill="url(#cpBar)" opacity="0.92"/>
+          <text x="0" y="244" fill="#A8E1F8" font-size="15" font-weight="600">macOS</text>
+          <text x="0" y="266" fill="#52708F" font-size="11.5">small fleet</text>
+        </g>
+      </g>
+
+      <text x="120" y="44" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="3">WHAT "COMPLIANT" MEANS · FOUR PLATFORMS</text>
+    </svg>
+    <figcaption>Four policies, one job: each defines the minimum bar a device must clear to count as "compliant."</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A compliance policy is the document that answers a single question: <em>what does it mean for a device to be considered "compliant" in this customer's tenant?</em></p>
+
+  <p>The answer feeds straight into Conditional Access. When a CA policy says "require compliant device" (the AiTM-killer pattern from card 3 lesson 4), the device-compliance signal it reads comes from the compliance policy you wrote. Not the Intune configuration profile that <em>enforces</em> settings on the device — the compliance policy that <em>evaluates</em> whether the device meets the bar.</p>
+
+  <p>This distinction matters and gets confused often. The Panoptica365 BitLocker Settings template <em>makes BitLocker happen</em> on Windows devices. The Panoptica365 Windows Compliance policy <em>checks whether BitLocker is on</em> and reports compliant or non-compliant accordingly. Same outcome (BitLocker enabled), two different policies doing different jobs. You need both.</p>
+
+  <p>This lesson walks through the four compliance policies in the Panoptica365 library: Windows, iOS/iPadOS, Android, and macOS. Each is small (under 2KB of JSON), opinionated, and intentionally lenient — they define the minimum bar, not the aspirational target.</p>
+  </div>
+
+  <h2>The four policies</h2>
+
+  <h3>Panoptica365 - Windows Compliance</h3>
+
+  <p>The Windows compliance policy is the most consequential because Windows is the dominant managed-device platform in SMB MSP environments. What it actually checks:</p>
+
+  <ul>
+    <li><strong>Defender enabled</strong> (<code>defenderEnabled: true</code>) — Microsoft Defender Antivirus must be running.</li>
+    <li><strong>Real-time protection enabled</strong> (<code>rtpEnabled: true</code>) — RTP must be on, not just installed.</li>
+    <li><strong>Antivirus required</strong> (<code>antivirusRequired: true</code>) — an antivirus must be present.</li>
+    <li><strong>Anti-spyware required</strong> (<code>antiSpywareRequired: true</code>) — anti-spyware engine present.</li>
+    <li><strong>Active firewall required</strong> (<code>activeFirewallRequired: true</code>) — Windows Defender Firewall must be active.</li>
+    <li><strong>Signature out of date check</strong> (<code>signatureOutOfDate: true</code>) — flags devices with stale AV signatures.</li>
+    <li><strong>Device threat protection enabled</strong> (<code>deviceThreatProtectionEnabled: true</code>) at level <code>low</code> — Defender for Endpoint must report no high-confidence threats.</li>
+  </ul>
+
+  <p>What it <em>deliberately doesn't check:</em></p>
+
+  <ul>
+    <li><strong>BitLocker</strong> is <em>not</em> required. (Notice the <code>bitLockerEnabled: false</code>.) That's a real choice. BitLocker enforcement happens via the BitLocker Settings template (lesson 4); the compliance policy doesn't demand it.</li>
+    <li><strong>Password</strong> is <em>not</em> required. (<code>passwordRequired: false</code>.) Windows password enforcement comes from the Security Baseline (lesson 3) or Group Policy elsewhere.</li>
+    <li><strong>TPM</strong> is <em>not</em> required. (<code>tpmRequired: false</code>.) Most modern Windows hardware has TPM, but requiring it would fail compliance for older fleet devices.</li>
+    <li><strong>Secure Boot</strong> is <em>not</em> required. Same reason.</li>
+    <li><strong>OS minimum version</strong> is <em>not</em> set. The compliance policy doesn't demand Windows 11 or any specific build.</li>
+  </ul>
+
+  <p>Why the leniency? Because the compliance policy is the <em>minimum bar for CA's compliant-device gate</em>. If you set it too high, devices that are otherwise correctly configured fail compliance and lose access to M365 — even when nothing's wrong with them from a security perspective. The Panoptica365 Windows compliance policy errs on the side of "if Defender is running, this device is compliant enough to access M365." Hardening beyond that bar happens in the configuration templates (BitLocker, Security Baseline, ASR Rules) — separately from the compliance evaluation.</p>
+
+  <p>This is a <em>defensible</em> choice. A different MSP might require BitLocker as a compliance criterion. The trade-off: stricter compliance criteria catch more security gaps but also produce more false-positive non-compliance findings when device state is briefly inconsistent (BitLocker temporarily disabled for a recovery operation, signatures briefly stale during an update window, etc.). The lenient bar prioritises stability of the CA-compliant-device signal over aggressive hardening.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 320" role="img" aria-label="What the Windows compliance policy checks versus what it deliberately leaves out.">
+      <rect width="720" height="320" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><filter id="cpSoft2"><feGaussianBlur stdDeviation="1.4"/></filter></defs>
+      <text x="200" y="34" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CHECKS</text>
+      <text x="520" y="34" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">DELIBERATELY SKIPS</text>
+      <line x1="360" y1="50" x2="360" y2="296" stroke="#1F3C5C" stroke-width="1.5"/>
+
+      <g font-family="Geist,Inter,sans-serif" font-size="13.5">
+        <!-- checks (left) -->
+        <g fill="#C4D4E8">
+          <g transform="translate(44,64)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Defender enabled</text></g>
+          <g transform="translate(44,92)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Real-time protection</text></g>
+          <g transform="translate(44,120)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Antivirus present</text></g>
+          <g transform="translate(44,148)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Anti-spyware present</text></g>
+          <g transform="translate(44,176)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Active firewall</text></g>
+          <g transform="translate(44,204)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Signature freshness</text></g>
+          <g transform="translate(44,232)"><circle cx="8" cy="-4" r="8" fill="#0E2A22" stroke="#2EE8A0"/><path d="M5 -4 l2.4 2.6 l4 -5.4" stroke="#2EE8A0" stroke-width="1.8" fill="none"/><text x="26" y="0">Device threat protection</text></g>
+          <g transform="translate(44,260)"><text x="26" y="0" fill="#52708F" font-size="11.5">at level "low"</text></g>
+        </g>
+        <!-- skips (right) -->
+        <g fill="#6B85A6">
+          <g transform="translate(396,64)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">BitLocker</text></g>
+          <g transform="translate(396,92)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">Password</text></g>
+          <g transform="translate(396,120)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">TPM</text></g>
+          <g transform="translate(396,148)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">Secure Boot</text></g>
+          <g transform="translate(396,176)"><circle cx="8" cy="-4" r="8" fill="#0E2236" stroke="#52708F"/><path d="M4 -8 l8 8 M12 -8 l-8 8" stroke="#52708F" stroke-width="1.6"/><text x="26" y="0">OS minimum version</text></g>
+        </g>
+      </g>
+      <text x="200" y="290" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">if Defender is running, compliant enough for M365</text>
+    </svg>
+    <figcaption>The Windows policy's seven checks, and the five things it leaves to the configuration templates.</figcaption>
+  </figure>
+
+  <h3>Panoptica365 - iOS/iPadOS Compliance</h3>
+
+  <p>Mobile compliance is light by design. iOS devices in the SMB context are overwhelmingly BYOD — personal phones used to read corporate email. Full MDM enrolment on a personal phone is something users push back on and many MSPs don't try to enforce.</p>
+
+  <p>What the iOS policy checks:</p>
+
+  <ul>
+    <li><strong>Passcode required</strong> (<code>passcodeRequired: true</code>) — device must have a passcode.</li>
+    <li><strong>Minimum passcode length: 4 characters.</strong></li>
+    <li><strong>Maximum 5 minutes of inactivity before lock</strong> (<code>passcodeMinutesOfInactivityBeforeLock: 5</code>).</li>
+    <li><strong>24-passcode previous-block count</strong> — can't reuse the last 24 passcodes.</li>
+    <li><strong>Jailbreak detection</strong> (<code>securityBlockJailbrokenDevices: true</code>) — blocks devices flagged as jailbroken.</li>
+  </ul>
+
+  <p>What it doesn't check:</p>
+
+  <ul>
+    <li><strong>OS minimum version</strong> is not set. iOS gets security updates aggressively; users generally are on current versions; demanding a specific minimum would catch a small number of devices on old iOS releases who probably can't update anyway.</li>
+    <li><strong>Device Threat Protection</strong> is not required (Defender for Endpoint on iOS exists but isn't standard for SMB BYOD).</li>
+    <li><strong>Managed email profile</strong> is not required. Users access email through their consumer Outlook/Apple Mail app, not through a managed configuration.</li>
+  </ul>
+
+  <p>The honest framing: this policy ensures the basics (passcode + lock screen + not-jailbroken) and accepts that the rest of mobile-device hardening is outside the SMB-MSP scope. If a customer wants stricter mobile MDM, they want a different MSP relationship.</p>
+
+  <h3>Panoptica365 - Android Compliance</h3>
+
+  <p>The Android policy is configured for <strong>Android Open Source Project (AOSP) Device Owner</strong> mode — the Android Enterprise model. What it checks:</p>
+
+  <ul>
+    <li><strong>Storage encryption required</strong> (<code>storageRequireEncryption: true</code>) — device encryption must be enabled.</li>
+    <li><strong>Password required</strong> (<code>passwordRequired: true</code>).</li>
+    <li><strong>15 minutes of inactivity before lock</strong> (<code>passwordMinutesOfInactivityBeforeLock: 15</code>).</li>
+    <li><strong>Jailbreak / root detection</strong> (<code>securityBlockJailbrokenDevices: true</code>).</li>
+  </ul>
+
+  <p>Notably absent: minimum OS version, minimum Android security patch level, app verification. Same reasoning as iOS — these would fail compliance on devices that customers can't easily upgrade.</p>
+
+  <p>The AOSP Device Owner mode is specifically for <em>corporate-owned, fully-managed</em> Android devices. For <em>personally-owned</em> Android devices using a work profile, the compliance policy structure is slightly different and not represented in the Panoptica365 library. If a customer has a meaningful Android-BYOD fleet, this template doesn't cover that scenario directly — and the Panoptica365 mobile scope is "compliance signal for what's enrolled, nothing more."</p>
+
+  <h3>Panoptica365 - macOS Compliance</h3>
+
+  <p>macOS gets less attention in most SMB MSP contexts because the fleet is small. The compliance policy reflects that:</p>
+
+  <ul>
+    <li><strong>Password required</strong> (<code>passwordRequired: true</code>).</li>
+    <li><strong>Minimum password length: 6 characters.</strong></li>
+    <li><strong>Storage encryption required</strong> (<code>storageRequireEncryption: true</code>) — FileVault must be on.</li>
+    <li><strong>Firewall enabled</strong> (<code>firewallEnabled: true</code>) — macOS firewall on.</li>
+    <li><strong>Firewall blocks all incoming</strong> (<code>firewallBlockAllIncoming: true</code>) — strict inbound block.</li>
+  </ul>
+
+  <p>Notably <em>not</em> required: System Integrity Protection (SIP). Most modern macOS installations have SIP enabled by default, but it can be disabled by sophisticated users. The compliance policy doesn't demand it.</p>
+
+  <p>Also notably: <code>gatekeeperAllowedAppSource: "anywhere"</code> — the compliance policy doesn't enforce Gatekeeper restrictions on app sources. This is permissive; a stricter policy would set this to <code>macAppStore</code> or <code>macAppStoreAndIdentifiedDevelopers</code>. The Panoptica365 default accepts whatever the customer has configured at the OS level.</p>
+
+  <p>For most SMB tenants with one or two Mac users, this compliance bar is appropriate. For customers with substantial Mac fleets (creative agencies, dev shops), the operator should consider tightening this template via the customisation workflow in lesson 10.</p>
+
+  <h2>The compliance signal vs the configuration</h2>
+
+  <p>A pattern worth naming explicitly: the Panoptica365 library treats compliance and configuration as separate concerns. Each compliance policy is paired with one or more configuration templates that <em>make</em> the device meet that bar.</p>
+
+  <p>For Windows:</p>
+
+  <ul>
+    <li>Compliance policy says "Defender must be enabled" → configuration delivered by Defender Settings template (lesson 5).</li>
+    <li>Compliance policy says "firewall must be active" → configuration delivered by Firewall Settings template (lesson 6).</li>
+    <li>(BitLocker is not in the compliance bar but IS in the configuration → BitLocker Settings template, lesson 4.)</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="The compliance policy evaluates whether a device meets the bar; the configuration template makes the device meet it.">
+      <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="cpArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- configuration template -->
+        <rect x="40" y="78" width="200" height="64" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="140" y="104" fill="#A8E1F8" font-size="14" font-weight="600">Configuration template</text>
+        <text x="140" y="124" fill="#6B85A6" font-size="11.5">makes the device meet the bar</text>
+
+        <!-- device -->
+        <rect x="300" y="84" width="120" height="52" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="115" fill="#C4D4E8" font-size="14" font-weight="600">Device</text>
+
+        <!-- compliance policy -->
+        <rect x="480" y="78" width="200" height="64" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="580" y="104" fill="#7DD9F9" font-size="14" font-weight="700">Compliance policy</text>
+        <text x="580" y="124" fill="#6B85A6" font-size="11.5">evaluates if it meets the bar</text>
+      </g>
+      <path d="M240 110 H300" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <path d="M480 110 H420" stroke="#335F92" stroke-width="2" marker-end="url(#cpArr)"/>
+      <text x="270" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">configures</text>
+      <text x="450" y="158" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11">checks</text>
+      <text x="360" y="40" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">TWO POLICIES, DIFFERENT JOBS — YOU NEED BOTH</text>
+    </svg>
+    <figcaption>One template makes the device meet the bar; the other checks whether it did. Same outcome, two jobs.</figcaption>
+  </figure>
+
+  <p>For macOS, there <em>is</em> a paired configuration template — <strong>Panoptica365 - Defender Settings macOS</strong> (covered in lesson 5). It turns on Defender for macOS, enables real-time protection, and enables automatic sample submission. So the macOS pair exists, but it's structurally lighter than the Windows pair — and the reason is Microsoft, not Panoptica365. The macOS compliance policy in Intune exposes exactly these criteria: System Integrity Protection, OS version, password rules, FileVault, firewall + stealth mode, and Gatekeeper. That's the whole list. No Defender row, no real-time-protection row, no Device Threat Protection level (which on Windows is the Defender-for-Endpoint health signal). You can <em>configure</em> Defender on macOS via the configuration template; you cannot <em>check</em> its state through the compliance policy at all. The Panoptica365 macOS compliance policy therefore checks the things Microsoft surfaces, and the Defender Settings macOS template handles the configuration side without a matching compliance check. If you've wondered why the macOS story feels half-finished, this is why.</p>
+
+  <p>For iOS and Android: there's no paired configuration template in the Panoptica365 library — only the compliance policy. The configuration is the user's responsibility (they set their own passcode, they keep encryption on).</p>
+
+  <p>This separation reflects the real business model: full configuration-plus-compliance management on Windows (because the MSP effectively owns those devices via the customer); a lighter configuration pair on macOS limited by what Microsoft's compliance API supports; compliance-signal-only on iOS and Android (because the MSP doesn't own those devices and can't push configuration).</p>
+
+  <p>The honest takeaway: a customer who wants their iPhones, iPads, or Android devices to be <em>managed</em> (not just <em>checked for compliance</em>) needs a different conversation. Panoptica365's bundled library doesn't cover that scenario by design. Operators who need it — or who need deeper macOS configuration beyond Defender — can build their own configuration templates and import them via the workflow in lesson 10.</p>
+
+  <h2>Rollout</h2>
+
+  <p>Compliance policies deploy in Enabled state, like all Panoptica365 templates. For these specific policies, the deploy-hot approach is almost always safe — the bar is intentionally low and the checks are conservative:</p>
+
+  <ul>
+    <li>A new Windows device with Defender running passes immediately.</li>
+    <li>A new iPhone with a passcode and not jailbroken passes immediately.</li>
+    <li>A new Mac with FileVault on passes immediately.</li>
+  </ul>
+
+  <p>The pilot-group deployment from lesson 1's pre-flight is still recommended, but the verification window is short — 24–48 hours is usually enough. Look for:</p>
+
+  <ul>
+    <li>Devices marked <strong>Not yet evaluated</strong> that should have evaluated by now (indicates compliance-loop break — see lesson 9).</li>
+    <li>Devices marked <strong>Non-compliant</strong> for a reason that surprises you. Common surprise: a Defender signature timing window where a device briefly shows non-compliant due to staleness.</li>
+    <li>Devices that <em>don't appear</em> in the compliance evaluation at all. Usually means they're not Intune-enrolled and the policy has no target.</li>
+  </ul>
+
+  <p>After enforcement (which for compliance policies is "deployed and being evaluated"), monitor:</p>
+
+  <ul>
+    <li><strong>Overall compliance ratio.</strong> Panoptica365's devices tile gives you the headline (e.g., "32/57 compliant"). Healthy is 95%+ compliant for the evaluated set. Below 90% means something structural is wrong — template misconfigured, infrastructure problem, or a chunk of devices that shouldn't be enrolled.</li>
+    <li><strong>Per-platform sanity check.</strong> Use the Devices by OS breakdown to confirm the platform mix is what you expect. If you see counts shift unexpectedly (a chunk of Windows devices disappears, an unfamiliar OS appears), that's worth investigating.</li>
+    <li><strong>Common non-compliance reasons.</strong> Drill into non-compliant devices in the Intune portal and read the specific failure reason — Microsoft surfaces which check failed per device. If "Defender disabled" appears across multiple devices, you have a real problem (Defender shouldn't be off on managed Windows machines). A few in isolation are noise; a cluster of the same reason is signal. Panoptica365 doesn't aggregate these reasons for you, so pattern-spotting is manual work in the Intune portal.</li>
+    <li><strong>Devices repeatedly flipping between compliant and non-compliant.</strong> This is "compliance flapping" — usually a sync-timing issue or a setting that's enforced unevenly by a configuration template. Catching it is manual: notice in the Intune portal that a device has bounced state multiple times in a week, then investigate per device. Lesson 9 walks through the failure modes.</li>
+  </ul>
+
+  <h2>What Panoptica365 sees</h2>
+
+  <p>Compliance state per device flows into Panoptica365 from Microsoft Graph. The customer dashboard surfaces three things about it, deliberately kept high-level:</p>
+
+  <ul>
+    <li><strong>The Intune Managed Devices list</strong> — every enrolled device with its OS, current compliance state (compliant / not compliant / not evaluated), assigned user, and last sync timestamp. The "not evaluated" bucket includes things like Windows Servers that aren't handled by Intune at all — they show up because they're Entra-registered but they never get a compliance verdict.</li>
+    <li><strong>A "Compliant Devices" tile</strong> — the headline is the compliance percentage in big type (e.g., "94%" or "60%"), colour-coded by posture (green when healthy, red when weak). The subtitle reads "X of Y compliant, Z not evaluated" — three numbers that tell you the whole story: how many devices Panoptica365 successfully evaluated, how many of those passed, and how many enrolled devices never got a verdict (typically servers Intune doesn't handle, freshly-enrolled devices still in their first sync window, or devices with broken Intune clients). When the percentage changes between polls, a trend arrow shows direction — red down on a drop, green up on an improvement.</li>
+    <li><strong>Devices by OS</strong> — a count breakdown (Windows N, iOS N, Android N, Windows Server N, etc.).</li>
+  </ul>
+
+  <p>That's the surface. The per-device failure reason, the &gt;24-hour triage queue, the flapping pattern — those don't live in Panoptica365's dashboard. They live in the Intune portal, one device at a time. The platform points at <em>that</em> something is off (a device fell out of compliant, the compliant count dropped); Microsoft tells you <em>why</em>.</p>
+
+  <p>This is consistent with how Panoptica365 is positioned generally — read-only, alert-driven, drill into Microsoft's own consoles for the deep diagnosis. The compliance-loop lesson (lesson 9) walks through what operational monitoring looks like in practice with this split.</p>
+
+  <h2>What this means for the operator</h2>
+
+  <p>Three takeaways.</p>
+
+  <p><strong>Compliance is a bar, not a configuration.</strong> These four policies <em>evaluate</em> devices; they don't <em>configure</em> devices. The configuration templates in lessons 3–8 do the configuration. Both are needed.</p>
+
+  <p><strong>Lenient compliance bars are a feature, not a bug.</strong> A strict compliance policy that catches every device state inconsistency produces a noisy CA signal. The Panoptica365 defaults err toward stability. Customers who need stricter compliance (regulated industries, post-incident hardening) can customise — but the defaults are appropriate for most SMB tenants.</p>
+
+  <p><strong>Mobile and macOS compliance are scope statements as much as security controls.</strong> They tell the customer "this is what we check; this is what we don't." Operators who want deeper mobile/macOS management need to build their own templates (lesson 10) or accept that those platforms are managed lightly.</p>
+
+  <h2>What's next</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">3</div><div class="xt"><b>Lesson 3: The Security Baseline.</b> The curated Windows hardening bundle — your largest single template.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Lesson 4: BitLocker Settings.</b> Disk encryption configuration that the Windows compliance policy <em>doesn't</em> require but the Panoptica365 hardening posture does deploy.</div></div>
+  </div>
+
+  <p>For now: deploy the four compliance policies as a unit. They're the foundation for CA's compliant-device path. Without them, the cards 3.4 and 3.5 templates have nothing to read against.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources for the data points in this lesson — Microsoft Learn on compliance policy structure (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/device-compliance-get-started" target="_blank" rel="noopener">Microsoft Learn — Device compliance policies</a>); Windows compliance policy reference (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-windows" target="_blank" rel="noopener">Microsoft Learn — Windows 10/11 compliance settings</a>); iOS compliance settings (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-ios" target="_blank" rel="noopener">Microsoft Learn — iOS/iPadOS compliance settings</a>); Android Enterprise compliance (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-android-for-work" target="_blank" rel="noopener">Microsoft Learn — Android Enterprise compliance settings</a>); macOS compliance (<a href="https://learn.microsoft.com/en-us/mem/intune/protect/compliance-policy-create-mac-os" target="_blank" rel="noopener">Microsoft Learn — macOS compliance settings</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

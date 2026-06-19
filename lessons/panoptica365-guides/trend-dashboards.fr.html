@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tableaux de tendances — la sécurité dans le temps — Guides Panoptica365</title>
+<meta name="lesson:title" content="Tableaux de tendances — la sécurité dans le temps">
+<meta name="lesson:subtitle" content="Les deux surfaces longitudinales : l'onglet Tendances d'un locataire et la page Tendances du parc, graphique par graphique.">
+<meta name="lesson:icon" content="trending-up">
+<meta name="lesson:last_updated" content="2026-06-18">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Tableaux de tendances</span></div>
+  <h1>Tableaux de tendances — la sécurité dans le temps</h1>
+  <p class="dek">Les deux surfaces longitudinales : l'onglet Tendances d'un locataire et la page Tendances du parc, graphique par graphique.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Deux surfaces de tendances côte à côte : l'onglet Tendances d'un seul locataire et la page Tendances du parc, chacune traçant une ligne ascendante dans le temps avec un sélecteur de période.">
+      <defs>
+        <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="tdArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5CCBF4" stop-opacity="0.35"/><stop offset="100%" stop-color="#5CCBF4" stop-opacity="0"/></linearGradient>
+      </defs>
+      <rect width="1120" height="340" fill="url(#tdBg)"/>
+
+      <!-- panneau gauche : onglet Tendances d'un locataire -->
+      <g transform="translate(70,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2236" stroke="#33527A"/>
+        <text x="22" y="34" fill="#C4D4E8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Locataire · Tendances</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#2A6F9E"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7j 30j 90j 1an</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#1F3C5C" stroke-width="1.4"/>
+        <path d="M22 160 L100 150 L178 134 L256 120 L334 96 L418 84" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M22 150 L418 128" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <!-- panneau droit : page Tendances du parc -->
+      <g transform="translate(610,56)">
+        <rect width="440" height="228" rx="14" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="22" y="34" fill="#A8E1F8" font-family="Geist,Inter,sans-serif" font-size="15" font-weight="600">Parc · Tendances</text>
+        <rect x="318" y="18" width="104" height="22" rx="11" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="370" y="33" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="11">7j 30j 90j 1an</text>
+        <line x1="22" y1="184" x2="418" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <line x1="22" y1="60" x2="22" y2="184" stroke="#274B72" stroke-width="1.4"/>
+        <path d="M22 132 L100 124 L178 110 L256 102 L334 88 L418 78 L418 150 L334 140 L256 144 L178 150 L100 156 L22 160 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+        <path d="M22 146 L100 140 L178 130 L256 123 L334 108 L418 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M22 138 L100 130 L178 116 L256 106 L334 92 L418 82" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <path d="M22 140 L418 122" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      </g>
+
+      <text x="290" y="316" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">UN LOCATAIRE</text>
+      <text x="830" y="316" text-anchor="middle" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">TOUT LE PARC</text>
+    </svg>
+    <figcaption>Deux surfaces longitudinales, une seule idée : les mêmes tendances, tracées pour un seul locataire puis pour tout le parc.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La Console principale et la Vue d'ensemble d'un locataire répondent à <em>« comment ça va en ce moment? »</em>. Les tableaux de tendances répondent à la question plus difficile : <em>« est-ce qu'on s'améliore ou qu'on se dégrade, et comment le prouver? »</em> Il y en a deux — un <strong>onglet Tendances sur chaque tableau de bord de locataire</strong>, et une <strong>page Tendances à l'échelle du parc</strong> dans la barre latérale. Les deux lisent l'historique que Panoptica365 accumule au fil de ses interrogations quotidiennes; ils ne coûtent donc rien à ouvrir et n'ajoutent aucune charge chez Microsoft. Les deux portent un <strong>sélecteur de période</strong> — 7 j / 30 j / 90 j / 1 an — en haut à droite.</p>
+
+  <p>Un locataire fraîchement intégré n'aura pas encore grand-chose à tracer. Là où l'historique se construit encore, le graphique le dit (<em>« La tendance commence le… »</em>) au lieu de tracer une ligne plate trompeuse. Donnez-lui quelques semaines.</p>
+  </div>
+
+  <h2>L'onglet Tendances d'un locataire</h2>
+
+  <p>Ouvrez un locataire, puis cliquez sur <strong>Tendances</strong> (le deuxième onglet, à côté de Vue d'ensemble). Il se divise en deux moitiés — <em>ce que le client voit</em> et <em>ce que le fournisseur voit</em> — avec une bande de statistiques de couverture en haut.</p>
+
+  <div class="callout">
+    <div class="clabel">Bande de couverture</div>
+    <p>Une réassurance d'une ligne : combien des contrôles recommandés par Microsoft sont configurés et sains pour ce locataire. C'est la posture en chiffre, pas en graphique, parce qu'un locataire bien tenu reste à 100 % et qu'une ligne plate ne vous apprend rien.</p>
+  </div>
+
+  <p>Ce que le client voit :</p>
+
+  <ul>
+    <li><strong>Cote de sécurité Microsoft</strong> (le graphique vedette) — la mesure de sécurité canonique de Microsoft pour ce locataire au fil du temps, avec une ligne pointillée montrant la moyenne des <strong>entreprises de taille comparable</strong> (la référence de Microsoft). La cote bouge à mesure que Microsoft relève la barre; garder la ligne pleine au-dessus de la pointillée, c'est le travail. La pastille indique de combien de points vous devancez les locataires comparables, ou de combien vous êtes en retard.</li>
+    <li><strong>Cote de sécurité par catégorie</strong> — la même cote ventilée selon les catégories de Microsoft (Identité, Données, Appareils, Applications, Infrastructure) en aires empilées. Elle montre <em>d'où</em> viennent les points et <em>où subsistent les lacunes</em> — la bande la plus mince est votre prochaine campagne.</li>
+    <li><strong>Recommandations de sécurité appliquées</strong> — combien des actions recommandées par Microsoft sont réellement en place, au fil du temps. C'est le travail qui ne finit jamais : Microsoft ajoute constamment des recommandations, donc une ligne plate ici signifie que vous suivez le rythme, et une ligne ascendante que vous gagnez du terrain.</li>
+    <li><strong>Problèmes détectés et résolus</strong> — les dérives et menaces que Panoptica a détectées et que votre équipe a réglées, par mois et par gravité. C'est le récit de la valeur : la preuve que le service fait quelque chose.</li>
+    <li><strong>Problèmes ouverts dans le temps</strong> — combien d'éléments étaient en attente d'action chaque jour. Tendre vers zéro est l'objectif; une ligne qui monte signifie que l'arriéré grossit plus vite que l'équipe ne le résorbe.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Les graphiques destinés au client sur l'onglet Tendances d'un locataire : une ligne de cote de sécurité avec référence pointillée, une cote par catégorie en aires empilées, une ligne des recommandations appliquées, les problèmes détectés et résolus en barres, et les problèmes ouverts dans le temps en ligne.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">CE QUE LE CLIENT VOIT</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <g transform="translate(20,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 56 L60 50 L106 42 L152 30 L202 24" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M14 50 L202 36" fill="none" stroke="#6B85A6" stroke-width="1.4" stroke-dasharray="4 4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">Cote de sécurité</text>
+        </g>
+        <g transform="translate(252,46)">
+          <rect width="216" height="74" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M14 60 L60 56 L106 52 L152 46 L202 42 L202 64 L14 64 Z" fill="#2A7FA3" fill-opacity="0.5"/>
+          <path d="M14 50 L60 44 L106 40 L152 32 L202 28 L202 42 L152 46 L106 52 L60 56 L14 60 Z" fill="#5CCBF4" fill-opacity="0.45"/>
+          <path d="M14 40 L60 34 L106 30 L152 24 L202 22 L202 28 L152 32 L106 40 L60 44 L14 50 Z" fill="#A8E1F8" fill-opacity="0.4"/>
+          <text x="14" y="68" fill="#A8E1F8" font-size="11">Par catégorie</text>
+        </g>
+        <g transform="translate(20,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 62 L44 54 L76 56 L108 46 L126 44" fill="none" stroke="#5CCBF4" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10">Recos appliquées</text>
+        </g>
+        <g transform="translate(170,130)">
+          <rect width="138" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <rect x="20" y="40" width="14" height="24" rx="2" fill="#5CCBF4"/>
+          <rect x="44" y="32" width="14" height="32" rx="2" fill="#5CCBF4"/>
+          <rect x="68" y="46" width="14" height="18" rx="2" fill="#FFC04D"/>
+          <rect x="92" y="28" width="14" height="36" rx="2" fill="#5CCBF4"/>
+          <rect x="116" y="38" width="10" height="26" rx="2" fill="#FF5A6E"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10">Détectés/résolus</text>
+        </g>
+        <g transform="translate(320,130)">
+          <rect width="148" height="84" rx="8" fill="#0E2236" stroke="#33527A"/>
+          <path d="M12 36 L48 44 L84 50 L120 56 L136 60" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+          <text x="12" y="78" fill="#A8E1F8" font-size="10">Ouverts dans le temps</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>La moitié destinée au client de l'onglet Tendances : la posture et le récit de la valeur, graphique par graphique.</figcaption>
+  </figure>
+
+  <p>Ce que le fournisseur voit :</p>
+
+  <ul>
+    <li><strong>Délai de résolution</strong> — médiane d'heures entre le déclenchement d'une alerte et sa résolution. Votre réactivité, en preuve — utile pour les conversations sur les ententes de service.</li>
+    <li><strong>Volume d'alertes par semaine</strong> — nouvelles alertes par semaine, par gravité. Ce locataire devient-il plus bruyant ou plus calme?</li>
+    <li><strong>Politiques les plus déclenchées</strong> — quelles politiques génèrent le volume sur les 90 derniers jours, en barres classées. Les barres les plus longues sont vos candidates au réglage : une politique qui se déclenche sans cesse est soit un vrai problème, soit une politique à ajuster.</li>
+  </ul>
+
+  <h2>La page Tendances du parc</h2>
+
+  <p>Cliquez sur <strong>Tendances</strong> dans la barre latérale gauche (juste après Carte thermique). C'est la même idée, élargie à tout le parc d'un coup. Elle couvre vos <strong>locataires gérés seulement</strong> — les locataires en audit ne font pas partie du récit de posture du parc — et s'organise en <em>Cote de sécurité et posture</em> et <em>Opérations d'alertes</em>, encore une fois avec une bande de couverture en haut.</p>
+
+  <div class="callout">
+    <div class="clabel">Bande de couverture du parc</div>
+    <p>Combien de locataires gérés sont à 100 % des contrôles recommandés, et la couverture moyenne du parc. L'étoile polaire de tout le parc.</p>
+  </div>
+
+  <p>Cote de sécurité et posture :</p>
+
+  <ul>
+    <li><strong>Cote de sécurité Microsoft du parc</strong> (la vedette) — la cote de sécurité moyenne des locataires gérés au fil du temps. Trois éléments se superposent à la ligne moyenne : une <strong>plage max–min</strong> ombrée montrant votre meilleur et votre pire locataire chaque jour (des chiffres réels, non lissés — vérifiables à la main), une <strong>référence de taille comparable</strong> en pointillé, et — uniquement si vous avez intégré des locataires durant la période — une ligne verte des <strong>« locataires existants »</strong> qui garde la même cohorte constante. L'infobulle indique sur combien de locataires la moyenne a été calculée ce jour-là.</li>
+    <li><strong>Croissance du parc — locataires gérés</strong> — combien de locataires gérés existaient chaque jour, avec un repère les jours d'intégration. Ce graphique explique celui du dessus : quand vous ajoutez un locataire qui part de bas, la moyenne du parc baisse — c'est le parc qui change, pas vos clients existants qui se dégradent. La ligne verte de la vedette et ce graphique, ensemble, permettent de distinguer ces deux récits.</li>
+    <li><strong>Recommandations en suspens</strong> — total des actions recommandées par Microsoft encore ouvertes dans tout le parc. Suivez-vous collectivement le rythme?</li>
+    <li><strong>Cote de sécurité par catégorie</strong> — la cote moyenne du parc par catégorie Microsoft au fil du temps. Là où <em>tout le parc</em> est le plus faible se trouve l'endroit au meilleur levier pour mener une campagne chez tous les clients d'un coup.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Le graphique vedette de la cote de sécurité du parc : une ligne moyenne avec une plage max–min ombrée derrière elle, une référence de taille comparable en pointillé, et une ligne verte des locataires existants qui garde la même cohorte constante.">
+      <rect width="720" height="240" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <text x="20" y="30" fill="#5CCBF4" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">COTE DE SÉCURITÉ DU PARC (VEDETTE)</text>
+      <line x1="40" y1="200" x2="680" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <line x1="40" y1="56" x2="40" y2="200" stroke="#1F3C5C" stroke-width="1.4"/>
+      <path d="M40 120 L168 110 L296 96 L424 86 L552 72 L680 64 L680 168 L552 156 L424 162 L296 168 L168 174 L40 178 Z" fill="#5CCBF4" fill-opacity="0.10" stroke="none"/>
+      <path d="M40 150 L168 142 L296 130 L424 122 L552 108 L680 100" fill="none" stroke="#5CCBF4" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M40 138 L168 128 L296 114 L424 104 L552 90 L680 80" fill="none" stroke="#2EE8A0" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M40 142 L680 124" fill="none" stroke="#6B85A6" stroke-width="1.6" stroke-dasharray="5 5"/>
+      <g font-family="Geist,Inter,sans-serif" font-size="11.5">
+        <rect x="420" y="44" width="18" height="3" rx="1.5" fill="#5CCBF4"/>
+        <text x="444" y="50" fill="#A8E1F8">moyenne</text>
+        <rect x="420" y="62" width="18" height="3" rx="1.5" fill="#2EE8A0"/>
+        <text x="444" y="68" fill="#A8E1F8">locataires existants</text>
+        <line x1="568" y1="46" x2="586" y2="46" stroke="#6B85A6" stroke-width="2" stroke-dasharray="4 3"/>
+        <text x="592" y="50" fill="#6B85A6">référence</text>
+        <rect x="568" y="60" width="18" height="9" rx="2" fill="#5CCBF4" fill-opacity="0.18"/>
+        <text x="592" y="68" fill="#6B85A6">plage max–min</text>
+      </g>
+    </svg>
+    <figcaption>La vedette du parc empile quatre signaux sur un graphique — moyenne, plage max–min, référence et la ligne à cohorte constante.</figcaption>
+  </figure>
+
+  <p>Opérations d'alertes :</p>
+
+  <ul>
+    <li><strong>Problèmes détectés et résolus</strong> — total résolu pour le parc, par mois et par gravité. Combien l'équipe a-t-elle réglé chez tout le monde?</li>
+    <li><strong>Problèmes ouverts dans le temps</strong> — total des éléments en attente d'action chaque jour pour le parc. L'équipe suit-elle le rythme à l'échelle du parc?</li>
+    <li><strong>Délai de résolution</strong> — médiane d'heures par semaine pour le parc, avec une <strong>ligne p90</strong> au-dessus. La médiane, c'est le cas typique; le p90 attrape la queue de distribution — quelques locataires lents à résoudre que la médiane cache. Une preuve d'entente de service pour tout le parc.</li>
+    <li><strong>Volume d'alertes par semaine</strong> — nouvelles alertes du parc par semaine, par gravité. Est-ce plus bruyant dans l'ensemble?</li>
+    <li><strong>Répartition des alertes par catégorie dans le temps</strong> — nouvelles alertes du parc regroupées par catégorie de politique (connexions à risque, gestion des menaces, partage externe, modifications de configuration, autorisations, gouvernance de l'information) par semaine. Elle vous dit <em>quel type de travail</em> le parc génère, ce qui doit guider la dotation et la formation.</li>
+    <li><strong>Politiques les plus déclenchées — 90 derniers jours</strong> — les politiques les plus bruyantes partout, classées. Ce sont vos cibles de réglage à l'échelle du parc — ajustez une politique et vous la faites taire chez tous les clients.</li>
+  </ul>
+
+  <h2>Bien les lire</h2>
+
+  <ul>
+    <li><strong>La cote de sécurité bouge parce que Microsoft relève la barre.</strong> Une baisse ne signifie pas toujours qu'une chose s'est dégradée chez vous — Microsoft a peut-être ajouté une recommandation. La ligne de référence est le contexte qui vous garde honnête là-dessus.</li>
+    <li><strong>Sur la vedette du parc, surveillez la plage, pas seulement la moyenne.</strong> Une moyenne saine qui cache un minimum très bas signifie qu'un client tire vers le bas — la plage le révèle; la moyenne l'enterre.</li>
+    <li><strong>Utilisez la bonne période pour la question.</strong> 7 j / 30 j pour une rétrospective d'incident ou une semaine bruyante; 90 j / 1 an pour une revue d'affaires ou une diapositive de conseil. Le récit change selon la lentille.</li>
+    <li><strong>Les politiques les plus déclenchées sont une invitation, pas un verdict.</strong> La barre la plus longue est soit un vrai problème récurrent chez ce client, soit une politique trop sensible. Les deux méritent une action — l'une avec le locataire, l'autre avec la politique.</li>
+  </ul>
+
+  <blockquote>Les tableaux de bord vous disent l'état. Les tendances vous disent la trajectoire — et c'est la trajectoire qui est en jeu lors d'un renouvellement client, d'une revue d'entente de service ou d'une revue d'affaires trimestrielle.</blockquote>
+
+</div>
+</body>
+</html>

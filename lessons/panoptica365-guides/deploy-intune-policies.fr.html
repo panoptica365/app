@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déployez des stratégies Intune — Guides Panoptica365</title>
+<meta name="lesson:title" content="Déployez des stratégies Intune">
+<meta name="lesson:subtitle" content="Le même modèle « modèle et dérive » que l'AC, appliqué à la configuration des appareils : affecter, déployer, surveiller.">
+<meta name="lesson:icon" content="monitor-smartphone">
+<meta name="lesson:last_updated" content="2026-06-15">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Déployez des stratégies Intune</span></div>
+  <h1>Déployez des stratégies Intune</h1>
+  <p class="dek">Le même modèle « modèle et dérive » que l'AC, appliqué à la configuration des appareils : affecter, déployer, surveiller.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Le rythme Intune : intégrer un locataire, déployer votre référence standard, puis l'oublier pendant que les alertes de dérive arrivent.">
+      <defs>
+        <radialGradient id="inBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <radialGradient id="inDev" cx="50%" cy="40%" r="65%"><stop offset="0%" stop-color="#A8E1F8"/><stop offset="60%" stop-color="#5CCBF4"/><stop offset="100%" stop-color="#2A7FA3"/></radialGradient>
+        <marker id="inArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#inBg)"/>
+
+      <!-- step 1: onboard tenant -->
+      <g transform="translate(140,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <circle r="34" fill="none" stroke="#3A6FA0" stroke-width="1.1" stroke-dasharray="3 7"/>
+        <rect x="-20" y="-20" width="40" height="40" rx="7" fill="#10243B" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="0" cy="-4" r="8" fill="url(#inDev)"/>
+        <rect x="-11" y="8" width="22" height="5" rx="2.5" fill="#2A7FA3"/>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Intégrer le locataire</text>
+      </g>
+
+      <path d="M232 150 H338" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 2: deploy baseline -->
+      <g transform="translate(430,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2640" stroke="#2A6F9E" stroke-width="1.6"/>
+        <g stroke="#5CCBF4" stroke-width="1.5" fill="#10243B">
+          <rect x="-26" y="-24" width="34" height="22" rx="3"/>
+          <rect x="-6" y="-8" width="34" height="22" rx="3"/>
+          <rect x="-16" y="6" width="34" height="22" rx="3"/>
+        </g>
+        <text x="0" y="98" fill="#C4D4E8" font-size="15" font-weight="600">Déployer la référence</text>
+      </g>
+
+      <path d="M522 150 H628" stroke="#335F92" stroke-width="2.5" marker-end="url(#inArr)"/>
+
+      <!-- step 3: forget it -->
+      <g transform="translate(720,150)" font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <circle r="62" fill="#0E2236" stroke="#33527A" stroke-width="1.6"/>
+        <path d="M-22 0 a22 14 0 0 1 44 0" fill="none" stroke="#52708F" stroke-width="2"/>
+        <line x1="-22" y1="-2" x2="-32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <line x1="22" y1="-2" x2="32" y2="-10" stroke="#52708F" stroke-width="2"/>
+        <text x="0" y="6" fill="#6B85A6" font-size="20" font-weight="700">zzz</text>
+        <text x="0" y="98" fill="#A8C2DD" font-size="15" font-weight="600">L'oublier</text>
+      </g>
+
+      <!-- drift alert loops back -->
+      <path d="M720 230 C 720 300, 430 300, 430 224" fill="none" stroke="#FFC04D" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#inArr)"/>
+      <text x="575" y="318" text-anchor="middle" fill="#FFC04D" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="600">alerte de dérive quand une stratégie déployée change</text>
+
+      <text x="980" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LE RYTHME</text>
+    </svg>
+    <figcaption>Intégrer, déployer votre référence standard, l'oublier — jusqu'à ce qu'une alerte de dérive vous rappelle.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Si vous avez lu le guide des stratégies AC, celui-ci vous semblera familier — c'est voulu. Les déploiements Intune utilisent le même modèle « modèle et dérive » : une bibliothèque que vous maintenez (barre latérale → <strong>Stratégies Intune</strong>), des déploiements par locataire, et une détection de dérive continue sur ce qui est actif.</p>
+
+  <p>Les modèles eux-mêmes — quels paramètres choisir, à quoi ressemble une référence Windows saine — sont couverts dans la carte <strong>Paramètres des modèles Intune</strong> d'Apprendre. Ce guide, c'est la mécanique.</p>
+  </div>
+
+  <h2>Déployer des stratégies sur un locataire</h2>
+
+  <ol>
+    <li>Ouvrez le tableau de bord du locataire → onglet <strong>Stratégies Intune</strong>. Locataire neuf : <em>« Aucun modèle de stratégie Intune assigné à ce locataire pour le moment. Cliquez sur « Ajouter des stratégies » pour commencer. »</em></li>
+    <li>Cliquez sur <strong>Ajouter des stratégies</strong>. Le sélecteur liste votre bibliothèque de modèles Intune — catalogues de paramètres, configurations d'appareil, stratégies de conformité, modèles d'administration, références de sécurité.</li>
+    <li>Sélectionnez les stratégies à déployer et choisissez la <strong>cible d'affectation</strong> : <strong>Tous les utilisateurs</strong>, <strong>Tous les appareils</strong> ou <strong>Aucune</strong> (déployer sans affectation, et brancher l'affectation dans la console plus tard).</li>
+    <li>Déployez. Chaque stratégie devient une carte montrant son nom, son type, son état, sa cible d'affectation et un badge de dérive.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 188" role="img" aria-label="Le flux de déploiement en quatre étapes : ouvrir l'onglet Stratégies Intune, cliquer sur Ajouter des stratégies, sélectionner des stratégies et une cible d'affectation, puis déployer pour obtenir une carte par stratégie.">
+      <rect width="720" height="188" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d1Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- step 1 -->
+        <rect x="28" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="98" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="98" y="78" fill="#5CCBF4" font-size="12" font-weight="700">1</text>
+        <text x="98" y="104" fill="#C4D4E8" font-size="12.5">Stratégies Intune</text>
+        <text x="98" y="121" fill="#6B85A6" font-size="11">onglet</text>
+
+        <path d="M168 94 H192" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 2 -->
+        <rect x="200" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="270" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="270" y="78" fill="#5CCBF4" font-size="12" font-weight="700">2</text>
+        <text x="270" y="104" fill="#C4D4E8" font-size="12.5">Ajouter</text>
+        <text x="270" y="121" fill="#6B85A6" font-size="11">depuis la bibliothèque</text>
+
+        <path d="M340 94 H364" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 3 -->
+        <rect x="372" y="52" width="140" height="84" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <circle cx="442" cy="74" r="11" fill="#102A4C" stroke="#4A80BD"/><text x="442" y="78" fill="#5CCBF4" font-size="12" font-weight="700">3</text>
+        <text x="442" y="104" fill="#C4D4E8" font-size="12.5">Affectation</text>
+        <text x="442" y="121" fill="#6B85A6" font-size="11">Util. / Appareils / Aucune</text>
+
+        <path d="M512 94 H536" stroke="#335F92" stroke-width="2" marker-end="url(#d1Arr)"/>
+
+        <!-- step 4 -->
+        <rect x="544" y="52" width="148" height="84" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="618" cy="74" r="11" fill="#10243B" stroke="#5CCBF4"/><text x="618" y="78" fill="#7DD9F9" font-size="12" font-weight="700">4</text>
+        <text x="618" y="104" fill="#A8E1F8" font-size="12.5" font-weight="600">Déployer</text>
+        <text x="618" y="121" fill="#6B85A6" font-size="11">une carte par stratégie</text>
+      </g>
+      <text x="360" y="32" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">FLUX DE DÉPLOIEMENT</text>
+    </svg>
+    <figcaption>Quatre étapes, d'un onglet vide à une carte par stratégie déployée.</figcaption>
+  </figure>
+
+  <h2>Détection de dérive</h2>
+
+  <p>Le cycle de dérive compare chaque stratégie déployée à son modèle, exactement comme l'AC :</p>
+
+  <ul>
+    <li><strong>ok</strong> — la stratégie active correspond.</li>
+    <li><strong>en dérive</strong> — un paramètre a été changé côté locataire.</li>
+    <li><strong>acceptée</strong> — dérive examinée et acceptée par un opérateur.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 132" role="img" aria-label="Les trois états de dérive d'une stratégie déployée : ok quand elle correspond au modèle, en dérive quand un paramètre a été changé côté locataire, et acceptée quand un opérateur a examiné la dérive.">
+      <rect width="720" height="132" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- ok -->
+        <rect x="36" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#2EE8A0" stroke-width="1.4"/>
+        <circle cx="74" cy="71" r="9" fill="none" stroke="#2EE8A0" stroke-width="2"/>
+        <path d="M70 71 l3 3 l5 -6" fill="none" stroke="#2EE8A0" stroke-width="2" stroke-linecap="round"/>
+        <text x="98" y="68" text-anchor="start" fill="#2EE8A0" font-size="14" font-weight="700">ok</text>
+        <text x="98" y="84" text-anchor="start" fill="#6B85A6" font-size="11">correspond au modèle</text>
+
+        <!-- drifted -->
+        <rect x="260" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.4"/>
+        <path d="M298 65 l5 9 h-10 z" fill="none" stroke="#FFC04D" stroke-width="2" stroke-linejoin="round"/>
+        <text x="322" y="68" text-anchor="start" fill="#FFC04D" font-size="14" font-weight="700">en dérive</text>
+        <text x="322" y="84" text-anchor="start" fill="#6B85A6" font-size="11">changé côté locataire</text>
+
+        <!-- accepted -->
+        <rect x="484" y="42" width="200" height="58" rx="10" fill="#0E2236" stroke="#5CCBF4" stroke-width="1.4"/>
+        <circle cx="522" cy="71" r="9" fill="none" stroke="#5CCBF4" stroke-width="2"/>
+        <path d="M518 71 l3 3 l5 -6" fill="none" stroke="#5CCBF4" stroke-width="2" stroke-linecap="round"/>
+        <text x="546" y="68" text-anchor="start" fill="#7DD9F9" font-size="14" font-weight="700">acceptée</text>
+        <text x="546" y="84" text-anchor="start" fill="#6B85A6" font-size="11">examinée par un opérateur</text>
+      </g>
+      <text x="360" y="28" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ÉTATS DE DÉRIVE</text>
+    </svg>
+    <figcaption>Chaque stratégie déployée porte l'un des trois états de dérive.</figcaption>
+  </figure>
+
+  <p>Actions par carte : <strong>Vérifier la dérive</strong> (comparer maintenant), <strong>Déployer</strong> (réappliquer) et <strong>Accepter</strong> (ouvrir la fenêtre d'acceptation).</p>
+
+  <h2>Accepter une dérive Intune</h2>
+
+  <p>La fenêtre d'acceptation offre les deux mêmes chemins que l'AC :</p>
+
+  <ul>
+    <li><strong>Accepter avec expiration</strong> <em>(recommandé)</em> — acceptée jusqu'à la date de votre choix (180 jours par défaut), motif obligatoire. L'acceptation apparaît dans la page <strong>Exemptions</strong>. Notez que les exemptions Intune sont <strong>à l'échelle de la stratégie</strong> — elles acceptent la dérive actuelle du déploiement dans son ensemble, pas une exception par utilisateur.</li>
+    <li><strong>Accepter une fois, pour toujours</strong> — indéfinie; ne se redéclenche que si la dérive change de forme.</li>
+  </ul>
+
+  <p>Quand une exemption expire ou est révoquée, le prochain cycle de dérive Intune signale de nouveau le déploiement comme en dérive, ce qui exige un nouvel examen. Rien ne reste accepté en silence.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Une mise en garde importante</div>
+    <p>Évitez de modifier les stratégies déployées par Panoptica365 directement dans la console Intune pour des ajustements par locataire (groupes d'exclusion supplémentaires, changements ponctuels de paramètres). Le travail de la plateforme est de ramener les stratégies actives vers le modèle — les personnalisations faites côté console déclenchent des alertes de dérive perpétuelles ou se font écraser au prochain redéploiement. Si un locataire a réellement besoin d'une variation, rendez-la explicite : un modèle distinct, ou une dérive acceptée, documentée et limitée dans le temps.</p>
+  </div>
+
+  <h2>Adopter les paramètres existants sur place (issus du locataire)</h2>
+
+  <p>Tout comme pour l'AC, vous pouvez adopter les configurations Intune <strong>existantes</strong> d'un locataire au lieu de pousser d'abord vos modèles. Sous l'onglet <strong>Stratégies Intune</strong>, cliquez sur <strong>Importer les paramètres existants</strong>. Panoptica lit les configurations en vigueur dans le locataire — pour les mêmes types que votre bibliothèque prend en charge (catalogues de paramètres, configurations d'appareils, stratégies de conformité, modèles d'administration, bases de référence de sécurité) — et crée une carte <strong>Issu du locataire</strong> (bordure rouge et badge) pour chacune qu'il ne gère pas déjà. Tout ce que vous avez déployé à partir d'un modèle est reconnu par son identifiant d'objet et ignoré, vous n'obtenez donc jamais de doublons; recliquer est sans risque.</p>
+
+  <p>Chaque carte est enregistrée telle que trouvée — la configuration <strong>et ses attributions</strong> — et surveillée pour tout changement. L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em>. La dérive Intune est détectée par la surveillance <strong>quotidienne</strong> : contrairement aux nouvelles stratégies AC, les changements Intune ne figurent pas dans le flux du journal d'audit, il n'y a donc pas de voie à latence de quelques minutes — la réconciliation quotidienne est le filet de sécurité.</p>
+
+  <p>Ouvrez les <strong>Actions</strong> d'une carte pour trois choix :</p>
+
+  <ol>
+    <li><strong>Arrêter la surveillance</strong> — retire la carte; ne touche jamais au locataire.</li>
+    <li><strong>Désactiver dans le locataire</strong> — Intune n'a pas d'interrupteur global « arrêt », donc Panoptica <strong>enregistre d'abord l'ensemble complet des attributions</strong>, puis retire toutes les attributions afin que la configuration ne s'applique à personne. <strong>Restaurer</strong> rejoue exactement les attributions. C'est cet instantané préalable qui rend la désactivation réversible — sans lui, retirer les attributions serait une porte à sens unique.</li>
+    <li><strong>Supprimer du locataire</strong> — retire définitivement la configuration; la suppression vous demande de saisir votre propre nom.</li>
+  </ol>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="Les trois Actions d'une carte issue du locataire : arrêter la surveillance ne touche jamais au locataire; désactiver enregistre d'abord les attributions puis les retire, Restaurer les rejoue; supprimer retire définitivement la configuration et demande de saisir votre propre nom.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="d3Arr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#52708F"/></marker></defs>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">ACTIONS D'UNE CARTE ISSUE DU LOCATAIRE</text>
+      <g font-family="Geist,Inter,sans-serif">
+        <!-- stop monitoring -->
+        <rect x="32" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="136" y="86" text-anchor="middle" fill="#C4D4E8" font-size="12.5" font-weight="600">Arrêter la surveillance</text>
+        <line x1="60" y1="100" x2="212" y2="100" stroke="#1F3C5C"/>
+        <text x="136" y="128" text-anchor="middle" fill="#6B85A6" font-size="11.5">retire la carte</text>
+        <text x="136" y="148" text-anchor="middle" fill="#2EE8A0" font-size="11.5">ne touche pas au locataire</text>
+
+        <!-- deactivate -->
+        <rect x="256" y="56" width="208" height="146" rx="10" fill="#0E2236" stroke="#FFC04D" stroke-width="1.3"/>
+        <text x="360" y="86" text-anchor="middle" fill="#FFC04D" font-size="12.5" font-weight="600">Désactiver</text>
+        <line x1="284" y1="100" x2="436" y2="100" stroke="#1F3C5C"/>
+        <text x="360" y="124" text-anchor="middle" fill="#C4D4E8" font-size="11.5">1. instantané des attributions</text>
+        <text x="360" y="144" text-anchor="middle" fill="#6B85A6" font-size="11.5">2. retirer les attributions</text>
+        <text x="360" y="174" text-anchor="middle" fill="#7DD9F9" font-size="11.5">Restaurer les rejoue</text>
+
+        <!-- delete -->
+        <rect x="480" y="56" width="208" height="146" rx="10" fill="#1C0D12" stroke="#FF5A6E" stroke-width="1.3"/>
+        <text x="584" y="86" text-anchor="middle" fill="#FF8A98" font-size="12.5" font-weight="600">Supprimer du locataire</text>
+        <line x1="508" y1="100" x2="660" y2="100" stroke="#3A2030"/>
+        <text x="584" y="128" text-anchor="middle" fill="#E2A0AA" font-size="11.5">retire définitivement</text>
+        <text x="584" y="148" text-anchor="middle" fill="#6B85A6" font-size="11.5">saisir votre nom pour confirmer</text>
+      </g>
+    </svg>
+    <figcaption>Trois actions, de l'inoffensif au définitif — seule la suppression est irréversible.</figcaption>
+  </figure>
+
+  <p>Ces trois actions sont consignées dans le journal d'audit MSP et dans le journal des modifications du locataire. Et comme pour l'AC, Panoptica surveille chaque locataire pour détecter une configuration Intune créée <strong>en dehors de Panoptica</strong> et la présente comme une carte issue du locataire accompagnée d'une alerte.</p>
+
+  <h2>Le rythme</h2>
+
+  <p>Intégrer le locataire → déployer votre référence Intune standard → l'oublier. À partir de là, les alertes de dérive arrivent quand quelqu'un modifie une stratégie déployée dans le locataire du client, et la carte <strong>Appareils conformes</strong> de l'onglet Vue d'ensemble vous dit si les appareils atteignent réellement la barre que vous avez fixée.</p>
+
+</div>
+</body>
+</html>

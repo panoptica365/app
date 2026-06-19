@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Règles ASR + Block mshta.exe — réduction de surface d'attaque — Intune Template Settings</title>
+<meta name="lesson:title" content="Règles ASR + Block mshta.exe — réduction de surface d'attaque">
+<meta name="lesson:subtitle" content="19 règles ASR en mode Blocage et une règle pare-feu mshta.exe — bloquer les chaînes comportementales des maliciels avant que les signatures puissent les détecter.">
+<meta name="lesson:icon" content="bug">
+<meta name="lesson:last_updated" content="2026-05-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Intune Template Settings</span> <span class="sep">·</span> <span>Règles ASR + Block mshta.exe</span></div>
+  <h1>Règles ASR + Block mshta.exe — réduction de surface d'attaque</h1>
+  <p class="dek">19 règles ASR en mode Blocage et une règle pare-feu mshta.exe — bloquer les chaînes comportementales des maliciels avant que les signatures puissent les détecter.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La chaîne de livraison de maliciel : une macro Word lance PowerShell, qui télécharge et exécute un exécutable qui établit un point d'appui.">
+      <defs>
+        <radialGradient id="asrBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="asrArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#asrBg)"/>
+
+      <text x="560" y="56" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2.5">CHAQUE ÉTAPE EST UNE FONCTIONNALITÉ WINDOWS LÉGITIME</text>
+
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- Word -->
+        <g transform="translate(80,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Word</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">+ macro</text>
+        </g>
+        <path d="M236 170 H290" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- PowerShell -->
+        <g transform="translate(298,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">PowerShell</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">lancé</text>
+        </g>
+        <path d="M454 170 H508" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Download -->
+        <g transform="translate(516,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Téléchargement</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">.exe distant</text>
+        </g>
+        <path d="M672 170 H726" stroke="#335F92" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Execute -->
+        <g transform="translate(734,128)">
+          <rect width="148" height="84" rx="12" fill="#0E2236" stroke="#33527A"/>
+          <text x="74" y="38" fill="#C4D4E8" font-size="16" font-weight="600">Exécution</text>
+          <text x="74" y="60" fill="#6B85A6" font-size="12.5">+ persistance</text>
+        </g>
+        <path d="M890 170 H944" stroke="#FF5A6E" stroke-width="2.5" marker-end="url(#asrArr)"/>
+
+        <!-- Foothold -->
+        <g transform="translate(952,124)">
+          <rect width="128" height="92" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.6"/>
+          <text x="64" y="40" fill="#FF8A98" font-size="14" font-weight="700">Point d'appui</text>
+          <text x="64" y="62" fill="#E2A0AA" font-size="11.5">attaquant en place</text>
+        </g>
+      </g>
+
+      <text x="560" y="284" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="14" font-weight="600">…mais la combinaison signifie presque toujours un maliciel</text>
+    </svg>
+    <figcaption>Chaque maillon de la chaîne est permis isolément; les règles ASR bloquent la combinaison.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Un patron fréquent dans la livraison de maliciels : un utilisateur ouvre un document Word attaché à un courriel d'hameçonnage. Le document contient une macro. La macro lance un processus PowerShell. Le processus PowerShell télécharge un exécutable depuis un serveur distant. L'exécutable s'exécute, établit la persistance, et l'attaquant a un point d'appui sur l'appareil.</p>
+
+  <p>Chaque étape de cette chaîne est <em>de la fonctionnalité Windows légitime</em>. Word peut avoir des macros. Les macros peuvent appeler PowerShell. PowerShell peut télécharger des fichiers. Les fichiers peuvent s'exécuter. Chaque étape, prise isolément, c'est quelque chose qu'un développeur ou un utilisateur avancé pourrait légitimement faire. Mais la <em>combinaison</em> — Word → macro → PowerShell → téléchargement → exécution — c'est un patron de comportement qui n'a presque jamais de raison d'affaires légitime et qui indique presque toujours une livraison de maliciel.</p>
+
+  <p>Les règles de réduction de surface d'attaque (ASR), c'est le mécanisme de Microsoft pour attraper exactement ces patrons comportementaux. Plutôt que d'identifier des fichiers malveillants spécifiques, les règles ASR bloquent les <em>combinaisons</em> d'actions légitimes-mais-inhabituelles que le code malveillant utilise pour s'enchaîner vers une compromission réussie.</p>
+
+  <p>Cette leçon couvre le modèle ASR Rules Standard de Panoptica365 (l'ensemble de règles ASR complet) et le modèle Block mshta.exe outbound connections lié (une règle de pare-feu focalisée qui complète l'ensemble de règles ASR). Ensemble ils forment la couche de défense préemptive basée sur le comportement sur les terminaux Windows.</p>
+  </div>
+
+  <h2>Le modèle ASR Rules Standard</h2>
+
+  <p>Le modèle configure <strong>19 règles ASR — toutes en mode Block</strong> — plus l'accès contrôlé aux dossiers (dans un mode différent; voir plus bas). Il utilise le type de modèle catalogue de paramètres avec <code>endpointSecurityAttackSurfaceReduction</code> comme famille. La posture du modèle, en une ligne : à peu près tout bloquer.</p>
+
+  <p>Les 19 règles, regroupées par ce qu'elles attrapent :</p>
+
+  <h3>Livraison de maliciel basée sur Office (la chaîne d'attaque la plus fréquente)</h3>
+
+  <ul>
+    <li><strong>Bloquer toutes les applications Office de créer des processus enfants.</strong> Word, Excel, PowerPoint, etc. ne devraient pas lancer de processus. Quand ils le font, c'est presque toujours une macro qui lance quelque chose de malveillant.</li>
+    <li><strong>Bloquer les applications Office de créer du contenu exécutable.</strong> Les apps Office qui écrivent des fichiers .exe / .dll sur le disque, c'est hautement suspect.</li>
+    <li><strong>Bloquer les applications Office d'injecter du code dans d'autres processus.</strong> L'injection de code depuis Office dans d'autres processus est une technique classique de maliciel.</li>
+    <li><strong>Bloquer l'application de communication Office de créer des processus enfants.</strong> Outlook spécifiquement — Outlook qui lance des processus, c'est encore plus rare que les autres apps Office.</li>
+    <li><strong>Bloquer les appels d'API Win32 depuis les macros Office.</strong> Les macros qui appellent l'API Win32 directement font quelque chose qu'une macro d'affaires normale ne ferait pas.</li>
+    <li><strong>Bloquer JavaScript ou VBScript de lancer du contenu exécutable téléchargé.</strong> Les scripts téléchargés qui lancent des exécutables téléchargés, c'est le cœur de la livraison de maliciel « drive-by ».</li>
+    <li><strong>Bloquer l'exécution de scripts potentiellement obfusqués.</strong> Le PowerShell ou VBScript fortement obfusqué est un fort signal de maliciel — les scripts légitimes n'ont aucune raison de s'obfusquer.</li>
+  </ul>
+
+  <h3>Livraison basée sur le lecteur de documents</h3>
+
+  <ul>
+    <li><strong>Bloquer Adobe Reader de créer des processus enfants.</strong> Adobe Reader est un vecteur d'attaque parallèle à Office — les PDF malveillants intègrent parfois des scripts ou invoquent des lanceurs qui démarrent des processus enfants. Même logique défensive que les règles Office : un lecteur PDF n'a pas affaire à lancer d'autres processus.</li>
+  </ul>
+
+  <h3>Livraison basée sur le courriel</h3>
+
+  <ul>
+    <li><strong>Bloquer le contenu exécutable depuis le client de courriel et le courriel web.</strong> Les pièces jointes courriel qui sont des exécutables (ou qui téléchargent des exécutables) ne devraient pas s'exécuter directement depuis le client de courriel.</li>
+  </ul>
+
+  <h3>Vol d'identifiants</h3>
+
+  <ul>
+    <li><strong>Bloquer le vol d'identifiants depuis le sous-système Windows Local Security Authority (LSASS).</strong> Ça attrape les attaques de style Mimikatz où le maliciel essaie de vider les identifiants depuis la mémoire LSASS. Hautement diagnostique — un processus qui accède à LSASS pour l'extraction d'identifiants indique presque toujours une compromission. Cette règle dans le modèle Panoptica365 livre avec une exclusion par règle : <code>wazuh-agent.exe</code>. Wazuh est un agent SIEM/XDR open source qui lit légitimement LSASS pour la surveillance des identifiants; sans l'exclusion, l'agent lui-même serait bloqué par la règle même dont il dépend pour observer. Exemple concret de comment une exclusion par règle fonctionne en pratique : la règle se déclenche encore pour tout le reste, mais Wazuh obtient un laissez-passer permanent.</li>
+  </ul>
+
+  <h3>Persistance, mouvement latéral et évasion de défense</h3>
+
+  <ul>
+    <li><strong>Bloquer la persistance via l'abonnement aux événements WMI.</strong> L'abonnement aux événements WMI est une technique de persistance furtive que les maliciels utilisent pour survivre aux redémarrages; les apps légitimes ne l'utilisent presque jamais.</li>
+    <li><strong>Bloquer la création de processus depuis PsExec et les commandes WMI.</strong> L'exécution à distance basée sur PsExec et WMI sont des outils fréquents de mouvement latéral.</li>
+    <li><strong>Bloquer le redémarrage de la machine en mode sans échec.</strong> Certains rançongiciels redémarrent en mode sans échec pour désactiver les produits de sécurité avant de chiffrer.</li>
+    <li><strong>Bloquer l'utilisation d'outils système copiés ou usurpés.</strong> Les maliciels copient parfois des binaires système légitimes (comme cmd.exe) vers d'autres emplacements et les exécutent de là, évitant certaines règles de détection.</li>
+  </ul>
+
+  <h3>USB et médias amovibles</h3>
+
+  <ul>
+    <li><strong>Bloquer les processus non fiables et non signés qui s'exécutent depuis USB.</strong> Le maliciel livré par USB est un vecteur de longue date; cette règle attrape les exécutables non signés qui se lancent depuis des lecteurs amovibles.</li>
+  </ul>
+
+  <h3>Spécifique au serveur</h3>
+
+  <ul>
+    <li><strong>Bloquer la création de webshell pour les serveurs.</strong> Spécifiquement pour les installations Windows Server — attrape les téléversements de fichiers malveillants qui déposent des webshells (PHP, ASPX) sur IIS ou d'autres serveurs web.</li>
+  </ul>
+
+  <h3>Défense des pilotes et de l'exploitation</h3>
+
+  <ul>
+    <li><strong>Bloquer l'abus de pilotes signés vulnérables exploités.</strong> Attrape les maliciels qui utilisent des pilotes noyau signés connus-vulnérables comme vecteur d'escalade de privilèges. Microsoft maintient la liste des pilotes vulnérables.</li>
+    <li><strong>Bloquer l'exécution de fichiers exécutables sauf s'ils rencontrent un critère de prévalence, d'âge, ou de liste de confiance.</strong> Une règle « fichiers sans pedigree » — les exécutables qui sont trop nouveaux, trop rares, ou pas sur une liste connue-sûre se font bloquer. Attrape les nouvelles variantes de maliciels; peut faire de faux positifs sur des logiciels de niche légitimes.</li>
+  </ul>
+
+  <h3>Spécifique au rançongiciel</h3>
+
+  <ul>
+    <li><strong>Utiliser la protection avancée contre les rançongiciels.</strong> Une règle comportementale qui attrape les patrons de chiffrement caractéristiques des rançongiciels.</li>
+  </ul>
+
+  <h2>Accès contrôlé aux dossiers — l'exception délibérée</h2>
+
+  <p>Adjacent aux 19 règles ASR, le modèle active aussi <strong>l'accès contrôlé aux dossiers (CFA)</strong> — mais en <strong>mode Audit</strong>, pas Block. C'est le seul endroit où le modèle s'écarte explicitement de la posture « tout bloquer », et c'est intentionnel.</p>
+
+  <p>CFA restreint quelles applications peuvent écrire dans des dossiers protégés (Documents, Images, Bureau, etc.). En mode Block, les apps qui ne sont pas sur la liste d'autorisation se font empêcher de modifier les fichiers dans ces emplacements. En mode Audit, ces mêmes écritures sont <em>journalisées</em> mais non bloquées — Defender enregistre qui a essayé d'écrire quoi dans un dossier protégé, mais l'écriture procède.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Pourquoi Audit, pas Block</div>
+    <p>Trop d'applications légitimes écrivent dans les dossiers protégés sur un appareil Windows normal. Outils de sauvegarde, clients de synchronisation, apps créatives, outils de productivité qui sauvegardent automatiquement — faire rouler CFA en Block dès le départ génère une avalanche de billets de service d'aide. Le mode Audit garde la visibilité sans briser les flux.</p>
+  </div>
+
+  <p>La raison pour le mode Audit : trop d'applications légitimes écrivent dans les dossiers protégés sur un appareil Windows normal. Les outils de sauvegarde qui écrivent dans les documents de l'utilisateur, les clients de synchronisation (Dropbox, Google Drive, OneDrive), les apps créatives qui écrivent les fichiers de projet dans Documents, les outils de productivité qui sauvegardent automatiquement — la liste est longue. Faire rouler CFA en mode Block dès le départ génère une avalanche de billets de service d'aide (« mon OneDrive a arrêté de synchroniser », « ma sauvegarde échoue », « Photoshop ne sauvegarde pas »). Le mode Audit garde la visibilité (vous pouvez voir ce qui est tenté) sans briser les flux.</p>
+
+  <p>Les opérateurs qui veulent une protection contre les rançongiciels plus forte peuvent basculer CFA en mode Block par client après avoir construit une liste d'autorisation des apps légitimes pour cet environnement. Le modèle livre en Audit pour que le déploiement par défaut ne cause pas de bris de flux; la mise à niveau au mode Block est une étape de durcissement par client, pas un défaut à l'échelle de la flotte.</p>
+
+  <h2>Modes des règles ASR — la distinction cruciale</h2>
+
+  <p>Chaque règle ASR peut être mise dans un de quatre modes :</p>
+
+  <ul>
+    <li><strong>Audit</strong> — la règle évalue et journalise les matchs, mais ne bloque pas. Utilisé pour les tests et la découverte.</li>
+    <li><strong>Block</strong> — la règle évalue et bloque le comportement qui matche. Le mode production.</li>
+    <li><strong>Warn</strong> — la règle avertit l'utilisateur quand le comportement qui matche se produit; l'utilisateur peut surpasser et procéder. Disponible pour certaines règles; intermédiaire entre Audit et Block.</li>
+    <li><strong>Non configuré / Off</strong> — la règle n'est pas active.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 200" role="img" aria-label="Les quatre modes des règles ASR, de Off à Block : Off, Audit, Warn et Block.">
+      <rect width="720" height="200" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <line x1="60" y1="100" x2="660" y2="100" stroke="#1F3C5C" stroke-width="1.5"/>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <g>
+          <rect x="48" y="78" width="124" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+          <text x="110" y="100" fill="#6B85A6" font-size="14" font-weight="600">Off</text>
+          <text x="110" y="148" fill="#52708F" font-size="11.5">non active</text>
+        </g>
+        <g>
+          <rect x="188" y="78" width="124" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+          <text x="250" y="100" fill="#A8E1F8" font-size="14" font-weight="600">Audit</text>
+          <text x="250" y="148" fill="#52708F" font-size="11.5">journalise, pas bloque</text>
+        </g>
+        <g>
+          <rect x="328" y="78" width="124" height="44" rx="22" fill="#1F1A0E" stroke="#FFC04D"/>
+          <text x="390" y="100" fill="#FFC04D" font-size="14" font-weight="600">Warn</text>
+          <text x="390" y="148" fill="#52708F" font-size="11">l'utilisateur surpasse</text>
+        </g>
+        <g>
+          <rect x="468" y="76" width="124" height="48" rx="24" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
+          <text x="530" y="100" fill="#7DD9F9" font-size="14" font-weight="700">Block</text>
+          <text x="530" y="148" fill="#7DD9F9" font-size="11.5">mode production</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Les quatre modes. Le modèle livre les 19 règles en Block — CFA est le seul en Audit.</figcaption>
+  </figure>
+
+  <p>Le modèle ASR Rules Standard de Panoptica365 met <strong>les 19 règles ASR à Block</strong> dès le départ. L'accès contrôlé aux dossiers est le seul en Audit (voir la section précédente). Les auteurs du modèle ont choisi des règles spécifiquement parce qu'elles ont des taux de faux positifs bas en 2026 — Microsoft les a accordées pendant des années, et l'ensemble choisi évite les règles historiquement plus problématiques. L'intention de conception du modèle est un déploiement direct-vers-Block.</p>
+
+  <p><strong>La réalité opérationnelle</strong> : même avec des règles soigneusement sélectionnées, déployer les règles ASR à Block sur une flotte qui n'en a jamais eu attrapera occasionnellement de l'activité d'affaires légitime-mais-inhabituelle que les auteurs du modèle n'ont pas pu prédire. Logiciels spécifiques à l'industrie, outils de niche, apps internes sur mesure avec des patrons de macro Office bizarres — ceux-ci peuvent encore déclencher des règles et se faire bloquer, brisant les flux des utilisateurs.</p>
+
+  <p>Deux approches acceptables, selon le client :</p>
+
+  <p><strong>Direct-vers-Block (le défaut du modèle).</strong> Déployer comme le modèle livre — toutes les règles en Block. Convient aux clients dont vous connaissez bien l'inventaire d'apps, qui exécutent des logiciels d'affaires grand public, qui n'ont pas d'apps sur mesure héritées avec des patrons Office bizarres ou LOLBin. La plupart des tenants PME entrent dans ce profil. Soyez prêt à ajouter des exclusions par règle à mesure que les bris légitimes surgissent.</p>
+
+  <p><strong>Pré-déploiement en mode Audit (l'option prudente).</strong> Pour les clients avec un inventaire de logiciels inconnu ou inhabituel — fournisseurs de contrôle industriel, apps d'affaires sur mesure, logiciels spécifiques à la santé, n'importe quoi en dehors du monde SaaS grand public — basculer chaque règle en Audit avant le déploiement, surveiller pendant 14 à 30 jours, bâtir la liste d'exclusions, puis basculer en Block :</p>
+
+  <ol>
+    <li>Modifier le modèle par client pour mettre chaque règle en Audit avant le déploiement.</li>
+    <li>Faire rouler en mode Audit pendant 14 à 30 jours. Tirer les journaux d'audit aux quelques jours.</li>
+    <li>Pour chaque règle qui s'est déclenchée contre de l'activité légitime, ajouter une exclusion par règle pour le processus ou fichier affecté (l'exclusion Wazuh de la règle LSASS plus haut est le modèle).</li>
+    <li>Une fois la période d'audit propre, rebasculer les règles à Block.</li>
+  </ol>
+
+  <p>Le choix entre direct-vers-Block et pré-déploiement Audit est par client. Le modèle livre en direct-vers-Block parce que c'est la bonne réponse pour la majorité des tenants PME; les opérateurs qui savent que l'environnement d'un client est inhabituel devraient tendre vers le pré-déploiement Audit à la place.</p>
+
+  <h2>Le modèle Block mshta.exe — le complément focalisé</h2>
+
+  <p>Adjacent au modèle ASR Rules, il y a un modèle séparé et focalisé : <strong>Panoptica365 - Block mshta.exe outbound connections.</strong></p>
+
+  <p>La description du modèle est inhabituellement détaillée : <em>« Bloquer les connexions sortantes depuis mshta.exe a un impact utilisateur minimal mais réduit significativement la surface d'attaque en empêchant un LOLBin fréquemment abusé d'atteindre des charges utiles externes et des serveurs C2. »</em></p>
+
+  <p>L'acronyme LOLBin signifie <strong>Living Off the Land Binary</strong> — un binaire Windows légitime que les attaquants abusent pour faire des choses malveillantes. mshta.exe en est l'exemple classique : c'est un utilitaire Windows intégré pour exécuter des fichiers HTML Application (.hta), et il fait partie de Windows depuis des décennies. Presque aucun flux d'affaires légitime n'utilise mshta.exe en 2026; presque chaque famille de maliciels qui roule sur Windows inclut mshta.exe comme un de ses vecteurs d'exécution parce qu'il est déjà sur chaque appareil Windows, signé par Microsoft, et peut être invoqué depuis plusieurs contextes (macros Office, tâches planifiées, ligne de commande, scripts).</p>
+
+  <p>Le modèle bloque les <strong>connexions réseau sortantes</strong> spécifiquement depuis mshta.exe. C'est-à-dire : mshta.exe peut encore rouler si un cas d'usage légitime l'invoque, mais il ne peut pas atteindre l'infrastructure C2 externe ou télécharger des charges utiles depuis Internet. Le cas d'usage malveillant devient sévèrement dégradé.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 230" role="img" aria-label="La règle Block mshta.exe : mshta.exe a encore le droit de rouler localement, mais sa connexion sortante vers le C2 externe et les serveurs de charges utiles est bloquée.">
+      <rect width="720" height="230" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="msArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#5C7796"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <!-- mshta still runs -->
+        <rect x="48" y="86" width="184" height="58" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+        <text x="140" y="110" fill="#C4D4E8" font-size="14.5" font-weight="600">mshta.exe</text>
+        <text x="140" y="130" fill="#7BE6BE" font-size="11.5">roule encore localement</text>
+
+        <!-- internet -->
+        <rect x="486" y="86" width="186" height="58" rx="10" fill="#0E2236" stroke="#33527A"/>
+        <text x="579" y="106" fill="#C4D4E8" font-size="13.5" font-weight="600">Serveurs C2 /</text>
+        <text x="579" y="126" fill="#C4D4E8" font-size="13.5" font-weight="600">charges utiles externes</text>
+      </g>
+      <!-- blocked outbound -->
+      <path d="M232 115 H486" stroke="#FF5A6E" stroke-width="2.4" stroke-dasharray="6 6"/>
+      <g transform="translate(359,115)">
+        <circle r="22" fill="#2A0F16" stroke="#FF5A6E" stroke-width="2"/>
+        <line x1="-11" y1="-11" x2="11" y2="11" stroke="#FF5A6E" stroke-width="2.4"/>
+      </g>
+      <text x="359" y="180" text-anchor="middle" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="600">connexions sortantes bloquées</text>
+      <text x="359" y="50" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">RÈGLE PARE-FEU · DÉFENSE LOLBIN</text>
+    </svg>
+    <figcaption>Le binaire continue de rouler pour les appelants légitimes; seul son chemin vers les charges utiles externes et le C2 est coupé.</figcaption>
+  </figure>
+
+  <p>Le modèle utilise la même famille <code>endpointSecurityFirewall</code> que le modèle Firewall Settings principal (leçon 6). C'est techniquement une règle de pare-feu plutôt qu'une règle ASR, mais conceptuellement c'est un contrôle de réduction de surface d'attaque — il retire un chemin spécifique sur lequel les attaquants se fient.</p>
+
+  <p>C'est le bon patron pour la défense LOLBin : identifier les binaires Windows légitimes-mais-rarement-utilisés que les attaquants aiment, et restreindre chirurgicalement le comportement spécifique qui les rend utiles pour l'attaque. La bibliothèque Panoptica365 livre actuellement ce modèle pour mshta.exe spécifiquement; des modèles similaires pourraient être construits pour d'autres LOLBin (cscript.exe, wscript.exe, certutil.exe, regsvr32.exe, msbuild.exe, installutil.exe, rundll32.exe — il y a une longue liste). Pour l'instant, mshta.exe est celui qui est inclus.</p>
+
+  <h2>Ce qui peut briser</h2>
+
+  <p>Les règles ASR et le blocage mshta.exe peuvent produire des faux positifs. Les catégories les plus fréquentes :</p>
+
+  <p><strong>Apps internes sur mesure qui font des choses qu'elles ne devraient pas.</strong> Une application d'affaires sur mesure qui inclut des macros Office faisant des choses bizarres, ou qui utilise mshta.exe pour quelque raison héritée, ou qui appelle des APIs Win32 depuis Excel pour la performance, va se faire bloquer. La solution, ce sont des exclusions par app dans la configuration de règle ASR.</p>
+
+  <p><strong>Fournisseurs de logiciels de niche avec des pratiques de codage pauvres.</strong> Certains logiciels commerciaux (surtout plus vieux, de niche ou spécifiques à l'industrie) violent les règles ASR dans le cadre de leur fonctionnement normal. L'installateur du fournisseur lance PowerShell, l'app principale du fournisseur injecte du code dans d'autres processus, etc. Les solutions sont des exclusions spécifiques au fournisseur.</p>
+
+  <p><strong>Outils de gestion à distance basés sur PsExec / WMI.</strong> Certains outils de gestion à distance légitimes utilisent PsExec ou l'exécution à distance basée sur WMI, ce qui se fait attraper par la règle ASR correspondante. Si l'équipe TI d'un client utilise ces outils, ils ont besoin d'exclusions.</p>
+
+  <p><strong>Scripts PowerShell sur mesure qui téléchargent et exécutent.</strong> Une automatisation interne légitime qui télécharge une charge utile et l'exécute (p. ex., un installateur lancé par un script d'ouverture de session) va déclencher la règle JavaScript/VBScript-exécutable-téléchargé. Exclusions ou réécriture de l'automatisation.</p>
+
+  <p><strong>Accès contrôlé aux dossiers anti-rançongiciel.</strong> Avec le défaut du modèle de CFA en mode Audit, rien ne brise — les écritures sont journalisées mais permises. La liste « ce qui briserait si CFA était en mode Block » est longue quand même : logiciels de sauvegarde qui écrivent dans les documents utilisateur, clients de synchronisation (Dropbox, Google Drive, OneDrive — OneDrive est habituellement sur la liste d'autorisation par défaut de Microsoft), outils créatifs qui écrivent dans Documents, apps de productivité qui sauvegardent automatiquement. C'est exactement pour ça que le modèle livre délibérément CFA en Audit : bloquer ces choses dès le départ générerait un flot de billets de service d'aide. Les opérateurs qui basculent CFA en Block pour un client spécifique plus tard devraient bâtir la liste d'autorisation depuis les journaux du mode Audit d'abord.</p>
+
+  <h2>Déploiement</h2>
+
+  <p>Pour les tenants PME grand public (inventaire d'apps familier, environnement standard fort en SaaS), le défaut direct-vers-Block du modèle est la bonne posture de déploiement :</p>
+
+  <ol>
+    <li><strong>Jour 0</strong> — déployer le modèle tel qu'il livre (les 19 règles ASR en Block, CFA en Audit). Groupe pilote d'abord selon le pré-déploiement de la leçon 1.</li>
+    <li><strong>Jours 1 à 14</strong> — surveiller les billets de service d'aide et les événements de blocage Defender. Les faux positifs qui ont besoin d'exclusions vont surgir comme des bris de flux rapportés par les utilisateurs (« X a arrêté de fonctionner après la mise à jour »). Triez chacun : faux positif (ajouter exclusion), vrai positif (enquêter comme incident de sécurité), cas limite (décider par cas).</li>
+    <li><strong>Jour 14+</strong> — étendre l'assignation du groupe pilote à la portée complète une fois que les appareils pilotes sont propres. Continuer à surveiller pour les 30 premiers jours et ajouter des exclusions à mesure que de nouvelles surgissent.</li>
+  </ol>
+
+  <p>Pour les clients avec un inventaire de logiciels inhabituel (contrôle industriel, spécifique à la santé, apps d'affaires sur mesure avec patrons hérités), utilisez le pré-déploiement Audit de la section précédente à la place — basculer chaque règle en Audit, faire rouler pendant 14 à 30 jours, bâtir les exclusions, puis basculer en Block.</p>
+
+  <p><strong>L'accès contrôlé aux dossiers</strong> livre en Audit par conception. Les opérateurs qui veulent l'activer en mode Block (protection contre les rançongiciels plus forte) devraient le faire par client après avoir construit une liste d'autorisation d'apps légitimes qui écrivent dans des dossiers protégés. C'est une mise à niveau de durcissement, pas une partie du déploiement standard.</p>
+
+  <p><strong>Le modèle Block mshta.exe</strong> peut se déployer directement sans fenêtre d'audit — la surface d'échec est si étroite que presque aucun flux légitime n'utilise mshta.exe en 2026.</p>
+
+  <h2>Quoi surveiller après l'application</h2>
+
+  <p><strong>Matchs de règles ASR par règle par appareil.</strong> Une fois en mode Block, les matchs devraient être rares. Les pointes indiquent soit de l'activité de maliciel (vrais positifs), soit de l'activité légitime-mais-non-documentée qui a besoin d'une exclusion.</p>
+
+  <p><strong>Bris de flux rapportés par les utilisateurs.</strong> Tracez chaque plainte « X a arrêté de fonctionner ». Triage par cause ASR probable; documentez chaque exclusion ajoutée.</p>
+
+  <p><strong>Événements d'audit d'accès contrôlé aux dossiers.</strong> Même en mode Audit, CFA journalise chaque tentative d'écriture dans un dossier protégé par une app non sur la liste d'autorisation. C'est du renseignement utile — ça vous montre exactement quelles apps auraient été bloquées si CFA était en mode Block. Si vous décidez un jour de basculer CFA en Block pour un client, le journal d'audit est votre source préconstruite de liste d'autorisation. Cherchez : outils de sauvegarde, clients de synchronisation (Dropbox, Google Drive, OneDrive), apps créatives, outils de productivité qui sauvegardent automatiquement dans Documents.</p>
+
+  <p><strong>Événements de blocage sortant mshta.exe dans le journal du pare-feu.</strong> Devrait être de très bas volume en fonctionnement normal. Les pointes sont intéressantes — soit une vraie tentative de maliciel bloquée avec succès, soit un cas d'usage légitime-mais-rare qui a besoin d'une exclusion.</p>
+
+  <p><strong>Dérive sur l'un ou l'autre modèle.</strong> Les deux modèles sont des cibles fréquentes pour « un admin a désactivé ça à cause [plainte d'utilisateur] ». La détection de dérive signale ceux-ci.</p>
+
+  <h2>La conversation avec le client</h2>
+
+  <p>Quand vous proposez les règles ASR à un client, le pitch honnête :</p>
+
+  <ul>
+    <li>Ces règles attrapent les patrons comportementaux spécifiques que les maliciels utilisent pour s'enchaîner vers une compromission réussie — Office-macro-vers-PowerShell-vers-téléchargement-vers-exécution, vol d'identifiants LSASS, charges utiles livrées par USB, patrons de chiffrement de rançongiciels.</li>
+    <li>Les défauts du modèle bloquent agressivement; on s'attend à ce que ça convienne proprement à la plupart des environnements, avec des exclusions par app occasionnelles pour les flux légitimes-mais-inhabituels.</li>
+    <li>Si votre environnement a des apps d'affaires inhabituelles — n'importe quoi sur mesure, spécifique à l'industrie, ou avec des patrons de macro Office bizarres — on fera rouler un pré-déploiement en mode Audit de 14 à 30 jours avant de basculer en Block, pour qu'on trouve les flux légitimes qui briseraient avant qu'ils brisent vraiment.</li>
+    <li>L'accès contrôlé aux dossiers est activé en mode Audit (journalisation seulement). Une protection contre les rançongiciels plus forte (CFA en Block) est une mise à niveau de durcissement séparée qu'on peut appliquer une fois qu'on a inventorié les apps qui écrivent légitimement dans les dossiers protégés sur votre flotte.</li>
+  </ul>
+
+  <p>Pour les tenants dans des industries spécifiques — santé, finance, contrats gouvernementaux — les règles ASR sont souvent une attente réglementaire. Pour les tenants sans ces moteurs, les règles ASR sont encore fortement recommandées; la proposition de valeur est plus claire si vous pouvez nommer des attaques spécifiques que le client a été préoccupé par.</p>
+
+  <h2>Ce que ça veut dire pour l'opérateur</h2>
+
+  <p>Trois points à retenir.</p>
+
+  <p><strong>Le modèle livre agressif — 19 règles ASR en Block, CFA en Audit — et est destiné à se déployer tel quel sur les tenants PME grand public.</strong> Tendez vers le patron de pré-déploiement Audit quand vous ne connaissez pas l'inventaire d'apps du client, quand le client fait rouler des logiciels d'affaires inhabituels, ou quand des déploiements précédents ont signalé des bris faux positifs. Ne tendez pas vers ça comme défaut — l'intention de conception du modèle, c'est direct-vers-Block.</p>
+
+  <p><strong>Le modèle Block mshta.exe est le modèle pour la défense LOLBin.</strong> Chirurgical, focalisé, rayon d'explosion étroit. À mesure que Microsoft ajoute plus de couverture LOLBin à ses défenses intégrées, ce genre de règle supplémentaire focalisée pourrait devenir moins nécessaire — mais pour l'instant, mshta.exe spécifiquement est un favori connu des attaquants et le blocage est bien ciblé.</p>
+
+  <p><strong>Maintenez les listes d'exclusions par client.</strong> Chaque exclusion ASR est par client (parce que chaque client a différentes apps d'affaires et différents logiciels de niche). Le système d'exemption de Panoptica365 peut les suivre; elles ont besoin de maintenance continue à mesure que l'inventaire d'apps du client change.</p>
+
+  <h2>Ce qui suit</h2>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">8</div><div class="xt"><b>Account Protection + Block MSA</b> — Windows Hello for Business, Credential Guard, blocage des ajouts de comptes Microsoft personnels sur les appareils gérés.</div></div>
+    <div class="xl"><div class="xnum">9</div><div class="xt"><b>La boucle de conformité en production</b> — comment tous ces modèles font surface comme signaux.</div></div>
+  </div>
+
+  <p>Pour l'instant : règles ASR + Block mshta.exe forment la couche de défense préemptive basée sur le comportement. Déployez comme le modèle livre pour les tenants grand public (direct-vers-Block, CFA en Audit); utilisez le pré-déploiement en mode Audit quand l'environnement du client est inhabituel. La discipline de savoir <em>quelle posture convient à quel client</em>, c'est ce qui fait que ce modèle ajoute de la valeur plutôt que de la friction.</p>
+
+  <div class="sources">
+    <h4>Sources</h4>
+    <p>Sources des données dans cette leçon — Microsoft Learn sur les règles ASR (<a href="https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-reference" target="_blank" rel="noopener">Microsoft Learn — Attack surface reduction rules reference</a>); conseils de déploiement des règles ASR (<a href="https://learn.microsoft.com/en-us/defender-endpoint/attack-surface-reduction-rules-deployment" target="_blank" rel="noopener">Microsoft Learn — ASR rules deployment</a>); accès contrôlé aux dossiers (<a href="https://learn.microsoft.com/en-us/defender-endpoint/controlled-folders" target="_blank" rel="noopener">Microsoft Learn — Controlled Folder Access</a>); référence LOLBin (<a href="https://lolbas-project.github.io/" target="_blank" rel="noopener">LOLBAS project</a>); contexte du vecteur d'attaque mshta.exe (<a href="https://attack.mitre.org/techniques/T1218/005/" target="_blank" rel="noopener">MITRE ATT&CK — Mshta</a>).</p>
+  </div>
+
+</div>
+</body>
+</html>

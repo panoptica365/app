@@ -4281,7 +4281,6 @@
       "label": "Taille de la base de données",
       "summary": {
         "ok": "La base de données fait {gb} Go répartis sur {tables} tables",
-        "warn": "La base de données fait {gb} Go — au-dessus du seuil d’attention de {warnGb} Go",
         "unknown": "Impossible de lire la taille de la base de données"
       },
       "table_table": "Table",
