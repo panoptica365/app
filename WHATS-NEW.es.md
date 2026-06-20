@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.19 — 2026-06-20
+
+### La campana de alertas ahora se vacía una vez que ha hecho el triaje
+
+La campana de notificaciones — y el contador **Alertas** en la barra lateral — mantenía un número hasta que todas las alertas estuvieran resueltas, así que una alerta que ya había tomado y marcado como *En investigación* aún encendía la campana. Ahora cuenta solo las **alertas nuevas y sin tocar**: en cuanto marca una como En investigación, la resuelve o la descarta como falso positivo, desaparece de la campana y de la barra lateral. En otras palabras, la campana significa «algo nuevo merece una mirada», no «aún hay trabajo en curso».
+
+La cifra **Alertas abiertas** en la barra de estado inferior no cambia — sigue mostrando todo lo que está actualmente activo (nuevo *y* en investigación), para que mantenga un vistazo de su carga de trabajo abierta.
+
+---
+
 ## Versión 0.2.18 — 2026-06-20
 
 ### Supervisión de DLP en inquilinos nuevos — corrección finalizada

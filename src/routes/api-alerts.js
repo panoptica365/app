@@ -212,8 +212,10 @@ router.get('/', async (req, res) => {
  * GET /api/alerts/stats — Alert statistics for dashboard widgets.
  * Query params:
  *   tenant_id  — filter to one tenant
- *   range      — 'open' (default), '24h', '7d', '30d'
- *                'open' = all alerts currently in new/investigating
+ *   range      — 'open' (default), 'new', '24h', '7d', '30d'
+ *                'open' = all alerts currently in new/investigating (active)
+ *                'new'  = only unacknowledged alerts (status='new') — drives the
+ *                         header bell + sidebar "new alerts" badge
  *                time-based = all alerts (incl. resolved) within the window
  */
 router.get('/stats', async (req, res) => {
@@ -237,8 +239,13 @@ router.get('/stats', async (req, res) => {
       rangeCondition = " AND triggered_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND status <> 'false_positive'";
     } else if (range === '30d') {
       rangeCondition = " AND triggered_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND status <> 'false_positive'";
+    } else if (range === 'new') {
+      // Bell / sidebar "new alerts" badge — only genuinely NEW (unacknowledged)
+      // detections. Marking an alert investigating (or resolving/dismissing it)
+      // acknowledges it, so it drops off the badge. 2026-06-20.
+      rangeCondition = " AND status = 'new'";
     } else {
-      // 'open' (default) — only active alerts
+      // 'open' (default) — only active alerts (new + investigating)
       rangeCondition = " AND status NOT IN ('resolved', 'false_positive')";
     }
 

@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.19 — 2026-06-20
+
+### The alert bell now clears once you've triaged
+
+The notification bell — and the **Alerts** count in the sidebar — used to keep a number on it until every alert was resolved, so an alert you'd already picked up and marked *Investigating* still lit the bell. It now counts only **new, untouched alerts**: the moment you mark one Investigating, resolve it, or dismiss it as a false positive, it drops off the bell and the sidebar. In other words, the bell means "something new needs a look," not "work is still in progress."
+
+The **Open Alerts** figure in the bottom status bar is unchanged — it still shows everything currently active (new *and* under investigation), so you keep an at-a-glance count of your open workload.
+
+---
+
 ## Version 0.2.18 — 2026-06-20
 
 ### DLP monitoring on brand-new tenants — completed fix

@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.19 — 2026-06-20
+
+### La cloche d'alertes se vide maintenant une fois le tri effectué
+
+La cloche de notification — et le compteur **Alertes** dans la barre latérale — conservait un nombre tant que toutes les alertes n'étaient pas résolues, de sorte qu'une alerte que vous aviez déjà prise en charge et marquée *En cours d'examen* allumait encore la cloche. Elle ne compte désormais que les **alertes nouvelles et non touchées** : dès que vous en marquez une En cours d'examen, la résolvez ou la rejetez comme faux positif, elle disparaît de la cloche et de la barre latérale. Autrement dit, la cloche signifie « quelque chose de nouveau mérite un coup d'œil », et non « du travail est encore en cours ».
+
+Le nombre **Alertes ouvertes** dans la barre d'état inférieure est inchangé — il affiche toujours tout ce qui est actuellement actif (nouveau *et* en cours d'examen), pour garder un aperçu de votre charge de travail ouverte.
+
+---
+
 ## Version 0.2.18 — 2026-06-20
 
 ### Surveillance DLP sur les nouveaux locataires — correctif finalisé

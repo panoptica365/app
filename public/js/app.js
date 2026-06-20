@@ -1260,36 +1260,46 @@
   }
 
   async function refreshAlertSignals() {
-    // One stats fetch feeds the header bell, the Alerts sidebar badge,
-    // and the bottom status bar's "Open Alerts" cell.
+    // One stats fetch feeds the header bell, the Alerts sidebar badge, and the
+    // bottom status bar's "Open Alerts" cell.
+    // The bell + sidebar badge count only NEW (unacknowledged) alerts: the
+    // moment an operator marks an alert investigating — or resolves/dismisses
+    // it — it's acknowledged and drops off the badge, so the bell reflects
+    // "something new needs a look", not "work still in progress". The status
+    // bar's "Open Alerts" cell keeps showing all ACTIVE alerts (new +
+    // investigating). 2026-06-20.
     const badge = document.getElementById('header-bell-badge');
     const sbOpen = document.getElementById('sb-open-alerts');
     try {
-      const stats = await api('/api/alerts/stats?range=open');
+      const stats = await api('/api/alerts/stats?range=new');
       const counts = stats && stats.bySeverity ? stats.bySeverity : {};
-      const total = Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0);
+      const newTotal = Object.values(counts).reduce((a, b) => a + (Number(b) || 0), 0);
       const critical = (Number(counts.critical) || 0) + (Number(counts.high) || 0);
+      // Active = new + investigating. byStatus is is_rollup=0 and unfiltered by
+      // range, so it gives the status-bar count from the same single fetch.
+      const byStatus = stats && stats.byStatus ? stats.byStatus : {};
+      const activeTotal = (Number(byStatus.new) || 0) + (Number(byStatus.investigating) || 0);
 
-      // Bell
+      // Bell — new alerts only
       if (badge) {
-        if (total > 0) {
-          badge.textContent = total > 99 ? '99+' : String(total);
+        if (newTotal > 0) {
+          badge.textContent = newTotal > 99 ? '99+' : String(newTotal);
           badge.style.display = '';
         } else {
           badge.style.display = 'none';
         }
       }
 
-      // Sidebar Alerts count — red if any critical/high, amber if only medium/low
-      if (total > 0) {
+      // Sidebar Alerts count — new only; red if any critical/high, amber otherwise
+      if (newTotal > 0) {
         const cls = critical > 0 ? 'crit' : 'warn';
-        setNavIndicator('alerts', `<span class="nav-count ${cls}">${total}</span>`);
+        setNavIndicator('alerts', `<span class="nav-count ${cls}">${newTotal}</span>`);
       } else {
         setNavIndicator('alerts', '');
       }
 
-      // Status bar
-      if (sbOpen) sbOpen.textContent = String(total);
+      // Status bar — all active (new + investigating)
+      if (sbOpen) sbOpen.textContent = String(activeTotal);
     } catch (e) {
       console.warn('[SPA] Alert signals refresh failed:', e.message);
     }
