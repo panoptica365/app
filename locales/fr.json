@@ -3903,7 +3903,9 @@
     "no": "Non",
     "never": "Jamais",
     "page_load_failed": "Échec du chargement de la page. Veuillez réessayer.",
-    "export": "Exporter"
+    "export": "Exporter",
+    "confirm_title": "Veuillez confirmer",
+    "confirm_proceed": "Continuer"
   },
   "setup": {
     "step": {

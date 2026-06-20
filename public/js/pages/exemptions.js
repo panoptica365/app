@@ -364,7 +364,7 @@
         : 'exemptions.consequence_ca');
     const consequence = window.t(consequenceKey);
 
-    if (!confirm(window.t('exemptions.confirm_revoke', { who, consequence }))) return;
+    if (!(await Panoptica.confirmModal(window.t('exemptions.confirm_revoke', { who, consequence }), { danger: true }))) return;
 
     let url;
     let method = 'POST';

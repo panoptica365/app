@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.16 — 2026-06-20
+
+### Vos boutons d'action ne peuvent plus être désactivés par le navigateur
+
+Les confirmations qui apparaissent avant une action d'écriture — déployer une politique d'accès conditionnel, pousser un modèle, retirer un déploiement Intune, désactiver un locataire, etc. — reposaient auparavant sur la boîte de dialogue intégrée de votre **navigateur**. Si vous aviez déjà coché la case « empêcher cette page de créer des dialogues supplémentaires » du navigateur (parfois intitulée « Ne plus demander »), chacun de ces boutons cessait discrètement de répondre — sans erreur, sans dialogue — jusqu'au rechargement de la page.
+
+Panoptica365 affiche désormais sa **propre** boîte de confirmation pour chacune de ces actions, dans tout le produit. Un réglage du navigateur ne peut plus désactiver vos boutons. Les actions qui suppriment ou retirent quelque chose présentent un bouton de confirmation rouge bien visible, pour que la conséquence soit évidente avant le clic.
+
+### La surveillance DLP fonctionne maintenant sur les nouveaux locataires
+
+Lorsque vous intégriez un locataire qui n'avait **jamais** eu de prévention contre la perte de données configurée dans le portail Microsoft Purview, la vérification **Surveiller la configuration des politiques DLP** affichait une *erreur d'interrogation* et **Faire correspondre** échouait avec un message technique. Panoptica365 considère désormais « aucune DLP configurée » pour ce que c'est : une base de référence vide valide. Cliquez sur **Faire correspondre** pour la capturer, et Panoptica365 vous alertera dès qu'une politique DLP sera créée dans ce locataire. Les locataires qui ne peuvent réellement pas être lus (par exemple, un rôle d'administrateur manquant) signalent toujours une erreur claire et exploitable plutôt qu'une fausse base de référence vide.
+
+---
+
 ## Version 0.2.15 — 2026-06-19
 
 ### Nouvelle apparence pour les leçons + La couche humaine

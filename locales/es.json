@@ -3903,7 +3903,9 @@
     "no": "No",
     "never": "Nunca",
     "page_load_failed": "Error al cargar page. Inténtelo de nuevo.",
-    "export": "Exportar"
+    "export": "Exportar",
+    "confirm_title": "Confirme por favor",
+    "confirm_proceed": "Continuar"
   },
   "setup": {
     "step": {

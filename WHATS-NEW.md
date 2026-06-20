@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.2.16 — 2026-06-20
+
+### Your action buttons can't be silenced by the browser anymore
+
+The confirmation prompts that appear before write actions — deploying a Conditional Access policy, pushing a template, removing an Intune deployment, disabling a tenant, and the like — used to rely on your **browser's** built-in dialog. If you ever ticked the browser's "prevent this page from creating additional dialogs" checkbox (sometimes labelled "Don't ask again"), every one of those buttons would quietly stop responding — no error, no dialog — until you reloaded the page.
+
+Panoptica365 now shows its **own** confirmation dialog for every one of those actions, across the entire product. A browser setting can no longer disable your buttons. Actions that delete or remove something show a clearly marked red confirm button, so the consequence is obvious before you click.
+
+### DLP monitoring now works on brand-new tenants
+
+When you onboarded a tenant that had **never** had Data Loss Prevention set up in the Microsoft Purview portal, the **Monitor DLP Policy Configuration** check showed a *Poll Error* and **Match** failed with a technical message. Panoptica365 now treats "no DLP configured" as exactly what it is — a valid empty baseline. Click **Match** to capture it, and Panoptica365 will alert you the moment a DLP policy is created in that tenant. Tenants that genuinely can't be read (for example, a missing administrator role) still report a clear, actionable error instead of a misleading empty baseline.
+
+---
+
 ## Version 0.2.15 — 2026-06-19
 
 ### New Look for Lessons + The Human Layer

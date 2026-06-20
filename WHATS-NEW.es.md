@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.16 — 2026-06-20
+
+### Sus botones de acción ya no pueden ser silenciados por el navegador
+
+Las confirmaciones que aparecen antes de una acción de escritura — implementar una política de acceso condicional, enviar una plantilla, quitar una implementación de Intune, deshabilitar un inquilino, etc. — antes dependían del cuadro de diálogo integrado de su **navegador**. Si alguna vez marcó la casilla «impedir que esta página cree diálogos adicionales» del navegador (a veces etiquetada «No volver a preguntar»), cada uno de esos botones dejaba de responder en silencio — sin error, sin diálogo — hasta que recargaba la página.
+
+Panoptica365 ahora muestra su **propio** cuadro de confirmación para cada una de esas acciones, en todo el producto. Una configuración del navegador ya no puede deshabilitar sus botones. Las acciones que eliminan o quitan algo muestran un botón de confirmación rojo claramente marcado, para que la consecuencia sea evidente antes de hacer clic.
+
+### La supervisión de DLP ahora funciona en inquilinos nuevos
+
+Cuando incorporaba un inquilino que **nunca** había tenido configurada la prevención de pérdida de datos en el portal de Microsoft Purview, la comprobación **Supervisar la configuración de políticas DLP** mostraba un *error de sondeo* y **Coincidir** fallaba con un mensaje técnico. Panoptica365 ahora trata «sin DLP configurada» por lo que es: una línea base vacía válida. Haga clic en **Coincidir** para capturarla, y Panoptica365 le avisará en cuanto se cree una política DLP en ese inquilino. Los inquilinos que realmente no se pueden leer (por ejemplo, un rol de administrador que falta) siguen informando un error claro y accionable en lugar de una línea base vacía engañosa.
+
+---
+
 ## Versión 0.2.15 — 2026-06-19
 
 ### Nuevo aspecto para las lecciones + La capa humana

@@ -588,16 +588,54 @@ async function readDlpPolicies(tenantAzureId) {
     // The actual fix for rule attachment is ParentPolicyName (canonical) on
     // rules, which IS preserved here. Falls back to Policy in JS if it's
     // not surfaced by Microsoft for some reason.
+    // Each S&C cmdlet gets its OWN try/catch. On a brand-new tenant whose
+    // Purview/DLP compliance backend was never initialized, Get-DlpCompliancePolicy
+    // / Get-DlpComplianceRule throw a *terminating* .NET "Object reference not
+    // set to an instance of an object". -ErrorAction SilentlyContinue cannot
+    // suppress a terminating error, so without the try/catch the whole read
+    // aborts and the runner reports PWSH_CMDLET — exactly the "Poll Error /
+    // Match failed" the operator sees. We capture the message and default to an
+    // empty collection; the JS below decides whether empty means "no DLP
+    // configured" (a valid baseline) or a genuine read failure.
     const expression = `
-$policies = @(Get-DlpCompliancePolicy -ErrorAction SilentlyContinue) |
+$dlpError = $null
+$ruleError = $null
+$rawPolicies = @()
+try { $rawPolicies = @(Get-DlpCompliancePolicy -ErrorAction Stop) } catch { $dlpError = [string]$_.Exception.Message }
+$rawRules = @()
+try { $rawRules = @(Get-DlpComplianceRule -ErrorAction Stop) } catch { $ruleError = [string]$_.Exception.Message }
+$policies = $rawPolicies |
   Select-Object @{Name='Name'; Expression={ [string]$_.Name }}, @{Name='Mode'; Expression={ [string]$_.Mode }}, @{Name='Enabled'; Expression={ [bool]$_.Enabled }}, @{Name='Workloads'; Expression={ ($_.Workload -join ',') }}
-$rules = @(Get-DlpComplianceRule -ErrorAction SilentlyContinue) |
+$rules = $rawRules |
   Select-Object @{Name='Name'; Expression={ [string]$_.Name }}, @{Name='Policy'; Expression={ [string]$_.Policy }}, @{Name='ParentPolicyName'; Expression={ [string]$_.ParentPolicyName }}, @{Name='SensitiveTypes'; Expression={ @($_.ContentContainsSensitiveInformation | ForEach-Object { $_.Name } | Sort-Object) }}, @{Name='BlockAccess'; Expression={ [bool]$_.BlockAccess }}, @{Name='Disabled'; Expression={ [bool]$_.Disabled }}
-@{ policies = @($policies); rules = @($rules) } | ConvertTo-Json -Depth 5 -Compress
+@{ policies = @($policies); rules = @($rules); dlpError = $dlpError; ruleError = $ruleError } | ConvertTo-Json -Depth 5 -Compress
 `;
     const result = await runIppsCmdlet(tenantAzureId, expression);
-    const policies = Array.isArray(result?.policies) ? result.policies : [];
-    const rules = Array.isArray(result?.rules) ? result.rules : [];
+    // Filter to real entries: a DLP policy/rule always has a Name. This guards
+    // the PowerShell quirk where @($emptyPipeline) can serialize as a one-item
+    // [null] array, which would otherwise make an empty tenant read as 1 policy
+    // — the precise count this setting's baseline/drift hinges on.
+    const policies = (Array.isArray(result?.policies) ? result.policies : []).filter(p => p && p.Name != null);
+    const rules = (Array.isArray(result?.rules) ? result.rules : []).filter(r => r && r.Name != null);
+
+    // "Object reference not set to an instance of an object" from the S&C DLP
+    // cmdlets is Microsoft's signature for a never-initialized compliance
+    // backend (brand-new tenant, Purview never opened). Per CMP-02's design
+    // that is a VALID empty baseline — Match captures the empty state, any
+    // policy created later fires drift. Treat it as zero policies. Any OTHER
+    // failure (auth / permission / connection) is a real read error and must
+    // surface, so we never persist a false-empty baseline that misfires drift.
+    // The error cause is deliberately NOT folded into current_value: an empty
+    // baseline must be byte-identical whether the cause was "never initialized"
+    // or "initialized with zero policies", or the backend later initializing
+    // would itself look like drift.
+    const readErrs = [result?.dlpError, result?.ruleError].filter(Boolean).map(String);
+    const onlyUninitialized = readErrs.length > 0 &&
+      readErrs.every(m => /object reference not set to an instance/i.test(m));
+    if (readErrs.length > 0 && !onlyUninitialized) {
+      return handlePwshError(new PwshError('PWSH_CMDLET', readErrs.join(' | ')), 'CMP-02',
+        { role: 'Exchange Administrator + Compliance Administrator' });
+    }
 
     const total = policies.length;
     const enforcing = policies.filter(p => String(p?.Mode || '').toLowerCase() === 'enable' && p?.Enabled === true);

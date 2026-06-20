@@ -430,7 +430,7 @@
 
     if (t.enabled) {
       // Confirm disable
-      const proceed = confirm(window.t('tenants.confirm_disable', { name: t.display_name }));
+      const proceed = await Panoptica.confirmModal(window.t('tenants.confirm_disable', { name: t.display_name }), { danger: true });
       if (!proceed) return;
     }
 

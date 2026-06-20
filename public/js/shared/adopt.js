@@ -111,6 +111,10 @@
       return;
     }
 
+    // Per-surface import state (drives the empty-state copy below). Guard so a
+    // missing/odd-shaped /state response can never throw and strand the operator.
+    const surfState = (state && state.surfaces && state.surfaces[surface]) || {};
+
     const parts = [];
     // Security Defaults indicator — CA tab only, status-only (§2.6).
     if (surface === 'ca' && state && state.security_defaults) {

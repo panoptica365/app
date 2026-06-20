@@ -422,6 +422,58 @@
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });
 
+  // ── Promise-based in-app confirmation (replaces native window.confirm) ────
+  // window.confirm() can be silently disabled by the browser's "prevent this
+  // page from creating additional dialogs" checkbox; once ticked it returns
+  // false for the rest of the page's life — silently bricking every
+  // confirm-gated write action (Deploy / Push / Remove) with no error and no
+  // dialog. This modal can't be suppressed by the browser and never hangs the
+  // caller: every close path resolves the promise. Returns Promise<boolean>.
+  // Critical write actions MUST use this instead of confirm().
+  function confirmModal(message, opts) {
+    opts = opts || {};
+    const T = (k, d) => (window.t && window.t(k)) || d;
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('modal-overlay');
+      const title = opts.title || T('common.confirm_title', 'Please confirm');
+      const okText = opts.okText || T('common.confirm_proceed', 'Proceed');
+      const cancelText = opts.cancelText || T('common.cancel', 'Cancel');
+      const okClass = opts.danger ? 'btn-danger' : 'btn-primary';
+      const body = '<div style="font-size:0.9rem; line-height:1.5; color:var(--p-text); white-space:pre-line;">'
+        + escHtml(message) + '</div>';
+      const footer =
+        '<button class="btn-secondary" id="confirm-modal-cancel" type="button">' + escHtml(cancelText) + '</button>'
+        + '<button class="' + okClass + '" id="confirm-modal-ok" type="button">' + escHtml(okText) + '</button>';
+      openModal(title, body, footer);
+
+      let settled = false;
+      let observer = null;
+      function finish(val) {
+        if (settled) return;
+        settled = true;
+        if (observer) { observer.disconnect(); observer = null; }
+        document.removeEventListener('keydown', onKey);
+        closeModal();
+        resolve(val);
+      }
+      function onKey(e) { if (e.key === 'Escape') finish(false); }
+
+      const okBtn = document.getElementById('confirm-modal-ok');
+      const cancelBtn = document.getElementById('confirm-modal-cancel');
+      if (okBtn) okBtn.addEventListener('click', () => finish(true));
+      if (cancelBtn) cancelBtn.addEventListener('click', () => finish(false));
+      document.addEventListener('keydown', onKey);
+      // Any other close path (X button, backdrop click) just removes .active on
+      // the overlay — observe it so the awaiting caller always resolves to
+      // cancel rather than hanging forever.
+      observer = new MutationObserver(() => {
+        if (!overlay.classList.contains('active')) finish(false);
+      });
+      observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+      if (okBtn) okBtn.focus();
+    });
+  }
+
   // ─── Header dropdown menu + What's New (v0.1.7) ───────────────────────
 
   function escHtml(s) {
@@ -992,7 +1044,7 @@
     const cancelBtn = document.getElementById('user-prefs-mute-cancel');
     if (cancelBtn) {
       cancelBtn.onclick = async () => {
-        if (!confirm(window.t('user_prefs.confirm_cancel_mute'))) return;
+        if (!(await confirmModal(window.t('user_prefs.confirm_cancel_mute')))) return;
         try {
           await api('/api/user-prefs/mute', { method: 'DELETE' });
           await loadUserPrefs();
@@ -1924,6 +1976,7 @@
     showToast,
     openModal,
     closeModal,
+    confirmModal,
     api,
     mdToHtml,
     getSocket,

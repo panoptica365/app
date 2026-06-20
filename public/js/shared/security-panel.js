@@ -589,7 +589,7 @@
       document.getElementById('sec-detail-overlay').style.display = 'flex';
     } catch (e) {
       console.error('[Security] detail load failed', e);
-      alert(`Failed to load setting detail: ${e.message}`);
+      Panoptica.showToast(`Failed to load setting detail: ${e.message}`, 'error');
     }
   }
 
@@ -1640,7 +1640,7 @@
     );
     if (!popup) {
       // Popup blocked — fall back to inline navigation.
-      alert(window.t('security_page.delegated_auth_popup_blocked', { url }));
+      Panoptica.showToast(window.t('security_page.delegated_auth_popup_blocked', { url }), 'warning');
     }
     // The popup posts back via postMessage when complete. Listener registered
     // in init().
@@ -1651,7 +1651,7 @@
   }
 
   async function onDelegatedSignOutClick() {
-    if (!confirm(window.t('security_page.delegated_auth_signout_confirm'))) return;
+    if (!(await Panoptica.confirmModal(window.t('security_page.delegated_auth_signout_confirm')))) return;
     try {
       await fetch('/auth/teams-delegated/logout', { method: 'POST' });
     } catch { /* swallow */ }
@@ -1810,7 +1810,7 @@
   async function onRemediateRestore() {
     const setting = openDetail?.setting;
     if (!setting) return;
-    if (!confirm(window.t('security_page.confirm_restore'))) return;
+    if (!(await Panoptica.confirmModal(window.t('security_page.confirm_restore')))) return;
     const status = document.getElementById('sec-rem-status');
     setBusy('remediate', true, { title: window.t('security_page.restoring_baseline') });
     status.textContent = '';
@@ -1834,7 +1834,7 @@
   async function onRemediateAccept() {
     const setting = openDetail?.setting;
     if (!setting) return;
-    if (!confirm(window.t('security_page.confirm_accept'))) return;
+    if (!(await Panoptica.confirmModal(window.t('security_page.confirm_accept')))) return;
     const status = document.getElementById('sec-rem-status');
     setBusy('remediate', true, { title: window.t('security_page.accepting_drift') });
     status.textContent = '';

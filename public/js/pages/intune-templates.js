@@ -613,7 +613,7 @@
         const tagsChanged = tagsEl.value.trim() !== (t.tags || '');
 
         if (nameChanged || descChanged || tagsChanged) {
-          if (confirm(window.t('intune_templates.confirm_unsaved_changes'))) {
+          if (await Panoptica.confirmModal(window.t('intune_templates.confirm_unsaved_changes'))) {
             await saveTemplate();
             return;
           }
@@ -625,7 +625,7 @@
 
   async function deleteTemplate() {
     if (!currentTemplateId) return;
-    if (!confirm(window.t('intune_templates.confirm_delete'))) return;
+    if (!(await Panoptica.confirmModal(window.t('intune_templates.confirm_delete'), { danger: true }))) return;
 
     try {
       await Panoptica.api(`/api/intune/templates/${currentTemplateId}`, { method: 'DELETE' });

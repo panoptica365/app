@@ -543,7 +543,7 @@
 
   async function deleteTemplate() {
     if (!currentTemplateId) return;
-    if (!confirm(window.t('ca_templates.confirm_delete'))) return;
+    if (!(await Panoptica.confirmModal(window.t('ca_templates.confirm_delete'), { danger: true }))) return;
 
     try {
       await Panoptica.api(`/api/ca/templates/${currentTemplateId}`, { method: 'DELETE' });

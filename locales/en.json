@@ -3903,7 +3903,9 @@
     "no": "No",
     "never": "Never",
     "page_load_failed": "Failed to load page. Please try again.",
-    "export": "Export"
+    "export": "Export",
+    "confirm_title": "Please confirm",
+    "confirm_proceed": "Proceed"
   },
   "setup": {
     "step": {

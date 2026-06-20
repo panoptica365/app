@@ -3155,7 +3155,7 @@
   }
 
   async function deployToTenant(assignmentId) {
-    if (!confirm(window.t('tenant_dashboard.confirm_create_policy'))) return;
+    if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_create_policy')))) return;
     Panoptica.showToast(window.t('tenant_dashboard.toast_deploying_to_tenant'), 'info');
     try {
       const result = await Panoptica.api(`/api/ca/assignments/${assignmentId}/deploy`, { method: 'POST' });
@@ -3172,7 +3172,7 @@
     // v0.1.16: explicit operator-initiated push. Confirm dialog calls out the
     // wipe-on-PATCH semantics for excludeUsers/excludeGroups so the operator
     // can't be bitten without consent.
-    if (!confirm(window.t('tenant_dashboard.confirm_push_template', { name }))) return;
+    if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_push_template', { name }), { danger: true }))) return;
     try {
       await Panoptica.api(`/api/ca/assignments/${assignmentId}/remediate`, { method: 'POST' });
       Panoptica.showToast(window.t('tenant_dashboard.toast_template_pushed'), 'success');
@@ -3202,12 +3202,12 @@
     let deleteFromTenant = false;
 
     if (assignment && assignment.live_policy_id) {
-      deleteFromTenant = confirm(window.t('tenant_dashboard.confirm_remove_with_delete'));
+      deleteFromTenant = await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_with_delete'), { danger: true });
       if (!deleteFromTenant) {
-        if (!confirm(window.t('tenant_dashboard.confirm_remove_only'))) return;
+        if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_only'), { danger: true }))) return;
       }
     } else {
-      if (!confirm(window.t('tenant_dashboard.confirm_remove_assignment'))) return;
+      if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_assignment'), { danger: true }))) return;
     }
 
     try {
@@ -3529,7 +3529,7 @@
   }
 
   async function intuneDeploySingle(templateId) {
-    if (!confirm(window.t('tenant_dashboard.confirm_create_intune_policy'))) return;
+    if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_create_intune_policy')))) return;
     Panoptica.showToast(window.t('tenant_dashboard.toast_deploying_policy'), 'info');
     try {
       const result = await Panoptica.api('/api/intune/deploy', {
@@ -3734,12 +3734,12 @@
     let deleteFromTenant = false;
 
     if (deployment && deployment.deployed_policy_id) {
-      deleteFromTenant = confirm(window.t('tenant_dashboard.confirm_remove_deployment_with_delete'));
+      deleteFromTenant = await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_deployment_with_delete'), { danger: true });
       if (!deleteFromTenant) {
-        if (!confirm(window.t('tenant_dashboard.confirm_remove_deployment_only'))) return;
+        if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_deployment_only'), { danger: true }))) return;
       }
     } else {
-      if (!confirm(window.t('tenant_dashboard.confirm_remove_deployment_record'))) return;
+      if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_remove_deployment_record'), { danger: true }))) return;
     }
 
     try {
@@ -4309,7 +4309,7 @@
     async function deleteEvent() {
       const id = document.getElementById('cl-form-id').value;
       if (!id) return;
-      if (!confirm(window.t('tenant_dashboard.confirm_delete_event'))) return;
+      if (!(await Panoptica.confirmModal(window.t('tenant_dashboard.confirm_delete_event'), { danger: true }))) return;
       try {
         const res = await fetch(`/api/change-events/${id}`, { method: 'DELETE' });
         if (!res.ok) {

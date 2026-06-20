@@ -514,7 +514,7 @@
     if (!currentTenantId) return;
     const t = tenants.find(x => x.id === currentTenantId);
     const name = t ? (t.display_name || t.name) : 'this tenant';
-    if (!confirm(window.t('sharepoint.confirm_delete_all', { name }))) return;
+    if (!(await Panoptica.confirmModal(window.t('sharepoint.confirm_delete_all', { name }), { danger: true }))) return;
     try {
       const r = await api(`/api/sharepoint/audits/${currentTenantId}`, { method: 'DELETE' });
       toast(window.t('sharepoint.toast_audits_deleted', { count: r.deleted }), 'success');
