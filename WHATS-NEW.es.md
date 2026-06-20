@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.18 — 2026-06-20
+
+### Supervisión de DLP en inquilinos nuevos — corrección finalizada
+
+Esto finaliza la corrección de DLP para inquilinos nuevos iniciada en la versión 0.2.16. En un inquilino donde Microsoft Purview nunca se había abierto, el error subyacente de «referencia de objeto» se generaba en realidad durante la *conexión* al servicio de cumplimiento — un paso que se ejecuta antes de la protección añadida en 0.2.16 — por lo que la comprobación **Supervisar la configuración de políticas DLP** aún podía mostrar un *error de sondeo* y **Coincidir** aún podía fallar.
+
+Panoptica365 ahora reconoce un servicio DLP nunca inicializado sin importar qué paso lo informe, y lo trata por lo que es: una línea base vacía válida. Haga clic en **Coincidir** para capturarla, y Panoptica365 le avisará en cuanto se cree una política DLP en ese inquilino. Los inquilinos que realmente no se pueden leer — un rol de administrador que falta, por ejemplo — siguen informando un error claro y accionable en lugar de una línea base vacía engañosa.
+
+---
+
 ## Versión 0.2.17 — 2026-06-20
 
 ### Las lecciones de Aprender ahora se abren en todas las implementaciones

@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.18 — 2026-06-20
+
+### DLP monitoring on brand-new tenants — completed fix
+
+This finishes the brand-new-tenant DLP fix started in 0.2.16. On a tenant where Microsoft Purview had never been opened, the underlying "object reference" error was actually raised while *connecting* to the compliance service — a step that runs before the safeguard 0.2.16 added — so the **Monitor DLP Policy Configuration** check could still show a *Poll Error*, and **Match** could still fail.
+
+Panoptica365 now recognizes a never-initialized DLP service no matter which step reports it, and treats it as exactly what it is: a valid empty baseline. Click **Match** to capture it, and Panoptica365 will alert you the moment a DLP policy is ever created in that tenant. Tenants that genuinely can't be read — a missing administrator role, for example — still report a clear, actionable error instead of a misleading empty baseline.
+
+---
+
 ## Version 0.2.17 — 2026-06-20
 
 ### Learn lessons now open on every deployment

@@ -704,6 +704,25 @@ $rules = $rawRules |
       interpreted,
     };
   } catch (e) {
+    // A brand-new tenant whose Purview/DLP compliance backend was never
+    // initialized throws a terminating .NET "Object reference not set to an
+    // instance of an object" — and it surfaces from Connect-IPPSSession
+    // (which runs BEFORE the per-cmdlet try/catch in the expression above)
+    // just as readily as from the DLP cmdlets themselves. Catch it HERE, where
+    // it lands no matter which step threw, and treat it as a valid empty
+    // baseline (Match captures empty; any policy created later fires drift) —
+    // exactly the agreed design. Genuine auth/permission/connection failures
+    // carry a different message and still surface via handlePwshError, so we
+    // never store a false-empty baseline. The empty value is byte-identical to
+    // the success path's zero-policies result, so the backend later
+    // initializing never itself looks like drift.
+    if (e instanceof PwshError && /object reference not set to an instance/i.test(String(e?.message || ''))) {
+      return {
+        ok: true,
+        current_value: { total_policies: 0, enforcing_count: 0, auditing_count: 0, workloads: [], policy_details: [] },
+        interpreted: 'No DLP policies configured — Match captures the empty state as a baseline so any new policy fires drift',
+      };
+    }
     return handlePwshError(e, 'CMP-02', { role: 'Exchange Administrator + Compliance Administrator' });
   }
 }

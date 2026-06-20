@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.18 — 2026-06-20
+
+### Surveillance DLP sur les nouveaux locataires — correctif finalisé
+
+Ceci finalise le correctif DLP pour nouveaux locataires amorcé dans la version 0.2.16. Sur un locataire où Microsoft Purview n'avait jamais été ouvert, l'erreur « référence d'objet » sous-jacente était en fait levée pendant la *connexion* au service de conformité — une étape qui s'exécute avant la protection ajoutée en 0.2.16 — de sorte que la vérification **Surveiller la configuration des politiques DLP** pouvait encore afficher une *erreur d'interrogation* et **Faire correspondre** pouvait encore échouer.
+
+Panoptica365 reconnaît désormais un service DLP jamais initialisé quelle que soit l'étape qui le signale, et le considère pour ce qu'il est : une base de référence vide valide. Cliquez sur **Faire correspondre** pour la capturer, et Panoptica365 vous alertera dès qu'une politique DLP sera créée dans ce locataire. Les locataires qui ne peuvent réellement pas être lus — un rôle d'administrateur manquant, par exemple — signalent toujours une erreur claire et exploitable plutôt qu'une fausse base de référence vide.
+
+---
+
 ## Version 0.2.17 — 2026-06-20
 
 ### Les leçons d'Apprendre s'ouvrent maintenant sur tous les déploiements
