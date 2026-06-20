@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.2.17 — 2026-06-20
+
+### Learn lessons now open on every deployment
+
+Opening a lesson from the Learn hub could fail — showing a "refused to connect" message instead of the article — on installations served through the standard secure reverse proxy. The proxy's anti-clickjacking protection was, correctly, refusing to let any page embed the app in a frame, and that also stopped the lesson viewer from showing the lesson. Lessons now load through a method that protection doesn't apply to, so they open reliably on every deployment — while the app's clickjacking safeguard stays fully in place.
+
+---
+
 ## Version 0.2.16 — 2026-06-20
 
 ### Your action buttons can't be silenced by the browser anymore

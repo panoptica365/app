@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.17 — 2026-06-20
+
+### Las lecciones de Aprender ahora se abren en todas las implementaciones
+
+Abrir una lección desde el centro Aprender podía fallar — mostrando un mensaje de «conexión rechazada» en lugar del artículo — en las instalaciones servidas a través del proxy inverso seguro estándar. La protección contra el secuestro de clics del proxy se negaba, correctamente, a permitir que cualquier página incrustara la aplicación en un marco, y eso también impedía que el visor de lecciones mostrara la lección. Las lecciones ahora se cargan mediante un método al que esa protección no se aplica, por lo que se abren de forma fiable en todas las implementaciones — manteniendo plenamente activa la protección contra el secuestro de clics.
+
+---
+
 ## Versión 0.2.16 — 2026-06-20
 
 ### Sus botones de acción ya no pueden ser silenciados por el navegador

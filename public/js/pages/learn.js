@@ -65,6 +65,19 @@
     return 'dark';
   }
 
+  // Inject a <base> into the lesson HTML so its as-authored relative links
+  // (../learn-base.css, the-human-layer.css) resolve against /learn-assets when
+  // the document is rendered from srcdoc. A srcdoc document's base URL is the
+  // SPA's URL, not the lesson's, so without this the stylesheet would 404. `dir`
+  // is the lesson's served directory, e.g. "/learn-assets/secure-score/".
+  function withBaseHref(html, dir) {
+    const tag = '<base href="' + dir + '">';
+    if (/<head[^>]*>/i.test(html)) {
+      return html.replace(/<head[^>]*>/i, function (m) { return m + tag; });
+    }
+    return tag + html;
+  }
+
   // ─── Init / teardown ───
   function init(params) {
     document.getElementById('learn-back')?.addEventListener('click', showIndex);
@@ -225,27 +238,37 @@
     ).then((data) => {
       titleEl.textContent = data.title || '';
 
-      // The lesson is a standalone HTML doc served from /learn-assets. Render it
-      // in a sandboxed iframe (allow-same-origin only — NO allow-scripts; the
-      // lessons run no JS). The iframe FILLS the modal body and scrolls its own
-      // content — one native scrollbar. (We deliberately do NOT auto-size the
-      // frame to its content height: that left the frame a hair short, so it
-      // kept an inner scrollbar while the modal body scrolled the rest — the
-      // jumpy double-scrollbar.) Same-origin lets us inject the light/dark theme.
-      const frame = document.createElement('iframe');
-      frame.className = 'learn-lesson-frame';
-      frame.setAttribute('sandbox', 'allow-same-origin');
-      frame.setAttribute('title', data.title || '');
-      frame.src = data.html_url;
+      // Fetch the lesson HTML same-origin and render it through the iframe's
+      // srcdoc. We deliberately do NOT point iframe.src at /learn-assets: a
+      // hardened reverse proxy (the bundled Caddy sets X-Frame-Options: DENY on
+      // every response) blocks framing an HTTP document — even same-origin —
+      // which shows as "<host> refused to connect". srcdoc content is not an
+      // HTTP navigation, so X-Frame-Options never applies: lessons render behind
+      // ANY proxy with the app's strong anti-clickjacking header left intact.
+      // (XFO does not affect this fetch — it only governs framing.) A <base>
+      // makes the lesson's as-authored relative links (../learn-base.css) resolve
+      // against /learn-assets, which a srcdoc document otherwise can't know.
+      return fetch(data.html_url, { credentials: 'same-origin' })
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then((rawHtml) => {
+          const dir = data.html_url.slice(0, data.html_url.lastIndexOf('/') + 1);
+          // The iframe FILLS the modal body and scrolls its own content — one
+          // native scrollbar (CSS height:100%; no JS auto-sizing). allow-same-
+          // origin (no allow-scripts) lets us inject the light/dark theme.
+          const frame = document.createElement('iframe');
+          frame.className = 'learn-lesson-frame';
+          frame.setAttribute('sandbox', 'allow-same-origin');
+          frame.setAttribute('title', data.title || '');
+          frame.addEventListener('load', () => {
+            try {
+              frame.contentDocument.documentElement.setAttribute('data-theme', currentLessonTheme()); // 'light' | 'dark'
+            } catch (e) { /* same-origin; should not throw */ }
+          });
+          frame.srcdoc = withBaseHref(rawHtml, dir);
 
-      frame.addEventListener('load', () => {
-        try {
-          frame.contentDocument.documentElement.setAttribute('data-theme', currentLessonTheme()); // 'light' | 'dark'
-        } catch (e) { /* same-origin; should not throw */ }
-      });
-
-      body.innerHTML = '';
-      body.appendChild(frame);
+          body.innerHTML = '';
+          body.appendChild(frame);
+        });
     }).catch(() => {
       body.innerHTML = errorHtml();
     });

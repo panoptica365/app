@@ -5,6 +5,14 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.17 — 2026-06-20
+
+### Les leçons d'Apprendre s'ouvrent maintenant sur tous les déploiements
+
+L'ouverture d'une leçon depuis le carrefour Apprendre pouvait échouer — affichant un message « refus de connexion » au lieu de l'article — sur les installations servies par le proxy inverse sécurisé standard. La protection anti-détournement de clic du proxy refusait, avec raison, que toute page intègre l'application dans un cadre, ce qui empêchait aussi le lecteur de leçons d'afficher la leçon. Les leçons se chargent désormais par une méthode à laquelle cette protection ne s'applique pas; elles s'ouvrent donc de façon fiable sur tous les déploiements — tout en gardant la protection anti-détournement de clic pleinement active.
+
+---
+
 ## Version 0.2.16 — 2026-06-20
 
 ### Vos boutons d'action ne peuvent plus être désactivés par le navigateur
