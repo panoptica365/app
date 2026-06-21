@@ -113,6 +113,7 @@ const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 const psaWorker = require('./psa-worker');
 const psaStore = require('./psa/store');
 const retentionWorker = require('./retention-worker');
+const tenantDomainResolver = require('./tenant-domain-resolver');
 
 const app = express();
 const server = http.createServer(app);
@@ -646,6 +647,12 @@ async function start() {
     // own endpoint — never piggybacked onto the license refresh call).
     // States and counts only; no tenant data. TELEMETRY_ENABLED=false opts out.
     require('./lib/telemetry').start();
+
+    // Management Consoles Launcher (2026-06-21) — backfill each tenant's
+    // verified domains so the Exchange/Teams/Intune/SharePoint console links
+    // can be built. Boot pass (deferred 45s) + daily safety pass; reads the
+    // already-consented /organization endpoint, writes only our tenants table.
+    tenantDomainResolver.start();
   });
 }
 
@@ -672,6 +679,7 @@ async function shutdown(signal) {
   licenseRefresh.stop();
   psaWorker.stop();
   retentionWorker.stop();
+  tenantDomainResolver.stop();
   require('./lib/telemetry').stop();
   await db.close();
   server.close(() => process.exit(0));

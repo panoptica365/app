@@ -5,6 +5,25 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.20 — 2026-06-21
+
+### Acceso con un clic a las consolas de administración de Microsoft de cada inquilino
+
+La Gestión de inquilinos incorpora una nueva pestaña **Consolas de administración** que convierte Panoptica365 en su punto de partida hacia cada portal de administración de Microsoft. Elija un inquilino — o use la cuadrícula densa **Todos los inquilinos** — y entre directamente en su consola de Entra, Azure, Exchange, Microsoft 365, Intune, Defender, SharePoint o Teams. Cada enlace se abre en el contexto de inquilino correcto usando sus propios permisos delegados de GDAP: sin buscar el portal adecuado, sin copiar identificadores de inquilino y sin malabarismos de inicio de sesión.
+
+Dos formas de trabajar:
+
+- **Todos los inquilinos** — una matriz compacta (una fila por inquilino, una columna por consola) con un encabezado fijo y una búsqueda por nombre que ignora los acentos, para llegar a cualquier consola de cualquier inquilino con un solo clic, incluso con una lista de clientes larga.
+- **Enfocar un inquilino** — un selector de inquilino con tarjetas de consola más grandes, cada una con un recordatorio de una línea sobre para qué sirve ese portal, cuando trabaja con un solo cliente.
+
+También puede hacer clic en el **nombre** de cualquier inquilino en la lista para ir directamente a sus consolas.
+
+Todo aquí es **solo de navegación** — Panoptica365 sigue sin escribir nada en los inquilinos de sus clientes ni hacer cambios. Simplemente le da el camino más rápido a la consola correcta.
+
+No se requiere configuración: los dominios de cada inquilino se detectan automáticamente. Las cuatro consolas que solo necesitan el identificador del inquilino (Entra, Azure, Microsoft 365, Defender) funcionan de inmediato; las demás se activan en cuanto se detecta el dominio — poco después de añadir un inquilino — y muestran un breve estado «Resolviendo…» mientras tanto.
+
+---
+
 ## Versión 0.2.19 — 2026-06-20
 
 ### La campana de alertas ahora se vacía una vez que ha hecho el triaje

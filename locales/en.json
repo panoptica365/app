@@ -1161,6 +1161,49 @@
   },
   "tenants": {
     "title": "Tenant Management",
+    "consoles": {
+      "tab_tenant_list": "Tenant List",
+      "tab_management_consoles": "Management Consoles",
+      "view_all_tenants": "All tenants",
+      "view_focus": "Focus one tenant",
+      "search_label": "Search tenants",
+      "search_placeholder": "Filter by name… e.g. CAE",
+      "tenant_label": "Tenant",
+      "col_tenant": "Tenant",
+      "click_name_hint": "Click any tenant name to jump to its admin consoles.",
+      "hint_grid": "Every console for every tenant — one click, no selection step.",
+      "hint_cards": "Opens the console for {name} in a new tab, using your GDAP delegated permissions.",
+      "foot_summary": "{count} tenants · {consoles} consoles · links open with your partner GDAP context",
+      "foot_filtered": "{shown} of {count} tenants · {consoles} consoles",
+      "resolving": "Resolving domain…",
+      "link_not_ready": "Domain not resolved yet — retry shortly",
+      "c": {
+        "entra": {
+          "desc": "Users, groups, conditional access, sign-in logs"
+        },
+        "azure": {
+          "desc": "Subscriptions, resources, identity backend"
+        },
+        "exchange": {
+          "desc": "Mailboxes, mail flow, anti-spam policies"
+        },
+        "m365": {
+          "desc": "Tenant settings, licenses, service health"
+        },
+        "intune": {
+          "desc": "Device compliance, configuration, app policy"
+        },
+        "defender": {
+          "desc": "Incidents, alerts, hunting, secure score"
+        },
+        "sharepoint": {
+          "desc": "Sites, sharing policies, storage"
+        },
+        "teams": {
+          "desc": "Teams, meeting and calling policies"
+        }
+      }
+    },
     "loading": "Loading tenants...",
     "add_tenant": "Add Tenant",
     "edit_tenant": "Edit Tenant",

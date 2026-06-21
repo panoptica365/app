@@ -1161,6 +1161,49 @@
   },
   "tenants": {
     "title": "Gestion des locataires",
+    "consoles": {
+      "tab_tenant_list": "Liste des locataires",
+      "tab_management_consoles": "Consoles d'administration",
+      "view_all_tenants": "Tous les locataires",
+      "view_focus": "Cibler un locataire",
+      "search_label": "Rechercher des locataires",
+      "search_placeholder": "Filtrer par nom… p. ex. CAE",
+      "tenant_label": "Locataire",
+      "col_tenant": "Locataire",
+      "click_name_hint": "Cliquez sur le nom d'un locataire pour accéder à ses consoles d'administration.",
+      "hint_grid": "Chaque console pour chaque locataire — un seul clic, aucune sélection requise.",
+      "hint_cards": "Ouvre la console de {name} dans un nouvel onglet, avec vos autorisations déléguées GDAP.",
+      "foot_summary": "{count} locataires · {consoles} consoles · les liens s'ouvrent avec votre contexte GDAP partenaire",
+      "foot_filtered": "{shown} sur {count} locataires · {consoles} consoles",
+      "resolving": "Résolution du domaine…",
+      "link_not_ready": "Domaine pas encore résolu — réessayez sous peu",
+      "c": {
+        "entra": {
+          "desc": "Utilisateurs, groupes, accès conditionnel, journaux de connexion"
+        },
+        "azure": {
+          "desc": "Abonnements, ressources, infrastructure d'identité"
+        },
+        "exchange": {
+          "desc": "Boîtes aux lettres, flux de courrier, politiques anti-pourriel"
+        },
+        "m365": {
+          "desc": "Paramètres du locataire, licences, état des services"
+        },
+        "intune": {
+          "desc": "Conformité des appareils, configuration, politiques d'applications"
+        },
+        "defender": {
+          "desc": "Incidents, alertes, chasse aux menaces, niveau de sécurité"
+        },
+        "sharepoint": {
+          "desc": "Sites, politiques de partage, stockage"
+        },
+        "teams": {
+          "desc": "Équipes, politiques de réunion et d'appel"
+        }
+      }
+    },
     "loading": "Chargement des locataires...",
     "add_tenant": "Ajouter un locataire",
     "edit_tenant": "Modifier le locataire",

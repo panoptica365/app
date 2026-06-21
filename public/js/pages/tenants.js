@@ -30,11 +30,15 @@
     // Wire up Add Tenant button
     document.getElementById('btn-add-tenant')?.addEventListener('click', startAdminConsent);
 
+    // Wire the Management Consoles tab (tabs, view toggle, search, picker).
+    setupConsolesUI();
+
     await loadTenants();
   }
 
   function destroy() {
     tenants = [];
+    focusTenantId = null;
   }
 
   function showConsentMessage(text, type) {
@@ -74,6 +78,7 @@
     try {
       tenants = await Panoptica.api('/api/tenants');
       renderTable();
+      renderConsoles();
     } catch (err) {
       document.getElementById('tenants-table-body').innerHTML =
         `<div class="panel-error">${window.t('tenants.panel_load_failed')}</div>`;
@@ -133,7 +138,7 @@
       }
 
       html += `<tr>
-        <td class="tenant-name">${escHtml(t.display_name)}</td>
+        <td><span class="tenant-name mc-tname-link" data-tenant-id="${t.id}" title="${escAttr(window.t('tenants.consoles.click_name_hint'))}">${escHtml(t.display_name)}${MC_EXT}</span></td>
         <td>${escHtml(t.psa_name || '—')}</td>
         <td>${modeCell}</td>
         <td>${(t.language || 'en').toUpperCase()}</td>
@@ -158,6 +163,12 @@
     });
     body.querySelectorAll('.btn-toggle').forEach(btn => {
       btn.addEventListener('click', () => toggleTenant(parseInt(btn.dataset.id)));
+    });
+    // Clickable tenant name → Management Consoles tab, Focus view, pre-selected.
+    // The name (not the whole row) is the target so it never misfires next to
+    // the Edit/Disable buttons.
+    body.querySelectorAll('.mc-tname-link').forEach(el => {
+      el.addEventListener('click', () => jumpToConsoles(parseInt(el.dataset.tenantId, 10)));
     });
   }
 
@@ -454,6 +465,176 @@
 
   function escAttr(str) {
     return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // ─── Management Consoles tab ───────────────────────────────────────────
+  // Navigation-only launcher: jump straight into any tenant's Microsoft admin
+  // consoles, in the right tenant context, under the operator's own GDAP
+  // delegated permissions. URL construction lives in the shared
+  // PanopticaConsoleLinks module (single source of truth) — this page only
+  // renders it. See public/js/shared/console-links.js.
+
+  let focusTenantId = null;  // id of the tenant shown in Focus (cards) view
+
+  const MC_DIACRITICS = /[̀-ͯ]/g;
+  // Accent-insensitive fold so "CAE" matches the CAE orgs and "francois"
+  // matches "François".
+  function mcNorm(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(MC_DIACRITICS, '');
+  }
+
+  // External-link glyph reused by the matrix cells, focus cards + clickable name.
+  const MC_EXT = '<svg class="mc-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+
+  function mcConsoleSvg(inner) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9">' + inner + '</svg>';
+  }
+
+  // Wire the tab strip, view toggle, search box and tenant picker. Called once
+  // per page load (the partial is reloaded on every navigation).
+  function setupConsolesUI() {
+    document.querySelectorAll('#tenant-tabs .mc-tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTenantTab(btn.dataset.tab));
+    });
+    document.querySelectorAll('#mc-viewtoggle .mc-vt').forEach(btn => {
+      btn.addEventListener('click', () => setConsolesView(btn.dataset.view));
+    });
+    document.getElementById('mc-search')?.addEventListener('input', renderMatrixBody);
+    document.getElementById('mc-tenant-select')?.addEventListener('change', (e) => {
+      selectFocusTenant(parseInt(e.target.value, 10));
+    });
+  }
+
+  function switchTenantTab(name) {
+    document.querySelectorAll('#tenant-tabs .mc-tab').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === name));
+    document.getElementById('panel-list')?.classList.toggle('show', name === 'list');
+    document.getElementById('panel-consoles')?.classList.toggle('show', name === 'consoles');
+  }
+
+  function setConsolesView(view) {
+    const grid = view === 'grid';
+    document.querySelectorAll('#mc-viewtoggle .mc-vt').forEach(b =>
+      b.classList.toggle('active', b.dataset.view === view));
+    const vGrid = document.getElementById('mc-view-grid');
+    const vCards = document.getElementById('mc-view-cards');
+    if (vGrid) vGrid.style.display = grid ? 'block' : 'none';
+    if (vCards) vCards.style.display = grid ? 'none' : 'block';
+    // The search box belongs to the grid; the tenant picker to Focus view.
+    const searchField = document.getElementById('mc-search-field');
+    const tenantField = document.getElementById('mc-tenant-field');
+    if (searchField) searchField.style.display = grid ? 'flex' : 'none';
+    if (tenantField) tenantField.style.display = grid ? 'none' : 'flex';
+  }
+
+  // Render everything the consoles tab needs from the already-loaded `tenants`
+  // array. Cheap enough to do eagerly after load even though the tab is hidden.
+  function renderConsoles() {
+    if (!window.PanopticaConsoleLinks || !tenants.length) return;
+    populateTenantSelect();
+    renderMatrixHead();
+    renderMatrixBody();
+    // Default Focus selection = first tenant (the API returns them ordered by
+    // display_name). Preserve an existing selection across reloads if it's still
+    // present.
+    const keep = focusTenantId != null && tenants.some(t => t.id === focusTenantId);
+    selectFocusTenant(keep ? focusTenantId : tenants[0].id);
+  }
+
+  function populateTenantSelect() {
+    const sel = document.getElementById('mc-tenant-select');
+    if (!sel) return;
+    sel.innerHTML = tenants.map(t =>
+      '<option value="' + t.id + '">' + escHtml(t.display_name) + '</option>').join('');
+  }
+
+  // ── Matrix (All tenants) ──
+  function renderMatrixHead() {
+    const head = document.getElementById('mc-matrix-head');
+    if (!head) return;
+    const consoles = window.PanopticaConsoleLinks.CONSOLES;
+    head.innerHTML =
+      '<th class="mc-tcol">' + escHtml(window.t('tenants.consoles.col_tenant')) + '</th>' +
+      consoles.map(c =>
+        '<th><div class="mc-mh">' + mcConsoleSvg(window.PanopticaConsoleLinks.ICONS[c.key]) +
+        '<span>' + escHtml(c.short) + '</span></div></th>'
+      ).join('');
+  }
+
+  // Filter the tenants ARRAY (not just hide DOM rows) so the footer count stays
+  // honest and composes with any role/visibility filtering. Re-run on every
+  // keystroke — trivial for ~150 rows.
+  function renderMatrixBody() {
+    const body = document.getElementById('mc-matrix-body');
+    if (!body) return;
+    const q = mcNorm(document.getElementById('mc-search')?.value || '');
+    const rows = q ? tenants.filter(t => mcNorm(t.display_name).includes(q)) : tenants;
+    const resolving = window.t('tenants.consoles.resolving');
+
+    body.innerHTML = rows.map(t => {
+      const cells = window.PanopticaConsoleLinks.build(t).map(l => {
+        if (l.ready) {
+          return '<td><a class="mc-mlink" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' +
+            escAttr(l.title + ' — ' + t.display_name) + '">' + MC_EXT + '</a></td>';
+        }
+        return '<td><span class="mc-mlink is-disabled" title="' + escAttr(resolving) + '">' + MC_EXT + '</span></td>';
+      }).join('');
+      return '<tr><td class="mc-tcol">' + escHtml(t.display_name) + '</td>' + cells + '</tr>';
+    }).join('');
+
+    updateMatrixFooter(rows.length);
+  }
+
+  function updateMatrixFooter(shown) {
+    const foot = document.getElementById('mc-matrix-foot');
+    if (!foot) return;
+    const consoles = window.PanopticaConsoleLinks.CONSOLES.length;
+    const total = tenants.length;
+    foot.textContent = (shown === total)
+      ? window.t('tenants.consoles.foot_summary', { count: total, consoles })
+      : window.t('tenants.consoles.foot_filtered', { shown, count: total, consoles });
+  }
+
+  // ── Focus (one tenant) ──
+  function selectFocusTenant(id) {
+    const t = tenants.find(x => x.id === id) || tenants[0];
+    if (!t) return;
+    focusTenantId = t.id;
+    const sel = document.getElementById('mc-tenant-select');
+    if (sel) sel.value = String(t.id);
+    const hint = document.getElementById('mc-cards-hint');
+    if (hint) hint.textContent = window.t('tenants.consoles.hint_cards', { name: t.display_name });
+    renderFocusCards(t);
+  }
+
+  function renderFocusCards(t) {
+    const grid = document.getElementById('mc-cardgrid');
+    if (!grid) return;
+    const resolving = window.t('tenants.consoles.resolving');
+    grid.innerHTML = window.PanopticaConsoleLinks.build(t).map(l => {
+      const icon = '<div class="mc-cicon ' + l.tint + '">' + mcConsoleSvg(l.icon) + '</div>';
+      if (l.ready) {
+        return '<a class="mc-ccard" href="' + escAttr(l.url) + '" target="_blank" rel="noopener" title="' + escAttr(l.url) + '">' +
+          icon +
+          '<div class="mc-ctxt"><div class="mc-ctitle">' + escHtml(l.title) + '</div>' +
+          '<div class="mc-cdesc">' + escHtml(window.t(l.descKey)) + '</div></div>' +
+          '<span class="mc-cgo">' + MC_EXT + '</span>' +
+        '</a>';
+      }
+      return '<div class="mc-ccard is-disabled" title="' + escAttr(window.t('tenants.consoles.link_not_ready')) + '">' +
+        icon +
+        '<div class="mc-ctxt"><div class="mc-ctitle">' + escHtml(l.title) + '</div>' +
+        '<div class="mc-cdesc mc-resolving">' + escHtml(resolving) + '</div></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // From a clickable tenant name in the Tenant List → Consoles tab, Focus view,
+  // that tenant pre-selected (locked design decision 4).
+  function jumpToConsoles(id) {
+    switchTenantTab('consoles');
+    setConsolesView('cards');
+    selectFocusTenant(id);
   }
 
   // Register module

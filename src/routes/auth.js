@@ -15,6 +15,7 @@ const versionInfo = require('../version');
 const updateChecker = require('../lib/update/update-checker');
 const legal = require('../legal');
 const assignExoRoles = require('../lib/assign-exo-roles');
+const tenantDomainResolver = require('../tenant-domain-resolver');
 const { fetchWithTimeout } = require('../lib/http-timeout');
 
 const router = express.Router();
@@ -359,6 +360,16 @@ async function handleGraphConsentCallback(req, res) {
         metadata: { azure_tenant_id: tenant, mode: consentMode },
         req,
       }).catch(() => {});
+
+      // Management Consoles Launcher — capture this new tenant's verified
+      // domains right away (fire-and-forget) so its Exchange/Teams/Intune/
+      // SharePoint console links light up without waiting for the next boot or
+      // daily safety pass. Best-effort + self-healing: resolveOneTenant guards
+      // its own Graph call and, on any failure, leaves the columns NULL for the
+      // resolver's passes to retry — so this never blocks or breaks onboarding.
+      tenantDomainResolver.resolveOneTenant({ id, tenant_id: tenant }).catch((e) => {
+        console.warn(`[Auth] Domain resolution for new tenant ${tenant} failed (non-fatal):`, e.message);
+      });
     }
 
     // ─── Assign EXO/Compliance directory roles in the customer tenant ───

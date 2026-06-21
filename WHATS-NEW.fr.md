@@ -5,6 +5,25 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.20 — 2026-06-21
+
+### Accès en un clic aux consoles d'administration Microsoft de chaque locataire
+
+La Gestion des locataires comporte un nouvel onglet **Consoles d'administration** qui fait de Panoptica365 votre point de départ vers chaque portail d'administration Microsoft. Choisissez un locataire — ou utilisez la grille dense **Tous les locataires** — et accédez directement à sa console Entra, Azure, Exchange, Microsoft 365, Intune, Defender, SharePoint ou Teams. Chaque lien s'ouvre dans le bon contexte de locataire grâce à vos propres autorisations déléguées GDAP : plus besoin de chercher le bon portail, de copier des identifiants de locataire ni de jongler avec des connexions.
+
+Deux façons de travailler :
+
+- **Tous les locataires** — une matrice compacte (une ligne par locataire, une colonne par console) avec un en-tête figé et une recherche par nom insensible aux accents, pour atteindre n'importe quelle console de n'importe quel locataire en un clic, même avec une longue liste de clients.
+- **Cibler un locataire** — un sélecteur de locataire avec de plus grandes cartes de console, chacune accompagnée d'un rappel en une ligne de l'usage du portail, lorsque vous travaillez sur un seul client.
+
+Vous pouvez aussi cliquer sur le **nom** d'un locataire dans la liste pour accéder directement à ses consoles.
+
+Tout ici est en **navigation seulement** — Panoptica365 n'écrit toujours rien dans les locataires de vos clients et n'y apporte aucune modification. Il vous donne simplement le chemin le plus rapide vers la bonne console.
+
+Aucune configuration requise : les domaines de chaque locataire sont détectés automatiquement. Les quatre consoles qui n'ont besoin que de l'identifiant du locataire (Entra, Azure, Microsoft 365, Defender) fonctionnent immédiatement ; les autres s'activent dès que le domaine est détecté — peu après l'ajout d'un locataire — et affichent un bref état « Résolution… » en attendant.
+
+---
+
 ## Version 0.2.19 — 2026-06-20
 
 ### La cloche d'alertes se vide maintenant une fois le tri effectué

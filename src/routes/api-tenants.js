@@ -84,6 +84,33 @@ const router = express.Router();
   }
 })();
 
+// ─── Migration: add tenant domain-resolution columns (Jun 21, 2026) ───
+// Management Consoles Launcher. We persist the *inputs* (the default + initial
+// verified domains) and build each console's deep-link URL at render time from
+// a single template module — we never materialize/store the full URLs, so when
+// Microsoft changes a portal URL we edit one template, not every tenant row.
+// All three nullable: a tenant with unresolved domains is a valid state (the
+// four tenant-id-only consoles still render), not an error. Idempotent —
+// checks INFORMATION_SCHEMA before the ALTER. Mirrors the mode/audit pattern.
+(async () => {
+  try {
+    const col = await db.queryOne(
+      "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'default_domain'"
+    );
+    if (!col) {
+      await db.executeWithDeadlockRetry(
+        "ALTER TABLE tenants " +
+        "ADD COLUMN default_domain     VARCHAR(255) DEFAULT NULL, " +
+        "ADD COLUMN initial_domain     VARCHAR(255) DEFAULT NULL, " +
+        "ADD COLUMN domain_resolved_at DATETIME     DEFAULT NULL"
+      );
+      console.log("[Migration] Added tenants.default_domain + initial_domain + domain_resolved_at columns");
+    }
+  } catch (err) {
+    console.error('[Migration] tenant domain columns addition failed (non-fatal):', err.message);
+  }
+})();
+
 // All routes require authentication
 router.use(auth.requireAuth);
 
@@ -101,6 +128,7 @@ router.get('/', async (req, res) => {
   try {
     const tenants = await db.queryRows(
       `SELECT id, tenant_id, display_name, psa_name,
+              default_domain, initial_domain,
               language, mode, audit_expires_at, audit_expiry_warned_at,
               polling_interval, enabled, consented_at,
               last_polled_at, created_at

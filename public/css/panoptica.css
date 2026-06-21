@@ -5556,3 +5556,319 @@ td.monospace {
   color: var(--p-text, var(--p-text-bright));
   font-variant-numeric: tabular-nums;
 }
+
+/* ═══════════════════════════════════════════
+   MANAGEMENT CONSOLES LAUNCHER (Tenant Management → Management Consoles tab)
+   Adapted from the mock-up to the app's --p-* theme tokens, so it tracks both
+   light and dark themes. All classes are mc-* scoped to avoid collisions with
+   the generic .panel / .tab / .matrix names. (2026-06-21)
+   ═══════════════════════════════════════════ */
+
+/* Tab strip — underline tabs, driven by data-tab + active class. */
+.mc-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 18px;
+  border-bottom: 1px solid var(--p-border-subtle);
+}
+.mc-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--p-text-muted);
+  padding: 11px 16px;
+  position: relative;
+}
+.mc-tab:hover { color: var(--p-text-secondary); }
+.mc-tab.active { color: var(--p-accent-deep); }
+.mc-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 10px; right: 10px; bottom: -1px;
+  height: 3px;
+  background: var(--p-accent);
+  border-radius: 3px 3px 0 0;
+}
+
+.mc-panel { display: none; }
+.mc-panel.show { display: block; animation: mcFade 0.18s ease; }
+@keyframes mcFade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* Clickable tenant name in the Tenant List table → jumps to the consoles. */
+.mc-tname-link {
+  color: var(--p-accent-deep);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.mc-tname-link:hover { text-decoration: underline; }
+.mc-tname-link .mc-ext {
+  width: 13px; height: 13px;
+  margin-left: 5px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.tenant-list-table tbody tr:hover .mc-tname-link .mc-ext { opacity: 0.7; }
+
+/* Hint line (info / external-link icon + muted copy). */
+.mc-hint {
+  font-size: 12px;
+  color: var(--p-text-muted);
+  margin: 2px 0 16px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.mc-hint svg { width: 14px; height: 14px; flex: none; }
+
+/* Toolbar: tenant picker + search + view toggle. */
+.mc-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.mc-field { display: flex; flex-direction: column; gap: 6px; }
+.mc-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+}
+select.mc-select {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--p-text);
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 4px;
+  padding: 10px 38px 10px 13px;
+  min-width: 320px;
+  max-width: 460px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237388A2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+select.mc-select:hover,
+select.mc-select:focus { outline: none; border-color: var(--p-accent); }
+
+.mc-searchwrap { position: relative; }
+.mc-searchwrap svg {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--p-text-muted);
+  pointer-events: none;
+}
+input.mc-search {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--p-text);
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 4px;
+  padding: 10px 13px 10px 38px;
+  min-width: 340px;
+}
+input.mc-search::placeholder { color: var(--p-text-dim); }
+input.mc-search:focus { outline: none; border-color: var(--p-accent); }
+
+.mc-viewtoggle {
+  margin-left: auto;
+  display: flex;
+  background: var(--p-surface-deep);
+  border: 1px solid var(--p-border);
+  border-radius: 4px;
+  padding: 3px;
+}
+.mc-vt {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--p-text-muted);
+  padding: 7px 14px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.mc-vt.active {
+  background: var(--p-surface);
+  color: var(--p-accent-deep);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.mc-vt svg { width: 15px; height: 15px; }
+
+/* Opaque card surface wrapping the matrix. */
+.mc-card-surface {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* ── Focus (one tenant) cards ── */
+.mc-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  gap: 14px;
+}
+.mc-ccard {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  padding: 16px 16px 15px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+  position: relative;
+}
+.mc-ccard:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.10), 0 10px 26px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--p-border-strong);
+}
+.mc-ccard.is-disabled {
+  opacity: 0.6;
+  cursor: default;
+  box-shadow: none;
+}
+.mc-ccard.is-disabled:hover { box-shadow: none; transform: none; border-color: var(--p-border); }
+.mc-cicon {
+  flex: none;
+  width: 42px; height: 42px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mc-cicon svg { width: 22px; height: 22px; }
+.mc-ctxt { min-width: 0; flex: 1; }
+.mc-ctitle {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--p-text);
+}
+.mc-cdesc { font-size: 11.5px; line-height: 1.45; color: var(--p-text-muted); margin-top: 4px; }
+.mc-cdesc.mc-resolving { font-style: italic; color: var(--p-text-dim); }
+.mc-cgo {
+  position: absolute;
+  top: 14px; right: 13px;
+  color: var(--p-text-dim);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.mc-ccard:hover .mc-cgo { opacity: 1; color: var(--p-accent); }
+.mc-cgo svg { width: 16px; height: 16px; }
+
+/* Per-console icon tints — translucent brand background + saturated mid-tone
+   icon, both readable on the light AND dark surfaces. */
+.mc-t-entra      { background: rgba(42, 156, 203, 0.15);  color: #2A9CCB; }
+.mc-t-azure      { background: rgba(60, 130, 214, 0.15);  color: #3C82D6; }
+.mc-t-exchange   { background: rgba(142, 111, 208, 0.16); color: #8E6FD0; }
+.mc-t-m365       { background: rgba(226, 86, 107, 0.14);  color: #E2566B; }
+.mc-t-intune     { background: rgba(39, 192, 137, 0.16);  color: #27C089; }
+.mc-t-defender   { background: rgba(30, 147, 201, 0.15);  color: #1E93C9; }
+.mc-t-sharepoint { background: rgba(43, 168, 142, 0.16);  color: #2BA88E; }
+.mc-t-teams      { background: rgba(123, 131, 224, 0.16); color: #7B83E0; }
+
+/* ── Matrix (all tenants) ──
+   Frozen header + frozen first column inside an internal scroll window so the
+   console column labels and tenant names stay visible at 150 tenants. The
+   window is sized off the viewport (max-height: 70vh), NOT a fixed pixel height
+   — a hardcoded value breaks under font scaling / browser zoom. */
+.mc-matrix-scroll { max-height: 70vh; overflow: auto; }
+table.mc-matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 13px;
+}
+table.mc-matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--p-surface-alt);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+  padding: 12px 6px;
+  border-bottom: 1px solid var(--p-border);
+  white-space: nowrap;
+  text-align: center;
+}
+table.mc-matrix thead th .mc-mh { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+table.mc-matrix thead th .mc-mh svg { width: 16px; height: 16px; }
+table.mc-matrix th.mc-tcol {
+  text-align: left;
+  left: 0;
+  z-index: 3;            /* corner cell sits above both sticky axes */
+  min-width: 210px;
+  padding-left: 16px;
+}
+table.mc-matrix td.mc-tcol {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--p-surface);
+  font-weight: 600;
+  color: var(--p-text);
+  padding-left: 16px;
+  border-right: 1px solid var(--p-border-subtle);
+}
+table.mc-matrix tbody td {
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--p-border-subtle);
+  text-align: center;
+}
+table.mc-matrix tbody tr:hover td { background: var(--p-surface-hover); }
+table.mc-matrix tbody tr:hover td.mc-tcol { background: var(--p-surface-hover); }
+
+.mc-mlink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  color: var(--p-text-dim);
+  transition: background 0.12s, color 0.12s;
+  cursor: pointer;
+}
+.mc-mlink:hover { background: rgba(22, 132, 181, 0.12); color: var(--p-accent-deep); }
+.mc-mlink svg { width: 16px; height: 16px; }
+.mc-mlink.is-disabled { opacity: 0.3; cursor: not-allowed; }
+.mc-mlink.is-disabled:hover { background: transparent; color: var(--p-text-dim); }
+
+.mc-matrix-foot {
+  font-size: 11.5px;
+  color: var(--p-text-muted);
+  padding: 12px 16px;
+  border-top: 1px solid var(--p-border-subtle);
+  background: var(--p-surface-alt);
+}

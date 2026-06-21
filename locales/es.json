@@ -1161,6 +1161,49 @@
   },
   "tenants": {
     "title": "Gestión de inquilinos",
+    "consoles": {
+      "tab_tenant_list": "Lista de inquilinos",
+      "tab_management_consoles": "Consolas de administración",
+      "view_all_tenants": "Todos los inquilinos",
+      "view_focus": "Enfocar un inquilino",
+      "search_label": "Buscar inquilinos",
+      "search_placeholder": "Filtrar por nombre… p. ej. CAE",
+      "tenant_label": "Inquilino",
+      "col_tenant": "Inquilino",
+      "click_name_hint": "Haga clic en el nombre de un inquilino para ir a sus consolas de administración.",
+      "hint_grid": "Todas las consolas de cada inquilino: un solo clic, sin paso de selección.",
+      "hint_cards": "Abre la consola de {name} en una pestaña nueva, usando sus permisos delegados de GDAP.",
+      "foot_summary": "{count} inquilinos · {consoles} consolas · los enlaces se abren con su contexto GDAP de partner",
+      "foot_filtered": "{shown} de {count} inquilinos · {consoles} consolas",
+      "resolving": "Resolviendo el dominio…",
+      "link_not_ready": "El dominio aún no se ha resuelto: vuelva a intentarlo en breve",
+      "c": {
+        "entra": {
+          "desc": "Usuarios, grupos, acceso condicional, registros de inicio de sesión"
+        },
+        "azure": {
+          "desc": "Suscripciones, recursos, infraestructura de identidad"
+        },
+        "exchange": {
+          "desc": "Buzones, flujo de correo, políticas antispam"
+        },
+        "m365": {
+          "desc": "Configuración del inquilino, licencias, estado del servicio"
+        },
+        "intune": {
+          "desc": "Cumplimiento de dispositivos, configuración, políticas de aplicaciones"
+        },
+        "defender": {
+          "desc": "Incidentes, alertas, búsqueda de amenazas, puntuación de seguridad"
+        },
+        "sharepoint": {
+          "desc": "Sitios, políticas de uso compartido, almacenamiento"
+        },
+        "teams": {
+          "desc": "Equipos, políticas de reuniones y llamadas"
+        }
+      }
+    },
     "loading": "Cargando inquilinos...",
     "add_tenant": "Añadir inquilino",
     "edit_tenant": "Editar inquilino",

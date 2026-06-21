@@ -4,18 +4,90 @@
   <span class="panel-title" data-i18n="tenants.title">Tenant Management</span>
 </div>
 
-<div class="tenant-mgmt-toolbar">
-  <span class="label" id="tenants-count"></span>
-  <button class="btn-primary" id="btn-add-tenant" data-role-required="admin" data-i18n="tenants.add_tenant">Add Tenant</button>
+<!-- Tab strip: Tenant List | Management Consoles. data-tab + active class
+     (same interaction pattern as the tenant-dashboard view toggle). -->
+<div class="mc-tabs" id="tenant-tabs">
+  <button class="mc-tab active" data-tab="list" data-i18n="tenants.consoles.tab_tenant_list">Tenant List</button>
+  <button class="mc-tab" data-tab="consoles" data-i18n="tenants.consoles.tab_management_consoles">Management Consoles</button>
 </div>
 
-<!-- Consent status messages -->
-<div id="consent-message" style="display:none; margin-bottom:16px;"></div>
+<!-- ════════════ TAB 1: TENANT LIST ════════════ -->
+<div class="mc-panel show" id="panel-list">
+  <div class="tenant-mgmt-toolbar">
+    <span class="label" id="tenants-count"></span>
+    <button class="btn-primary" id="btn-add-tenant" data-role-required="admin" data-i18n="tenants.add_tenant">Add Tenant</button>
+  </div>
 
-<!-- Tenant Table -->
-<div id="tenants-table-body">
-  <div class="loading-container">
-    <div class="loading-spinner"></div>
-    <span data-i18n="tenants.loading">Loading tenants...</span>
+  <div class="mc-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    <span data-i18n="tenants.consoles.click_name_hint">Click any tenant name to jump to its admin consoles.</span>
+  </div>
+
+  <!-- Consent status messages -->
+  <div id="consent-message" style="display:none; margin-bottom:16px;"></div>
+
+  <!-- Tenant Table -->
+  <div id="tenants-table-body">
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <span data-i18n="tenants.loading">Loading tenants...</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TAB 2: MANAGEMENT CONSOLES ════════════ -->
+<div class="mc-panel" id="panel-consoles">
+  <div class="mc-toolbar">
+    <!-- Tenant picker — shown only in Focus (cards) view -->
+    <div class="mc-field" id="mc-tenant-field" style="display:none;">
+      <label data-i18n="tenants.consoles.tenant_label">Tenant</label>
+      <select class="mc-select" id="mc-tenant-select"></select>
+    </div>
+    <!-- Name search — shown only in All-tenants (grid) view -->
+    <div class="mc-field" id="mc-search-field">
+      <label data-i18n="tenants.consoles.search_label">Search tenants</label>
+      <div class="mc-searchwrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input class="mc-search" id="mc-search" type="text" autocomplete="off"
+               placeholder="Filter by name… e.g. CAE" data-i18n-attr-placeholder="tenants.consoles.search_placeholder">
+      </div>
+    </div>
+    <!-- View toggle: All tenants (grid) / Focus one tenant (cards) -->
+    <div class="mc-viewtoggle" id="mc-viewtoggle">
+      <button class="mc-vt active" data-view="grid" id="mc-vt-grid">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+        <span data-i18n="tenants.consoles.view_all_tenants">All tenants</span>
+      </button>
+      <button class="mc-vt" data-view="cards" id="mc-vt-cards">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span data-i18n="tenants.consoles.view_focus">Focus one tenant</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FOCUS (cards) view -->
+  <div id="mc-view-cards" style="display:none;">
+    <div class="mc-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <span id="mc-cards-hint"></span>
+    </div>
+    <div class="mc-cards" id="mc-cardgrid"></div>
+  </div>
+
+  <!-- ALL TENANTS (matrix) view — default -->
+  <div id="mc-view-grid">
+    <div class="mc-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      <span data-i18n="tenants.consoles.hint_grid">Every console for every tenant — one click, no selection step.</span>
+    </div>
+    <div class="mc-card-surface">
+      <div class="mc-matrix-scroll" id="mc-matrix-scroll">
+        <table class="mc-matrix">
+          <thead><tr id="mc-matrix-head"></tr></thead>
+          <tbody id="mc-matrix-body"></tbody>
+        </table>
+      </div>
+      <div class="mc-matrix-foot" id="mc-matrix-foot"></div>
+    </div>
   </div>
 </div>

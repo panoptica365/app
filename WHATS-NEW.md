@@ -5,6 +5,25 @@ that release, newest first.
 
 ---
 
+## Version 0.2.20 — 2026-06-21
+
+### One-click launch into any tenant's Microsoft admin consoles
+
+Tenant Management has a new **Management Consoles** tab that turns Panoptica365 into your jump-off point for every Microsoft admin portal. Pick a tenant — or use the dense **All tenants** grid — and click straight into its Entra, Azure, Exchange, Microsoft 365, Intune, Defender, SharePoint or Teams console. Each link opens in the correct tenant context using your own GDAP delegated permissions, so there's no hunting for the right portal, no copying tenant IDs, and no extra sign-in juggling.
+
+Two ways to work:
+
+- **All tenants** — a compact matrix (one row per tenant, one column per console) with a frozen header and an accent-insensitive name search, so you're one click from any console of any tenant, even with a long client list.
+- **Focus one tenant** — a tenant picker with larger console cards, each with a one-line reminder of what that portal is for, when you're working a single client.
+
+You can also click any tenant's **name** in the Tenant List to jump straight to its consoles.
+
+Everything here is **navigation only** — Panoptica365 still writes nothing to your customers' tenants and makes no changes. It just gives you the fastest path to the right console.
+
+No setup is required: each tenant's domains are detected automatically. The four consoles that need only the tenant ID (Entra, Azure, Microsoft 365, Defender) work immediately; the rest light up as soon as the domain is detected — a moment after a tenant is added — and show a brief "Resolving…" state until then.
+
+---
+
 ## Version 0.2.19 — 2026-06-20
 
 ### The alert bell now clears once you've triaged
