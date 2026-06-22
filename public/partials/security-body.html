@@ -229,8 +229,8 @@
              guide the operator to the one-time Defender portal turn-on. -->
         <div id="sec-rem-noinit" style="display:none;">
           <div style="padding:14px; border:1px solid var(--p-warm, #f59e0b); border-radius:4px; background:rgba(245, 158, 11, 0.06); margin-bottom:14px;">
-            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.preset_guide.noinit_title">This must be turned on once in Microsoft Defender</div>
-            <div style="font-size:0.9rem;" data-i18n="security_page.preset_guide.noinit_body">Microsoft creates this preset only the first time it's turned on in the Defender portal — there is no API or PowerShell command that can create it from scratch. After this one-time step, Panoptica monitors it automatically.</div>
+            <div id="sec-rem-noinit-title" style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.preset_guide.noinit_title">This must be turned on once in Microsoft Defender</div>
+            <div id="sec-rem-noinit-body" style="font-size:0.9rem;" data-i18n="security_page.preset_guide.noinit_body">Microsoft creates this preset only the first time it's turned on in the Defender portal — there is no API or PowerShell command that can create it from scratch. After this one-time step, Panoptica monitors it automatically.</div>
           </div>
           <button class="btn-primary" id="sec-rem-guide-btn" data-role-required="member" data-i18n="security_page.preset_guide.open_btn">Show me how to turn it on →</button>
         </div>
@@ -281,7 +281,11 @@
       <!-- ── MDO variant (tenant HAS Defender for Office 365 P1 / Business Premium) ── -->
       <div id="sec-guide-body-mdo">
       <!-- Why this is manual -->
-      <p class="sec-explainer" data-i18n="security_page.preset_guide.why_p1">This tenant has never had Microsoft's Standard preset security policy turned on. Microsoft creates the underlying policies only the first time the preset is enabled in the Defender portal — there is no API or PowerShell command that can create them from scratch. So this first activation is a one-time manual step. Once it's done, Panoptica takes over and monitors it for drift automatically — you'll never have to do this again for this tenant.</p>
+      <p class="sec-explainer" id="sec-guide-why-p1" data-i18n="security_page.preset_guide.why_p1">This tenant has never had Microsoft's Standard preset security policy turned on. Microsoft creates the underlying policies only the first time the preset is enabled in the Defender portal — there is no API or PowerShell command that can create them from scratch. So this first activation is a one-time manual step. Once it's done, Panoptica takes over and monitors it for drift automatically — you'll never have to do this again for this tenant.</p>
+      <!-- Alternate lead-in shown after a licence upgrade (MDO half not yet set
+           up). Hidden by default; openPresetGuide() reveals it and hides why_p1
+           when current_value.mdo_half_uninitialized is true. -->
+      <p class="sec-explainer" id="sec-guide-mdohalf-intro" style="display:none;" data-i18n="security_page.preset_guide.mdohalf_intro">This tenant's licence changed — Defender for Office 365 (Business Premium) was added after the Standard preset was first turned on. The Exchange Online Protection half of the preset is already live, but Microsoft does not retroactively add the Defender for Office 365 half (Safe Attachments, Safe Links, impersonation protection), and there is no API or PowerShell command that can create it. So you re-run the preset wizard once to switch those pieces on. Once it's done, Panoptica adopts the new baseline and monitors it automatically.</p>
       <div style="padding:12px 14px; border-left:3px solid var(--p-warm, #f59e0b); background:rgba(245,158,11,0.06); border-radius:4px; margin:12px 0 4px 0; font-size:0.88rem;" data-i18n="security_page.preset_guide.why_callout">Keep the Standard preset rather than building custom policies: Microsoft re-tunes these policies daily from billions of threat signals, so the customer's protection keeps improving on its own.</div>
 
       <!-- Step 1 -->

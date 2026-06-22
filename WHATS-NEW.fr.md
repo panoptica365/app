@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.21 — 2026-06-22
+
+### Des indications plus claires lorsqu'un locataire obtient Defender pour Office 365 après une mise à niveau de licence
+
+Lorsqu'un client passe d'une licence sans Defender pour Office 365 (par exemple Business Standard) à une licence qui l'inclut (Business Premium), le paramètre **Activer la stratégie de sécurité prédéfinie** gère désormais ce changement correctement, au lieu de se retrouver dans une impasse.
+
+Si vous aviez déjà activé la stratégie prédéfinie Standard (ou Strict) de Microsoft pendant que le locataire était sur la licence inférieure, la mise à niveau débloque les protections Defender pour Office 365 — Liens fiables, Pièces jointes fiables et protection contre l'usurpation d'identité — mais Microsoft ne les active pas automatiquement, et il n'y a aucun moyen de les activer en dehors du portail Defender. Panoptica365 signalait correctement l'écart comme une dérive, mais les boutons **Appliquer** et **Accepter** s'arrêtaient tous deux avec un message déroutant : « ne correspond à aucune option documentée ».
+
+Panoptica365 reconnaît maintenant cette situation précise et affiche un court guide vers l'étape unique, dans le portail Microsoft Defender, qui termine l'activation de la protection. Une fois cela fait et après une actualisation, Panoptica365 adopte la protection désormais complète comme référence et reprend la surveillance automatiquement.
+
+---
+
 ## Version 0.2.20 — 2026-06-21
 
 ### Accès en un clic aux consoles d'administration Microsoft de chaque locataire

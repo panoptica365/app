@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.21 — 2026-06-22
+
+### Clearer guidance when a tenant gains Defender for Office 365 after a licence upgrade
+
+When a customer moves up from a licence without Defender for Office 365 (for example, Business Standard) to one that includes it (Business Premium), the **Enable Preset Security Policy** setting now handles the change gracefully instead of dead-ending.
+
+If you had already turned Microsoft's Standard (or Strict) preset on while the tenant was on the lower licence, the upgrade unlocks the Defender for Office 365 protections — Safe Links, Safe Attachments and impersonation protection — but Microsoft does not switch them on automatically, and there is no way to turn them on from outside the Defender portal. Panoptica365 correctly flagged the gap as drift, but the **Apply** and **Accept** buttons both stopped with a confusing "does not correspond to any documented option" message.
+
+Panoptica365 now recognizes this exact situation and shows a short guided walkthrough to the one-time step in the Microsoft Defender portal that finishes turning the protection on. Once you've done that and refreshed, Panoptica365 adopts the now-complete protection as its baseline and resumes monitoring automatically.
+
+---
+
 ## Version 0.2.20 — 2026-06-21
 
 ### One-click launch into any tenant's Microsoft admin consoles

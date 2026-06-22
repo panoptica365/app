@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.21 — 2026-06-22
+
+### Indicaciones más claras cuando un inquilino obtiene Defender para Office 365 tras un cambio de licencia
+
+Cuando un cliente pasa de una licencia sin Defender para Office 365 (por ejemplo, Business Standard) a una que lo incluye (Business Premium), el ajuste **Habilitar la directiva de seguridad preestablecida** ahora gestiona el cambio correctamente, en lugar de quedarse en un callejón sin salida.
+
+Si ya había activado la preconfiguración Standard (o Strict) de Microsoft mientras el inquilino estaba en la licencia inferior, la mejora desbloquea las protecciones de Defender para Office 365 — Vínculos seguros, Datos adjuntos seguros y protección contra suplantación — pero Microsoft no las activa automáticamente ni hay forma de activarlas fuera del portal de Defender. Panoptica365 marcaba correctamente la diferencia como desviación, pero los botones **Aplicar** y **Aceptar** se detenían con un mensaje confuso: «no corresponde a ninguna opción documentada».
+
+Panoptica365 ahora reconoce esta situación concreta y muestra una breve guía hacia el paso único, en el portal de Microsoft Defender, que termina de activar la protección. Una vez hecho y tras actualizar, Panoptica365 adopta la protección ya completa como línea base y reanuda la supervisión automáticamente.
+
+---
+
 ## Versión 0.2.20 — 2026-06-21
 
 ### Acceso con un clic a las consolas de administración de Microsoft de cada inquilino

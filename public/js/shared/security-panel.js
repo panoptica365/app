@@ -655,16 +655,20 @@
     // initialized (no baseline drift yet, but we still need to surface the
     // one-time turn-on guidance there).
     const neverInit = !!(st.current_value && st.current_value.never_initialized);
-    if (st.status === 'drift' || neverInit) {
+    // Jun 22, 2026 — EXO-06 post-licence-upgrade state (ATP/MDO half not
+    // provisioned). Like never_initialized, it needs the guided turn-on surfaced
+    // in Remediate even though Restore/Accept/Apply can't resolve it.
+    const mdoHalf = !!(st.current_value && st.current_value.mdo_half_uninitialized);
+    if (st.status === 'drift' || neverInit || mdoHalf) {
       remTab.style.display = '';
     } else {
       remTab.style.display = 'none';
     }
 
     // Default tab — start on Overview every open. If status=drift or the preset
-    // needs first-time setup, jump to Remediate so the operator's eye lands on
-    // what needs attention.
-    switchTab((st.status === 'drift' || neverInit) ? 'remediate' : 'overview');
+    // needs first-time setup (or its MDO half after a licence upgrade), jump to
+    // Remediate so the operator's eye lands on what needs attention.
+    switchTab((st.status === 'drift' || neverInit || mdoHalf) ? 'remediate' : 'overview');
 
     // Pre-render the Configure tab even if not selected, so switching is instant.
     renderConfigureTab();
@@ -1757,6 +1761,16 @@
     }
   }
 
+  // Set an element's text + data-i18n key together, so the immediate render and
+  // any later PanopticaI18n.applyTo() pass agree. Used to swap the guided-panel
+  // copy between the "never turned on" and "MDO half missing" states.
+  function setGuideText(id, key) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute('data-i18n', key);
+    el.textContent = window.t(key);
+  }
+
   // ─── Remediate tab ────────────────────────────────────────
   function renderRemediateTab() {
     const setting = openDetail?.setting;
@@ -1766,12 +1780,26 @@
     // EXO-06 first-time setup: preset never turned on. Panoptica can't create
     // it programmatically, so show the guided walkthrough instead of the normal
     // Restore/Accept buttons (which would be no-ops here).
-    const neverInit = !!(state.current_value && state.current_value.never_initialized);
+    const cv = state.current_value || {};
+    const neverInit = !!cv.never_initialized;
+    // Jun 22, 2026 — MDO half not provisioned after a licence upgrade. Same
+    // guided panel as never_initialized (Restore/Accept/Apply all dead-end), but
+    // different copy: the preset IS on, only the Defender-for-O365 half is
+    // missing. The "Show me how" button opens the same walkthrough — openDetail's
+    // mdo_available is true here, so it shows the full MDO (Safe Links / Safe
+    // Attachments / impersonation) variant, which is exactly the wizard re-run.
+    const mdoHalf = !!cv.mdo_half_uninitialized;
+    const showGuide = neverInit || mdoHalf;
     const noinitPanel = document.getElementById('sec-rem-noinit');
     const driftWrap = document.getElementById('sec-rem-drift-wrap');
-    if (noinitPanel) noinitPanel.style.display = neverInit ? '' : 'none';
-    if (driftWrap) driftWrap.style.display = neverInit ? 'none' : '';
-    if (neverInit) return;
+    if (noinitPanel) noinitPanel.style.display = showGuide ? '' : 'none';
+    if (driftWrap) driftWrap.style.display = showGuide ? 'none' : '';
+    if (showGuide) {
+      setGuideText('sec-rem-noinit-title', mdoHalf ? 'security_page.preset_guide.mdohalf_title' : 'security_page.preset_guide.noinit_title');
+      setGuideText('sec-rem-noinit-body',  mdoHalf ? 'security_page.preset_guide.mdohalf_body'  : 'security_page.preset_guide.noinit_body');
+      setGuideText('sec-rem-guide-btn',    mdoHalf ? 'security_page.preset_guide.mdohalf_open_btn' : 'security_page.preset_guide.open_btn');
+      return;
+    }
 
     if (state.status !== 'drift') return;
 
@@ -1869,6 +1897,14 @@
     const eopBody = document.getElementById('sec-guide-body-eop');
     if (mdoBody) mdoBody.style.display = eopOnly ? 'none' : '';
     if (eopBody) eopBody.style.display = eopOnly ? '' : 'none';
+    // Within the MDO body, swap the lead-in paragraph: the default "never turned
+    // on" wording is inaccurate after a licence upgrade (the preset IS on; only
+    // the Defender half is missing). The steps themselves are identical.
+    const mdoHalf = !!(cv && cv.mdo_half_uninitialized);
+    const whyP1 = document.getElementById('sec-guide-why-p1');
+    const mdohalfIntro = document.getElementById('sec-guide-mdohalf-intro');
+    if (whyP1) whyP1.style.display = mdoHalf ? 'none' : '';
+    if (mdohalfIntro) mdohalfIntro.style.display = mdoHalf ? '' : 'none';
     overlay.style.display = 'flex';
   }
   function closePresetGuide() {

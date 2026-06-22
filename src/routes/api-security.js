@@ -1281,9 +1281,20 @@ router.post('/tenants/:tid/settings/:sid/accept', auth.requireMemberOrAdmin, asy
   } else {
     newChosen = deriveChosenFromCurrent(setting, readResult.current_value);
     if (newChosen === null) {
+      // Jun 22, 2026 — EXO-06 post-licence-upgrade case: the tenant gained
+      // Defender for Office 365 after the preset was first turned on, but the
+      // Safe Links / Safe Attachments / impersonation (ATP) half was never
+      // provisioned — and Microsoft has no API to create it. "Use Apply" is the
+      // WRONG hint here: Apply can only ENABLE an existing ATP rule, so it
+      // silently no-ops against a rule that doesn't exist. Point at the portal
+      // wizard instead (the Remediate tab surfaces the guided walkthrough).
+      const cv = readResult.current_value || {};
+      const detail = cv.mdo_half_uninitialized
+        ? 'This tenant gained Defender for Office 365 after the preset was first turned on, but the Safe Links / Safe Attachments / impersonation half has not been set up yet — and Microsoft has no API to create it. Re-run the Preset Security Policies wizard in the Defender portal (see the Remediate tab → "Show me how to add Defender protection"), then Refresh.'
+        : 'Drifted current value does not correspond to any documented option. Use Apply to set an explicit value.';
       return res.status(409).json({
         error: 'Accept not available',
-        detail: 'Drifted current value does not correspond to any documented option. Use Apply to set an explicit value.',
+        detail,
       });
     }
     baselineToStoreAccept = setting.writer.captureBaseline

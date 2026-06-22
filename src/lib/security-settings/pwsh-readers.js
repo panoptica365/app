@@ -388,6 +388,16 @@ Get-AdminAuditLogConfig | Select-Object UnifiedAuditLogIngestionEnabled | Conver
 // Field reality (Apr 25, Jacques): most SMB tenants have NEITHER preset
 // configured — they run on default policies which Microsoft acknowledges
 // are looser than recommended.
+// Pure detector for the EXO-06 "MDO half not initialized" state (post-licence
+// upgrade): Defender for Office 365 is now available and the EOP preset rules
+// already exist, but NO ATP preset rules do. Microsoft never back-fills the ATP
+// half when a licence is added and offers no API to create it, so Apply/Accept
+// dead-end and the operator must re-run the portal wizard once. Single source of
+// truth for the condition, covered by test/exo06-mdo-half.test.js.
+function isMdoHalfUninitialized({ mdoAvailable, eopRuleCount, atpRuleCount }) {
+  return !!mdoAvailable && atpRuleCount === 0 && eopRuleCount > 0;
+}
+
 async function readPresetSecurityPolicy(tenantAzureId) {
   try {
     // Apr 26, 2026 v2: also pull the impersonation lists from the underlying
@@ -504,6 +514,26 @@ $apStrict = $ap | Where-Object { $_.RecommendedPolicyType -eq 'Strict' } | Selec
     // which Enable-*ProtectionPolicyRule can fix.
     const neverInitialized = !apStd && !apStrict && eopRules.length === 0 && atpRules.length === 0;
 
+    // Jun 22, 2026 — "MDO half not initialized" detector. Fires when the tenant
+    // NOW has Defender for Office 365 available (mdo_available) and the EOP
+    // preset machinery already exists (eop rules present), but NO ATP preset
+    // rules exist yet. This is the post-licence-upgrade state: an operator turned
+    // the Standard (or Strict) preset on while the tenant was EOP-only (e.g.
+    // Business Standard), then the customer moved up to Business Premium.
+    // Microsoft does NOT retroactively create the Safe Links / Safe Attachments /
+    // impersonation (ATP) half when a licence is added, and there is no API to
+    // create it — so Apply silently no-ops (ensureAtpRule can only enable an
+    // EXISTING rule) and Accept dead-ends (matches() now demands the ATP rule,
+    // which doesn't exist → state maps to no documented option). The only fix is
+    // the one-time Defender portal Preset wizard re-run, so the UI routes to the
+    // same guided walkthrough as never_initialized. Distinct from
+    // never_initialized (nothing set up at all) — here the EOP half IS live.
+    const mdoHalfUninitialized = isMdoHalfUninitialized({
+      mdoAvailable,
+      eopRuleCount: eopRules.length,
+      atpRuleCount: atpRules.length,
+    });
+
     let interpreted;
     if (strictEnabled && standardEnabled) {
       interpreted = 'Both Standard + Strict presets enabled';
@@ -527,6 +557,7 @@ $apStrict = $ap | Where-Object { $_.RecommendedPolicyType -eq 'Strict' } | Selec
         eop_rule_count: eopRules.length,
         atp_rule_count: atpRules.length,
         never_initialized: neverInitialized,
+        mdo_half_uninitialized: mdoHalfUninitialized,
         mdo_available: mdoAvailable,
         // Apr 26 v2: impersonation lists per tier (sorted, lowercased)
         standard_targeted_users:    toArr(apStd?.targeted_users),
@@ -1078,5 +1109,6 @@ async function pollSetting(tenantAzureId, settingId) {
 module.exports = {
   pollSetting,
   getConfigStatus,
+  isMdoHalfUninitialized,
   _readers: READERS,
 };
