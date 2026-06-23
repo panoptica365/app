@@ -99,6 +99,11 @@ const TENANT_SCOPED_TABLES = [
   { table: 'break_glass_accounts',    column: 'tenant_id', note: 'Operator-designated break-glass accounts' },
   { table: 'break_glass_config',      column: 'tenant_id', note: 'Break-glass group (CA exclusion) config' },
 
+  // Email Auth (A6). Tenant-scoped DNS posture + drift history (no FK; cascaded
+  // here). NOT global catalogs.
+  { table: 'dns_posture_drift',       column: 'tenant_id', note: 'Email-auth (DNS) drift events + acknowledge history' },
+  { table: 'dns_posture',             column: 'tenant_id', note: 'Email-auth (DNS) posture snapshots per domain' },
+
   // Audit / change journals (deleted late so they retain context for as long
   // as possible). msp_audit_events has NO tenant_id column — tenant linkage
   // is via (target_type='tenant', target_id=<tenant_id>). Handled as a

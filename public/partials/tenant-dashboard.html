@@ -14,6 +14,7 @@
     <button class="td-view-btn" data-view="security" data-i18n="tenant_dashboard.view_security">Security</button>
     <button class="td-view-btn" data-view="access-review" data-i18n="tenant_dashboard.view_access_review">Access Review</button>
     <button class="td-view-btn" data-view="applications" data-i18n="tenant_dashboard.view_applications">Applications</button>
+    <button class="td-view-btn" data-view="email-auth" data-i18n="tenant_dashboard.view_email_auth">Email Auth</button>
     <button class="td-view-btn" data-view="ca-policies" data-i18n="tenant_dashboard.view_ca_policies">CA Policies</button>
     <button class="td-view-btn" data-view="intune-policies" data-i18n="tenant_dashboard.view_intune_policies">Intune Policies</button>
     <button class="td-view-btn" data-view="change-log" data-i18n="tenant_dashboard.view_change_log">Change Log</button>
@@ -286,6 +287,84 @@
     <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.applications.loading">Loading applications…</span></div>
   </div>
 </div>
+
+<!-- ═══ Per-Tenant Email Auth View (Feature A6, hidden by default) ═══ -->
+<!--
+  Public-DNS email-authentication posture: MX/SPF/DKIM/DMARC + lighter mechanisms,
+  a deterministic weighted gauge, an AI explanation, and drift monitoring with an
+  operator accept flow. Read-only toward DNS — Panoptica never edits records; the
+  operator fixes them at the registrar. Refresh works for managed AND audit-only
+  tenants; the daily re-check + drift alerts are managed-only.
+-->
+<div id="td-email-auth-view" style="display:none;">
+  <div class="td-ea-actions">
+    <label class="td-ea-domsel-wrap" id="td-ea-domsel-wrap" style="display:none;">
+      <span data-i18n="tenant_dashboard.email_auth.domain_label">Domain</span>
+      <select id="td-ea-domain" class="td-ea-domsel"></select>
+    </label>
+    <button class="btn-secondary" id="td-ea-refresh-btn" data-role-required="member" data-i18n="tenant_dashboard.email_auth.refresh_btn">Refresh</button>
+    <span id="td-ea-retrieved" class="td-ea-retrieved"></span>
+    <span id="td-ea-status" style="margin-left:auto; font-size:0.85rem; color:var(--p-text-muted);"></span>
+  </div>
+  <div style="font-size:0.8rem; color:var(--p-text-secondary); margin-bottom:10px;" data-i18n="tenant_dashboard.email_auth.help_text">
+    Audit each domain's public email-authentication DNS. Refresh reads live records, scores the posture, and explains it. Monitored domains are watched for regressions (drift). Panoptica reads DNS only — it never changes your records.
+  </div>
+  <div id="td-ea-progress" class="td-apps-progress" style="display:none;"></div>
+  <div id="td-ea-body">
+    <div class="loading-container"><div class="loading-spinner"></div><span data-i18n="tenant_dashboard.email_auth.loading">Loading email authentication…</span></div>
+  </div>
+</div>
+
+<style>
+  #td-email-auth-view .td-ea-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  #td-email-auth-view .td-ea-domsel-wrap { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--p-text-muted); }
+  #td-email-auth-view .td-ea-domsel { font-family:inherit; font-size:13px; padding:5px 9px; border-radius:7px; border:1px solid var(--p-border-strong); background:var(--p-surface); color:var(--p-text); }
+  #td-email-auth-view .td-ea-retrieved { font-size:11.5px; color:var(--p-text-muted); }
+  #td-email-auth-view .td-ea-grid { display:grid; gap:14px; grid-template-columns:280px 1fr; align-items:start; }
+  @media (max-width:880px) { #td-email-auth-view .td-ea-grid { grid-template-columns:1fr; } }
+  #td-email-auth-view .td-ea-gauge-card { background:var(--p-surface); border:1px solid var(--p-border); border-radius:12px; padding:18px 16px 14px; text-align:center; }
+  #td-email-auth-view .td-ea-gauge { width:200px; max-width:100%; margin:0 auto; display:block; }
+  #td-email-auth-view .td-ea-gauge-score { font-size:38px; font-weight:700; font-family:var(--mono, monospace); letter-spacing:-1px; }
+  #td-email-auth-view .td-ea-gauge-grade { font-size:15px; font-weight:600; }
+  #td-email-auth-view .td-ea-gauge-sub { font-size:11.5px; color:var(--p-text-muted); margin-top:4px; }
+  #td-email-auth-view .td-ea-providers { font-size:11px; color:var(--p-text-secondary); margin-top:8px; }
+  #td-email-auth-view .td-ea-ai { background:var(--p-surface); border:1px solid var(--p-border); border-left:3px solid var(--p-secondary); border-radius:12px; padding:16px 18px; }
+  #td-email-auth-view .td-ea-ai-h { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--p-secondary); font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:7px; }
+  #td-email-auth-view .td-ea-ai-summary { font-size:13.5px; color:var(--p-text); line-height:1.55; }
+  #td-email-auth-view .td-ea-ai-recs { margin:10px 0 0; padding-left:18px; font-size:12.5px; color:var(--p-text-secondary); line-height:1.5; }
+  #td-email-auth-view .td-ea-ai-recs li { margin:3px 0; }
+  #td-email-auth-view .td-ea-ai-muted { font-size:12.5px; color:var(--p-text-muted); font-style:italic; }
+  #td-email-auth-view .td-ea-cards { display:grid; gap:12px; grid-template-columns:1fr 1fr; margin-top:14px; }
+  @media (max-width:880px) { #td-email-auth-view .td-ea-cards { grid-template-columns:1fr; } }
+  #td-email-auth-view .td-ea-card { background:var(--p-surface); border:1px solid var(--p-border); border-radius:10px; padding:13px 15px; }
+  #td-email-auth-view .td-ea-card.warn { border-color:var(--p-danger); box-shadow:inset 0 0 0 1px rgba(248,81,73,.10); }
+  #td-email-auth-view .td-ea-card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  #td-email-auth-view .td-ea-card-title { font-size:13.5px; font-weight:600; color:var(--p-text); }
+  #td-email-auth-view .td-ea-card-weight { font-size:10.5px; color:var(--p-text-muted); text-transform:uppercase; letter-spacing:.06em; }
+  #td-email-auth-view .td-ea-record { font-family:var(--mono, monospace); font-size:11.5px; color:var(--p-text-secondary); background:var(--p-surface-alt, rgba(127,127,127,.07)); border:1px solid var(--p-border); border-radius:6px; padding:7px 9px; margin:6px 0; word-break:break-all; white-space:pre-wrap; }
+  #td-email-auth-view .td-ea-explain { font-size:12.5px; color:var(--p-text); line-height:1.5; }
+  #td-email-auth-view .td-ea-pill { font-size:11px; font-weight:600; padding:2px 9px; border-radius:11px; white-space:nowrap; }
+  #td-email-auth-view .td-ea-pill-pass { background:rgba(46,232,160,.16); color:var(--p-success, #2ee8a0); }
+  #td-email-auth-view .td-ea-pill-partial { background:rgba(245,191,79,.16); color:#f5bf4f; }
+  #td-email-auth-view .td-ea-pill-fail { background:rgba(248,81,73,.16); color:var(--p-danger, #f85149); }
+  #td-email-auth-view .td-ea-pill-indeterminate { background:rgba(140,160,180,.16); color:var(--p-text-muted); }
+  #td-email-auth-view .td-ea-pill-advisory { background:rgba(92,203,244,.16); color:var(--p-accent, #5ccbf4); }
+  #td-email-auth-view .td-ea-pill-na, #td-email-auth-view .td-ea-pill-absent, #td-email-auth-view .td-ea-pill-unknown { background:rgba(140,160,180,.12); color:var(--p-text-muted); }
+  #td-email-auth-view .td-ea-sec { margin-top:16px; background:var(--p-surface); border:1px solid var(--p-border); border-radius:10px; padding:12px 16px; }
+  #td-email-auth-view .td-ea-sec-h { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--p-text-muted); font-weight:600; margin-bottom:6px; }
+  #td-email-auth-view .td-ea-sec-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--p-border); font-size:12.5px; }
+  #td-email-auth-view .td-ea-sec-row:first-of-type { border-top:none; }
+  #td-email-auth-view .td-ea-sec-name { min-width:96px; font-weight:600; color:var(--p-text); }
+  #td-email-auth-view .td-ea-sec-explain { color:var(--p-text-secondary); flex:1; }
+  #td-email-auth-view .td-ea-drift { background:rgba(248,81,73,.07); border:1px solid var(--p-danger); border-radius:10px; padding:13px 15px; margin-bottom:14px; }
+  #td-email-auth-view .td-ea-drift-h { font-size:12.5px; font-weight:700; color:var(--p-danger, #f85149); margin-bottom:8px; }
+  #td-email-auth-view .td-ea-drift-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--p-border); font-size:12.5px; }
+  #td-email-auth-view .td-ea-drift-row:first-of-type { border-top:none; }
+  #td-email-auth-view .td-ea-drift-meta { color:var(--p-text-secondary); }
+  #td-email-auth-view .td-ea-empty { text-align:center; padding:46px 20px; color:var(--p-text-muted); }
+  /* Light theme: deepen muted text for contrast (theme.css loads before this). */
+  :root[data-theme="light"] #td-email-auth-view .td-ea-record { background:rgba(0,0,0,.04); }
+</style>
 
 <!-- ═══ Per-Tenant Access Review View (A1, hidden by default) ═══ -->
 <!--

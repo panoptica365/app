@@ -5,6 +5,20 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.22 — 2026-06-22
+
+### Nouvel onglet Auth. courriel — vérifiez, évaluez et surveillez le DNS anti-usurpation de chaque domaine
+
+Chaque tableau de bord de client comporte un nouvel onglet **Auth. courriel** qui vérifie la configuration DNS publique d'authentification des courriels d'un client et continue de la surveiller. Cliquez sur **Actualiser** et Panoptica365 lit les enregistrements en direct de chaque domaine accepté — MX, SPF, DKIM et DMARC, ainsi que les mécanismes complémentaires (DNSSEC, MTA-STS, TLS-RPT, BIMI, DANE) — évalue la posture sur une jauge pondérée de A à F et utilise l'IA pour expliquer chaque enregistrement en langage clair, avec une courte liste de correctifs prioritaires à appliquer chez le registraire.
+
+Ce qui en fait plus qu'un vérificateur générique, c'est l'**intelligence DKIM**. Panoptica365 détecte qui envoie réellement du courrier pour le domaine (à partir des enregistrements MX et SPF) et recoupe cela avec les sélecteurs DKIM publiés. Ainsi, un locataire qui fonctionne sur Microsoft 365 mais dont les enregistrements `selector1`/`selector2` sont absents est correctement signalé comme **courrier sortant non signé** — au lieu de recevoir une fausse note de 100 % parce qu'un sélecteur marketing sans rapport a répondu. Et lorsqu'un expéditeur utilise légitimement des sélecteurs imprévisibles propres à chaque compte (Amazon SES, Salesforce, Mimecast, etc.), le résultat est un honnête **« indéterminé »** assorti d'un conseil pour confirmer à partir d'un message envoyé — jamais un faux échec.
+
+Surtout, il s'agit d'une **surveillance continue, pas d'un instantané ponctuel**. Après la première lecture, Panoptica365 revérifie chaque jour les domaines des locataires gérés et déclenche une alerte de dérive dès que la posture régresse — DMARC affaibli de reject à none, sélecteur DKIM retiré ou révoqué, SPF assoupli à `~all` ou `+all`. L'alerte indique exactement ce qui a changé (avant → après). Si vous avez fait le changement, cliquez sur **Accepter** pour définir une nouvelle référence et résoudre l'alerte; sinon, enquêtez chez votre hébergeur DNS.
+
+Comme toujours, Panoptica365 **lit le DNS seulement et ne modifie jamais vos enregistrements** — il détecte, conseille et fournit des liens directs; vous faites la correction chez le registraire. Actualiser est disponible pour les locataires gérés et en mode audit; la surveillance quotidienne et les alertes de dérive s'appliquent aux locataires gérés.
+
+---
+
 ## Version 0.2.21 — 2026-06-22
 
 ### Des indications plus claires lorsqu'un locataire obtient Defender pour Office 365 après une mise à niveau de licence

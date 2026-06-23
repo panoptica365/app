@@ -196,6 +196,9 @@
     const appsView = el('td-applications-view');
     if (appsView) appsView.style.display = 'none';
 
+    const eaView = el('td-email-auth-view');
+    if (eaView) eaView.style.display = 'none';
+
     const arView = el('td-access-review-view');
     if (arView) arView.style.display = 'none';
 
@@ -232,12 +235,258 @@
     } else if (currentView === 'applications') {
       if (appsView) appsView.style.display = 'block';
       loadApplications();
+    } else if (currentView === 'email-auth') {
+      if (eaView) eaView.style.display = 'block';
+      loadEmailAuth();
     } else if (currentView === 'access-review') {
       if (arView) arView.style.display = 'block';
       loadAccessReview();
     } else if (currentView === 'change-log') {
       if (changelogView) changelogView.style.display = 'block';
       ChangeLog.show();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Email Auth tab (A6) — public-DNS posture (MX/SPF/DKIM/DMARC + lighter),
+  // deterministic gauge, AI narrative, drift monitoring + operator accept.
+  // Cache-first read; Refresh does a live SSE-streamed re-pull (the multi-domain
+  // Sonnet narrative can outlast the proxy). Refresh is Member+ and works for
+  // managed + audit-only tenants; the server gates drift to managed only.
+  // ═══════════════════════════════════════════════════════════════════════
+  let emailAuthData = null;       // { tenant, domains:[], drift:[] }
+  let emailAuthDomain = null;     // currently-selected domain name
+  let emailAuthInfo = [];         // informational onmicrosoft domains (last refresh)
+
+  function eaT(key, params) { return window.t('tenant_dashboard.email_auth.' + key, params); }
+
+  function eaProgress(html, isError) {
+    const p = el('td-ea-progress'); if (!p) return;
+    if (!html) { p.style.display = 'none'; p.innerHTML = ''; return; }
+    p.className = 'td-apps-progress' + (isError ? ' is-error' : '');
+    p.style.display = 'flex';
+    p.innerHTML = html;
+  }
+
+  async function loadEmailAuth() {
+    const refBtn = el('td-ea-refresh-btn');
+    if (refBtn) refBtn.onclick = refreshEmailAuth;
+    const sel = el('td-ea-domain');
+    if (sel) sel.onchange = () => { emailAuthDomain = sel.value; renderEmailAuth(); };
+    try {
+      const data = await Panoptica.api(`/api/email-auth?tenant_id=${tenantId}`);
+      emailAuthData = data;
+      const domains = (data && data.domains) || [];
+      if (!emailAuthDomain || !domains.some(d => d.domain === emailAuthDomain)) {
+        const primary = domains.find(d => d.is_primary) || domains[0];
+        emailAuthDomain = primary ? primary.domain : null;
+      }
+      renderEmailAuth();
+    } catch (e) {
+      const body = el('td-ea-body');
+      if (body) body.innerHTML = `<div class="panel-error">${esc(eaT('load_failed'))}</div>`;
+    }
+  }
+
+  async function refreshEmailAuth() {
+    const refBtn = el('td-ea-refresh-btn');
+    if (refBtn) refBtn.disabled = true;
+    eaProgress(`<div class="loading-spinner"></div><span>${esc(eaT('refreshing'))}</span>`, false);
+    try {
+      // SSE-streamed (a multi-domain Sonnet narrative can outlast the proxy).
+      const response = await fetch(`/api/email-auth/refresh?tenant_id=${tenantId}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ tenant_id: tenantId }),
+      });
+      if (!response.ok) { const err = await response.json().catch(() => ({})); throw new Error(err.error || `HTTP ${response.status}`); }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let result = null, buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let msg; try { msg = JSON.parse(line.slice(6)); } catch { continue; }
+          if (msg.error) throw new Error(msg.error);
+          if (msg.stage === 'reading') eaProgress(`<div class="loading-spinner"></div><span>${esc(eaT('reading_domain', { domain: msg.domain }))}</span>`, false);
+          else if (msg.stage === 'narrating') eaProgress(`<div class="loading-spinner"></div><span>${esc(eaT('analyzing_domain', { domain: msg.domain }))}</span>`, false);
+          if (msg.done) result = msg;
+        }
+      }
+      if (!result) throw new Error(eaT('refresh_failed', { message: 'no result' }));
+      emailAuthInfo = (result.summary && result.summary.informational) || [];
+      eaProgress(null);
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(eaT('refresh_done', { count: (result.summary && result.summary.domains) || 0 }), 'success');
+      await loadEmailAuth();
+    } catch (e) {
+      eaProgress(esc(eaT('refresh_failed', { message: e.message })), true);
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(eaT('refresh_failed', { message: e.message }), 'error');
+    } finally {
+      if (refBtn) refBtn.disabled = false;
+    }
+  }
+
+  function renderEmailAuth() {
+    const body = el('td-ea-body'); if (!body) return;
+    const domains = (emailAuthData && emailAuthData.domains) || [];
+    const drift = (emailAuthData && emailAuthData.drift) || [];
+
+    const sel = el('td-ea-domain'), selWrap = el('td-ea-domsel-wrap');
+    if (sel && selWrap) {
+      if (domains.length > 1) {
+        selWrap.style.display = 'flex';
+        sel.innerHTML = domains.map(d =>
+          `<option value="${esc(d.domain)}"${d.domain === emailAuthDomain ? ' selected' : ''}>${esc(d.domain)}${d.is_primary ? ' ★' : ''} — ${esc(d.grade)} (${d.overall_score})</option>`).join('');
+      } else { selWrap.style.display = 'none'; }
+    }
+
+    const retrieved = el('td-ea-retrieved');
+    if (!domains.length) {
+      body.innerHTML = `<div class="td-ea-empty"><div style="font-size:15px;margin-bottom:6px;">${esc(eaT('empty_title'))}</div><div>${esc(eaT('empty_hint'))}</div></div>`;
+      if (retrieved) retrieved.textContent = '';
+      return;
+    }
+
+    const dom = domains.find(d => d.domain === emailAuthDomain) || domains[0];
+    emailAuthDomain = dom.domain;
+    if (retrieved) {
+      let txt = dom.last_checked_at ? eaT('last_retrieved', { when: String(dom.last_checked_at).slice(0, 16).replace('T', ' ') }) : '';
+      if (emailAuthInfo.length) txt += (txt ? ' · ' : '') + eaT('informational_domains', { domains: emailAuthInfo.join(', ') });
+      retrieved.textContent = txt;
+    }
+
+    const domainDrift = drift.filter(x => x.domain === dom.domain);
+    const f = dom.findings || {};
+    const r = dom.records || {};
+    const lang = (window.PanopticaI18n && PanopticaI18n.currentLang && PanopticaI18n.currentLang()) || 'en';
+    const narrative = dom.narrative && (dom.narrative[lang] || dom.narrative.en);
+
+    let html = '';
+    if (domainDrift.length) html += eaDriftBanner(domainDrift);
+
+    html += '<div class="td-ea-grid">';
+    html += `<div class="td-ea-gauge-card">${eaGauge(dom.overall_score, dom.grade)}`;
+    html += `<div class="td-ea-gauge-sub">${esc(dom.non_mail ? eaT('non_mail_domain') : eaT('gauge_caption'))}</div>`;
+    const provs = (dom.detected_providers && dom.detected_providers.all) || [];
+    if (provs.length) html += `<div class="td-ea-providers">${esc(eaT('detected_providers', { providers: provs.join(', ') }))}</div>`;
+    html += '</div>';
+
+    html += '<div class="td-ea-ai"><div class="td-ea-ai-h">✦ ' + esc(eaT('ai_analysis')) + '</div>';
+    if (narrative && narrative.summary) {
+      html += `<div class="td-ea-ai-summary">${esc(narrative.summary)}</div>`;
+      if (narrative.recommendations && narrative.recommendations.length) {
+        html += '<ul class="td-ea-ai-recs">' + narrative.recommendations.map(rec => `<li>${esc(rec)}</li>`).join('') + '</ul>';
+      }
+    } else {
+      html += `<div class="td-ea-ai-muted">${esc(eaT('ai_unavailable'))}</div>`;
+    }
+    html += '</div></div>';
+
+    html += '<div class="td-ea-cards">';
+    html += eaRecordCard('mx', f.mx, eaRecordText('mx', r));
+    html += eaRecordCard('spf', f.spf, eaRecordText('spf', r));
+    html += eaRecordCard('dkim', f.dkim, eaRecordText('dkim', r), f.dkim && f.dkim.status === 'fail');
+    html += eaRecordCard('dmarc', f.dmarc, eaRecordText('dmarc', r));
+    html += '</div>';
+
+    // Secondary protection box: each lighter mechanism with its status + a short
+    // explanation. Green rows say "nothing to do"; partial/absent rows show the
+    // deterministic finding message (what's wrong / what to do).
+    const secRows = ['dnssec', 'mta_sts', 'tls_rpt'].map(m => {
+      const fin = f[m]; if (!fin) return '';
+      const explain = fin.status === 'pass'
+        ? eaT('secondary_ok')
+        : window.t('tenant_dashboard.email_auth.finding.' + fin.detail_key, fin.detail_params || {});
+      return `<div class="td-ea-sec-row"><span class="td-ea-sec-name">${esc(eaT('mech.' + m))}</span>${eaPill(fin.status)}<span class="td-ea-sec-explain">${esc(explain)}</span></div>`;
+    }).join('');
+    if (secRows) html += `<div class="td-ea-sec"><div class="td-ea-sec-h">${esc(eaT('secondary_title'))}</div>${secRows}</div>`;
+
+    body.innerHTML = html;
+    if (window.PanopticaI18n && PanopticaI18n.applyTo) PanopticaI18n.applyTo(body);
+    body.querySelectorAll('[data-ea-ack]').forEach(btn =>
+      btn.addEventListener('click', () => eaAcknowledge(parseInt(btn.getAttribute('data-ea-ack'), 10))));
+  }
+
+  function eaRecordText(mech, r) {
+    if (mech === 'mx') return (r.mx && r.mx.present) ? (r.mx.hosts || []).map(h => `${h.priority} ${h.exchange}`).join('\n') : eaT('no_record');
+    if (mech === 'spf') return (r.spf && r.spf.present) ? r.spf.raw : eaT('no_record');
+    if (mech === 'dmarc') return (r.dmarc && r.dmarc.present) ? r.dmarc.raw : eaT('no_record');
+    if (mech === 'dkim') {
+      const d = r.dkim || {};
+      if (d.selectorsFound && d.selectorsFound.length) {
+        return d.selectorsFound.map(s => `${s.selector}._domainkey${s.provider ? ' → ' + s.provider : ''}`).join('\n');
+      }
+      if (d.expectedLabel) return eaT('dkim_expected_missing', { provider: d.expectedLabel });
+      return eaT('no_record');
+    }
+    return '';
+  }
+
+  function eaRecordCard(mech, finding, recordText, warn) {
+    if (!finding) return '';
+    const title = eaT('mech.' + mech);
+    const explain = window.t('tenant_dashboard.email_auth.finding.' + finding.detail_key, finding.detail_params || {});
+    return `<div class="td-ea-card${warn ? ' warn' : ''}">
+      <div class="td-ea-card-head"><span class="td-ea-card-title">${esc(title)}</span><span>${eaPill(finding.status)} <span class="td-ea-card-weight">${esc(eaT('weight'))} ${finding.weight}</span></span></div>
+      <div class="td-ea-record">${esc(recordText)}</div>
+      <div class="td-ea-explain">${esc(explain)}</div>
+    </div>`;
+  }
+
+  function eaPill(status) {
+    return `<span class="td-ea-pill td-ea-pill-${esc(status)}">${esc(eaT('status.' + status))}</span>`;
+  }
+
+  function eaGauge(score, grade) {
+    const s = Math.max(0, Math.min(100, parseInt(score, 10) || 0));
+    const color = grade === 'A' ? 'var(--p-success, #2ee8a0)'
+      : grade === 'B' ? '#7fd98a'
+      : grade === 'C' ? '#f5bf4f'
+      : grade === 'D' ? '#f0913f'
+      : 'var(--p-danger, #f85149)';
+    const cx = 100, cy = 100, rad = 78;
+    const polar = (deg) => { const a = deg * Math.PI / 180; return [cx + rad * Math.cos(a), cy + rad * Math.sin(a)]; };
+    const arc = (startDeg, endDeg) => {
+      const [x1, y1] = polar(startDeg), [x2, y2] = polar(endDeg);
+      const large = (endDeg - startDeg) > 180 ? 1 : 0;
+      return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${rad} ${rad} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+    };
+    const endDeg = 180 + (s / 100) * 180;
+    return `<svg class="td-ea-gauge" viewBox="0 0 200 120" role="img" aria-label="${esc(eaT('grade'))} ${esc(grade)} (${s})">
+      <path d="${arc(180, 360)}" fill="none" stroke="var(--p-border)" stroke-width="13" stroke-linecap="round"/>
+      <path d="${arc(180, endDeg === 180 ? 180.01 : endDeg)}" fill="none" stroke="${color}" stroke-width="13" stroke-linecap="round"/>
+      <text x="100" y="94" text-anchor="middle" class="td-ea-gauge-score" fill="var(--p-text)">${s}</text>
+      <text x="100" y="113" text-anchor="middle" class="td-ea-gauge-grade" fill="${color}">${esc(eaT('grade'))} ${esc(grade)}</text>
+    </svg>`;
+  }
+
+  function eaDriftBanner(rows) {
+    let h = `<div class="td-ea-drift"><div class="td-ea-drift-h">⚠ ${esc(eaT('drift_title', { count: rows.length }))}</div>`;
+    for (const d of rows) {
+      const change = window.t('tenant_dashboard.email_auth.drift_change.' + d.change_type);
+      const changeLbl = change === ('tenant_dashboard.email_auth.drift_change.' + d.change_type) ? d.change_type : change;
+      h += `<div class="td-ea-drift-row"><div>
+        <div><strong>${esc(eaT('mech.' + d.mechanism))}</strong> — ${esc(changeLbl)}</div>
+        <div class="td-ea-drift-meta">${esc(d.before_value || '')} → ${esc(d.after_value || '')}</div>
+      </div><button class="btn-secondary" data-role-required="member" data-ea-ack="${d.id}">${esc(eaT('accept_btn'))}</button></div>`;
+    }
+    h += `<div class="td-ea-drift-meta" style="margin-top:8px;font-size:11.5px;">${esc(eaT('drift_help'))}</div></div>`;
+    return h;
+  }
+
+  async function eaAcknowledge(driftId) {
+    if (!(await Panoptica.confirmModal(eaT('accept_confirm')))) return;
+    try {
+      await Panoptica.api('/api/email-auth/acknowledge', {
+        method: 'POST', body: JSON.stringify({ tenant_id: tenantId, drift_id: driftId }),
+      });
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(eaT('accept_done'), 'success');
+      await loadEmailAuth();
+    } catch (e) {
+      if (window.Panoptica && Panoptica.showToast) Panoptica.showToast(e.message, 'error');
     }
   }
 

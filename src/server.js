@@ -65,6 +65,7 @@ const setupApiRoutes = require('./routes/api-setup');
 const legalApiRoutes = require('./routes/api-legal');
 const learnApiRoutes = require('./routes/api-learn');
 const applicationsApiRoutes = require('./routes/api-applications');
+const emailAuthApiRoutes = require('./routes/api-email-auth');
 const accessReviewApiRoutes = require('./routes/api-access-review');
 const adoptApiRoutes = require('./routes/api-adopt');
 const identityTimelineApiRoutes = require('./routes/api-identity-timeline');
@@ -107,6 +108,8 @@ const ualWorker = require('./ual-worker');
 const messageCenterWorker = require('./message-center-worker');
 const knownGoodWorker = require('./known-good-worker');
 const knownGoodStore = require('./lib/known-good-store');
+const emailAuthWorker = require('./email-auth-worker');
+const emailAuthStore = require('./lib/email-auth-store');
 const accessReviewStore = require('./lib/access-review-store');
 const securityApplyWorker = require('./security-apply-worker');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
@@ -367,6 +370,7 @@ app.use(
 
 app.use('/api/learn', learnApiRoutes);
 app.use('/api/applications', applicationsApiRoutes);
+app.use('/api/email-auth', emailAuthApiRoutes);
 app.use('/api/access-review', accessReviewApiRoutes);
 app.use('/api/identity-timeline', identityTimelineApiRoutes);
 app.use('/api/meta', metaApiRoutes);
@@ -546,6 +550,13 @@ async function start() {
       console.error('[Server] known-good schema ensure failed at boot:', err.message)
     );
 
+    // Feature A6 — eager-create dns_posture + dns_posture_drift + the email-auth
+    // drift alert policy at boot so the Email Auth tab + daily re-check have
+    // their schema regardless of whether anything has triggered them yet.
+    emailAuthStore.ensureSchema().catch(err =>
+      console.error('[Server] email-auth schema ensure failed at boot:', err.message)
+    );
+
     // Adopt-in-Place (2026-06-15) — eager-create tenant_sourced_objects +
     // seen-set/watermark tables + the "Configuration created outside Panoptica"
     // alert policy at boot so the CA/Intune adopt cards + daily discovery loop
@@ -608,6 +619,10 @@ async function start() {
     // Feature 8.9 — known-good apps drift loop (daily, ~24h per managed tenant;
     // never in the 15-min poll). Backstop for permission drift on blessed apps.
     knownGoodWorker.start();
+
+    // Feature A6 — daily email-auth (DNS) re-check + drift loop. Managed tenants
+    // only (audit_only refreshes on demand). Never in the 15-min poll cycle.
+    emailAuthWorker.start();
 
     // Async-Apply infrastructure (May 6, 2026).
     // Stranded-job recovery FIRST — any apply jobs in 'running' state from
@@ -675,6 +690,7 @@ async function shutdown(signal) {
   ualWorker.stopLoop();
   messageCenterWorker.stop();
   knownGoodWorker.stop();
+  emailAuthWorker.stop();
   securityApplyWorker.stop();
   licenseRefresh.stop();
   psaWorker.stop();

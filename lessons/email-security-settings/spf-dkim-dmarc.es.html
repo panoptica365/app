@@ -210,19 +210,24 @@
     <p>Esta es la parte que asusta a los MSPs a quedarse en <code>p=none</code> indefinidamente. No seas ese MSP. El cliente está a un correo de ingeniería social de un incidente de transferencia fraudulenta que DMARC habría detenido.</p>
   </div>
 
-  <h2>Diagnóstico — usando DomainGuardian</h2>
+  <h2>Diagnóstico — usando la pestaña Aut. correo</h2>
 
-  <p>Antes de tocar nada, audita el estado actual. <a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">DomainGuardian</a> te da la vista codificada por colores para SPF / DKIM / DMARC / MX / registros relacionados, diseñada para técnicos de nivel L1 que no quieren memorizar la sintaxis de consulta de DNS.</p>
+  <p>Antes de tocar nada, audita el estado actual. La pestaña <strong>Aut. correo</strong> de Panoptica365 — en cada panel de cliente — lee el DNS público en vivo del cliente para cada dominio aceptado, califica la postura en un medidor ponderado de A a F y explica cada registro en lenguaje claro. Está diseñada para técnicos de nivel L1 que no quieren memorizar la sintaxis de consulta de DNS: haz clic en <strong>Actualizar</strong> y obtiene MX, SPF, DKIM, DMARC y los registros de apoyo en una sola pasada, y luego el panel de IA convierte los hallazgos en una lista de correcciones priorizadas, lista para el registrador. Panoptica365 solo lee el DNS — nunca cambia los registros; tú haces la corrección en el registrador.</p>
 
-  <p>Para cada dominio aceptado en el tenant del cliente, comprueba:</p>
+  <p>Lo que la pestaña comprueba para cada dominio aceptado:</p>
 
   <ul>
-    <li><strong>SPF.</strong> ¿Existe? ¿Termina en <code>-all</code> (hard fail) o <code>~all</code> (soft fail) o <code>+all</code> (catastrófico — permitir todo)? ¿Incluye <code>spf.protection.outlook.com</code> (obligatorio para M365)? ¿Incluye cualquier otro remitente que el cliente realmente use (plataformas de marketing, proveedores de nómina, herramientas de contabilidad)? ¿El recuento de búsquedas está bajo 10 (el límite duro de SPF — supéralo y el registro se rompe)?</li>
-    <li><strong>DKIM.</strong> ¿Está DKIM habilitado para este dominio en el centro de administración de M365? ¿Están los registros CNAME correspondientes (<code>selector1._domainkey.cliente.com</code> y <code>selector2._domainkey.cliente.com</code>) publicados en DNS apuntando a los destinos de Microsoft? ¿Están resolviendo correctamente?</li>
-    <li><strong>DMARC.</strong> ¿Existe un registro TXT en <code>_dmarc.cliente.com</code>? ¿Cuál es la política (<code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>)? ¿Hay un destino de informe agregado (<code>rua=mailto:...</code>)? ¿Están puestos <code>aspf</code> y <code>adkim</code> (modos de alineación — <code>r</code> para relajado, <code>s</code> para estricto)?</li>
+    <li><strong>SPF.</strong> ¿Existe? ¿Termina en <code>-all</code> (hard fail) o <code>~all</code> (soft fail) o <code>+all</code> (catastrófico — permitir todo)? ¿Incluye <code>spf.protection.outlook.com</code> (obligatorio para M365)? ¿Incluye los demás remitentes que el cliente realmente usa (plataformas de marketing, proveedores de nómina, herramientas de contabilidad)? La pestaña resuelve el árbol de <code>include</code> y cuenta las búsquedas DNS por ti, marcando un desbordamiento del límite duro de 10 de SPF.</li>
+    <li><strong>DKIM — donde la pestaña supera a un comprobador genérico.</strong> Detecta quién envía realmente el correo del dominio (a partir de los registros MX y SPF) y lo contrasta con los selectores DKIM publicados en DNS. Si Microsoft 365 está en uso pero <code>selector1</code>/<code>selector2</code> no resuelven, eso es un fallo duro — el correo saliente no está firmado — <em>aunque</em> responda algún selector de marketing sin relación. Y cuando un remitente usa selectores impredecibles por cuenta (Amazon SES, Salesforce, Mimecast…), la pestaña informa <strong>indeterminado</strong> en lugar de un falso fallo, porque el DNS no puede enumerar esos selectores. Un comprobador genérico que muestra una marca verde en el primer selector que encuentra pasará por alto en silencio la brecha de M365.</li>
+    <li><strong>DMARC.</strong> ¿Existe un registro TXT en <code>_dmarc.cliente.com</code>? ¿Cuál es la política (<code>p=none</code>, <code>p=quarantine</code>, <code>p=reject</code>)? ¿Hay un destino de informe agregado (<code>rua=mailto:...</code>)? ¿Están puestos <code>aspf</code> y <code>adkim</code> (modos de alineación — <code>r</code> para relajado, <code>s</code> para estricto)? DMARC lleva el mayor peso en el medidor, porque es el mecanismo que une a los otros dos.</li>
   </ul>
 
-  <p>Documenta los hallazgos por dominio. La auditoría es el fundamento del recorrido.</p>
+  <p>El medidor le da al cliente una sola calificación para seguir, y cada tarjeta por registro muestra el registro real literal junto al hallazgo en lenguaje claro. Documenta el resultado por dominio — la auditoría es el fundamento del recorrido.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Supervisado, no una instantánea única</div>
+    <p>Tras la primera actualización, Panoptica365 vuelve a comprobar cada dominio gestionado a diario y genera una alerta de desviación si la postura retrocede — DMARC debilitado, un selector DKIM eliminado, SPF relajado. Cada alerta indica exactamente qué cambió (antes → después), y el botón <strong>Aceptar</strong> fija una nueva línea base cuando el cambio fue intencionado. Así, la auditoría no es una captura de pantalla que tengas que acordarte de repetir — es continua.</p>
+  </div>
 
   <h2>Configuración — los pasos prácticos</h2>
 
@@ -268,18 +273,30 @@
 
   <p><strong>Límite de búsquedas SPF superado.</strong> Los registros SPF que anidan demasiados includes (límite duro de 10 búsquedas) se vuelven inválidos. M365 solo usa un include; añade Mailchimp, ADP y Salesforce y puedes alcanzar el límite rápido. Las herramientas de aplanado de SPF (servicios de pago) colapsan los includes en listas de IP en crudo para mantenerse bajo el límite.</p>
 
-  <h2>Qué ve Panoptica365</h2>
+  <h2>Protección secundaria — DNSSEC, MTA-STS, TLS-RPT</h2>
 
-  <p>SPF, DKIM y DMARC son registros DNS en el dominio del cliente — fuera del modelo de lectura de Panoptica365 centrado en el tenant M365. Panoptica365 hoy no audita los registros DNS de forma nativa; el flujo del operador es usar DomainGuardian (o una herramienta similar) para la auditoría periódica.</p>
-
-  <p>Lo que Panoptica365 <em>sí</em> expone que es relevante:</p>
+  <p>Los tres grandes impiden que alguien <em>suplante</em> el dominio. Una segunda capa protege los propios registros DNS y el transporte que lleva el correo. La pestaña Aut. correo también los califica, en una caja de <strong>Protección secundaria</strong> debajo de los registros principales — con menos peso que SPF/DKIM/DMARC, pero una verdadera defensa en profundidad.</p>
 
   <ul>
-    <li><strong>Estado de habilitación de DKIM en el tenant M365.</strong> Conmutar DKIM «habilitado» por dominio es un ajuste de M365 — la detección de deriva de Panoptica365 puede marcar si la firma DKIM se deshabilita para un dominio que antes estaba habilitado.</li>
+    <li><strong>DNSSEC</strong> firma criptográficamente las respuestas DNS del dominio para que un resolutor pueda probar que no fueron manipuladas en tránsito. Sin él, un atacante capaz de envenenar una caché DNS podría falsificar tus respuestas MX, SPF o DKIM — socavando los mismos registros en los que se apoyan los tres grandes. La pestaña lee el registro DS (y el bit de validación/AD) para confirmar que está habilitado. Se configura en el registrador, no en M365.</li>
+    <li><strong>MTA-STS</strong> indica a los servidores de envío que exijan cifrado TLS y un certificado válido al entregar al dominio, y que <em>rechacen</em> caer a texto plano. Cierra el ataque de degradación en el que un intermediario quita el cifrado del correo entrante. Una directiva publicada en <code>mode: enforce</code> obtiene el crédito completo; el modo <code>testing</code> es solo de informe — un paso de transición, no el destino.</li>
+    <li><strong>TLS-RPT</strong> es el compañero de informes de MTA-STS: publica una dirección a la que los servidores receptores envían informes de fallos de TLS, para que te enteres cuando alguien <em>no pudo</em> entregarte de forma segura. Es cómo detectas un problema de MTA-STS o de certificado antes de que deje caer correo en silencio.</li>
+  </ul>
+
+  <p>Ninguno de estos es obligatorio para que un dominio esté «bien autenticado», por eso llevan menos peso en el medidor. Pero un dominio que tiene los tres está genuinamente reforzado de extremo a extremo, y la pestaña te dice en una línea si cada uno está haciendo su trabajo o necesita atención.</p>
+
+  <h2>Qué ve Panoptica365</h2>
+
+  <p>SPF, DKIM y DMARC son registros DNS en el dominio del cliente. Panoptica365 ahora los audita de forma nativa en la pestaña <strong>Aut. correo</strong> (arriba) — leyendo los registros en vivo, calificándolos, explicándolos y supervisándolos para detectar desviaciones. Eso reemplaza el antiguo flujo de pegar dominios en un comprobador externo: la auditoría vive junto al resto de la postura del cliente y se reejecuta a diario.</p>
+
+  <p>Dos señales relacionadas aparecen en otros lugares de Panoptica365:</p>
+
+  <ul>
+    <li><strong>Estado de habilitación de DKIM en el tenant M365.</strong> Conmutar DKIM «habilitado» por dominio es un ajuste de M365 — la detección de deriva de tenant de Panoptica365 puede marcar si la firma DKIM se deshabilita en el portal, complementando la comprobación del lado DNS de la pestaña Aut. correo.</li>
     <li><strong>El pipeline de alertas de Defender XDR.</strong> Cuando MDO detecta un intento de spoofing que falló la alineación DMARC, la alerta resultante fluye al motor de alertas de Panoptica365.</li>
   </ul>
 
-  <p>Para los informes DMARC reales — los informes XML agregados diarios — los operadores se apoyan en una plataforma de monitorización DMARC de terceros; <a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a> es la que recomendamos, con Postmark, Valimail, dmarcian o Mailhardener como alternativas válidas. Panoptica365 no ingiere estos hoy.</p>
+  <p>La única pieza que sigue fuera de alcance son los <em>informes agregados</em> de DMARC diarios — los flujos XML <code>rua</code> que muestran quién envía bajo el dominio. Esos necesitan una plataforma de informes dedicada; <a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a> es la que recomendamos, con Postmark, Valimail, dmarcian o Mailhardener como alternativas válidas. La pestaña Aut. correo te dice la <em>postura</em>; la plataforma de informes te dice el <em>tráfico</em>.</p>
 
   <h2>Lo que esto significa para el operador</h2>
 
@@ -289,7 +306,7 @@
 
   <p><strong>La alineación es el concepto que pilla a los operadores.</strong> SPF y DKIM pueden ambos «pasar» mientras la cabecera <code>From:</code> visible está falsificada. El requisito de alineación de DMARC es lo que hace que el trío pille realmente el spoofing que describe la anécdota inicial.</p>
 
-  <p><strong>DomainGuardian para el diagnóstico, mailsec.ca para los informes.</strong> El trabajo de auditar el DNS es amigable para L1 con la herramienta visual adecuada. El trabajo de leer informes DMARC necesita una plataforma de informes real para la escala de pequeña empresa — los archivos XML no escalan a una cartera de 30 clientes. mailsec.ca es la que recomendamos; Postmark, Valimail, dmarcian o Mailhardener son alternativas válidas. Elige una por MSP y úsala con cada cliente.</p>
+  <p><strong>La pestaña Aut. correo para el diagnóstico, mailsec.ca para los informes.</strong> El trabajo de auditar el DNS ahora es amigable para L1 al ser una actualización con un clic dentro de Panoptica365 — medidor, hallazgos en lenguaje claro y supervisión diaria de la desviación. El trabajo de leer informes DMARC todavía necesita una plataforma de informes real para la escala de pequeña empresa — los archivos XML no escalan a una cartera de 30 clientes. mailsec.ca es la que recomendamos; Postmark, Valimail, dmarcian o Mailhardener son alternativas válidas. Elige una por MSP y úsala con cada cliente.</p>
 
   <h2>Lo que viene</h2>
 
@@ -298,11 +315,11 @@
     <div class="xl"><div class="xnum">6</div><div class="xt"><b>Auditoría de buzón</b> — la postura de auditoría que te da visibilidad sobre lo que pasó en un buzón después de los hechos.</div></div>
   </div>
 
-  <p>Por ahora: abre DomainGuardian, pega el dominio primario del cliente, captura el resultado y recorre los hallazgos de SPF / DKIM / DMARC con el cliente. Si están en <code>p=none</code> o no tienen DMARC en absoluto, el recorrido empieza ahí. Dos o tres meses de trabajo disciplinado llevan a un cliente de la Etapa 0 a la Etapa 3. Sáltatelo y el cliente se queda a un correo de ingeniería social de la llamada de la anécdota inicial.</p>
+  <p>Por ahora: abre el tenant del cliente, ve a la pestaña <strong>Aut. correo</strong>, pulsa Actualizar y recorre el medidor y los hallazgos de SPF / DKIM / DMARC con el cliente. Si están en <code>p=none</code> o no tienen DMARC en absoluto, el recorrido empieza ahí. Dos o tres meses de trabajo disciplinado llevan a un cliente de la Etapa 0 a la Etapa 3. Sáltatelo y el cliente se queda a un correo de ingeniería social de la llamada de la anécdota inicial.</p>
 
   <div class="sources">
     <h4>Fuentes</h4>
-    <p>Fuentes de los datos en esta lección — el comprobador de autenticación de correo DomainGuardian (<a href="https://domainguardian.nebiatek.com/" target="_blank" rel="noopener">domainguardian.nebiatek.com</a>); la plataforma de informes DMARC mailsec.ca (<a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a>); Microsoft Learn sobre SPF en Microsoft 365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-spf-configure" target="_blank" rel="noopener">Microsoft Learn — Set up SPF</a>); configuración de firma DKIM en M365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dkim-configure" target="_blank" rel="noopener">Microsoft Learn — Use DKIM to validate outbound email</a>); visión general y referencia de política DMARC (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure" target="_blank" rel="noopener">Microsoft Learn — Use DMARC to validate email</a>); RFC 7489 (especificación DMARC — modos de alineación y semántica de política) (<a href="https://datatracker.ietf.org/doc/html/rfc7489" target="_blank" rel="noopener">RFC 7489</a>); visión general de ARC (Authenticated Received Chain) para correo reenviado (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-arc-configure" target="_blank" rel="noopener">Microsoft Learn — ARC</a>).</p>
+    <p>Fuentes de los datos en esta lección — la plataforma de informes DMARC mailsec.ca (<a href="https://mailsec.ca/" target="_blank" rel="noopener">mailsec.ca</a>); Microsoft Learn sobre SPF en Microsoft 365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-spf-configure" target="_blank" rel="noopener">Microsoft Learn — Set up SPF</a>); configuración de firma DKIM en M365 (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dkim-configure" target="_blank" rel="noopener">Microsoft Learn — Use DKIM to validate outbound email</a>); visión general y referencia de política DMARC (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-dmarc-configure" target="_blank" rel="noopener">Microsoft Learn — Use DMARC to validate email</a>); RFC 7489 (especificación DMARC — modos de alineación y semántica de política) (<a href="https://datatracker.ietf.org/doc/html/rfc7489" target="_blank" rel="noopener">RFC 7489</a>); visión general de ARC (Authenticated Received Chain) para correo reenviado (<a href="https://learn.microsoft.com/en-us/defender-office-365/email-authentication-arc-configure" target="_blank" rel="noopener">Microsoft Learn — ARC</a>).</p>
   </div>
 
 </div>

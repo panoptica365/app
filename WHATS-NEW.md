@@ -5,6 +5,20 @@ that release, newest first.
 
 ---
 
+## Version 0.2.22 — 2026-06-22
+
+### New Email Auth tab — audit, score, and monitor every domain's anti-spoofing DNS
+
+Each tenant dashboard has a new **Email Auth** tab that audits a customer's public email-authentication DNS and keeps watching it. Click **Refresh** and Panoptica365 reads the live records for every accepted domain — MX, SPF, DKIM and DMARC, plus the lighter mechanisms (DNSSEC, MTA-STS, TLS-RPT, BIMI, DANE) — scores the posture on a weighted A–F gauge, and uses AI to explain each record in plain language with a short, prioritized list of fixes you can make at the registrar.
+
+What makes it more than a generic checker is the **DKIM intelligence**. Panoptica365 detects who actually sends mail for the domain (from the MX and SPF records) and cross-references that against the DKIM selectors that are published. So a tenant that runs on Microsoft 365 but whose `selector1`/`selector2` records are missing is correctly called out as **unsigned outbound mail** — not handed a false 100% because some unrelated marketing selector happened to answer. And when a sender legitimately uses unpredictable per-account selectors (Amazon SES, Salesforce, Mimecast and the like), the result is an honest **"indeterminate"** with guidance to confirm from a sent message — never a false failure.
+
+Crucially, this is **monitored, not a one-time snapshot**. After the first read, Panoptica365 re-checks each managed tenant's domains every day and raises a drift alert the moment the posture regresses — DMARC weakened from reject to none, a DKIM selector removed or revoked, SPF loosened to `~all` or `+all`. The alert tells you exactly what changed (before → after). If you made the change, click **Accept** to set a new baseline and resolve the alert; if you didn't, investigate it at your DNS host.
+
+As always, Panoptica365 **reads DNS only and never changes your records** — it detects, advises and deep-links; you make the fix at the registrar. Refresh is available for both managed and audit-only tenants; the daily monitoring and drift alerts apply to managed tenants.
+
+---
+
 ## Version 0.2.21 — 2026-06-22
 
 ### Clearer guidance when a tenant gains Defender for Office 365 after a licence upgrade

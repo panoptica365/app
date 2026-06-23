@@ -41,6 +41,7 @@ const KNOWN_WORKERS = new Set([
   'ual',
   'psa',
   'known_good',
+  'email_auth',
   'message_center',
   'morning_briefing',
   'audit_expiry',

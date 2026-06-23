@@ -5,6 +5,20 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.22 — 2026-06-22
+
+### Nueva pestaña Aut. correo — audite, califique y supervise el DNS anti-suplantación de cada dominio
+
+Cada panel de cliente tiene una nueva pestaña **Aut. correo** que audita el DNS público de autenticación de correo de un cliente y lo sigue vigilando. Haga clic en **Actualizar** y Panoptica365 lee los registros en vivo de cada dominio aceptado — MX, SPF, DKIM y DMARC, además de los mecanismos complementarios (DNSSEC, MTA-STS, TLS-RPT, BIMI, DANE) — califica la postura en un medidor ponderado de A a F y usa IA para explicar cada registro en lenguaje claro, con una breve lista de correcciones priorizadas que puede aplicar en el registrador.
+
+Lo que lo convierte en algo más que un verificador genérico es la **inteligencia DKIM**. Panoptica365 detecta quién envía realmente el correo del dominio (a partir de los registros MX y SPF) y lo contrasta con los selectores DKIM publicados. Así, un inquilino que funciona en Microsoft 365 pero cuyos registros `selector1`/`selector2` faltan se señala correctamente como **correo saliente sin firmar** — en lugar de recibir un falso 100 % porque respondió algún selector de marketing sin relación. Y cuando un remitente usa legítimamente selectores impredecibles por cuenta (Amazon SES, Salesforce, Mimecast y similares), el resultado es un honesto **«indeterminado»** con la indicación de confirmarlo desde un mensaje enviado — nunca un falso fallo.
+
+Y lo más importante: es **supervisión continua, no una instantánea única**. Tras la primera lectura, Panoptica365 vuelve a comprobar a diario los dominios de los inquilinos gestionados y genera una alerta de desviación en cuanto la postura retrocede — DMARC debilitado de reject a none, un selector DKIM eliminado o revocado, SPF relajado a `~all` o `+all`. La alerta indica exactamente qué cambió (antes → después). Si usted hizo el cambio, haga clic en **Aceptar** para fijar una nueva línea base y resolver la alerta; si no, investíguelo en su proveedor de DNS.
+
+Como siempre, Panoptica365 **solo lee el DNS y nunca cambia sus registros** — detecta, aconseja y enlaza directamente; usted hace la corrección en el registrador. Actualizar está disponible para inquilinos gestionados y de solo auditoría; la supervisión diaria y las alertas de desviación se aplican a los inquilinos gestionados.
+
+---
+
 ## Versión 0.2.21 — 2026-06-22
 
 ### Indicaciones más claras cuando un inquilino obtiene Defender para Office 365 tras un cambio de licencia
