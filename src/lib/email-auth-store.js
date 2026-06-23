@@ -298,8 +298,8 @@ async function upsertPosture(tenantId, snap) {
        overall_score      = VALUES(overall_score),
        grade              = VALUES(grade),
        non_mail           = VALUES(non_mail),
-       narrative          = COALESCE(VALUES(narrative), narrative),
-       narrative_hash     = COALESCE(VALUES(narrative_hash), narrative_hash),
+       narrative          = VALUES(narrative),
+       narrative_hash     = VALUES(narrative_hash),
        first_retrieved_at = COALESCE(first_retrieved_at, VALUES(first_retrieved_at)),
        last_checked_at    = ${now}`,
     [

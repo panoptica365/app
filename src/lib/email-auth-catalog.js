@@ -22,7 +22,9 @@
 // ── Tier 1: providers with fixed, high-confidence selectors. A miss against a
 //    DETECTED tier-1 provider is a finding (the headline M365 case). ──────────
 const PROBEABLE_SELECTORS = {
-  microsoft365: { selectors: ['selector1', 'selector2'], type: 'cname', target_contains: 'onmicrosoft.com', label: 'Microsoft 365' },
+  // M365 DKIM CNAME targets moved from <tenant>.onmicrosoft.com to the newer
+  // *.dkim.mail.microsoft infra — accept both (and treat as advisory, not a gate).
+  microsoft365: { selectors: ['selector1', 'selector2'], type: 'cname', target_contains: ['onmicrosoft.com', 'dkim.mail.microsoft'], label: 'Microsoft 365' },
   google:       { selectors: ['google'], type: 'txt', label: 'Google Workspace' },
   sendgrid:     { selectors: ['s1', 's2'], type: 'cname', target_contains: 'sendgrid.net', label: 'SendGrid' },
   mailchimp:    { selectors: ['k1', 'k2', 'k3'], type: 'cname', target_contains: 'mcsv.net', label: 'Mailchimp' },

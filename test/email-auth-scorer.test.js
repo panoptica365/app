@@ -168,3 +168,54 @@ test('parseMtaStsMode reads the enforcement mode from the policy file', () => {
   assert.strictEqual(reader.parseMtaStsMode('version: STSv1\r\nmode: testing\r\n'), 'testing');
   assert.strictEqual(reader.parseMtaStsMode(''), null);
 });
+
+// ── DKIM verdict (the differentiator) — targetMatch must be advisory, not a gate ──
+const m365 = { all: ['microsoft365'] };
+test('M365 selectors resolving with a key PASS regardless of CNAME target (the dkim.mail.microsoft regression)', () => {
+  // targetMatch:false simulates Microsoft's newer *.dkim.mail.microsoft target that
+  // the old hardcoded onmicrosoft.com gate rejected. Must NOT false-fail.
+  const probes = [
+    { selector: 'selector1', provider: 'microsoft365', outcome: 'key', target: 's1._domainkey.x.w-v1.dkim.mail.microsoft', targetMatch: false, keyType: 'rsa', keyBits: 2048 },
+    { selector: 'selector2', provider: 'microsoft365', outcome: 'key', target: 's2._domainkey.x.w-v1.dkim.mail.microsoft', targetMatch: false, keyType: 'rsa', keyBits: 2048 },
+  ];
+  const v = reader.dkimVerdict(probes, m365);
+  assert.strictEqual(v.state, 'pass');
+  assert.strictEqual(v.passProvider, 'Microsoft 365');
+});
+
+test('M365 detected with all selectors CONFIRMED absent → fail', () => {
+  const probes = [
+    { selector: 'selector1', provider: 'microsoft365', outcome: 'absent' },
+    { selector: 'selector2', provider: 'microsoft365', outcome: 'absent' },
+  ];
+  const v = reader.dkimVerdict(probes, m365);
+  assert.strictEqual(v.state, 'fail');
+  assert.strictEqual(v.expectedLabel, 'Microsoft 365');
+});
+
+test('M365 detected but a selector ERRORED → indeterminate (no false fail), not fail', () => {
+  const probes = [
+    { selector: 'selector1', provider: 'microsoft365', outcome: 'error' },
+    { selector: 'selector2', provider: 'microsoft365', outcome: 'absent' },
+  ];
+  const v = reader.dkimVerdict(probes, m365);
+  assert.strictEqual(v.state, 'indeterminate');
+  assert.strictEqual(v.unconfirmed, true);
+});
+
+test('M365 expected selector with empty key (revoked) → fail (revoked)', () => {
+  const probes = [
+    { selector: 'selector1', provider: 'microsoft365', outcome: 'revoked' },
+    { selector: 'selector2', provider: 'microsoft365', outcome: 'absent' },
+  ];
+  const v = reader.dkimVerdict(probes, m365);
+  assert.strictEqual(v.state, 'fail');
+  assert.strictEqual(v.revoked, true);
+});
+
+test('dynamic-selector sender (Amazon SES) with nothing answering → indeterminate, never fail', () => {
+  const probes = [{ selector: 'selector1', provider: 'microsoft365', outcome: 'absent' }];
+  const v = reader.dkimVerdict(probes, { all: ['amazonses'] });
+  assert.strictEqual(v.state, 'indeterminate');
+  assert.strictEqual(v.expectedLabel, 'Amazon SES');
+});

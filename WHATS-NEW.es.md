@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.23 — 2026-06-23
+
+### Aut. correo: detección de DKIM corregida para el nuevo formato de registro de Microsoft 365
+
+Un seguimiento rápido de la nueva pestaña Aut. correo. Microsoft está migrando el DKIM de Microsoft 365 del antiguo destino CNAME `*.onmicrosoft.com` a un nuevo destino `*.dkim.mail.microsoft`. La primera versión solo reconocía la forma antigua; un dominio con el nuevo formato — incluso con DKIM correctamente publicado y firmando activamente — se informaba por error como **DKIM con fallo** («selectores esperados no encontrados»). Esta versión reconoce ambos y, lo más importante, ya no trata el nombre de host de destino del proveedor como un criterio de aprobado o fallo: cualquier selector de Microsoft 365 que resuelva con una clave válida ahora se considera correcto, de modo que los futuros cambios en la infraestructura DKIM de Microsoft tampoco causarán un falso fallo.
+
+También en esta versión: el análisis con IA ya no repite la puntuación numérica (a veces la recalculaba de forma incorrecta y podía contradecir el medidor en pantalla), y un análisis de IA obsoleto ahora se borra en lugar de mostrarse cuando los registros de un dominio cambian pero el análisis no se puede regenerar.
+
+---
+
 ## Versión 0.2.22 — 2026-06-22
 
 ### Nueva pestaña Aut. correo — audite, califique y supervise el DNS anti-suplantación de cada dominio

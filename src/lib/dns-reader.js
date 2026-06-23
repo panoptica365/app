@@ -313,8 +313,18 @@ async function probeSelector(domain, entry) {
   else if (txtErr || cnameErr) outcome = 'error';
   else outcome = 'absent';
 
+  // Advisory provider-alignment signal ONLY — never a gate. Providers change
+  // their CNAME target hostnames over time (M365 moved onmicrosoft.com →
+  // dkim.mail.microsoft), so a named selector that resolves with a key is a pass
+  // regardless of target. target_contains may be a string or an array.
   let targetMatch = true;
-  if (entry.target_contains) targetMatch = target ? target.includes(entry.target_contains) : false;
+  if (entry.target_contains) {
+    if (!target) targetMatch = false;
+    else {
+      const needles = Array.isArray(entry.target_contains) ? entry.target_contains : [entry.target_contains];
+      targetMatch = needles.some(n => target.includes(n));
+    }
+  }
 
   return {
     selector: entry.selector, provider: entry.provider, tier: entry.tier,
@@ -341,8 +351,21 @@ async function mapLimit(items, limit, fn) {
 async function getDkim(domain, providers) {
   const plan = catalog.buildProbePlan();
   const probes = await mapLimit(plan, PROBE_CONCURRENCY, e => probeSelector(domain, e));
+  return dkimVerdict(probes, providers);
+}
 
-  const hits = probes.filter(p => p.outcome === 'key' && p.targetMatch);
+/**
+ * Pure three-state DKIM verdict from probe results + detected providers (§7a).
+ *
+ * Key rule (the fix for the M365 false-fail): a named selector that RESOLVES
+ * WITH A KEY is a hit for its provider — `targetMatch` (the CNAME target
+ * hostname check) is ADVISORY ONLY, never a gate. Providers change their target
+ * infra over time (M365 moved <tenant>.onmicrosoft.com → *.dkim.mail.microsoft);
+ * gating on a hardcoded hostname turned correctly-published DKIM into a false
+ * "missing". I/O-free → unit-testable (see test/).
+ */
+function dkimVerdict(probes, providers) {
+  const hits = probes.filter(p => p.outcome === 'key');
   const revokedHits = probes.filter(p => p.outcome === 'revoked');
   const testModeHits = probes.filter(p => p.outcome === 'testmode');
 
@@ -356,7 +379,7 @@ async function getDkim(domain, providers) {
   for (const prov of expected) {
     const cfg = catalog.PROBEABLE_SELECTORS[prov];
     const provProbes = probes.filter(p => p.provider === prov);
-    const anyKey = provProbes.some(p => p.outcome === 'key' && p.targetMatch);
+    const anyKey = provProbes.some(p => p.outcome === 'key');
     const anyRevoked = provProbes.some(p => p.outcome === 'revoked');
     const anyError = provProbes.some(p => p.outcome === 'error');
     if (anyKey) continue;
@@ -538,7 +561,7 @@ async function readDomain(rawDomain) {
 module.exports = {
   readDomain,
   // mechanism readers (exported for targeted use / tests)
-  getMx, getApexTxt, parseSpf, getDmarc, getDkim,
+  getMx, getApexTxt, parseSpf, getDmarc, getDkim, dkimVerdict,
   getMtaSts, getTlsRpt, getDnssec, getBimi, getDane,
   decodeDkim, parseTags, toAscii,
   dohResolve, parseDnssecAnswer, parseMtaStsMode,

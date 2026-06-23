@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.23 — 2026-06-23
+
+### Email Auth: correct DKIM detection for Microsoft 365's newer record format
+
+A fast follow-up to the new Email Auth tab. Microsoft has been moving Microsoft 365 DKIM from the older `*.onmicrosoft.com` CNAME target to a newer `*.dkim.mail.microsoft` target. The first release recognized only the older form, so a domain on the newer format — even with DKIM correctly published and actively signing — was incorrectly reported as **DKIM Fail** ("expected selectors not found"). This release recognizes both, and more importantly no longer treats the provider's target hostname as a pass/fail gate at all: any Microsoft 365 selector that resolves with a valid key now reads as a pass, so future changes to Microsoft's DKIM infrastructure won't cause a false failure either.
+
+Also in this release: the AI analysis no longer restates the numeric score (it occasionally recomputed it incorrectly and could disagree with the on-screen gauge), and a stale AI write-up is now cleared rather than shown when a domain's records change but the analysis can't be regenerated.
+
+---
+
 ## Version 0.2.22 — 2026-06-22
 
 ### New Email Auth tab — audit, score, and monitor every domain's anti-spoofing DNS

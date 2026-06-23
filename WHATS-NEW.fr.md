@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.23 — 2026-06-23
+
+### Auth. courriel : détection DKIM corrigée pour le nouveau format d'enregistrement de Microsoft 365
+
+Un suivi rapide du nouvel onglet Auth. courriel. Microsoft fait migrer la DKIM de Microsoft 365 de l'ancienne cible CNAME `*.onmicrosoft.com` vers une nouvelle cible `*.dkim.mail.microsoft`. La première version ne reconnaissait que l'ancienne forme; un domaine au nouveau format — même avec DKIM correctement publié et signant activement — était signalé à tort comme **DKIM en échec** (« sélecteurs attendus introuvables »). Cette version reconnaît les deux et, surtout, ne traite plus du tout le nom d'hôte cible du fournisseur comme un critère de réussite ou d'échec : tout sélecteur Microsoft 365 qui se résout avec une clé valide est désormais considéré comme conforme, de sorte que les futurs changements à l'infrastructure DKIM de Microsoft ne provoqueront pas non plus de faux échec.
+
+Aussi dans cette version : l'analyse IA ne répète plus le score numérique (elle le recalculait parfois de façon erronée et pouvait contredire la jauge à l'écran), et une analyse IA périmée est maintenant effacée plutôt qu'affichée lorsque les enregistrements d'un domaine changent mais que l'analyse ne peut pas être régénérée.
+
+---
+
 ## Version 0.2.22 — 2026-06-22
 
 ### Nouvel onglet Auth. courriel — vérifiez, évaluez et surveillez le DNS anti-usurpation de chaque domaine

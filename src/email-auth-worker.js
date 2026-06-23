@@ -106,13 +106,20 @@ async function refreshTenant(tenant, opts = {}) {
     const prev = await store.getPostureDomain(tenant.id, d.domain);
 
     // Narrative: regenerate only when the deterministic findings changed (§9).
-    let narrative = null;
-    let narrativeHash = null;
+    // If findings DID change but regen fails, CLEAR the stale narrative (+ its
+    // hash, so it retries next cycle) rather than leave prose that contradicts
+    // the fresh gauge. If findings are unchanged, carry the cached narrative
+    // forward verbatim (no AI call).
+    let narrative, narrativeHash;
     const needNarrative = !prev || !prev.narrative || prev.narrative_hash !== newHash;
-    if (needNarrative) {
+    if (!needNarrative) {
+      narrative = prev.narrative;
+      narrativeHash = prev.narrative_hash;
+    } else {
       onProgress({ stage: 'narrating', domain: d.domain });
       const n = await narrator.generateNarrative(d.domain, scored, records);
-      if (n) { narrative = n; narrativeHash = newHash; } // failed gen → retry next cycle
+      narrative = n || null;
+      narrativeHash = n ? newHash : null;
     }
 
     // Drift (managed only) — diff against the prior snapshot before overwriting.
