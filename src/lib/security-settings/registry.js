@@ -1439,7 +1439,7 @@ if ($errors.Count -gt 0) {
           input: {
             multiline: true,
             line_kind: 'word',
-            placeholder: 'trilogiam\npanoptica\nmontreal\nquebec',
+            placeholder: 'contoso\nfabrikam\nmontreal\nquebec',
             help: 'One banned word or phrase per line, 4-16 characters each. These will be rejected when users try to use them in passwords. Microsoft\'s global list of common-passwords is always applied on top of this.',
             empty_ok: false,
             // Microsoft Entra Password Protection enforces these bounds on

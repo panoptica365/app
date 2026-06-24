@@ -30,6 +30,10 @@ const eventI18n = require('../lib/event-description-i18n');
 const accessReviewStore = require('../lib/access-review-store');
 const breakGlassGraph = require('../lib/break-glass-graph');
 const knownGoodStore = require('../lib/known-good-store');
+// v0.2.24 report polish — email-auth posture (Item 7) + localized alert titles (Item 4).
+const emailAuthStore = require('../lib/email-auth-store');
+const emailAuthWorker = require('../email-auth-worker');
+const notifier = require('../notifier');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -147,6 +151,7 @@ async function gatherReportEnrichment(tenantDbId, azureTenantId) {
     identity: { available: false },
     breakGlass: { configured: false },
     apps: { available: false, knownGood: [], others: [] },
+    emailAuth: { available: false },
   };
 
   // ── Identity hygiene — privileged roles + inactive accounts ──
@@ -162,6 +167,14 @@ async function gatherReportEnrichment(tenantDbId, azureTenantId) {
       const thresholdDays = Number.isFinite(snap.inactivity_days) && snap.inactivity_days > 0
         ? snap.inactivity_days
         : ((config.accessReview && config.accessReview.inactivityThresholdDays) || 90);
+      // Item 8: build the inactive roster once, then split members vs guests.
+      const inactiveAll = users.filter(u => u.inactive).map(u => ({
+        account: u.displayName || u.userPrincipalName || '',
+        upn: u.userPrincipalName || '',
+        type: u.type === 'guest' ? 'guest' : 'member',
+        lastActivity: u.lastActivity || null,
+        neverRedeemed: !!u.neverRedeemed,
+      }));
       enrichment.identity = {
         available: true,
         captured_at: snap.captured_at || null,
@@ -169,10 +182,12 @@ async function gatherReportEnrichment(tenantDbId, azureTenantId) {
         threshold_days: thresholdDays,
         summary: {
           total: (snap.summary && snap.summary.total) ?? users.length,
-          inactive: (snap.summary && snap.summary.inactive) ?? users.filter(u => u.inactive).length,
+          inactive: (snap.summary && snap.summary.inactive) ?? inactiveAll.length,
           ga_count: (snap.privileged_roles && snap.privileged_roles.ga_count) ?? (snap.summary && snap.summary.ga_count) ?? null,
           no_mfa_admins: (snap.privileged_roles && snap.privileged_roles.no_mfa_count) ?? (snap.summary && snap.summary.no_mfa_admins) ?? null,
           admin_total: priv.length,
+          // Item 8: total guest accounts (for the "M of N guests inactive" note).
+          guest_total: (snap.summary && snap.summary.guest_total) ?? users.filter(u => u.type === 'guest').length,
         },
         admins: priv.map(a => ({
           account: a.displayName || a.userPrincipalName || '',
@@ -183,13 +198,9 @@ async function gatherReportEnrichment(tenantDbId, azureTenantId) {
           lastActivity: activityByKey.get(key(a)) || null,
           breakGlass: !!a.breakGlass,
         })),
-        inactive_users: users.filter(u => u.inactive).map(u => ({
-          account: u.displayName || u.userPrincipalName || '',
-          upn: u.userPrincipalName || '',
-          type: u.type === 'guest' ? 'guest' : 'member',
-          lastActivity: u.lastActivity || null,
-          neverRedeemed: !!u.neverRedeemed,
-        })),
+        // Item 8: separate inactive members from inactive external/guest accounts.
+        inactive_members: inactiveAll.filter(u => u.type !== 'guest'),
+        inactive_guests: inactiveAll.filter(u => u.type === 'guest'),
       };
     }
   } catch (err) {
@@ -277,6 +288,44 @@ async function gatherReportEnrichment(tenantDbId, azureTenantId) {
     console.warn('[Reports.enrich] applications inventory unavailable (non-fatal):', err.message);
   }
 
+  // ── Email-auth posture (Item 7) — cached read only, NO live DNS re-pull ──
+  try {
+    const domains = await emailAuthStore.getPosture(tid);
+    if (Array.isArray(domains) && domains.length) {
+      const toCard = (d) => ({
+        domain: d.domain,
+        is_primary: !!d.is_primary,
+        non_mail: !!d.non_mail,
+        overall_score: d.overall_score,
+        grade: d.grade,
+      });
+      // Primary = the is_primary row (getPosture sorts is_primary DESC), else the
+      // first scored domain. Only the primary carries findings + providers; other
+      // mail domains render as a compact grade list (spec: no wall of gauges).
+      const primaryRow = domains.find(d => d.is_primary) || domains[0];
+      const primary = primaryRow ? {
+        ...toCard(primaryRow),
+        detected_providers: primaryRow.detected_providers || null,
+        findings: primaryRow.findings || {},
+      } : null;
+      const others = domains.filter(d => d !== primaryRow).map(toCard);
+      // Informational *.onmicrosoft.com routing domains aren't stored in
+      // dns_posture — derive them best-effort from the org's verified domains
+      // (the same source the tab uses). This is an org-metadata read, NOT a DNS
+      // re-pull; graceful if Graph is unavailable at report time.
+      let informational = [];
+      try {
+        const enumerated = await emailAuthWorker.enumerateDomains(azureTenantId);
+        informational = (enumerated && enumerated.informational) || [];
+      } catch (e) {
+        console.warn('[Reports.enrich] email-auth informational domains unavailable (non-fatal):', e.message);
+      }
+      enrichment.emailAuth = { available: true, primary, others, informational };
+    }
+  } catch (err) {
+    console.warn('[Reports.enrich] email-auth posture unavailable (non-fatal):', err.message);
+  }
+
   return enrichment;
 }
 
@@ -345,7 +394,7 @@ async function gatherReportData(tenantId, range) {
 
   // Top 15 most significant alerts (high/severe first, then by recurrence)
   const topAlerts = await db.queryRows(
-    `SELECT a.severity, a.message, a.status, a.triggered_at, a.recurrence_count,
+    `SELECT a.id, a.severity, a.message, a.raw_data, a.status, a.triggered_at, a.recurrence_count,
             ${aiAnalysisExpr} AS ai_analysis, p.name AS policy_name, p.category
      FROM alerts a
      JOIN alert_policies p ON a.policy_id = p.id
@@ -763,7 +812,11 @@ async function gatherReportData(tenantId, range) {
       total: alertsBySeverity.reduce((sum, r) => sum + r.cnt, 0),
       topAlerts: topAlerts.map(a => ({
         severity: a.severity,
-        message: a.message,
+        // Item 4: render the localized title via the SAME path the alert emails
+        // use (message_template_key + params → tenant language). Falls back to the
+        // stored English message for legacy/keyless alerts. Operator-typed free
+        // text (exemption reasons, notes) is never touched.
+        message: notifier.renderAlertMessageForLocale(a, lang),
         status: a.status,
         triggered_at: a.triggered_at,
         recurrence_count: a.recurrence_count,
@@ -868,11 +921,14 @@ const WELL_KNOWN_ROLES = {
 async function gatherCaPolicies(azureTenantId) {
   try {
     // Fetch policies, named locations, groups, and service principals in parallel
-    const [policies, namedLocations, groups, servicePrincipals] = await Promise.all([
+    const [policies, namedLocations, groups, servicePrincipals, roleDefs] = await Promise.all([
       graph.callGraphPaged(azureTenantId, '/identity/conditionalAccess/policies').catch(() => []),
       graph.callGraphPaged(azureTenantId, '/identity/conditionalAccess/namedLocations?$select=id,displayName').catch(() => []),
       graph.callGraphPaged(azureTenantId, '/groups?$select=id,displayName&$top=999').catch(() => []),
       graph.callGraphPaged(azureTenantId, '/servicePrincipals?$select=appId,displayName&$top=999').catch(() => []),
+      // Item 5: roleDefinitions resolves ANY directory role (built-in template IDs
+      // beyond the hardcoded set, plus custom roles) so an excluded role shows a name.
+      graph.callGraphPaged(azureTenantId, '/roleManagement/directory/roleDefinitions?$select=id,displayName,templateId').catch(() => []),
     ]);
 
     if (!policies || policies.length === 0) return [];
@@ -881,13 +937,54 @@ async function gatherCaPolicies(azureTenantId) {
     const locationMap = Object.fromEntries((namedLocations || []).map(l => [l.id, l.displayName]));
     const groupMap = Object.fromEntries((groups || []).map(g => [g.id, g.displayName]));
     const appMap = Object.fromEntries((servicePrincipals || []).map(sp => [sp.appId, sp.displayName]));
+    // CA stores the role TEMPLATE id; custom roles use the definition id — map both.
+    const roleMap = {};
+    for (const r of (roleDefs || [])) {
+      if (!r || !r.displayName) continue;
+      if (r.templateId) roleMap[r.templateId] = r.displayName;
+      if (r.id) roleMap[r.id] = r.displayName;
+    }
 
-    // Resolve a GUID to a name
+    // Item 5: resolve excluded PRINCIPALS (users / groups) the bulk fetch didn't
+    // cover — typically a handful of break-glass users named in excludeUsers.
+    // Batch-resolve only the unknown GUIDs via directoryObjects/getByIds (bounded
+    // by the number of exclusions, not directory size). Best-effort: a principal
+    // that still can't be resolved keeps its GUID (the agreed Item 5 fallback).
+    const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const SPECIAL_USER = new Set(['All', 'None', 'GuestsOrExternalUsers']);
+    const unknownIds = new Set();
+    for (const p of policies) {
+      const u = (p.conditions && p.conditions.users) || {};
+      for (const arr of [u.includeUsers, u.excludeUsers, u.includeGroups, u.excludeGroups]) {
+        for (const id of (arr || [])) {
+          if (typeof id === 'string' && GUID_RE.test(id) && !SPECIAL_USER.has(id) && !groupMap[id]) {
+            unknownIds.add(id);
+          }
+        }
+      }
+    }
+    const principalMap = {};
+    if (unknownIds.size) {
+      try {
+        const resp = await graph.callGraph(azureTenantId, '/directoryObjects/getByIds', {
+          method: 'POST',
+          body: { ids: Array.from(unknownIds).slice(0, 1000), types: ['user', 'group', 'servicePrincipal'] },
+        });
+        for (const obj of ((resp && resp.value) || [])) {
+          const name = obj.displayName || obj.userPrincipalName || null;
+          if (obj.id && name) principalMap[obj.id] = name;
+        }
+      } catch (e) {
+        console.warn('[Reports] CA principal resolution (getByIds) failed (non-fatal):', e.message);
+      }
+    }
+
+    // Resolve a GUID to a name (special tokens → groups → batched principals)
     function resolveUser(id) {
       if (id === 'All') return 'All Users';
       if (id === 'GuestsOrExternalUsers') return 'Guests / External Users';
       if (id === 'None') return 'None';
-      return groupMap[id] || id; // groups and users share include/exclude arrays
+      return groupMap[id] || principalMap[id] || id; // groups and users share include/exclude arrays
     }
 
     function resolveApp(id) {
@@ -895,7 +992,7 @@ async function gatherCaPolicies(azureTenantId) {
     }
 
     function resolveRole(id) {
-      return WELL_KNOWN_ROLES[id] || id;
+      return WELL_KNOWN_ROLES[id] || roleMap[id] || id;
     }
 
     function resolveLocation(id) {

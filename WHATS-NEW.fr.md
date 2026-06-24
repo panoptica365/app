@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.24 — 2026-06-24
+
+### Rapports — révisés et peaufinés
+
+Nous avons passé en revue les trois rapports — le **rapport de posture de sécurité**, l'**évaluation rapide** et la **documentation de configuration** — et les avons révisés et peaufinés en anglais, en français et en espagnol.
+
+La principale nouveauté est une nouvelle section **Authentification du courriel** dans chaque rapport : la posture DNS publiée (SPF, DKIM, DMARC et mécanismes connexes, avec une cote de A à F) pour les domaines d'envoi du client, afin que le rapport montre dans quelle mesure le client est protégé contre l'usurpation de courriel. En complément, les comptes inactifs sont maintenant clairement séparés entre membres et comptes externes/invités, et de nombreux ajustements de mise en page et de formulation rendent chaque rapport plus clair.
+
+---
+
 ## Version 0.2.23 — 2026-06-23
 
 ### Auth. courriel : détection DKIM corrigée pour le nouveau format d'enregistrement de Microsoft 365

@@ -33,6 +33,13 @@ from reportlab.pdfgen import canvas
 import re as _re
 import unicodedata as _ud
 
+# Shared email-auth helpers — text-only here (matplotlib stays lazy inside the
+# gauge, which this report doesn't use), the same module the posture + QA
+# generators use so the findings→rows mapping can't drift. Ensure the script's
+# own dir is importable whether run as a script or via importlib.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _report_email_auth import email_auth_label, mechanism_rows  # noqa: E402
+
 # ─── Palette (consistent with security-posture report) ───
 COLORS = {
     'primary': '#2C3E50',
@@ -204,7 +211,6 @@ STRINGS = {
         # ─── Enrichment (Identity Hygiene + Application Governance) ───
         'er_sec_identity': 'Identity Hygiene',
         'er_sec_admins': 'Accounts with Admin Roles',
-        'er_sec_inactive': 'Inactive Accounts',
         'er_sec_breakglass': 'Break-Glass (Emergency Access)',
         'er_sec_app_risk': 'Application Risk',
         'er_sec_app_gov': 'Application Governance',
@@ -215,7 +221,6 @@ STRINGS = {
         'er_col_enabled': 'Enabled',
         'er_col_mfa': 'MFA',
         'er_col_activity': 'Last Activity',
-        'er_col_type': 'Type',
         'er_col_app': 'Application',
         'er_col_publisher': 'Publisher',
         'er_col_verdict': 'Risk Verdict',
@@ -224,8 +229,6 @@ STRINGS = {
         'er_yes': 'Yes',
         'er_no': 'No',
         'er_unknown': 'Unknown',
-        'er_member': 'Member',
-        'er_guest': 'Guest',
         'er_verdict_green': 'Green',
         'er_verdict_yellow': 'Yellow',
         'er_verdict_red': 'Red',
@@ -238,13 +241,20 @@ STRINGS = {
         'er_none': 'None',
         'er_more': '(+{n} more)',
         'er_no_admins': 'No accounts hold admin roles.',
-        'er_no_inactive': 'No inactive accounts.',
         'er_all_known_good': 'All applications are tagged Known-Good.',
         'er_identity_unavailable': 'Access Review data has not been captured for this tenant. Run an Access Review to populate identity hygiene.',
+        # ─── Report polish v0.2.24 — Email Authentication (shared verbatim) ───
+        'email_auth_title': 'Email Authentication',
+        'email_auth_intro': "DNS email-authentication posture for this tenant's primary sending domain.",
+        'email_auth_unavailable': 'Email authentication has not been audited for this tenant. Run a Refresh on the Email Auth tab to populate it.',
+        'ea_col_mechanism': 'Mechanism',
+        'ea_col_status': 'Status',
+        'ea_col_detail': 'Detail',
+        'email_auth_other_domains': 'Other mail domains',
+        'email_auth_nonmail_note': 'Non-mail domains should publish v=spf1 -all and DMARC p=reject to prevent spoofing: {domains}',
         'er_apps_unavailable': 'Application inventory is not available. Run the Applications scan.',
         'er_bg_not_configured': 'No break-glass (emergency-access) group is configured for this tenant.',
         'er_bg_members_unavailable': 'Group membership could not be read at report time.',
-        'er_threshold_note': 'Inactivity threshold: {n} days.',
     },
     'fr': {
         'report_title': 'Rapport de configuration',
@@ -400,7 +410,6 @@ STRINGS = {
         # ─── Enrichment (Identity Hygiene + Application Governance) ───
         'er_sec_identity': 'Hygiène des identités',
         'er_sec_admins': 'Comptes avec rôles d\'administration',
-        'er_sec_inactive': 'Comptes inactifs',
         'er_sec_breakglass': 'Compte d\'urgence (bris de glace)',
         'er_sec_app_risk': 'Risque applicatif',
         'er_sec_app_gov': 'Gouvernance des applications',
@@ -411,7 +420,6 @@ STRINGS = {
         'er_col_enabled': 'Activé',
         'er_col_mfa': 'MFA',
         'er_col_activity': 'Dernière activité',
-        'er_col_type': 'Type',
         'er_col_app': 'Application',
         'er_col_publisher': 'Éditeur',
         'er_col_verdict': 'Verdict de risque',
@@ -420,8 +428,6 @@ STRINGS = {
         'er_yes': 'Oui',
         'er_no': 'Non',
         'er_unknown': 'Inconnu',
-        'er_member': 'Membre',
-        'er_guest': 'Invité',
         'er_verdict_green': 'Vert',
         'er_verdict_yellow': 'Jaune',
         'er_verdict_red': 'Rouge',
@@ -434,13 +440,20 @@ STRINGS = {
         'er_none': 'Aucun',
         'er_more': '(+{n} de plus)',
         'er_no_admins': 'Aucun compte ne détient de rôle d\'administration.',
-        'er_no_inactive': 'Aucun compte inactif.',
         'er_all_known_good': 'Toutes les applications sont approuvées.',
         'er_identity_unavailable': 'Les données de revue des accès n\'ont pas été recueillies pour ce locataire. Lancez une revue des accès pour renseigner l\'hygiène des identités.',
+        # ─── Report polish v0.2.24 — Authentification du courriel (partagé) ───
+        'email_auth_title': 'Authentification du courriel',
+        'email_auth_intro': "Posture d'authentification des courriels (DNS) pour le domaine d'envoi principal de ce locataire.",
+        'email_auth_unavailable': "L'authentification des courriels n'a pas été vérifiée pour ce locataire. Lancez une actualisation dans l'onglet Authentification du courriel pour la renseigner.",
+        'ea_col_mechanism': 'Mécanisme',
+        'ea_col_status': 'Statut',
+        'ea_col_detail': 'Détail',
+        'email_auth_other_domains': 'Autres domaines de courriel',
+        'email_auth_nonmail_note': "Les domaines sans courriel devraient publier v=spf1 -all et DMARC p=reject pour empêcher l'usurpation : {domains}",
         'er_apps_unavailable': 'L\'inventaire des applications n\'est pas disponible. Lancez l\'analyse des applications.',
         'er_bg_not_configured': 'Aucun groupe de compte d\'urgence (bris de glace) n\'est configuré pour ce locataire.',
         'er_bg_members_unavailable': 'L\'appartenance au groupe n\'a pas pu être lue au moment du rapport.',
-        'er_threshold_note': 'Seuil d\'inactivité : {n} jours.',
     },
     'es': {
         'report_title': 'Documentación de Configuración',
@@ -596,7 +609,6 @@ STRINGS = {
         # ─── Enrichment (Identity Hygiene + Application Governance) ───
         'er_sec_identity': 'Higiene de identidades',
         'er_sec_admins': 'Cuentas con roles de administrador',
-        'er_sec_inactive': 'Cuentas inactivas',
         'er_sec_breakglass': 'Acceso de emergencia (break-glass)',
         'er_sec_app_risk': 'Riesgo de aplicaciones',
         'er_sec_app_gov': 'Gobernanza de aplicaciones',
@@ -607,7 +619,6 @@ STRINGS = {
         'er_col_enabled': 'Habilitado',
         'er_col_mfa': 'MFA',
         'er_col_activity': 'Última actividad',
-        'er_col_type': 'Tipo',
         'er_col_app': 'Aplicación',
         'er_col_publisher': 'Editor',
         'er_col_verdict': 'Veredicto de riesgo',
@@ -616,8 +627,6 @@ STRINGS = {
         'er_yes': 'Sí',
         'er_no': 'No',
         'er_unknown': 'Desconocido',
-        'er_member': 'Miembro',
-        'er_guest': 'Invitado',
         'er_verdict_green': 'Verde',
         'er_verdict_yellow': 'Amarillo',
         'er_verdict_red': 'Rojo',
@@ -630,13 +639,20 @@ STRINGS = {
         'er_none': 'Ninguno',
         'er_more': '(+{n} más)',
         'er_no_admins': 'Ninguna cuenta tiene roles de administrador.',
-        'er_no_inactive': 'Ninguna cuenta inactiva.',
         'er_all_known_good': 'Todas las aplicaciones están aprobadas.',
         'er_identity_unavailable': 'No se han recopilado datos de revisión de acceso para este inquilino. Ejecute una revisión de acceso para completar la higiene de identidades.',
+        # ─── Report polish v0.2.24 — Autenticación de correo (compartido) ───
+        'email_auth_title': 'Autenticación de correo',
+        'email_auth_intro': 'Postura de autenticación de correo (DNS) del dominio de envío principal de este inquilino.',
+        'email_auth_unavailable': 'La autenticación de correo no se ha auditado para este inquilino. Ejecute Actualizar en la pestaña Autenticación de correo para completarla.',
+        'ea_col_mechanism': 'Mecanismo',
+        'ea_col_status': 'Estado',
+        'ea_col_detail': 'Detalle',
+        'email_auth_other_domains': 'Otros dominios de correo',
+        'email_auth_nonmail_note': 'Los dominios sin correo deberían publicar v=spf1 -all y DMARC p=reject para evitar la suplantación: {domains}',
         'er_apps_unavailable': 'El inventario de aplicaciones no está disponible. Ejecute el análisis de aplicaciones.',
         'er_bg_not_configured': 'No hay configurado ningún grupo de acceso de emergencia (break-glass) para este inquilino.',
         'er_bg_members_unavailable': 'No se pudo leer la pertenencia al grupo al momento del informe.',
-        'er_threshold_note': 'Umbral de inactividad: {n} días.',
     },
 }
 
@@ -1584,9 +1600,9 @@ def build_section_security_settings(data, styles, s, width, lang):
             flows.append(Spacer(1, 8))
         first = False
         cat_label = localize_enum(cat, SETTING_CATEGORY_LABELS, lang)
-        flows.append(Paragraph(f"<b>{esc(cat_label)}</b>", styles['DocSubHeading']))
+        cat_heading = Paragraph(f"<b>{esc(cat_label)}</b>", styles['DocSubHeading'])
 
-        for st in cat_settings:
+        for idx, st in enumerate(cat_settings):
             setting_id = st.get('setting_id', '')
             status_key = st.get('status', '')
             priority = st.get('priority', '')
@@ -1612,7 +1628,13 @@ def build_section_security_settings(data, styles, s, width, lang):
             block = [Paragraph(title_html, styles['DocBody'])]
             if description:
                 block.append(Paragraph(esc(description), styles['DocBody']))
-            flows.append(KeepTogether(block))
+            # Glue the category sub-heading to its FIRST setting so the heading
+            # never strands alone at the foot of a page (flat KeepTogether — no
+            # nesting). Subsequent settings are their own keep-together blocks.
+            if idx == 0:
+                flows.append(KeepTogether([cat_heading] + block))
+            else:
+                flows.append(KeepTogether(block))
             flows.append(Spacer(1, 4))
 
     return flows
@@ -1717,6 +1739,84 @@ def build_section_domains(data, styles, s, width, lang):
                           dns_rows, [50, 80, 280, 80], styles)
             if t2:
                 flows.append(t2)
+    return flows
+
+
+def build_section_email_auth(data, styles, s, width, project_root, lang):
+    """Email-authentication posture for the primary sending domain (cached read,
+    no live DNS pull). Table-style, no gauge — matches this report's documentary
+    look. Other mail domains as a compact grade list; informational/non-mail noted."""
+    flows = []
+    email_auth = (data.get('enrichment') or {}).get('emailAuth') or {}
+    primary = email_auth.get('primary') or {}
+    if (not email_auth.get('available')) or (not primary):
+        flows.append(Paragraph(s['email_auth_unavailable'], styles['DocBody']))
+        return flows
+
+    flows.append(Paragraph(s['email_auth_intro'], styles['DocBody']))
+    flows.append(Spacer(1, 6))
+
+    # Headline: "<domain> — Grade B (78/100)" + caption (no gauge in this report).
+    grade_word = email_auth_label(project_root, lang, 'grade')
+    score = primary.get('overall_score')
+    score_str = f"{score}/100" if score is not None else '—'
+    headline = (f"<b>{esc(primary.get('domain') or '—')}</b> — "
+                f"{esc(grade_word)} {esc(str(primary.get('grade') or '—'))} ({esc(score_str)})")
+    flows.append(Paragraph(headline, styles['DocBody']))
+    caption = email_auth_label(project_root, lang,
+                               'non_mail_domain' if primary.get('non_mail') else 'gauge_caption')
+    flows.append(Paragraph(f"<font size='8' color='#666666'>{esc(caption)}</font>", styles['DocBody']))
+    provs = ((primary.get('detected_providers') or {}).get('all')) or []
+    if provs:
+        flows.append(Paragraph(
+            f"<font size='8' color='#666666'>"
+            f"{esc(email_auth_label(project_root, lang, 'detected_providers', {'providers': ', '.join(provs)}))}</font>",
+            styles['DocBody']))
+    flows.append(Spacer(1, 6))
+
+    # Per-mechanism table (shared findings→rows mapping; DKIM stays 3-state).
+    rows = [list(r) for r in mechanism_rows(primary.get('findings') or {}, project_root, lang)]
+    # Fixed, narrower widths (not full content width) — a 3-column status table
+    # stretched edge-to-edge looks empty/silly; keep it compact and left-aligned.
+    t = std_table([s['ea_col_mechanism'], s['ea_col_status'], s['ea_col_detail']],
+                  rows, [85, 80, 260], styles)
+    if t:
+        t.hAlign = 'LEFT'  # flush with the left margin (ReportLab centers tables by default)
+        flows.append(t)
+        flows.append(Spacer(1, 8))
+
+    # Other mail domains — compact one-line-per-domain list (no per-domain table).
+    others = email_auth.get('others') or []
+    if others:
+        other_heading = Paragraph(f"<b>{esc(s['email_auth_other_domains'])}</b>", styles['DocSubHeading'])
+        lines = []
+        for o in others:
+            tag = ''
+            if o.get('non_mail'):
+                tag = ' · ' + esc(email_auth_label(project_root, lang, 'non_mail_domain'))
+            lines.append(f"{esc(o.get('domain') or '—')} — {esc(str(o.get('grade') or ''))} "
+                         f"({esc(str(o.get('overall_score', 0)))}){tag}")
+        # Glue the sub-heading to its list so it never strands at a page bottom.
+        flows.append(KeepTogether([other_heading, Paragraph('<br/>'.join(lines), styles['DocBody'])]))
+        flows.append(Spacer(1, 6))
+
+    # Non-mail advisory + informational (onmicrosoft) domains.
+    nonmail = []
+    if primary.get('non_mail') and primary.get('domain'):
+        nonmail.append(primary.get('domain'))
+    nonmail += [o.get('domain') for o in others if o.get('non_mail') and o.get('domain')]
+    if nonmail:
+        flows.append(Paragraph(
+            f"<font size='8' color='#666666'>"
+            f"{esc(s['email_auth_nonmail_note'].replace('{domains}', ', '.join(nonmail)))}</font>",
+            styles['DocBody']))
+    info = email_auth.get('informational') or []
+    if info:
+        flows.append(Paragraph(
+            f"<font size='8' color='#666666'>"
+            f"{esc(email_auth_label(project_root, lang, 'informational_domains', {'domains': ', '.join(info)}))}</font>",
+            styles['DocBody']))
+
     return flows
 
 
@@ -2009,31 +2109,11 @@ def build_section_identity(data, styles, s, width, lang):
         flows.append(Paragraph(s['er_no_admins'], styles['DocBody']))
         flows.append(Spacer(1, 8))
 
-    # ─── Inactive Accounts ───
-    flows.append(Paragraph(f"<b>{esc(s['er_sec_inactive'])}</b>", styles['DocSubHeading']))
-    threshold = identity.get('threshold_days')
-    if threshold is not None:
-        flows.append(Paragraph(
-            f"<i>{esc(s['er_threshold_note'].replace('{n}', str(threshold)))}</i>",
-            styles['DocBody']
-        ))
-    inactive = identity.get('inactive_users') or []
-    if inactive:
-        rows = []
-        for u in inactive:
-            account = u.get('account') or u.get('upn') or '—'
-            utype = s['er_guest'] if u.get('type') == 'guest' else s['er_member']
-            rows.append([account, utype, activity_label(u)])
-        t = std_table(
-            [s['er_col_account'], s['er_col_type'], s['er_col_activity']],
-            rows, [240, 100, 164], styles
-        )
-        if t:
-            flows.append(t)
-            flows.append(Spacer(1, 8))
-    else:
-        flows.append(Paragraph(s['er_no_inactive'], styles['DocBody']))
-        flows.append(Spacer(1, 8))
+    # NOTE: the inactive-accounts listing lives in the Users section
+    # (build_section_users — entra/sign-in sourced, richer: per-user last sign-in,
+    # Licensed column, internal/guest split, "no Entra ID P1" notes). The duplicate
+    # Identity-Hygiene inactive subsection was removed (single source of truth) when
+    # the shared enrichment switched inactive_users → inactive_members/guests.
 
     # ─── Break-Glass (Emergency Access) ───
     flows.append(Paragraph(f"<b>{esc(s['er_sec_breakglass'])}</b>", styles['DocSubHeading']))
@@ -2250,6 +2330,7 @@ def build_pdf(data, output_path):
         (s['sec_exemptions'], lambda: build_section_exemptions(data, styles, s, width, project_root, lang)),
         (s['sec_devices'], lambda: build_section_devices(data, styles, s, width, lang)),
         (s['sec_domains'], lambda: build_section_domains(data, styles, s, width, lang)),
+        (s['email_auth_title'], lambda: build_section_email_auth(data, styles, s, width, project_root, lang)),
         (s['sec_sharepoint'], lambda: build_section_sharepoint(data, styles, s, width, lang)),
         (s['sec_exchange'], lambda: build_section_exchange(data, styles, s, width, lang)),
         (s['sec_inbox_rules'], lambda: build_section_inbox_rules(data, styles, s, width, lang)),

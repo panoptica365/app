@@ -26,7 +26,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Image as RLImage,
-    PageBreak, Table, TableStyle, KeepTogether
+    PageBreak, CondPageBreak, Table, TableStyle, KeepTogether
 )
 from reportlab.pdfgen import canvas
 
@@ -35,6 +35,14 @@ import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+
+# Shared email-auth rendering logic, kept in sync across both report generators
+# (Security Posture + Quick Assessment). Ensure the script's own dir is importable
+# whether run as a script or loaded via importlib (the offline harness does the latter).
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _report_email_auth import (  # noqa: E402
+    generate_email_auth_gauge, email_auth_label, mechanism_rows,
+)
 
 # ─── Color palette (Panoptica365) ───
 COLORS = {
@@ -316,6 +324,22 @@ STRINGS = {
         'er_bg_not_configured': 'No break-glass (emergency-access) group is configured for this tenant.',
         'er_bg_members_unavailable': 'Group membership could not be read at report time.',
         'er_threshold_note': 'Inactivity threshold: {n} days.',
+        # ─── Report polish v0.2.24 ───
+        'settings_center_label': 'settings',
+        'email_auth_title': 'Email Authentication',
+        'email_auth_intro': "DNS email-authentication posture for this tenant's primary sending domain.",
+        'email_auth_unavailable': 'Email authentication has not been audited for this tenant. Run a Refresh on the Email Auth tab to populate it.',
+        'ea_col_mechanism': 'Mechanism',
+        'ea_col_status': 'Status',
+        'ea_col_detail': 'Detail',
+        'email_auth_other_domains': 'Other mail domains',
+        'email_auth_nonmail_note': 'Non-mail domains should publish v=spf1 -all and DMARC p=reject to prevent spoofing: {domains}',
+        'er_sec_inactive_members': 'Inactive Members',
+        'er_sec_inactive_guests': 'Inactive External / Guest Accounts',
+        'er_guest_external': 'Guest/External',
+        'er_no_inactive_members': 'No inactive member accounts.',
+        'er_no_inactive_guests': 'No inactive guest accounts.',
+        'er_guest_count_note': '{inactive} of {total} guest account(s) inactive.',
     },
     'fr': {
         'report_title': 'Rapport de posture de sécurité',
@@ -419,6 +443,22 @@ STRINGS = {
         'er_bg_not_configured': 'Aucun groupe de compte d\'urgence (bris de glace) n\'est configuré pour ce locataire.',
         'er_bg_members_unavailable': 'L\'appartenance au groupe n\'a pas pu être lue au moment du rapport.',
         'er_threshold_note': 'Seuil d\'inactivité : {n} jours.',
+        # ─── Report polish v0.2.24 ───
+        'settings_center_label': 'paramètres',
+        'email_auth_title': 'Authentification du courriel',
+        'email_auth_intro': "Posture d'authentification des courriels (DNS) pour le domaine d'envoi principal de ce locataire.",
+        'email_auth_unavailable': "L'authentification des courriels n'a pas été vérifiée pour ce locataire. Lancez une actualisation dans l'onglet Authentification du courriel pour la renseigner.",
+        'ea_col_mechanism': 'Mécanisme',
+        'ea_col_status': 'Statut',
+        'ea_col_detail': 'Détail',
+        'email_auth_other_domains': 'Autres domaines de courriel',
+        'email_auth_nonmail_note': "Les domaines sans courriel devraient publier v=spf1 -all et DMARC p=reject pour empêcher l'usurpation : {domains}",
+        'er_sec_inactive_members': 'Membres inactifs',
+        'er_sec_inactive_guests': 'Comptes externes / invités inactifs',
+        'er_guest_external': 'Invité/Externe',
+        'er_no_inactive_members': 'Aucun compte membre inactif.',
+        'er_no_inactive_guests': 'Aucun compte invité inactif.',
+        'er_guest_count_note': '{inactive} compte(s) invité sur {total} inactif(s).',
     },
     'es': {
         'report_title': 'Informe de Postura de Seguridad',
@@ -522,6 +562,22 @@ STRINGS = {
         'er_bg_not_configured': 'No hay configurado ningún grupo de acceso de emergencia (break-glass) para este inquilino.',
         'er_bg_members_unavailable': 'No se pudo leer la pertenencia al grupo al momento del informe.',
         'er_threshold_note': 'Umbral de inactividad: {n} días.',
+        # ─── Report polish v0.2.24 ───
+        'settings_center_label': 'parámetros',
+        'email_auth_title': 'Autenticación de correo',
+        'email_auth_intro': 'Postura de autenticación de correo (DNS) del dominio de envío principal de este inquilino.',
+        'email_auth_unavailable': 'La autenticación de correo no se ha auditado para este inquilino. Ejecute Actualizar en la pestaña Autenticación de correo para completarla.',
+        'ea_col_mechanism': 'Mecanismo',
+        'ea_col_status': 'Estado',
+        'ea_col_detail': 'Detalle',
+        'email_auth_other_domains': 'Otros dominios de correo',
+        'email_auth_nonmail_note': 'Los dominios sin correo deberían publicar v=spf1 -all y DMARC p=reject para evitar la suplantación: {domains}',
+        'er_sec_inactive_members': 'Miembros inactivos',
+        'er_sec_inactive_guests': 'Cuentas externas / invitadas inactivas',
+        'er_guest_external': 'Invitado/Externo',
+        'er_no_inactive_members': 'Ninguna cuenta miembro inactiva.',
+        'er_no_inactive_guests': 'Ninguna cuenta invitada inactiva.',
+        'er_guest_count_note': '{inactive} de {total} cuenta(s) invitada(s) inactiva(s).',
     }
 }
 
@@ -760,7 +816,7 @@ def generate_settings_chart(by_status, output_buf, s):
     # Center text — total + label
     ax.text(0, 0.06, str(total), ha='center', va='center',
             fontsize=20, fontweight='bold', color=COLORS['primary'])
-    ax.text(0, -0.18, 'settings', ha='center', va='center',
+    ax.text(0, -0.18, s.get('settings_center_label', 'settings'), ha='center', va='center',
             fontsize=8, color=COLORS['text_light'])
 
     # Legend on the right — own axes
@@ -895,6 +951,41 @@ def build_section(title, paragraphs, styles, width, story):
     else:
         story.append(KeepTogether([heading, Spacer(1, 4), line]))
     story.append(Spacer(1, 6))
+
+
+def build_section_with_visual(title, intro_paras, visual, styles, width, story, mode='keep'):
+    """Heading + intro + a trailing visual (chart image or table), grouped so the
+    heading never orphans from its visual. Two modes by content type (Item 2):
+
+      mode='keep'      → wrap heading + intro + visual in ONE KeepTogether. Safe
+                         for charts (they are < a page tall), so ReportLab pushes
+                         the whole block to the next page when space is tight.
+      mode='condbreak' → emit a CondPageBreak so the heading + intro + first rows
+                         land together, then append the visual separately. Use for
+                         tables that can grow taller than a page (a KeepTogether'd
+                         oversized table overflows/loops). The caller must set
+                         repeatRows=1 on the table so its header repeats on split.
+    """
+    heading = Paragraph(title, styles['SectionHeading'])
+    line = section_line(width)
+    block = [heading, Spacer(1, 4), line, Spacer(1, 8)]
+    block.extend(intro_paras or [])
+    if mode == 'keep':
+        if visual is not None:
+            block.append(visual)
+        story.append(KeepTogether(block))
+    else:  # condbreak
+        story.append(CondPageBreak(3 * inch))
+        story.append(KeepTogether(block))
+        if visual is not None:
+            story.append(visual)
+    story.append(Spacer(1, 6))
+
+
+# NOTE: the email-auth gauge (generate_email_auth_gauge), the localized label
+# reader (email_auth_label), and the findings→rows mapping (mechanism_rows) now
+# live in scripts/_report_email_auth.py (imported at the top) so the Security
+# Posture and Quick Assessment reports share one implementation and can't drift.
 
 
 def build_pdf(data, output_path):
@@ -1065,16 +1156,17 @@ def build_pdf(data, output_path):
     if sev_parts:
         summary_text += f' {s["breakdown"]}: ' + ', '.join(sev_parts) + '.'
 
-    alert_overview_paras = [Paragraph(summary_text, styles['ReportBody']), Spacer(1, 8)]
+    sev_chart_img = None
     if total_alerts > 0:
         sev_chart_img = RLImage(severity_chart_buf, width=4.5 * inch, height=1.8 * inch)
-        alert_overview_paras.append(sev_chart_img)
-    build_section(s['alert_overview'], alert_overview_paras, styles, width, story)
+    # Item 2: keep heading + intro + chart together so the heading never orphans.
+    build_section_with_visual(s['alert_overview'], [Paragraph(summary_text, styles['ReportBody'])],
+                              sev_chart_img, styles, width, story, mode='keep')
 
     # Trend chart if available
     if has_trend:
         trend_img = RLImage(trend_chart_buf, width=5 * inch, height=2 * inch)
-        build_section(s['alert_trend'], [trend_img], styles, width, story)
+        build_section_with_visual(s['alert_trend'], [], trend_img, styles, width, story, mode='keep')
 
     # ── Security Highlights ──
     highlights = narrative.get('security_highlights', '')
@@ -1098,17 +1190,49 @@ def build_pdf(data, output_path):
             Paragraph(s['date'], styles['TableHeader']),
         ]
         table_data = [header_row]
-        for a in top_alerts[:10]:
+        # Item 6: collapse runs of IDENTICAL incident descriptions into a single
+        # row that preserves the dates (occurrence count + date range as a muted
+        # sub-line) instead of N near-duplicate rows. Order = first-seen.
+        collapsed = []
+        index = {}
+        for a in top_alerts:
             sev = a.get('severity', 'info')
-            sev_label_text = sev_labels.get(sev, sev)
-            msg = a.get('message', '')
-            status = localize(a.get('status', ''), STATUS_LABELS, lang)
-            date = (a.get('triggered_at', '') or '')[:10]
+            msg = a.get('message', '') or ''
+            status_raw = a.get('status', '') or ''
+            key = (sev, msg, status_raw)
+            d = (a.get('triggered_at', '') or '')[:10]
+            if key in index:
+                g = index[key]
+                g['count'] += 1
+                if d:
+                    g['dates'].append(d)
+            else:
+                g = {'severity': sev, 'message': msg, 'status': status_raw,
+                     'count': 1, 'dates': ([d] if d else [])}
+                index[key] = g
+                collapsed.append(g)
+
+        for g in collapsed[:10]:
+            sev_label_text = sev_labels.get(g['severity'], g['severity'])
+            status = localize(g['status'], STATUS_LABELS, lang)
+            dates_sorted = sorted(g['dates'])
+            desc = g['message']
+            if g['count'] > 1:
+                if dates_sorted and dates_sorted[0] != dates_sorted[-1]:
+                    span = f"{dates_sorted[0]} – {dates_sorted[-1]}"
+                elif dates_sorted:
+                    span = dates_sorted[0]
+                else:
+                    span = ''
+                desc += f"<br/><font size='7' color='#888888'>{g['count']}×{' · ' + span if span else ''}</font>"
+                date_cell = dates_sorted[-1] if dates_sorted else ''
+            else:
+                date_cell = dates_sorted[0] if dates_sorted else ''
             table_data.append([
                 Paragraph(sev_label_text, styles['TableCell']),
-                Paragraph(msg, styles['TableCell']),
+                Paragraph(desc, styles['TableCell']),
                 Paragraph(status, styles['TableCell']),
-                Paragraph(date, styles['TableCell']),
+                Paragraph(date_cell, styles['TableCell']),
             ])
 
         t = Table(table_data, colWidths=[60, 280, 70, 70])
@@ -1217,6 +1341,115 @@ def build_pdf(data, output_path):
             ]))
             story.append(t)
             story.append(Spacer(1, 10))
+
+    # ── Email Authentication (Item 7) — primary domain detail, cached read ──
+    # Mechanism / status / finding labels are pulled from the SAME locale tree the
+    # dashboard tab uses (tenant_dashboard.email_auth.*) so the two never diverge.
+    email_auth = (data.get('enrichment') or {}).get('emailAuth') or {}
+    if email_auth:
+        intro_para = Paragraph(s['email_auth_intro'], styles['ReportBody'])
+        if not email_auth.get('available'):
+            build_section(s['email_auth_title'], [intro_para], styles, width, story)
+            story.append(Paragraph(s['email_auth_unavailable'], styles['ReportBody']))
+            story.append(Spacer(1, 10))
+        else:
+            primary = email_auth.get('primary') or {}
+            if primary:
+                # Gauge (grade-banded donut) + domain / caption / providers beside it.
+                ea_buf = BytesIO()
+                grade_word = email_auth_label(project_root, lang, 'grade')
+                has_ea = generate_email_auth_gauge(primary.get('overall_score'), primary.get('grade'),
+                                                   ea_buf, grade_word)
+                if has_ea:
+                    ea_buf.seek(0)
+                caption = email_auth_label(project_root, lang,
+                                           'non_mail_domain' if primary.get('non_mail') else 'gauge_caption')
+                provs = ((primary.get('detected_providers') or {}).get('all')) or []
+                text_flow = [Paragraph(f"<b>{primary.get('domain', '')}</b>", styles['ReportBody']),
+                             Paragraph(f"<i>{caption}</i>", styles['TableCell'])]
+                if provs:
+                    text_flow.append(Paragraph(
+                        email_auth_label(project_root, lang, 'detected_providers', {'providers': ', '.join(provs)}),
+                        styles['TableCell']))
+                if has_ea:
+                    ea_img = RLImage(ea_buf, width=1.8 * inch, height=1.8 * inch)
+                    ea_table = Table([[ea_img, text_flow]],
+                                     colWidths=[2.0 * inch, width - 108 - 2.0 * inch])
+                    ea_table.setStyle(TableStyle([
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                    ]))
+                    # Keep heading + intro + gauge together (avoid heading orphan).
+                    build_section_with_visual(s['email_auth_title'], [intro_para], ea_table,
+                                              styles, width, story, mode='keep')
+                else:
+                    build_section(s['email_auth_title'], [intro_para] + text_flow, styles, width, story)
+                story.append(Spacer(1, 8))
+
+                # Per-mechanism status table (DKIM is 3-state; indeterminate is
+                # NOT a failure — the localized status label makes that explicit).
+                findings = primary.get('findings') or {}
+                mech_header = [
+                    Paragraph(s['ea_col_mechanism'], styles['TableHeader']),
+                    Paragraph(s['ea_col_status'], styles['TableHeader']),
+                    Paragraph(s['ea_col_detail'], styles['TableHeader']),
+                ]
+                mech_rows = [mech_header]
+                for mech_name, status_lbl, detail in mechanism_rows(findings, project_root, lang):
+                    mech_rows.append([
+                        Paragraph(mech_name, styles['TableCell']),
+                        Paragraph(status_lbl, styles['TableCell']),
+                        Paragraph(detail, styles['TableCell']),
+                    ])
+                mt = Table(mech_rows, colWidths=[70, 70, width - 108 - 140], repeatRows=1)
+                mt.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
+                    ('GRID', (0, 0), (-1, -1), 0.5, HexColor(COLORS['border'])),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                story.append(CondPageBreak(2 * inch))
+                story.append(mt)
+                story.append(Spacer(1, 10))
+            else:
+                build_section(s['email_auth_title'], [intro_para], styles, width, story)
+
+            # Other scored mail domains — compact one-line-per-domain list only
+            # (no gauge / table — a multi-domain tenant must not be a wall of gauges).
+            others = email_auth.get('others') or []
+            if others:
+                story.append(Paragraph(s['email_auth_other_domains'], styles['SubHeading']))
+                lines = []
+                for o in others:
+                    tag = ''
+                    if o.get('non_mail'):
+                        tag = ' · ' + email_auth_label(project_root, lang, 'non_mail_domain')
+                    lines.append(f"{o.get('domain', '')} — {o.get('grade', '')} ({o.get('overall_score', 0)}){tag}")
+                story.append(Paragraph('<br/>'.join(lines), styles['ReportBody']))
+                story.append(Spacer(1, 8))
+
+            # Non-mail advisory (parked domains should lock down SPF + DMARC).
+            nonmail_doms = []
+            if primary.get('non_mail') and primary.get('domain'):
+                nonmail_doms.append(primary.get('domain'))
+            nonmail_doms += [o.get('domain') for o in others if o.get('non_mail') and o.get('domain')]
+            if nonmail_doms:
+                story.append(Paragraph(s['email_auth_nonmail_note'].format(domains=', '.join(nonmail_doms)),
+                                       styles['ReportBody']))
+                story.append(Spacer(1, 6))
+
+            # Informational (Microsoft routing / *.onmicrosoft.com) domains.
+            info_doms = email_auth.get('informational') or []
+            if info_doms:
+                story.append(Paragraph(
+                    email_auth_label(project_root, lang, 'informational_domains', {'domains': ', '.join(info_doms)}),
+                    styles['ReportBody']))
+                story.append(Spacer(1, 10))
 
     # ── Defender XDR Incidents ──
     if defender.get('total') or narrative.get('defender_incidents_analysis'):
@@ -1424,30 +1657,30 @@ def build_pdf(data, output_path):
                                        Paragraph(s['er_no_admins'], styles['ReportBody'])]))
         story.append(Spacer(1, 10))
 
-        # Inactive accounts table
-        inactive = identity.get('inactive_users') or []
-        inactive_heading = Paragraph(s['er_sec_inactive'], styles['SubHeading'])
+        # Inactive accounts — Item 8: split into inactive MEMBERS and inactive
+        # EXTERNAL/GUEST accounts (guests were previously lumped in one table).
         threshold_n = identity.get('threshold_days')
         note_line = Paragraph(
             s['er_threshold_note'].replace('{n}', str(threshold_n)),
             styles['ReportBody']
         ) if threshold_n is not None else Spacer(1, 0)
-        if inactive:
+
+        def _inactive_table(users_list, type_label):
             header_row = [
                 Paragraph(s['er_col_account'], styles['TableHeader']),
                 Paragraph(s['er_col_type'], styles['TableHeader']),
                 Paragraph(s['er_col_activity'], styles['TableHeader']),
             ]
             rows = [header_row]
-            for u in inactive:
+            for u in users_list:
                 account = u.get('account') or u.get('upn') or '—'
-                utype = s['er_guest'] if u.get('type') == 'guest' else s['er_member']
                 rows.append([
                     Paragraph(account, styles['TableCell']),
-                    Paragraph(utype, styles['TableCell']),
+                    Paragraph(type_label, styles['TableCell']),
                     Paragraph(_er_activity(u), styles['TableCell']),
                 ])
-            t = Table(rows, colWidths=[250, 80, 160])
+            # repeatRows=1 so the header repeats if a large roster splits a page.
+            t = Table(rows, colWidths=[250, 80, 160], repeatRows=1)
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
                 ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
@@ -1458,10 +1691,43 @@ def build_pdf(data, output_path):
                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ]))
-            story.append(KeepTogether([inactive_heading, Spacer(1, 4), note_line, Spacer(1, 4), t]))
+            return t
+
+        # Partition. New payloads carry inactive_members + inactive_guests; fall
+        # back to a single inactive_users list for older payloads.
+        if identity.get('inactive_members') is not None or identity.get('inactive_guests') is not None:
+            inactive_members = identity.get('inactive_members') or []
+            inactive_guests = identity.get('inactive_guests') or []
         else:
-            story.append(KeepTogether([inactive_heading, Spacer(1, 4), note_line, Spacer(1, 4),
-                                       Paragraph(s['er_no_inactive'], styles['ReportBody'])]))
+            legacy = identity.get('inactive_users') or []
+            inactive_members = [u for u in legacy if u.get('type') != 'guest']
+            inactive_guests = [u for u in legacy if u.get('type') == 'guest']
+
+        # Inactive members
+        story.append(CondPageBreak(2.5 * inch))
+        story.append(KeepTogether([Paragraph(s['er_sec_inactive_members'], styles['SubHeading']),
+                                   Spacer(1, 4), note_line]))
+        story.append(Spacer(1, 4))
+        if inactive_members:
+            story.append(_inactive_table(inactive_members, s['er_member']))
+        else:
+            story.append(Paragraph(s['er_no_inactive_members'], styles['ReportBody']))
+        story.append(Spacer(1, 10))
+
+        # Inactive external / guests
+        guest_total = (identity.get('summary') or {}).get('guest_total')
+        g_block = [Paragraph(s['er_sec_inactive_guests'], styles['SubHeading']), Spacer(1, 4)]
+        if guest_total is not None:
+            g_block.append(Paragraph(
+                s['er_guest_count_note'].replace('{inactive}', str(len(inactive_guests))).replace('{total}', str(guest_total)),
+                styles['ReportBody']))
+        story.append(CondPageBreak(2.5 * inch))
+        story.append(KeepTogether(g_block))
+        story.append(Spacer(1, 4))
+        if inactive_guests:
+            story.append(_inactive_table(inactive_guests, s['er_guest_external']))
+        else:
+            story.append(Paragraph(s['er_no_inactive_guests'], styles['ReportBody']))
         story.append(Spacer(1, 10))
 
         # Break-glass block
@@ -1579,10 +1845,10 @@ def build_pdf(data, output_path):
     # ── Activity Volume ──
     if activity.get('totalEvents'):
         intro_text = s['activity_intro'].format(total=activity.get('totalEvents', 0))
-        intro_paras = [Paragraph(intro_text, styles['ReportBody']), Spacer(1, 6)]
-        if has_activity_chart:
-            intro_paras.append(RLImage(activity_chart_buf, width=5 * inch, height=1.8 * inch))
-        build_section(s['activity_title'], intro_paras, styles, width, story)
+        activity_chart = RLImage(activity_chart_buf, width=5 * inch, height=1.8 * inch) if has_activity_chart else None
+        # Item 2: keep heading + intro + chart together so the heading never orphans.
+        build_section_with_visual(s['activity_title'], [Paragraph(intro_text, styles['ReportBody'])],
+                                  activity_chart, styles, width, story, mode='keep')
 
         top_pol = activity.get('topPolicies', [])
         if top_pol:
@@ -1598,7 +1864,10 @@ def build_pdf(data, output_path):
                     Paragraph(localize(p.get('category', ''), ALERT_CATEGORY_LABELS, lang), styles['TableCell']),
                     Paragraph(str(p.get('total', 0)), styles['TableCell']),
                 ])
-            t = Table(rows, colWidths=[260, 150, 80])
+            # Item 2: a busy tenant's activity table can grow past one page — do NOT
+            # KeepTogether it (that overflows/loops). CondPageBreak keeps the first
+            # rows with the section; repeatRows=1 repeats the header on a split.
+            t = Table(rows, colWidths=[260, 150, 80], repeatRows=1)
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#F0F0F0')),
                 ('ROWBACKGROUNDS', (0, 1), (-1, -1), [white, HexColor('#FAFAFA')]),
@@ -1609,6 +1878,7 @@ def build_pdf(data, output_path):
                 ('LEFTPADDING', (0, 0), (-1, -1), 6),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ]))
+            story.append(CondPageBreak(2 * inch))
             story.append(t)
             story.append(Spacer(1, 10))
 

@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.24 — 2026-06-24
+
+### Reports — reviewed and polished
+
+We went through all three reports — the **Security Posture report**, the **Quick Assessment**, and the **Configuration Documentation** — and gave them a thorough review and polish across English, French and Spanish.
+
+The headline addition is a new **Email Authentication** section in each report: the published SPF, DKIM, DMARC and related DNS posture (with an A–F grade) for the tenant's sending domains, so the report shows how well the client is protected against email spoofing. Alongside that, inactive accounts are now clearly split into members and external/guest accounts, and a range of layout and wording refinements make every report read more cleanly.
+
+---
+
 ## Version 0.2.23 — 2026-06-23
 
 ### Email Auth: correct DKIM detection for Microsoft 365's newer record format

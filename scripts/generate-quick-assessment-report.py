@@ -35,6 +35,14 @@ import matplotlib
 matplotlib.use('Agg')  # headless — no display
 import matplotlib.pyplot as plt
 
+# Shared email-auth rendering logic — one implementation across both report
+# generators (Security Posture + Quick Assessment) so they can't drift. Ensure
+# the script's own dir is importable whether run as a script or via importlib.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _report_email_auth import (  # noqa: E402
+    generate_email_auth_gauge, email_auth_label, mechanism_rows,
+)
+
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ─── Palette (consistent with the other Panoptica reports) ───
@@ -131,6 +139,21 @@ STRINGS = {
         'er_bg_not_configured': 'No break-glass (emergency-access) group is configured for this tenant.',
         'er_bg_members_unavailable': 'Group membership could not be read at report time.',
         'er_threshold_note': 'Inactivity threshold: {n} days.',
+        # ─── Report polish v0.2.24 (shared with the Security Posture report) ───
+        'er_sec_inactive_members': 'Inactive Members',
+        'er_sec_inactive_guests': 'Inactive External / Guest Accounts',
+        'er_guest_external': 'Guest/External',
+        'er_no_inactive_members': 'No inactive member accounts.',
+        'er_no_inactive_guests': 'No inactive guest accounts.',
+        'er_guest_count_note': '{inactive} of {total} guest account(s) inactive.',
+        'email_auth_title': 'Email Authentication',
+        'email_auth_intro': "DNS email-authentication posture for this tenant's primary sending domain.",
+        'email_auth_unavailable': 'Email authentication has not been audited for this tenant. Run a Refresh on the Email Auth tab to populate it.',
+        'ea_col_mechanism': 'Mechanism',
+        'ea_col_status': 'Status',
+        'ea_col_detail': 'Detail',
+        'email_auth_other_domains': 'Other mail domains',
+        'email_auth_nonmail_note': 'Non-mail domains should publish v=spf1 -all and DMARC p=reject to prevent spoofing: {domains}',
     },
     'fr': {
         'title': 'Évaluation rapide',
@@ -210,6 +233,21 @@ STRINGS = {
         'er_bg_not_configured': "Aucun groupe de compte d'urgence (bris de glace) n'est configuré pour ce locataire.",
         'er_bg_members_unavailable': "L'appartenance au groupe n'a pas pu être lue au moment du rapport.",
         'er_threshold_note': "Seuil d'inactivité : {n} jours.",
+        # ─── Report polish v0.2.24 (partagé avec le rapport de posture) ───
+        'er_sec_inactive_members': 'Membres inactifs',
+        'er_sec_inactive_guests': 'Comptes externes / invités inactifs',
+        'er_guest_external': 'Invité/Externe',
+        'er_no_inactive_members': 'Aucun compte membre inactif.',
+        'er_no_inactive_guests': 'Aucun compte invité inactif.',
+        'er_guest_count_note': '{inactive} compte(s) invité sur {total} inactif(s).',
+        'email_auth_title': 'Authentification du courriel',
+        'email_auth_intro': "Posture d'authentification des courriels (DNS) pour le domaine d'envoi principal de ce locataire.",
+        'email_auth_unavailable': "L'authentification des courriels n'a pas été vérifiée pour ce locataire. Lancez une actualisation dans l'onglet Authentification du courriel pour la renseigner.",
+        'ea_col_mechanism': 'Mécanisme',
+        'ea_col_status': 'Statut',
+        'ea_col_detail': 'Détail',
+        'email_auth_other_domains': 'Autres domaines de courriel',
+        'email_auth_nonmail_note': "Les domaines sans courriel devraient publier v=spf1 -all et DMARC p=reject pour empêcher l'usurpation : {domains}",
     },
     'es': {
         'title': 'Evaluación rápida',
@@ -289,6 +327,21 @@ STRINGS = {
         'er_bg_not_configured': 'No hay configurado ningún grupo de acceso de emergencia (break-glass) para este inquilino.',
         'er_bg_members_unavailable': 'No se pudo leer la pertenencia al grupo al momento del informe.',
         'er_threshold_note': 'Umbral de inactividad: {n} días.',
+        # ─── Report polish v0.2.24 (compartido con el informe de postura) ───
+        'er_sec_inactive_members': 'Miembros inactivos',
+        'er_sec_inactive_guests': 'Cuentas externas / invitadas inactivas',
+        'er_guest_external': 'Invitado/Externo',
+        'er_no_inactive_members': 'Ninguna cuenta miembro inactiva.',
+        'er_no_inactive_guests': 'Ninguna cuenta invitada inactiva.',
+        'er_guest_count_note': '{inactive} de {total} cuenta(s) invitada(s) inactiva(s).',
+        'email_auth_title': 'Autenticación de correo',
+        'email_auth_intro': 'Postura de autenticación de correo (DNS) del dominio de envío principal de este inquilino.',
+        'email_auth_unavailable': 'La autenticación de correo no se ha auditado para este inquilino. Ejecute Actualizar en la pestaña Autenticación de correo para completarla.',
+        'ea_col_mechanism': 'Mecanismo',
+        'ea_col_status': 'Estado',
+        'ea_col_detail': 'Detalle',
+        'email_auth_other_domains': 'Otros dominios de correo',
+        'email_auth_nonmail_note': 'Los dominios sin correo deberían publicar v=spf1 -all y DMARC p=reject para evitar la suplantación: {domains}',
     },
 }
 
@@ -622,7 +675,7 @@ def _er_activity(entry, S):
     return '—'
 
 
-def render_enrichment(enrichment, styles, S, width):
+def render_enrichment(enrichment, styles, S, width, lang='en'):
     """Render the identity-hygiene + break-glass + application-risk tables.
     Honors graceful-degradation per the enrichment contract: every block
     falls back to an explanatory line rather than an empty table, and never
@@ -663,33 +716,65 @@ def render_enrichment(enrichment, styles, S, width):
             admin_content = [_er_table(rows, col_w, cs)]
     flows.extend(section(S['er_sec_admins'], admin_content, styles, width))
 
-    # ── Inactive accounts ──
-    inactive_content = []
+    # ── Inactive accounts — split into members vs external/guests (Item 1) ──
+    # NOTE: the shared gatherReportEnrichment() emits inactive_members +
+    # inactive_guests (the old inactive_users key was removed in the posture-report
+    # work); reading inactive_users here is what silently emptied this table.
+    def _inactive_table(users_list, type_label):
+        header = [Paragraph(esc(S[k]), th) for k in (
+            'er_col_account', 'er_col_type', 'er_col_activity')]
+        rows = [header]
+        for u in users_list:
+            account = u.get('account') or u.get('upn') or '—'
+            rows.append([
+                Paragraph(esc(account), td),
+                Paragraph(esc(type_label), td),
+                Paragraph(esc(_er_activity(u, S)), td),
+            ])
+        col_w = [width * f for f in (0.50, 0.18, 0.32)]
+        return _er_table(rows, col_w, cs)
+
     if not identity.get('available'):
-        inactive_content = [Paragraph(esc(S['er_identity_unavailable']), styles['Body'])]
+        flows.extend(section(S['er_sec_inactive_members'],
+                             [Paragraph(esc(S['er_identity_unavailable']), styles['Body'])],
+                             styles, width))
     else:
         threshold = identity.get('threshold_days')
-        if threshold is not None:
-            inactive_content.append(Paragraph(
-                esc(S['er_threshold_note'].replace('{n}', str(threshold))),
-                styles['GapMeta']))
-        inactive = identity.get('inactive_users') or []
-        if not inactive:
-            inactive_content.append(Paragraph(esc(S['er_no_inactive']), styles['Body']))
+        threshold_note = Paragraph(
+            esc(S['er_threshold_note'].replace('{n}', str(threshold))), styles['GapMeta']
+        ) if threshold is not None else None
+
+        # New payload carries the split; fall back to a single list for older data.
+        if identity.get('inactive_members') is not None or identity.get('inactive_guests') is not None:
+            inactive_members = identity.get('inactive_members') or []
+            inactive_guests = identity.get('inactive_guests') or []
         else:
-            header = [Paragraph(esc(S[k]), th) for k in (
-                'er_col_account', 'er_col_type', 'er_col_activity')]
-            rows = [header]
-            for u in inactive:
-                account = u.get('account') or u.get('upn') or '—'
-                rows.append([
-                    Paragraph(esc(account), td),
-                    Paragraph(esc(_er_type(u.get('type'), S)), td),
-                    Paragraph(esc(_er_activity(u, S)), td),
-                ])
-            col_w = [width * f for f in (0.50, 0.18, 0.32)]
-            inactive_content.append(_er_table(rows, col_w, cs))
-    flows.extend(section(S['er_sec_inactive'], inactive_content, styles, width))
+            legacy = identity.get('inactive_users') or []
+            inactive_members = [u for u in legacy if (u.get('type') or '').lower() != 'guest']
+            inactive_guests = [u for u in legacy if (u.get('type') or '').lower() == 'guest']
+
+        # Inactive members
+        m_content = []
+        if threshold_note is not None:
+            m_content.append(threshold_note)
+        if inactive_members:
+            m_content.append(_inactive_table(inactive_members, S['er_member']))
+        else:
+            m_content.append(Paragraph(esc(S['er_no_inactive_members']), styles['Body']))
+        flows.extend(section(S['er_sec_inactive_members'], m_content, styles, width))
+
+        # Inactive external / guest accounts
+        g_content = []
+        guest_total = (identity.get('summary') or {}).get('guest_total')
+        if guest_total is not None:
+            g_content.append(Paragraph(esc(
+                S['er_guest_count_note'].replace('{inactive}', str(len(inactive_guests))).replace('{total}', str(guest_total))
+            ), styles['GapMeta']))
+        if inactive_guests:
+            g_content.append(_inactive_table(inactive_guests, S['er_guest_external']))
+        else:
+            g_content.append(Paragraph(esc(S['er_no_inactive_guests']), styles['Body']))
+        flows.extend(section(S['er_sec_inactive_guests'], g_content, styles, width))
 
     # ── Break-glass (emergency access) ──
     bg_content = []
@@ -737,6 +822,79 @@ def render_enrichment(enrichment, styles, S, width):
             col_w = [width * f for f in (0.24, 0.20, 0.12, 0.10, 0.34)]
             app_content = [_er_table(rows, col_w, cs)]
     flows.extend(section(S['er_sec_app_risk'], app_content, styles, width))
+
+    # ── Email authentication (primary domain detail; cached read, Item 2) ──
+    email_auth = (enrichment.get('emailAuth') or {})
+    primary = email_auth.get('primary') or {}
+    ea_content = []
+    if (not email_auth.get('available')) or (not primary):
+        ea_content = [Paragraph(esc(S['email_auth_unavailable']), styles['Body'])]
+    else:
+        ea_content.append(Paragraph(esc(S['email_auth_intro']), styles['GapMeta']))
+
+        # Gauge (shared grade-banded donut) + domain / caption / providers beside it.
+        ea_buf = BytesIO()
+        grade_word = email_auth_label(PROJECT_ROOT, lang, 'grade')
+        if generate_email_auth_gauge(primary.get('overall_score'), primary.get('grade'), ea_buf, grade_word):
+            ea_buf.seek(0)
+            caption = email_auth_label(PROJECT_ROOT, lang,
+                                       'non_mail_domain' if primary.get('non_mail') else 'gauge_caption')
+            side = [Paragraph(f"<b>{esc(primary.get('domain') or '—')}</b>", styles['Body']),
+                    Paragraph(esc(caption), td)]
+            provs = ((primary.get('detected_providers') or {}).get('all')) or []
+            if provs:
+                side.append(Paragraph(esc(email_auth_label(
+                    PROJECT_ROOT, lang, 'detected_providers', {'providers': ', '.join(provs)})), td))
+            gauge_tbl = Table([[RLImage(ea_buf, width=1.6 * inch, height=1.6 * inch), side]],
+                              colWidths=[1.8 * inch, width - 1.8 * inch])
+            gauge_tbl.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ]))
+            ea_content.append(gauge_tbl)
+
+        # Per-mechanism status table (shared findings→rows mapping; DKIM 3-state).
+        mech_rows_data = mechanism_rows(primary.get('findings') or {}, PROJECT_ROOT, lang)
+        if mech_rows_data:
+            header = [Paragraph(esc(S[k]), th) for k in (
+                'ea_col_mechanism', 'ea_col_status', 'ea_col_detail')]
+            rows = [header]
+            for mech_name, status_lbl, detail in mech_rows_data:
+                rows.append([Paragraph(esc(mech_name), td),
+                             Paragraph(esc(status_lbl), td),
+                             Paragraph(esc(detail), td)])
+            col_w = [width * f for f in (0.18, 0.16, 0.66)]
+            ea_content.append(_er_table(rows, col_w, cs))
+
+        # Other mail domains — compact one-line-per-domain list (no gauge/table).
+        others = email_auth.get('others') or []
+        if others:
+            lines = []
+            for o in others:
+                tag = ''
+                if o.get('non_mail'):
+                    tag = ' · ' + esc(email_auth_label(PROJECT_ROOT, lang, 'non_mail_domain'))
+                lines.append(f"{esc(o.get('domain') or '—')} — {esc(str(o.get('grade') or ''))} "
+                             f"({esc(str(o.get('overall_score', 0)))}){tag}")
+            ea_content.append(Paragraph(esc(S['email_auth_other_domains']), styles['SubHead']))
+            ea_content.append(Paragraph('<br/>'.join(lines), styles['Body']))
+
+        # Non-mail advisory + informational (onmicrosoft) domains.
+        nonmail = []
+        if primary.get('non_mail') and primary.get('domain'):
+            nonmail.append(primary.get('domain'))
+        nonmail += [o.get('domain') for o in others if o.get('non_mail') and o.get('domain')]
+        if nonmail:
+            ea_content.append(Paragraph(
+                esc(S['email_auth_nonmail_note'].replace('{domains}', ', '.join(nonmail))),
+                styles['GapMeta']))
+        info = email_auth.get('informational') or []
+        if info:
+            ea_content.append(Paragraph(esc(email_auth_label(
+                PROJECT_ROOT, lang, 'informational_domains', {'domains': ', '.join(info)})),
+                styles['GapMeta']))
+    flows.extend(section(S['email_auth_title'], ea_content, styles, width))
 
     return flows
 
@@ -980,7 +1138,7 @@ def main():
                          styles, width))
 
     # ─── Enrichment tables (admins / inactive / break-glass / app risk) ───
-    story.extend(render_enrichment(data.get('enrichment') or {}, styles, S, width))
+    story.extend(render_enrichment(data.get('enrichment') or {}, styles, S, width, lang))
 
     # ─── Strengths summary ───
     if analysis.get('strengths_summary'):

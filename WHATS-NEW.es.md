@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.24 — 2026-06-24
+
+### Informes — revisados y pulidos
+
+Revisamos los tres informes — el **informe de postura de seguridad**, la **evaluación rápida** y la **documentación de configuración** — y los revisamos y pulimos en inglés, francés y español.
+
+La novedad principal es una nueva sección de **Autenticación de correo** en cada informe: la postura DNS publicada (SPF, DKIM, DMARC y mecanismos relacionados, con una calificación de A a F) de los dominios de envío del cliente, para que el informe muestre qué tan protegido está el cliente frente a la suplantación de correo. Además, las cuentas inactivas ahora se separan claramente entre miembros y cuentas externas/invitadas, y numerosos ajustes de diseño y redacción hacen que cada informe se lea con mayor claridad.
+
+---
+
 ## Versión 0.2.23 — 2026-06-23
 
 ### Aut. correo: detección de DKIM corregida para el nuevo formato de registro de Microsoft 365
