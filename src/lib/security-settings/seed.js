@@ -92,6 +92,30 @@ async function ensureSchema() {
         INDEX idx_sse_event_type (event_type)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // #26 (Jun 27, 2026) — actual-compliance status states. deriveStatus() now
+    // emits 'off_recommended' (ORANGE — readable value off-recommended, never
+    // accepted) and 'not_configured' (GREY — no readable value / object absent)
+    // in addition to the original set. status is a strict ENUM: WITHOUT this
+    // ALTER, writes of the new values SILENTLY FAIL (mysql truncates the unknown
+    // enum to '' and the dot lies) — the same class of bug as alert_policies
+    // .category. This runs in ensureSchema(), which is awaited at boot (server.js
+    // → securitySeed.seed()) BEFORE the security poll loop starts, so the column
+    // can hold the new values before any code path writes them. Idempotent:
+    // MODIFY is a no-op when the ENUM already matches. Keep ALL legacy values —
+    // 'not_applied' is still produced by the legacy path (audit_only/preset).
+    try {
+      await db.execute(`
+        ALTER TABLE tenant_security_config
+          MODIFY COLUMN status ENUM(
+            'not_applied','monitored','drift','pending','poll_error','unavailable',
+            'off_recommended','not_configured'
+          ) NOT NULL DEFAULT 'not_applied'
+      `);
+      console.log('[SecuritySettings] Ensured tenant_security_config.status ENUM includes off_recommended + not_configured');
+    } catch (e) {
+      console.error('[SecuritySettings] status ENUM expansion error:', e.message);
+    }
   } catch (e) {
     console.error('[SecuritySettings] Schema ensure failed:', e.message);
     throw e;

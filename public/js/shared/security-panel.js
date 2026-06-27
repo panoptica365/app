@@ -363,7 +363,8 @@
     document.getElementById('sec-sum-critical').textContent = sum.critical_total || 0;
     document.getElementById('sec-sum-drift').textContent = sum.critical_drift || 0;
     document.getElementById('sec-sum-monitored').textContent = sum.monitored_total || 0;
-    document.getElementById('sec-sum-not-applied').textContent = sum.not_applied_total || 0;
+    // #26 — repurposed tile: now the actionable "off recommended — review" count.
+    document.getElementById('sec-sum-not-applied').textContent = sum.off_recommended_total || 0;
     document.getElementById('sec-sum-errors').textContent = sum.poll_error_total || 0;
     document.getElementById('sec-sum-unavailable').textContent = sum.unavailable_total || 0;
     bar.style.display = 'flex';
@@ -448,14 +449,16 @@
 
   function ledColourFor(status) {
     switch (status) {
-      case 'monitored':    return 'green';
-      case 'drift':        return 'red';
-      case 'pending':      return 'blue';
-      case 'poll_error':   return 'amber';
-      case 'unavailable':  return 'lock';
+      case 'monitored':       return 'green';
+      case 'drift':           return 'red';
+      case 'off_recommended': return 'orange';  // #26 — review flag, off-recommended
+      case 'pending':         return 'blue';
+      case 'poll_error':      return 'amber';
+      case 'unavailable':     return 'lock';
+      case 'not_configured':  // #26 — no readable value, nothing to monitor
       case 'not_applied':
       case 'not_polled':
-      default:             return 'grey';
+      default:                return 'grey';
     }
   }
 
@@ -466,6 +469,8 @@
       });
     }
     if (s.status === 'unavailable') return window.t('security_page.tooltip_unavailable');
+    if (s.status === 'off_recommended') return window.t('security_page.tooltip_off_recommended');
+    if (s.status === 'not_configured') return window.t('security_page.tooltip_not_configured');
     if (s.last_checked_at) {
       return window.t('security_page.tooltip_last_checked', { when: formatWhen(s.last_checked_at) });
     }
@@ -659,7 +664,10 @@
     // provisioned). Like never_initialized, it needs the guided turn-on surfaced
     // in Remediate even though Restore/Accept/Apply can't resolve it.
     const mdoHalf = !!(st.current_value && st.current_value.mdo_half_uninitialized);
-    if (st.status === 'drift' || neverInit || mdoHalf) {
+    // #26 — the Remediate tab also hosts the Accept action for off_recommended
+    // (ORANGE), so make it available there too. It is NOT auto-opened for orange
+    // (orange is a calm review flag, not urgent) — only drift/preset states jump.
+    if (st.status === 'drift' || st.status === 'off_recommended' || neverInit || mdoHalf) {
       remTab.style.display = '';
     } else {
       remTab.style.display = 'none';
@@ -667,7 +675,8 @@
 
     // Default tab — start on Overview every open. If status=drift or the preset
     // needs first-time setup (or its MDO half after a licence upgrade), jump to
-    // Remediate so the operator's eye lands on what needs attention.
+    // Remediate so the operator's eye lands on what needs attention. off_recommended
+    // does NOT auto-jump — the orange dot + Overview label are signal enough.
     switchTab((st.status === 'drift' || neverInit || mdoHalf) ? 'remediate' : 'overview');
 
     // Pre-render the Configure tab even if not selected, so switching is instant.
@@ -1801,16 +1810,43 @@
       return;
     }
 
-    if (state.status !== 'drift') return;
+    // #26 — the Remediate tab now also serves off_recommended (ORANGE). Anything
+    // else (monitored/grey/pending) has nothing to remediate.
+    const isOff = state.status === 'off_recommended';
+    if (state.status !== 'drift' && !isOff) return;
 
     const writer = setting.writer;
     const isAuditOnly = !!(writer && writer.audit_only);
 
-    // Restore button is hidden for audit-only settings — Panoptica can't
-    // write to those, so the only valid resolution is Accept Drift (or revert
-    // manually via the source admin portal).
+    // Swap the box from RED (drift) to ORANGE (off_recommended), and the heading
+    // + help copy to match. The Accept CTA is shared.
+    const box = document.getElementById('sec-rem-drift-box');
+    const heading = document.getElementById('sec-rem-drift-heading');
+    const help = document.getElementById('sec-rem-help');
+    if (box) {
+      box.style.border = isOff ? '1px solid #f97316' : '1px solid #ef4444';
+      box.style.background = isOff ? 'rgba(249, 115, 22, 0.06)' : 'rgba(239, 68, 68, 0.06)';
+    }
+    if (heading) heading.textContent = window.t(isOff ? 'security_page.off_recommended_heading' : 'security_page.drift_detected');
+    if (help) help.textContent = window.t(isOff ? 'security_page.off_recommended_help' : 'security_page.remediate_help');
+
+    // Restore button: hidden for audit-only (can't write) AND for off_recommended
+    // (no baseline to restore to — the only paths are Apply the recommended value
+    // via the Configure tab, or Accept the current value here).
     const restoreBtn = document.getElementById('sec-rem-restore-btn');
-    if (restoreBtn) restoreBtn.style.display = isAuditOnly ? 'none' : '';
+    if (restoreBtn) restoreBtn.style.display = (isAuditOnly || isOff) ? 'none' : '';
+
+    if (isOff) {
+      // ORANGE: show the recommended value vs the current value. The recommended
+      // option's label is the human-readable target; current is the interpreted live value.
+      const rec = writer && Array.isArray(writer.options) ? writer.options.find(o => o.recommended) : null;
+      const recLabel = rec ? rec.label : '—';
+      document.getElementById('sec-rem-summary').innerHTML =
+        `<div><strong>${escapeHtml(window.t('security_page.recommended_label_short'))}</strong> ${escapeHtml(recLabel)}</div>` +
+        `<div><strong>${escapeHtml(window.t('security_page.current_label_short'))}</strong> ${escapeHtml(renderInterpreted(state.current_value_interpreted, JSON.stringify(state.current_value)))}</div>`;
+      document.getElementById('sec-rem-status').textContent = '';
+      return;
+    }
 
     let appliedLabel;
     if (isAuditOnly) {
@@ -2001,13 +2037,15 @@
 
   function statusLabel(status) {
     const keyByStatus = {
-      monitored:   'security_page.status_monitored',
-      drift:       'security_page.status_drift',
-      pending:     'security_page.status_pending',
-      poll_error:  'security_page.status_poll_error',
-      unavailable: 'security_page.status_unavailable',
-      not_applied: 'security_page.status_not_applied',
-      not_polled:  'security_page.status_not_polled',
+      monitored:       'security_page.status_monitored',
+      drift:           'security_page.status_drift',
+      off_recommended: 'security_page.status_off_recommended',  // #26
+      not_configured:  'security_page.status_not_configured',   // #26
+      pending:         'security_page.status_pending',
+      poll_error:      'security_page.status_poll_error',
+      unavailable:     'security_page.status_unavailable',
+      not_applied:     'security_page.status_not_applied',
+      not_polled:      'security_page.status_not_polled',
     };
     return window.t(keyByStatus[status] || 'security_page.status_not_polled');
   }

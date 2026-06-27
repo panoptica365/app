@@ -5,6 +5,16 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.27 — 2026-06-27
+
+### Los ajustes de seguridad ahora muestran el cumplimiento real de un vistazo
+
+En la página Tenant Security, la luz de estado de un ajuste ahora refleja la configuración **real** del inquilino en cada comprobación, y no solo si hizo clic en **Apply** o **Match Current** en Panoptica365. Un ajuste que ya está configurado correctamente (por ejemplo, el registro de auditoría unificado ya activado) ahora aparece en **verde**, sin ninguna acción necesaria, en lugar de quedar en gris hasta que cambiara algo innecesariamente.
+
+La luz tiene cuatro estados claros: **verde** — conforme con el valor recomendado, o con un valor que usted aceptó explícitamente como referencia; **naranja** — un valor legible que se aparta del ajuste recomendado y nunca se aceptó, solo una señal para revisar (sin alerta); **gris** — nada legible que evaluar, por lo que no hay nada que supervisar (sin alerta); **rojo** — un ajuste que estaba conforme y que desde entonces se desvió, el único caso que genera una alerta de desviación. La acción **Accept** ahora está disponible tanto en naranja como en rojo: adopta el valor actual como referencia supervisada, para los inquilinos que ejecutan deliberadamente un valor diferente. Agregar un inquilino nuevo nunca produce alertas falsas en su primera comprobación.
+
+---
+
 ## Versión 0.2.26 — 2026-06-27
 
 ### Las auditorías de SharePoint ahora son trabajos en segundo plano con seguimiento, con una pestaña Auditorías

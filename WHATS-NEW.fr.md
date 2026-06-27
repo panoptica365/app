@@ -5,6 +5,16 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.27 — 2026-06-27
+
+### Les réglages de sécurité affichent maintenant la conformité réelle d'un coup d'œil
+
+Sur la page Tenant Security, le voyant d'état d'un réglage reflète désormais la configuration **réelle** du locataire à chaque vérification — et non plus seulement le fait que vous ayez cliqué sur **Apply** ou **Match Current** dans Panoptica365. Un réglage déjà correctement configuré (par exemple le journal d'audit unifié déjà activé) s'affiche maintenant en **vert**, sans aucune action requise, au lieu de rester en gris jusqu'à une modification inutile.
+
+Le voyant a quatre états clairs : **vert** — conforme à la valeur recommandée, ou à une valeur que vous avez explicitement acceptée comme référence; **orange** — une valeur lisible qui s'écarte du réglage recommandé et n'a jamais été acceptée, un simple signal à examiner (sans alerte); **gris** — rien de lisible à évaluer, donc rien à surveiller (sans alerte); **rouge** — un réglage qui était conforme et qui a depuis dérivé, le seul cas qui déclenche une alerte de dérive. L'action **Accept** est maintenant offerte sur l'orange comme sur le rouge : elle adopte la valeur actuelle comme référence surveillée, pour les locataires qui exécutent volontairement une valeur différente. L'ajout d'un nouveau locataire ne produit jamais de fausses alertes à sa première vérification.
+
+---
+
 ## Version 0.2.26 — 2026-06-27
 
 ### Les audits SharePoint sont maintenant des tâches en arrière-plan suivies, avec un onglet Audits

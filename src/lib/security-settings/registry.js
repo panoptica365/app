@@ -597,6 +597,12 @@ if ($errors.Count -gt 0) { throw "EXO-03 Apply: fixed=$fixed of $total; $($error
     writer: {
       strategy: 'powershell_exo',
       ui: 'select_one',
+      // #26 (Jun 27, 2026) — preset-style: opt OUT of the actual-compliance dot
+      // logic (poll.js deriveStatus). EXO-06's reader returns special objects
+      // (never_initialized, mdo_available/mdo_half_uninitialized) that have their
+      // own guided turn-on UX; it must stay on the legacy not_applied/monitored/
+      // drift path, NOT be forced into the new compliant/orange/grey states.
+      preset_style: true,
       recommended_label: 'Standard alone is the floor every tenant should have — turning it on tenant-wide is the single highest-value EXO hardening step. Standard + Strict adds defense in depth for tenants with high-value targets (executives, finance, legal). Disabled is "default Microsoft policies" which Microsoft acknowledges is loose.',
       options: [
         { value: 'standard_strict', label: 'Standard + Strict (defense in depth — Strict for high-risk users on top of Standard baseline)' },

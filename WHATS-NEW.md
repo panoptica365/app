@@ -5,6 +5,16 @@ that release, newest first.
 
 ---
 
+## Version 0.2.27 — 2026-06-27
+
+### Security settings now show real compliance at a glance
+
+On the Tenant Security page, a setting's status light now reflects the tenant's **actual** configuration on every check — not just whether you clicked **Apply** or **Match Current** in Panoptica365. A setting that is already correctly configured (for example, Unified Audit Log already enabled) now shows **green** with no action required, instead of sitting grey until you needlessly changed something.
+
+The light has four clear states: **green** — compliant with the recommended value, or with a value you have explicitly accepted as the baseline; **orange** — a readable value that is off the recommended setting and was never accepted, a review flag only (no alert); **grey** — nothing readable to evaluate, so there is nothing to monitor (no alert); **red** — a setting that was compliant and has since drifted, which is the only case that raises a drift alert. The **Accept** action is now available on orange as well as red, adopting the current value as the monitored baseline for tenants that intentionally run a different value. Adding a new tenant never produces false alerts on its first check.
+
+---
+
 ## Version 0.2.26 — 2026-06-27
 
 ### SharePoint audits are now tracked background jobs, with an Audits tab

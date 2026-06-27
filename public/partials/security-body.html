@@ -14,7 +14,7 @@
   <div class="sec-sum-chunk"><strong id="sec-sum-critical">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_critical">Critical</span></div>
   <div class="sec-sum-chunk"><strong id="sec-sum-drift">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_drifted">Drifted</span></div>
   <div class="sec-sum-chunk"><strong id="sec-sum-monitored">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_monitored">Monitored</span></div>
-  <div class="sec-sum-chunk"><strong id="sec-sum-not-applied">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_not_applied">Not Applied</span></div>
+  <div class="sec-sum-chunk"><strong id="sec-sum-not-applied">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_off_recommended">Off recommended</span></div>
   <div class="sec-sum-chunk"><strong id="sec-sum-errors">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_poll_errors">Poll Errors</span></div>
   <div class="sec-sum-chunk"><strong id="sec-sum-unavailable">–</strong> <span style="color:var(--p-text-muted);" data-i18n="security_page.sum_awaiting_infra">Awaiting Infra</span></div>
 </div>
@@ -235,10 +235,11 @@
           <button class="btn-primary" id="sec-rem-guide-btn" data-role-required="member" data-i18n="security_page.preset_guide.open_btn">Show me how to turn it on →</button>
         </div>
 
-        <!-- Standard drift UI (Restore / Accept) -->
+        <!-- Standard drift UI (Restore / Accept). Re-used for off_recommended
+             (#26) — box border + heading + help text are swapped in JS. -->
         <div id="sec-rem-drift-wrap">
-          <div style="padding:14px; border:1px solid #ef4444; border-radius:4px; background:rgba(239, 68, 68, 0.06); margin-bottom:14px;">
-            <div style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.drift_detected">Drift detected</div>
+          <div id="sec-rem-drift-box" style="padding:14px; border:1px solid #ef4444; border-radius:4px; background:rgba(239, 68, 68, 0.06); margin-bottom:14px;">
+            <div id="sec-rem-drift-heading" style="font-weight:600; margin-bottom:6px;" data-i18n="security_page.drift_detected">Drift detected</div>
             <div id="sec-rem-summary" style="font-size:0.9rem;"></div>
           </div>
           <div id="sec-rem-actions" style="display:flex; gap:10px;">
@@ -246,7 +247,7 @@
             <button class="btn-secondary" id="sec-rem-accept-btn" data-role-required="member" data-i18n="security_page.btn_accept">Accept This Change</button>
             <span id="sec-rem-status" style="color:var(--p-text-muted); font-size:0.85rem; align-self:center;"></span>
           </div>
-          <p style="margin-top:12px; color:var(--p-text-muted); font-size:0.8rem;" data-i18n="security_page.remediate_help">
+          <p id="sec-rem-help" style="margin-top:12px; color:var(--p-text-muted); font-size:0.8rem;" data-i18n="security_page.remediate_help">
             Restore re-applies the original baseline value. Accept makes the current (drifted) value the new baseline.
           </p>
         </div>

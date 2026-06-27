@@ -103,72 +103,64 @@ const STRATEGY = {
   powershell_spo:   async () => ({ ok: false, unavailable: true, error: 'Awaiting Phase A2.4 — SharePoint Online PowerShell readers' }),
 };
 
+// JSON-column read tolerance. mysql2 AUTO-PARSES JSON columns: a JSON-stored
+// primitive (string/bool/number) comes back as that primitive, and JSON.parse
+// on that throws and loses the value (which used to flip ENT-09's GUID baseline
+// back to not_applied). Pass non-strings through; attempt parse on strings;
+// fall back to the raw string if it isn't valid JSON (= a primitive string).
+function parseStoredJson(raw) {
+  if (typeof raw !== 'string') return raw;
+  try { return JSON.parse(raw); }
+  catch { return raw; }
+}
+
+// The Microsoft-recommended option value for a writer, or undefined if the
+// writer has no single `recommended: true` option. This is the SAME source the
+// detail modal and Match CTA use (writer.options[].recommended) — single source
+// of truth for "what good looks like" with no baseline.
+function recommendedValueOf(writer) {
+  if (!writer || !Array.isArray(writer.options)) return undefined;
+  const rec = writer.options.find(o => o && o.recommended);
+  return rec ? rec.value : undefined;
+}
+
+// "Does the reader actually have a value to evaluate?" Null/empty means the
+// object doesn't exist (e.g. no DLP policies, a preset never enabled) → there
+// is nothing to judge compliant or off-recommended, so the dot stays GREY
+// (not_configured). Every in-scope reader returns a NON-empty object on a real
+// read, so an empty object/array/string here genuinely means "nothing there".
+function hasUsableValue(v) {
+  if (v == null) return false;
+  if (typeof v === 'string') return v.length > 0;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'object') return Object.keys(v).length > 0;
+  return true; // numbers, booleans
+}
+
+// Settings that keep their original (pre-#26) status behavior: audit-only
+// (CMP-02 DLP) and preset-style (EXO-06). These return special/uninitialized
+// objects and have their own guided UX, so the new compliant/orange logic must
+// NOT be forced onto them.
+function usesLegacyStatus(setting) {
+  const w = setting && setting.writer;
+  if (!w) return true;
+  return w.audit_only === true || w.preset_style === true || typeof w.matches !== 'function';
+}
+
 /**
- * Decide new status given the read result and the prior row (if any).
- *
- * Phase A1 rules:
- *   - unavailable:   read explicitly marked as awaiting infra
- *   - poll_error:    read failed with a real error
- *   - not_applied:   read succeeded; no baseline
- *
- * Phase B additions (when applied_value is non-null AND a writer exists):
- *   - monitored:     current_value matches applied_value via writer.matches()
- *   - drift:         current_value does NOT match applied_value
- *   - pending:       mismatch but applied_at is within the verification window
- *                    (Microsoft propagation lag). Becomes drift after window expires.
- *
- * Drift comparison uses writer.matches(applied, current) — same canonical
- * comparator the API layer uses for Apply verification, so the entire system
- * has ONE definition of "this matches".
- *
- * @param {object}      result    reader output { ok, current_value, error, unavailable }
- * @param {object|null} priorRow  current tenant_security_config row (or null)
- *                                Expected fields: applied_value (JSON string|null),
- *                                applied_at (Date|string|null), status (string|null)
+ * Original (Phase B) status derivation, kept verbatim for legacy settings
+ * (audit_only CMP-02, preset-style EXO-06). No baseline → not_applied; baseline
+ * → monitored/pending/drift via writer.matches(applied, current).
  */
-function deriveStatus(result, priorRow) {
-  if (result.unavailable) return 'unavailable';
-  if (!result.ok) return 'poll_error';
-
-  // No baseline → not_applied (Phase A behavior).
+function deriveStatusLegacy(result, priorRow, setting) {
   if (!priorRow || priorRow.applied_value == null) return 'not_applied';
+  const writer = setting && setting.writer;
+  if (!writer || typeof writer.matches !== 'function') return 'not_applied';
 
-  // Baseline exists → drift comparison via writer.matches.
-  // If the registry has no writer for this setting (read-only setting that
-  // somehow got an applied_value — shouldn't happen, but defend), fall back
-  // to not_applied so we don't lie about being monitored.
-  const settingId = priorRow._settingId;
-  const setting = settingId ? byId(settingId) : null;
-  if (!setting || !setting.writer || typeof setting.writer.matches !== 'function') {
-    return 'not_applied';
-  }
+  const appliedValue = parseStoredJson(priorRow.applied_value);
+  if (writer.matches(appliedValue, result.current_value)) return 'monitored';
 
-  // mysql2 AUTO-PARSES JSON columns. A JSON-stored primitive (string/bool/
-  // number) comes back as that primitive — JSON.parse on that throws and
-  // loses the value, which used to flip status back to not_applied for
-  // string-typed applied_values like ENT-09's GUID. Be tolerant: pass-through
-  // non-strings, attempt parse on strings, fall back to the raw string if
-  // the string isn't valid JSON (= it's a primitive string value).
-  let appliedValue;
-  const rawApplied = priorRow.applied_value;
-  if (typeof rawApplied !== 'string') {
-    appliedValue = rawApplied;
-  } else {
-    try { appliedValue = JSON.parse(rawApplied); }
-    catch { appliedValue = rawApplied; }
-  }
-
-  const matches = setting.writer.matches(appliedValue, result.current_value);
-  if (matches) return 'monitored';
-
-  // Mismatch — check verification window. ONLY suppress to 'pending' if the
-  // prior status was already 'pending' (i.e. we're still in a post-Apply
-  // verification cycle waiting for Microsoft propagation). After Match or
-  // Accept, prior status is 'monitored' — there was no write, no propagation
-  // to wait for, so any mismatch is real drift and should fire immediately.
-  // Bug fix Apr 26, 2026: the original window check applied to both Apply
-  // and Match; that incorrectly suppressed real drift when an external change
-  // happened within 5 min of a Match.
+  // Mismatch — post-Apply pending verification window (Microsoft propagation).
   if (priorRow.status === 'pending' && priorRow.applied_at) {
     const appliedAtMs = new Date(priorRow.applied_at).getTime();
     if (!Number.isNaN(appliedAtMs) && (Date.now() - appliedAtMs) < PENDING_VERIFICATION_WINDOW_MS) {
@@ -176,6 +168,87 @@ function deriveStatus(result, priorRow) {
     }
   }
   return 'drift';
+}
+
+/**
+ * Decide new status given the read result and the prior row (if any).
+ *
+ * #26 (Jun 27, 2026) — the dot now reflects ACTUAL compliance every poll,
+ * independent of whether Panoptica "applied" the setting:
+ *   - monitored (GREEN):  current matches the recommended value, OR matches an
+ *                         operator-accepted/applied baseline.
+ *   - off_recommended (ORANGE): readable value present but off-recommended and
+ *                         never accepted. A review flag — NO alert.
+ *   - not_configured (GREY): no readable value / object not configured. NO alert.
+ *   - drift (RED):        a setting that WAS green then went non-compliant.
+ *                         Fires SECURITY_DRIFT on the green→non-compliant edge.
+ *   - pending (BLUE):     post-Apply verification window (unchanged).
+ *
+ * Compliance is decided by writer.matches() — the tristate-aware, key-order-
+ * insensitive comparator the rest of the system already uses. There is ONE
+ * definition of "this matches".
+ *
+ * audit_only (CMP-02) and preset-style (EXO-06) settings keep their original
+ * behavior via deriveStatusLegacy().
+ *
+ * @param {object}      result    reader output { ok, current_value, error, unavailable }
+ * @param {object|null} priorRow  current tenant_security_config row (or null)
+ *                                Expected fields: applied_value (JSON string|null),
+ *                                applied_at (Date|string|null), status (string|null),
+ *                                _settingId (injected by updateRow)
+ */
+function deriveStatus(result, priorRow) {
+  if (result.unavailable) return 'unavailable';
+  if (!result.ok) return 'poll_error';
+
+  const settingId = priorRow && priorRow._settingId;
+  const setting = settingId ? byId(settingId) : null;
+
+  // audit_only / preset-style / writerless settings → original behavior.
+  if (usesLegacyStatus(setting)) return deriveStatusLegacy(result, priorRow, setting);
+
+  const writer = setting.writer;
+  const hasBaseline = !!(priorRow && priorRow.applied_value != null);
+  const recommendedValue = recommendedValueOf(writer);
+
+  // No baseline AND no recommended option to compare against → nothing the new
+  // logic can evaluate; fall back to legacy (which yields not_applied here).
+  if (!hasBaseline && recommendedValue === undefined) {
+    return deriveStatusLegacy(result, priorRow, setting);
+  }
+
+  // No readable value → not_configured (GREY). Nothing to evaluate, no alert,
+  // and (critically) no baseline gets captured from emptiness.
+  if (!hasUsableValue(result.current_value)) return 'not_configured';
+
+  // effectiveTarget = the accepted/applied baseline if one exists, else the
+  // recommended value. Either way matches() decides compliance.
+  const effectiveTarget = hasBaseline
+    ? parseStoredJson(priorRow.applied_value)
+    : recommendedValue;
+
+  if (writer.matches(effectiveTarget, result.current_value)) return 'monitored';
+
+  // Mismatch — preserve the post-Apply pending verification window. Only a
+  // setting with a real baseline can be in a propagation window; a no-baseline
+  // compliance evaluation has nothing pending.
+  if (hasBaseline && priorRow.status === 'pending' && priorRow.applied_at) {
+    const appliedAtMs = new Date(priorRow.applied_at).getTime();
+    if (!Number.isNaN(appliedAtMs) && (Date.now() - appliedAtMs) < PENDING_VERIFICATION_WINDOW_MS) {
+      return 'pending';
+    }
+  }
+
+  // RED vs ORANGE. A setting that was GREEN (monitored) or is already RED
+  // (drift), or is exiting a post-Apply pending window on a real baseline, has
+  // gone non-compliant → drift (fires the alert on the green→non-compliant edge
+  // only; maybeLogTransition dedupes the already-drift case). Anything else
+  // (previously orange/grey/not_applied or a first poll) is a calm review flag.
+  const prev = priorRow ? priorRow.status : null;
+  if (prev === 'monitored' || prev === 'drift' || (hasBaseline && prev === 'pending')) {
+    return 'drift';
+  }
+  return 'off_recommended';
 }
 
 /**
@@ -218,18 +291,10 @@ async function updateRow(tenantId, settingId, result) {
     );
   }
 
-  // Same JSON-column read-tolerance rule as deriveStatus: if mysql2 already
-  // returned a non-string (object or primitive), pass through. If it returned
-  // a string that JSON.parse can't handle, treat as primitive string.
+  // Same JSON-column read-tolerance rule as deriveStatus (parseStoredJson).
   let appliedValueParsed = null;
   if (prior && prior.applied_value != null) {
-    const raw = prior.applied_value;
-    if (typeof raw !== 'string') {
-      appliedValueParsed = raw;
-    } else {
-      try { appliedValueParsed = JSON.parse(raw); }
-      catch { appliedValueParsed = raw; }
-    }
+    appliedValueParsed = parseStoredJson(prior.applied_value);
   }
 
   return {

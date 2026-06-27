@@ -186,6 +186,10 @@ router.get('/tenants/:tid/settings', async (req, res) => {
       critical_monitored: 0,
       critical_drift: 0,
       monitored_total: 0,
+      // #26 (Jun 27, 2026) — the actionable "review" count. off_recommended is a
+      // readable value off the recommended target, never accepted. not_applied is
+      // retired for writable settings; kept here for legacy/audit-only rows.
+      off_recommended_total: 0,
       not_applied_total: 0,
       poll_error_total: 0,
       unavailable_total: 0,
@@ -195,6 +199,9 @@ router.get('/tenants/:tid/settings', async (req, res) => {
       if (r.priority === 'critical') summary.critical_total++;
       if (status === 'monitored') summary.monitored_total++;
       if (status === 'drift') { summary.critical_drift += r.priority === 'critical' ? 1 : 0; }
+      if (status === 'off_recommended') summary.off_recommended_total++;
+      // not_configured (grey, nothing to monitor) is intentionally uncounted —
+      // like not_polled, it is not an actionable state for the summary bar.
       if (status === 'not_applied' || status === 'not_polled') summary.not_applied_total++;
       if (status === 'poll_error') summary.poll_error_total++;
       if (status === 'unavailable') summary.unavailable_total++;
@@ -1246,10 +1253,15 @@ router.post('/tenants/:tid/settings/:sid/accept', auth.requireMemberOrAdmin, asy
   if (!existing) {
     return res.status(409).json({ error: 'Accept not available', detail: 'No row for this setting yet.' });
   }
-  if (existing.status !== 'drift') {
+  // #26 (Jun 27, 2026) — Accept adopts the current value as the monitored
+  // baseline. Valid on RED (drift) AND on ORANGE (off_recommended) — adopting a
+  // non-recommended value the tenant intentionally runs is exactly what Accept
+  // is for. captureBaseline → applied_value, status → monitored, any open drift
+  // alert resolves.
+  if (existing.status !== 'drift' && existing.status !== 'off_recommended') {
     return res.status(409).json({
       error: 'Accept not available',
-      detail: `Current status is "${existing.status}". Accept is only valid when status=drift.`,
+      detail: `Current status is "${existing.status}". Accept is only valid when the setting is off-recommended or drifted.`,
     });
   }
 
