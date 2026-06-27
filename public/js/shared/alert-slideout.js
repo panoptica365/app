@@ -150,6 +150,32 @@
          </button>`
       : '';
 
+    // Jun 26-27, 2026 (#7/#23) — "Create exception" for noisy Microsoft-already-
+    // handled alerts, scoped to this tenant or fleet-wide. Two kinds, one button:
+    //   - 'policy'        : EOP email-threat alerts (Inbound spam/malware/phish
+    //                       blocked). Each class is its OWN policy, so exempting
+    //                       the whole policy = "this category entirely" and is
+    //                       safe — outbound spam / malware are different policies.
+    //   - 'defender_type' : the generic Defender XDR evaluator, where ONE policy
+    //                       carries mixed alert types, so we exempt by the alert
+    //                       TYPE string instead (outbound is a different type).
+    // The email-threat path is what Microfix's "Inbound spam blocked" alerts hit
+    // (they carry no defender_alert_type — that's why the button was missing).
+    const defenderAlertType = extractDefenderAlertType(alert);
+    const isEmailThreat = isEmailThreatAlert(alert);
+    let exceptionKind = null;
+    if (defenderAlertType) exceptionKind = 'defender_type';
+    else if (isEmailThreat) exceptionKind = 'policy';
+    const canCreateException = !isResolvedAlready && !wasAutoResolved && !!exceptionKind;
+    const createDefenderExceptionBtnHtml = canCreateException
+      ? `<button id="alert-create-defender-exception" class="alert-filter-select" data-role-required="member"
+             data-exception-kind="${esc(exceptionKind)}"
+             style="font-family:Inter,sans-serif;font-size:0.75rem;padding:4px 10px;cursor:pointer;"
+             title="${esc(window.t('defender_exception.btn_title'))}">
+           ${esc(window.t('defender_exception.btn_label'))}
+         </button>`
+      : '';
+
     // Identity-timeline chip (May 30, 2026) — read-only triage pivot to the
     // identity timeline drawer. Shown for ANY alert that resolves a UPN,
     // regardless of category/status (unlike the exemption button, which is a
@@ -195,6 +221,7 @@
         ${adjustedBadgeHtml}
         ${autoResolvedPillHtml}
         ${createExemptionBtnHtml}
+        ${createDefenderExceptionBtnHtml}
         ${identityTimelineBtnHtml}
         <span id="alert-psa-chip"></span>
       </div>
@@ -273,6 +300,15 @@
       if (createExBtn) {
         createExBtn.addEventListener('click', () => {
           openCreateExemptionModal(alert);
+        });
+      }
+
+      // Create exception handler (#7/#23) — policy-level (email threats) or
+      // alert-type (generic Defender XDR), per the button's data-exception-kind.
+      const createDefExBtn = el('alert-create-defender-exception');
+      if (createDefExBtn) {
+        createDefExBtn.addEventListener('click', () => {
+          openCreateDefenderExceptionModal(alert, createDefExBtn.dataset.exceptionKind || 'defender_type');
         });
       }
 
@@ -737,6 +773,32 @@
     return Array.from(new Set(upns));
   }
 
+  // #7/#23 — pull the Microsoft Defender alert type/name out of raw_data. This
+  // is the key a Defender exception rule matches on. Mirrors extractAlertSignal's
+  // tolerance of raw_data arriving as a JSON string.
+  function extractDefenderAlertType(alert) {
+    if (!alert || !alert.raw_data) return null;
+    let raw = alert.raw_data;
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch (_) { return null; }
+    }
+    const t = raw.defender_alert_type;
+    return (t && typeof t === 'string' && t.trim()) ? t.trim() : null;
+  }
+
+  // #7/#23 — is this an EOP email-threat alert (Inbound spam/malware/phish
+  // blocked, etc.)? These come from per-class policies, so the exception is
+  // created at the POLICY level ("this category entirely"). Detected by the
+  // email-threat raw_data shape (emailDirection / threatTypes / deliveryAction).
+  function isEmailThreatAlert(alert) {
+    if (!alert || !alert.raw_data) return false;
+    let raw = alert.raw_data;
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch (_) { return false; }
+    }
+    return !!(raw.emailDirection || raw.threatTypes || raw.deliveryAction);
+  }
+
   function t(key, fallback) {
     // Helper — fall back to English literal if i18n hasn't loaded the key yet
     if (window.Panoptica && typeof window.Panoptica.t === 'function') {
@@ -994,6 +1056,227 @@
 
   function closeCreateExemptionModal() {
     const overlay = document.getElementById('alert-exemption-overlay');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+  }
+
+  // ─── Create Defender alert-type exception modal (#7/#23) ───
+  // Operator silences a noisy Microsoft-already-handled Defender alert TYPE.
+  // Scope is this-tenant or all-managed-tenants; reason required; permanent
+  // until revoked. Reuses the .aex-* pill styling injected by the exemption
+  // modal (or injects it if this modal opens first).
+  function openCreateDefenderExceptionModal(alert, kind) {
+    kind = kind || 'defender_type';
+    const alertType = extractDefenderAlertType(alert);
+
+    // Resolve the subject being exempted + the POST body, per kind.
+    //   'policy'        → exempt the whole policy (email-threat "category");
+    //   'defender_type' → exempt the Defender XDR alert type string.
+    let subjectLabel, subjectValue, noteText, buildBody;
+    if (kind === 'policy') {
+      if (!alert.policy_id) {
+        Panoptica.showToast(t('defender_exception.toast_missing_policy',
+          'Cannot create exception — alert has no policy'), 'error');
+        return;
+      }
+      const rawName = alert.policy_name || '';
+      subjectValue = (rawName && window.PanopticaI18n)
+        ? window.PanopticaI18n.tOrFallback('alert_policy_names.' + window.PanopticaI18n.slugify(rawName), rawName)
+        : rawName;
+      subjectLabel = t('defender_exception.field_policy', 'Policy');
+      noteText = t('defender_exception.note_body_policy',
+        'This silences this entire policy for the chosen scope and sends matching alerts to history. Other policies keep firing. The exception is permanent until you revoke it on the Exemptions page.');
+      buildBody = (scope, reasonStr) => ({
+        policy_exemption: true,
+        tenant_id: alert.tenant_id,
+        policy_id: alert.policy_id,
+        all_tenants: scope === 'all',
+        reason: reasonStr,
+        source_alert_id: alert.id,
+      });
+    } else {
+      if (!alertType) {
+        Panoptica.showToast(t('defender_exception.toast_missing_type',
+          'Cannot create exception — no Defender alert type in alert data'), 'error');
+        return;
+      }
+      subjectValue = alertType;
+      subjectLabel = t('defender_exception.field_type', 'Alert type');
+      noteText = t('defender_exception.note_body',
+        'This silences only this exact Defender alert type. Other Defender alerts — including outbound spam from a compromised account — keep firing. The exception is permanent until you revoke it on the Exemptions page.');
+      buildBody = (scope, reasonStr) => ({
+        tenant_id: alert.tenant_id,
+        policy_id: alert.policy_id,
+        match_alert_type: alertType,
+        all_tenants: scope === 'all',
+        reason: reasonStr,
+        source_alert_id: alert.id,
+      });
+    }
+
+    closeCreateExemptionModal();
+    closeCreateDefenderExceptionModal();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'defex-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
+      background: 'rgba(0,0,0,0.55)', zIndex: '10000',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    });
+
+    const modal = document.createElement('div');
+    modal.id = 'defex-modal';
+    Object.assign(modal.style, {
+      background: 'var(--p-surface)', color: 'var(--p-text)',
+      border: '1px solid var(--p-border)', borderRadius: '6px',
+      width: 'min(560px, 92vw)', maxHeight: '88vh', overflowY: 'auto',
+      padding: '20px 22px', fontFamily: 'Inter, sans-serif',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+    });
+
+    const tenantName = alert.tenant_name || '';
+
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--p-text);">
+            <span data-i18n="defender_exception.modal_title">Create Defender alert exception</span>
+          </h3>
+          <div style="font-size:0.82rem;color:var(--p-text-muted);">
+            <span data-i18n="defender_exception.modal_subtitle">Auto-resolve alerts of this Microsoft Defender type and send them to history</span>
+          </div>
+        </div>
+        <button id="defex-close" type="button"
+                style="background:transparent;border:none;color:var(--p-text-muted);font-size:1.4rem;cursor:pointer;line-height:1;">&times;</button>
+      </div>
+
+      <table class="alert-detail-table" style="width:100%;margin-bottom:14px;font-size:0.85rem;">
+        <tr><td style="opacity:0.7;width:120px;">${esc(subjectLabel)}</td><td><code>${esc(subjectValue)}</code></td></tr>
+      </table>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.78rem;color:var(--p-text-muted);margin-bottom:6px;">
+          <span data-i18n="defender_exception.label_scope">Apply to</span> <span style="color:var(--p-danger,#c44);">*</span>
+        </div>
+        <div class="aex-pill-group" style="display:flex;gap:6px;flex-wrap:wrap;">
+          <label class="aex-pill"><input type="radio" name="defex-scope" value="tenant" checked>
+            <span><span data-i18n="defender_exception.scope_tenant">This tenant only</span>${tenantName ? ` (${esc(tenantName)})` : ''}</span>
+          </label>
+          <label class="aex-pill"><input type="radio" name="defex-scope" value="all">
+            <span data-i18n="defender_exception.scope_all">All managed tenants</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:0.78rem;color:var(--p-text-muted);margin-bottom:6px;">
+          <span data-i18n="defender_exception.label_reason">Justification</span> <span style="color:var(--p-danger,#c44);">*</span>
+        </label>
+        <textarea id="defex-reason" class="form-control" rows="3"
+                  placeholder="${esc(t('defender_exception.reason_placeholder', 'e.g. Microsoft already blocks/remediates this inbound class; not actionable for us'))}"
+                  style="width:100%;padding:6px 8px;background:var(--p-surface-sunken);border:1px solid var(--p-border-subtle);border-radius:4px;color:var(--p-text);font-family:inherit;"></textarea>
+      </div>
+
+      <div style="background:rgba(220,140,0,0.08);border:1px solid rgba(220,140,0,0.35);border-radius:4px;padding:10px 12px;margin-bottom:14px;font-size:0.8rem;color:var(--p-text);">
+        <strong data-i18n="defender_exception.note_label">Note.</strong>
+        <span>${esc(noteText)}</span>
+      </div>
+
+      <div id="defex-error" style="display:none;color:var(--p-danger,#c44);font-size:0.82rem;margin-bottom:10px;"></div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--p-border-subtle);padding-top:14px;">
+        <button id="defex-cancel" type="button" class="btn-secondary"
+                style="padding:6px 14px;cursor:pointer;background:transparent;border:1px solid var(--p-border);border-radius:4px;color:var(--p-text);"
+                data-i18n="defender_exception.btn_cancel">Cancel</button>
+        <button id="defex-submit" type="button" class="btn-primary" data-role-required="member"
+                style="padding:6px 14px;cursor:pointer;background:var(--p-accent);border:1px solid var(--p-accent);border-radius:4px;color:var(--p-on-accent,#fff);"
+                data-i18n="defender_exception.btn_submit">Create exception</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // Reuse the exemption modal's pill styling; inject if not already present.
+    const styleId = 'aex-pill-style';
+    if (!document.getElementById(styleId)) {
+      const styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      styleEl.textContent = `
+        .aex-pill { display:inline-flex; align-items:center; gap:6px;
+          padding:6px 12px; border:1px solid var(--p-border-subtle);
+          border-radius:999px; cursor:pointer; font-size:0.82rem;
+          background:var(--p-surface-sunken); color:var(--p-text);
+          user-select:none; transition:background 0.12s, border-color 0.12s, color 0.12s; }
+        .aex-pill:hover { border-color:var(--p-accent, #4a90d9); }
+        .aex-pill input { display:none; }
+        .aex-pill:has(input:checked) { background:var(--p-accent, #4a90d9);
+          border-color:var(--p-accent, #4a90d9); color:var(--p-on-accent, #fff);
+          font-weight:600; }
+      `;
+      document.head.appendChild(styleEl);
+    }
+
+    if (window.PanopticaI18n && typeof window.PanopticaI18n.applyTo === 'function') {
+      try { window.PanopticaI18n.applyTo(modal); } catch (_) {}
+    }
+
+    const closeFn = closeCreateDefenderExceptionModal;
+    el('defex-close').addEventListener('click', closeFn);
+    el('defex-cancel').addEventListener('click', closeFn);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeFn(); });
+
+    el('defex-submit').addEventListener('click', async () => {
+      const errEl = el('defex-error');
+      errEl.style.display = 'none';
+
+      const scope = (modal.querySelector('input[name="defex-scope"]:checked') || {}).value;
+      const reasonStr = (el('defex-reason').value || '').trim();
+      if (reasonStr.length === 0) {
+        errEl.textContent = t('defender_exception.err_reason', 'Justification is required.');
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const body = buildBody(scope, reasonStr);
+
+      const submitBtn = el('defex-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '...';
+
+      try {
+        const resp = await Panoptica.api('/api/alert-exemptions', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+        const n = (resp && typeof resp.resolved_count === 'number') ? resp.resolved_count : 0;
+        Panoptica.showToast(
+          t('defender_exception.toast_created', 'Exception created — matching alerts sent to history')
+            + (n > 0 ? ` (${n})` : ''),
+          'success'
+        );
+        closeCreateDefenderExceptionModal();
+        try {
+          const lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+          const fresh = await Panoptica.api(`/api/alerts/${alert.id}?lang=${encodeURIComponent(lang)}`);
+          renderDetail(fresh);
+        } catch (_) {}
+        Panoptica.refreshAlertSignals?.();
+        if (typeof callbacks.onStatusChanged === 'function') {
+          try { callbacks.onStatusChanged('resolved'); } catch (_) {}
+        }
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : String(e);
+        errEl.textContent = t('defender_exception.err_save', 'Failed to create exception: ') + msg;
+        errEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = t('defender_exception.btn_submit', 'Create exception');
+      }
+    });
+  }
+
+  function closeCreateDefenderExceptionModal() {
+    const overlay = document.getElementById('defex-overlay');
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
   }
 

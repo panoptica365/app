@@ -5,6 +5,26 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.25 — 2026-06-27
+
+### Faites taire en un clic les alertes « déjà traitées »
+
+Microsoft bloque une grande quantité de pourriels, de maliciels et d'hameçonnage entrants avant même qu'ils n'atteignent une boîte aux lettres — et jusqu'ici, chacun générait tout de même une alerte, encombrant le tableau de bord d'éléments ne nécessitant aucune action. Vous pouvez maintenant cliquer sur **Créer une exception** pour une telle alerte et choisir de la faire taire pour **ce locataire seulement** ou pour **tous les locataires gérés**. L'exception envoie immédiatement les alertes ouvertes correspondantes à l'historique et résout automatiquement les suivantes, tout en laissant le reste se déclencher comme avant — y compris le pourriel sortant d'un compte compromis, qui relève d'une autre politique et constitue un véritable signal de compromission de compte. Les exceptions sont permanentes jusqu'à ce que vous les révoquiez sur la page **Exemptions**, où elles apparaissent avec leur portée afin que vous puissiez les revoir ou les supprimer à tout moment.
+
+### Le rapport de documentation de configuration liste maintenant tous les administrateurs
+
+Le rapport de documentation de configuration ne listait auparavant que les administrateurs globaux. Il liste désormais **tout compte détenant un rôle d'administration** — Exchange, SharePoint, Teams, Intune, administrateur d'utilisateurs, du service d'assistance et plus encore — avec les rôles qu'il détient, l'état du compte (activé ou non) et son statut MFA. Le nombre d'administrateurs globaux demeure affiché comme valeur sommaire. (Note : le rapport affiche les rôles activement attribués ; les attributions admissibles via PIM mais non activées ne sont pas listées.)
+
+### Aperçu du stockage SharePoint — totaux exacts
+
+L'aperçu du stockage SharePoint surévaluait le stockage. Comme les bibliothèques de documents d'un site partagent un même espace de stockage, le stockage de chaque site était compté une fois par bibliothèque puis additionné, gonflant le total du locataire. Chaque site apparaît maintenant **une seule fois**, avec son stockage réel et le nombre de ses bibliothèques, et les barres indiquent la part de chaque site dans le total corrigé au lieu de toujours remplir la barre pour le plus gros site.
+
+### Corrections mineures
+
+Les valeurs de stockage des panneaux « principaux utilisateurs » et « principales boîtes aux lettres » du tableau de bord du locataire s'affichent maintenant en gigaoctets plutôt qu'en mégaoctets bruts. Le message de vérification de l'état de l'écran de mise à jour intégré est plus clair. Et en mode sombre, les titres de version de la fenêtre Quoi de neuf ne sont plus en sombre sur sombre.
+
+---
+
 ## Version 0.2.24 — 2026-06-24
 
 ### Rapports — révisés et peaufinés

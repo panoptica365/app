@@ -2167,8 +2167,7 @@
       panels += collapsePanel(window.t('tenant_dashboard.panel.top_users_by_storage'), Math.min(odSites.length, 10), () => {
         let t = `<table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.owner')}</th><th>${window.t('tenant_dashboard.col.files')}</th><th>${window.t('tenant_dashboard.col.storage')}</th><th>${window.t('tenant_dashboard.col.last_active')}</th></tr></thead><tbody>`;
         odSites.slice(0, 10).forEach(s => {
-          const mb = (s.storageUsedBytes / (1024 * 1024)).toFixed(1);
-          t += `<tr><td>${esc(s.siteName)}</td><td>${fmtNum(s.fileCount)}</td><td>${mb} MB</td><td>${s.lastActivityDate || '—'}</td></tr>`;
+          t += `<tr><td>${esc(s.siteName)}</td><td>${fmtNum(s.fileCount)}</td><td>${fmtStorageGB(s.storageUsedBytes)}</td><td>${s.lastActivityDate || '—'}</td></tr>`;
         });
         return t + '</tbody></table>';
       });
@@ -2181,8 +2180,7 @@
       panels += collapsePanel(window.t('tenant_dashboard.panel.top_mailboxes_by_storage'), Math.min(mboxUsage.length, 5), () => {
         let t = `<table class="td-list-table"><thead><tr><th>${window.t('tenant_dashboard.col.user')}</th><th>${window.t('tenant_dashboard.col.items')}</th><th>${window.t('tenant_dashboard.col.storage')}</th><th>${window.t('tenant_dashboard.col.last_active')}</th></tr></thead><tbody>`;
         mboxUsage.slice(0, 5).forEach(m => {
-          const mb = (m.storageUsedBytes / (1024 * 1024)).toFixed(1);
-          t += `<tr><td>${esc(m.displayName || m.upn)}</td><td>${fmtNum(m.itemCount)}</td><td>${mb} MB</td><td>${m.lastActivity || '—'}</td></tr>`;
+          t += `<tr><td>${esc(m.displayName || m.upn)}</td><td>${fmtNum(m.itemCount)}</td><td>${fmtStorageGB(m.storageUsedBytes)}</td><td>${m.lastActivity || '—'}</td></tr>`;
         });
         return t + '</tbody></table>';
       });
@@ -2721,6 +2719,15 @@
     return Number(n).toLocaleString(_numLocale);
   }
   function esc(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+  // Format a byte count as gibibytes for display (2 decimals, localized thousands
+  // separator, " GB" suffix). Display-only; callers keep sorting by the raw value.
+  function fmtStorageGB(bytes) {
+    const n = Number(bytes);
+    if (!isFinite(n)) return '0.00 GB';
+    const _lang = (window.PanopticaI18n && window.PanopticaI18n.currentLang()) || 'en';
+    const _numLocale = _lang === 'fr' ? 'fr-CA' : (_lang === 'es' ? 'es' : 'en-CA');
+    return (n / (1024 ** 3)).toLocaleString(_numLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' GB';
+  }
   // ═══════════════════════════════════════════════════════════════════════
   // Trends tab (Feature B3) — posture + operations time-series. Read-only, all
   // RBAC tiers. One GET /api/tenants/:id/trends?range= round-trip feeds seven

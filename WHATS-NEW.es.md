@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.25 — 2026-06-27
+
+### Silencie con un clic las alertas «ya gestionadas»
+
+Microsoft bloquea una gran cantidad de correo no deseado, malware y phishing entrantes antes de que lleguen a un buzón — y hasta ahora cada uno generaba igualmente una alerta, llenando el panel de elementos que no requieren ninguna acción. Ahora puede hacer clic en **Crear excepción** en una de esas alertas y elegir silenciarla solo para **este inquilino** o para **todos los inquilinos gestionados**. La excepción envía de inmediato las alertas abiertas coincidentes al historial y resuelve automáticamente las futuras, dejando que todo lo demás siga activándose como antes — incluido el correo no deseado saliente de una cuenta comprometida, que corresponde a otra política y es una verdadera señal de robo de cuenta. Las excepciones son permanentes hasta que las revoque en la página **Exenciones**, donde aparecen con su alcance para que pueda revisarlas o eliminarlas en cualquier momento.
+
+### El informe de documentación de configuración ahora lista a todos los administradores
+
+El informe de documentación de configuración antes listaba únicamente a los administradores globales. Ahora lista **toda cuenta que tenga un rol administrativo** — Exchange, SharePoint, Teams, Intune, administrador de usuarios, de soporte técnico y más — con los roles que posee, si la cuenta está habilitada y su estado de MFA. El número de administradores globales se sigue mostrando como cifra de resumen. (Nota: el informe muestra los roles asignados activamente; las asignaciones elegibles mediante PIM pero no activadas no se listan.)
+
+### Resumen de almacenamiento de SharePoint — totales exactos
+
+El resumen de almacenamiento de SharePoint contaba de más. Como las bibliotecas de documentos de un sitio comparten un mismo espacio de almacenamiento, el almacenamiento de cada sitio se contaba una vez por biblioteca y luego se sumaba, inflando el total del inquilino. Cada sitio aparece ahora **una sola vez**, con su almacenamiento real y un recuento de sus bibliotecas, y las barras muestran la proporción de cada sitio sobre el total corregido en lugar de llenarse siempre para el sitio más grande.
+
+### Correcciones menores
+
+Las cifras de almacenamiento de los paneles de «principales usuarios» y «principales buzones» del panel del inquilino ahora se muestran en gigabytes en lugar de megabytes sin procesar. El mensaje de comprobación de estado de la pantalla de actualización integrada se lee con mayor claridad. Y en modo oscuro, los títulos de versión de la ventana de Novedades ya no aparecen en oscuro sobre oscuro.
+
+---
+
 ## Versión 0.2.24 — 2026-06-24
 
 ### Informes — revisados y pulidos

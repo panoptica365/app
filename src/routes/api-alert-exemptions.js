@@ -80,6 +80,18 @@ function actorFor(req) {
 // A3 (May 9, 2026): operator — alert exemption rule creation.
 router.post('/', auth.requireMemberOrAdmin, async (req, res) => {
   try {
+    // Jun 26, 2026 — Defender alert-type exception (operator "Create exception"
+    // button on Microsoft Defender alerts, #7/#23). Distinct shape from the
+    // UPN-keyed risky-sign-in rule: keyed on the Defender alert TYPE, scoped to
+    // one tenant or fleet-wide, and permanent (no duration). Routed first so it
+    // never trips the UPN validation below.
+    if (req.body && req.body.policy_exemption) {
+      return await createPolicyException(req, res);
+    }
+    if (req.body && typeof req.body.match_alert_type === 'string' && req.body.match_alert_type.trim()) {
+      return await createDefenderTypeException(req, res);
+    }
+
     const {
       tenant_id,
       policy_id,
@@ -144,14 +156,16 @@ router.post('/', auth.requireMemberOrAdmin, async (req, res) => {
 
     const actor = actorFor(req);
 
-    const insertResult = await db.execute(
+    // db.insert returns the new insertId; db.execute returns affectedRows only
+    // (so the previous insertId extraction here always yielded null, leaving
+    // the source alert's resolution_rule_id unlinked). Fixed Jun 26, 2026.
+    const ruleId = await db.insert(
       `INSERT INTO alert_exemption_rules
         (tenant_id, policy_id, match_upn, match_country, match_ip_cidr, match_asn,
          reason, expires_at, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [tenantId, policyId, upn, country, ipCidr, asn, reasonClamped, expiresAt, actor]
     );
-    const ruleId = insertResult?.insertId ?? insertResult?.[0]?.insertId ?? null;
 
     // ─── Tenant Change Log row (audit trail) ──────────────────────────
     // Surface = identity (these rules are sign-in / risky-sign-in scoped).
@@ -243,7 +257,8 @@ router.get('/', async (req, res) => {
     }
     if (!include_revoked) {
       clauses.push('r.revoked_at IS NULL');
-      clauses.push('r.expires_at > UTC_TIMESTAMP()');
+      // NULL expires_at = permanent (Defender-type rules) — keep those active.
+      clauses.push('(r.expires_at IS NULL OR r.expires_at > UTC_TIMESTAMP())');
     }
     const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
 
@@ -258,6 +273,8 @@ router.get('/', async (req, res) => {
               r.match_country,
               r.match_ip_cidr,
               r.match_asn,
+              r.match_alert_type,
+              r.all_tenants,
               r.reason,
               r.expires_at,
               TIMESTAMPDIFF(DAY, UTC_TIMESTAMP(), r.expires_at) AS days_remaining,
@@ -324,6 +341,7 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     // the row is already revoked.
     const rule = await db.queryOne(
       `SELECT r.id, r.tenant_id, r.policy_id, r.match_upn, r.match_country,
+              r.match_alert_type, r.all_tenants,
               r.revoked_at, p.name AS policy_name, tn.display_name AS tenant_name
          FROM alert_exemption_rules r
          JOIN tenants tn ON tn.id = r.tenant_id
@@ -337,6 +355,10 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     }
 
     const actor = actorFor(req);
+    // Describe whichever rule kind this is: Defender alert-type, or UPN.
+    const matchDesc = rule.match_alert_type
+      ? `type "${rule.match_alert_type}"${rule.all_tenants ? ' (all tenants)' : ''}`
+      : `UPN ${rule.match_upn}${rule.match_country ? ' / ' + rule.match_country : ''}`;
 
     await db.execute(
       `UPDATE alert_exemption_rules
@@ -351,9 +373,9 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
       tenantId: rule.tenant_id,
       category: changeLog.CATEGORY.ALERT_EXEMPTION_REVOKE,
       surfaces: [changeLog.SURFACE.IDENTITY],
-      description: `Alert exemption rule revoked — policy "${rule.policy_name}" — UPN ${rule.match_upn}${rule.match_country ? ' / ' + rule.match_country : ''} — reason: ${reasonStr}`,
+      description: `Alert exemption rule revoked — policy "${rule.policy_name}" — ${matchDesc} — reason: ${reasonStr}`,
       templateKey: 'alert_exemption.revoke',
-      templateParams: { policyName: rule.policy_name, matchUpn: rule.match_upn },
+      templateParams: { policyName: rule.policy_name, matchUpn: matchDesc },
       createdBy: actor,
       ...changeLog.captureActorContext(req),
     }).catch(e => {
@@ -366,5 +388,238 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// ─── Policy-level exception (create) ─────────────────────────────────
+// Jun 27, 2026 (#7/#23). Operator clicks "Create exception" on a noisy EOP
+// email-threat alert (Inbound spam/malware/phish blocked). Each class is its
+// own policy, so we silence the WHOLE policy ("this category entirely"),
+// scoped to this tenant or fleet-wide. We:
+//   1. Insert a permanent (no-expiry) rule with NO narrower match keys
+//      (match_upn / match_alert_type both NULL) — the alert engine reads it via
+//      findMatchingPolicyRule and auto-resolves future matches.
+//   2. Immediately resolve currently-open alerts of that policy (scoped) so the
+//      existing noise drops to history right away.
+// Safe by construction: a different category is a different policy_id, so this
+// can never suppress outbound spam or a different threat class.
+async function createPolicyException(req, res) {
+  const { tenant_id, policy_id, all_tenants, reason, source_alert_id } = req.body || {};
+
+  const tenantId = parseInt(tenant_id, 10);
+  const policyId = parseInt(policy_id, 10);
+  if (!Number.isFinite(tenantId) || !Number.isFinite(policyId)) {
+    return res.status(400).json({ error: 'tenant_id and policy_id are required integers' });
+  }
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'reason is required' });
+  }
+  const reasonClamped = String(reason).slice(0, 1000);
+  const fleetWide = all_tenants === true || all_tenants === 1
+    || all_tenants === '1' || all_tenants === 'true';
+
+  const tenant = await db.queryOne('SELECT id, display_name FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) return res.status(404).json({ error: 'tenant not found' });
+  const policy = await db.queryOne('SELECT id, name FROM alert_policies WHERE id = ?', [policyId]);
+  if (!policy) return res.status(404).json({ error: 'alert policy not found' });
+
+  const actor = actorFor(req);
+
+  // Guard: don't let two identical active policy rules pile up for the same
+  // scope (e.g. operator double-clicks, or one already exists fleet-wide).
+  // Block if an active rule already covers this create: a fleet-wide rule
+  // covers everything; otherwise a tenant rule for this same tenant. (A new
+  // fleet-wide rule is still allowed to supersede narrower tenant rules.)
+  const existing = await db.queryOne(
+    `SELECT id FROM alert_exemption_rules
+      WHERE policy_id = ? AND match_upn IS NULL AND match_alert_type IS NULL
+        AND revoked_at IS NULL
+        AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+        AND (all_tenants = 1 OR (? = 0 AND tenant_id = ?))
+      LIMIT 1`,
+    [policyId, fleetWide ? 1 : 0, tenantId]
+  );
+  if (existing) {
+    return res.status(409).json({ error: 'an active exception already covers this policy and scope', id: existing.id });
+  }
+
+  // expires_at NULL = permanent until manually revoked. db.insert returns id.
+  const ruleId = await db.insert(
+    `INSERT INTO alert_exemption_rules
+       (tenant_id, policy_id, all_tenants, reason, expires_at, created_by)
+     VALUES (?, ?, ?, ?, NULL, ?)`,
+    [tenantId, policyId, fleetWide ? 1 : 0, reasonClamped, actor]
+  );
+
+  // Resolve currently-open alerts of this policy (scoped) to history.
+  let resolvedCount = 0;
+  try {
+    const scopeClause = fleetWide ? '' : ' AND a.tenant_id = ?';
+    const params = [ruleId, ruleId, reasonClamped.slice(0, 500), policyId];
+    if (!fleetWide) params.push(tenantId);
+    resolvedCount = await db.execute(
+      `UPDATE alerts a
+          SET a.status             = 'resolved',
+              a.resolution_reason  = 'exemption_rule',
+              a.resolution_rule_id = ?,
+              a.closed_at          = NOW(),
+              a.notes              = CONCAT(COALESCE(a.notes, ''),
+                                           '\n[', NOW(), '] Resolved by alert exemption rule #', ?, ': ', ?)
+        WHERE a.policy_id = ?
+          AND a.status IN ('new', 'investigating')
+          ${scopeClause}`,
+      params
+    ) || 0;
+    if (ruleId && resolvedCount > 0) {
+      await db.execute(
+        'UPDATE alert_exemption_rules SET match_count = match_count + ?, last_matched_at = UTC_TIMESTAMP() WHERE id = ?',
+        [resolvedCount, ruleId]
+      ).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[AlertExemptions] Policy-level bulk resolve failed (rule still created):', e.message);
+  }
+
+  const scopeLabel = fleetWide ? 'all managed tenants' : tenant.display_name;
+  await changeLog.logPanopticaChange({
+    tenantId,
+    category: changeLog.CATEGORY.ALERT_EXEMPTION_APPLY,
+    surfaces: [changeLog.SURFACE.IDENTITY],
+    description: `Policy exception created — policy "${policy.name}" — scope: ${scopeLabel} — permanent — reason: ${reasonClamped.slice(0, 200)}`,
+    templateKey: 'alert_exemption.apply',
+    templateParams: { policyName: policy.name, matchUpn: `entire policy (${scopeLabel})`, expiresAt: 'permanent', reason: reasonClamped.slice(0, 200) },
+    createdBy: actor,
+    ...changeLog.captureActorContext(req),
+  }).catch(e => {
+    console.error('[AlertExemptions] Policy-level change-log write failed (rule still created):', e.message);
+  });
+
+  return res.status(201).json({
+    id: ruleId,
+    tenant_id: tenantId,
+    policy_id: policyId,
+    all_tenants: fleetWide ? 1 : 0,
+    reason: reasonClamped,
+    expires_at: null,
+    created_by: actor,
+    resolved_count: resolvedCount,
+  });
+}
+
+// ─── Defender alert-type exception (create) ──────────────────────────
+// Jun 26, 2026 (#7/#23). Operator clicks "Create exception" on a noisy
+// Microsoft-already-handled inbound Defender alert. We:
+//   1. Insert a permanent (no-expiry) rule keyed on the alert TYPE, scoped to
+//      this tenant or fleet-wide. The alert engine's createOrUpdateAlert reads
+//      it (findMatchingDefenderTypeRule) and auto-resolves FUTURE matches.
+//   2. Immediately resolve any currently-open alerts of that type (scoped) so
+//      the existing noise drops to history right away.
+// policy_id is the Defender policy the alert belongs to (carried from the
+// slideout); the matcher doesn't filter on it, but the column is NOT NULL and
+// it keeps the rule joinable to the policy in the management UI.
+async function createDefenderTypeException(req, res) {
+  const {
+    tenant_id,
+    policy_id,
+    match_alert_type,
+    all_tenants,
+    reason,
+    source_alert_id,
+  } = req.body || {};
+
+  const tenantId = parseInt(tenant_id, 10);
+  const policyId = parseInt(policy_id, 10);
+  if (!Number.isFinite(tenantId) || !Number.isFinite(policyId)) {
+    return res.status(400).json({ error: 'tenant_id and policy_id are required integers' });
+  }
+
+  const alertType = String(match_alert_type).trim().slice(0, 255);
+  if (!alertType) return res.status(400).json({ error: 'match_alert_type is required' });
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'reason is required' });
+  }
+  const reasonClamped = String(reason).slice(0, 1000);
+
+  // Coerce a variety of truthy representations the client might send.
+  const fleetWide = all_tenants === true || all_tenants === 1
+    || all_tenants === '1' || all_tenants === 'true';
+
+  const tenant = await db.queryOne('SELECT id, display_name FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) return res.status(404).json({ error: 'tenant not found' });
+  const policy = await db.queryOne('SELECT id, name FROM alert_policies WHERE id = ?', [policyId]);
+  if (!policy) return res.status(404).json({ error: 'alert policy not found' });
+
+  const actor = actorFor(req);
+
+  // expires_at NULL = permanent until manually revoked (product decision).
+  // db.insert returns the new insertId (db.execute returns affectedRows only).
+  const ruleId = await db.insert(
+    `INSERT INTO alert_exemption_rules
+       (tenant_id, policy_id, match_alert_type, all_tenants, reason, expires_at, created_by)
+     VALUES (?, ?, ?, ?, ?, NULL, ?)`,
+    [tenantId, policyId, alertType, fleetWide ? 1 : 0, reasonClamped, actor]
+  );
+
+  // Resolve currently-open alerts of this type (scoped). Match the type out of
+  // raw_data (JSON column) case-insensitively. Only touch active alerts so we
+  // never re-close something an operator already triaged to false_positive.
+  let resolvedCount = 0;
+  try {
+    const scopeClause = fleetWide ? '' : ' AND a.tenant_id = ?';
+    const params = [
+      ruleId, ruleId, reasonClamped.slice(0, 500), policyId, alertType,
+    ];
+    if (!fleetWide) params.push(tenantId);
+    // db.execute returns affectedRows directly.
+    resolvedCount = await db.execute(
+      `UPDATE alerts a
+          SET a.status             = 'resolved',
+              a.resolution_reason  = 'exemption_rule',
+              a.resolution_rule_id = ?,
+              a.closed_at          = NOW(),
+              a.notes              = CONCAT(COALESCE(a.notes, ''),
+                                           '\n[', NOW(), '] Resolved by alert exemption rule #', ?, ': ', ?)
+        WHERE a.policy_id = ?
+          AND a.status IN ('new', 'investigating')
+          AND LOWER(JSON_UNQUOTE(JSON_EXTRACT(a.raw_data, '$.defender_alert_type'))) = LOWER(?)
+          ${scopeClause}`,
+      params
+    ) || 0;
+    if (ruleId && resolvedCount > 0) {
+      // Reflect the back-fill in the rule's match telemetry.
+      await db.execute(
+        'UPDATE alert_exemption_rules SET match_count = match_count + ?, last_matched_at = UTC_TIMESTAMP() WHERE id = ?',
+        [resolvedCount, ruleId]
+      ).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[AlertExemptions] Defender-type bulk resolve failed (rule still created):', e.message);
+  }
+
+  const scopeLabel = fleetWide ? 'all managed tenants' : tenant.display_name;
+  await changeLog.logPanopticaChange({
+    tenantId,
+    category: changeLog.CATEGORY.ALERT_EXEMPTION_APPLY,
+    surfaces: [changeLog.SURFACE.IDENTITY],
+    description: `Defender alert exception created — type "${alertType}" — scope: ${scopeLabel} — permanent — reason: ${reasonClamped.slice(0, 200)}`,
+    templateKey: 'alert_exemption.apply',
+    templateParams: { policyName: policy.name, matchUpn: `type: ${alertType} (${scopeLabel})`, expiresAt: 'permanent', reason: reasonClamped.slice(0, 200) },
+    createdBy: actor,
+    ...changeLog.captureActorContext(req),
+  }).catch(e => {
+    console.error('[AlertExemptions] Defender-type change-log write failed (rule still created):', e.message);
+  });
+
+  return res.status(201).json({
+    id: ruleId,
+    tenant_id: tenantId,
+    policy_id: policyId,
+    match_alert_type: alertType,
+    all_tenants: fleetWide ? 1 : 0,
+    reason: reasonClamped,
+    expires_at: null,
+    created_by: actor,
+    resolved_count: resolvedCount,
+  });
+}
 
 module.exports = router;

@@ -205,7 +205,18 @@
       return `<span style="color:var(--p-text-muted); font-style:italic;">${esc(window.t('exemptions.scope_policy_wide'))}</span>`;
     }
     if (e.source === 'alert_rule') {
-      // principal_label is composed server-side as "upn / country / cidr"
+      const scopeBadge = e.all_tenants
+        ? `<span style="background:var(--p-accent-muted); color:var(--p-accent-light); padding:1px 6px; border-radius:3px; font-size:0.7rem; margin-left:4px;">${esc(window.t('exemptions.alert_scope_all'))}</span>`
+        : `<span style="background:var(--p-surface-sunken); color:var(--p-text-muted); padding:1px 6px; border-radius:3px; font-size:0.7rem; margin-left:4px;">${esc(window.t('exemptions.alert_scope_tenant'))}</span>`;
+      // Defender alert-type rule (#7/#23): show the alert type + scope badge.
+      if (e.match_alert_type) {
+        return `<code style="font-size:0.75rem;">${esc(e.match_alert_type)}</code>${scopeBadge}`;
+      }
+      // Policy-level rule (#7/#23): whole category, no UPN. Show "entire policy".
+      if (!e.match_upn) {
+        return `<span style="font-style:italic;">${esc(window.t('exemptions.alert_entire_policy'))}</span>${scopeBadge}`;
+      }
+      // UPN rule: principal_label is composed server-side as "upn / country / cidr"
       const parts = [];
       parts.push(`<code style="font-size:0.78rem;">${esc(e.match_upn || '')}</code>`);
       if (e.match_country) {

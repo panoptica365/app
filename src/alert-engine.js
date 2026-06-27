@@ -762,12 +762,14 @@ async function ensureAlertColumns() {
         id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         tenant_id         INT UNSIGNED NOT NULL,
         policy_id         INT UNSIGNED NOT NULL,
-        match_upn         VARCHAR(255) NOT NULL COMMENT 'Lowercased UPN; exact match',
+        match_upn         VARCHAR(255) DEFAULT NULL COMMENT 'Lowercased UPN; exact match (NULL for non-UPN rule types)',
         match_country     CHAR(2) DEFAULT NULL COMMENT 'ISO-3166-1 alpha-2, uppercase',
         match_ip_cidr     VARCHAR(64) DEFAULT NULL COMMENT 'IPv4/IPv6 CIDR; matcher uses ipaddr.js if available',
         match_asn         VARCHAR(32) DEFAULT NULL COMMENT 'RESERVED — ASN enrichment not yet wired',
+        match_alert_type  VARCHAR(255) DEFAULT NULL COMMENT 'Microsoft Defender alert type/name; case-insensitive exact match (Jun 2026 — operator "Create exception" on Defender alerts)',
+        all_tenants       TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = fleet-wide (match ignores tenant_id); 0 = this tenant only',
         reason            TEXT NOT NULL COMMENT 'Operator justification, REQUIRED at create',
-        expires_at        DATETIME NOT NULL COMMENT 'Hard expiry — no never expire',
+        expires_at        DATETIME DEFAULT NULL COMMENT 'Hard expiry; NULL = permanent until manually revoked',
         created_by        VARCHAR(255) NOT NULL,
         created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -779,7 +781,8 @@ async function ensureAlertColumns() {
         FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
         FOREIGN KEY (policy_id) REFERENCES alert_policies(id) ON DELETE CASCADE,
         INDEX idx_lookup (tenant_id, policy_id, match_upn, revoked_at, expires_at),
-        INDEX idx_expiry (expires_at, revoked_at)
+        INDEX idx_expiry (expires_at, revoked_at),
+        INDEX idx_alert_type (match_alert_type, all_tenants, revoked_at)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
     console.log('[AlertEngine] Ensured alert_exemption_rules table exists');
@@ -787,6 +790,64 @@ async function ensureAlertColumns() {
     if (!e.message.includes('already exists')) {
       console.error('[AlertEngine] alert_exemption_rules migration error:', e.message);
     }
+  }
+
+  // Jun 26, 2026 — extend alert_exemption_rules for the operator-driven
+  // "Create exception" button on Microsoft Defender alerts (#7/#23). Existing
+  // Prod installs already have the table (Apr 30) without these, so add them
+  // idempotently. Fresh installs get them from the CREATE above; these ALTERs
+  // are then no-ops. Two of these RELAX existing NOT NULL constraints
+  // (match_upn, expires_at) so a Defender-type rule can omit a UPN and be
+  // permanent — pre-existing UPN rules always populate both, so loosening the
+  // constraint never affects them.
+  const exemptionColumns = [
+    { name: 'match_alert_type', sql: "ALTER TABLE alert_exemption_rules ADD COLUMN match_alert_type VARCHAR(255) DEFAULT NULL COMMENT 'Microsoft Defender alert type/name; case-insensitive exact match' AFTER match_asn" },
+    { name: 'all_tenants', sql: "ALTER TABLE alert_exemption_rules ADD COLUMN all_tenants TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = fleet-wide (match ignores tenant_id); 0 = this tenant only' AFTER match_alert_type" },
+  ];
+  for (const col of exemptionColumns) {
+    try {
+      const exists = await db.queryRows(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules' AND COLUMN_NAME = ?",
+        [col.name]
+      );
+      if (exists.length === 0) {
+        await db.execute(col.sql);
+        console.log(`[AlertEngine] Added column alert_exemption_rules.${col.name}`);
+      }
+    } catch (e) {
+      console.error(`[AlertEngine] alert_exemption_rules column migration error for ${col.name}:`, e.message);
+    }
+  }
+  // Relax NOT NULL on match_upn + expires_at (only if currently NOT NULL).
+  const nullableColumns = [
+    { name: 'match_upn',  sql: "ALTER TABLE alert_exemption_rules MODIFY COLUMN match_upn VARCHAR(255) DEFAULT NULL COMMENT 'Lowercased UPN; exact match (NULL for non-UPN rule types)'" },
+    { name: 'expires_at', sql: "ALTER TABLE alert_exemption_rules MODIFY COLUMN expires_at DATETIME DEFAULT NULL COMMENT 'Hard expiry; NULL = permanent until manually revoked'" },
+  ];
+  for (const col of nullableColumns) {
+    try {
+      const meta = await db.queryRows(
+        "SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules' AND COLUMN_NAME = ?",
+        [col.name]
+      );
+      if (meta.length && meta[0].IS_NULLABLE === 'NO') {
+        await db.execute(col.sql);
+        console.log(`[AlertEngine] Relaxed NOT NULL on alert_exemption_rules.${col.name}`);
+      }
+    } catch (e) {
+      console.error(`[AlertEngine] alert_exemption_rules nullable migration error for ${col.name}:`, e.message);
+    }
+  }
+  // Index to support the Defender-type matcher's hot path.
+  try {
+    const idxExists = await db.queryRows(
+      "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules' AND INDEX_NAME = 'idx_alert_type'"
+    );
+    if (idxExists.length === 0) {
+      await db.execute("ALTER TABLE alert_exemption_rules ADD INDEX idx_alert_type (match_alert_type, all_tenants, revoked_at)");
+      console.log('[AlertEngine] Added index alert_exemption_rules.idx_alert_type');
+    }
+  } catch (e) {
+    // Index may already exist
   }
 }
 
@@ -2932,6 +2993,41 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
     // if no rule matched.
     console.warn(`[AlertEngine] Exemption rule match failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
     matchedRule = null;
+  }
+
+  // Jun 26, 2026 — Defender alert-type exception rules (operator "Create
+  // exception" button, #7/#23). Keyed on raw_data.defender_alert_type rather
+  // than UPN, scoped to this tenant or fleet-wide. Reuses the exact same
+  // auto-resolve branch below as the UPN matcher (status='resolved',
+  // resolution_reason='exemption_rule', resolution_rule_id, recordRuleMatch).
+  // Only the inbound Microsoft-already-handled type the operator silenced
+  // matches; outbound-spam-from-compromised-account carries a different
+  // alertType and keeps firing — that's the requirement, guaranteed by an
+  // exact (case-insensitive) type match.
+  if (!matchedRule) {
+    try {
+      const dtype = alertData.raw_data && alertData.raw_data.defender_alert_type;
+      if (dtype) {
+        matchedRule = await alertExemptionMatcher.findMatchingDefenderTypeRule(tenant.id, dtype);
+      }
+    } catch (e) {
+      console.warn(`[AlertEngine] Defender-type exemption match failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
+      matchedRule = null;
+    }
+  }
+
+  // Jun 27, 2026 — Policy-level exception rules (operator "Create exception" on
+  // EOP email-threat alerts — Inbound spam/malware/phish blocked, #7/#23). Each
+  // class is its own policy, so a whole-policy exemption = "this category
+  // entirely" and can't suppress a different category. Reuses the same
+  // auto-resolve branch below. Checked last so a narrower UPN/type rule wins.
+  if (!matchedRule) {
+    try {
+      matchedRule = await alertExemptionMatcher.findMatchingPolicyRule(tenant.id, policy.id);
+    } catch (e) {
+      console.warn(`[AlertEngine] Policy-level exemption match failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
+      matchedRule = null;
+    }
   }
 
   // Feature 8.9 §10.2 — Known-good app auto-resolve. For UAL OAuth-consent

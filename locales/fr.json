@@ -1052,7 +1052,10 @@
     "scope_group": "groupe",
     "status_revoked_format": "révoquée le {date}",
     "status_expired": "expirée",
-    "status_no_expiry": "sans expiration"
+    "status_no_expiry": "sans expiration",
+    "alert_scope_all": "tous les locataires",
+    "alert_scope_tenant": "ce locataire",
+    "alert_entire_policy": "Politique entière"
   },
   "alert_exemption": {
     "btn_label": "Créer une exemption",
@@ -1082,6 +1085,29 @@
     "err_save": "Échec de la création de l’exemption : ",
     "toast_missing_upn": "Impossible de créer une exemption — aucun nom d’utilisateur principal dans les données de l’alerte",
     "toast_created": "Exemption créée — alerte résolue automatiquement"
+  },
+  "defender_exception": {
+    "btn_label": "Créer une exception",
+    "btn_title": "Mettre en sourdine cette politique (p. ex. pourriel entrant déjà bloqué par Microsoft) et envoyer les alertes correspondantes à l’historique",
+    "modal_title": "Créer une exception",
+    "modal_subtitle": "Résoudre automatiquement les alertes correspondantes et les envoyer à l’historique",
+    "field_type": "Type d’alerte",
+    "field_policy": "Politique",
+    "label_scope": "Appliquer à",
+    "scope_tenant": "Ce locataire seulement",
+    "scope_all": "Tous les locataires gérés",
+    "label_reason": "Justification",
+    "reason_placeholder": "p. ex. Microsoft bloque/corrige déjà cette catégorie entrante; aucune action requise de notre part",
+    "note_label": "Remarque.",
+    "note_body": "Ceci met en sourdine uniquement ce type d’alerte Defender précis. Les autres alertes Defender — y compris le pourriel sortant d’un compte compromis — continuent de se déclencher. L’exception est permanente jusqu’à ce que vous la révoquiez sur la page Exemptions.",
+    "note_body_policy": "Ceci met en sourdine toute cette politique pour la portée choisie et envoie les alertes correspondantes à l’historique. Les autres politiques continuent de se déclencher. L’exception est permanente jusqu’à ce que vous la révoquiez sur la page Exemptions.",
+    "toast_missing_policy": "Impossible de créer une exception — l’alerte n’a aucune politique",
+    "btn_cancel": "Annuler",
+    "btn_submit": "Créer une exception",
+    "err_reason": "La justification est obligatoire.",
+    "err_save": "Échec de la création de l’exception : ",
+    "toast_missing_type": "Impossible de créer une exception — aucun type d’alerte Defender dans les données de l’alerte",
+    "toast_created": "Exception créée — alertes correspondantes envoyées à l’historique"
   },
   "ca_templates": {
     "title": "Accès conditionnel — Modèles de stratégies",
@@ -4036,6 +4062,10 @@
       "loading": "Chargement des données d’inventaire…",
       "load_failed": "Échec du chargement de l’inventaire : {message}",
       "no_libs": "Aucune bibliothèque de documents trouvée. Lancez d’abord un inventaire.",
+      "library_count": {
+        "one": "{count} bibliothèque",
+        "other": "{count} bibliothèques"
+      },
       "kpi": {
         "total_storage_gb": "Stockage total (GB)",
         "document_libraries": "Bibliothèques de documents",
@@ -4505,7 +4535,7 @@
     "phase_snapshotting": "Sauvegarde de la base de données…",
     "phase_pulling": "Téléchargement de la nouvelle version…",
     "phase_restarting": "Redémarrage…",
-    "phase_health_check": "Vérification de son bon fonctionnement…",
+    "phase_health_check": "Vérification de l'état en cours…",
     "phase_reconnecting": "Reconnexion…",
     "result_success": "Mise à jour terminée. Rechargement…",
     "result_rolled_back": "La mise à jour vers {version} a échoué à la vérification d'intégrité et a été automatiquement annulée. Vous êtes en sécurité sur la version {previous}.",

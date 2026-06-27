@@ -5,6 +5,26 @@ that release, newest first.
 
 ---
 
+## Version 0.2.25 — 2026-06-27
+
+### Silence noisy "already handled" alerts with one click
+
+Microsoft blocks a great deal of inbound spam, malware and phishing before it ever reaches a mailbox — and until now each one still raised an alert, cluttering the dashboard with items that need no action. You can now click **Create exception** on such an alert and choose to silence it for **just this tenant** or for **all managed tenants**. The exception clears the matching open alerts to history right away and quietly auto-resolves future ones, while leaving everything else firing as before — including outbound spam from a compromised account, which is a different policy and a genuine account-takeover signal. Exceptions are permanent until you revoke them on the **Exemptions** page, where they appear with their scope so you can review or remove them at any time.
+
+### Configuration Documentation report now lists every administrator
+
+The Configuration Documentation report previously listed only Global Administrators. It now lists **every account holding an administrative role** — Exchange, SharePoint, Teams, Intune, User, Helpdesk administrators and more — each with the roles it holds, whether the account is enabled, and its MFA status. The Global Administrator count is still shown as a summary figure. (Note: the report shows roles that are actively assigned; PIM-eligible-but-not-activated assignments are not listed.)
+
+### SharePoint Storage Overview — accurate totals
+
+The SharePoint Storage Overview was over-counting storage. Because a site's document libraries share one storage pool, each site's storage was being counted once per library and then summed, inflating the tenant total. Each site now appears **once**, with its true storage and a count of its libraries, and the bars show each site's share of the corrected total instead of always filling for the largest site.
+
+### Smaller fixes
+
+Storage figures in the tenant dashboard's top-users and top-mailboxes panels now display in gigabytes instead of raw megabytes. The in-app update screen's health-check message reads more clearly. And in dark mode, the version headings in the What's New window are no longer dark-on-dark.
+
+---
+
 ## Version 0.2.24 — 2026-06-24
 
 ### Reports — reviewed and polished

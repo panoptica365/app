@@ -788,18 +788,31 @@
       }
     }
 
-    const libs = [];
-    let total = 0;
+    // Aggregate by SITE, not by drive. In SharePoint a site collection has a
+    // single storage quota shared across all its document libraries, so Graph
+    // returns the SAME quota.used for every drive in a site. The old code
+    // pushed one row per drive and summed them, multiplying each site's
+    // storage by its library count and inflating the tenant total (the
+    // fictitious ~2.6 TB). We now collapse to one row per site, count its
+    // storage ONCE (max across drives — they're equal; max is just defensive),
+    // and keep a library count for context. (#2 / Cowork note 2026-06-26.)
+    const siteMap = new Map();
     for (const site of data.inventory || []) {
       if (site.error || !site.drives) continue;
+      const name = site.displayName || site.name || '(unnamed)';
+      let entry = siteMap.get(name);
+      if (!entry) { entry = { site: name, used: 0, libraryCount: 0 }; siteMap.set(name, entry); }
       for (const drive of site.drives) {
         const used = drive.quota && drive.quota.used ? drive.quota.used : 0;
-        total += used;
-        libs.push({ site: site.displayName || site.name || '(unnamed)', drive: drive.name || '(unnamed)', used });
+        entry.used = Math.max(entry.used, used); // shared site quota — take once
+        entry.libraryCount += 1;
       }
     }
-    libs.sort((a, b) => b.used - a.used);
-    if (libs.length === 0) {
+    const sites = Array.from(siteMap.values());
+    const total = sites.reduce((sum, s) => sum + s.used, 0);
+    const libraryCount = sites.reduce((sum, s) => sum + s.libraryCount, 0);
+    sites.sort((a, b) => b.used - a.used);
+    if (sites.length === 0) {
       empty.innerHTML = '<div class="sp-empty-icon">📊</div><p>No document libraries found. Run an Inventory first.</p>';
       empty.style.display = ''; content.style.display = 'none';
       return;
@@ -810,29 +823,35 @@
     const palette = ['#42A5F5', '#29B6F6', '#66BB6A', '#FFA726', '#EF5350', '#AB47BC', '#26C6DA', '#FFCA28', '#8D6E63', '#EC407A'];
     const siteColors = {};
     let i = 0;
-    for (const l of libs) if (!siteColors[l.site]) siteColors[l.site] = palette[i++ % palette.length];
+    for (const s of sites) if (!siteColors[s.site]) siteColors[s.site] = palette[i++ % palette.length];
 
     totals.innerHTML = `
-      <div class="sp-kpi"><div class="sp-kpi-value">${(total / (1024 ** 3)).toFixed(2)}</div><div class="sp-kpi-label">Total Storage (GB)</div></div>
-      <div class="sp-kpi"><div class="sp-kpi-value">${libs.length}</div><div class="sp-kpi-label">Document Libraries</div></div>
-      <div class="sp-kpi"><div class="sp-kpi-value">${Object.keys(siteColors).length}</div><div class="sp-kpi-label">Sites</div></div>
+      <div class="sp-kpi"><div class="sp-kpi-value">${(total / (1024 ** 3)).toFixed(2)}</div><div class="sp-kpi-label">${escHtml(window.t('sharepoint.storage.kpi.total_storage_gb'))}</div></div>
+      <div class="sp-kpi"><div class="sp-kpi-value">${libraryCount}</div><div class="sp-kpi-label">${escHtml(window.t('sharepoint.storage.kpi.document_libraries'))}</div></div>
+      <div class="sp-kpi"><div class="sp-kpi-value">${sites.length}</div><div class="sp-kpi-label">${escHtml(window.t('sharepoint.storage.kpi.sites'))}</div></div>
     `;
 
-    const max = libs[0].used || 1;
-    chart.innerHTML = libs.map(l => {
-      const pct = max > 0 ? Math.max(1, (l.used / max) * 100) : 0;
-      const label = l.used >= 1024 ** 3 ? (l.used / 1024 ** 3).toFixed(2) + ' GB' : (l.used / 1024 ** 2).toFixed(1) + ' MB';
-      const barW = l.used === 0 ? '2px' : pct + '%';
+    // Bar denominator: each site's share of the (corrected) tenant total. This
+    // replaces the old "relative to the largest site" scaling, which made the
+    // biggest site always render as a full bar. When/if true tenant capacity
+    // (Get-SPOTenant StorageQuota) is wired in, swap `denom` to that value and
+    // the bars become "used vs purchased capacity" with no other change.
+    const denom = total || 1;
+    chart.innerHTML = sites.map(s => {
+      const pct = denom > 0 ? Math.min(100, Math.max(0.5, (s.used / denom) * 100)) : 0;
+      const label = s.used >= 1024 ** 3 ? (s.used / 1024 ** 3).toFixed(2) + ' GB' : (s.used / 1024 ** 2).toFixed(1) + ' MB';
+      const barW = s.used === 0 ? '2px' : pct + '%';
+      const libLabel = window.t('sharepoint.storage.library_count', { count: s.libraryCount });
       return `
         <div class="sp-storage-bar-row">
           <div class="sp-storage-label">
-            <span class="sp-site-dot" style="background:${siteColors[l.site]};"></span>
+            <span class="sp-site-dot" style="background:${siteColors[s.site]};"></span>
             <div style="min-width:0;">
-              <div class="sp-storage-site-name">${escHtml(l.site)}</div>
-              <div class="sp-storage-drive-name">${escHtml(l.drive)}</div>
+              <div class="sp-storage-site-name">${escHtml(s.site)}</div>
+              <div class="sp-storage-drive-name">${escHtml(libLabel)}</div>
             </div>
           </div>
-          <div class="sp-storage-bar-track"><div class="sp-storage-bar-fill" style="width:${barW}; background:${siteColors[l.site]};"></div></div>
+          <div class="sp-storage-bar-track"><div class="sp-storage-bar-fill" style="width:${barW}; background:${siteColors[s.site]};"></div></div>
           <div class="sp-storage-value">${label}</div>
         </div>
       `;

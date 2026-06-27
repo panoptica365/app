@@ -5205,7 +5205,11 @@ td.monospace {
   font-size: 1.05rem;
   margin-top: 14px;
   margin-bottom: 6px;
-  color: var(--p-chrome-text);
+  /* Version/date headings (latest + earlier-releases). --p-chrome-text resolves
+     to a dark navy in both themes (it's for text on light chrome), so in dark
+     mode these read dark-on-dark. --p-text is identical in light mode but
+     theme-aware, so it stays readable in both. */
+  color: var(--p-text);
 }
 .whats-new-body h5 {
   font-size: 0.95rem;

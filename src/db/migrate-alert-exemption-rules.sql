@@ -81,6 +81,74 @@ CREATE TABLE IF NOT EXISTS alert_exemption_rules (
   INDEX idx_expiry (expires_at, revoked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- ─── 1b. Jun 2026 — Defender alert-type exception columns (#7/#23) ─────
+-- Operator-driven "Create exception" on Microsoft Defender alerts: silence a
+-- noisy Microsoft-already-handled inbound alert TYPE without suppressing the
+-- whole Defender policy (outbound spam from a compromised account is a
+-- different type and keeps firing). Two existing NOT NULL constraints are
+-- RELAXED so a Defender-type rule can omit a UPN and be permanent. The runtime
+-- source of truth is src/alert-engine.js::ensureAlertExemptionRulesTable; this
+-- block mirrors it. Idempotent.
+DROP PROCEDURE IF EXISTS __add_alert_exemption_defender_columns;
+DELIMITER $$
+CREATE PROCEDURE __add_alert_exemption_defender_columns()
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules'
+      AND COLUMN_NAME = 'match_alert_type'
+  ) THEN
+    ALTER TABLE alert_exemption_rules
+      ADD COLUMN match_alert_type VARCHAR(255) DEFAULT NULL
+        COMMENT 'Microsoft Defender alert type/name; case-insensitive exact match'
+        AFTER match_asn;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules'
+      AND COLUMN_NAME = 'all_tenants'
+  ) THEN
+    ALTER TABLE alert_exemption_rules
+      ADD COLUMN all_tenants TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT '1 = fleet-wide (match ignores tenant_id); 0 = this tenant only'
+        AFTER match_alert_type;
+  END IF;
+
+  -- Relax NOT NULL on match_upn + expires_at (only when currently NOT NULL).
+  IF EXISTS (
+    SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules'
+      AND COLUMN_NAME = 'match_upn' AND IS_NULLABLE = 'NO'
+  ) THEN
+    ALTER TABLE alert_exemption_rules
+      MODIFY COLUMN match_upn VARCHAR(255) DEFAULT NULL
+        COMMENT 'Lowercased UPN; exact match (NULL for non-UPN rule types)';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules'
+      AND COLUMN_NAME = 'expires_at' AND IS_NULLABLE = 'NO'
+  ) THEN
+    ALTER TABLE alert_exemption_rules
+      MODIFY COLUMN expires_at DATETIME DEFAULT NULL
+        COMMENT 'Hard expiry; NULL = permanent until manually revoked';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules'
+      AND INDEX_NAME = 'idx_alert_type'
+  ) THEN
+    ALTER TABLE alert_exemption_rules
+      ADD INDEX idx_alert_type (match_alert_type, all_tenants, revoked_at);
+  END IF;
+END$$
+DELIMITER ;
+CALL __add_alert_exemption_defender_columns();
+DROP PROCEDURE IF EXISTS __add_alert_exemption_defender_columns;
+
 -- ─── 2. alerts.resolution_reason + resolution_rule_id ─────────────────
 -- Adds provenance to the existing alerts table so an auto-resolved row can
 -- be distinguished from a manually-resolved one and traced back to the rule

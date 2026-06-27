@@ -131,7 +131,8 @@ router.get('/', async (req, res) => {
       }
       if (!include_revoked) {
         clauses.push('r.revoked_at IS NULL');
-        clauses.push('r.expires_at > UTC_TIMESTAMP()');
+        // NULL expires_at = permanent (Defender alert-type rules) — keep active.
+        clauses.push('(r.expires_at IS NULL OR r.expires_at > UTC_TIMESTAMP())');
       }
       const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
 
@@ -146,11 +147,18 @@ router.get('/', async (req, res) => {
                   COALESCE(p.name, CONCAT('policy #', r.policy_id)) AS template_name,
                   'pattern'                                   AS principal_type,
                   NULL                                        AS principal_id,
-                  CONCAT(
-                    r.match_upn,
-                    CASE WHEN r.match_country IS NOT NULL THEN CONCAT(' / ', r.match_country) ELSE '' END,
-                    CASE WHEN r.match_ip_cidr IS NOT NULL THEN CONCAT(' / ', r.match_ip_cidr) ELSE '' END
-                  )                                           AS principal_label,
+                  CASE WHEN r.match_alert_type IS NOT NULL
+                       THEN CONCAT('type: ', r.match_alert_type,
+                                   CASE WHEN r.all_tenants = 1 THEN ' (all tenants)' ELSE '' END)
+                       WHEN r.match_upn IS NULL
+                       THEN CONCAT('entire policy',
+                                   CASE WHEN r.all_tenants = 1 THEN ' (all tenants)' ELSE '' END)
+                       ELSE CONCAT(
+                         COALESCE(r.match_upn, ''),
+                         CASE WHEN r.match_country IS NOT NULL THEN CONCAT(' / ', r.match_country) ELSE '' END,
+                         CASE WHEN r.match_ip_cidr IS NOT NULL THEN CONCAT(' / ', r.match_ip_cidr) ELSE '' END
+                       )
+                  END                                         AS principal_label,
                   r.reason                                    AS reason,
                   r.created_by                                AS accepted_by,
                   r.created_at                                AS accepted_at,
@@ -161,7 +169,9 @@ router.get('/', async (req, res) => {
                   r.match_upn                                 AS match_upn,
                   r.match_country                             AS match_country,
                   r.match_ip_cidr                             AS match_ip_cidr,
-                  r.match_asn                                 AS match_asn
+                  r.match_asn                                 AS match_asn,
+                  r.match_alert_type                          AS match_alert_type,
+                  r.all_tenants                               AS all_tenants
              FROM alert_exemption_rules r
              JOIN tenants tn ON tn.id = r.tenant_id
              LEFT JOIN alert_policies p ON p.id = r.policy_id

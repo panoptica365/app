@@ -1052,7 +1052,10 @@
     "scope_group": "group",
     "status_revoked_format": "revoked {date}",
     "status_expired": "expired",
-    "status_no_expiry": "no expiry"
+    "status_no_expiry": "no expiry",
+    "alert_scope_all": "all tenants",
+    "alert_scope_tenant": "this tenant",
+    "alert_entire_policy": "Entire policy"
   },
   "alert_exemption": {
     "btn_label": "Create exemption",
@@ -1082,6 +1085,29 @@
     "err_save": "Failed to create exemption: ",
     "toast_missing_upn": "Cannot create exemption — no user principal name in alert data",
     "toast_created": "Exemption created — alert auto-resolved"
+  },
+  "defender_exception": {
+    "btn_label": "Create exception",
+    "btn_title": "Silence this policy (e.g. inbound spam Microsoft already blocked) and send matching alerts to history",
+    "modal_title": "Create exception",
+    "modal_subtitle": "Auto-resolve matching alerts and send them to history",
+    "field_type": "Alert type",
+    "field_policy": "Policy",
+    "label_scope": "Apply to",
+    "scope_tenant": "This tenant only",
+    "scope_all": "All managed tenants",
+    "label_reason": "Justification",
+    "reason_placeholder": "e.g. Microsoft already blocks/remediates this inbound class; not actionable for us",
+    "note_label": "Note.",
+    "note_body": "This silences only this exact Defender alert type. Other Defender alerts — including outbound spam from a compromised account — keep firing. The exception is permanent until you revoke it on the Exemptions page.",
+    "note_body_policy": "This silences this entire policy for the chosen scope and sends matching alerts to history. Other policies keep firing. The exception is permanent until you revoke it on the Exemptions page.",
+    "toast_missing_policy": "Cannot create exception — alert has no policy",
+    "btn_cancel": "Cancel",
+    "btn_submit": "Create exception",
+    "err_reason": "Justification is required.",
+    "err_save": "Failed to create exception: ",
+    "toast_missing_type": "Cannot create exception — no Defender alert type in alert data",
+    "toast_created": "Exception created — matching alerts sent to history"
   },
   "ca_templates": {
     "title": "Conditional Access — Policy Templates",
@@ -4036,6 +4062,10 @@
       "loading": "Loading inventory data…",
       "load_failed": "Failed to load inventory: {message}",
       "no_libs": "No document libraries found. Run an Inventory first.",
+      "library_count": {
+        "one": "{count} library",
+        "other": "{count} libraries"
+      },
       "kpi": {
         "total_storage_gb": "Total Storage (GB)",
         "document_libraries": "Document Libraries",
@@ -4505,7 +4535,7 @@
     "phase_snapshotting": "Backing up the database…",
     "phase_pulling": "Downloading the new version…",
     "phase_restarting": "Restarting…",
-    "phase_health_check": "Checking it's healthy…",
+    "phase_health_check": "Health check in progress…",
     "phase_reconnecting": "Reconnecting…",
     "result_success": "Update complete. Reloading…",
     "result_rolled_back": "Update to {version} failed its health check and was automatically rolled back. You are safely on {previous}.",

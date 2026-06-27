@@ -1291,19 +1291,43 @@ def build_section_users(data, styles, s, width, lang):
     entra = (data.get('services') or {}).get('entra', {}) or {}
     sec = (data.get('services') or {}).get('security', {}) or {}
 
-    # Global Admins
-    ga = sec.get('global_admins') or {}
-    admins = ga.get('admins') or []
-    if admins:
-        flows.append(Paragraph(f"<b>{esc(s['card_global_admins'])} ({len(admins)})</b>", styles['DocSubHeading']))
-        rows = [[a.get('displayName', ''), a.get('userPrincipalName', ''),
+    # Accounts with admin roles — EVERY account holding any watched privileged
+    # role (not just Global Admins), from the always-polled privileged_roles
+    # reader (fetchers.fetchPrivilegedRoles → sec.privileged_roles). Replaces the
+    # old GA-only list: Microfix correctly noted the report listed only Global
+    # Admins. The GA *count* still appears as a summary KPI card. Falls back to
+    # the legacy global_admins list if privileged_roles isn't present (older snap).
+    priv = sec.get('privileged_roles') or {}
+    priv_accounts = priv.get('accounts') or []
+    if priv_accounts:
+        def _mfa(v):
+            mr = v.get('mfaRegistered')
+            return '✓' if mr is True else ('✗' if mr is False else '—')
+        flows.append(Paragraph(
+            f"<b>{esc(s['er_sec_admins'])} ({len(priv_accounts)})</b>", styles['DocSubHeading']))
+        rows = [[a.get('displayName') or a.get('userPrincipalName', ''),
+                 ', '.join(r.get('name', '') for r in (a.get('roles') or []) if r.get('name')) or '—',
                  '✓' if a.get('enabled') else '✗',
-                 '✓' if a.get('licensed') else '✗'] for a in admins]
-        t = std_table([s['col_name'], s['col_upn'], s['col_enabled'], s['col_lic_short']],
-                      rows, [180, 230, 40, 40], styles)
+                 _mfa(a)] for a in priv_accounts]
+        t = std_table([s['col_name'], s['er_col_roles'], s['col_enabled'], s['er_col_mfa']],
+                      rows, [150, 210, 50, 80], styles)
         if t:
             flows.append(t)
             flows.append(Spacer(1, 8))
+    else:
+        # Fallback for older snapshots without privileged_roles: legacy GA list.
+        ga = sec.get('global_admins') or {}
+        admins = ga.get('admins') or []
+        if admins:
+            flows.append(Paragraph(f"<b>{esc(s['card_global_admins'])} ({len(admins)})</b>", styles['DocSubHeading']))
+            rows = [[a.get('displayName', ''), a.get('userPrincipalName', ''),
+                     '✓' if a.get('enabled') else '✗',
+                     '✓' if a.get('licensed') else '✗'] for a in admins]
+            t = std_table([s['col_name'], s['col_upn'], s['col_enabled'], s['col_lic_short']],
+                          rows, [180, 230, 40, 40], styles)
+            if t:
+                flows.append(t)
+                flows.append(Spacer(1, 8))
 
     # Helper to format the lastSignIn value the same way the dashboard does:
     # the literal string 'Never' is the API's signal for "never signed in" —
@@ -2078,10 +2102,15 @@ def build_section_identity(data, styles, s, width, lang):
             return s['er_never_redeemed']
         return '—'
 
-    # ─── Accounts with Admin Roles ───
-    flows.append(Paragraph(f"<b>{esc(s['er_sec_admins'])}</b>", styles['DocSubHeading']))
+    # ─── Accounts with Admin Roles (Access Review snapshot only) ───
+    # The full admin roster lives in the Users section (always-polled
+    # privileged_roles). Here we ONLY add the richer view — last-activity and
+    # break-glass tagging — when a real Access Review snapshot was captured.
+    # When it wasn't, we skip silently (no misleading "no admins" line, no
+    # duplicate of the Users-section table).
     admins = identity.get('admins') or []
     if admins:
+        flows.append(Paragraph(f"<b>{esc(s['er_sec_admins'])}</b>", styles['DocSubHeading']))
         rows = []
         for a in admins:
             account = a.get('account') or a.get('upn') or '—'
@@ -2105,9 +2134,6 @@ def build_section_identity(data, styles, s, width, lang):
         if t:
             flows.append(t)
             flows.append(Spacer(1, 8))
-    else:
-        flows.append(Paragraph(s['er_no_admins'], styles['DocBody']))
-        flows.append(Spacer(1, 8))
 
     # NOTE: the inactive-accounts listing lives in the Users section
     # (build_section_users — entra/sign-in sourced, richer: per-user last sign-in,

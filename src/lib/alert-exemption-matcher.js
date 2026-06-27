@@ -121,6 +121,102 @@ async function findMatchingRule(tenantId, policyId, signal) {
 }
 
 /**
+ * Find an active "Defender alert type" exception rule for a would-be alert.
+ *
+ * Distinct from findMatchingRule (the UPN-keyed risky-sign-in matcher) — this
+ * one keys on the Microsoft Defender alert TYPE/name (raw_data.defender_alert_type)
+ * and is what the operator-driven "Create exception" button on Defender alerts
+ * creates. It exists so an MSP can silence noisy Microsoft-already-handled
+ * inbound classes (e.g. "Email messages containing malware removed after
+ * delivery") WITHOUT silencing the whole Defender policy — outbound-spam-from-
+ * compromised-account alerts carry a different alertType and never match here.
+ *
+ * Scope: a rule applies to one tenant (tenant_id) OR fleet-wide (all_tenants=1).
+ * Match is case-insensitive exact on the type string (not substring) so an
+ * exception only ever silences the exact Microsoft alert class the operator
+ * picked. Permanent until revoked: expires_at is NULL for these rules, but we
+ * still honour a non-NULL expiry defensively in case one is ever set.
+ *
+ * Same fail-safe contract as findMatchingRule: any error (missing columns
+ * before migration, DB hiccup) returns null so alerts behave exactly as they
+ * did before this feature — we never suppress on the basis of a query error.
+ *
+ * @param {number} tenantId   — internal tenants.id of the would-be alert
+ * @param {string} alertType  — raw_data.defender_alert_type
+ * @returns {Promise<object|null>} rule row or null
+ */
+async function findMatchingDefenderTypeRule(tenantId, alertType) {
+  if (!tenantId || !alertType || typeof alertType !== 'string') return null;
+  const typeLower = alertType.trim().toLowerCase();
+  if (!typeLower) return null;
+
+  try {
+    // Prefer a tenant-specific rule over a fleet-wide one if both exist
+    // (all_tenants ASC puts tenant_id matches, where all_tenants=0, first).
+    const rows = await db.queryRows(
+      `SELECT id, tenant_id, policy_id, match_alert_type, all_tenants,
+              reason, created_by
+         FROM alert_exemption_rules
+        WHERE match_alert_type IS NOT NULL
+          AND LOWER(match_alert_type) = ?
+          AND revoked_at IS NULL
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+          AND (all_tenants = 1 OR tenant_id = ?)
+        ORDER BY all_tenants ASC
+        LIMIT 1`,
+      [typeLower, tenantId]
+    );
+    return (rows && rows.length) ? rows[0] : null;
+  } catch (err) {
+    console.warn(`[AlertExemptionMatcher] Defender-type query failed (tenant=${tenantId}, type="${alertType}"): ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Find an active POLICY-level exception rule for a would-be alert.
+ *
+ * This is the "silence this whole category" primitive (operator "Create
+ * exception" on EOP email-threat alerts — Inbound spam/malware/phish blocked,
+ * #7/#23). Each of those classes is its own alert policy, so exempting the
+ * whole policy IS "this category entirely" and is safe by construction:
+ * outbound spam / malware / phish are different policies and are untouched.
+ *
+ * A policy-level rule is identified by having NO narrower match keys set
+ * (match_upn IS NULL AND match_alert_type IS NULL) — so it can't be confused
+ * with a UPN risky-sign-in rule or a Defender alert-type rule. Scope is one
+ * tenant (tenant_id) OR fleet-wide (all_tenants=1). Permanent unless an
+ * expiry was set. Same fail-safe contract as the other matchers: any error
+ * returns null and the alert behaves exactly as before.
+ *
+ * @param {number} tenantId  — internal tenants.id of the would-be alert
+ * @param {number} policyId  — alert_policies.id
+ * @returns {Promise<object|null>} rule row or null
+ */
+async function findMatchingPolicyRule(tenantId, policyId) {
+  if (!tenantId || !policyId) return null;
+  try {
+    const rows = await db.queryRows(
+      `SELECT id, tenant_id, policy_id, all_tenants, reason, created_by
+         FROM alert_exemption_rules
+        WHERE policy_id         = ?
+          AND match_upn         IS NULL
+          AND match_alert_type  IS NULL
+          AND revoked_at        IS NULL
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+          AND (all_tenants = 1 OR tenant_id = ?)
+        ORDER BY all_tenants ASC
+        LIMIT 1`,
+      [policyId, tenantId]
+    );
+    return (rows && rows.length) ? rows[0] : null;
+  } catch (err) {
+    console.warn(`[AlertExemptionMatcher] Policy-rule query failed (tenant=${tenantId}, policy=${policyId}): ${err.message}`);
+    return null;
+  }
+}
+
+/**
  * Bump match_count + last_matched_at for a rule that just resolved an
  * alert. Fire-and-forget — caller does not await. Failures log warn.
  *
@@ -220,6 +316,8 @@ function logAsnUnsupportedOnce(ruleId) {
 
 module.exports = {
   findMatchingRule,
+  findMatchingDefenderTypeRule,
+  findMatchingPolicyRule,
   recordRuleMatch,
   extractSignal,
 };
