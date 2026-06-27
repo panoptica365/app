@@ -1943,23 +1943,8 @@
     socket.on('connect', () => console.log('[WS] Connected'));
     socket.on('disconnect', () => console.log('[WS] Disconnected'));
 
-    // SharePoint audit completion — show toast from anywhere in the SPA
-    socket.on('sp:audit:complete', (payload) => {
-      try {
-        const msg = window.t('sharepoint.toast_audit_complete', {
-          drive: payload.driveName,
-          folders: payload.foldersScanned,
-          explicit: payload.explicitCount,
-        });
-        showToast(msg, 'success');
-      } catch (e) { console.error('[WS] sp:audit:complete handler:', e); }
-    });
-    socket.on('sp:audit:error', (payload) => {
-      showToast(window.t('sharepoint.toast_audit_failed', {
-        drive: payload.driveName,
-        message: payload.message || 'unknown error',
-      }), 'error');
-    });
+    // SharePoint audits are tracked jobs now (v0.2.26) — status lives in the
+    // SharePoint → Audits tab; no completion toast / nav (operator decision).
     return socket;
   }
 

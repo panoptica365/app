@@ -5,6 +5,26 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.26 — 2026-06-27
+
+### Les audits SharePoint sont maintenant des tâches en arrière-plan suivies, avec un onglet Audits
+
+Les audits de bibliothèques SharePoint ne bloquent plus l'écran et ne vous redirigent plus vers le résultat à la fin — lancer un audit le met simplement en file et vous laisse où vous êtes, ce qui permet d'en enchaîner plusieurs. Un nouvel onglet **Audits** dans la section SharePoint affiche chaque tâche d'audit — en cours, en file, et récemment terminée, en échec ou annulée — avec sa progression, ses horodatages et la personne qui l'a lancée, de sorte que rien n'est perdu une fois que vous changez de page. Vous pouvez auditer une seule bibliothèque, **toutes les bibliothèques d'un site**, ou **tous les sites d'un locataire** en une seule action, chacune avec une confirmation proportionnée à l'ampleur de l'opération. Les tâches s'exécutent quelques-unes à la fois en arrière-plan pour ne jamais ralentir la surveillance de sécurité, réessaient automatiquement lorsque Microsoft Graph limite le débit, et reprennent après un redémarrage. Vous pouvez annuler les tâches en file (une ou toutes) et relancer une tâche en échec, et une case **Afficher les tâches de tous les locataires** permet de suivre les audits sur l'ensemble de vos locataires gérés d'un seul coup d'œil.
+
+### Inventaire SharePoint : date du dernier audit, et rapports dans la langue du locataire
+
+L'inventaire SharePoint affiche désormais une **date du dernier audit** pour chaque site et bibliothèque (ou « Jamais » s'il n'a pas été audité). Les deux rapports de permissions SharePoint (permissions de bibliothèque et permissions par utilisateur) sont maintenant produits dans la langue configurée de chaque locataire — français, anglais ou espagnol — comme les autres rapports de Panoptica.
+
+### Rapport PDF des permissions SharePoint : plus de lignes qui se chevauchent
+
+Dans l'export PDF des permissions, les entrées dont la source de permission s'étend sur trois ou quatre lignes ne chevauchent plus la ligne suivante — la hauteur des lignes est maintenant dynamique et le texte se replie proprement dans la cellule. Les identifiants de groupe bruts qui apparaissaient parfois dans le PDF sont remplacés par une étiquette lisible, afin que les rapports destinés aux clients n'affichent aucun identifiant interne.
+
+### Alerte préventive d'expiration des secrets et certificats d'applications
+
+Panoptica surveille désormais les secrets clients et les certificats des inscriptions d'applications de vos locataires et vous avertit avant qu'ils n'expirent — à 30 jours, de nouveau à 7 jours, et une fois expirés (une seule alerte par identifiant, pour ne jamais vous inonder). L'expiration est aussi affichée directement dans l'onglet **Applications** : une pastille sur la ligne de l'application, la date mise en évidence dans le détail, et un compteur dans le résumé de l'onglet — afin que vous puissiez renouveler un identifiant à votre rythme plutôt que de le découvrir le matin où une intégration cesse de fonctionner.
+
+---
+
 ## Version 0.2.25 — 2026-06-27
 
 ### Faites taire en un clic les alertes « déjà traitées »

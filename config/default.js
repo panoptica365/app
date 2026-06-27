@@ -66,6 +66,10 @@ module.exports = {
       // working window covers detection + the identity timeline; trends survive
       // in daily_event_counts. Left unbounded before 2026-06-16 (grew forever).
       ual_events:                 retentionDays('RETENTION_UAL_EVENTS_DAYS', 90),
+      // SharePoint audit jobs — keep terminal jobs (done/failed/cancelled)
+      // visible in the Audits tab for ~48h, then prune. queued/running are
+      // never pruned (finished_at IS NULL).
+      sp_audit_jobs:              retentionDays('RETENTION_SP_AUDIT_JOBS_DAYS', 2),
     },
     // metric_snapshots: full raw poll history is kept rawDays whole days
     // (the snapshot-delta alert engine only needs the previous poll); beyond

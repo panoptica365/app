@@ -100,6 +100,15 @@ const TABLES = [
     column: 'creation_time',
     configKey: 'ual_events',
   },
+  {
+    // SharePoint audit jobs (v0.2.26). Prune terminal jobs (done/failed/
+    // cancelled) by finished_at; queued/running rows have finished_at NULL so
+    // they're never pruned. idx_spaj_finished (finished_at) is created in
+    // sharepoint-audit-jobs.ensureSchema(), so no ensureIndex here.
+    table: 'sp_audit_jobs',
+    column: 'finished_at',
+    configKey: 'sp_audit_jobs',
+  },
 ];
 
 let cronJob = null;

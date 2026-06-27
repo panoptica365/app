@@ -334,8 +334,68 @@
     "modal_btn_cancel": "Cancel"
   },
   "_comment_alert_policy_names": "Slug-derived keys for policy names. Slug = lowercased name with non-alphanumerics → underscore. If a policy is added in DB without a corresponding key here, the live English name from the DB is used as graceful fallback (slugify('Account lockouts') → 'account_lockouts').",
+  "sharepoint_report": {
+    "not_available": "N/A",
+    "page": "Page {n}",
+    "details_title": "Report Details",
+    "label_tenant": "Tenant",
+    "label_generated": "Generated",
+    "cover_generated": "Generated {date}",
+    "unresolved_principal": "[Unresolved Principal]",
+    "table": {
+      "principal": "Principal",
+      "type": "Type",
+      "role": "Role",
+      "members": "Members",
+      "no_permissions": "No permissions found."
+    },
+    "principal_type": {
+      "user": "User",
+      "user_external": "User (external)",
+      "security_group": "Security group",
+      "sharepoint_group": "SharePoint group",
+      "group": "Group",
+      "site_user": "Site user",
+      "application": "Application",
+      "link": "Sharing link",
+      "link_unresolved": "Link recipient (unresolved)",
+      "distribution_list": "Distribution list"
+    },
+    "library": {
+      "title": "Library Permissions Report",
+      "detail_site": "Site",
+      "detail_library": "Library",
+      "detail_folders_scanned": "Folders Scanned",
+      "detail_library_size": "Library Size",
+      "detail_explicit": "Explicit Permissions",
+      "detail_audit_date": "Audit Date",
+      "baseline_heading": "Baseline Permissions",
+      "baseline_desc": "These permissions are inherited by all folders in the library unless explicitly overridden.",
+      "explicit_heading": "Folders with Explicit Permissions",
+      "explicit_none": "No folders with explicit (non-inherited) permissions were found. All folders inherit the baseline permissions above.",
+      "explicit_count": {
+        "one": "{count} folder with permissions that differ from the library baseline.",
+        "other": "{count} folders with permissions that differ from the library baseline."
+      }
+    },
+    "user": {
+      "title": "User Permissions Report",
+      "cover_subtitle": "All Audited Libraries",
+      "root_inherited": "(root — inherited)",
+      "detail_libraries_audited": "Libraries Audited",
+      "detail_sites": "Sites",
+      "detail_users_found": "Users/Groups Found",
+      "section_heading": "User & Group Permissions",
+      "section_desc": {
+        "one": "Aggregated permissions across {count} audited library. Each user or group is shown with every location they have access to.",
+        "other": "Aggregated permissions across {count} audited libraries. Each user or group is shown with every location they have access to."
+      },
+      "empty": "No users or groups found in the audited libraries."
+    }
+  },
   "alert_policy_names": {
     "known_good_app_drift": "Known-good app drift",
+    "app_credential_expiry": "App credential expiry",
     "microsoft_planned_change": "Microsoft planned change",
     "sign_ins_blocked_by_conditional_access": "Sign-ins blocked by Conditional Access",
     "impossible_travel_detections": "Impossible travel detections",
@@ -411,6 +471,7 @@
   "_comment_alert_policy_descriptions": "Same slug-keyed pattern as alert_policy_names. Drop more rows here as new alert policies ship in the DB.",
   "alert_policy_descriptions": {
     "known_good_app_drift": "An application previously marked known-good gained one or more permissions beyond its approved baseline. Removing permissions does not fire; only growth past the baseline does. Source: Microsoft Graph, compared on Refresh and on the daily known-good loop.",
+    "app_credential_expiry": "A client secret or certificate on a tenant app registration is approaching expiry. Panoptica warns at 30 days and 7 days out, and once expired, so the credential can be rotated before an outage. One alert per credential. Source: Microsoft Graph (/applications), evaluated on the daily known-good loop.",
     "sign_ins_blocked_by_conditional_access": "Tenant-wide telemetry: daily count of sign-ins blocked by Conditional Access policies. Feeds the Daily Activity donut chart.",
     "impossible_travel_detections": "Risk detections for unlikely travel patterns",
     "account_lockouts": "Account lockouts due to incorrect sign-in attempts",
@@ -480,6 +541,13 @@
       "attack_vectors": "What to look at when this fires:\n\n- New high-impact scopes. Mail.*, Files.*.All, Directory.ReadWrite.All, full_access_as_app, or AppRoleAssignment.ReadWrite.All added to an app that didn’t have them is the headline signal.\n\n- New application (app-only) permissions. App-only grants act without a signed-in user and are the strongest persistence — weight them above delegated additions.\n\n- New credentials on an app registration. A fresh client secret or certificate on a high-permission app is how an attacker takes over an app you already trust.\n\n- New redirect URIs. An added reply URL on an app registration is token-theft setup.\n\n- Legitimate change. The vendor expanded the product, or an admin deliberately granted more. Confirm out-of-band, then re-save to set the new baseline.",
       "what_to_do": "Step 1. Open the app’s row in the Applications tab and expand it to see the full current permission set; the alert lists exactly what was added.\n\nStep 2. Decide whether the addition is expected. Check the Change Log and ask the operator/admin whether they granted it. A verified publisher expanding scopes is usually benign; an unverified or generic-looking app gaining Mail/Directory access is not.\n\nStep 3. If unexpected, treat it as a live consent-abuse incident. In Entra → Enterprise Applications (or App registrations), review the new grant/credential, remove it, revoke the app’s tokens, and audit what it accessed since the change.\n\nStep 4. If expected, re-open the app in the Applications tab and Save it again to capture the new permission set as the baseline. The drift clears and the app returns to known-good.\n\nPanoptica takes no action on the tenant — every change is made by you in Entra.",
       "example_scenario": "Six weeks ago you reviewed “Contoso Backup” — a verified-publisher backup tool with Files.Read.All and Mail.Read — and marked it known good. This morning the daily loop finds it now also holds Mail.ReadWrite and Directory.ReadWrite.All, added at 02:40 via an admin-consent grant.\n\nThat is drift in the dangerous direction. A backup tool has no need for directory write. Either the vendor shipped an over-broad update, or an attacker who compromised an admin escalated an app already on your trusted list precisely because it would not draw a second look.\n\nYou’d expand the row to confirm the added scopes, check the Change Log for a matching operator action, and if none, treat the admin as compromised — pull the new grant in Entra, revoke the app’s tokens, audit mailbox and directory access since 02:40, and reset the admin. If the vendor legitimately expanded the product and the customer approved it, re-Save the app to set the new baseline so it stops alerting."
+    },
+    "app_credential_expiry": {
+      "what_is_this": "An app registration in this tenant authenticates with a client secret or a certificate, and one of those credentials is approaching its expiry date — or has already passed it.\n\nPanoptica reads the expiry of every credential on every app registration during its daily inventory of the tenant, and raises this alert at 30 days out, again at 7 days out, and once the credential has expired. It is an operational early-warning, not a sign of compromise: the point is to let you rotate the credential on your schedule instead of discovering it the morning an integration stops working.",
+      "why_it_matters": "When an app's secret or certificate expires, the app silently stops being able to authenticate. Whatever it powered — a backup job, a SaaS connector, an unattended script, a line-of-business integration — fails, usually with an opaque 401 that is hard to trace back to an expired credential under time pressure.\n\nExpiries are easy to miss because nothing happens until the deadline, and the person who created the credential is often gone or has forgotten it exists. Catching it 30 days ahead turns a production outage into a five-minute planned rotation. There is a security angle too: teams under outage pressure tend to create a new secret with an over-long lifetime or paste it into the wrong place — advance warning removes that pressure.",
+      "attack_vectors": "What to look at when this fires:\n\n- Is the app still in use? An expiring credential on an app nobody recognises is a prompt to remove the app entirely, not to renew it. Stale app registrations with live credentials are a standing attack surface.\n\n- Who owns the rotation? Identify the integration the credential serves and the person or vendor responsible before it lapses.\n\n- Secret vs certificate. Certificates are the stronger credential; if you are renewing, prefer moving a secret-based app to a certificate where the integration supports it.\n\n- Over-long replacements. When rotating, avoid the temptation to set a multi-year secret to avoid doing this again — long-lived secrets are exactly what attackers harvest. Keep lifetimes short and let this alert remind you.\n\n- Unexpected new credentials. If you rotate and later see a credential you did not add, treat that as the known-good app drift case — it can indicate an attacker establishing their own persistence on the app.",
+      "what_to_do": "Step 1. Open the app's row in the Applications tab; the alert names the credential (secret or certificate), its identifier, and the exact expiry date.\n\nStep 2. Confirm what the app does and whether it is still needed. If it is not, remove the app registration in Entra (App registrations) rather than renewing — that closes the alert and shrinks your attack surface.\n\nStep 3. If it is needed, rotate before the expiry date: in Entra → App registrations → the app → Certificates & secrets, add a new secret or upload a new certificate with a short lifetime, update the consuming integration to use it, verify the integration works, then remove the old credential.\n\nStep 4. The alert is one-per-credential and does not re-fire each cycle. Once the credential is rotated or removed, the old credential no longer appears in the inventory; resolve the alert. Panoptica makes no change on the tenant — every action is taken by you in Entra.",
+      "example_scenario": "On the 1st of the month the daily loop flags that the client secret on “Contoso Nightly Backup” expires in 30 days. The app runs an unattended backup against SharePoint every night using that secret.\n\nNobody would have noticed until the backups silently failed a month later — and the first sign would have been a missing restore point during an incident, the worst possible time to learn the secret lapsed. Instead, with 30 days of runway, the operator confirms the app is still in use, schedules a maintenance window, and in Entra adds a new 6-month secret, updates the backup job's configuration, runs a test backup to confirm it works, and deletes the old secret.\n\nThe credential no longer appears in the inventory on the next loop, so the operator resolves the alert. A would-have-been production outage became a routine, planned rotation — and because the new secret is short-lived, the same safeguard will catch the next one in good time."
     },
     "modal_title": "About this alert",
     "tooltip": "Learn about this alert",
@@ -1519,6 +1587,15 @@
       "global_admin_privilege_elevation": "{policyName}: {displayName} ({userPrincipalName}) added as Global Administrator",
       "ms_change": "Microsoft change — {msTitle}",
       "enterprise_application_creation": "{policyName}: \"{appName}\" registered",
+      "app_credential_expiring": {
+        "one": "{policyName}: {credType} on \"{appName}\" expires in {count} day ({endDate})",
+        "other": "{policyName}: {credType} on \"{appName}\" expires in {count} days ({endDate})"
+      },
+      "app_credential_expired": "{policyName}: {credType} on \"{appName}\" expired on {endDate}",
+      "cred_type": {
+        "secret": "client secret",
+        "certificate": "certificate"
+      },
       "external_user_addition": "{policyName}: {guestName} invited as external user",
       "mfa_disabled_users": "{policyName}: {userName} — MFA not registered",
       "inbox_rule_created": "{policyName}: \"{ruleName}\" created on {user} ({userPrincipalName}){extNote}",
@@ -2969,6 +3046,12 @@
       "kind_registration": "App registration",
       "status_drift": "Permissions changed since approved",
       "status_known_good": "Known good",
+      "cred_expiring": "Credential expiring",
+      "cred_expired": "Credential expired",
+      "summary_creds": {
+        "one": "{count} with expiring credential",
+        "other": "{count} with expiring credentials"
+      },
       "perm_delegated": "Delegated permissions",
       "perm_application": "Application permissions",
       "perm_requested": "Requested permissions",
@@ -3920,6 +4003,40 @@
     "tab_library_permissions": "Library Permissions",
     "tab_user_permissions": "User Permissions",
     "tab_storage": "Storage Overview",
+    "tab_audits": "Audits",
+    "audits": {
+      "intro": "Background audit jobs — running, queued, and recently finished.",
+      "empty_html": "No audit jobs yet. Launch audits from the <strong>Inventory</strong> tab — per library, per site, or all sites.",
+      "btn_audit_all": "Audit All Sites",
+      "btn_audit_all_site": "Audit all libraries",
+      "show_all_tenants": "Show all tenant jobs",
+      "col_tenant": "Tenant",
+      "col_library": "Library",
+      "col_status": "Status",
+      "col_times": "Times",
+      "col_requested_by": "Requested by",
+      "col_queued": "Queued",
+      "col_started": "Started",
+      "col_finished": "Finished",
+      "status_queued": "Queued",
+      "status_running": "Running",
+      "status_done": "Done",
+      "status_failed": "Failed",
+      "status_cancelled": "Cancelled",
+      "cancel": "Cancel",
+      "rerun": "Re-run",
+      "cancel_all": "Cancel all queued",
+      "confirm_site": "This will audit all {count} libraries in this site ({site}). It can take a while and may hit Microsoft Graph throttling. Continue?",
+      "confirm_global": "This will audit ALL {libs} document libraries across ALL {sites} sites in this tenant. This can take a very long time, will hit Microsoft Graph throttling, and some libraries may fail and need re-running. Are you sure?",
+      "confirm_cancel_all": "Cancel all queued audit jobs? Jobs already running will be left to finish.",
+      "confirm_cancel_all_fleet": "Cancel ALL queued audit jobs across ALL tenants? Jobs already running will be left to finish.",
+      "toast_queued_one": "Audit queued for {library} — see the Audits tab.",
+      "toast_queued_many": "{enqueued} audit(s) queued, {skipped} already in flight.",
+      "toast_already_queued": "{library} is already queued or running.",
+      "toast_run_inventory_first": "Run an inventory first so Panoptica knows the sites and libraries to audit.",
+      "toast_cancelled_n": "{count} queued job(s) cancelled.",
+      "toast_cancel_failed": "Cancel failed: {message}"
+    },
     "starting_inventory": "Starting inventory...",
     "kpi_sites": "Sites",
     "kpi_document_libraries": "Document Libraries",
@@ -3928,6 +4045,8 @@
     "col_url": "URL",
     "col_libraries_size": "Libraries / Size",
     "col_last_modified": "Last Modified",
+    "col_last_audit": "Last Audit Date",
+    "audit_never": "Never",
     "col_audit": "Audit",
     "label_audit": "Audit:",
     "option_no_audits": "— No audits yet —",

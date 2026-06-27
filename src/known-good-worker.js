@@ -122,7 +122,18 @@ async function refreshTenant(tenant, opts = {}) {
     apps: invApps,
   });
 
-  return { total: invApps.length, blessed, drifted, driftedNow };
+  // App-registration credential expiry early warning (reuses the credentials
+  // already collected above — no extra Graph fetch). One alert per (app, cred).
+  let expiringCreds = 0;
+  if (fireAlerts) {
+    try {
+      expiringCreds = await fireCredentialExpiryAlerts(tenant, apps);
+    } catch (err) {
+      console.error(`[KnownGood] credential-expiry check failed (tenant ${tenant.id}): ${err.message}`);
+    }
+  }
+
+  return { total: invApps.length, blessed, drifted, driftedNow, expiringCreds };
 }
 
 /** Fire the one-shot known_good_app_drift alert for a newly-drifted app. */
@@ -161,6 +172,106 @@ async function fireDriftAlert(tenant, app, baseline, signature) {
   } catch (err) {
     console.error(`[KnownGood] drift alert insert failed (tenant ${tenant.id}, app ${app.appId}): ${err.message}`);
   }
+}
+
+// Slug of the EXPIRY_POLICY_NAME ('App credential expiry') — must match the
+// alert_policy_names / alert_explanations keys in the locale files.
+const EXPIRY_POLICY_SLUG = 'app_credential_expiry';
+const EXPIRY_WARN_DAYS = 30;
+const EXPIRY_CRITICAL_DAYS = 7;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Scan app-registration credentials and raise an early-warning alert for each
+ * client secret / certificate within 30 or 7 days of expiry (or already
+ * expired). Dedup is per (app, credential) so it fires once and does not
+ * re-fire on the next daily cycle. Enterprise apps carry no `credentials`
+ * field, so this naturally scopes to app registrations.
+ * @returns {number} count of credentials that triggered (incl. deduped)
+ */
+async function fireCredentialExpiryAlerts(tenant, apps) {
+  const policy = await store.getExpiryPolicy();
+  if (!policy || !policy.enabled) return 0;
+
+  const now = Date.now();
+  let triggered = 0;
+
+  for (const app of apps) {
+    for (const cred of app.credentials || []) {
+      if (!cred.endDateTime) continue;
+      const end = new Date(cred.endDateTime).getTime();
+      if (Number.isNaN(end)) continue;
+      const days = Math.floor((end - now) / MS_PER_DAY);
+
+      let stage;
+      if (days < 0) stage = 'expired';
+      else if (days <= EXPIRY_CRITICAL_DAYS) stage = 'critical';
+      else if (days <= EXPIRY_WARN_DAYS) stage = 'warning';
+      else continue;
+
+      triggered += 1;
+      // type 'key' = certificate, 'password' = client secret.
+      const isCert = cred.type === 'key';
+      const credTypeEn = isCert ? 'certificate' : 'client secret';
+      const credId = cred.keyId || cred.displayName || credTypeEn;
+      const appName = app.displayName || app.appId;
+      const endDate = String(cred.endDateTime).slice(0, 10);
+
+      const messageParams = {
+        policyNameKey: `alert_policy_names.${EXPIRY_POLICY_SLUG}`,
+        policyNameFallback: policy.name,
+        credTypeKey: `alerts.message_format.cred_type.${isCert ? 'certificate' : 'secret'}`,
+        credTypeFallback: credTypeEn,
+        appName,
+        endDate,
+      };
+      let messageKey;
+      let message;
+      if (stage === 'expired') {
+        messageKey = 'alerts.message_format.app_credential_expired';
+        message = `${policy.name}: ${credTypeEn} on "${appName}" expired on ${endDate}`;
+      } else {
+        messageKey = 'alerts.message_format.app_credential_expiring';
+        messageParams.count = days;
+        message = `${policy.name}: ${credTypeEn} on "${appName}" expires in ${days} day(s) (${endDate})`;
+      }
+
+      // 'warning' (30d) is medium; 'critical' (7d) and 'expired' are high.
+      const severity = stage === 'warning' ? 'medium' : 'high';
+
+      const alertData = {
+        dedup_key: `${EXPIRY_POLICY_SLUG}:${app.appId}:${credId}`,
+        severity,
+        message,
+        raw_data: {
+          appId: app.appId,
+          appName,
+          appKind: app.kind,
+          objectId: app.objectId || null,
+          credType: isCert ? 'certificate' : 'secret',
+          credId,
+          credName: cred.displayName || null,
+          endDateTime: cred.endDateTime,
+          daysToExpiry: days,
+          stage,
+          message_template_key: messageKey,
+          message_template_params: messageParams,
+          deepLink: { view: 'tenant-dashboard', tenantId: tenant.id, tab: 'applications', appId: app.appId },
+        },
+      };
+
+      try {
+        const result = await alertEngine.createOrUpdateAlert(tenant, policy, alertData);
+        if (result && result.isNew && !result.isAutoResolved) {
+          alertEngine.processNewAlert(result, tenant).catch(e =>
+            console.error(`[KnownGood] processNewAlert failed for expiry alert ${result.id}: ${e.message}`));
+        }
+      } catch (err) {
+        console.error(`[KnownGood] expiry alert insert failed (tenant ${tenant.id}, app ${app.appId}, cred ${credId}): ${err.message}`);
+      }
+    }
+  }
+  return triggered;
 }
 
 /** Turn a signature token (del|res|scope) into a readable "Scope (resource)". */

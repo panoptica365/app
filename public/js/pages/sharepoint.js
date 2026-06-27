@@ -15,8 +15,9 @@
   let tenants = [];
   let currentInventory = null;
   let currentTenantId = null;   // DB id (int)
-  let currentAuditId = null;
-  let auditPollTimer = null;
+  let currentTab = 'inventory';
+  let auditsAllTenants = false; // Audits tab: "Show all tenant jobs" checkbox
+  let auditPollTimer = null;    // Audits-tab refresh poller
   let currentAuditData = null;
   let allAuditFiles = [];
   let storageCache = new Map();
@@ -54,11 +55,14 @@
 
   // ─── Tab switching ───
   function switchTab(name) {
+    currentTab = name;
     document.querySelectorAll('#sp-page .sp-tab').forEach(t => t.classList.toggle('active', t.dataset.spTab === name));
     document.querySelectorAll('#sp-page .sp-section').forEach(s => s.classList.toggle('active', s.id === `sp-tab-${name}`));
+    if (name !== 'audits') stopAuditJobsPoll();
     if (name === 'library-permissions' && currentTenantId) loadAuditList(currentTenantId);
     if (name === 'user-permissions') loadUserPermissions();
     if (name === 'storage') renderStorage();
+    if (name === 'audits') loadAuditJobs();
   }
 
   // ─── Init / Destroy ───
@@ -83,11 +87,11 @@
     document.getElementById('sp-btn-export-user-pdf').addEventListener('click', exportUserPdf);
     document.getElementById('sp-btn-export-user-csv').addEventListener('click', exportUserCsv);
 
-    document.getElementById('sp-btn-close-audit-modal').addEventListener('click', () => {
-      // Hide UI but DO NOT kill the poller — it keeps updating progress in the
-      // background. The global Socket.IO listener in app.js will toast on
-      // completion, so navigation away is safe too.
-      document.getElementById('sp-audit-modal').classList.remove('open');
+    document.getElementById('sp-btn-audit-all').addEventListener('click', startGlobalAudit);
+    document.getElementById('sp-btn-cancel-queued').addEventListener('click', cancelAllQueued);
+    document.getElementById('sp-audits-all-tenants').addEventListener('change', e => {
+      auditsAllTenants = e.target.checked;
+      loadAuditJobs();
     });
 
     document.getElementById('sp-preflight-btn').addEventListener('click', runPreflight);
@@ -208,6 +212,7 @@
     let html = '';
     inv.forEach((site, idx) => {
       const lastMod = fmtDate(site.lastModifiedDateTime);
+      const lastAudit = site.lastAuditAt ? fmtDate(site.lastAuditAt) : window.t('sharepoint.audit_never');
       html += `
         <tr class="sp-site-row" data-idx="${idx}">
           <td><span class="sp-arrow" id="sp-arrow-${idx}">▶</span></td>
@@ -215,12 +220,14 @@
           <td><a href="${escHtml(site.webUrl)}" target="_blank" style="color: var(--p-accent-light); text-decoration:none;">${escHtml(shortUrl(site.webUrl))}</a></td>
           <td><span class="sp-badge">${site.driveCount} ${window.t('sharepoint.lib_count', { count: site.driveCount })}</span></td>
           <td style="color: var(--p-text-muted); font-size:0.83rem;">${lastMod}</td>
-          <td></td>
+          <td style="color: var(--p-text-muted); font-size:0.83rem;">${lastAudit}</td>
+          <td>${site.driveCount > 0 ? `<button class="btn-secondary" data-role-required="member" style="padding:4px 10px;font-size:0.78rem;" data-act="audit-site" data-site-id="${escHtml(site.id)}" data-site-url="${escHtml(site.webUrl)}" data-site-name="${escHtml(site.displayName || site.name || '')}" data-lib-count="${site.driveCount}">${escHtml(window.t('sharepoint.audits.btn_audit_all_site'))}</button>` : ''}</td>
         </tr>
       `;
       site.drives.forEach(drive => {
         const size = (drive.quota && drive.quota.used) ? fmtSize(drive.quota.used) : '—';
         const dMod = fmtDate(drive.lastModifiedDateTime);
+        const dAudit = drive.lastAuditAt ? fmtDate(drive.lastAuditAt) : window.t('sharepoint.audit_never');
         html += `
           <tr class="sp-drive-row hidden" data-site="${idx}">
             <td></td>
@@ -228,6 +235,7 @@
             <td><a href="${escHtml(drive.webUrl)}" target="_blank" style="color: var(--p-accent-light); text-decoration:none;">${escHtml(shortUrl(drive.webUrl))}</a></td>
             <td style="color: var(--p-text-muted); font-size:0.83rem;">${size}</td>
             <td style="color: var(--p-text-muted); font-size:0.83rem;">${dMod}</td>
+            <td style="color: var(--p-text-muted); font-size:0.83rem;">${dAudit}</td>
             <td><button class="btn-primary" data-role-required="member" style="padding:4px 10px;font-size:0.78rem;" data-act="audit" data-site-id="${escHtml(site.id)}" data-drive-id="${escHtml(drive.id)}" data-drive-name="${escHtml(drive.name)}" data-site-url="${escHtml(site.webUrl)}">${escHtml(window.t('sharepoint.btn_audit'))}</button></td>
           </tr>
         `;
@@ -242,6 +250,12 @@
       b.addEventListener('click', e => {
         e.stopPropagation();
         startAudit(b.dataset.siteId, b.dataset.driveId, b.dataset.driveName, b.dataset.siteUrl);
+      });
+    });
+    tbody.querySelectorAll('button[data-act="audit-site"]').forEach(b => {
+      b.addEventListener('click', e => {
+        e.stopPropagation();
+        startSiteAudit(b.dataset.siteId, b.dataset.siteUrl, b.dataset.siteName, parseInt(b.dataset.libCount, 10) || 0);
       });
     });
   }
@@ -278,61 +292,181 @@
   // public/js/shared/csv-export.js. Same UTF-8-BOM behavior, reused by the
   // Applications, Access Review, and Audit Log exports too.
 
-  // ─── Audit ───
-  async function startAudit(siteId, driveId, driveName, siteUrl) {
-    if (!currentTenantId) { toast(window.t('sharepoint.toast_select_tenant_first'), 'error'); return; }
+  // ─── Audit jobs (v0.2.26) ───
+  // Enqueuing NEVER navigates — the operator stays put and watches the Audits
+  // tab. The throttling notice is kept on single-library enqueue.
 
-    document.getElementById('sp-audit-modal-library').textContent = driveName;
-    document.getElementById('sp-audit-folders-scanned').textContent = '0';
-    document.getElementById('sp-audit-explicit-count').textContent = '0';
-    document.getElementById('sp-audit-progress-fill').style.width = '0%';
-    document.getElementById('sp-audit-status-text').textContent = window.t('sharepoint.audit.status_starting');
-    document.getElementById('sp-audit-modal').classList.add('open');
-
+  // Per-library: enqueue one job. tenantId defaults to the selected tenant, but
+  // a re-run from the all-tenants view passes the job's own tenant.
+  async function startAudit(siteId, driveId, driveName, siteUrl, tenantId) {
+    const tid = tenantId || currentTenantId;
+    if (!tid) { toast(window.t('sharepoint.toast_select_tenant_first'), 'error'); return; }
     try {
-      const r = await api(`/api/sharepoint/audit/${currentTenantId}`, {
+      const r = await api(`/api/sharepoint/audit-jobs/${tid}/library`, {
         method: 'POST',
         body: JSON.stringify({ siteId, driveId, driveName, siteUrl }),
       });
-      currentAuditId = r.auditId;
-      pollAuditProgress(r.auditId);
+      if (r.skipped) toast(window.t('sharepoint.audits.toast_already_queued', { library: driveName }), 'info');
+      else toast(window.t('sharepoint.audits.toast_queued_one', { library: driveName }), 'success');
+      if (currentTab === 'audits') loadAuditJobs();
     } catch (err) {
-      document.getElementById('sp-audit-modal').classList.remove('open');
       toast(window.t('sharepoint.toast_audit_start_failed', { message: err.message }), 'error');
     }
   }
 
-  function pollAuditProgress(auditId) {
-    if (auditPollTimer) clearInterval(auditPollTimer);
-    auditPollTimer = setInterval(async () => {
-      try {
-        const p = await api(`/api/sharepoint/audit/${auditId}/progress`);
-        document.getElementById('sp-audit-folders-scanned').textContent = p.foldersScanned || 0;
-        document.getElementById('sp-audit-explicit-count').textContent = p.explicitCount || 0;
-        document.getElementById('sp-audit-status-text').textContent = p.message || window.t('sharepoint.audit.status_scanning');
-        if (p.foldersTotal > 0) {
-          const pct = Math.min(100, Math.round((p.foldersScanned / p.foldersTotal) * 100));
-          document.getElementById('sp-audit-progress-fill').style.width = pct + '%';
-        }
-        if (p.status === 'complete') {
-          clearInterval(auditPollTimer); auditPollTimer = null;
-          document.getElementById('sp-audit-progress-fill').style.width = '100%';
-          document.getElementById('sp-audit-status-text').textContent = window.t('sharepoint.audit.status_complete');
-          toast(window.t('sharepoint.toast_audit_complete_short', { folders: p.foldersScanned, explicit: p.explicitCount }), 'success');
-          setTimeout(() => {
-            document.getElementById('sp-audit-modal').classList.remove('open');
-            switchTab('library-permissions');
-          }, 1500);
-        } else if (p.status === 'error') {
-          clearInterval(auditPollTimer); auditPollTimer = null;
-          document.getElementById('sp-audit-status-text').textContent = window.t('sharepoint.audit.error_prefix', { message: p.message || window.t('sharepoint.audit.error_unknown') });
-          toast(window.t('sharepoint.toast_audit_error', { message: p.message || '' }), 'error');
-        }
-      } catch (err) {
-        clearInterval(auditPollTimer); auditPollTimer = null;
-        document.getElementById('sp-audit-status-text').textContent = window.t('sharepoint.audit.poll_error', { message: err.message });
+  // Per-site: enqueue one job per library in the site (stronger confirm).
+  async function startSiteAudit(siteId, siteUrl, siteName, libCount) {
+    if (!currentTenantId) { toast(window.t('sharepoint.toast_select_tenant_first'), 'error'); return; }
+    const ok = await Panoptica.confirmModal(
+      window.t('sharepoint.audits.confirm_site', { count: libCount, site: siteName }), { danger: false });
+    if (!ok) return;
+    try {
+      const r = await api(`/api/sharepoint/audit-jobs/${currentTenantId}/site`, {
+        method: 'POST',
+        body: JSON.stringify({ siteId, siteUrl, siteName }),
+      });
+      toast(window.t('sharepoint.audits.toast_queued_many', { enqueued: r.enqueued, skipped: r.skipped }), 'success');
+      if (currentTab === 'audits') loadAuditJobs();
+    } catch (err) {
+      toast(window.t('sharepoint.toast_audit_start_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // Global: enqueue one job per library across all sites in the tenant (hard confirm).
+  async function startGlobalAudit() {
+    if (!currentTenantId) { toast(window.t('sharepoint.toast_select_tenant_first'), 'error'); return; }
+    const inv = (currentInventory && currentInventory.inventory) || [];
+    const usable = inv.filter(s => !s.error && s.driveCount > 0);
+    const libs = usable.reduce((s, x) => s + x.driveCount, 0);
+    const sites = usable.length;
+    if (libs === 0) { toast(window.t('sharepoint.audits.toast_run_inventory_first'), 'info'); return; }
+    const ok = await Panoptica.confirmModal(
+      window.t('sharepoint.audits.confirm_global', { libs, sites }), { danger: true });
+    if (!ok) return;
+    try {
+      const r = await api(`/api/sharepoint/audit-jobs/${currentTenantId}/all`, { method: 'POST' });
+      toast(window.t('sharepoint.audits.toast_queued_many', { enqueued: r.enqueued, skipped: r.skipped }), 'success');
+      switchTab('audits');
+    } catch (err) {
+      toast(window.t('sharepoint.toast_audit_start_failed', { message: err.message }), 'error');
+    }
+  }
+
+  // ─── Audits tab ───
+  async function loadAuditJobs() {
+    // All-tenants mode works without a selected tenant; single-tenant needs one.
+    if (!auditsAllTenants && !currentTenantId) {
+      document.getElementById('sp-audits-empty').style.display = '';
+      document.getElementById('sp-audits-content').style.display = 'none';
+      stopAuditJobsPoll();
+      return;
+    }
+    await renderAuditJobs();
+    startAuditJobsPoll();
+  }
+
+  function startAuditJobsPoll() {
+    stopAuditJobsPoll();
+    auditPollTimer = setInterval(() => {
+      if (currentTab !== 'audits') { stopAuditJobsPoll(); return; }
+      renderAuditJobs();
+    }, 3000);
+  }
+  function stopAuditJobsPoll() {
+    if (auditPollTimer) { clearInterval(auditPollTimer); auditPollTimer = null; }
+  }
+
+  function auditJobStatusBadge(s) {
+    return `<span class="sp-job-status sp-job-${escHtml(s)}">${escHtml(window.t('sharepoint.audits.status_' + s))}</span>`;
+  }
+
+  async function renderAuditJobs() {
+    const allTenants = auditsAllTenants;
+    let jobs;
+    try {
+      jobs = allTenants
+        ? await api('/api/sharepoint/audit-jobs-fleet')
+        : await api(`/api/sharepoint/audit-jobs/${currentTenantId}`);
+    } catch (err) {
+      return; // transient; keep the last render
+    }
+    const empty = document.getElementById('sp-audits-empty');
+    const content = document.getElementById('sp-audits-content');
+    const tbody = document.getElementById('sp-audits-tbody');
+    // Tenant column only in all-tenants mode.
+    document.getElementById('sp-audits-th-tenant').style.display = allTenants ? '' : 'none';
+    const queuedCount = jobs.filter(j => j.status === 'queued').length;
+    document.getElementById('sp-btn-cancel-queued').style.display = queuedCount > 0 ? '' : 'none';
+
+    if (jobs.length === 0) {
+      empty.style.display = ''; content.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none'; content.style.display = '';
+
+    tbody.innerHTML = jobs.map(j => {
+      const pct = j.itemsTotal > 0 ? Math.min(100, Math.round((j.itemsProcessed / j.itemsTotal) * 100)) : 0;
+      let progress = '';
+      if (j.status === 'running') {
+        progress = `<div class="sp-job-bar"><div class="sp-job-bar-fill" style="width:${pct}%"></div></div>
+          <div class="sp-job-progress-txt">${j.itemsTotal > 0 ? `${j.itemsProcessed}/${j.itemsTotal}` : ''} ${escHtml(j.progressMessage || '')}</div>`;
+      } else if (j.status === 'failed' && j.error) {
+        progress = `<div class="sp-job-error">${escHtml(j.error)}</div>`;
       }
-    }, 1000);
+      let action = '';
+      if (j.status === 'queued') {
+        action = `<button class="btn-secondary sp-job-act" data-job-act="cancel" data-job-id="${j.id}" data-tenant-id="${j.tenantId}" style="padding:3px 8px;font-size:0.75rem;">${escHtml(window.t('sharepoint.audits.cancel'))}</button>`;
+      } else if (j.status === 'failed') {
+        action = `<button class="btn-primary sp-job-act" data-job-act="rerun" data-tenant-id="${j.tenantId}" data-site-id="${escHtml(j.siteId)}" data-drive-id="${escHtml(j.libraryId)}" data-drive-name="${escHtml(j.libraryName)}" data-site-name="${escHtml(j.siteName || '')}" style="padding:3px 8px;font-size:0.75rem;">${escHtml(window.t('sharepoint.audits.rerun'))}</button>`;
+      }
+      const tenantCell = allTenants ? `<td class="sp-job-by"><strong>${escHtml(j.tenantName || '—')}</strong></td>` : '';
+      return `<tr>
+        ${tenantCell}
+        <td><strong>${escHtml(j.libraryName)}</strong><div class="sp-job-sub">${escHtml(j.siteName || '')}</div></td>
+        <td>${auditJobStatusBadge(j.status)}${progress}</td>
+        <td class="sp-job-times">
+          <div>${window.t('sharepoint.audits.col_queued')}: ${fmtJobTime(j.queuedAt)}</div>
+          ${j.finishedAt ? `<div>${window.t('sharepoint.audits.col_finished')}: ${fmtJobTime(j.finishedAt)}</div>` : (j.startedAt ? `<div>${window.t('sharepoint.audits.col_started')}: ${fmtJobTime(j.startedAt)}</div>` : '')}
+        </td>
+        <td class="sp-job-by">${escHtml(j.requestedBy || '—')}</td>
+        <td>${action}</td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('button[data-job-act="cancel"]').forEach(b => {
+      b.addEventListener('click', async () => {
+        try {
+          await api(`/api/sharepoint/audit-jobs/${b.dataset.tenantId}/${b.dataset.jobId}/cancel`, { method: 'POST' });
+          renderAuditJobs();
+        } catch (err) { toast(window.t('sharepoint.audits.toast_cancel_failed', { message: err.message }), 'error'); }
+      });
+    });
+    tbody.querySelectorAll('button[data-job-act="rerun"]').forEach(b => {
+      b.addEventListener('click', () => startAudit(b.dataset.siteId, b.dataset.driveId, b.dataset.driveName, '', parseInt(b.dataset.tenantId, 10)));
+    });
+  }
+
+  function fmtJobTime(v) {
+    if (!v) return '—';
+    try { return new Date(v).toLocaleString(); } catch { return String(v).slice(0, 16); }
+  }
+
+  async function cancelAllQueued() {
+    const allTenants = auditsAllTenants;
+    if (!allTenants && !currentTenantId) return;
+    const msg = allTenants
+      ? window.t('sharepoint.audits.confirm_cancel_all_fleet')
+      : window.t('sharepoint.audits.confirm_cancel_all');
+    const ok = await Panoptica.confirmModal(msg, { danger: true });
+    if (!ok) return;
+    try {
+      const url = allTenants
+        ? '/api/sharepoint/audit-jobs-fleet/cancel-queued'
+        : `/api/sharepoint/audit-jobs/${currentTenantId}/cancel-queued`;
+      const r = await api(url, { method: 'POST' });
+      toast(window.t('sharepoint.audits.toast_cancelled_n', { count: r.cancelled }), 'success');
+      renderAuditJobs();
+    } catch (err) { toast(window.t('sharepoint.audits.toast_cancel_failed', { message: err.message }), 'error'); }
   }
 
   // ─── Library Permissions ───

@@ -334,8 +334,68 @@
     "modal_btn_cancel": "Cancelar"
   },
   "_comment_alert_policy_names": "Claves derivadas del slug para nombres de directivas. Slug = nombre en minúsculas con caracteres no alfanuméricos → guion bajo. Si se añade una directiva a la BD sin una clave correspondiente aquí, se usa el nombre en inglés de la BD como alternativa segura (slugify('Account lockouts') → 'account_lockouts').",
+  "sharepoint_report": {
+    "not_available": "N/D",
+    "page": "Página {n}",
+    "details_title": "Detalles del informe",
+    "label_tenant": "Inquilino",
+    "label_generated": "Generado",
+    "cover_generated": "Generado el {date}",
+    "unresolved_principal": "[Principal sin resolver]",
+    "table": {
+      "principal": "Principal",
+      "type": "Tipo",
+      "role": "Rol",
+      "members": "Miembros",
+      "no_permissions": "No se encontraron permisos."
+    },
+    "principal_type": {
+      "user": "Usuario",
+      "user_external": "Usuario (externo)",
+      "security_group": "Grupo de seguridad",
+      "sharepoint_group": "Grupo de SharePoint",
+      "group": "Grupo",
+      "site_user": "Usuario del sitio",
+      "application": "Aplicación",
+      "link": "Enlace para compartir",
+      "link_unresolved": "Destinatario del enlace (sin resolver)",
+      "distribution_list": "Lista de distribución"
+    },
+    "library": {
+      "title": "Informe de permisos de biblioteca",
+      "detail_site": "Sitio",
+      "detail_library": "Biblioteca",
+      "detail_folders_scanned": "Carpetas analizadas",
+      "detail_library_size": "Tamaño de la biblioteca",
+      "detail_explicit": "Permisos explícitos",
+      "detail_audit_date": "Fecha de la auditoría",
+      "baseline_heading": "Permisos base",
+      "baseline_desc": "Estos permisos los heredan todas las carpetas de la biblioteca, salvo que se reemplacen explícitamente.",
+      "explicit_heading": "Carpetas con permisos explícitos",
+      "explicit_none": "No se encontraron carpetas con permisos explícitos (no heredados). Todas las carpetas heredan los permisos base anteriores.",
+      "explicit_count": {
+        "one": "{count} carpeta con permisos distintos de la base de la biblioteca.",
+        "other": "{count} carpetas con permisos distintos de la base de la biblioteca."
+      }
+    },
+    "user": {
+      "title": "Informe de permisos por usuario",
+      "cover_subtitle": "Todas las bibliotecas auditadas",
+      "root_inherited": "(raíz — heredado)",
+      "detail_libraries_audited": "Bibliotecas auditadas",
+      "detail_sites": "Sitios",
+      "detail_users_found": "Usuarios/Grupos encontrados",
+      "section_heading": "Permisos de usuarios y grupos",
+      "section_desc": {
+        "one": "Permisos agregados de {count} biblioteca auditada. Cada usuario o grupo se muestra con cada ubicación a la que tiene acceso.",
+        "other": "Permisos agregados de {count} bibliotecas auditadas. Cada usuario o grupo se muestra con cada ubicación a la que tiene acceso."
+      },
+      "empty": "No se encontraron usuarios ni grupos en las bibliotecas auditadas."
+    }
+  },
   "alert_policy_names": {
     "known_good_app_drift": "Cambios en aplicación de confianza",
+    "app_credential_expiry": "Expiración de credencial de aplicación",
     "microsoft_planned_change": "Cambio planificado de Microsoft",
     "sign_ins_blocked_by_conditional_access": "Inicios de sesión bloqueados por Acceso Condicional",
     "impossible_travel_detections": "Detecciones de viaje imposible",
@@ -411,6 +471,7 @@
   "_comment_alert_policy_descriptions": "Mismo patrón con claves por slug que alert_policy_names. Añada más filas aquí a medida que se publiquen nuevas directivas de alerta en la BD.",
   "alert_policy_descriptions": {
     "known_good_app_drift": "Una aplicación marcada previamente como de confianza obtuvo uno o más permisos más allá de la base aprobada. Quitar permisos no genera alerta; solo el crecimiento más allá de la base la genera. Fuente: Microsoft Graph, comparado al actualizar y en el ciclo diario.",
+    "app_credential_expiry": "Un secreto de cliente o un certificado de un registro de aplicación del inquilino se acerca a su expiración. Panoptica avisa a 30 días y a 7 días de la fecha, y una vez expirado, para que la credencial pueda rotarse antes de una interrupción. Una sola alerta por credencial. Fuente: Microsoft Graph (/applications), evaluado en el ciclo diario de aplicaciones de confianza.",
     "sign_ins_blocked_by_conditional_access": "Telemetría a nivel de inquilino: recuento diario de inicios de sesión bloqueados por políticas de Acceso Condicional. Alimenta el gráfico de anillo de Actividad Diaria.",
     "impossible_travel_detections": "Detecciones de riesgo para patrones de viaje improbables",
     "account_lockouts": "Bloqueos de cuenta por intentos de inicio de sesión incorrectos",
@@ -480,6 +541,13 @@
       "attack_vectors": "Qué revisar cuando se dispara:\n\n- Nuevos ámbitos de alto impacto. Mail.*, Files.*.All, Directory.ReadWrite.All, full_access_as_app o AppRoleAssignment.ReadWrite.All añadidos a una aplicación que no los tenía es la señal principal.\n\n- Nuevos permisos de aplicación (solo aplicación). Estas concesiones actúan sin un usuario conectado y son la persistencia más fuerte: dales más peso que a las adiciones delegadas.\n\n- Nuevas credenciales en un registro de aplicación. Un secreto de cliente o certificado nuevo en una aplicación con muchos permisos es como un atacante toma el control de una aplicación en la que usted ya confía.\n\n- Nuevas URI de redirección. Una URL de respuesta añadida a un registro de aplicación prepara el robo de tokens.\n\n- Cambio legítimo. El proveedor amplió el producto, o un administrador concedió más permisos de forma deliberada. Confírmelo por otra vía y luego vuelva a aprobar para fijar la nueva base.",
       "what_to_do": "Paso 1. Abra la fila de la aplicación en la pestaña Aplicaciones y expanda para ver el conjunto actual de permisos; la alerta indica exactamente qué se añadió.\n\nPaso 2. Decida si la adición es esperada. Consulte el Registro de cambios y pregunte al operador o administrador si la concedió. Un editor verificado que amplía sus ámbitos suele ser benigno; una aplicación no verificada o de aspecto genérico que obtiene acceso a Mail/Directory no lo es.\n\nPaso 3. Si es inesperado, trátelo como un incidente activo de abuso de consentimiento. En Entra → Aplicaciones empresariales (o Registros de aplicaciones), revise la nueva concesión o credencial, elimínela, revoque los tokens de la aplicación y audite a qué accedió desde el cambio.\n\nPaso 4. Si es esperado, vuelva a abrir la aplicación en la pestaña Aplicaciones y guárdela de nuevo para capturar el nuevo conjunto como base. El cambio se borra y la aplicación vuelve a ser de confianza.\n\nPanoptica no realiza ninguna acción sobre el inquilino: cada cambio lo hace usted en Entra.",
       "example_scenario": "Hace seis semanas usted revisó «Contoso Backup» — una herramienta de copia de seguridad de editor verificado con Files.Read.All y Mail.Read — y la marcó de confianza. Esta mañana el ciclo diario detecta que ahora también tiene Mail.ReadWrite y Directory.ReadWrite.All, añadidos a las 02:40 mediante un consentimiento de administrador.\n\nEs un cambio en la dirección peligrosa. Una herramienta de copia de seguridad no necesita escritura en el directorio. O el proveedor publicó una actualización demasiado amplia, o un atacante que comprometió a un administrador escaló una aplicación que ya estaba en su lista de confianza, precisamente porque no llamaría la atención.\n\nExpandiría la fila para confirmar los ámbitos añadidos, revisaría el Registro de cambios en busca de una acción del operador y, si no la hay, trataría al administrador como comprometido: retirar la nueva concesión en Entra, revocar los tokens de la aplicación, auditar el acceso a buzones y al directorio desde las 02:40 y restablecer al administrador. Si el proveedor amplió legítimamente el producto y el cliente lo aprobó, vuelva a guardar la aplicación para fijar la nueva base y que deje de alertar."
+    },
+    "app_credential_expiry": {
+      "what_is_this": "Un registro de aplicación de este inquilino se autentica mediante un secreto de cliente o un certificado, y una de esas credenciales se acerca a su fecha de expiración — o ya la ha superado.\n\nPanoptica lee la expiración de cada credencial de cada registro de aplicación durante su inventario diario del inquilino, y genera esta alerta a 30 días, de nuevo a 7 días, y una vez que la credencial ha expirado. Es un aviso operativo, no una señal de compromiso: el objetivo es permitirle rotar la credencial en su propio horario en lugar de descubrirlo la mañana en que una integración deja de funcionar.",
+      "why_it_matters": "Cuando el secreto o el certificado de una aplicación expira, la aplicación deja de poder autenticarse en silencio. Lo que impulsaba — un trabajo de copia de seguridad, un conector SaaS, un script desatendido, una integración de negocio — falla, normalmente con un 401 opaco difícil de rastrear hasta una credencial expirada bajo presión.\n\nLas expiraciones se pasan por alto con facilidad porque no ocurre nada hasta la fecha límite, y la persona que creó la credencial a menudo ya no está o ha olvidado que existe. Detectarlo con 30 días de antelación convierte una interrupción de producción en una rotación planificada de cinco minutos. También hay un ángulo de seguridad: los equipos bajo la presión de una interrupción tienden a crear un nuevo secreto con una vigencia demasiado larga o a pegarlo en el lugar equivocado — el aviso anticipado elimina esa presión.",
+      "attack_vectors": "Qué revisar cuando se dispara:\n\n- ¿Sigue en uso la aplicación? Una credencial que expira en una aplicación que nadie reconoce es una invitación a eliminar la aplicación por completo, no a renovarla. Los registros de aplicación obsoletos con credenciales activas son una superficie de ataque permanente.\n\n- ¿Quién es responsable de la rotación? Identifique la integración a la que sirve la credencial y la persona o el proveedor responsable antes de que caduque.\n\n- Secreto frente a certificado. Los certificados son la credencial más robusta; si va a renovar, prefiera mover una aplicación basada en secreto a un certificado cuando la integración lo permita.\n\n- Reemplazos de vigencia demasiado larga. Al rotar, evite la tentación de establecer un secreto de varios años para no tener que repetirlo — los secretos de larga duración son justo lo que los atacantes recolectan. Mantenga vigencias cortas y deje que esta alerta se lo recuerde.\n\n- Credenciales nuevas inesperadas. Si rota y más tarde ve una credencial que no añadió, trátela como el caso de cambios en aplicación de confianza — puede indicar que un atacante establece su propia persistencia en la aplicación.",
+      "what_to_do": "Paso 1. Abra la fila de la aplicación en la pestaña Aplicaciones; la alerta nombra la credencial (secreto o certificado), su identificador y la fecha exacta de expiración.\n\nPaso 2. Confirme qué hace la aplicación y si sigue siendo necesaria. Si no lo es, elimine el registro de aplicación en Entra (Registros de aplicaciones) en lugar de renovarlo — eso cierra la alerta y reduce su superficie de ataque.\n\nPaso 3. Si es necesaria, rote antes de la fecha de expiración: en Entra → Registros de aplicaciones → la aplicación → Certificados y secretos, añada un nuevo secreto o cargue un nuevo certificado con vigencia corta, actualice la integración consumidora para usarlo, verifique que la integración funciona y luego elimine la credencial antigua.\n\nPaso 4. La alerta es una por credencial y no se vuelve a disparar en cada ciclo. Una vez que la credencial se rota o se elimina, la antigua ya no aparece en el inventario; resuelva la alerta. Panoptica no realiza ningún cambio en el inquilino — cada acción la realiza usted en Entra.",
+      "example_scenario": "El día 1 del mes, el ciclo diario marca que el secreto de cliente de «Contoso Nightly Backup» expira en 30 días. La aplicación ejecuta cada noche una copia de seguridad contra SharePoint usando ese secreto.\n\nNadie lo habría notado hasta que las copias de seguridad fallaran en silencio un mes después — y la primera señal habría sido un punto de restauración faltante durante un incidente, el peor momento para enterarse de que el secreto caducó. En cambio, con 30 días de margen, el operador confirma que la aplicación sigue en uso, programa una ventana de mantenimiento y, en Entra, añade un nuevo secreto de 6 meses, actualiza la configuración del trabajo de copia de seguridad, ejecuta una copia de prueba para confirmar que funciona y elimina el secreto antiguo.\n\nLa credencial ya no aparece en el inventario en el siguiente ciclo, así que el operador resuelve la alerta. Una interrupción de producción potencial se convirtió en una rotación rutinaria y planificada — y como el nuevo secreto es de vigencia corta, la misma salvaguarda detectará el próximo a tiempo."
     },
     "modal_title": "Acerca de esta alerta",
     "tooltip": "Aprenda sobre esta alerta",
@@ -1519,6 +1587,15 @@
       "global_admin_privilege_elevation": "{policyName}: {displayName} ({userPrincipalName}) añadido como administrador global",
       "ms_change": "Cambio de Microsoft — {msTitle}",
       "enterprise_application_creation": "{policyName}: «{appName}» registrada",
+      "app_credential_expiring": {
+        "one": "{policyName}: {credType} de «{appName}» expira en {count} día ({endDate})",
+        "other": "{policyName}: {credType} de «{appName}» expira en {count} días ({endDate})"
+      },
+      "app_credential_expired": "{policyName}: {credType} de «{appName}» expiró el {endDate}",
+      "cred_type": {
+        "secret": "secreto de cliente",
+        "certificate": "certificado"
+      },
       "external_user_addition": "{policyName}: {guestName} invitado como usuario externo",
       "mfa_disabled_users": "{policyName}: {userName} — MFA no registrada",
       "inbox_rule_created": "{policyName}: «{ruleName}» creada para {user} ({userPrincipalName}){extNote}",
@@ -2969,6 +3046,12 @@
       "kind_registration": "Registro de aplicación",
       "status_drift": "Permisos cambiados desde la aprobación",
       "status_known_good": "De confianza",
+      "cred_expiring": "Credencial por expirar",
+      "cred_expired": "Credencial expirada",
+      "summary_creds": {
+        "one": "{count} con credencial por expirar",
+        "other": "{count} con credenciales por expirar"
+      },
       "perm_delegated": "Permisos delegados",
       "perm_application": "Permisos de aplicación",
       "perm_requested": "Permisos solicitados",
@@ -3920,6 +4003,40 @@
     "tab_library_permissions": "Library Permissions",
     "tab_user_permissions": "Usuario Permissions",
     "tab_storage": "Storage Overview",
+    "tab_audits": "Auditorías",
+    "audits": {
+      "intro": "Trabajos de auditoría en segundo plano — en curso, en cola y recién finalizados.",
+      "empty_html": "Aún no hay trabajos de auditoría. Inicie auditorías desde la pestaña <strong>Inventario</strong> — por biblioteca, por sitio o en todos los sitios.",
+      "btn_audit_all": "Auditar todos los sitios",
+      "btn_audit_all_site": "Auditar todas las bibliotecas",
+      "show_all_tenants": "Mostrar trabajos de todos los inquilinos",
+      "col_tenant": "Inquilino",
+      "col_library": "Biblioteca",
+      "col_status": "Estado",
+      "col_times": "Marcas de tiempo",
+      "col_requested_by": "Solicitado por",
+      "col_queued": "En cola",
+      "col_started": "Iniciado",
+      "col_finished": "Finalizado",
+      "status_queued": "En cola",
+      "status_running": "En curso",
+      "status_done": "Hecho",
+      "status_failed": "Fallido",
+      "status_cancelled": "Cancelado",
+      "cancel": "Cancelar",
+      "rerun": "Reejecutar",
+      "cancel_all": "Cancelar toda la cola",
+      "confirm_site": "Esto auditará las {count} bibliotecas de este sitio ({site}). Puede tardar y alcanzar la limitación de Microsoft Graph. ¿Continuar?",
+      "confirm_global": "Esto auditará TODAS las {libs} bibliotecas de documentos en TODOS los {sites} sitios de este inquilino. Puede tardar muchísimo, alcanzará la limitación de Microsoft Graph y algunas bibliotecas pueden fallar y necesitar reejecutarse. ¿Está seguro?",
+      "confirm_cancel_all": "¿Cancelar todos los trabajos de auditoría en cola? Los que ya están en curso se dejarán terminar.",
+      "confirm_cancel_all_fleet": "¿Cancelar TODOS los trabajos de auditoría en cola en TODOS los inquilinos? Los que ya están en curso se dejarán terminar.",
+      "toast_queued_one": "Auditoría en cola para {library} — vea la pestaña Auditorías.",
+      "toast_queued_many": "{enqueued} auditoría(s) en cola, {skipped} ya en curso.",
+      "toast_already_queued": "{library} ya está en cola o en curso.",
+      "toast_run_inventory_first": "Ejecute primero un inventario para que Panoptica conozca los sitios y bibliotecas a auditar.",
+      "toast_cancelled_n": "{count} trabajo(s) en cola cancelado(s).",
+      "toast_cancel_failed": "Error al cancelar: {message}"
+    },
     "starting_inventory": "Starting inventory...",
     "kpi_sites": "Sites",
     "kpi_document_libraries": "Document Libraries",
@@ -3928,6 +4045,8 @@
     "col_url": "URL",
     "col_libraries_size": "Libraries / Size",
     "col_last_modified": "Últimos Modified",
+    "col_last_audit": "Fecha de última auditoría",
+    "audit_never": "Nunca",
     "col_audit": "Audit",
     "label_audit": "Audit:",
     "option_no_audits": "— No audits yet —",

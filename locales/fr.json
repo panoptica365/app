@@ -334,8 +334,68 @@
     "modal_btn_cancel": "Annuler"
   },
   "_comment_alert_policy_names": "Clés générées à partir de slugs pour les noms de stratégies. Slug = nom mis en minuscules, caractères non alphanumériques remplacés par _. Si une stratégie est ajoutée à la BD sans clé correspondante, le nom anglais de la BD est affiché en repli.",
+  "sharepoint_report": {
+    "not_available": "S.O.",
+    "page": "Page {n}",
+    "details_title": "Détails du rapport",
+    "label_tenant": "Locataire",
+    "label_generated": "Généré",
+    "cover_generated": "Généré le {date}",
+    "unresolved_principal": "[Principal non résolu]",
+    "table": {
+      "principal": "Principal",
+      "type": "Type",
+      "role": "Rôle",
+      "members": "Membres",
+      "no_permissions": "Aucune permission trouvée."
+    },
+    "principal_type": {
+      "user": "Utilisateur",
+      "user_external": "Utilisateur (externe)",
+      "security_group": "Groupe de sécurité",
+      "sharepoint_group": "Groupe SharePoint",
+      "group": "Groupe",
+      "site_user": "Utilisateur du site",
+      "application": "Application",
+      "link": "Lien de partage",
+      "link_unresolved": "Destinataire du lien (non résolu)",
+      "distribution_list": "Liste de distribution"
+    },
+    "library": {
+      "title": "Rapport des permissions de bibliothèque",
+      "detail_site": "Site",
+      "detail_library": "Bibliothèque",
+      "detail_folders_scanned": "Dossiers analysés",
+      "detail_library_size": "Taille de la bibliothèque",
+      "detail_explicit": "Permissions explicites",
+      "detail_audit_date": "Date de l’audit",
+      "baseline_heading": "Permissions de base",
+      "baseline_desc": "Ces permissions sont héritées par tous les dossiers de la bibliothèque, sauf en cas de remplacement explicite.",
+      "explicit_heading": "Dossiers avec permissions explicites",
+      "explicit_none": "Aucun dossier avec des permissions explicites (non héritées) n’a été trouvé. Tous les dossiers héritent des permissions de base ci-dessus.",
+      "explicit_count": {
+        "one": "{count} dossier avec des permissions différentes de la base de la bibliothèque.",
+        "other": "{count} dossiers avec des permissions différentes de la base de la bibliothèque."
+      }
+    },
+    "user": {
+      "title": "Rapport des permissions par utilisateur",
+      "cover_subtitle": "Toutes les bibliothèques auditées",
+      "root_inherited": "(racine — hérité)",
+      "detail_libraries_audited": "Bibliothèques auditées",
+      "detail_sites": "Sites",
+      "detail_users_found": "Utilisateurs/Groupes trouvés",
+      "section_heading": "Permissions des utilisateurs et groupes",
+      "section_desc": {
+        "one": "Permissions regroupées pour {count} bibliothèque auditée. Chaque utilisateur ou groupe est affiché avec tous les emplacements auxquels il a accès.",
+        "other": "Permissions regroupées pour {count} bibliothèques auditées. Chaque utilisateur ou groupe est affiché avec tous les emplacements auxquels il a accès."
+      },
+      "empty": "Aucun utilisateur ou groupe trouvé dans les bibliothèques auditées."
+    }
+  },
   "alert_policy_names": {
     "known_good_app_drift": "Dérive d’application approuvée",
+    "app_credential_expiry": "Expiration d’identifiant d’application",
     "microsoft_planned_change": "Changement prévu par Microsoft",
     "sign_ins_blocked_by_conditional_access": "Connexions bloquées par l’accès conditionnel",
     "impossible_travel_detections": "Détections de voyage impossible",
@@ -411,6 +471,7 @@
   "_comment_alert_policy_descriptions": "Même motif de slug que alert_policy_names. Ajouter ici de nouvelles lignes au fil des nouvelles stratégies en BD.",
   "alert_policy_descriptions": {
     "known_good_app_drift": "Une application déjà marquée comme approuvée a obtenu une ou plusieurs permissions au-delà de la base approuvée. Le retrait de permissions ne déclenche pas d’alerte; seule une croissance au-delà de la base le fait. Source : Microsoft Graph, comparé lors de l’actualisation et de la boucle quotidienne.",
+    "app_credential_expiry": "Un secret client ou un certificat d’une inscription d’application du locataire approche de son expiration. Panoptica avertit à 30 jours et à 7 jours de l’échéance, puis une fois expiré, afin que l’identifiant soit renouvelé avant une panne. Une seule alerte par identifiant. Source — Microsoft Graph (/applications), évalué lors de la boucle quotidienne d’applications approuvées.",
     "sign_ins_blocked_by_conditional_access": "Télémétrie à l’échelle du locataire : décompte quotidien des connexions bloquées par les stratégies d’accès conditionnel. Alimente le graphique en anneau Activité quotidienne.",
     "impossible_travel_detections": "Détections de risque pour des modèles de voyage improbables",
     "account_lockouts": "Verrouillages de compte dus à des tentatives de connexion incorrectes",
@@ -480,6 +541,13 @@
       "attack_vectors": "À examiner lorsque cette alerte se déclenche :\n\n- Nouvelles portées à fort impact. Mail.*, Files.*.All, Directory.ReadWrite.All, full_access_as_app ou AppRoleAssignment.ReadWrite.All ajoutées à une application qui ne les avait pas est le signal principal.\n\n- Nouvelles permissions d’application (application seule). Ces octrois agissent sans utilisateur connecté et constituent la persistance la plus forte — accordez-leur plus de poids que les ajouts délégués.\n\n- Nouveaux identifiants sur une inscription d’application. Un nouveau secret client ou certificat sur une application à fortes permissions est la façon dont un attaquant prend le contrôle d’une application déjà de confiance.\n\n- Nouvelles URI de redirection. Une URL de réponse ajoutée à une inscription d’application prépare le vol de jeton.\n\n- Changement légitime. L’éditeur a élargi le produit, ou un administrateur a délibérément accordé davantage. Confirmez hors bande, puis réapprouvez pour fixer la nouvelle base.",
       "what_to_do": "Étape 1. Ouvrez la ligne de l’application dans l’onglet Applications et dépliez-la pour voir l’ensemble actuel des permissions; l’alerte indique exactement ce qui a été ajouté.\n\nÉtape 2. Déterminez si l’ajout est attendu. Consultez le Journal des modifications et demandez à l’opérateur ou à l’administrateur s’il l’a accordé. Un éditeur vérifié qui élargit ses portées est généralement bénin; une application non vérifiée ou à l’aspect générique qui obtient un accès Mail/Directory ne l’est pas.\n\nÉtape 3. Si c’est inattendu, traitez-le comme un incident d’abus de consentement en cours. Dans Entra → Applications d’entreprise (ou Inscriptions d’applications), examinez le nouvel octroi ou identifiant, retirez-le, révoquez les jetons de l’application et vérifiez ce à quoi elle a accédé depuis le changement.\n\nÉtape 4. Si c’est attendu, rouvrez l’application dans l’onglet Applications et enregistrez-la de nouveau pour capturer le nouvel ensemble comme base. La dérive disparaît et l’application redevient approuvée.\n\nPanoptica ne pose aucune action sur le locataire — chaque changement est fait par vous dans Entra.",
       "example_scenario": "Il y a six semaines, vous avez examiné « Contoso Backup » — un outil de sauvegarde d’éditeur vérifié avec Files.Read.All et Mail.Read — et l’avez marqué approuvé. Ce matin, la boucle quotidienne constate qu’il détient aussi maintenant Mail.ReadWrite et Directory.ReadWrite.All, ajoutés à 02 h 40 via un consentement administrateur.\n\nC’est une dérive dans la mauvaise direction. Un outil de sauvegarde n’a aucun besoin d’écriture sur l’annuaire. Soit l’éditeur a livré une mise à jour trop large, soit un attaquant ayant compromis un administrateur a escaladé une application déjà sur votre liste de confiance, précisément parce qu’elle n’attirerait pas un second regard.\n\nVous déplieriez la ligne pour confirmer les portées ajoutées, vérifieriez le Journal des modifications pour une action correspondante de l’opérateur et, à défaut, traiteriez l’administrateur comme compromis — retirer le nouvel octroi dans Entra, révoquer les jetons de l’application, vérifier les accès aux boîtes et à l’annuaire depuis 02 h 40, et réinitialiser l’administrateur. Si l’éditeur a légitimement élargi le produit et que le client l’a approuvé, réenregistrez l’application pour fixer la nouvelle base afin qu’elle cesse d’alerter."
+    },
+    "app_credential_expiry": {
+      "what_is_this": "Une inscription d’application de ce locataire s’authentifie au moyen d’un secret client ou d’un certificat, et l’un de ces identifiants approche de sa date d’expiration — ou l’a déjà dépassée.\n\nPanoptica lit l’expiration de chaque identifiant de chaque inscription d’application lors de son inventaire quotidien du locataire, et lève cette alerte à 30 jours, puis à 7 jours, et une fois l’identifiant expiré. C’est un avertissement opérationnel, non un signe de compromission : le but est de vous permettre de renouveler l’identifiant à votre rythme plutôt que de le découvrir le matin où une intégration cesse de fonctionner.",
+      "why_it_matters": "Lorsqu’un secret ou un certificat d’application expire, l’application cesse silencieusement de pouvoir s’authentifier. Ce qu’elle alimentait — une tâche de sauvegarde, un connecteur SaaS, un script sans surveillance, une intégration métier — échoue, généralement avec un 401 opaque difficile à relier à un identifiant expiré sous pression.\n\nLes expirations passent facilement inaperçues car rien ne se produit avant l’échéance, et la personne ayant créé l’identifiant est souvent partie ou a oublié son existence. Le détecter 30 jours à l’avance transforme une panne de production en une rotation planifiée de cinq minutes. Il y a aussi un angle de sécurité : sous la pression d’une panne, on a tendance à créer un nouveau secret à durée trop longue ou à le coller au mauvais endroit — l’avertissement préalable supprime cette pression.",
+      "attack_vectors": "Ce qu’il faut examiner lorsque l’alerte se déclenche :\n\n- L’application est-elle encore utilisée ? Un identifiant qui expire sur une application que personne ne reconnaît est une invitation à supprimer l’application, non à la renouveler. Les inscriptions d’application orphelines avec des identifiants actifs sont une surface d’attaque permanente.\n\n- Qui est responsable de la rotation ? Identifiez l’intégration desservie et la personne ou le fournisseur responsable avant l’échéance.\n\n- Secret ou certificat. Les certificats sont l’identifiant le plus robuste ; si vous renouvelez, préférez faire passer une application à secret vers un certificat lorsque l’intégration le permet.\n\n- Remplacements à durée trop longue. Lors de la rotation, évitez la tentation d’un secret de plusieurs années pour ne plus avoir à recommencer — les secrets à longue durée sont exactement ce que les attaquants récoltent. Gardez des durées courtes et laissez cette alerte vous rappeler.\n\n- Identifiants nouveaux inattendus. Si vous renouvelez et qu’apparaît ensuite un identifiant que vous n’avez pas ajouté, traitez-le comme le cas de dérive d’application approuvée — cela peut indiquer qu’un attaquant établit sa propre persistance sur l’application.",
+      "what_to_do": "Étape 1. Ouvrez la ligne de l’application dans l’onglet Applications ; l’alerte nomme l’identifiant (secret ou certificat), son identifiant et la date exacte d’expiration.\n\nÉtape 2. Confirmez ce que fait l’application et si elle est toujours nécessaire. Si non, supprimez l’inscription d’application dans Entra (Inscriptions d’applications) plutôt que de la renouveler — cela ferme l’alerte et réduit votre surface d’attaque.\n\nÉtape 3. Si elle est nécessaire, effectuez la rotation avant la date d’expiration : dans Entra → Inscriptions d’applications → l’application → Certificats et secrets, ajoutez un nouveau secret ou téléversez un nouveau certificat à durée courte, mettez à jour l’intégration consommatrice pour l’utiliser, vérifiez que l’intégration fonctionne, puis supprimez l’ancien identifiant.\n\nÉtape 4. L’alerte est unique par identifiant et ne se redéclenche pas à chaque cycle. Une fois l’identifiant renouvelé ou supprimé, l’ancien n’apparaît plus dans l’inventaire ; résolvez l’alerte. Panoptica n’apporte aucune modification au locataire — chaque action est effectuée par vous dans Entra.",
+      "example_scenario": "Le 1er du mois, la boucle quotidienne signale que le secret client de « Contoso Nightly Backup » expire dans 30 jours. L’application exécute chaque nuit une sauvegarde sur SharePoint à l’aide de ce secret.\n\nPersonne ne l’aurait remarqué jusqu’à l’échec silencieux des sauvegardes un mois plus tard — et le premier signe aurait été un point de restauration manquant pendant un incident, le pire moment pour apprendre que le secret a expiré. Au lieu de cela, avec 30 jours de marge, l’opérateur confirme que l’application est toujours utilisée, planifie une fenêtre de maintenance et, dans Entra, ajoute un nouveau secret de 6 mois, met à jour la configuration de la tâche de sauvegarde, exécute une sauvegarde de test pour confirmer, et supprime l’ancien secret.\n\nL’identifiant n’apparaît plus dans l’inventaire à la boucle suivante, alors l’opérateur résout l’alerte. Une panne de production potentielle est devenue une rotation de routine et planifiée — et comme le nouveau secret est à durée courte, la même protection détectera le prochain en temps voulu."
     },
     "modal_title": "À propos de cette alerte",
     "tooltip": "En savoir plus sur cette alerte",
@@ -1519,6 +1587,15 @@
       "global_admin_privilege_elevation": "{policyName} : {displayName} ({userPrincipalName}) ajouté comme administrateur général",
       "ms_change": "Changement Microsoft — {msTitle}",
       "enterprise_application_creation": "{policyName} : « {appName} » enregistrée",
+      "app_credential_expiring": {
+        "one": "{policyName} : {credType} de « {appName} » expire dans {count} jour ({endDate})",
+        "other": "{policyName} : {credType} de « {appName} » expire dans {count} jours ({endDate})"
+      },
+      "app_credential_expired": "{policyName} : {credType} de « {appName} » a expiré le {endDate}",
+      "cred_type": {
+        "secret": "secret client",
+        "certificate": "certificat"
+      },
       "external_user_addition": "{policyName} : {guestName} invité comme utilisateur externe",
       "mfa_disabled_users": "{policyName} : {userName} — MFA non enregistrée",
       "inbox_rule_created": "{policyName} : « {ruleName} » créée pour {user} ({userPrincipalName}){extNote}",
@@ -2969,6 +3046,12 @@
       "kind_registration": "Inscription d’application",
       "status_drift": "Permissions modifiées depuis l’approbation",
       "status_known_good": "Approuvée",
+      "cred_expiring": "Identifiant expirant",
+      "cred_expired": "Identifiant expiré",
+      "summary_creds": {
+        "one": "{count} avec identifiant expirant",
+        "other": "{count} avec identifiants expirants"
+      },
       "perm_delegated": "Permissions déléguées",
       "perm_application": "Permissions d’application",
       "perm_requested": "Permissions demandées",
@@ -3920,6 +4003,40 @@
     "tab_library_permissions": "Autorisations des bibliothèques",
     "tab_user_permissions": "Autorisations des utilisateurs",
     "tab_storage": "Vue d’ensemble du stockage",
+    "tab_audits": "Audits",
+    "audits": {
+      "intro": "Tâches d’audit en arrière-plan — en cours, en file et récemment terminées.",
+      "empty_html": "Aucune tâche d’audit pour l’instant. Lancez des audits depuis l’onglet <strong>Inventaire</strong> — par bibliothèque, par site ou pour tous les sites.",
+      "btn_audit_all": "Auditer tous les sites",
+      "btn_audit_all_site": "Auditer toutes les bibliothèques",
+      "show_all_tenants": "Afficher les tâches de tous les locataires",
+      "col_tenant": "Locataire",
+      "col_library": "Bibliothèque",
+      "col_status": "Statut",
+      "col_times": "Horodatage",
+      "col_requested_by": "Demandé par",
+      "col_queued": "En file",
+      "col_started": "Démarré",
+      "col_finished": "Terminé",
+      "status_queued": "En file",
+      "status_running": "En cours",
+      "status_done": "Terminé",
+      "status_failed": "Échec",
+      "status_cancelled": "Annulé",
+      "cancel": "Annuler",
+      "rerun": "Relancer",
+      "cancel_all": "Annuler toute la file",
+      "confirm_site": "Ceci auditera les {count} bibliothèques de ce site ({site}). Cela peut prendre du temps et déclencher la limitation de Microsoft Graph. Continuer ?",
+      "confirm_global": "Ceci auditera les {libs} bibliothèques de documents sur les {sites} sites de ce locataire. Cela peut être très long, déclenchera la limitation de Microsoft Graph, et certaines bibliothèques pourraient échouer et devoir être relancées. Êtes-vous certain ?",
+      "confirm_cancel_all": "Annuler toutes les tâches d’audit en file ? Les tâches déjà en cours seront laissées se terminer.",
+      "confirm_cancel_all_fleet": "Annuler TOUTES les tâches d’audit en file sur TOUS les locataires ? Les tâches déjà en cours seront laissées se terminer.",
+      "toast_queued_one": "Audit mis en file pour {library} — voir l’onglet Audits.",
+      "toast_queued_many": "{enqueued} audit(s) mis en file, {skipped} déjà en cours.",
+      "toast_already_queued": "{library} est déjà en file ou en cours.",
+      "toast_run_inventory_first": "Lancez d’abord un inventaire pour que Panoptica connaisse les sites et bibliothèques à auditer.",
+      "toast_cancelled_n": "{count} tâche(s) en file annulée(s).",
+      "toast_cancel_failed": "Échec de l’annulation : {message}"
+    },
     "starting_inventory": "Démarrage de l’inventaire...",
     "kpi_sites": "Sites",
     "kpi_document_libraries": "Bibliothèques de documents",
@@ -3928,6 +4045,8 @@
     "col_url": "URL",
     "col_libraries_size": "Bibliothèques / Taille",
     "col_last_modified": "Dernière modification",
+    "col_last_audit": "Date du dernier audit",
+    "audit_never": "Jamais",
     "col_audit": "Audit",
     "label_audit": "Audit :",
     "option_no_audits": "— Aucun audit pour le moment —",

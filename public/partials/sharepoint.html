@@ -219,6 +219,21 @@
   #sp-page .sp-storage-bar-fill { height: 100%; border-radius: 7px; }
   #sp-page .sp-storage-value { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; text-align: right; color: var(--p-text-secondary); }
 
+  /* Audits tab — job rows */
+  #sp-page .sp-job-status { display: inline-block; font-size: 0.74rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+  #sp-page .sp-job-running   { color: #29B6F6; background: rgba(41,182,246,0.12); }
+  #sp-page .sp-job-queued    { color: var(--p-text-muted); background: rgba(255,255,255,0.06); }
+  #sp-page .sp-job-done      { color: #66BB6A; background: rgba(102,187,106,0.12); }
+  #sp-page .sp-job-failed    { color: #E57373; background: rgba(229,115,115,0.12); }
+  #sp-page .sp-job-cancelled { color: var(--p-text-muted); background: rgba(255,255,255,0.04); }
+  #sp-page .sp-job-bar { width: 180px; max-width: 100%; background: rgba(0,0,0,0.3); height: 6px; border-radius: 3px; overflow: hidden; margin: 6px 0 2px; }
+  #sp-page .sp-job-bar-fill { height: 100%; background: linear-gradient(90deg, var(--p-accent), var(--p-highlight)); transition: width 0.25s; }
+  #sp-page .sp-job-progress-txt { font-size: 0.74rem; color: var(--p-text-muted); }
+  #sp-page .sp-job-error { font-size: 0.76rem; color: #E57373; margin-top: 4px; max-width: 360px; }
+  #sp-page .sp-job-sub { font-size: 0.76rem; color: var(--p-text-muted); }
+  #sp-page .sp-job-times { font-size: 0.76rem; color: var(--p-text-muted); }
+  #sp-page .sp-job-by { font-size: 0.78rem; color: var(--p-text-secondary); }
+
   /* Audit progress modal */
   #sp-audit-modal {
     position: fixed; inset: 0; background: var(--p-bg, #0A1929);
@@ -276,6 +291,7 @@
           <button class="btn-primary" id="sp-btn-run-inventory" data-role-required="member" disabled data-i18n="sharepoint.btn_run_inventory">Run Inventory</button>
         </div>
         <div style="display: flex; gap: 8px;">
+          <button class="btn-secondary" id="sp-btn-audit-all" data-role-required="member" data-i18n="sharepoint.audits.btn_audit_all">Audit All Sites</button>
           <button class="btn-secondary" id="sp-btn-export-csv" disabled data-i18n="sharepoint.btn_export_csv">Export CSV</button>
         </div>
       </div>
@@ -290,6 +306,7 @@
         <button class="sp-tab" data-sp-tab="library-permissions" data-i18n="sharepoint.tab_library_permissions">Library Permissions</button>
         <button class="sp-tab" data-sp-tab="user-permissions" data-i18n="sharepoint.tab_user_permissions">User Permissions</button>
         <button class="sp-tab" data-sp-tab="storage" data-i18n="sharepoint.tab_storage">Storage Overview</button>
+        <button class="sp-tab" data-sp-tab="audits" data-i18n="sharepoint.tab_audits">Audits</button>
       </div>
     </div>
     <div style="padding: 16px;">
@@ -321,6 +338,7 @@
               <th data-i18n="sharepoint.col_url">URL</th>
               <th style="width:140px" data-i18n="sharepoint.col_libraries_size">Libraries / Size</th>
               <th style="width:130px" data-i18n="sharepoint.col_last_modified">Last Modified</th>
+              <th style="width:130px" data-i18n="sharepoint.col_last_audit">Last Audit Date</th>
               <th style="width:100px" data-i18n="sharepoint.col_audit">Audit</th>
             </tr></thead>
             <tbody id="sp-inventory-tbody"></tbody>
@@ -390,30 +408,38 @@
         </div>
       </section>
 
-    </div>
-  </div>
+      <!-- AUDITS -->
+      <section id="sp-tab-audits" class="sp-section">
+        <div class="sp-toolbar">
+          <div class="sp-toolbar-left">
+            <span style="color: var(--p-text-muted); font-size: 0.85rem;" data-i18n="sharepoint.audits.intro">Background audit jobs — running, queued, and recently finished.</span>
+          </div>
+          <div style="display:flex; gap:12px; align-items:center;">
+            <label style="display:flex; align-items:center; gap:6px; color: var(--p-text-secondary); font-size:0.85rem; cursor:pointer;">
+              <input type="checkbox" id="sp-audits-all-tenants"> <span data-i18n="sharepoint.audits.show_all_tenants">Show all tenant jobs</span>
+            </label>
+            <button class="btn-secondary" id="sp-btn-cancel-queued" data-role-required="member" style="display:none;" data-i18n="sharepoint.audits.cancel_all">Cancel all queued</button>
+          </div>
+        </div>
+        <div id="sp-audits-empty" class="sp-empty">
+          <div class="sp-empty-icon">🧾</div>
+          <p data-i18n-html="sharepoint.audits.empty_html">No audit jobs yet. Launch audits from the <strong>Inventory</strong> tab — per library, per site, or all sites.</p>
+        </div>
+        <div id="sp-audits-content" style="display:none;">
+          <table class="sp-table">
+            <thead><tr>
+              <th id="sp-audits-th-tenant" style="width:160px; display:none;" data-i18n="sharepoint.audits.col_tenant">Tenant</th>
+              <th data-i18n="sharepoint.audits.col_library">Library</th>
+              <th data-i18n="sharepoint.audits.col_status">Status</th>
+              <th style="width:220px" data-i18n="sharepoint.audits.col_times">Times</th>
+              <th style="width:160px" data-i18n="sharepoint.audits.col_requested_by">Requested by</th>
+              <th style="width:90px"></th>
+            </tr></thead>
+            <tbody id="sp-audits-tbody"></tbody>
+          </table>
+        </div>
+      </section>
 
-  <!-- Audit Progress Modal -->
-  <div id="sp-audit-modal">
-    <div class="sp-audit-dialog">
-      <h3 data-i18n="sharepoint.audit_modal_title">Auditing SharePoint Library</h3>
-      <div id="sp-audit-modal-library" class="sp-audit-library"></div>
-
-      <div class="sp-audit-stats">
-        <div class="sp-audit-stat"><div class="sp-audit-stat-val" id="sp-audit-folders-scanned">0</div><div class="sp-audit-stat-lbl" data-i18n="sharepoint.audit_stat_folders">Folders Scanned</div></div>
-        <div class="sp-audit-stat"><div class="sp-audit-stat-val" id="sp-audit-explicit-count">0</div><div class="sp-audit-stat-lbl" data-i18n="sharepoint.audit_stat_explicit">Explicit Permissions</div></div>
-      </div>
-
-      <div class="sp-audit-bar"><div id="sp-audit-progress-fill" class="sp-audit-bar-fill"></div></div>
-      <div id="sp-audit-status-text" class="sp-audit-status" data-i18n="sharepoint.starting_audit">Starting audit...</div>
-
-      <div class="sp-audit-warning">
-        ⚠ Large libraries can take several minutes. Microsoft Graph throttling may slow progress — we retry with exponential backoff automatically.
-      </div>
-
-      <div class="sp-audit-actions">
-        <button class="btn-secondary" id="sp-btn-close-audit-modal" data-i18n="sharepoint.btn_hide_notify">Hide — notify when done</button>
-      </div>
     </div>
   </div>
 

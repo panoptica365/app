@@ -46,9 +46,22 @@ const DRIFT_POLICY_DESCRIPTION =
   'permissions are informational and do not fire. Source: Microsoft Graph (servicePrincipals + applications), ' +
   'compared on Refresh and on the daily known-good loop.';
 
+// App credential (client secret / certificate) expiry early-warning policy.
+// Reuses the daily known-good collection (which already pulls keyCredentials /
+// passwordCredentials with endDateTime) — no extra Graph fetch. Slug:
+// app_credential_expiry (must match alert_policy_names / alert_explanations).
+const EXPIRY_POLICY_NAME = 'App credential expiry';
+const EXPIRY_POLICY_DESCRIPTION =
+  'A client secret or certificate on a tenant app registration is approaching expiry. ' +
+  'Panoptica warns at 30 days and 7 days out, and once expired, so you can rotate the ' +
+  'credential before an outage. One alert per credential — it does not re-fire every cycle. ' +
+  'Source: Microsoft Graph (/applications keyCredentials + passwordCredentials), evaluated on ' +
+  'Refresh and on the daily known-good loop.';
+
 let schemaReady = false;
 let schemaPromise = null;
 let _driftPolicyId = null;
+let _expiryPolicyId = null;
 
 /** Strip ISO 'Z'/fractional + T→space for MySQL DATETIME params. */
 function toMysqlDatetime(value) {
@@ -167,6 +180,7 @@ async function ensureSchema() {
     `);
 
     await ensureDriftPolicy();
+    await ensureExpiryPolicy();
     schemaReady = true;
   })();
 
@@ -218,6 +232,49 @@ async function getDriftPolicy() {
   return db.queryOne(
     'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
     [_driftPolicyId]
+  );
+}
+
+/**
+ * Idempotent bootstrap of the 'App credential expiry' alert policy. Same
+ * imperative model as the drift policy (the scheduled evaluator skips it; the
+ * known-good worker fires it). category 'permissions' — an EXISTING ENUM value;
+ * never add a new one (it silently fails to bootstrap).
+ */
+async function ensureExpiryPolicy() {
+  const existing = await db.queryOne(
+    'SELECT id FROM alert_policies WHERE name = ? LIMIT 1',
+    [EXPIRY_POLICY_NAME]
+  );
+  if (existing) {
+    _expiryPolicyId = existing.id;
+    return _expiryPolicyId;
+  }
+  const id = await db.insert(
+    `INSERT INTO alert_policies
+       (name, description, category, severity, polling_tier, notification_target, detection_logic, enabled)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+    [
+      EXPIRY_POLICY_NAME,
+      EXPIRY_POLICY_DESCRIPTION,
+      'permissions',
+      'medium',
+      'low',
+      'both',
+      JSON.stringify({ threshold_type: 'imperative', credential_expiry: true, thresholds_days: [30, 7] }),
+    ]
+  );
+  console.log(`[KnownGood] Created alert policy "${EXPIRY_POLICY_NAME}" id=${id}`);
+  _expiryPolicyId = id;
+  return _expiryPolicyId;
+}
+
+async function getExpiryPolicy() {
+  await ensureSchema();
+  if (!_expiryPolicyId) await ensureExpiryPolicy();
+  return db.queryOne(
+    'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
+    [_expiryPolicyId]
   );
 }
 
@@ -380,6 +437,8 @@ module.exports = {
   ensureSchema,
   getDriftPolicy,
   DRIFT_POLICY_NAME,
+  getExpiryPolicy,
+  EXPIRY_POLICY_NAME,
   // CRUD
   getBaselines,
   getBaseline,

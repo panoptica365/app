@@ -3187,6 +3187,11 @@ body.role-viewer [data-role-readonly="member"] {
 .app-status { font-size: 0.74rem; }
 .app-status-good { color: var(--status-healthy, #3fb950); }
 .app-status-drift { color: var(--status-broken, #f85149); font-weight: 600; }
+/* App credential (secret/cert) expiry — mirrors the alert thresholds (≤30d / expired). */
+.app-status-cred-expiring { color: var(--status-warning, #d29922); font-weight: 600; }
+.app-status-cred-expired { color: var(--status-broken, #f85149); font-weight: 600; }
+.app-cred-expiring { color: var(--status-warning, #d29922); font-weight: 600; }
+.app-cred-expired { color: var(--status-broken, #f85149); font-weight: 600; }
 .app-detail-row td { background: rgba(68, 136, 255, 0.04); }
 /* Sonnet assessment card at the top of the expanded row. Left border tinted by
    verdict so the reasoning reads at a glance; the dot + label repeat the dot's

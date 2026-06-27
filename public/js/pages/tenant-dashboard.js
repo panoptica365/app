@@ -1431,11 +1431,35 @@
     html += group(window.t('tenant_dashboard.applications.perm_requested'), app.requiredResourceAccess,
       p => `<div class="app-perm">${esc(p.value)} <span class="app-perm-res">— ${esc(p.resource || '')} (${esc(p.permType || '')})</span></div>`);
     html += group(window.t('tenant_dashboard.applications.perm_credentials'), app.credentials,
-      c => `<div class="app-perm">${esc(c.type)} ${esc(c.displayName || c.keyId || '')} <span class="app-perm-res">${c.endDateTime ? '— exp ' + esc(String(c.endDateTime).slice(0, 10)) : ''}</span></div>`);
+      c => {
+        const days = credDaysToExpiry(c);
+        const cls = days === null ? '' : (days < 0 ? ' app-cred-expired' : (days <= CRED_WARN_DAYS ? ' app-cred-expiring' : ''));
+        const exp = c.endDateTime ? '— exp ' + esc(String(c.endDateTime).slice(0, 10)) : '';
+        return `<div class="app-perm">${esc(c.type)} ${esc(c.displayName || c.keyId || '')} <span class="app-perm-res${cls}">${exp}</span></div>`;
+      });
     html += group(window.t('tenant_dashboard.applications.perm_redirects'), app.redirectUris,
       u => `<div class="app-perm">${esc(u)}</div>`);
     if (!html) html = `<div class="app-perm-res" style="padding:6px;">${esc(window.t('tenant_dashboard.applications.no_perms'))}</div>`;
     return html;
+  }
+
+  // App credential (secret/cert) expiry surfacing — mirrors the alert thresholds.
+  const CRED_WARN_DAYS = 30;
+  function credDaysToExpiry(c) {
+    if (!c || !c.endDateTime) return null;
+    const days = Math.floor((new Date(c.endDateTime).getTime() - Date.now()) / 86400000);
+    return Number.isNaN(days) ? null : days;
+  }
+  // Worst-case credential status for an app: 'expired' | 'expiring' | null.
+  function appCredStatus(a) {
+    let status = null;
+    for (const c of a.credentials || []) {
+      const days = credDaysToExpiry(c);
+      if (days === null) continue;
+      if (days < 0) return 'expired';
+      if (days <= CRED_WARN_DAYS) status = 'expiring';
+    }
+    return status;
   }
 
   function appRowHtml(a, lang) {
@@ -1451,6 +1475,10 @@
     } else if (a.blessed) {
       const when = a.approved_at ? ' · ' + esc(String(a.approved_at).slice(0, 10)) : '';
       status = `<span class="app-status app-status-good">${esc(window.t('tenant_dashboard.applications.status_known_good'))}${when}</span>`;
+    }
+    const cred = appCredStatus(a);
+    if (cred) {
+      status += `${status ? ' ' : ''}<span class="app-status app-status-cred-${cred}">${esc(window.t('tenant_dashboard.applications.cred_' + cred))}</span>`;
     }
     const verified = a.verifiedPublisher
       ? ` <span class="app-verified" title="${esc(window.t('tenant_dashboard.applications.verified'))}">✓</span>` : '';
@@ -1473,6 +1501,8 @@
     const blessed = inv.apps.filter(a => a.blessed).length;
     const drifted = inv.apps.filter(a => a.drift_state === 'drifted').length;
     let txt = window.t('tenant_dashboard.applications.summary', { total, blessed, drifted });
+    const expiringCreds = inv.apps.filter(a => appCredStatus(a)).length;
+    if (expiringCreds > 0) txt += ' · ' + window.t('tenant_dashboard.applications.summary_creds', { count: expiringCreds });
     if (inv.generated_at) txt += ' · ' + window.t('tenant_dashboard.applications.refreshed', { when: String(inv.generated_at).slice(0, 16) });
     s.textContent = txt;
   }

@@ -112,6 +112,8 @@ const emailAuthWorker = require('./email-auth-worker');
 const emailAuthStore = require('./lib/email-auth-store');
 const accessReviewStore = require('./lib/access-review-store');
 const securityApplyWorker = require('./security-apply-worker');
+const spAuditWorker = require('./sp-audit-worker');
+const spAuditJobs = require('./lib/sharepoint-audit-jobs');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 const psaWorker = require('./psa-worker');
 const psaStore = require('./psa/store');
@@ -636,6 +638,14 @@ async function start() {
     // cap per job. Fully separate from the UAL worker.
     securityApplyWorker.start();
 
+    // SharePoint audit jobs (v0.2.26). Requeue any 'running' jobs stranded by a
+    // restart FIRST (audits are re-runnable, so they resume), then start the
+    // bounded-concurrency worker that drains the queue.
+    spAuditJobs.recoverStrandedJobs().catch(err =>
+      console.error('[Server] sp-audit recoverStrandedJobs failed at boot:', err.message)
+    );
+    spAuditWorker.start();
+
     // License refresh client (v0.1.8). Schedules a weekly heartbeat to the
     // license server based on the current JWT's iat. On success, writes the
     // new token to both .env and the cache sidecar; on failure, retries in
@@ -692,6 +702,7 @@ async function shutdown(signal) {
   knownGoodWorker.stop();
   emailAuthWorker.stop();
   securityApplyWorker.stop();
+  spAuditWorker.stop();
   licenseRefresh.stop();
   psaWorker.stop();
   retentionWorker.stop();

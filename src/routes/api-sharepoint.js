@@ -11,6 +11,7 @@ const auth = require('../auth');
 const db = require('../db/database');
 const sp = require('../lib/sharepoint-graph');
 const { generateLibraryPermissionsPDF, generateUserPermissionsPDF } = require('../lib/sharepoint-pdf');
+const auditJobs = require('../lib/sharepoint-audit-jobs');
 
 const router = express.Router();
 
@@ -23,8 +24,8 @@ async function resolveTenant(idOrGuid) {
   if (!idOrGuid) return null;
   const isGuid = /^[0-9a-f-]{36}$/i.test(String(idOrGuid));
   const sql = isGuid
-    ? 'SELECT id, tenant_id, display_name FROM tenants WHERE tenant_id = ? LIMIT 1'
-    : 'SELECT id, tenant_id, display_name FROM tenants WHERE id = ? LIMIT 1';
+    ? 'SELECT id, tenant_id, display_name, language FROM tenants WHERE tenant_id = ? LIMIT 1'
+    : 'SELECT id, tenant_id, display_name, language FROM tenants WHERE id = ? LIMIT 1';
   return db.queryOne(sql, [idOrGuid]);
 }
 
@@ -48,6 +49,27 @@ router.get('/inventory/:tenantId', async (req, res) => {
   if (!t) return res.status(404).json({ error: 'Tenant not found' });
   try {
     const inventory = await sp.getInventory(t.tenant_id);
+    // Attach last-audit timestamps (sp_audits is keyed per site + drive). Site
+    // rows show the most recent audit across their libraries; drive rows show
+    // their own. finished_at preferred, started_at as fallback (matches the
+    // audit-list endpoint). #11
+    const auditRows = await db.queryRows(
+      `SELECT site_id, drive_id, MAX(COALESCE(finished_at, started_at)) AS last_audit
+         FROM sp_audits WHERE tenant_id = ? AND status = 'complete'
+         GROUP BY site_id, drive_id`,
+      [t.id]
+    );
+    const byDrive = new Map();
+    const bySite = new Map();
+    for (const r of auditRows) {
+      if (r.drive_id) byDrive.set(r.drive_id, r.last_audit);
+      const prev = bySite.get(r.site_id);
+      if (!prev || new Date(r.last_audit) > new Date(prev)) bySite.set(r.site_id, r.last_audit);
+    }
+    for (const site of inventory) {
+      site.lastAuditAt = bySite.get(site.id) || null;
+      for (const d of site.drives || []) d.lastAuditAt = byDrive.get(d.id) || null;
+    }
     res.json({
       tenantId: t.id,
       tenantGuid: t.tenant_id,
@@ -71,83 +93,146 @@ router.get('/sites/:tenantId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ─── Audit: start / progress / list / fetch / delete ────────────────────────
-// Tracks running audits in-memory; persists to DB on completion.
+// ─── Audit jobs: enqueue / list / cancel ────────────────────────────────────
+// v0.2.26 — audits are tracked background jobs (sp_audit_jobs), drained by
+// src/sp-audit-worker.js at bounded concurrency. Enqueuing NEVER navigates the
+// operator anywhere (fixes #12); the Audits tab is the status surface.
 
-const auditSessions = new Map();   // auditDbId → progress snapshot
-
-// A3 (May 9, 2026): operator — triggers SharePoint audit run.
-router.post('/audit/:tenantId', auth.requireMemberOrAdmin, async (req, res) => {
-  const t = await resolveTenant(req.params.tenantId);
-  if (!t) return res.status(404).json({ error: 'Tenant not found' });
-
-  const { siteId, driveId, driveName, siteUrl } = req.body || {};
-  if (!siteId || !driveId || !driveName || !siteUrl) {
-    return res.status(400).json({ error: 'Required: siteId, driveId, driveName, siteUrl' });
-  }
-
-  let siteName = '';
-  try { siteName = new URL(siteUrl).pathname.split('/').filter(Boolean).pop() || siteId; } catch { siteName = siteId; }
-
-  const auditId = await db.insert(
-    `INSERT INTO sp_audits (tenant_id, site_id, site_name, site_url, drive_id, drive_name, status)
-     VALUES (?, ?, ?, ?, ?, ?, 'running')`,
-    [t.id, siteId, siteName, siteUrl, driveId, driveName]
-  );
-
-  const progress = {
-    status: 'running',
-    foldersTotal: 0,
-    foldersScanned: 0,
-    explicitCount: 0,
-    message: 'Initializing audit...',
+function mapJob(r) {
+  return {
+    id: r.id,
+    tenantId: r.tenant_id,
+    tenantName: r.tenant_name || null,
+    siteId: r.site_id,
+    siteName: r.site_name,
+    libraryId: r.library_id,
+    libraryName: r.library_name,
+    status: r.status,
+    origin: r.origin,
+    requestedBy: r.requested_by,
+    auditId: r.audit_id,
+    itemsTotal: Number(r.items_total || 0),
+    itemsProcessed: Number(r.items_processed || 0),
+    progressMessage: r.progress_message,
+    error: r.error,
+    queuedAt: r.queued_at,
+    startedAt: r.started_at,
+    finishedAt: r.finished_at,
   };
-  auditSessions.set(auditId, progress);
-
-  // Fire-and-forget async crawl. Pass Express app so we can emit on completion.
-  const app = req.app;
-  runAudit(auditId, t, siteId, driveId, driveName, siteUrl, siteName, progress, app)
-    .catch(err => {
-      console.error('[SP Audit] Unhandled:', err.message);
-      progress.status = 'error';
-      progress.message = err.message;
-      db.execute(
-        `UPDATE sp_audits SET status='error', error_message=?, finished_at=NOW() WHERE id=?`,
-        [err.message.substring(0, 500), auditId]
-      ).catch(() => {});
-      emitAuditEvent(app, 'sp:audit:error', {
-        auditId, tenantId: t.id, driveName, message: err.message.substring(0, 200),
-      });
-    });
-
-  res.json({ auditId });
-});
-
-function emitAuditEvent(app, eventName, payload) {
-  try {
-    const io = app.get('io');
-    if (io) io.emit(eventName, payload);
-  } catch (e) {
-    console.error('[SP Audit] Socket emit failed:', e.message);
-  }
 }
 
-router.get('/audit/:auditId/progress', (req, res) => {
-  const p = auditSessions.get(parseInt(req.params.auditId, 10));
-  if (p) return res.json(p);
-  // Fall back to DB if session evicted (e.g. after restart or after 5-min TTL)
-  db.queryOne('SELECT status, folders_scanned, explicit_count, error_message FROM sp_audits WHERE id=?', [req.params.auditId])
-    .then(row => {
-      if (!row) return res.status(404).json({ error: 'Audit not found' });
-      res.json({
-        status: row.status,
-        foldersTotal: row.folders_scanned,
-        foldersScanned: row.folders_scanned,
-        explicitCount: row.explicit_count,
-        message: row.status === 'complete' ? 'Audit complete.' : (row.error_message || 'Audit finished.'),
+function siteNameFromUrl(siteUrl, fallback) {
+  try { return new URL(siteUrl).pathname.split('/').filter(Boolean).pop() || fallback; } catch { return fallback; }
+}
+
+// Enqueue ONE library audit. Replaces the old POST /audit fire-and-forget.
+router.post('/audit-jobs/:tenantId/library', auth.requireMemberOrAdmin, async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  const { siteId, driveId, driveName, siteUrl } = req.body || {};
+  if (!siteId || !driveId) return res.status(400).json({ error: 'Required: siteId, driveId' });
+  try {
+    const by = (req.session && req.session.user && req.session.user.email) || null;
+    const r = await auditJobs.enqueueJob({
+      tenantId: t.id, siteId, siteName: siteNameFromUrl(siteUrl, siteId), siteUrl,
+      libraryId: driveId, libraryName: driveName || driveId, origin: 'single', requestedBy: by,
+    });
+    res.json({ enqueued: r.skipped ? 0 : 1, skipped: r.skipped ? 1 : 0, jobId: r.jobId });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Enqueue one job per document library in a SITE.
+router.post('/audit-jobs/:tenantId/site', auth.requireMemberOrAdmin, async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  const { siteId, siteUrl } = req.body || {};
+  if (!siteId) return res.status(400).json({ error: 'Required: siteId' });
+  try {
+    const siteName = req.body.siteName || siteNameFromUrl(siteUrl, siteId);
+    const drives = await sp.listDrives(t.tenant_id, siteId);
+    const by = (req.session && req.session.user && req.session.user.email) || null;
+    let enqueued = 0, skipped = 0;
+    for (const d of drives) {
+      const r = await auditJobs.enqueueJob({
+        tenantId: t.id, siteId, siteName, siteUrl, libraryId: d.id, libraryName: d.name,
+        origin: 'site', requestedBy: by,
       });
-    })
-    .catch(err => res.status(500).json({ error: err.message }));
+      r.skipped ? skipped++ : enqueued++;
+    }
+    res.json({ enqueued, skipped, libraries: drives.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Enqueue one job per document library across ALL sites in the selected tenant.
+router.post('/audit-jobs/:tenantId/all', auth.requireMemberOrAdmin, async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  try {
+    const inventory = await sp.getInventory(t.tenant_id);
+    const by = (req.session && req.session.user && req.session.user.email) || null;
+    let enqueued = 0, skipped = 0, libraries = 0, sites = 0;
+    for (const site of inventory) {
+      if (!site.drives || site.drives.length === 0) continue;
+      sites++;
+      for (const d of site.drives) {
+        libraries++;
+        const r = await auditJobs.enqueueJob({
+          tenantId: t.id, siteId: site.id, siteName: site.displayName || site.name,
+          siteUrl: site.webUrl, libraryId: d.id, libraryName: d.name, origin: 'global', requestedBy: by,
+        });
+        r.skipped ? skipped++ : enqueued++;
+      }
+    }
+    res.json({ enqueued, skipped, libraries, sites });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Fleet view: jobs across ALL tenants (with tenant name) — "Show all tenant
+// jobs". Distinct path so it never collides with /audit-jobs/:tenantId.
+router.get('/audit-jobs-fleet', async (req, res) => {
+  try {
+    const rows = await auditJobs.listAllJobs(48);
+    res.json(rows.map(mapJob));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Cancel ALL queued jobs across ALL tenants (fleet safety valve).
+router.post('/audit-jobs-fleet/cancel-queued', auth.requireMemberOrAdmin, async (req, res) => {
+  try {
+    const cancelled = await auditJobs.cancelAllQueuedFleet();
+    res.json({ cancelled });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// List jobs for the Audits tab (active + terminal within the retention window).
+router.get('/audit-jobs/:tenantId', async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  try {
+    const rows = await auditJobs.listJobsForTenant(t.id, 48);
+    res.json(rows.map(mapJob));
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Cancel ALL queued jobs for the tenant (safety valve after a big Audit-All).
+router.post('/audit-jobs/:tenantId/cancel-queued', auth.requireMemberOrAdmin, async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  try {
+    const cancelled = await auditJobs.cancelAllQueued(t.id);
+    res.json({ cancelled });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Cancel ONE queued job (running jobs are left to finish).
+router.post('/audit-jobs/:tenantId/:jobId/cancel', auth.requireMemberOrAdmin, async (req, res) => {
+  const t = await resolveTenant(req.params.tenantId);
+  if (!t) return res.status(404).json({ error: 'Tenant not found' });
+  try {
+    const ok = await auditJobs.cancelJob(t.id, parseInt(req.params.jobId, 10));
+    if (!ok) return res.status(409).json({ error: 'Job is not queued (already running/finished)' });
+    res.json({ cancelled: 1 });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/audits/:tenantId', async (req, res) => {
@@ -209,7 +294,7 @@ router.delete('/audits/:tenantId', auth.requireMemberOrAdmin, async (req, res) =
 router.get('/export/library-pdf/:auditId', async (req, res) => {
   try {
     const row = await db.queryOne(
-      `SELECT a.*, t.display_name AS tenant_display_name
+      `SELECT a.*, t.display_name AS tenant_display_name, t.language AS tenant_language
          FROM sp_audits a JOIN tenants t ON t.id=a.tenant_id
         WHERE a.id=?`,
       [req.params.auditId]
@@ -223,7 +308,7 @@ router.get('/export/library-pdf/:auditId', async (req, res) => {
     const date = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="Library_Permissions_${safe}_${date}.pdf"`);
-    generateLibraryPermissionsPDF(data, res);
+    generateLibraryPermissionsPDF(data, res, row.tenant_language);
   } catch (err) {
     console.error('[SP PDF] Library error:', err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
@@ -245,126 +330,12 @@ router.get('/export/user-pdf/:tenantId', async (req, res) => {
     const date = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="User_Permissions_${safeName}_${date}.pdf"`);
-    generateUserPermissionsPDF(audits, t.display_name, res);
+    generateUserPermissionsPDF(audits, t.display_name, res, t.language);
   } catch (err) {
     console.error('[SP PDF] User error:', err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
   }
 });
-
-// ─── Async audit worker ─────────────────────────────────────────────────────
-
-async function runAudit(auditId, tenantRow, siteId, driveId, driveName, siteUrl, siteName, progress, app) {
-  const tenantGuid = tenantRow.tenant_id;
-
-  progress.message = 'Resolving library...';
-  const rootItem = await sp.getDriveRoot(tenantGuid, driveId);
-
-  const librarySize = await sp.getDriveQuota(tenantGuid, driveId);
-  // Verified domains — used to flag external users in normalizePermissions
-  const verifiedDomains = await sp.getVerifiedDomains(tenantGuid);
-
-  progress.message = 'Crawling folder tree...';
-  let discovered = 0;
-  const folders = await sp.crawlFolders(tenantGuid, driveId, 'root', '', 0, (c) => {
-    discovered += c;
-    progress.foldersTotal = discovered;
-    progress.message = `Discovering folders... ${discovered} found`;
-  });
-
-  const allFolders = [
-    { id: rootItem.id, name: '(root)', path: '/', depth: 0, webUrl: rootItem.webUrl },
-    ...folders,
-  ];
-  progress.foldersTotal = allFolders.length;
-  progress.message = `Reading permissions on ${allFolders.length} folders...`;
-
-  // Baseline from root
-  const rootPerms = await sp.getItemPermissions(tenantGuid, driveId, rootItem.id);
-  const baselineNorm = sp.normalizePermissions(rootPerms.allPermissions, verifiedDomains);
-  const baselinePermissions = await sp.resolvePermissionMembers(tenantGuid, baselineNorm);
-
-  // Explicit permission detection
-  const foldersWithExplicitPermissions = [];
-  let scanned = 0;
-  const CONC = 5;
-
-  for (let i = 0; i < allFolders.length; i += CONC) {
-    const batch = allFolders.slice(i, i + CONC);
-    await Promise.all(batch.map(async f => {
-      if (f.id === rootItem.id) {
-        scanned++;
-        progress.foldersScanned = scanned;
-        return;
-      }
-      try {
-        const p = await sp.getItemPermissions(tenantGuid, driveId, f.id);
-        if (p.uniquePermissions.length > 0) {
-          const norm = sp.normalizePermissions(p.allPermissions, verifiedDomains);
-          const resolved = await sp.resolvePermissionMembers(tenantGuid, norm);
-          foldersWithExplicitPermissions.push({
-            folderPath: f.path || f.name,
-            folderName: f.name,
-            depth: f.depth,
-            roleAssignments: resolved,
-          });
-          progress.explicitCount = foldersWithExplicitPermissions.length;
-        }
-      } catch (e) {
-        console.log(`[SP Audit] Perm err on ${f.name}: ${e.message.substring(0, 100)}`);
-      }
-      scanned++;
-      progress.foldersScanned = scanned;
-      progress.message = `Scanning ${scanned}/${allFolders.length} (${foldersWithExplicitPermissions.length} explicit)`;
-    }));
-  }
-
-  foldersWithExplicitPermissions.sort((a, b) => a.folderPath.localeCompare(b.folderPath));
-
-  const result = {
-    tenantId: tenantGuid,
-    tenantName: tenantRow.display_name,
-    siteId, siteName, siteUrl,
-    driveId, driveName,
-    timestamp: new Date().toISOString(),
-    foldersScanned: allFolders.length,
-    librarySize,
-    baselinePermissions,
-    foldersWithExplicitPermissions,
-  };
-
-  await db.execute(
-    `UPDATE sp_audits SET status='complete', finished_at=NOW(),
-            folders_scanned=?, library_size=?, explicit_count=?, result_json=?
-      WHERE id=?`,
-    [
-      allFolders.length,
-      librarySize,
-      foldersWithExplicitPermissions.length,
-      JSON.stringify(result),
-      auditId,
-    ]
-  );
-
-  progress.status = 'complete';
-  progress.foldersScanned = allFolders.length;
-  progress.message = `Audit complete. ${allFolders.length} folders, ${foldersWithExplicitPermissions.length} explicit.`;
-
-  // Notify any connected Panoptica session so a toast can fire even if the
-  // user closed the modal and navigated away.
-  emitAuditEvent(app, 'sp:audit:complete', {
-    auditId,
-    tenantId: tenantRow.id,
-    tenantName: tenantRow.display_name,
-    driveName,
-    siteName,
-    foldersScanned: allFolders.length,
-    explicitCount: foldersWithExplicitPermissions.length,
-  });
-
-  // Evict session after 5 minutes
-  setTimeout(() => auditSessions.delete(auditId), 5 * 60 * 1000);
-}
 
 // ─── Startup orphan sweep ─────────────────────────────────────────────────
 // Marks any sp_audits stuck in 'running' as 'error' on boot. Needed because

@@ -5,6 +5,26 @@ that release, newest first.
 
 ---
 
+## Version 0.2.26 — 2026-06-27
+
+### SharePoint audits are now tracked background jobs, with an Audits tab
+
+SharePoint library audits no longer block the screen or jump you to the result when they finish — launching one simply queues it and leaves you where you are, so you can fire several in a row. A new **Audits** tab in the SharePoint section shows every audit job — running, queued, and recently finished, failed or cancelled — with its progress, timestamps and who started it, so nothing is lost after you click away. You can audit a single library, **all libraries in a site**, or **all sites in a tenant** in one action, each with a confirmation scaled to how large the run is. Jobs run a few at a time in the background so they never slow down security monitoring, retry automatically when Microsoft Graph throttles, and resume after a restart. You can cancel queued jobs (one or all) and re-run a failed one, and a **Show all tenant jobs** checkbox lets you watch audits across every managed tenant at once.
+
+### SharePoint inventory: Last Audit Date, and reports in the tenant's language
+
+The SharePoint inventory now shows a **Last Audit Date** for each site and library (or "Never" if it has not been audited). The two SharePoint permission reports (Library Permissions and User Permissions) are now produced in each tenant's configured language — French, English or Spanish — like the rest of Panoptica's reports.
+
+### SharePoint permission PDF: no more overlapping rows
+
+In the permission PDF export, entries whose permission source spans three or four lines no longer overlap the next row — row height is now dynamic and the text wraps cleanly inside the cell. Raw group identifiers that occasionally leaked into the PDF are replaced with a readable label, so client-facing reports show no internal IDs.
+
+### App secret and certificate expiry early warning
+
+Panoptica now watches the client secrets and certificates on your tenants' app registrations and warns you before they lapse — at 30 days, again at 7 days, and once expired (one alert per credential, so it never spams). The expiry is also shown right in the **Applications** tab: a badge on the app's row, the date highlighted in the expanded detail, and a count in the tab summary — so you can rotate a credential on your own schedule instead of discovering it the morning an integration stops working.
+
+---
+
 ## Version 0.2.25 — 2026-06-27
 
 ### Silence noisy "already handled" alerts with one click

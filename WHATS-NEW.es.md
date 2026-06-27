@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.26 — 2026-06-27
+
+### Las auditorías de SharePoint ahora son trabajos en segundo plano con seguimiento, con una pestaña Auditorías
+
+Las auditorías de bibliotecas de SharePoint ya no bloquean la pantalla ni lo llevan al resultado al terminar — iniciar una simplemente la pone en cola y lo deja donde está, así puede lanzar varias seguidas. Una nueva pestaña **Auditorías** en la sección de SharePoint muestra cada trabajo de auditoría — en curso, en cola y recién finalizado, fallido o cancelado — con su progreso, marcas de tiempo y quién lo inició, de modo que nada se pierde al cambiar de página. Puede auditar una sola biblioteca, **todas las bibliotecas de un sitio** o **todos los sitios de un inquilino** en una sola acción, cada una con una confirmación acorde al tamaño de la operación. Los trabajos se ejecutan de a pocos en segundo plano para no ralentizar nunca la supervisión de seguridad, reintentan automáticamente cuando Microsoft Graph limita el ritmo y se reanudan tras un reinicio. Puede cancelar los trabajos en cola (uno o todos) y reejecutar uno fallido, y una casilla **Mostrar trabajos de todos los inquilinos** permite ver las auditorías de todos sus inquilinos gestionados a la vez.
+
+### Inventario de SharePoint: fecha de última auditoría y reportes en el idioma del inquilino
+
+El inventario de SharePoint ahora muestra una **fecha de última auditoría** para cada sitio y biblioteca (o «Nunca» si no se ha auditado). Los dos reportes de permisos de SharePoint (permisos de biblioteca y permisos por usuario) ahora se generan en el idioma configurado de cada inquilino — francés, inglés o español — como el resto de los reportes de Panoptica.
+
+### Reporte PDF de permisos de SharePoint: sin filas superpuestas
+
+En la exportación PDF de permisos, las entradas cuya fuente de permiso abarca tres o cuatro líneas ya no se superponen con la fila siguiente — la altura de fila ahora es dinámica y el texto se ajusta limpiamente dentro de la celda. Los identificadores de grupo en bruto que a veces aparecían en el PDF se reemplazan por una etiqueta legible, de modo que los reportes para clientes no muestran identificadores internos.
+
+### Aviso anticipado de expiración de secretos y certificados de aplicaciones
+
+Panoptica ahora vigila los secretos de cliente y los certificados de los registros de aplicaciones de sus inquilinos y le avisa antes de que caduquen — a 30 días, de nuevo a 7 días y una vez expirados (una sola alerta por credencial, para no saturarlo). La expiración también se muestra directamente en la pestaña **Aplicaciones**: una insignia en la fila de la aplicación, la fecha resaltada en el detalle y un recuento en el resumen de la pestaña — para que pueda rotar una credencial a su propio ritmo en lugar de descubrirla la mañana en que una integración deja de funcionar.
+
+---
+
 ## Versión 0.2.25 — 2026-06-27
 
 ### Silencie con un clic las alertas «ya gestionadas»

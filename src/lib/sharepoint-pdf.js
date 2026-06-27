@@ -11,6 +11,35 @@
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
+const i18n = require('../i18n');
+
+// All report chrome lives under locales → sharepoint_report.*. Reports are
+// keyed to the TENANT's language (en/fr/es, English fallback) — same convention
+// as the Python posture/documentation reports.
+function makeT(lang) {
+  const L = (lang === 'fr' || lang === 'es') ? lang : 'en';
+  return (key, params) => i18n.t(`sharepoint_report.${key}`, { lang: L, ...(params || {}) });
+}
+// Date locale per language (used for the cover + audit-date formatting).
+const DATE_LOCALE = { en: 'en-US', fr: 'fr-CA', es: 'es-ES' };
+// Our own principal-type classifications (from sharepoint-graph normalizePermissions)
+// → locale subkeys. Unknown values pass through untranslated.
+const PRINCIPAL_TYPE_KEYS = {
+  'User': 'user',
+  'User (external)': 'user_external',
+  'SecurityGroup': 'security_group',
+  'SharePointGroup': 'sharepoint_group',
+  'Group': 'group',
+  'Site User': 'site_user',
+  'Application': 'application',
+  'Link': 'link',
+  'Link recipient (unresolved)': 'link_unresolved',
+  'DL': 'distribution_list',
+};
+function localizeType(t, type) {
+  const k = PRINCIPAL_TYPE_KEYS[type];
+  return k ? t(`principal_type.${k}`) : safe(type);
+}
 
 // ─── Assets ──────────────────────────────────────────────────────────────────
 const PUBLIC_IMG_DIR = path.join(__dirname, '..', '..', 'public', 'img');
@@ -53,16 +82,27 @@ const PAGE = {
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function safe(s) { return s || ''; }
-function formatDate(iso) {
-  if (!iso) return 'N/A';
+// Bare directoryObject GUIDs leak through when SharePoint can't resolve a
+// principal (deleted users, uncached B2B guests, orphaned ACLs). Operator-facing
+// copy must never show internal IDs — mirror the frontend's resolvePrincipalLabel.
+const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// `naLabel` is the localized "[Unresolved Principal]" string, precomputed by the
+// caller so this stays a pure formatter.
+function displayPrincipal(s, naLabel) {
+  const v = (s == null ? '' : String(s)).trim();
+  return GUID_RE.test(v) ? naLabel : v;
+}
+function formatDate(iso, lang) {
+  const L = (lang === 'fr' || lang === 'es') ? lang : 'en';
+  if (!iso) return i18n.t('sharepoint_report.not_available', { lang: L });
   const d = new Date(iso);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(DATE_LOCALE[L], {
     year: 'numeric', month: 'long', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
 }
-function formatSize(bytes) {
-  if (!bytes) return 'N/A';
+function formatSize(bytes, lang) {
+  if (!bytes) return i18n.t('sharepoint_report.not_available', { lang: (lang === 'fr' || lang === 'es') ? lang : 'en' });
   const gb = bytes / (1024 ** 3);
   if (gb >= 1) return gb.toFixed(2) + ' GB';
   return (bytes / (1024 ** 2)).toFixed(1) + ' MB';
@@ -85,17 +125,16 @@ function drawText(doc, text, x, y, options) {
 
 // ─── Page chrome ─────────────────────────────────────────────────────────────
 
-function drawPageHeaderFooter(doc, reportTitle, pageNum) {
+function drawPageHeaderFooter(doc, reportTitle, pageNum, t) {
   const headerY = 20;
   const logo = getLogoPath();
+  // The logo PNG already carries the "PANOPTICA365" wordmark — don't redraw it
+  // (that overlapped the logo). Title goes large + bold, right-aligned.
   if (logo) doc.image(logo, PAGE.marginLeft, headerY - 2, { height: 24 });
 
-  doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.accentDeep);
-  drawText(doc, 'PANOPTICA365', PAGE.marginLeft + 32, headerY + 2, { width: 120, lineBreak: false });
-
-  doc.font('Helvetica').fontSize(8).fillColor(COLORS.textMuted);
-  drawText(doc, reportTitle, PAGE.marginLeft + 32, headerY + 13, {
-    width: PAGE.contentWidth - 32, lineBreak: false,
+  doc.font('Helvetica-Bold').fontSize(13).fillColor(COLORS.accentDeep);
+  drawText(doc, reportTitle, PAGE.marginLeft, headerY + 4, {
+    width: PAGE.contentWidth, align: 'right', lineBreak: false,
   });
 
   doc.strokeColor(COLORS.accent).lineWidth(1)
@@ -110,7 +149,7 @@ function drawPageHeaderFooter(doc, reportTitle, pageNum) {
     .stroke();
 
   doc.font('Helvetica').fontSize(8).fillColor(COLORS.textMuted);
-  drawText(doc, `Page ${pageNum}`, PAGE.marginLeft, footerY + 8, {
+  drawText(doc, t('page', { n: pageNum }), PAGE.marginLeft, footerY + 8, {
     width: PAGE.contentWidth, align: 'center', lineBreak: false,
   });
 }
@@ -122,7 +161,7 @@ function drawPageHeaderFooter(doc, reportTitle, pageNum) {
 // Posture report. Verbose audit metadata is rendered separately via
 // addReportDetailsPanel() on the first content page.
 
-function addCoverPage(doc, { reportTitle, subtitle, tenantName }) {
+function addCoverPage(doc, { reportTitle, subtitle, tenantName }, t, lang) {
   const cover = getCoverPath();
   if (cover) {
     // Full-bleed cover image
@@ -158,7 +197,7 @@ function addCoverPage(doc, { reportTitle, subtitle, tenantName }) {
   });
 
   doc.font('Helvetica').fontSize(10).fillColor('#4A5568');
-  drawText(doc, `Generated ${formatDate(new Date().toISOString())}`,
+  drawText(doc, t('cover_generated', { date: formatDate(new Date().toISOString(), lang) }),
     0, titleTop + (subtitle ? 96 : 70), {
       align: 'center', width: PAGE.width, lineBreak: false,
     });
@@ -169,17 +208,17 @@ function addCoverPage(doc, { reportTitle, subtitle, tenantName }) {
 // preserving the audit details that previously lived on the procedural title
 // page. Advances doc.y to below the panel so subsequent content flows normally.
 
-function addReportDetailsPanel(doc, { tenantName, details }) {
+function addReportDetailsPanel(doc, { tenantName, details }, t, lang) {
   doc.font('Helvetica-Bold').fontSize(11).fillColor(COLORS.accentDeep);
-  drawText(doc, 'Report Details', PAGE.marginLeft, doc.y, {
+  drawText(doc, t('details_title'), PAGE.marginLeft, doc.y, {
     width: PAGE.contentWidth, lineBreak: false,
   });
   doc.y += 18;
 
   const rows = [
-    { label: 'Tenant', value: tenantName },
+    { label: t('label_tenant'), value: tenantName },
     ...details,
-    { label: 'Generated', value: formatDate(new Date().toISOString()) },
+    { label: t('label_generated'), value: formatDate(new Date().toISOString(), lang) },
   ];
 
   const labelW = 130;
@@ -206,7 +245,7 @@ function addReportDetailsPanel(doc, { tenantName, details }) {
 
 // ─── Document factory ────────────────────────────────────────────────────────
 
-function createDocument(reportTitle, info) {
+function createDocument(reportTitle, info, t) {
   let pageCount = 0;
   const doc = new PDFDocument({
     size: 'letter',
@@ -218,7 +257,7 @@ function createDocument(reportTitle, info) {
   function newContentPage() {
     doc.addPage();
     pageCount++;
-    drawPageHeaderFooter(doc, reportTitle, pageCount);
+    drawPageHeaderFooter(doc, reportTitle, pageCount, t);
     doc.y = PAGE.marginTop;
   }
   function ensureSpace(needed) {
@@ -233,11 +272,11 @@ function createDocument(reportTitle, info) {
 
 // ─── Permission table ────────────────────────────────────────────────────────
 
-function drawPermissionTable(doc, assignments, ensureSpace) {
+function drawPermissionTable(doc, assignments, ensureSpace, t, naLabel) {
   if (!assignments || assignments.length === 0) {
     ensureSpace(20);
     doc.font('Helvetica-Oblique').fontSize(9).fillColor(COLORS.textMuted);
-    drawText(doc, 'No permissions found.', PAGE.marginLeft, doc.y, {
+    drawText(doc, t('table.no_permissions'), PAGE.marginLeft, doc.y, {
       width: PAGE.contentWidth, lineBreak: false,
     });
     doc.y += 16;
@@ -257,13 +296,13 @@ function drawPermissionTable(doc, assignments, ensureSpace) {
 
   doc.font('Helvetica-Bold').fontSize(8).fillColor(COLORS.accentDeep);
   let x = PAGE.marginLeft + 4;
-  drawText(doc, 'Principal', x, headerY + 5, { width: col.principal, lineBreak: false });
+  drawText(doc, t('table.principal'), x, headerY + 5, { width: col.principal, lineBreak: false });
   x += col.principal;
-  drawText(doc, 'Type', x, headerY + 5, { width: col.type, lineBreak: false });
+  drawText(doc, t('table.type'), x, headerY + 5, { width: col.type, lineBreak: false });
   x += col.type;
-  drawText(doc, 'Role', x, headerY + 5, { width: col.roles, lineBreak: false });
+  drawText(doc, t('table.role'), x, headerY + 5, { width: col.roles, lineBreak: false });
   x += col.roles;
-  drawText(doc, 'Members', x, headerY + 5, { width: col.members, lineBreak: false });
+  drawText(doc, t('table.members'), x, headerY + 5, { width: col.members, lineBreak: false });
 
   doc.y = headerY + 20;
 
@@ -272,7 +311,9 @@ function drawPermissionTable(doc, assignments, ensureSpace) {
     const memberLines = a.members && a.members.length > 0
       ? a.members.map(m => `${m.displayName} <${m.email || ''}>`)
       : [];
-    const principalText = safe(a.principalName) + (a.principalEmail ? ` <${a.principalEmail}>` : '');
+    const emailRaw = safe(a.principalEmail).trim();
+    const principalEmail = GUID_RE.test(emailRaw) ? '' : emailRaw;
+    const principalText = displayPrincipal(a.principalName, naLabel) + (principalEmail ? ` <${principalEmail}>` : '');
 
     doc.font('Helvetica').fontSize(8);
     const principalH = doc.heightOfString(principalText, { width: col.principal - 8 });
@@ -300,7 +341,7 @@ function drawPermissionTable(doc, assignments, ensureSpace) {
     x += col.principal;
 
     doc.font('Helvetica').fontSize(7).fillColor(COLORS.textMuted);
-    drawText(doc, safe(a.principalType), x, rowY + 4, { width: col.type - 4, lineBreak: false });
+    drawText(doc, localizeType(t, a.principalType), x, rowY + 4, { width: col.type - 4, lineBreak: false });
     x += col.type;
 
     let roleY = rowY + 3;
@@ -332,8 +373,10 @@ function drawPermissionTable(doc, assignments, ensureSpace) {
 
 // ─── Report 1: Library Permissions ───────────────────────────────────────────
 
-function generateLibraryPermissionsPDF(auditData, stream) {
-  const reportTitle = 'Library Permissions Report';
+function generateLibraryPermissionsPDF(auditData, stream, lang) {
+  const t = makeT(lang);
+  const naLabel = t('unresolved_principal');
+  const reportTitle = t('library.title');
   const explicitFolders = auditData.foldersWithExplicitPermissions || [];
 
   const { doc, newContentPage, ensureSpace } = createDocument(reportTitle, {
@@ -341,60 +384,59 @@ function generateLibraryPermissionsPDF(auditData, stream) {
     Author: 'Panoptica365',
     Subject: 'SharePoint Library Permissions Audit',
     Creator: 'Panoptica365 — SharePoint Audit',
-  });
+  }, t);
   doc.pipe(stream);
 
   addCoverPage(doc, {
-    reportTitle: 'Library Permissions Report',
+    reportTitle,
     subtitle: `${safe(auditData.driveName)} — ${safe(auditData.siteName)}`,
     tenantName: safe(auditData.tenantName),
-  });
+  }, t, lang);
 
   // First content page: report-details panel, then baseline section
   newContentPage();
   addReportDetailsPanel(doc, {
     tenantName: safe(auditData.tenantName),
     details: [
-      { label: 'Site', value: safe(auditData.siteName) },
-      { label: 'Library', value: safe(auditData.driveName) },
-      { label: 'Folders Scanned', value: String(auditData.foldersScanned || 0) },
-      { label: 'Library Size', value: formatSize(auditData.librarySize) },
-      { label: 'Explicit Permissions', value: String(explicitFolders.length) },
-      { label: 'Audit Date', value: formatDate(auditData.timestamp) },
+      { label: t('library.detail_site'), value: safe(auditData.siteName) },
+      { label: t('library.detail_library'), value: safe(auditData.driveName) },
+      { label: t('library.detail_folders_scanned'), value: String(auditData.foldersScanned || 0) },
+      { label: t('library.detail_library_size'), value: formatSize(auditData.librarySize, lang) },
+      { label: t('library.detail_explicit'), value: String(explicitFolders.length) },
+      { label: t('library.detail_audit_date'), value: formatDate(auditData.timestamp, lang) },
     ],
-  });
+  }, t, lang);
 
   doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accentDeep);
-  drawText(doc, 'Baseline Permissions', PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
+  drawText(doc, t('library.baseline_heading'), PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
   doc.y += 24;
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.textMuted);
-  drawText(doc, 'These permissions are inherited by all folders in the library unless explicitly overridden.',
+  drawText(doc, t('library.baseline_desc'),
     PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
   doc.y += 18;
 
-  drawPermissionTable(doc, auditData.baselinePermissions || [], ensureSpace);
+  drawPermissionTable(doc, auditData.baselinePermissions || [], ensureSpace, t, naLabel);
 
   // Explicit section
   doc.y += 10;
+  const explicitHeading = t('library.explicit_heading');
   doc.font('Helvetica-Bold').fontSize(16);
-  const hH = doc.heightOfString('Folders with Explicit Permissions', { width: PAGE.contentWidth });
+  const hH = doc.heightOfString(explicitHeading, { width: PAGE.contentWidth });
   ensureSpace(hH + 40);
   doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accentDeep);
-  drawText(doc, 'Folders with Explicit Permissions', PAGE.marginLeft, doc.y, {
+  drawText(doc, explicitHeading, PAGE.marginLeft, doc.y, {
     width: PAGE.contentWidth, lineBreak: false,
   });
   doc.y += hH + 6;
 
   if (explicitFolders.length === 0) {
     doc.font('Helvetica').fontSize(10).fillColor(COLORS.textMuted);
-    drawText(doc,
-      'No folders with explicit (non-inherited) permissions were found. All folders inherit the baseline permissions above.',
+    drawText(doc, t('library.explicit_none'),
       PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
     doc.y += 20;
   } else {
     doc.font('Helvetica').fontSize(9).fillColor(COLORS.textMuted);
-    drawText(doc,
-      `${explicitFolders.length} folder${explicitFolders.length > 1 ? 's' : ''} with permissions that differ from the library baseline.`,
+    drawText(doc, t('library.explicit_count', { count: explicitFolders.length }),
       PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
     doc.y += 20;
 
@@ -407,7 +449,7 @@ function generateLibraryPermissionsPDF(auditData, stream) {
       doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.text);
       drawText(doc, label, PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
       doc.y += fh + 4;
-      drawPermissionTable(doc, folder.roleAssignments || [], ensureSpace);
+      drawPermissionTable(doc, folder.roleAssignments || [], ensureSpace, t, naLabel);
       doc.y += 6;
     }
   }
@@ -418,13 +460,16 @@ function generateLibraryPermissionsPDF(auditData, stream) {
 
 // ─── Report 2: User Permissions ──────────────────────────────────────────────
 
-function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
-  const reportTitle = 'User Permissions Report';
+function generateUserPermissionsPDF(auditDataList, tenantName, stream, lang) {
+  const t = makeT(lang);
+  const naLabel = t('unresolved_principal');
+  const reportTitle = t('user.title');
 
   const userMap = new Map();
+  const rootInherited = t('user.root_inherited');
   for (const audit of auditDataList) {
     const lib = `${safe(audit.driveName)} (${safe(audit.siteName)})`;
-    for (const p of audit.baselinePermissions || []) addToUserMap(userMap, p, lib, '(root — inherited)');
+    for (const p of audit.baselinePermissions || []) addToUserMap(userMap, p, lib, rootInherited);
     for (const f of audit.foldersWithExplicitPermissions || []) {
       for (const p of f.roleAssignments || []) addToUserMap(userMap, p, lib, f.folderPath);
     }
@@ -437,31 +482,30 @@ function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
     Author: 'Panoptica365',
     Subject: 'SharePoint User Permissions Audit',
     Creator: 'Panoptica365 — SharePoint Audit',
-  });
+  }, t);
   doc.pipe(stream);
 
   addCoverPage(doc, {
-    reportTitle: 'User Permissions Report',
-    subtitle: `All Audited Libraries — ${safe(tenantName)}`,
+    reportTitle,
+    subtitle: t('user.cover_subtitle'),
     tenantName: safe(tenantName),
-  });
+  }, t, lang);
 
   newContentPage();
   addReportDetailsPanel(doc, {
     tenantName: safe(tenantName),
     details: [
-      { label: 'Libraries Audited', value: String(auditDataList.length) },
-      { label: 'Sites', value: siteNames.join(', ') || 'N/A' },
-      { label: 'Users/Groups Found', value: String(users.length) },
+      { label: t('user.detail_libraries_audited'), value: String(auditDataList.length) },
+      { label: t('user.detail_sites'), value: siteNames.join(', ') || t('not_available') },
+      { label: t('user.detail_users_found'), value: String(users.length) },
     ],
-  });
+  }, t, lang);
 
   doc.font('Helvetica-Bold').fontSize(16).fillColor(COLORS.accentDeep);
-  drawText(doc, 'User & Group Permissions', PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
+  drawText(doc, t('user.section_heading'), PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
   doc.y += 24;
   doc.font('Helvetica').fontSize(9).fillColor(COLORS.textMuted);
-  drawText(doc,
-    `Aggregated permissions across ${auditDataList.length} audited librar${auditDataList.length === 1 ? 'y' : 'ies'}. Each user or group is shown with every location they have access to.`,
+  drawText(doc, t('user.section_desc', { count: auditDataList.length }),
     PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
   doc.y += 18;
 
@@ -470,14 +514,16 @@ function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
     ensureSpace(24 + Math.min(u.accesses.length * 18, 36));
     const cardY = doc.y;
 
+    const uName = displayPrincipal(u.name, naLabel);
     doc.rect(PAGE.marginLeft, cardY, PAGE.contentWidth, 20).fill(COLORS.tableHeadBg);
     doc.font('Helvetica-Bold').fontSize(9).fillColor(COLORS.accentDeep);
-    drawText(doc, safe(u.name), PAGE.marginLeft + 6, cardY + 5, { lineBreak: false });
-    const nw = doc.font('Helvetica-Bold').fontSize(9).widthOfString(safe(u.name));
+    drawText(doc, uName, PAGE.marginLeft + 6, cardY + 5, { lineBreak: false });
+    const nw = doc.font('Helvetica-Bold').fontSize(9).widthOfString(uName);
     doc.font('Helvetica').fontSize(7).fillColor(COLORS.textMuted);
-    drawText(doc, safe(u.type), PAGE.marginLeft + nw + 14, cardY + 6, { lineBreak: false });
-    const em = safe(u.email);
-    if (em && em !== u.name) {
+    drawText(doc, localizeType(t, u.type), PAGE.marginLeft + nw + 14, cardY + 6, { lineBreak: false });
+    const emRaw = safe(u.email).trim();
+    const em = GUID_RE.test(emRaw) ? '' : emRaw;
+    if (em && em !== uName) {
       doc.font('Helvetica').fontSize(7).fillColor(COLORS.textMuted);
       drawText(doc, em, PAGE.marginLeft + 6, cardY + 5, {
         width: PAGE.contentWidth - 12, align: 'right', lineBreak: false,
@@ -485,20 +531,28 @@ function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
     }
     doc.y = cardY + 22;
 
+    // Library / folder ("permission source") can wrap to several lines for deep
+    // paths — measure each cell and grow the row so nothing overlaps the next.
+    const libW = PAGE.contentWidth * 0.3;
+    const folderW = PAGE.contentWidth * 0.42;
     for (let j = 0; j < u.accesses.length; j++) {
       const a = u.accesses[j];
-      ensureSpace(18);
+      const libText = safe(a.library);
+      const folderText = safe(a.folder);
+      doc.font('Helvetica-Bold').fontSize(7);
+      const libH = doc.heightOfString(libText, { width: libW - 4 });
+      doc.font('Helvetica').fontSize(7);
+      const folderH = doc.heightOfString(folderText, { width: folderW - 4 });
+      const rowH = Math.max(16, libH + 6, folderH + 6);
+
+      ensureSpace(rowH);
       const rowY = doc.y;
-      if (j % 2 === 0) doc.rect(PAGE.marginLeft + 8, rowY, PAGE.contentWidth - 8, 16).fill(COLORS.rowAlt);
+      if (j % 2 === 0) doc.rect(PAGE.marginLeft + 8, rowY, PAGE.contentWidth - 8, rowH).fill(COLORS.rowAlt);
 
       doc.font('Helvetica-Bold').fontSize(7).fillColor(COLORS.text);
-      drawText(doc, safe(a.library), PAGE.marginLeft + 12, rowY + 3, {
-        width: PAGE.contentWidth * 0.3, lineBreak: false,
-      });
+      drawText(doc, libText, PAGE.marginLeft + 12, rowY + 3, { width: libW - 4 });
       doc.font('Helvetica').fontSize(7).fillColor(COLORS.textMuted);
-      drawText(doc, safe(a.folder), PAGE.marginLeft + 12 + PAGE.contentWidth * 0.3, rowY + 3, {
-        width: PAGE.contentWidth * 0.42, lineBreak: false,
-      });
+      drawText(doc, folderText, PAGE.marginLeft + 12 + libW, rowY + 3, { width: folderW - 4 });
 
       let rx = PAGE.marginLeft + 12 + PAGE.contentWidth * 0.72;
       for (const role of a.roles || []) {
@@ -509,7 +563,7 @@ function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
         drawText(doc, role, rx + 3, rowY + 4, { width: rw - 6, lineBreak: false });
         rx += rw + 3;
       }
-      doc.y = rowY + 17;
+      doc.y = rowY + rowH + 1;
     }
     doc.y += 10;
   }
@@ -517,7 +571,7 @@ function generateUserPermissionsPDF(auditDataList, tenantName, stream) {
   if (users.length === 0) {
     ensureSpace(20);
     doc.font('Helvetica-Oblique').fontSize(10).fillColor(COLORS.textMuted);
-    drawText(doc, 'No users or groups found in the audited libraries.',
+    drawText(doc, t('user.empty'),
       PAGE.marginLeft, doc.y, { width: PAGE.contentWidth, lineBreak: false });
   }
 
