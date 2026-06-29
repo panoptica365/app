@@ -51,6 +51,7 @@ const KNOWN_WORKERS = new Set([
   'retention',
   'ca_drift',
   'intune_drift',
+  'adopt_drift',
   'sp_audit',
 ]);
 

@@ -5,6 +5,38 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.28 — 2026-06-28
+
+### Importar un lote de plantillas de directivas de Intune ya no falla
+
+Importar una exportación completa de directivas de configuración de Intune — por ejemplo, un ZIP de once directivas — en su biblioteca de plantillas antes fallaba con **«Error de importación: HTTP 500»**, y tenía que importarlas de una en una. Ahora Panoptica365 importa el lote en grupos pequeños: un ZIP grande se procesa en una sola acción, con un indicador de progreso **«Importando X de Y…»** en directo. Si alguna directiva no se puede importar, las demás se importan igualmente: la ventana de importación permanece abierta e indica exactamente qué directivas fallaron y por qué — por ejemplo, *«La directiva es demasiado grande para importarla»* — para que pueda reintentar solo esas con un clic en lugar de empezar de nuevo. Esto solo afecta a la biblioteca de plantillas de Panoptica365; no toca a sus inquilinos cliente.
+
+### La importación de acceso condicional, simplificada
+
+La importación de plantillas de acceso condicional ahora funciona igual que la de Intune: cargue un **ZIP** exportado (o el archivo JSON de una sola directiva), elija qué directivas importar y se añaden en lotes robustos — con progreso en directo, resultados por elemento y reintento con un clic. El nombre y la descripción de la plantilla provienen directamente de cada directiva, así que ya no hay un formulario que rellenar. Cuando el ZIP proviene de un inquilino gestionado por Panoptica365, las referencias a ubicaciones con nombre se convierten automáticamente en marcadores de posición portátiles.
+
+### La detección de desviación de acceso condicional ahora vigila toda la directiva
+
+Antes elegía *qué campos* de una directiva de acceso condicional vigilar. Ahora Panoptica365 vigila la **directiva completa** — exactamente como en Intune — y alerta ante cualquier cambio significativo, ignorando el ruido como los identificadores internos y las marcas de tiempo. Nada que configurar. **Aviso:** como ahora se compara una mayor parte de cada directiva, las asignaciones existentes pueden mostrar desviación en campos que antes no se vigilaban (ubicaciones, controles de sesión, riesgo de inicio de sesión/usuario, plataformas…), y cualquier desviación que hubiera *aceptado* anteriormente puede reaparecer una vez — solo acéptela de nuevo para borrarla.
+
+### Las directivas adoptadas ahora se comprueban cada hora
+
+Cuando adopta una directiva de acceso condicional o de Intune que ya existe en un inquilino, Panoptica365 vigila sus cambios. Esa comprobación ahora se ejecuta **cada hora** en lugar de una vez al día: un cambio que debilita una directiva adoptada se detecta en menos de una hora en vez de al día siguiente. Las directivas nuevas que aparecen en un inquilino se detectan en ese mismo paso por hora: cada una se convierte en una tarjeta supervisada y genera una única alerta de **«nueva directiva detectada»** para que la revise — de modo que una directiva añadida fuera de Panoptica365 nunca se da por normal en silencio.
+
+### Aceptar el estado actual de una directiva adoptada como su nueva referencia
+
+Cuando una directiva adoptada se ha desviado y usted decide que el cambio es intencionado, ahora puede hacer clic en **Aceptar como referencia** en su tarjeta. Panoptica365 registra el estado actual como la nueva referencia supervisada, borra la desviación y resuelve la alerta — y a partir de entonces supervisa con respecto a ese estado. Esto solo actualiza el registro de Panoptica365; no se escribe nada en el inquilino. Reimportar sus ajustes existentes nunca mueve una referencia por sí solo, así que un cambio silencioso no puede colarse de esa manera.
+
+### Importar una plantilla que ya existe ahora le pregunta qué hacer
+
+Si importa una directiva cuyo nombre coincide con una plantilla que ya tiene, Panoptica365 ya no crea un duplicado silencioso. Se detiene y le permite elegir, para cada coincidencia: **importar como copia nueva** (el original queda intacto) o **sobrescribir** la plantilla existente. Si la plantilla que sobrescribiría ya está implementada en inquilinos, se le advierte cuántos — sobrescribir cambia su referencia de cumplimiento y los marca como desviados hasta que vuelva a implementar, lo que sigue siendo un paso aparte y deliberado.
+
+### Nueva alerta: una cuenta bloqueada para enviar correo (posible compromiso)
+
+Cuando Microsoft bloquea una de las cuentas de un inquilino para enviar correo porque su volumen saliente superó los límites de spam, casi siempre se trata de una cuenta comprometida que se usa para enviar spam o phishing. Panoptica365 ahora genera esto como una alerta dedicada de **gravedad alta**, con su propia explicación y pasos de respuesta, en lugar de incluirla en una alerta «Defender» genérica. Funciona con Business Premium — no se requiere Defender para Office 365 P2. Las demás alertas de Microsoft Defender no cambian.
+
+---
+
 ## Versión 0.2.27 — 2026-06-27
 
 ### Los ajustes de seguridad ahora muestran el cumplimiento real de un vistazo

@@ -364,6 +364,31 @@ async function setDrift(id, driftStatus, driftDetails) {
   );
 }
 
+/**
+ * Move the monitored baseline to the current live state and clear drift — the
+ * DELIBERATE operator "Accept current as baseline" action (the only path other
+ * than the initial Adopt that moves the baseline). Normalizes + hashes exactly
+ * as upsertObject does so the very next computeDrift sees a match. `config` /
+ * `assignments` are the same shape computeDrift receives (CA: raw policy + null;
+ * Intune: config object + assignments array). Discovery/import never call this.
+ */
+async function setBaseline(id, config, assignments) {
+  await ensureSchema();
+  const normalized = normalizeObject(config, assignments);
+  const hash = baselineHash(normalized);
+  await db.execute(
+    `UPDATE tenant_sourced_objects
+        SET baseline_config = ?, baseline_assignments = ?, baseline_hash = ?,
+            drift_status = 'ok', drift_details = NULL, last_checked_at = NOW()
+      WHERE id = ?`,
+    [
+      JSON.stringify(normalized.config),
+      normalized.assignments ? JSON.stringify(normalized.assignments) : null,
+      hash, id,
+    ]
+  );
+}
+
 /** Remove the card (Stop-monitoring / Delete). Does NOT touch the tenant. */
 async function deleteObject(id) {
   await ensureSchema();
@@ -498,6 +523,7 @@ module.exports = {
   getObjectById,
   setLifecycle,
   setDrift,
+  setBaseline,
   deleteObject,
   // seen-set + watermark
   isWatermarkEstablished,

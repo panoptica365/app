@@ -9,10 +9,13 @@
   let tenantsForPicker = [];
   let currentTemplateId = null;
 
-  // GUID shape — used by scanForLocationGUIDs() to decide whether the pasted
-  // policy JSON references any raw named-location IDs. Sentinels like 'All',
-  // 'AllTrusted', 'None' are not GUIDs and won't match, which is what we want.
-  const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // #20 — whole-ZIP / multi-policy import (parity with Intune). Upload a ZIP or
+  // JSON file, pick which policies to import; they import in small chunks with
+  // per-item results + retry. Name/description come from each policy.
+  const CA_IMPORT_CHUNK_SIZE = 5;
+  let caImportData = null;       // { policies:[], sourceTenantId|null }
+  let caImportStatus = {};       // original policy index -> { state:'ok'|'failed'|'collision', … }
+  let caCollisionMode = false;   // true while resolving duplicate-name collisions
 
   // ─── JSZip loader (loaded on demand from CDN, same as Intune export) ───
   let JSZipLib = null;
@@ -32,22 +35,18 @@
     // Wire static buttons
     document.getElementById('ca-import-btn').addEventListener('click', showImportModal);
     document.getElementById('ca-import-cancel-btn').addEventListener('click', hideImportModal);
-    document.getElementById('ca-import-submit-btn').addEventListener('click', importTemplate);
+    // #20 — import is file/ZIP → pick which policies → bulk import.
+    document.getElementById('ca-import-submit-btn').addEventListener('click', submitCaBulkImport);
+    document.getElementById('ca-import-file').addEventListener('change', handleCaFileSelect);
+    document.getElementById('ca-import-select-all').addEventListener('click', () => toggleAllCaImports(true));
+    document.getElementById('ca-import-select-none').addEventListener('click', () => toggleAllCaImports(false));
+    document.getElementById('ca-import-list').addEventListener('change', updateCaImportCount);
     document.getElementById('ca-export-btn').addEventListener('click', showExportModal);
     document.getElementById('ca-export-cancel-btn').addEventListener('click', hideExportModal);
     document.getElementById('ca-export-start-btn').addEventListener('click', startExport);
     document.getElementById('ca-detail-close-btn').addEventListener('click', hideDetailModal);
     document.getElementById('ca-detail-delete-btn').addEventListener('click', deleteTemplate);
     document.getElementById('ca-detail-save-btn').addEventListener('click', saveTemplate);
-
-    // Wire live scanning on the JSON textarea — any change revisits whether
-    // a source tenant needs to be picked. Use 'input' (covers paste + type)
-    // rather than 'paste' specifically, so pasted-then-edited JSON still
-    // re-triggers the scan.
-    const jsonEl = document.getElementById('ca-import-json');
-    if (jsonEl) {
-      jsonEl.addEventListener('input', onJsonChanged);
-    }
 
     // Close modals when the overlay backdrop is clicked (matches Intune pattern).
     ['ca-import-overlay', 'ca-export-overlay', 'ca-detail-overlay'].forEach(id => {
@@ -269,31 +268,26 @@
   // ─── Import Modal ───
 
   async function showImportModal() {
-    document.getElementById('ca-import-name').value = '';
-    document.getElementById('ca-import-desc').value = '';
-    document.getElementById('ca-import-json').value = '';
-    // Reset checkboxes to defaults
-    document.querySelectorAll('#ca-field-checkboxes input').forEach(cb => {
-      cb.checked = ['state', 'grantControls.builtInControls', 'conditions.users.includeUsers',
-        'conditions.users.includeGroups', 'conditions.applications.includeApplications'].includes(cb.value);
-    });
-    // Reset source-tenant container to hidden + no selection. The scan fires
-    // again as soon as the user pastes JSON, so we only need to start clean.
-    const srcContainer = document.getElementById('ca-import-source-container');
-    const srcSelect = document.getElementById('ca-import-source-tenant');
-    if (srcContainer) srcContainer.style.display = 'none';
-    if (srcSelect) srcSelect.value = '';
+    // #20 — file-only import. Start clean: empty picker, hidden until a file is
+    // chosen. Name/description/monitoring all come from each policy.
+    caImportData = null;
+    caImportStatus = {};
+    caCollisionMode = false;
+    document.getElementById('ca-import-file').value = '';
+    document.getElementById('ca-import-bulk').style.display = 'none';
+    document.getElementById('ca-import-list').innerHTML = '';
+    document.getElementById('ca-import-count').textContent = '0';
+    setCaImportStatus('', null);
+    const btn = document.getElementById('ca-import-submit-btn');
+    btn.textContent = window.t('ca_templates.import_select_count_btn', { count: 0 });
+    btn.disabled = true;
 
-    // Lazy-load tenant list on first open — fine to refresh every time, the
-    // list is small and the endpoint is fast. Keeps the dropdown in sync if
-    // a tenant was added/removed since the page loaded.
+    // Load the tenant list so a ZIP's manifest tenant can be matched for
+    // location-GUID substitution (non-fatal — import still works without it).
     try {
       await ensureTenantsForPicker();
     } catch (e) {
-      console.warn('[CA Templates] Failed to load tenant list for source-tenant picker:', e.message);
-      // Non-fatal — user can still import, they just won't see the picker.
-      // If they paste a policy with location GUIDs the scan will reveal the
-      // picker with an empty list, at which point they can retry.
+      console.warn('[CA Templates] Failed to load tenant list for source resolution:', e.message);
     }
 
     document.getElementById('ca-import-overlay').style.display = 'flex';
@@ -303,127 +297,311 @@
     document.getElementById('ca-import-overlay').style.display = 'none';
   }
 
+  // Load the tenant list (id + azure tenant_id) used by resolveSourceTenantId
+  // to auto-resolve a ZIP's source tenant from its manifest.
   async function ensureTenantsForPicker() {
     const list = await Panoptica.api('/api/tenants');
     tenantsForPicker = Array.isArray(list) ? list : [];
-    const srcSelect = document.getElementById('ca-import-source-tenant');
-    if (!srcSelect) return;
-    const opts = ['<option value="">Select source tenant…</option>'];
-    for (const t of tenantsForPicker) {
-      opts.push(`<option value="${t.id}">${esc(t.display_name || t.tenant_id)}</option>`);
-    }
-    srcSelect.innerHTML = opts.join('');
   }
 
-  /**
-   * Scan the pasted JSON for named-location GUIDs. If any are found, reveal
-   * the source-tenant picker. If none, hide it. Cheap enough to run on every
-   * keystroke.
-   */
-  function onJsonChanged() {
-    const jsonStr = document.getElementById('ca-import-json').value || '';
-    const hasLocationGUIDs = scanForLocationGUIDs(jsonStr);
-    const container = document.getElementById('ca-import-source-container');
-    if (!container) return;
-    container.style.display = hasLocationGUIDs ? '' : 'none';
-  }
+  // ═══════════════════════════════════════════
+  // #20 — file/ZIP import (pick policies, import in chunks)
+  // ═══════════════════════════════════════════
 
-  function scanForLocationGUIDs(jsonStr) {
-    if (!jsonStr || jsonStr.trim().length === 0) return false;
-    let policy;
-    try {
-      policy = JSON.parse(jsonStr);
-    } catch (e) {
-      return false; // Invalid JSON — let the Import button handle that.
-    }
-    const locs = policy && policy.conditions && policy.conditions.locations;
-    if (!locs) return false;
-    for (const arr of [locs.includeLocations, locs.excludeLocations]) {
-      if (!Array.isArray(arr)) continue;
-      for (const v of arr) {
-        if (typeof v === 'string' && GUID_RE.test(v)) return true;
+  // Parse the uploaded file (ZIP of policies, an array, or a single policy
+  // JSON) and show the picker.
+  async function handleCaFileSelect(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
+    if (file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+      try {
+        const JSZip = await loadJSZip();
+        const zip = await JSZip.loadAsync(file);
+        const policies = [];
+        const jsonFiles = Object.keys(zip.files)
+          .filter(name => name.endsWith('.json') && !name.endsWith('_manifest.json') && !zip.files[name].dir)
+          .sort();
+        for (const fname of jsonFiles) {
+          try { policies.push(JSON.parse(await zip.files[fname].async('text'))); }
+          catch (parseErr) { console.warn(`[CA:Import] Failed to parse ${fname}:`, parseErr.message); }
+        }
+        // A ZIP comes from one tenant; auto-resolve it from the manifest so
+        // location-GUID substitution happens without the operator picking.
+        let sourceTenantId = null;
+        const manifestFile = Object.keys(zip.files).find(n => n.endsWith('_manifest.json'));
+        if (manifestFile) {
+          try {
+            const manifest = JSON.parse(await zip.files[manifestFile].async('text'));
+            sourceTenantId = resolveSourceTenantId(manifest.azureTenantId);
+          } catch (e2) { /* ignore unreadable manifest */ }
+        }
+        enterCaBulkMode(policies, sourceTenantId);
+      } catch (zipErr) {
+        Panoptica.showToast(window.t('ca_templates.toast_zip_read_failed', { message: zipErr.message }), 'error');
       }
+      return;
     }
-    return false;
+
+    // Plain JSON file — one policy, an array, or { policies:[…] }.
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        let policies, sourceTenantId = null;
+        if (parsed && Array.isArray(parsed.policies)) { policies = parsed.policies; sourceTenantId = resolveSourceTenantId(parsed.azureTenantId); }
+        else if (Array.isArray(parsed)) { policies = parsed; }
+        else { policies = [parsed]; }
+        enterCaBulkMode(policies, sourceTenantId);
+      } catch (parseErr) {
+        Panoptica.showToast(window.t('ca_templates.toast_invalid_json', { message: parseErr.message }), 'error');
+      }
+    };
+    reader.readAsText(file);
   }
 
-  async function importTemplate() {
-    const name = document.getElementById('ca-import-name').value.trim();
-    const description = document.getElementById('ca-import-desc').value.trim();
-    const jsonStr = document.getElementById('ca-import-json').value.trim();
+  // Map an exported manifest's Azure tenant id to a known tenant's DB id (for
+  // server-side location-GUID substitution). null = unknown/not onboarded →
+  // import raw (templates still load, just non-portable).
+  function resolveSourceTenantId(azureTenantId) {
+    if (!azureTenantId) return null;
+    const match = (tenantsForPicker || []).find(t => t.tenant_id === azureTenantId);
+    return match ? match.id : null;
+  }
 
-    if (!name) return Panoptica.showToast(window.t('ca_templates.toast_template_name_required'), 'error');
-    if (!jsonStr) return Panoptica.showToast(window.t('ca_templates.toast_policy_json_required'), 'error');
-
-    let policy_json;
-    try {
-      policy_json = JSON.parse(jsonStr);
-    } catch (e) {
-      return Panoptica.showToast(window.t('ca_templates.toast_invalid_json', { message: e.message }), 'error');
+  function enterCaBulkMode(policies, sourceTenantId) {
+    if (!Array.isArray(policies) || policies.length === 0) {
+      Panoptica.showToast(window.t('ca_templates.toast_zip_read_failed', { message: 'no policies found' }), 'warning');
+      return;
     }
+    caImportData = { policies, sourceTenantId: sourceTenantId || null };
+    caImportStatus = {};
+    caCollisionMode = false;
+    document.getElementById('ca-import-bulk').style.display = '';
+    document.getElementById('ca-import-count').textContent = policies.length;
+    setCaImportStatus('', null);
+    renderCaImportList();
+    updateCaImportCount();
+  }
 
-    // Gather monitored fields
-    const monitored_fields = [];
-    document.querySelectorAll('#ca-field-checkboxes input:checked').forEach(cb => {
-      monitored_fields.push(cb.value);
+  function caPolicyName(p) {
+    return (p && (p.displayName || p.name || (p.policy && p.policy.displayName))) || 'Unnamed Policy';
+  }
+
+  // Render the per-policy rows, honouring caImportStatus: imported rows lock
+  // with a ✓, failed rows stay checked and show the reason for one-click retry.
+  function renderCaImportList() {
+    const list = document.getElementById('ca-import-list');
+    const policies = (caImportData && caImportData.policies) || [];
+    list.innerHTML = policies.map((p, i) => {
+      const name = caPolicyName(p);
+      const state = p && p.state ? String(p.state) : '';
+      const meta = state ? `<div style="color:var(--p-text-muted); font-size:0.75rem;">${esc(state)}</div>` : '';
+      const st = caImportStatus[i];
+
+      if (st && st.state === 'ok') {
+        return `
+        <div class="ca-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle); opacity:0.6;">
+          <span style="color:#3fb950; font-size:1rem; width:16px; text-align:center;">✓</span>
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            ${meta}
+          </div>
+          <span style="font-size:0.75rem; color:#3fb950;">${esc(window.t('ca_templates.import_status_imported'))}</span>
+        </div>`;
+      }
+
+      const failed = st && st.state === 'failed';
+      const reasonRow = failed ? `<div style="color:#f85149; font-size:0.75rem; margin-top:2px;">⚠ ${esc(caImportReasonText(st))}</div>` : '';
+      return `
+        <label class="ca-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle); cursor:pointer;">
+          <input type="checkbox" class="ca-import-check" data-index="${i}" checked style="margin-top:0;">
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            ${meta}
+            ${reasonRow}
+          </div>
+        </label>`;
+    }).join('');
+  }
+
+  // Shared progress / results banner above the bulk list.
+  function setCaImportStatus(text, type) {
+    const el = document.getElementById('ca-import-status');
+    if (!el) return;
+    if (!text) { el.style.display = 'none'; el.textContent = ''; return; }
+    el.textContent = text;
+    el.style.color = type === 'warning' ? '#f85149' : 'var(--p-text-muted)';
+    el.style.fontWeight = type === 'warning' ? '600' : '400';
+    el.style.display = 'block';
+  }
+
+  function caImportReasonText(st) {
+    const KEYS = {
+      duplicate_name: 'import_reason_duplicate_name',
+      db_busy: 'import_reason_db_busy',
+      too_large: 'import_reason_too_large',
+      missing_fields: 'import_reason_missing_fields',
+      request_failed: 'import_reason_request_failed',
+      generic: 'import_reason_generic',
+    };
+    const key = st && KEYS[st.reason];
+    if (key) return window.t('ca_templates.' + key);
+    return (st && st.error) || window.t('ca_templates.import_reason_generic');
+  }
+
+  function updateCaImportCount() {
+    // The collision step manages its own button (Apply); don't let the choice
+    // <select>s reset it.
+    if (caCollisionMode) return;
+    const checked = document.querySelectorAll('.ca-import-check:checked').length;
+    const btn = document.getElementById('ca-import-submit-btn');
+    // After a partial import some rows carry a status → the button retries the
+    // still-failed (checked) ones; before any import it's a fresh selection.
+    btn.textContent = Object.keys(caImportStatus).length > 0
+      ? window.t('ca_templates.import_retry_failed_btn', { count: checked })
+      : window.t('ca_templates.import_select_count_btn', { count: checked });
+    btn.disabled = checked === 0;
+  }
+
+  function toggleAllCaImports(state) {
+    document.querySelectorAll('.ca-import-check').forEach(cb => { cb.checked = state; });
+    updateCaImportCount();
+  }
+
+  async function submitCaBulkImport() {
+    // In the collision step the button applies the New/Overwrite choices.
+    if (caCollisionMode) return applyCaCollisionChoices();
+    if (!caImportData) return;
+    const checkboxes = document.querySelectorAll('.ca-import-check:checked');
+    const selectedIndices = [...checkboxes].map(cb => parseInt(cb.dataset.index, 10));
+    if (selectedIndices.length === 0) { Panoptica.showToast(window.t('ca_templates.toast_no_policies_selected'), 'warning'); return; }
+
+    document.getElementById('ca-import-submit-btn').disabled = true;
+
+    const attempts = selectedIndices.map(i => {
+      const p = caImportData.policies[i];
+      const name = caPolicyName(p);
+      return { index: i, name, payload: { name, description: '', policy_json: p } };
     });
 
-    // Source-tenant handling: if the (live) picker is visible it means the
-    // scan detected location GUIDs — a source tenant is required. If it's
-    // hidden the picker value is ignored server-side.
-    const srcContainer = document.getElementById('ca-import-source-container');
-    const srcSelect = document.getElementById('ca-import-source-tenant');
-    const sourceVisible = srcContainer && srcContainer.style.display !== 'none';
-    const sourceValue = srcSelect ? srcSelect.value : '';
-    if (sourceVisible && !sourceValue) {
-      return Panoptica.showToast(window.t('ca_templates.toast_source_tenant_required'), 'error');
+    await importCaChunks(attempts);
+    await loadTemplates();
+    finishCaImport();
+  }
+
+  // Chunked POST + per-item correlation (ok / collision / failed). Shared by the
+  // first pass, failure-retry, and the collision re-submit.
+  async function importCaChunks(attempts) {
+    const total = attempts.length;
+    let done = 0;
+    setCaImportStatus(window.t('ca_templates.import_progress', { done, total }), 'info');
+    const sourceTenantId = caImportData.sourceTenantId || undefined;
+    for (let start = 0; start < attempts.length; start += CA_IMPORT_CHUNK_SIZE) {
+      const chunk = attempts.slice(start, start + CA_IMPORT_CHUNK_SIZE);
+      try {
+        const body = { templates: chunk.map(a => a.payload) };
+        if (sourceTenantId) body.source_tenant_id = sourceTenantId;
+        const result = await Panoptica.api('/api/ca/templates/bulk', { method: 'POST', body: JSON.stringify(body) });
+        // Correlate by the REQUESTED name (the name we sent), not the final
+        // stored name — 'new' renames the template, so they differ.
+        const okNames = (result.templates || []).map(x => x.requested_name || x.name);
+        const errs = (result.errors || []).slice();
+        const cols = (result.collisions || []).slice();
+        for (const a of chunk) {
+          const okPos = okNames.indexOf(a.name);
+          if (okPos !== -1) { okNames.splice(okPos, 1); caImportStatus[a.index] = { state: 'ok' }; continue; }
+          const cPos = cols.findIndex(c => c.name === a.name);
+          if (cPos !== -1) { const c = cols.splice(cPos, 1)[0]; caImportStatus[a.index] = { state: 'collision', existing_id: c.existing_id, deployed_count: c.deployed_count, payload: a.payload }; continue; }
+          const ePos = errs.findIndex(e => (e.name || 'unknown') === a.name);
+          const e = ePos !== -1 ? errs.splice(ePos, 1)[0] : null;
+          caImportStatus[a.index] = { state: 'failed', reason: (e && e.reason) || 'generic', error: e && e.error };
+        }
+      } catch (err) {
+        console.warn('[CA:Import] Chunk failed:', err && err.message);
+        const reason = classifyCaChunkError(err);
+        for (const a of chunk) caImportStatus[a.index] = { state: 'failed', reason, error: err && err.message };
+      }
+      done += chunk.length;
+      setCaImportStatus(window.t('ca_templates.import_progress', { done, total }), 'info');
     }
+  }
 
-    // Auto-fill name from policy displayName if user left it as-is
-    const finalName = name || policy_json.displayName || 'Unnamed Template';
+  // After a pass: resolve collisions FIRST, then failures (retry), else success.
+  function finishCaImport() {
+    const collisions = Object.keys(caImportStatus)
+      .filter(i => caImportStatus[i].state === 'collision')
+      .map(i => Object.assign({ index: Number(i) }, caImportStatus[i]));
+    const okCount = Object.values(caImportStatus).filter(s => s.state === 'ok').length;
+    const failCount = Object.values(caImportStatus).filter(s => s.state === 'failed').length;
 
-    const body = { name: finalName, description, policy_json, monitored_fields };
-    if (sourceValue) body.source_tenant_id = parseInt(sourceValue, 10);
-
-    try {
-      const resp = await Panoptica.api('/api/ca/templates', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-
-      // Success path. New response shape is { template, substitution }.
-      // Fall back to treating resp as the template for forward-compatibility
-      // in case the API layer ever reverts shape.
-      const substitution = (resp && resp.substitution) || null;
-      if (substitution && substitution.substitutedCount > 0) {
-        Panoptica.showToast(window.t('ca_templates.toast_template_imported_with_subs', { count: substitution.substitutedCount }), 'success');
-      } else {
-        Panoptica.showToast(window.t('ca_templates.toast_template_imported'), 'success');
-      }
-
-      // Secondary non-blocking warning for IP-based (or otherwise unresolved)
-      // location references that stayed raw in the stored JSON.
-      if (substitution && Array.isArray(substitution.skipped) && substitution.skipped.length > 0) {
-        const ipCount = substitution.skipped.filter(s => s.type === 'ip').length;
-        const unresolvedCount = substitution.skipped.filter(s => s.type === 'unresolved').length;
-        const otherCount = substitution.skipped.length - ipCount - unresolvedCount;
-        const parts = [];
-        if (ipCount > 0) parts.push(window.t('ca_templates.skipped_ip_based', { count: ipCount }));
-        if (unresolvedCount > 0) parts.push(window.t('ca_templates.skipped_unresolved', { count: unresolvedCount }));
-        if (otherCount > 0) parts.push(window.t('ca_templates.skipped_other', { count: otherCount }));
-        setTimeout(() => {
-          Panoptica.showToast(
-            window.t('ca_templates.toast_heads_up', { parts: parts.join(', ') }),
-            'warning'
-          );
-        }, 150); // Slight delay so the success toast lands first.
-      }
-
+    if (collisions.length > 0) {
+      caCollisionMode = true;
+      renderCaImportCollisions(collisions);
+      return;
+    }
+    caCollisionMode = false;
+    if (failCount === 0) {
+      Panoptica.showToast(window.t('ca_templates.toast_imported', { imported: okCount }), 'success');
       hideImportModal();
-      await loadTemplates();
-    } catch (err) {
-      Panoptica.showToast(window.t('ca_templates.toast_import_failed', { message: err.message }), 'error');
+      return;
     }
+    Panoptica.showToast(window.t('ca_templates.toast_imported_with_failures', { imported: okCount, failed: failCount }), 'warning');
+    setCaImportStatus(window.t('ca_templates.import_results_summary', { imported: okCount, failed: failCount }), 'warning');
+    renderCaImportList();
+    updateCaImportCount();
+  }
+
+  // Collision step: one row per name clash with a New-copy / Overwrite choice.
+  // Overwrite on a DEPLOYED template shows the blast-radius warning.
+  function renderCaImportCollisions(collisions) {
+    const list = document.getElementById('ca-import-list');
+    setCaImportStatus(window.t('ca_templates.import_collisions_summary', { count: collisions.length }), 'warning');
+    list.innerHTML = collisions.map(c => {
+      const name = c.payload.name;
+      const warn = c.deployed_count > 0
+        ? `<div style="color:#f85149; font-size:0.75rem; margin-top:2px;">⚠ ${esc(window.t('ca_templates.import_collision_deployed_warn', { count: c.deployed_count }))}</div>`
+        : '';
+      const opt = (v, label) => `<option value="${v}">${esc(label)}</option>`;
+      return `
+        <div class="ca-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle);">
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            <div style="color:var(--p-text-muted); font-size:0.75rem;">${esc(window.t('ca_templates.import_reason_duplicate_name'))}</div>
+            ${warn}
+          </div>
+          <select class="ca-collision-choice form-control" data-index="${c.index}" style="width:auto; min-width:170px; font-size:0.78rem; padding:4px 8px;">
+            ${opt('new', window.t('ca_templates.import_collision_new'))}${opt('overwrite', window.t('ca_templates.import_collision_overwrite'))}
+          </select>
+        </div>`;
+    }).join('');
+    const btn = document.getElementById('ca-import-submit-btn');
+    btn.textContent = window.t('ca_templates.import_collision_apply', { count: collisions.length });
+    btn.disabled = false;
+  }
+
+  // Re-submit just the collisions, each with its chosen on_collision directive.
+  async function applyCaCollisionChoices() {
+    const attempts = [];
+    document.querySelectorAll('.ca-collision-choice').forEach(sel => {
+      const idx = parseInt(sel.dataset.index, 10);
+      const st = caImportStatus[idx];
+      if (!st || st.state !== 'collision') return;
+      const choice = sel.value === 'overwrite' ? 'overwrite' : 'new';
+      attempts.push({ index: idx, name: st.payload.name, payload: Object.assign({}, st.payload, { on_collision: choice }) });
+    });
+    if (attempts.length === 0) return;
+    document.getElementById('ca-import-submit-btn').disabled = true;
+    await importCaChunks(attempts);
+    await loadTemplates();
+    finishCaImport();
+  }
+
+  function classifyCaChunkError(err) {
+    const m = String((err && err.message) || '').toLowerCase();
+    if (/413|too large|payload|entity too large/.test(m)) return 'too_large';
+    return 'request_failed';
   }
 
   // ─── Detail / Edit Modal ───
@@ -576,7 +754,6 @@
     destroy,
     showImportModal,
     hideImportModal,
-    importTemplate,
     showDetail,
     hideDetailModal,
     deleteTemplate,

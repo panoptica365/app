@@ -76,6 +76,7 @@ const CATEGORY = {
   ADOPT_DEACTIVATE:       'adopt_deactivate',      // tenant write
   ADOPT_RESTORE:          'adopt_restore',         // tenant write
   ADOPT_DELETE:           'adopt_delete',          // tenant write
+  ADOPT_ACCEPT_BASELINE:  'adopt_accept_baseline', // Panoptica-only (re-baseline)
   OTHER:                  'other',
 };
 

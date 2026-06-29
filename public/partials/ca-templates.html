@@ -56,47 +56,26 @@
       <span class="mh-title" data-i18n="ca_templates.import_modal_title">Import CA Policy Template</span>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label data-i18n="ca_templates.label_template_name">Template Name</label>
-        <input type="text" id="ca-import-name" class="form-control" placeholder="e.g. Require MFA for All Users" data-i18n-attr-placeholder="ca_templates.placeholder_template_name">
+      <!-- #20: file-only import. Upload a ZIP or single-policy JSON; the picker
+           (#ca-import-bulk) appears so you choose which policies to import.
+           Name / description / drift monitoring all come from each policy. -->
+      <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; margin:0 0 14px 0; border:1px solid rgba(56,139,253,0.35); border-radius:6px; background:rgba(56,139,253,0.08);">
+        <span aria-hidden="true" style="font-size:1rem; line-height:1.4;">💡</span>
+        <span style="font-size:0.85rem; color:var(--p-text-bright); line-height:1.45;" data-i18n="ca_templates.import_zip_hint">Upload an entire exported ZIP — you'll choose which policies to import — or a single policy's JSON file.</span>
       </div>
       <div class="form-group">
-        <label data-i18n="ca_templates.label_description">Description (optional)</label>
-        <input type="text" id="ca-import-desc" class="form-control" placeholder="Brief description of this policy template" data-i18n-attr-placeholder="ca_templates.placeholder_description">
+        <label data-i18n="ca_templates.label_zip_file">Upload a ZIP or JSON file</label>
+        <input type="file" id="ca-import-file" accept=".json,.zip" class="form-control" style="padding:8px;">
       </div>
-      <div class="form-group">
-        <label><span data-i18n="ca_templates.label_policy_json">Policy JSON</span> <span style="color:var(--p-text-muted); font-size:0.8rem;" data-i18n="ca_templates.policy_json_hint">(paste the Entra CA policy export)</span></label>
-        <textarea id="ca-import-json" class="form-control" rows="10" style="font-family:monospace; font-size:0.8rem; background:var(--p-surface-sunken); color:var(--p-text-bright); border:1px solid var(--p-border-subtle);" placeholder='Paste your CA policy JSON here...' data-i18n-attr-placeholder="ca_templates.placeholder_policy_json"></textarea>
-      </div>
-      <div class="form-group">
-        <label><span data-i18n="ca_templates.label_fields_to_monitor">Fields to Monitor</span> <span style="color:var(--p-text-muted); font-size:0.8rem;" data-i18n="ca_templates.fields_to_monitor_hint">(select which fields to watch for drift)</span></label>
-        <div id="ca-field-checkboxes" class="ca-field-checks" style="display:grid; grid-template-columns:1fr 1fr; gap:6px 16px;">
-          <label class="ca-check"><input type="checkbox" value="state" checked> <span data-i18n="ca_templates.field_state">Policy state (enabled/disabled)</span></label>
-          <label class="ca-check"><input type="checkbox" value="grantControls.builtInControls" checked> <span data-i18n="ca_templates.field_grant_controls">Grant controls (MFA, compliant device, etc.)</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.users.includeUsers" checked> <span data-i18n="ca_templates.field_target_users">Target users</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.users.includeGroups" checked> <span data-i18n="ca_templates.field_target_groups">Target groups</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.applications.includeApplications" checked> <span data-i18n="ca_templates.field_target_applications">Target applications</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.platforms.includePlatforms"> <span data-i18n="ca_templates.field_platforms">Platform conditions</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.locations.includeLocations"> <span data-i18n="ca_templates.field_locations">Location conditions</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.signInRiskLevels"> <span data-i18n="ca_templates.field_signin_risk">Sign-in risk levels</span></label>
-          <label class="ca-check"><input type="checkbox" value="conditions.userRiskLevels"> <span data-i18n="ca_templates.field_user_risk">User risk levels</span></label>
-          <label class="ca-check"><input type="checkbox" value="sessionControls"> <span data-i18n="ca_templates.field_session_controls">Session controls</span></label>
+      <!-- #20: policy picker — shown once a ZIP / JSON file is uploaded. -->
+      <div id="ca-import-bulk" style="display:none;">
+        <div style="display:flex; gap:12px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
+          <strong style="color:var(--p-text-bright);"><span data-i18n="ca_templates.policies_found">Policies found:</span> <span id="ca-import-count">0</span></strong>
+          <button class="btn-small" id="ca-import-select-all" style="font-size:0.75rem;" data-i18n="ca_templates.select_all">Select All</button>
+          <button class="btn-small" id="ca-import-select-none" style="font-size:0.75rem;" data-i18n="ca_templates.select_none">Select None</button>
         </div>
-      </div>
-      <!-- Source-tenant picker — hidden by default, revealed when the pasted
-           policy JSON references raw named-location GUIDs. Placed just above
-           the action buttons so operators see it right before Save. -->
-      <div id="ca-import-source-container" class="form-group" style="display:none; border:1px solid rgba(255, 193, 7, 0.35); border-radius:6px; padding:12px 14px; background:rgba(255, 193, 7, 0.05); margin-top:4px;">
-        <label style="display:block; margin-bottom:6px;">
-          <strong data-i18n="ca_templates.source_tenant_label">Source tenant</strong>
-          <span style="color:var(--p-text-muted); font-weight:400; font-size:0.78rem;" data-i18n="ca_templates.source_tenant_required">(required)</span>
-        </label>
-        <div style="font-size:0.82rem; color:var(--p-text-muted); margin-bottom:8px; line-height:1.4;" data-i18n="ca_templates.source_tenant_intro">
-          This policy references named locations. Panoptica365 needs to know which tenant this JSON came from so it can translate tenant-specific location IDs into portable placeholders. Without this, the template will only work when deployed back to the tenant it came from.
-        </div>
-        <select id="ca-import-source-tenant" class="form-control">
-          <option value="" data-i18n="ca_templates.option_select_source_tenant">Select source tenant…</option>
-        </select>
+        <div id="ca-import-status" style="display:none; margin:0 0 8px 0; font-size:0.85rem;"></div>
+        <div id="ca-import-list" class="modal-scroll-list" style="max-height:42vh; border:1px solid var(--p-border-subtle); border-radius:4px; padding:8px;"></div>
       </div>
     </div>
     <div class="modal-footer" style="display:flex; gap:12px; justify-content:flex-end; padding:16px 20px; border-top:1px solid var(--p-border);">

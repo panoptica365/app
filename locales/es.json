@@ -459,7 +459,8 @@
     "ual_admin_initiated_password_reset": "Restablecimiento de contraseña iniciado por administrador",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Protocolo heredado reactivado por buzón",
     "ual_microsoft_defender_incident": "Incidente de Microsoft Defender",
-    "configuration_created_outside_panoptica": "Configuración creada fuera de Panoptica"
+    "configuration_created_outside_panoptica": "Configuración creada fuera de Panoptica",
+    "ual_user_restricted_from_sending_email": "Usuario restringido para enviar correo"
   },
   "_comment_alert_message_prefix": "Prefijos de mensajes de alerta personalizados que no coinciden con el alert_policy_names principal. Las alertas de deriva CA e Intune usan estos prefijos en inglés literal del lado servidor; el helper renderAlertMessage los detecta al mostrar y sustituye la forma traducida.",
   "alert_message_prefix": {
@@ -997,6 +998,13 @@
       "attack_vectors": "Lo que habilita una regresión aquí:\n\n- DMARC reducido a p=none. La aplicación está desactivada; el correo suplantado que falla SPF/DKIM se entrega con normalidad — la base del fraude de facturas y la suplantación de directivos.\n\n- Selector DKIM ausente o revocado. El correo saliente no está firmado, por lo que los destinatarios no pueden verificarlo y se rompe la alineación DMARC.\n\n- SPF puesto en +all o relajado a ~all. El dominio autoriza a remitentes que no debería, o deja de rechazar las falsificaciones.\n\n- Un cambio legítimo. Una migración de proveedor o una edición deliberada. Confírmelo por otra vía y luego acepte la desviación para fijar la nueva línea base.",
       "what_to_do": "Paso 1. Abra la pestaña Aut. correo del dominio. El aviso de desviación indica exactamente qué cambió (antes → después) y las tarjetas por registro muestran los valores en vivo.\n\nPaso 2. Determine si el cambio fue intencionado. Pregunte a quien gestiona el DNS del dominio y revise si hubo un cambio reciente de registrador o de hosting.\n\nPaso 3. Si no fue intencionado, corríjalo en el proveedor de DNS — restablezca la política DMARC, vuelva a publicar el selector DKIM o refuerce SPF. Panoptica no edita el DNS; usted hace el cambio en el registrador. Actualice para confirmar que se resolvió.\n\nPaso 4. Si fue intencionado, haga clic en Aceptar en la desviación para fijar los registros actuales como la nueva línea base. La alerta vinculada se resuelve.",
       "example_scenario": "Un cliente mueve su sitio web a un nuevo proveedor de hosting. El asistente de incorporación del proveedor publica «amablemente» su propio registro SPF y sobrescribe el existente, quitando el include de Microsoft 365 y cambiando el final de -all a ~all.\n\nNada se rompe de forma visible — el correo sigue fluyendo. Pero el dominio ahora es más fácil de suplantar, y nadie lo notaría desde Microsoft 365. La siguiente verificación diaria compara el nuevo SPF con la instantánea anterior, detecta el debilitamiento y dispara esta alerta con el antes/después.\n\nUsted abre la pestaña Aut. correo, ve que SPF pasó de -all a ~all y perdió el include de Outlook, reconoce la migración del sitio web, corrige el registro SPF en el proveedor de DNS para restaurar el include y -all, actualiza para confirmar la calificación A, y queda resuelto antes de que llegue cualquier factura falsa."
+    },
+    "ual_user_restricted_from_sending_email": {
+      "what_is_this": "Microsoft Exchange Online Protection (EOP) bloqueó automáticamente una de las cuentas de este inquilino para enviar correo, porque su volumen saliente superó los umbrales de spam. Microsoft lo presenta como una alerta de «usuario restringido para enviar», y Panoptica365 la promueve aquí como una señal de primer nivel. Es una protección estándar de EOP en Business Premium — no requiere Defender para Office 365 P2.",
+      "why_it_matters": "Una cuenta interna que envía suficiente spam como para ser limitada casi nunca es el usuario legítimo — es el indicio más fiable de un secuestro de cuenta. Un atacante que obtuvo las credenciales por phishing o pulverización de contraseñas está usando el buzón para enviar spam o phishing, a menudo a los propios contactos del usuario y a los demás inquilinos que usted gestiona. Si no se actúa, la cuenta sigue enviando hasta que se restablece la contraseña, la reputación de envío del inquilino se degrada (el correo legítimo empieza a caer en correo no deseado) y el atacante puede pasar a reglas de buzón, reenvío u otras cuentas. El bloqueo es EOP conteniendo el daño; esta alerta es su señal para expulsar al atacante.",
+      "attack_vectors": "Cómo llega una cuenta a este estado:\n\n- Phishing de credenciales — el usuario introdujo su contraseña en una página de inicio de sesión falsa y el atacante inició sesión.\n- Pulverización o reutilización de contraseñas — una contraseña débil o filtrada dio acceso directo.\n- Robo de token / sesión — un proxy de adversario en el medio robó una sesión activa, omitiendo la MFA, y envía desde ella.\n- Una aplicación OAuth maliciosa o con permisos excesivos que envía en nombre del usuario.\n- Rara vez, un envío masivo legítimo realmente mal configurado — trátelo como la excepción, solo tras descartar un compromiso.",
+      "what_to_do": "Trátelo como un probable compromiso hasta que se demuestre lo contrario:\n\n1. Revise los inicios de sesión recientes de la cuenta (registros de inicio de sesión de Entra): IP desconocidas, países, viaje imposible.\n2. Restablezca la contraseña Y revoque todas las sesiones / tokens de actualización activos — un restablecimiento por sí solo deja funcionando los tokens robados.\n3. Vuelva a registrar la MFA — asuma que el atacante añadió su propio método.\n4. Audite el buzón en busca de persistencia: reglas de reenvío, reglas de bandeja de entrada (sobre todo las que eliminan o mueven a carpetas poco visibles), delegaciones / SendAs y los elementos enviados.\n5. Compruebe si alguna aplicación OAuth obtuvo acceso al buzón.\n6. Solo después de asegurar la cuenta, levante la restricción en el portal de Defender (Entidades restringidas) o mediante Exchange. Levantarla antes de la limpieza solo permite que el atacante continúe.",
+      "example_scenario": "Un contable de un cliente gestionado hace clic en un enlace falso de «factura compartida» e introduce su contraseña de Microsoft. Durante la noche, el atacante inicia sesión desde otro país y envía 4000 correos de phishing a los contactos del cliente. EOP detecta el volumen anómalo y bloquea el envío, lo que dispara esta alerta. El operador la ve en menos de una hora, confirma un inicio de sesión extranjero, restablece la contraseña, revoca las sesiones, elimina una regla de bandeja creada por el atacante que borraba automáticamente los mensajes de rebote y solo entonces levanta la restricción de envío. Detectado a tiempo, la reputación de correo del inquilino se recupera y ninguna otra cuenta se ve afectada."
     }
   },
   "intune_templates": {
@@ -1012,7 +1020,7 @@
     "fetching_policies": "Obteniendo directivas...",
     "export_policies_btn": "Exportar directivas",
     "import_modal_title": "Importar plantillas de directiva",
-    "import_intro": "Cargue el ZIP exportado (o un único JSON). Seleccione qué directivas desea importar como plantillas.",
+    "import_intro": "Puede cargar un ZIP exportado completo de una sola vez — luego elegirá qué directivas importar — o un solo archivo JSON de directiva.",
     "label_zip_file": "Archivo ZIP o JSON",
     "policies_found": "Directivas encontradas:",
     "select_all": "Seleccionar todo",
@@ -1071,7 +1079,22 @@
     "alert_email_and_psa": "Correo + PSA",
     "alert_psa_only": "Solo PSA",
     "alert_email_only": "Solo correo",
-    "alert_none": "Ninguno"
+    "alert_none": "Ninguno",
+    "import_progress": "Importando {done} de {total}…",
+    "import_status_imported": "Importada",
+    "import_retry_failed_btn": "Reintentar fallidas ({count})",
+    "import_results_summary": "{imported} importada(s), {failed} con error:",
+    "import_reason_duplicate_name": "Ya existe una plantilla con este nombre",
+    "import_reason_db_busy": "Base de datos ocupada — reinténtelo en un momento",
+    "import_reason_too_large": "La directiva es demasiado grande para importarla",
+    "import_reason_missing_fields": "Faltan el nombre o los datos de la directiva",
+    "import_reason_request_failed": "No se pudo contactar con el servidor — inténtelo de nuevo",
+    "import_reason_generic": "Error de importación — consulte el registro del servidor",
+    "import_collisions_summary": "{count} nombre(s) ya existe(n) — elija qué hacer:",
+    "import_collision_deployed_warn": "Implementado en {count} inquilino(s) — sobrescribir cambia su referencia y los marca como desviados hasta que vuelva a implementar.",
+    "import_collision_new": "Importar como copia nueva",
+    "import_collision_overwrite": "Sobrescribir la existente",
+    "import_collision_apply": "Aplicar ({count})"
   },
   "exemptions": {
     "title": "Exenciones — Excepciones concedidas en CA e Intune",
@@ -1258,7 +1281,32 @@
     "toast_heads_up": "Aviso: {parts} ubicación(es) con nombre permanecieron como ID sin procesar. Las ubicaciones basadas en IP son específicas del inquilino y no se recrearán al implementar esta plantilla en otros inquilinos. Considere mantener directivas basadas en IP por inquilino.",
     "skipped_ip_based": "{count} basadas en IP",
     "skipped_unresolved": "{count} sin resolver",
-    "skipped_other": "{count} otras"
+    "skipped_other": "{count} otras",
+    "import_zip_hint": "Cargue un ZIP exportado completo — elegirá qué directivas importar — o un solo archivo JSON de directiva.",
+    "label_zip_file": "Cargar un archivo ZIP o JSON",
+    "policies_found": "Directivas encontradas:",
+    "select_all": "Seleccionar todo",
+    "select_none": "No seleccionar ninguna",
+    "import_select_count_btn": "Importar seleccionadas ({count})",
+    "import_retry_failed_btn": "Reintentar fallidas ({count})",
+    "import_progress": "Importando {done} de {total}…",
+    "import_status_imported": "Importada",
+    "import_results_summary": "{imported} importada(s), {failed} con error:",
+    "import_reason_duplicate_name": "Ya existe una plantilla con este nombre",
+    "import_reason_db_busy": "Base de datos ocupada — reinténtelo en un momento",
+    "import_reason_too_large": "La directiva es demasiado grande para importarla",
+    "import_reason_missing_fields": "Faltan el nombre o los datos de la directiva",
+    "import_reason_request_failed": "No se pudo contactar con el servidor — inténtelo de nuevo",
+    "import_reason_generic": "Error de importación — consulte el registro del servidor",
+    "toast_no_policies_selected": "No se ha seleccionado ninguna directiva",
+    "toast_zip_read_failed": "Error al leer el ZIP: {message}",
+    "toast_imported": "{imported} plantilla(s) importada(s)",
+    "toast_imported_with_failures": "{imported} plantilla(s) importada(s), {failed} con error",
+    "import_collisions_summary": "{count} nombre(s) ya existe(n) — elija qué hacer:",
+    "import_collision_deployed_warn": "Implementado en {count} inquilino(s) — sobrescribir cambia su referencia y los marca como desviados hasta que vuelva a implementar.",
+    "import_collision_new": "Importar como copia nueva",
+    "import_collision_overwrite": "Sobrescribir la existente",
+    "import_collision_apply": "Aplicar ({count})"
   },
   "tenants": {
     "title": "Gestión de inquilinos",
@@ -1508,7 +1556,10 @@
       "tenant_object_deactivated": "{surface} «{name}» desactivado en el inquilino",
       "tenant_object_restored": "{surface} «{name}» restaurado en el inquilino",
       "tenant_object_deleted": "{surface} «{name}» eliminado del inquilino",
-      "email_auth_acknowledge": "Desviación de autenticación de correo aceptada en {domain} ({mechanism} {changeType}) para {tenant}"
+      "email_auth_acknowledge": "Desviación de autenticación de correo aceptada en {domain} ({mechanism} {changeType}) para {tenant}",
+      "ca_template.bulk_create": "Importación masiva de {imported} plantilla(s) de CA, {failed} con error",
+      "intune_template.bulk_create": "Importación masiva de {imported} plantilla(s) de Intune, {failed} con error",
+      "tenant_object_accept_baseline": "Estado actual de {surface} «{name}» aceptado como nueva referencia supervisada"
     },
     "tenant_change": {
       "ca_deploy": "Despliegue de la política CA «{policyName}»",
@@ -1689,7 +1740,8 @@
       "adopt_native_appeared": "Nueva configuración de {surface} creada fuera de Panoptica: «{name}»",
       "adopt_drift": "{surface} de origen del inquilino «{name}» cambió respecto al estado original: {count} campo(s) ({fields})",
       "adopt_removed": "{surface} de origen del inquilino «{name}» se eliminó del inquilino fuera de Panoptica",
-      "adopt_reenabled": "{surface} de origen del inquilino desactivado «{name}» se reactivó fuera de Panoptica"
+      "adopt_reenabled": "{surface} de origen del inquilino desactivado «{name}» se reactivó fuera de Panoptica",
+      "ual_restricted_sender": "{policyName}: {affectedUser} bloqueado para enviar correo por {source} — posible compromiso de cuenta"
     },
     "section": {
       "details": "Detalles",
@@ -3828,7 +3880,14 @@
       "tile_delete": "Eliminar",
       "hint_panoptica_only": "Solo Panoptica",
       "hint_reversible": "Reversible",
-      "hint_permanent": "Permanente"
+      "hint_permanent": "Permanente",
+      "accept_btn": "Aceptar como referencia",
+      "hint_accept": "Restablecer al estado actual",
+      "accept_title": "Aceptar el estado actual como referencia",
+      "accept_confirm": "¿Aceptar el estado actual de «{name}» como nueva referencia supervisada? La desviación se borra y Panoptica supervisa a partir de ahora con respecto a este estado.",
+      "accept_hint": "Actualiza solo la referencia de Panoptica — no se realiza ningún cambio en el inquilino.",
+      "accept_done": "Referencia actualizada — desviación borrada",
+      "accept_not_found": "Esta directiva ya no existe en el inquilino"
     },
     "view_trends": "Tendencias",
     "trends": {
@@ -4573,7 +4632,8 @@
         "update_checker": "Comprobador de actualizaciones",
         "retention": "Retención de datos",
         "ca_drift": "Planificador de desviación CA",
-        "intune_drift": "Planificador de desviación Intune"
+        "intune_drift": "Planificador de desviación Intune",
+        "adopt_drift": "Desviación de directivas adoptadas (cada hora)"
       },
       "table_worker": "Proceso",
       "table_status": "Estado",

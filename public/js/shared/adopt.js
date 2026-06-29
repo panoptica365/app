@@ -230,16 +230,22 @@
   function openActions(surface, tenantId, card) {
     const deactivated = card.lifecycle_state === 'deactivated';
     const name = esc(card.display_name);
+    // "Accept current as baseline" only on a config-drifted card — not when the
+    // policy was removed from the tenant (nothing live to re-baseline against).
+    const canAccept = card.drift_status === 'drifted'
+      && !(card.drift_details && card.drift_details.reason === 'removed');
     let body = '<h3>' + esc(t('actions_title')) + '</h3>' +
       '<div class="td-adopt-meta" style="margin-bottom:6px;">' + name + '</div>';
 
-    // One row of square icon tiles: Stop monitoring · Deactivate/Restore · Delete.
+    // One row of square icon tiles: Stop monitoring · Deactivate/Restore ·
+    // [Accept baseline if drifted] · Delete.
     const middle = deactivated
       ? tile('restore', 'rotate-ccw', t('restore_btn'), t('hint_reversible'))
       : tile('deactivate', 'ban', t('tile_deactivate'), t('hint_reversible'));
     body += '<div class="adopt-tiles">' +
       tile('stop', 'eye-off', t('stop_btn'), t('hint_panoptica_only')) +
       middle +
+      (canAccept ? tile('accept', 'check-circle', t('accept_btn'), t('hint_accept')) : '') +
       tile('delete', 'trash-2', t('tile_delete'), t('hint_permanent'), true) +
       '</div>';
     body += '<div class="adopt-footnote"><i data-lucide="info"></i><span>' + esc(t('stop_hint')) + '</span></div>';
@@ -254,6 +260,7 @@
         if (act === 'stop') confirmStop(surface, tenantId, card);
         else if (act === 'deactivate') confirmDeactivate(surface, tenantId, card);
         else if (act === 'restore') confirmRestore(surface, tenantId, card);
+        else if (act === 'accept') confirmAcceptBaseline(surface, tenantId, card);
         else if (act === 'delete') confirmDelete(surface, tenantId, card);
       });
     });
@@ -294,6 +301,29 @@
       '<div class="actions"><button class="btn-secondary" data-x="c">' + esc(t('cancel')) + '</button>' +
       '<button class="btn-primary" data-x="ok">' + esc(t('restore_btn')) + '</button></div>');
     bindConfirm(overlay, () => post(surface, tenantId, '/api/adopt/card/' + card.id + '/restore', {}, t('restore_done')));
+  }
+
+  // (4) Accept current as baseline — re-baseline a drifted card to live, clear
+  // drift. Panoptica-only (no tenant write). Own handler so the removed-policy
+  // case ('not_found') gets its specific message.
+  function confirmAcceptBaseline(surface, tenantId, card) {
+    const overlay = modal('<h3>' + esc(t('accept_title')) + '</h3>' +
+      '<p style="font-size:0.86rem;">' + esc(t('accept_confirm', { name: card.display_name })) + '</p>' +
+      '<div class="panoptica-only">' + esc(t('accept_hint')) + '</div>' +
+      '<div class="actions"><button class="btn-secondary" data-x="c">' + esc(t('cancel')) + '</button>' +
+      '<button class="btn-primary" data-x="ok">' + esc(t('accept_btn')) + '</button></div>');
+    bindConfirm(overlay, async () => {
+      try {
+        const r = await api('/api/adopt/card/' + card.id + '/accept-baseline', { method: 'POST', body: JSON.stringify({}) });
+        if (r && r.ok) toast(t('accept_done'), 'success');
+        else if (r && r.reason === 'not_found') toast(t('accept_not_found'), 'error');
+        else toast(t('action_failed'), 'error');
+      } catch (e) {
+        toast(t('action_failed'), 'error');
+      } finally {
+        load(tenantId, surface);
+      }
+    });
   }
 
   // (3) Delete — heaviest friction: type your own name + "I understand".

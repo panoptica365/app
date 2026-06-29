@@ -10,6 +10,14 @@
   let currentTemplateId = null;
   let importData = null;
 
+  // #20 — import in small chunks so one big ZIP never sends a single oversized
+  // request body (the cause of the "HTTP 500" on multi-policy import), and so
+  // the DB is paced. State that survives across a retry of the failed subset:
+  const IMPORT_CHUNK_SIZE = 5;
+  let importStatus = {};   // original policy index -> { state:'ok'|'failed', reason, error }
+  let importAssign = {};   // original policy index -> chosen assignment_target (kept across retry)
+  let importMode = 'initial'; // 'initial' | 'results' — drives the submit button label
+
   // ─── JSZip loader (loaded on demand from CDN) ───
   let JSZipLib = null;
   async function loadJSZip() {
@@ -72,6 +80,8 @@
     document.getElementById('intune-import-file').addEventListener('change', handleFileSelect);
     document.getElementById('intune-import-select-all').addEventListener('click', () => toggleAllImports(true));
     document.getElementById('intune-import-select-none').addEventListener('click', () => toggleAllImports(false));
+    // Keep the submit-button count in sync as checkboxes toggle (delegated once).
+    document.getElementById('intune-import-list').addEventListener('change', updateImportCount);
     document.getElementById('intune-detail-close-btn').addEventListener('click', closeDetail);
     document.getElementById('intune-detail-delete-btn').addEventListener('click', deleteTemplate);
     document.getElementById('intune-detail-save-btn').addEventListener('click', saveTemplate);
@@ -315,6 +325,9 @@
 
   function showImportModal() {
     importData = null;
+    importStatus = {};
+    importAssign = {};
+    importMode = 'initial';
     document.getElementById('intune-import-file').value = '';
     document.getElementById('intune-import-preview').style.display = 'none';
     document.getElementById('intune-import-submit-btn').disabled = true;
@@ -389,50 +402,113 @@
 
   function renderImportPreview(policies) {
     const preview = document.getElementById('intune-import-preview');
-    const list = document.getElementById('intune-import-list');
     const countEl = document.getElementById('intune-import-count');
+
+    // Fresh selection — clear any results from a previous import session.
+    importStatus = {};
+    importAssign = {};
+    importMode = 'initial';
+    setImportStatus('', null);
 
     countEl.textContent = policies.length;
     preview.style.display = 'block';
 
-    list.innerHTML = policies.map((p, i) => {
-      const name = p.name || p.displayName || p.policy?.name || p.policy?.displayName || 'Unnamed Policy';
-      const type = p.policyType || 'unknown';
-      const cat = p.category || '';
-      return `
-        <label class="intune-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle); cursor:pointer;">
-          <input type="checkbox" class="intune-import-check" data-index="${i}" checked style="margin-top:0;">
-          <div style="flex:1; min-width:0;">
-            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
-            <div style="color:var(--p-text-muted); font-size:0.75rem;">
-              ${esc(policyTypeLabel(type))}${cat ? ' — ' + esc(categoryLabel(cat)) : ''}
-            </div>
-          </div>
-          <select class="intune-import-assign form-control" data-index="${i}" style="width:auto; min-width:110px; font-size:0.75rem; padding:3px 6px;">
-            <option value="none">None</option>
-            <option value="all_users">All Users</option>
-            <option value="all_devices">All Devices</option>
-          </select>
-        </label>`;
-    }).join('');
+    renderImportList();
 
     // Wire default assignment dropdown to set all per-policy dropdowns
     const defaultAssignEl = document.getElementById('intune-import-default-assign');
     if (defaultAssignEl) {
       defaultAssignEl.onchange = () => {
-        list.querySelectorAll('.intune-import-assign').forEach(sel => { sel.value = defaultAssignEl.value; });
+        document.querySelectorAll('.intune-import-assign').forEach(sel => { sel.value = defaultAssignEl.value; });
       };
     }
 
     document.getElementById('intune-import-submit-btn').disabled = false;
-    list.addEventListener('change', updateImportCount);
     updateImportCount();
   }
 
+  // Render the per-policy rows, honouring importStatus: already-imported rows
+  // are locked with a ✓, failed rows stay selectable (checked) and show the
+  // reason so the operator can retry just those. Pristine rows look as before.
+  function renderImportList() {
+    const list = document.getElementById('intune-import-list');
+    const policies = (importData && importData.policies) || [];
+    list.innerHTML = policies.map((p, i) => {
+      const name = p.name || p.displayName || p.policy?.name || p.policy?.displayName || 'Unnamed Policy';
+      const type = p.policyType || 'unknown';
+      const cat = p.category || '';
+      const meta = `${esc(policyTypeLabel(type))}${cat ? ' — ' + esc(categoryLabel(cat)) : ''}`;
+      const st = importStatus[i];
+
+      if (st && st.state === 'ok') {
+        return `
+        <div class="intune-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle); opacity:0.6;">
+          <span style="color:#3fb950; font-size:1rem; width:16px; text-align:center;">✓</span>
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            <div style="color:var(--p-text-muted); font-size:0.75rem;">${meta}</div>
+          </div>
+          <span style="font-size:0.75rem; color:#3fb950;">${esc(window.t('intune_templates.import_status_imported'))}</span>
+        </div>`;
+      }
+
+      const assignVal = importAssign[i] || 'none';
+      const opt = (v, label) => `<option value="${v}"${assignVal === v ? ' selected' : ''}>${label}</option>`;
+      const failed = st && st.state === 'failed';
+      const reasonRow = failed
+        ? `<div style="color:#f85149; font-size:0.75rem; margin-top:2px;">⚠ ${esc(importReasonText(st))}</div>`
+        : '';
+      return `
+        <label class="intune-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle); cursor:pointer;">
+          <input type="checkbox" class="intune-import-check" data-index="${i}" checked style="margin-top:0;">
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            <div style="color:var(--p-text-muted); font-size:0.75rem;">${meta}</div>
+            ${reasonRow}
+          </div>
+          <select class="intune-import-assign form-control" data-index="${i}" style="width:auto; min-width:110px; font-size:0.75rem; padding:3px 6px;">
+            ${opt('none', 'None')}${opt('all_users', 'All Users')}${opt('all_devices', 'All Devices')}
+          </select>
+        </label>`;
+    }).join('');
+  }
+
+  // Shared progress / results banner above the list. type: null|'info'|'warning'.
+  function setImportStatus(text, type) {
+    const el = document.getElementById('intune-import-status');
+    if (!el) return;
+    if (!text) { el.style.display = 'none'; el.textContent = ''; return; }
+    el.textContent = text;
+    el.style.color = type === 'warning' ? '#f85149' : 'var(--p-text-muted)';
+    el.style.fontWeight = type === 'warning' ? '600' : '400';
+    el.style.display = 'block';
+  }
+
+  // Map a backend reason code (or chunk-level failure) to a localized string,
+  // falling back to the server's safe English text if the code is unknown.
+  function importReasonText(st) {
+    const KEYS = {
+      duplicate_name: 'import_reason_duplicate_name',
+      db_busy: 'import_reason_db_busy',
+      too_large: 'import_reason_too_large',
+      missing_fields: 'import_reason_missing_fields',
+      request_failed: 'import_reason_request_failed',
+      generic: 'import_reason_generic',
+    };
+    const key = st && KEYS[st.reason];
+    if (key) return window.t('intune_templates.' + key);
+    return (st && st.error) || window.t('intune_templates.import_reason_generic');
+  }
+
   function updateImportCount() {
+    // The collision step manages its own button (Apply); don't let list changes
+    // (the choice <select>s) reset it.
+    if (importMode === 'collisions') return;
     const checked = document.querySelectorAll('.intune-import-check:checked').length;
     const btn = document.getElementById('intune-import-submit-btn');
-    btn.textContent = `Import Selected (${checked})`;
+    btn.textContent = importMode === 'results'
+      ? window.t('intune_templates.import_retry_failed_btn', { count: checked })
+      : window.t('intune_templates.btn_import_selected_count', { count: checked });
     btn.disabled = checked === 0;
   }
 
@@ -442,6 +518,9 @@
   }
 
   async function submitImport() {
+    // In the collision-resolution step the button applies the New/Overwrite
+    // choices instead of importing checked rows.
+    if (importMode === 'collisions') return applyCollisionChoices();
     if (!importData) return;
 
     const checkboxes = document.querySelectorAll('.intune-import-check:checked');
@@ -450,50 +529,167 @@
 
     const btn = document.getElementById('intune-import-submit-btn');
     btn.disabled = true;
-    btn.textContent = 'Importing...';
 
-    const templatesToImport = selectedIndices.map(i => {
+    // Capture every visible assignment choice so a retry re-render keeps them.
+    document.querySelectorAll('.intune-import-assign').forEach(sel => {
+      importAssign[parseInt(sel.dataset.index, 10)] = sel.value;
+    });
+
+    // Build one attempt per selected policy; the original index lets us map the
+    // backend's results back onto the right row for the failure/retry display.
+    const attempts = selectedIndices.map(i => {
       const p = importData.policies[i];
       const name = p.name || p.displayName || p.policy?.name || p.policy?.displayName || 'Unnamed Policy';
       let policyJson = p.policy || p;
       if (p.settings && Array.isArray(p.settings)) policyJson = { ...policyJson, settings: p.settings };
       if (p.definitionValues && Array.isArray(p.definitionValues)) policyJson = { ...policyJson, definitionValues: p.definitionValues };
-
-      // Get per-policy assignment target from dropdown
-      const assignSel = document.querySelector(`.intune-import-assign[data-index="${i}"]`);
-      const assignTarget = assignSel ? assignSel.value : 'none';
-
       return {
+        index: i,
         name,
-        description: p.description || p.policy?.description || '',
-        category: p.category || p.templateFamily || 'other',
-        policy_type: p.policyType || 'configurationPolicies',
-        platform: p.policy?.platforms || 'windows10',
-        template_family: p.templateFamily || p.policy?.templateReference?.templateFamily || null,
-        policy_json: policyJson,
-        source_tenant: importData.sourceTenant || null,
-        assignment_target: assignTarget,
+        payload: {
+          name,
+          description: p.description || p.policy?.description || '',
+          category: p.category || p.templateFamily || 'other',
+          policy_type: p.policyType || 'configurationPolicies',
+          platform: p.policy?.platforms || 'windows10',
+          template_family: p.templateFamily || p.policy?.templateReference?.templateFamily || null,
+          policy_json: policyJson,
+          source_tenant: importData.sourceTenant || null,
+          assignment_target: importAssign[i] || 'none',
+        },
       };
     });
 
-    try {
-      const result = await Panoptica.api('/api/intune/templates/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ templates: templatesToImport }),
-      });
-      Panoptica.showToast(
-        result.failed > 0
-          ? window.t('intune_templates.toast_imported_with_failures', { imported: result.imported, failed: result.failed })
-          : window.t('intune_templates.toast_imported', { imported: result.imported }),
-        result.failed > 0 ? 'warning' : 'success'
-      );
-      hideImportModal();
-      await loadTemplates();
-    } catch (err) {
-      Panoptica.showToast(window.t('intune_templates.toast_import_failed', { message: err.message }), 'error');
-      btn.disabled = false;
-      btn.textContent = window.t('intune_templates.btn_import_selected_count', { count: selectedIndices.length });
+    await importChunks(attempts);
+    // Refresh the grid behind the modal so newly imported templates show up.
+    await loadTemplates();
+    finishImport();
+  }
+
+  // Chunked POST + per-item correlation (ok / collision / failed). Shared by the
+  // first pass, the failure-retry, and the collision re-submit. Updates
+  // importStatus keyed by original policy index.
+  async function importChunks(attempts) {
+    const total = attempts.length;
+    let done = 0;
+    setImportStatus(window.t('intune_templates.import_progress', { done, total }), 'info');
+    for (let start = 0; start < attempts.length; start += IMPORT_CHUNK_SIZE) {
+      const chunk = attempts.slice(start, start + IMPORT_CHUNK_SIZE);
+      try {
+        const result = await Panoptica.api('/api/intune/templates/bulk', {
+          method: 'POST',
+          body: JSON.stringify({ templates: chunk.map(a => a.payload) }),
+        });
+        // Correlate results by name (backend returns successes / errors /
+        // collisions in processing order; consume greedily so duplicate names
+        // still resolve sensibly).
+        // Correlate by the REQUESTED name (the name we sent), not the final
+        // stored name — 'new' renames the template, so they differ.
+        const okNames = (result.templates || []).map(x => x.requested_name || x.name);
+        const errs = (result.errors || []).slice();
+        const cols = (result.collisions || []).slice();
+        for (const a of chunk) {
+          const okPos = okNames.indexOf(a.name);
+          if (okPos !== -1) { okNames.splice(okPos, 1); importStatus[a.index] = { state: 'ok' }; continue; }
+          const cPos = cols.findIndex(c => c.name === a.name);
+          if (cPos !== -1) {
+            const c = cols.splice(cPos, 1)[0];
+            importStatus[a.index] = { state: 'collision', existing_id: c.existing_id, deployed_count: c.deployed_count, payload: a.payload };
+            continue;
+          }
+          const ePos = errs.findIndex(e => (e.name || 'unknown') === a.name);
+          const e = ePos !== -1 ? errs.splice(ePos, 1)[0] : null;
+          importStatus[a.index] = { state: 'failed', reason: (e && e.reason) || 'generic', error: e && e.error };
+        }
+      } catch (err) {
+        // Whole-chunk failure — attribute to every policy in it.
+        console.warn('[Intune:Import] Chunk failed:', err && err.message);
+        const reason = classifyChunkError(err);
+        for (const a of chunk) importStatus[a.index] = { state: 'failed', reason, error: err && err.message };
+      }
+      done += chunk.length;
+      setImportStatus(window.t('intune_templates.import_progress', { done, total }), 'info');
     }
+  }
+
+  // After an import pass: resolve name collisions FIRST (operator decision), then
+  // surface failures for retry, else close on full success.
+  function finishImport() {
+    const collisions = Object.keys(importStatus)
+      .filter(i => importStatus[i].state === 'collision')
+      .map(i => Object.assign({ index: Number(i) }, importStatus[i]));
+    const okCount = Object.values(importStatus).filter(s => s.state === 'ok').length;
+    const failCount = Object.values(importStatus).filter(s => s.state === 'failed').length;
+
+    if (collisions.length > 0) {
+      importMode = 'collisions';
+      renderImportCollisions(collisions);
+      return;
+    }
+    if (failCount === 0) {
+      Panoptica.showToast(window.t('intune_templates.toast_imported', { imported: okCount }), 'success');
+      hideImportModal();
+      return;
+    }
+    // Partial failure: keep the modal open, re-offer the failed rows for retry.
+    importMode = 'results';
+    Panoptica.showToast(window.t('intune_templates.toast_imported_with_failures', { imported: okCount, failed: failCount }), 'warning');
+    setImportStatus(window.t('intune_templates.import_results_summary', { imported: okCount, failed: failCount }), 'warning');
+    renderImportList();
+    updateImportCount();
+  }
+
+  // Collision-resolution step: one row per name clash with a New-copy / Overwrite
+  // choice. Overwrite on a DEPLOYED template shows the blast-radius warning.
+  function renderImportCollisions(collisions) {
+    const list = document.getElementById('intune-import-list');
+    setImportStatus(window.t('intune_templates.import_collisions_summary', { count: collisions.length }), 'warning');
+    list.innerHTML = collisions.map(c => {
+      const name = c.payload.name;
+      const warn = c.deployed_count > 0
+        ? `<div style="color:#f85149; font-size:0.75rem; margin-top:2px;">⚠ ${esc(window.t('intune_templates.import_collision_deployed_warn', { count: c.deployed_count }))}</div>`
+        : '';
+      const opt = (v, label) => `<option value="${v}">${esc(label)}</option>`;
+      return `
+        <div class="intune-import-item" style="display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid var(--p-border-subtle);">
+          <div style="flex:1; min-width:0;">
+            <div style="color:var(--p-text-bright); font-size:0.9rem;">${esc(name)}</div>
+            <div style="color:var(--p-text-muted); font-size:0.75rem;">${esc(window.t('intune_templates.import_reason_duplicate_name'))}</div>
+            ${warn}
+          </div>
+          <select class="intune-collision-choice form-control" data-index="${c.index}" style="width:auto; min-width:170px; font-size:0.78rem; padding:4px 8px;">
+            ${opt('new', window.t('intune_templates.import_collision_new'))}${opt('overwrite', window.t('intune_templates.import_collision_overwrite'))}
+          </select>
+        </div>`;
+    }).join('');
+    const btn = document.getElementById('intune-import-submit-btn');
+    btn.textContent = window.t('intune_templates.import_collision_apply', { count: collisions.length });
+    btn.disabled = false;
+  }
+
+  // Re-submit just the collisions, each with its chosen on_collision directive.
+  async function applyCollisionChoices() {
+    const attempts = [];
+    document.querySelectorAll('.intune-collision-choice').forEach(sel => {
+      const idx = parseInt(sel.dataset.index, 10);
+      const st = importStatus[idx];
+      if (!st || st.state !== 'collision') return;
+      const choice = sel.value === 'overwrite' ? 'overwrite' : 'new';
+      attempts.push({ index: idx, name: st.payload.name, payload: Object.assign({}, st.payload, { on_collision: choice }) });
+    });
+    if (attempts.length === 0) return;
+    document.getElementById('intune-import-submit-btn').disabled = true;
+    await importChunks(attempts);
+    await loadTemplates();
+    finishImport();
+  }
+
+  // Classify a whole-chunk request failure (the request never reached the
+  // per-item loop) into a reason code shared with importReasonText().
+  function classifyChunkError(err) {
+    const m = String((err && err.message) || '').toLowerCase();
+    if (/413|too large|payload|entity too large/.test(m)) return 'too_large';
+    return 'request_failed';
   }
 
   // ═══════════════════════════════════════════

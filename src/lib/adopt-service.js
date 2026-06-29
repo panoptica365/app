@@ -155,6 +155,7 @@ const AUDIT = {
   deactivate:    { action: 'adopt.deactivate',      tplKey: 'tenant_object_deactivated',   clCat: 'adopt_deactivate',      tenantWrite: true  },
   restore:       { action: 'adopt.restore',         tplKey: 'tenant_object_restored',      clCat: 'adopt_restore',         tenantWrite: true  },
   delete:        { action: 'adopt.delete',          tplKey: 'tenant_object_deleted',       clCat: 'adopt_delete',          tenantWrite: true  },
+  accept_baseline: { action: 'adopt.accept_baseline', tplKey: 'tenant_object_accept_baseline', clCat: 'adopt_accept_baseline', tenantWrite: false },
 };
 
 /**
@@ -205,6 +206,7 @@ function auditFallback(kind, surfaceLabel, objectName, count) {
     case 'deactivate': return `Deactivated ${surfaceLabel} "${objectName}" in the tenant`;
     case 'restore': return `Restored ${surfaceLabel} "${objectName}" in the tenant`;
     case 'delete': return `Deleted ${surfaceLabel} "${objectName}" from the tenant`;
+    case 'accept_baseline': return `Accepted current live state of ${surfaceLabel} "${objectName}" as the new monitored baseline`;
     default: return `${kind} ${surfaceLabel} "${objectName}"`;
   }
 }
@@ -611,6 +613,48 @@ async function deleteFromTenant(tenant, card, { req, operator } = {}) {
   return { ok: true };
 }
 
+/**
+ * (4) Accept current live state as the new baseline — a DELIBERATE operator
+ * action that re-baselines a drifted adopted card to whatever the tenant has
+ * right now and clears the drift. NO tenant write: it reads live config and
+ * moves Panoptica's stored baseline. This is the only path besides the initial
+ * Adopt that moves the baseline — discovery / "Import existing settings" never
+ * do, so a re-import can never silently swallow a malicious change.
+ */
+async function acceptBaseline(tenant, card, { req, operator } = {}) {
+  // Read the CURRENT live config — this becomes the new monitored baseline,
+  // stored in the exact shape computeDrift compares against (CA: raw policy +
+  // null assignments; Intune: config object + assignments array).
+  let liveConfig;
+  let liveAssignments = null;
+  if (card.surface === 'ca') {
+    const live = await adoptGraph.readCaPolicy(tenant.tenant_id, card.source_object_id);
+    if (!live) return { ok: false, reason: 'not_found' }; // removed from tenant — nothing to accept
+    liveConfig = live;
+  } else {
+    const live = await adoptGraph.readIntuneObject(tenant.tenant_id, card.policy_type, card.source_object_id);
+    if (!live) return { ok: false, reason: 'not_found' };
+    liveConfig = live.config;
+    liveAssignments = live.assignments;
+  }
+
+  await store.setBaseline(card.id, liveConfig, liveAssignments);
+
+  // Resolve the open adopt-drift alert for this card (same dedup key fireDriftAlert uses).
+  try {
+    await alertEngine.resolveOpenAlerts(
+      tenant.id,
+      `adopt_drift:${card.surface}:${card.source_object_id}`,
+      'Accepted current live state as new baseline'
+    );
+  } catch (e) {
+    console.warn(`[Adopt] accept-baseline alert resolve failed (non-fatal): ${e.message}`);
+  }
+
+  await auditAction('accept_baseline', tenant, { surface: card.surface, objectName: card.display_name, operator, req });
+  return { ok: true };
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // Helpers for routes
 // ──────────────────────────────────────────────────────────────────────
@@ -649,6 +693,7 @@ module.exports = {
   deactivate,
   restore,
   deleteFromTenant,
+  acceptBaseline,
   loadTenant,
   getImportState,
   // exposed for tests

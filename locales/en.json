@@ -459,7 +459,8 @@
     "ual_admin_initiated_password_reset": "Admin-initiated password reset",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Legacy protocol re-enabled per mailbox",
     "ual_microsoft_defender_incident": "Microsoft Defender incident",
-    "configuration_created_outside_panoptica": "Configuration created outside Panoptica"
+    "configuration_created_outside_panoptica": "Configuration created outside Panoptica",
+    "ual_user_restricted_from_sending_email": "User restricted from sending email"
   },
   "_comment_alert_message_prefix": "Custom alert message prefixes that don't match the parent alert_policy_names. CA + Intune drift alerts use these literal English prefixes server-side; the renderAlertMessage helper detects them at display time and substitutes the translated form.",
   "alert_message_prefix": {
@@ -997,6 +998,13 @@
       "attack_vectors": "What a regression here enables:\n\n- DMARC downgraded to p=none. Enforcement is off; spoofed mail that fails SPF/DKIM is delivered normally — the setup for invoice fraud and CEO impersonation.\n\n- DKIM selector missing or revoked. Outbound mail is unsigned, so receivers can't verify it and DMARC alignment breaks.\n\n- SPF set to +all or loosened to ~all. The domain authorizes senders it shouldn't, or stops hard-failing forgeries.\n\n- A legitimate change. A provider migration or a deliberate edit. Confirm out-of-band, then accept the drift to set the new baseline.",
       "what_to_do": "Step 1. Open the Email Auth tab for the domain. The drift banner names exactly what changed (before → after) and the per-record cards show the live values.\n\nStep 2. Decide whether the change was intended. Ask whoever manages the domain's DNS, and check for a recent registrar or hosting change.\n\nStep 3. If unintended, fix it at the DNS host — restore the DMARC policy, re-publish the DKIM selector, or tighten SPF. Panoptica does not edit DNS; you make the change at the registrar. Refresh to confirm it cleared.\n\nStep 4. If it was intended, click Accept on the drift to set the current records as the new baseline. The linked alert resolves.",
       "example_scenario": "A customer moves their website to a new host. The host's onboarding wizard 'helpfully' publishes its own SPF record and overwrites the existing one, dropping the Microsoft 365 include and flipping the terminal from -all to ~all.\n\nNothing breaks visibly — mail still flows. But the domain is now softer to spoof, and no one would notice from inside Microsoft 365. The next daily re-check diffs the new SPF against the prior snapshot, sees the weakening, and fires this alert with the before/after.\n\nYou open the Email Auth tab, see SPF went from -all to ~all and lost the Outlook include, recognize it as the website migration, fix the SPF record at the DNS host to restore the include and -all, Refresh to confirm A-grade, and you're done before any spoofed invoice ever lands."
+    },
+    "ual_user_restricted_from_sending_email": {
+      "what_is_this": "Microsoft Exchange Online Protection (EOP) automatically blocked one of this tenant’s own accounts from sending email, because its outbound mail tripped the spam thresholds. Microsoft surfaces this as a \"user restricted from sending\" alert, and Panoptica365 promotes it here as a first-class signal. This is a standard Business Premium / EOP protection — it does not require Defender for Office 365 P2.",
+      "why_it_matters": "An internal account sending enough spam to get throttled is almost never the legitimate user — it is the single most reliable sign of an account takeover. An attacker who phished or password-sprayed the credentials is now using the mailbox to blast spam or phishing, often to the user’s own contacts and to the other tenants you manage. Left alone, the account keeps sending until the password is reset, the tenant’s sending reputation is damaged (legitimate mail starts landing in junk), and the attacker may pivot to mailbox rules, forwarding, or other accounts. The block is EOP containing the damage; this alert is your cue to evict the attacker.",
+      "attack_vectors": "How accounts reach this state:\n\n- Credential phishing — the user entered their password on a lookalike login page and the attacker signed in.\n- Password spray or reuse — a weak or breached password let the attacker in directly.\n- Token / session theft — an adversary-in-the-middle proxy stole a live session, bypassing MFA, and sends from it.\n- A malicious or over-permissioned OAuth app sending on the user’s behalf.\n- Rarely, a genuinely misconfigured legitimate bulk send — treat that as the exception, only after compromise is ruled out.",
+      "what_to_do": "Treat as a likely compromise until proven otherwise:\n\n1. Check the account’s recent sign-ins (Entra sign-in logs) for unfamiliar IPs, countries, or impossible travel.\n2. Reset the password AND revoke all active sessions / refresh tokens — a reset alone leaves stolen tokens working.\n3. Re-register MFA — assume the attacker added their own method.\n4. Audit the mailbox for attacker persistence: forwarding rules, inbox rules (especially ones that delete or move messages to obscure folders), delegate / SendAs grants, and Sent Items for what actually went out.\n5. Check whether any OAuth apps were granted access to the mailbox.\n6. Only after the account is secured, release the restriction in the Defender portal (Restricted entities) or via Exchange. Releasing it before cleanup just lets the attacker resume.",
+      "example_scenario": "A bookkeeper at a managed client clicks a fake \"shared invoice\" link and enters their Microsoft password. Overnight the attacker signs in from another country and sends 4,000 phishing emails to the client’s contacts. EOP detects the abnormal volume and blocks the account from sending, which fires this alert. The operator sees it within the hour, confirms a foreign sign-in, resets the password, revokes sessions, removes an attacker-created inbox rule that was auto-deleting bounce messages, and only then releases the sending restriction. Caught early, the tenant’s mail reputation recovers and no other accounts are touched."
     }
   },
   "intune_templates": {
@@ -1012,7 +1020,7 @@
     "fetching_policies": "Fetching policies...",
     "export_policies_btn": "Export Policies",
     "import_modal_title": "Import Policy Templates",
-    "import_intro": "Upload the exported ZIP (or a single JSON). Select which policies you want to import as templates.",
+    "import_intro": "You can upload an entire exported ZIP at once — you'll choose which policies to import — or a single policy JSON file.",
     "label_zip_file": "ZIP or JSON File",
     "policies_found": "Policies found:",
     "select_all": "Select All",
@@ -1071,7 +1079,22 @@
     "alert_email_and_psa": "Email + PSA",
     "alert_psa_only": "PSA Only",
     "alert_email_only": "Email Only",
-    "alert_none": "None"
+    "alert_none": "None",
+    "import_progress": "Importing {done} of {total}…",
+    "import_status_imported": "Imported",
+    "import_retry_failed_btn": "Retry Failed ({count})",
+    "import_results_summary": "{imported} imported, {failed} failed:",
+    "import_reason_duplicate_name": "A template with this name already exists",
+    "import_reason_db_busy": "Database busy — retry in a moment",
+    "import_reason_too_large": "Policy is too large to import",
+    "import_reason_missing_fields": "Missing name or policy data",
+    "import_reason_request_failed": "Couldn’t reach the server — please try again",
+    "import_reason_generic": "Import failed — see server log for details",
+    "import_collisions_summary": "{count} name(s) already exist — choose what to do:",
+    "import_collision_deployed_warn": "Deployed to {count} tenant(s) — overwriting changes their baseline and flags them as drifted until you redeploy.",
+    "import_collision_new": "Import as new copy",
+    "import_collision_overwrite": "Overwrite existing",
+    "import_collision_apply": "Apply ({count})"
   },
   "exemptions": {
     "title": "Exemptions — Granted exceptions across CA and Intune",
@@ -1258,7 +1281,32 @@
     "toast_heads_up": "Heads up: {parts} named location(s) stayed as raw IDs. IP-based locations are tenant-specific and won't be recreated when deploying this template to other tenants. Consider maintaining IP-based policies per tenant instead.",
     "skipped_ip_based": "{count} IP-based",
     "skipped_unresolved": "{count} unresolved",
-    "skipped_other": "{count} other"
+    "skipped_other": "{count} other",
+    "import_zip_hint": "Upload an entire exported ZIP — you'll choose which policies to import — or a single policy's JSON file.",
+    "label_zip_file": "Upload a ZIP or JSON file",
+    "policies_found": "Policies found:",
+    "select_all": "Select All",
+    "select_none": "Select None",
+    "import_select_count_btn": "Import Selected ({count})",
+    "import_retry_failed_btn": "Retry Failed ({count})",
+    "import_progress": "Importing {done} of {total}…",
+    "import_status_imported": "Imported",
+    "import_results_summary": "{imported} imported, {failed} failed:",
+    "import_reason_duplicate_name": "A template with this name already exists",
+    "import_reason_db_busy": "Database busy — retry in a moment",
+    "import_reason_too_large": "Policy is too large to import",
+    "import_reason_missing_fields": "Missing name or policy data",
+    "import_reason_request_failed": "Couldn’t reach the server — please try again",
+    "import_reason_generic": "Import failed — see server log for details",
+    "toast_no_policies_selected": "No policies selected",
+    "toast_zip_read_failed": "Failed to read ZIP: {message}",
+    "toast_imported": "Imported {imported} template(s)",
+    "toast_imported_with_failures": "Imported {imported} template(s), {failed} failed",
+    "import_collisions_summary": "{count} name(s) already exist — choose what to do:",
+    "import_collision_deployed_warn": "Deployed to {count} tenant(s) — overwriting changes their baseline and flags them as drifted until you redeploy.",
+    "import_collision_new": "Import as new copy",
+    "import_collision_overwrite": "Overwrite existing",
+    "import_collision_apply": "Apply ({count})"
   },
   "tenants": {
     "title": "Tenant Management",
@@ -1508,7 +1556,10 @@
       "tenant_object_deactivated": "Deactivated {surface} \"{name}\" in the tenant",
       "tenant_object_restored": "Restored {surface} \"{name}\" in the tenant",
       "tenant_object_deleted": "Deleted {surface} \"{name}\" from the tenant",
-      "email_auth_acknowledge": "Accepted email-auth drift on {domain} ({mechanism} {changeType}) for {tenant}"
+      "email_auth_acknowledge": "Accepted email-auth drift on {domain} ({mechanism} {changeType}) for {tenant}",
+      "ca_template.bulk_create": "Bulk-imported {imported} CA template(s), {failed} failed",
+      "intune_template.bulk_create": "Bulk-imported {imported} Intune template(s), {failed} failed",
+      "tenant_object_accept_baseline": "Accepted current live state of {surface} \"{name}\" as the new monitored baseline"
     },
     "tenant_change": {
       "ca_deploy": "Deployed CA policy \"{policyName}\"",
@@ -1689,7 +1740,8 @@
       "adopt_native_appeared": "New {surface} configuration created outside Panoptica: \"{name}\"",
       "adopt_drift": "Tenant-sourced {surface} \"{name}\" changed from as-found: {count} field(s) ({fields})",
       "adopt_removed": "Tenant-sourced {surface} \"{name}\" was removed from the tenant outside Panoptica",
-      "adopt_reenabled": "Deactivated tenant-sourced {surface} \"{name}\" was re-enabled outside Panoptica"
+      "adopt_reenabled": "Deactivated tenant-sourced {surface} \"{name}\" was re-enabled outside Panoptica",
+      "ual_restricted_sender": "{policyName}: {affectedUser} blocked from sending mail by {source} — possible account compromise"
     },
     "section": {
       "details": "Details",
@@ -3828,7 +3880,14 @@
       "tile_delete": "Delete",
       "hint_panoptica_only": "Panoptica-only",
       "hint_reversible": "Reversible",
-      "hint_permanent": "Permanent"
+      "hint_permanent": "Permanent",
+      "accept_btn": "Accept as baseline",
+      "hint_accept": "Re-baseline to current",
+      "accept_title": "Accept current as baseline",
+      "accept_confirm": "Accept the current live state of \"{name}\" as the new monitored baseline? The drift clears and Panoptica monitors against this state from now on.",
+      "accept_hint": "Updates Panoptica’s baseline only — no change is made in the tenant.",
+      "accept_done": "Baseline updated — drift cleared",
+      "accept_not_found": "This policy no longer exists in the tenant"
     },
     "view_trends": "Trends",
     "trends": {
@@ -4573,7 +4632,8 @@
         "update_checker": "Update checker",
         "retention": "Data retention",
         "ca_drift": "CA drift scheduler",
-        "intune_drift": "Intune drift scheduler"
+        "intune_drift": "Intune drift scheduler",
+        "adopt_drift": "Adopted-policy drift (hourly)"
       },
       "table_worker": "Worker",
       "table_status": "Status",

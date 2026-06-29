@@ -433,6 +433,10 @@ const WORKER_LIVENESS_SPEC = [
   { id: 'retention',        warn: 26 * 3600,      crit: 50 * 3600 },
   { id: 'ca_drift',         warn: 75 * 60,        crit: 90 * 60 },
   { id: 'intune_drift',     warn: 75 * 60,        crit: 90 * 60 },
+  // Adopted CA+Intune drift sweep (hourly at :15). Heavier than the deployed
+  // schedulers (discovery + drift across both surfaces for every tenant), so a
+  // more generous window to avoid false-amber on large fleets.
+  { id: 'adopt_drift',      warn: 100 * 60,       crit: 3 * 3600 },
 ];
 
 // Human-readable age with localized unit. Minutes under 2h, hours under 2d,

@@ -71,6 +71,10 @@ const POLICY_APP_URI_MODIFIED = 'UAL: Application URI/RedirectUri modified';
 const POLICY_SENDAS_GRANT = 'UAL: Send-As / SendOnBehalf permission grant';
 // Bundle D (May 6, 2026 late) — Defender ingestion + sabotage detection
 const POLICY_DEFENDER_ALERT = 'UAL: Microsoft Defender alert';
+// #23 — dedicated outbound-spam / account-compromise signal. EOP's "user
+// restricted from sending email" arrives as a generic Defender alert; we
+// promote it to its own first-class policy (own severity/dedup/explainer).
+const POLICY_OUTBOUND_SPAM = 'UAL: User restricted from sending email';
 const POLICY_SITE_COLLECTION_ADMIN = 'UAL: Site collection administrator added';
 const POLICY_OUTBOUND_CONNECTOR = 'UAL: Outbound connector changed';
 const POLICY_MAILBOX_DESTRUCTION = 'UAL: Mailbox disabled or removed';
@@ -104,6 +108,7 @@ let _policyIdAppUriModified = null;
 let _policyIdSendAsGrant = null;
 // Bundle D
 let _policyIdDefenderAlert = null;
+let _policyIdOutboundSpam = null;
 let _policyIdSiteCollectionAdmin = null;
 let _policyIdOutboundConnector = null;
 let _policyIdMailboxDestruction = null;
@@ -608,6 +613,34 @@ async function ensureUalAlertPolicies() {
     _policyIdDefenderAlert = id;
   } else {
     _policyIdDefenderAlert = dfa.id;
+  }
+
+  // #23 — User restricted from sending email (outbound spam / possible account
+  // compromise). Promotes the EOP restricted-sender signal out of the generic
+  // Defender pass-through into a first-class, Business-Premium-framed alert.
+  let osp = await db.queryOne(
+    'SELECT id FROM alert_policies WHERE name = ? LIMIT 1',
+    [POLICY_OUTBOUND_SPAM]
+  );
+  if (!osp) {
+    const id = await db.insert(
+      `INSERT INTO alert_policies
+         (name, description, category, severity, polling_tier, notification_target, detection_logic, enabled)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
+      [
+        POLICY_OUTBOUND_SPAM,
+        'Microsoft Exchange Online Protection (EOP) blocked an internal account from sending mail because its outbound volume tripped the spam thresholds — almost always a sign the account is compromised and being used to send spam or phishing. This is a Business Premium signal (EOP, not Defender for Office 365 P2). Promoted out of the generic Defender pass-through so it carries its own high severity, dedup key, account-compromise framing, and remediation explainer. Source: Office 365 Management Activity API (Audit.General, AlertEntityGenerated; AlertType matched case-insensitively on "restricted from sending").',
+        'threat_mgmt',
+        'high',
+        'critical',
+        'both',
+        JSON.stringify({ ual_evaluator: 'defender_alert', subtype: 'restricted_sender' }),
+      ]
+    );
+    console.log(`[UalEvaluators] Created alert policy "${POLICY_OUTBOUND_SPAM}" id=${id}`);
+    _policyIdOutboundSpam = id;
+  } else {
+    _policyIdOutboundSpam = osp.id;
   }
 
   // Site collection administrator added (SharePoint privilege escalation)
@@ -3247,6 +3280,14 @@ const DEFENDER_SEVERITY_MAP = {
   'high':          'high',
 };
 
+// #23 — tolerant, case-insensitive substring match for EOP's outbound-spam
+// signal. The EXACT AlertType label is NOT verified in the codebase — it could
+// be "User restricted from sending email", "Restricted from sending email", or
+// a variant. Match on the stable substring rather than an exact string so the
+// promotion works regardless; Microfix confirms the precise label during
+// testing. Do NOT replace this with a hardcoded equality check.
+const RESTRICTED_SENDER_RE = /restricted from sending/i;
+
 function parseDefenderAlertRecord(record) {
   if (!record) return null;
   if (record.Operation !== 'AlertEntityGenerated') return null;
@@ -3288,13 +3329,21 @@ function parseDefenderAlertRecord(record) {
 }
 
 async function evaluateDefenderAlert(tenant, sinceTime, untilTime) {
-  if (!_policyIdDefenderAlert) return { fired: 0, skipped: 0 };
-  const policy = await db.queryOne(
+  if (!_policyIdDefenderAlert && !_policyIdOutboundSpam) return { fired: 0, skipped: 0 };
+  const policy = _policyIdDefenderAlert ? await db.queryOne(
     'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
     [_policyIdDefenderAlert]
-  );
-  if (!policy) return { fired: 0, skipped: 0 };
-  if (!policy.enabled) return { fired: 0, skipped: 0, disabled: true };
+  ) : null;
+  // #23 — the dedicated outbound-spam policy may be enabled even if the generic
+  // Defender pass-through is off (and vice-versa), so fetch both and gate
+  // per-event. Don't early-return on the generic being disabled.
+  const spamPolicy = _policyIdOutboundSpam ? await db.queryOne(
+    'SELECT id, name, severity, category, notification_target, notification_limit, enabled FROM alert_policies WHERE id = ? LIMIT 1',
+    [_policyIdOutboundSpam]
+  ) : null;
+  const genericOn = !!(policy && policy.enabled);
+  const spamOn = !!(spamPolicy && spamPolicy.enabled);
+  if (!genericOn && !spamOn) return { fired: 0, skipped: 0, disabled: true };
 
   const events = await ualEvents.lookupEvents({
     tenantId: tenant.id, since: sinceTime, until: untilTime,
@@ -3307,43 +3356,85 @@ async function evaluateDefenderAlert(tenant, sinceTime, untilTime) {
     const parsed = parseDefenderAlertRecord(event.raw_record);
     if (!parsed) { skipped += 1; continue; }
 
-    // Inherit severity from Microsoft's classification, fall back to policy default.
-    const mappedSeverity = DEFENDER_SEVERITY_MAP[parsed.msSeverity] || policy.severity;
+    // Route EOP's "restricted from sending" signal to the dedicated outbound-
+    // spam policy; everything else stays on the generic Defender pass-through.
+    const isRestrictedSender = RESTRICTED_SENDER_RE.test(parsed.alertType || '');
 
-    const alertData = {
-      dedup_key: `ual_defender:${parsed.alertId}`,
-      severity: mappedSeverity,
-      message: `Defender alert: ${parsed.alertType}${parsed.affectedUser ? ' affecting ' + parsed.affectedUser : ''}`,
-      raw_data: {
-        message_template_key: 'ual_defender_alert',
-        message_template_params: {
-          ...buildPolicyNameParams(policy.name),
-          alertType: parsed.alertType,
-          source: parsed.source || 'Microsoft Defender',
-          affectedUser: parsed.affectedUser || '(none)',
-          msSeverity: parsed.msSeverity,
+    let targetPolicy;
+    let alertData;
+    if (isRestrictedSender) {
+      // Dedicated policy disabled → suppress entirely; do NOT fall back to the
+      // generic pass-through (so disabling this policy actually silences it).
+      if (!spamOn) { skipped += 1; continue; }
+      targetPolicy = spamPolicy;
+      alertData = {
+        dedup_key: `ual_restricted_sender:${parsed.alertId}`,
+        severity: spamPolicy.severity || 'high', // account compromise — fixed high, not MS-downgradable
+        message: `User restricted from sending email${parsed.affectedUser ? ': ' + parsed.affectedUser : ''} — possible account compromise`,
+        raw_data: {
+          message_template_key: 'ual_restricted_sender',
+          message_template_params: {
+            ...buildPolicyNameParams(spamPolicy.name),
+            affectedUser: parsed.affectedUser || '(unknown)',
+            source: parsed.source || 'Microsoft EOP',
+            msSeverity: parsed.msSeverity,
+            alertType: parsed.alertType,
+          },
+          ual_event_id: event.id,
+          ual_record_id: event.record_id,
+          creation_time: event.creation_time,
+          defender_alert_id: parsed.alertId,
+          defender_alert_type: parsed.alertType,
+          defender_severity: parsed.msSeverity,
+          defender_status: parsed.status,
+          defender_source: parsed.source,
+          defender_description: parsed.description,
+          incident_id: parsed.incidentId,
+          affected_user: parsed.affectedUser,
+          upn: parsed.affectedUser,
+          outbound_spam: true,
         },
-        ual_event_id: event.id,
-        ual_record_id: event.record_id,
-        creation_time: event.creation_time,
-        defender_alert_id: parsed.alertId,
-        defender_alert_type: parsed.alertType,
-        defender_severity: parsed.msSeverity,
-        defender_status: parsed.status,
-        defender_source: parsed.source,
-        defender_category: parsed.category,
-        defender_description: parsed.description,
-        // Bundle E forward-compat hook — captures the linkage so that when
-        // Graph Security API incident ingestion ships, we can join historical
-        // alerts to their parent incidents.
-        incident_id: parsed.incidentId,
-        affected_user: parsed.affectedUser,
-        upn: parsed.affectedUser,
-      },
-    };
+      };
+    } else {
+      if (!genericOn) { skipped += 1; continue; }
+      targetPolicy = policy;
+      // Inherit severity from Microsoft's classification, fall back to policy default.
+      const mappedSeverity = DEFENDER_SEVERITY_MAP[parsed.msSeverity] || policy.severity;
+      alertData = {
+        dedup_key: `ual_defender:${parsed.alertId}`,
+        severity: mappedSeverity,
+        message: `Defender alert: ${parsed.alertType}${parsed.affectedUser ? ' affecting ' + parsed.affectedUser : ''}`,
+        raw_data: {
+          message_template_key: 'ual_defender_alert',
+          message_template_params: {
+            ...buildPolicyNameParams(policy.name),
+            alertType: parsed.alertType,
+            source: parsed.source || 'Microsoft Defender',
+            affectedUser: parsed.affectedUser || '(none)',
+            msSeverity: parsed.msSeverity,
+          },
+          ual_event_id: event.id,
+          ual_record_id: event.record_id,
+          creation_time: event.creation_time,
+          defender_alert_id: parsed.alertId,
+          defender_alert_type: parsed.alertType,
+          defender_severity: parsed.msSeverity,
+          defender_status: parsed.status,
+          defender_source: parsed.source,
+          defender_category: parsed.category,
+          defender_description: parsed.description,
+          // Bundle E forward-compat hook — captures the linkage so that when
+          // Graph Security API incident ingestion ships, we can join historical
+          // alerts to their parent incidents.
+          incident_id: parsed.incidentId,
+          affected_user: parsed.affectedUser,
+          upn: parsed.affectedUser,
+        },
+      };
+    }
 
     try {
-      const result = await alertEngine.createOrUpdateAlert(tenant, policy, alertData);
+      const result = await alertEngine.createOrUpdateAlert(tenant, targetPolicy, alertData);
       if (result?.isNew) fired += 1; else skipped += 1;
       // Fire-and-forget AI analysis + email/Teams notification + AI sev-
       // adjust pipeline (May 12, 2026 extract — see alert-engine.processNewAlert).

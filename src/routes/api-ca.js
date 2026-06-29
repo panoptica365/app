@@ -13,6 +13,8 @@ const groupResolver = require('../lib/group-resolver');
 const changeLog = require('../change-log');
 const mspAudit = require('../msp-audit');
 const caClassifier = require('../lib/ca-policy-classifier');
+const { classifyImportError } = require('../lib/import-error-reason');
+const { normalizeForBaseline, structuralDiff } = require('../lib/canonical-json');
 // Break-Glass Governance: a tenant's break-glass group is, by operator design,
 // excluded from EVERY CA policy — so its presence in excludeGroups is expected,
 // not drift. access-review-store only requires ./db/database (no require cycle).
@@ -680,6 +682,116 @@ router.get('/templates/:id', async (req, res) => {
  * placeholder before storing. IP-type and unresolved GUIDs are left raw and
  * returned in response.substitution.skipped[] so the UI can warn the operator.
  */
+// #20 — shared CA-template insert (extract display fields + classify + persist).
+// Used by the single create route AND the bulk importer so both produce
+// identical rows. Any location-GUID substitution must already be applied to
+// `policy`. Returns the new id plus the data the caller needs for audit logging.
+async function insertCaTemplate({ name, description, policy, monitored_fields, resolvedSourceTenantId }) {
+  const extracted = extractPolicyFields(policy);
+
+  // Classify into the canonical control-dimension tags used by the exemption
+  // resolver and alert engine. Structure-only — never reads displayName. A
+  // classifier crash must NOT block import; an empty list just means the
+  // template is exempt-unaware until scripts/classify-ca-templates.js backfills.
+  let controlDimensions = null;
+  try {
+    const classified = caClassifier.classifyCaPolicy(policy);
+    const dims = caClassifier.toControlDimensionsList(classified);
+    controlDimensions = dims.length > 0 ? JSON.stringify(dims) : JSON.stringify([]);
+    if (classified.unclassified && classified.unclassified.length > 0) {
+      console.log(`[CA] Template "${name}" classified: dims=[${dims.join(',')}], unclassified=[${classified.unclassified.join(',')}]`);
+    } else {
+      console.log(`[CA] Template "${name}" classified: dims=[${dims.join(',')}]`);
+    }
+  } catch (e) {
+    console.warn(`[CA] Classifier failed for "${name}": ${e.message}`);
+  }
+
+  // Default monitored fields if not provided. (An explicit empty array is
+  // honoured — the operator may have unchecked every field on a single import.)
+  const defaultMonitored = [
+    'state',
+    'grantControls.builtInControls',
+    'conditions.users.includeUsers',
+    'conditions.users.includeGroups',
+    'conditions.applications.includeApplications',
+    'conditions.users.excludeUsers',
+    'conditions.users.excludeGroups',
+  ];
+  const monitoredFields = monitored_fields || defaultMonitored;
+
+  const id = await db.insert(
+    `INSERT INTO ca_templates (name, description, policy_json, state, grant_controls,
+      target_users, target_apps, conditions_summary, monitored_fields, control_dimensions,
+      source_tenant_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      name,
+      description || null,
+      JSON.stringify(policy),
+      extracted.state,
+      extracted.grantControls,
+      extracted.targetUsers,
+      extracted.targetApps,
+      extracted.conditionsSummary,
+      JSON.stringify(monitoredFields),
+      controlDimensions,
+      resolvedSourceTenantId,
+    ]
+  );
+  return { id, extracted, monitoredFields };
+}
+
+// Duplicate-import helpers (warn-and-choose). Match collisions by exact display
+// name (no UNIQUE constraint exists, so the first by id wins).
+async function findCaTemplateByName(name) {
+  return db.queryOne('SELECT id FROM ca_templates WHERE name = ? ORDER BY id LIMIT 1', [name]);
+}
+
+// Tenants this template is actively DEPLOYED to (a live policy exists) — the
+// overwrite blast radius: each will read as drifted until redeployed.
+async function caDeployedCount(templateId) {
+  const row = await db.queryOne(
+    'SELECT COUNT(*) AS n FROM ca_assignments WHERE template_id = ? AND live_policy_id IS NOT NULL',
+    [templateId]
+  );
+  return row ? Number(row.n) : 0;
+}
+
+// A non-colliding name by appending " (2)", " (3)", … (capped).
+async function uniqueCaTemplateName(name) {
+  const taken = async (n) => !!(await db.queryOne('SELECT id FROM ca_templates WHERE name = ? LIMIT 1', [n]));
+  if (!await taken(name)) return name;
+  for (let i = 2; i <= 999; i++) {
+    const cand = `${name} (${i})`;
+    if (!await taken(cand)) return cand;
+  }
+  return `${name} (${Date.now()})`;
+}
+
+// Overwrite an existing template's BASELINE policy + recompute the derived
+// display/classification fields. Deliberately keeps name, monitored_fields,
+// alert_routing and source_tenant_id — only the monitored policy changes.
+async function overwriteCaTemplate(id, policy) {
+  const extracted = extractPolicyFields(policy);
+  let controlDimensions = JSON.stringify([]);
+  try {
+    const classified = caClassifier.classifyCaPolicy(policy);
+    const dims = caClassifier.toControlDimensionsList(classified);
+    controlDimensions = dims.length > 0 ? JSON.stringify(dims) : JSON.stringify([]);
+  } catch (e) {
+    console.warn(`[CA] Classifier failed on overwrite of template ${id}: ${e.message}`);
+  }
+  await db.execute(
+    `UPDATE ca_templates
+        SET policy_json = ?, state = ?, grant_controls = ?, target_users = ?,
+            target_apps = ?, conditions_summary = ?, control_dimensions = ?
+      WHERE id = ?`,
+    [JSON.stringify(policy), extracted.state, extracted.grantControls, extracted.targetUsers,
+     extracted.targetApps, extracted.conditionsSummary, controlDimensions, id]
+  );
+}
+
 // A3 (May 9, 2026): admin — template CREATE (system-wide standards-setting).
 router.post('/templates', auth.requireAdmin, async (req, res) => {
   try {
@@ -715,58 +827,9 @@ router.post('/templates', auth.requireAdmin, async (req, res) => {
       }
     }
 
-    const extracted = extractPolicyFields(policy);
-
-    // Classify this policy into the canonical control-dimension tags used by
-    // the exemption resolver and alert engine. Structure-only — never reads
-    // displayName. See src/lib/ca-policy-classifier.js.
-    let controlDimensions = null;
-    try {
-      const classified = caClassifier.classifyCaPolicy(policy);
-      const dims = caClassifier.toControlDimensionsList(classified);
-      controlDimensions = dims.length > 0 ? JSON.stringify(dims) : JSON.stringify([]);
-      if (classified.unclassified && classified.unclassified.length > 0) {
-        console.log(`[CA] Template "${name}" classified: dims=[${dims.join(',')}], unclassified=[${classified.unclassified.join(',')}]`);
-      } else {
-        console.log(`[CA] Template "${name}" classified: dims=[${dims.join(',')}]`);
-      }
-    } catch (e) {
-      // Non-fatal: a classifier crash should not block template import. An
-      // empty control_dimensions just means the template is exempt-unaware
-      // until scripts/classify-ca-templates.js backfills it.
-      console.warn(`[CA] Classifier failed for "${name}": ${e.message}`);
-    }
-
-    // Default monitored fields if not provided
-    const defaultMonitored = [
-      'state',
-      'grantControls.builtInControls',
-      'conditions.users.includeUsers',
-      'conditions.users.includeGroups',
-      'conditions.applications.includeApplications',
-      'conditions.users.excludeUsers',
-      'conditions.users.excludeGroups',
-    ];
-
-    const id = await db.insert(
-      `INSERT INTO ca_templates (name, description, policy_json, state, grant_controls,
-        target_users, target_apps, conditions_summary, monitored_fields, control_dimensions,
-        source_tenant_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        description || null,
-        JSON.stringify(policy),
-        extracted.state,
-        extracted.grantControls,
-        extracted.targetUsers,
-        extracted.targetApps,
-        extracted.conditionsSummary,
-        JSON.stringify(monitored_fields || defaultMonitored),
-        controlDimensions,
-        resolvedSourceTenantId,
-      ]
-    );
+    const { id, extracted, monitoredFields } = await insertCaTemplate({
+      name, description, policy, monitored_fields, resolvedSourceTenantId,
+    });
 
     console.log(`[CA] Template "${name}" created (id=${id}) by ${req.session.user.email} — substituted ${substitution.substitutedCount} location GUID(s), skipped ${substitution.skipped.length}`);
     mspAudit.logMspAudit({
@@ -781,7 +844,7 @@ router.post('/templates', auth.requireAdmin, async (req, res) => {
       metadata: {
         state: extracted.state,
         has_description: !!description,
-        monitored_field_count: (monitored_fields || defaultMonitored).length,
+        monitored_field_count: monitoredFields.length,
         source_tenant_id: resolvedSourceTenantId,
         location_substitutions: substitution.substitutedCount,
         location_skipped_count: substitution.skipped.length,
@@ -796,6 +859,145 @@ router.post('/templates', auth.requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[CA] Create template failed:', err.message);
     res.status(500).json({ error: 'Failed to create template: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/ca/templates/bulk — admin: import many CA templates at once,
+ * typically from an exported ZIP (#20). Per-item isolated (each insert in its
+ * own try/catch): one bad policy is recorded in errors[] and the rest still
+ * import. The frontend posts in small chunks so the request body never blows
+ * the JSON size cap, and aggregates the per-chunk results.
+ *
+ * Body: { templates: [{ name, description?, policy_json, monitored_fields? }],
+ *         source_tenant_id? }. A ZIP comes from one tenant, so a single
+ * source_tenant_id applies to the whole batch — when set and a policy carries
+ * raw named-location GUIDs they're substituted to portable placeholders, using
+ * a source-locations index fetched ONCE for the batch. Substitution is
+ * best-effort: a failure logs and imports the policy raw rather than dropping it.
+ */
+router.post('/templates/bulk', auth.requireAdmin, async (req, res) => {
+  try {
+    const { templates, source_tenant_id } = req.body;
+    if (!Array.isArray(templates) || templates.length === 0)
+      return res.status(400).json({ error: 'templates array is required' });
+
+    // Resolve the (single) source tenant for the whole batch once. If it
+    // doesn't resolve we skip substitution (templates still import, just
+    // non-portable) rather than failing the batch.
+    let sourceAzureId = null;
+    let resolvedSourceTenantId = null;
+    if (source_tenant_id !== undefined && source_tenant_id !== null && source_tenant_id !== '') {
+      const sourceTenant = await db.queryOne('SELECT id, tenant_id FROM tenants WHERE id = ?', [source_tenant_id]);
+      if (sourceTenant) { sourceAzureId = sourceTenant.tenant_id; resolvedSourceTenantId = sourceTenant.id; }
+      else console.warn(`[CA] Bulk import — source_tenant_id ${source_tenant_id} did not resolve; importing without GUID substitution`);
+    }
+
+    // Fetch the source tenant's named-location index lazily and ONCE, only if a
+    // policy actually needs it. Cached for the rest of the batch.
+    let locationIndex = null;
+    let locationIndexAttempted = false;
+    async function getLocationIndex() {
+      if (!locationIndexAttempted) {
+        locationIndexAttempted = true;
+        try { locationIndex = await fetchSourceNamedLocationIndex(sourceAzureId); }
+        catch (e) { console.error('[CA] Bulk import — failed to fetch source named locations:', e.message); locationIndex = null; }
+      }
+      return locationIndex;
+    }
+
+    const imported = [];
+    const errors = [];
+    const collisions = [];
+    let overwritten = 0;
+
+    for (const t of templates) {
+      try {
+        if (!t.name || !t.policy_json) { errors.push({ name: t.name || 'unknown', reason: 'missing_fields', error: 'Missing name or policy data' }); continue; }
+
+        // Duplicate-import (#P3): an incoming name that matches an existing
+        // template needs an operator decision. With no directive, REPORT it and
+        // skip — never silently create a duplicate. The frontend re-submits the
+        // collision with on_collision: 'new' | 'overwrite'.
+        const onCollision = (t.on_collision === 'new' || t.on_collision === 'overwrite') ? t.on_collision : null;
+        const existing = await findCaTemplateByName(t.name);
+        if (existing && !onCollision) {
+          collisions.push({ name: t.name, existing_id: existing.id, deployed_count: await caDeployedCount(existing.id) });
+          continue;
+        }
+
+        const policy = typeof t.policy_json === 'string' ? JSON.parse(t.policy_json) : t.policy_json;
+
+        // Best-effort location-GUID substitution. Never drops the item: if the
+        // source index can't be fetched or substitution throws, import raw.
+        if (sourceAzureId && policyHasLocationGUIDs(policy)) {
+          try {
+            const idx = await getLocationIndex();
+            if (idx) await substituteLocationGUIDs(policy, sourceAzureId, idx);
+          } catch (subErr) {
+            console.error(`[CA] Bulk substitution failed for "${t.name}" (importing raw):`, subErr.message);
+          }
+        }
+
+        if (existing && onCollision === 'overwrite') {
+          await overwriteCaTemplate(existing.id, policy);
+          overwritten += 1;
+          // requested_name lets the frontend correlate the row even when 'new'
+          // renames the template (final name != the name it sent).
+          imported.push({ id: existing.id, name: t.name, requested_name: t.name, overwritten: true });
+          continue;
+        }
+
+        // No collision, or 'new': import (renaming to a free name if 'new').
+        const finalName = onCollision === 'new' ? await uniqueCaTemplateName(t.name) : t.name;
+        const { id } = await insertCaTemplate({
+          name: finalName,
+          description: t.description,
+          policy,
+          monitored_fields: t.monitored_fields,
+          resolvedSourceTenantId,
+        });
+        imported.push({ id, name: finalName, requested_name: t.name });
+      } catch (tErr) {
+        console.error(`[CA] Bulk import item "${t.name || 'unknown'}" failed:`, tErr);
+        const { reason, error } = classifyImportError(tErr);
+        errors.push({ name: t.name || 'unknown', reason, error });
+      }
+    }
+
+    // One audit row per batch keeps the log readable. Collisions awaiting a
+    // decision are not a write, so they don't audit.
+    if (imported.length > 0) {
+      mspAudit.logMspAudit({
+        category: mspAudit.CATEGORY.TEMPLATE_CRUD,
+        action: 'ca_template.bulk_create',
+        description: `Bulk-imported ${imported.length} CA template(s)${overwritten ? `, ${overwritten} overwritten` : ''}${errors.length ? `, ${errors.length} failed` : ''}`,
+        templateKey: 'ca_template.bulk_create',
+        templateParams: { imported: imported.length, failed: errors.length },
+        targetType: 'ca_template',
+        targetId: null,
+        targetName: `${imported.length} template(s)`,
+        metadata: {
+          imported: imported.length,
+          overwritten,
+          failed: errors.length,
+          source_tenant_id: resolvedSourceTenantId,
+        },
+        req,
+      }).catch(() => {});
+    }
+
+    res.json({
+      imported: imported.length,
+      failed: errors.length,
+      overwritten,
+      templates: imported,
+      errors: errors.length > 0 ? errors : undefined,
+      collisions: collisions.length > 0 ? collisions : undefined,
+    });
+  } catch (err) {
+    console.error('[CA] Bulk import error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -1755,39 +1957,63 @@ function collectLocationGUIDs(policy) {
  *          substitutedCount: number of GUID→placeholder substitutions made
  *          skipped: [{ guid, type, displayName }] — entries that stayed raw
  */
-async function substituteLocationGUIDs(policy, sourceAzureId) {
+const CA_LOCATION_GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Fetch a source tenant's named locations indexed by GUID. Extracted (#20) so
+// the bulk importer can fetch ONCE per batch and reuse the index across many
+// policies instead of re-querying Graph for every location-referencing policy.
+async function fetchSourceNamedLocationIndex(sourceAzureId) {
+  const resp = await graph.callGraph(
+    sourceAzureId,
+    '/identity/conditionalAccess/namedLocations',
+    { version: 'v1.0', method: 'GET' }
+  );
+  const byGuid = new Map();
+  for (const loc of (resp.value || [])) byGuid.set(loc.id, loc);
+  return byGuid;
+}
+
+// Cheap pre-check: does a CA policy reference any named-location GUID? Lets the
+// bulk importer skip the Graph fetch entirely when no policy in a batch needs it.
+function policyHasLocationGUIDs(policy) {
+  const locations = policy?.conditions?.locations;
+  if (!locations) return false;
+  for (const arr of [locations.includeLocations, locations.excludeLocations]) {
+    if (!Array.isArray(arr)) continue;
+    for (const v of arr) if (typeof v === 'string' && CA_LOCATION_GUID_RE.test(v)) return true;
+  }
+  return false;
+}
+
+// `byGuidIndex` (optional): a pre-fetched index from fetchSourceNamedLocationIndex.
+// Omitted (single-import path) → the source locations are fetched here as before.
+// Provided (bulk path) → no Graph call is made; the shared index is reused.
+async function substituteLocationGUIDs(policy, sourceAzureId, byGuidIndex = null) {
   const result = { substitutedCount: 0, skipped: [] };
   const locations = policy?.conditions?.locations;
   if (!locations) return result;
 
   // Collect GUIDs from include/exclude arrays (sentinels and non-GUID strings ignored).
-  const GUID_RE_LOCAL = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const presentGUIDs = new Set();
   for (const arr of [locations.includeLocations, locations.excludeLocations]) {
     if (!Array.isArray(arr)) continue;
     for (const v of arr) {
-      if (typeof v === 'string' && GUID_RE_LOCAL.test(v)) presentGUIDs.add(v);
+      if (typeof v === 'string' && CA_LOCATION_GUID_RE.test(v)) presentGUIDs.add(v);
     }
   }
   if (presentGUIDs.size === 0) return result;
 
-  // Fetch source tenant's named locations once.
-  let sourceLocations = [];
-  try {
-    const resp = await graph.callGraph(
-      sourceAzureId,
-      '/identity/conditionalAccess/namedLocations',
-      { version: 'v1.0', method: 'GET' }
-    );
-    sourceLocations = resp.value || [];
-  } catch (err) {
-    console.error('[CA] substituteLocationGUIDs — failed to fetch source named locations:', err.message);
-    throw new Error('Cannot substitute named-location GUIDs — failed to query source tenant: ' + err.message);
+  // Use the caller-supplied index if present, else fetch the source tenant's
+  // named locations once.
+  let byGuid = byGuidIndex;
+  if (!byGuid) {
+    try {
+      byGuid = await fetchSourceNamedLocationIndex(sourceAzureId);
+    } catch (err) {
+      console.error('[CA] substituteLocationGUIDs — failed to fetch source named locations:', err.message);
+      throw new Error('Cannot substitute named-location GUIDs — failed to query source tenant: ' + err.message);
+    }
   }
-
-  // Index by GUID for O(1) lookup.
-  const byGuid = new Map();
-  for (const loc of sourceLocations) byGuid.set(loc.id, loc);
 
   // Build the GUID → placeholder map for country-type locations.
   // Multi-country locations get alphabetized ISO codes in the placeholder to
@@ -2223,6 +2449,85 @@ function deepEqual(a, b) {
   return false;
 }
 
+// ── Whole-policy drift (#20 follow-up) ──────────────────────────────────────
+// CA drift now compares the ENTIRE authored policy (like Intune), not a
+// monitored-field subset. Both sides are canonicalized first so only real,
+// operator-authored changes surface: server-managed volatile keys are stripped
+// (id / timestamps / templateId / @odata via normalizeForBaseline), null and
+// empty values collapse to "absent", and scalar arrays are sorted (CA condition
+// arrays are unordered sets). The structural diff is then COALESCED back to
+// field paths so the existing {field, expected, actual} contract — exemption
+// classification, drift log, alerts, accept-hash — keeps working unchanged.
+
+const CA_DRIFT_EXTRA_VOLATILE = ['templateId'];
+
+// Recursively: drop null/undefined, drop empty arrays/objects, sort scalar
+// arrays. Run AFTER normalizeForBaseline (which removes volatile + @odata keys).
+function canonicalizeCaConfig(node) {
+  if (Array.isArray(node)) {
+    const items = node.map(canonicalizeCaConfig).filter(v => v !== undefined);
+    if (items.every(v => v === null || typeof v !== 'object')) {
+      items.sort((a, b) => String(a).localeCompare(String(b)));
+    }
+    return items.length ? items : undefined;
+  }
+  if (node && typeof node === 'object') {
+    const out = {};
+    for (const k of Object.keys(node)) {
+      const v = canonicalizeCaConfig(node[k]);
+      if (v !== undefined) out[k] = v;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }
+  if (node === null) return undefined;
+  return node;
+}
+
+function canonicalCaPolicy(policy) {
+  return canonicalizeCaConfig(normalizeForBaseline(policy, { extraVolatile: CA_DRIFT_EXTRA_VOLATILE })) || {};
+}
+
+// Collapse a structuralDiff leaf path to its field key: truncate at the first
+// array index so a single element change (e.g. "conditions.users.excludeUsers[2]")
+// reports as the whole field ("conditions.users.excludeUsers"), matching the
+// pre-existing field-level drift entries the alert/exemption code expects.
+function caDriftFieldKey(path) {
+  const i = path.indexOf('[');
+  return i === -1 ? path : path.slice(0, i);
+}
+
+// Compare a (placeholder-resolved) template policy against the live policy and
+// return drift entries in the legacy { field, expected, actual } shape.
+function computeCaPolicyDrift(resolvedTemplate, livePolicy, bgGroupId) {
+  // Break-Glass Governance: the tenant's break-glass group is, by operator
+  // design, excluded from EVERY CA policy. When the template defines an
+  // excludeGroups array, treat the bg group as part of the EXPECTED exclusion so
+  // its operator-applied presence in live never reads as drift. Its ABSENCE
+  // still surfaces (a removed exclusion / coverage gap). Only injected when the
+  // template already defines excludeGroups, so we never begin flagging a field
+  // the template left unset.
+  const tmpl = JSON.parse(JSON.stringify(resolvedTemplate));
+  if (bgGroupId) {
+    const eg = tmpl.conditions && tmpl.conditions.users && tmpl.conditions.users.excludeGroups;
+    if (Array.isArray(eg) && !eg.includes(bgGroupId)) eg.push(bgGroupId);
+  }
+
+  const tmplCanon = canonicalCaPolicy(tmpl);
+  const liveCanon = canonicalCaPolicy(livePolicy);
+
+  const fieldKeys = [];
+  const seen = new Set();
+  for (const d of structuralDiff(tmplCanon, liveCanon)) {
+    const fk = caDriftFieldKey(d.path);
+    if (!seen.has(fk)) { seen.add(fk); fieldKeys.push(fk); }
+  }
+  return fieldKeys.map(fk => ({
+    field: fk,
+    expected: getNestedValue(tmplCanon, fk),
+    actual: getNestedValue(liveCanon, fk),
+  }));
+}
+
 /**
  * Run drift detection for a single assignment.
  */
@@ -2230,10 +2535,6 @@ async function checkDrift(assignment) {
   const templatePolicy = typeof assignment.policy_json === 'string'
     ? JSON.parse(assignment.policy_json)
     : assignment.policy_json;
-
-  const monitoredFields = typeof assignment.monitored_fields === 'string'
-    ? JSON.parse(assignment.monitored_fields)
-    : assignment.monitored_fields || [];
 
   // If no live policy linked, try auto-match first
   if (!assignment.live_policy_id) {
@@ -2329,30 +2630,12 @@ async function checkDrift(assignment) {
     _bgGroupId = _bg && _bg.group_id;
   } catch (e) { /* fall back to plain comparison */ }
 
-  // Compare monitored fields (using resolved template with real GUIDs)
-  const drifts = [];
-  for (const fieldPath of monitoredFields) {
-    let expected = getNestedValue(resolvedTemplate, fieldPath);
-    const actual = getNestedValue(livePolicy, fieldPath);
-
-    // Inject the break-glass group into the expected excludeGroups — but ONLY
-    // when the template already defines an excludeGroups array, so we never
-    // begin flagging a field the template previously left unmonitored.
-    if (_bgGroupId && fieldPath === 'conditions.users.excludeGroups'
-        && Array.isArray(expected) && !expected.includes(_bgGroupId)) {
-      expected = [...expected, _bgGroupId];
-    }
-
-    if (expected !== undefined && !deepEqual(expected, actual)) {
-      console.log(`[CA:Drift] Field "${fieldPath}" drifted for assignment ${assignment.id} (${assignment.template_name}):`);
-      console.log(`  expected: ${JSON.stringify(expected)}`);
-      console.log(`  actual:   ${JSON.stringify(actual)}`);
-      drifts.push({
-        field: fieldPath,
-        expected: expected,
-        actual: actual,
-      });
-    }
+  // Whole-policy drift: compare the entire authored policy (resolved template
+  // with real GUIDs) against live. Reports any field that differs — no
+  // monitored-field subset. (#20 follow-up — matches Intune's structural diff.)
+  const drifts = computeCaPolicyDrift(resolvedTemplate, livePolicy, _bgGroupId);
+  for (const d of drifts) {
+    console.log(`[CA:Drift] Field "${d.field}" drifted for assignment ${assignment.id} (${assignment.template_name}): expected ${JSON.stringify(d.expected)}, actual ${JSON.stringify(d.actual)}`);
   }
 
   // Phase 10: three-state transition with acknowledged-drift hash

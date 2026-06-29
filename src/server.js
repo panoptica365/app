@@ -98,6 +98,7 @@ const setupMiddleware = require('./lib/setup/middleware');
 const polling = require('./polling');
 const driftScheduler = require('./drift-scheduler');
 const intuneDriftScheduler = require('./intune-drift-scheduler');
+const adoptDriftScheduler = require('./adopt-drift-scheduler');
 const driftHeartbeat = require('./drift-scheduler-heartbeat');
 const usersStore = require('./users-store');
 
@@ -135,6 +136,16 @@ app.set('trust proxy', 1);
 // a no-op for it and stays at the default for every other route. (The route
 // handler still enforces a 2 MB decoded ceiling.)
 app.use('/api/settings/branding', express.json({ limit: '6mb' }));
+// Intune template bulk import (#20): a batch of Settings Catalog policies can
+// exceed the default ~100 KB JSON cap, which the body parser would reject with
+// a PayloadTooLargeError — surfaced to the operator as a generic "HTTP 500" by
+// the catch-all error handler below. The frontend now imports in small chunks
+// so it never sends a giant body, but raise this admin-only route's limit too
+// so a single legitimately-large policy still imports. Same "first parser to
+// match wins" trick as the branding route above; a no-op for every other path.
+app.use('/api/intune/templates/bulk', express.json({ limit: '8mb' }));
+// Same for the Conditional Access bulk template import (#20).
+app.use('/api/ca/templates/bulk', express.json({ limit: '8mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -596,6 +607,11 @@ async function start() {
 
     // Start Intune drift scheduler (60-minute cycle, offset at :30)
     intuneDriftScheduler.start(intuneApiRoutes.runAllIntuneDriftChecks, intuneApiRoutes.schemaReady);
+
+    // Adopt-in-Place drift scheduler (hourly at :15) — drift-checks adopted
+    // (tenant-sourced) CA + Intune cards on the same hourly cadence as deployed
+    // templates. Moved off the daily known-good worker 2026-06-28.
+    adoptDriftScheduler.start();
 
     // Start morning briefing scheduler
     morningBriefing.start();

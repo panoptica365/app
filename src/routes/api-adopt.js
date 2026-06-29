@@ -8,6 +8,7 @@
  *   POST   /api/adopt/card/:cardId/deactivate    reversible tenant write (Member+)
  *   POST   /api/adopt/card/:cardId/restore       replay deactivation snapshot (Member+)
  *   POST   /api/adopt/card/:cardId/delete        destructive tenant write (Member+)
+ *   POST   /api/adopt/card/:cardId/accept-baseline  re-baseline to live, clear drift; NO tenant write (Member+)
  *
  * Governing rules (spec §2.1, §2.10–2.12, §9):
  *   - Posture: every tenant write is operator-initiated + confirmed; never automatic.
@@ -201,6 +202,24 @@ router.post('/card/:cardId/delete', auth.requireMemberOrAdmin, async (req, res) 
   } catch (e) {
     console.error('[Adopt] delete error:', e.message);
     res.status(500).json({ error: 'delete_failed' });
+  }
+});
+
+/**
+ * (4) Accept current live state as the new baseline — Panoptica-only (NO tenant
+ * write). Re-baselines a drifted adopted card to the current live config and
+ * clears the drift. Returns 200 {ok:false, reason:'not_found'} if the policy was
+ * removed from the tenant (Panoptica.api throws on non-2xx, masking the reason).
+ */
+router.post('/card/:cardId/accept-baseline', auth.requireMemberOrAdmin, async (req, res) => {
+  try {
+    const ctx = await loadCardAndTenant(req, res);
+    if (!ctx) return;
+    const result = await service.acceptBaseline(ctx.tenant, ctx.card, { req, operator: operatorOf(req) });
+    res.json(result);
+  } catch (e) {
+    console.error('[Adopt] accept-baseline error:', e.message);
+    res.status(500).json({ error: 'accept_baseline_failed' });
   }
 });
 

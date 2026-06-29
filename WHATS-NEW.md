@@ -5,6 +5,38 @@ that release, newest first.
 
 ---
 
+## Version 0.2.28 — 2026-06-28
+
+### Importing a batch of Intune policy templates no longer fails
+
+Importing a full export of Intune configuration policies — for example a ZIP of eleven policies — into your template library used to fail with **"Import failed: HTTP 500"**, and you had to import them one at a time. Panoptica365 now imports the batch in small groups, so a large ZIP goes through in a single action with a live **"Importing X of Y…"** progress indicator. If an individual policy can't be imported the others still succeed: the import window stays open and lists exactly which policies failed and why — for example *"Policy is too large to import"* — so you can retry just those with one click instead of starting over. This only affects Panoptica365's own template library; it does not touch your client tenants.
+
+### Conditional Access import, simplified
+
+Conditional Access template import now works just like Intune: upload an exported **ZIP** (or a single policy's JSON file), pick which policies to import, and they're added in robust batches — with live progress, per-item results and one-click retry. The template name and description come straight from each policy, so there's no longer a form to fill in. When the ZIP came from a tenant Panoptica365 manages, named-location references are translated to portable placeholders automatically.
+
+### Conditional Access drift now watches the whole policy
+
+Previously you chose *which fields* of a Conditional Access policy to watch for drift. Now Panoptica365 watches the **entire policy** — exactly like Intune — and alerts on any meaningful change, ignoring noise like internal IDs and timestamps. Nothing to configure. **Heads-up:** because more of each policy is now compared, existing assignments may surface drift on fields that weren't watched before (locations, session controls, sign-in/user risk, platforms…), and any drift you had previously *accepted* may re-appear once — just Accept it again to clear it.
+
+### Adopted policies are now checked for drift every hour
+
+When you adopt a Conditional Access or Intune policy that already exists in a tenant, Panoptica365 watches it for changes. That check now runs **every hour** instead of once a day, so a weakening change to an adopted policy is caught within the hour rather than the next day. Brand-new policies that appear in a tenant are picked up on the same hourly pass: each becomes a monitored card and raises a single **"new policy appeared"** alert for you to review — so a policy added outside Panoptica365 is never silently treated as normal.
+
+### Accept the current state of an adopted policy as its new baseline
+
+When an adopted policy has drifted and you've decided the change is intended, you can now click **Accept as baseline** on its card. Panoptica365 records the current live state as the new monitored baseline, clears the drift, and resolves the alert — then monitors against that state from then on. This updates only Panoptica365's record; nothing is written to the tenant. Re-importing your existing settings never moves a baseline on its own, so a silent change can't slip in that way.
+
+### Importing a template that already exists now asks what to do
+
+If you import a policy whose name matches a template you already have, Panoptica365 no longer creates a silent duplicate. It pauses and lets you choose, for each clash: **import as a new copy** (the original is left untouched) or **overwrite** the existing template. If the template you'd overwrite is already deployed to tenants, you're warned how many — overwriting changes their compliance baseline and flags them as drifted until you redeploy, which stays a separate, deliberate step.
+
+### New alert: an account blocked from sending email (possible compromise)
+
+When Microsoft blocks one of a tenant's own accounts from sending mail because its outbound volume tripped the spam limits, that is almost always a compromised account being used to send spam or phishing. Panoptica365 now raises this as a dedicated **high-severity** alert with its own explanation and step-by-step response, instead of folding it into a generic "Defender alert." It works on Business Premium — Defender for Office 365 P2 is not required. Other Microsoft Defender alerts are unchanged.
+
+---
+
 ## Version 0.2.27 — 2026-06-27
 
 ### Security settings now show real compliance at a glance

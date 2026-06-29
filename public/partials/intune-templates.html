@@ -60,9 +60,12 @@
       <span class="mh-title" data-i18n="intune_templates.import_modal_title">Import Policy Templates</span>
     </div>
     <div class="modal-body">
-      <p style="color:var(--p-text-muted); font-size:0.85rem; margin:0 0 12px 0;" data-i18n="intune_templates.import_intro">
-        Upload the exported ZIP (or a single JSON). Select which policies you want to import as templates.
-      </p>
+      <!-- #20: make the ZIP-or-single capability discoverable (operators often
+           don't realize a whole exported ZIP can be imported in one shot). -->
+      <div style="display:flex; gap:10px; align-items:flex-start; padding:10px 12px; margin:0 0 14px 0; border:1px solid rgba(56,139,253,0.35); border-radius:6px; background:rgba(56,139,253,0.08);">
+        <span aria-hidden="true" style="font-size:1rem; line-height:1.4;">💡</span>
+        <span style="font-size:0.85rem; color:var(--p-text-bright); line-height:1.45;" data-i18n="intune_templates.import_intro">You can upload an entire exported ZIP at once — you'll choose which policies to import — or a single policy JSON file.</span>
+      </div>
       <div class="form-group">
         <label data-i18n="intune_templates.label_zip_file">ZIP or JSON File</label>
         <input type="file" id="intune-import-file" accept=".json,.zip" class="form-control" style="padding:8px;">
@@ -80,6 +83,8 @@
             <option value="all_devices" data-i18n="intune_templates.assign_all_devices">All Devices</option>
           </select>
         </div>
+        <!-- #20: progress while chunked import runs, then per-item results summary -->
+        <div id="intune-import-status" style="display:none; margin:0 0 8px 0; font-size:0.85rem;"></div>
         <div id="intune-import-list" class="modal-scroll-list" style="max-height:40vh; border:1px solid var(--p-border-subtle); border-radius:4px; padding:8px;"></div>
       </div>
     </div>

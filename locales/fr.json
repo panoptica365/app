@@ -459,7 +459,8 @@
     "ual_admin_initiated_password_reset": "Réinitialisation de mot de passe par administrateur",
     "ual_legacy_protocol_re_enabled_per_mailbox": "Protocole hérité réactivé par boîte aux lettres",
     "ual_microsoft_defender_incident": "Incident Microsoft Defender",
-    "configuration_created_outside_panoptica": "Configuration créée en dehors de Panoptica"
+    "configuration_created_outside_panoptica": "Configuration créée en dehors de Panoptica",
+    "ual_user_restricted_from_sending_email": "Utilisateur bloqué pour l’envoi de courrier"
   },
   "_comment_alert_message_prefix": "Préfixes de messages d'alerte personnalisés qui ne correspondent pas au alert_policy_names parent. Les alertes de dérive CA et Intune utilisent ces préfixes anglais littéraux côté serveur; le helper renderAlertMessage les détecte au moment de l'affichage et substitue la forme traduite.",
   "alert_message_prefix": {
@@ -997,6 +998,13 @@
       "attack_vectors": "Ce qu'une régression ici permet :\n\n- DMARC abaissé à p=none. L'application est désactivée; le courrier usurpé qui échoue à SPF/DKIM est livré normalement — la base de la fraude à la facture et de l'usurpation de dirigeant.\n\n- Sélecteur DKIM manquant ou révoqué. Le courrier sortant n'est pas signé, donc les destinataires ne peuvent pas le vérifier et l'alignement DMARC est rompu.\n\n- SPF mis à +all ou assoupli à ~all. Le domaine autorise des expéditeurs qu'il ne devrait pas, ou cesse de rejeter strictement les contrefaçons.\n\n- Un changement légitime. Une migration de fournisseur ou une modification volontaire. Confirmez hors bande, puis acceptez la dérive pour définir la nouvelle référence.",
       "what_to_do": "Étape 1. Ouvrez l'onglet Auth. courriel pour le domaine. La bannière de dérive nomme exactement ce qui a changé (avant → après) et les fiches par enregistrement montrent les valeurs en direct.\n\nÉtape 2. Déterminez si le changement était voulu. Demandez à la personne qui gère le DNS du domaine et vérifiez s'il y a eu un changement récent de registraire ou d'hébergement.\n\nÉtape 3. Si ce n'était pas voulu, corrigez-le chez l'hébergeur DNS — rétablissez la politique DMARC, republiez le sélecteur DKIM ou renforcez SPF. Panoptica ne modifie pas le DNS; vous faites le changement chez le registraire. Actualisez pour confirmer que c'est réglé.\n\nÉtape 4. Si c'était voulu, cliquez sur Accepter sur la dérive pour définir les enregistrements actuels comme nouvelle référence. L'alerte liée se résout.",
       "example_scenario": "Un client déplace son site web vers un nouvel hébergeur. L'assistant d'intégration de l'hébergeur publie « obligeamment » son propre enregistrement SPF et écrase l'existant, retirant l'include Microsoft 365 et faisant passer la fin de -all à ~all.\n\nRien ne casse visiblement — le courrier circule toujours. Mais le domaine est désormais plus facile à usurper, et personne ne le remarquerait depuis Microsoft 365. La revérification quotidienne suivante compare le nouveau SPF à l'instantané précédent, voit l'affaiblissement et déclenche cette alerte avec l'avant/après.\n\nVous ouvrez l'onglet Auth. courriel, voyez que SPF est passé de -all à ~all et a perdu l'include Outlook, reconnaissez la migration du site web, corrigez l'enregistrement SPF chez l'hébergeur DNS pour rétablir l'include et -all, actualisez pour confirmer la cote A, et c'est réglé avant qu'une fausse facture n'arrive."
+    },
+    "ual_user_restricted_from_sending_email": {
+      "what_is_this": "Microsoft Exchange Online Protection (EOP) a automatiquement bloqué l’un des comptes de ce locataire pour l’envoi de courrier, parce que son volume sortant a dépassé les seuils anti-pourriel. Microsoft signale cela comme une alerte « utilisateur bloqué pour l’envoi », et Panoptica365 la promeut ici en signal de premier plan. C’est une protection EOP standard de Business Premium — elle ne nécessite pas Defender pour Office 365 P2.",
+      "why_it_matters": "Un compte interne qui envoie assez de pourriel pour être limité n’est presque jamais l’utilisateur légitime — c’est le signe le plus fiable d’une prise de contrôle de compte. Un attaquant ayant hameçonné ou deviné les identifiants utilise désormais la boîte aux lettres pour diffuser du pourriel ou de l’hameçonnage, souvent vers les contacts de l’utilisateur et vers les autres locataires que vous gérez. Sans intervention, le compte continue d’envoyer jusqu’à la réinitialisation du mot de passe, la réputation d’envoi du locataire se dégrade (le courrier légitime arrive en indésirable), et l’attaquant peut pivoter vers des règles de boîte, du transfert ou d’autres comptes. Le blocage est EOP qui limite les dégâts ; cette alerte est votre signal pour expulser l’attaquant.",
+      "attack_vectors": "Comment un compte en arrive là :\n\n- Hameçonnage d’identifiants — l’utilisateur a saisi son mot de passe sur une fausse page de connexion et l’attaquant s’est connecté.\n- Pulvérisation ou réutilisation de mot de passe — un mot de passe faible ou compromis a donné un accès direct.\n- Vol de jeton / de session — un proxy de type « adversaire au milieu » a volé une session active, contournant la MFA, et envoie depuis celle-ci.\n- Une application OAuth malveillante ou surprivilégiée envoyant au nom de l’utilisateur.\n- Rarement, un envoi en masse légitime réellement mal configuré — à traiter comme l’exception, seulement après avoir écarté une compromission.",
+      "what_to_do": "À traiter comme une compromission probable jusqu’à preuve du contraire :\n\n1. Vérifiez les connexions récentes du compte (journaux de connexion Entra) : IP inconnues, pays, voyage impossible.\n2. Réinitialisez le mot de passe ET révoquez toutes les sessions / jetons d’actualisation actifs — une simple réinitialisation laisse les jetons volés fonctionnels.\n3. Réenregistrez la MFA — supposez que l’attaquant a ajouté sa propre méthode.\n4. Auditez la boîte pour la persistance : règles de transfert, règles de boîte de réception (surtout celles qui suppriment ou déplacent vers des dossiers obscurs), délégations / SendAs, et les éléments envoyés.\n5. Vérifiez si des applications OAuth ont obtenu l’accès à la boîte.\n6. Seulement une fois le compte sécurisé, levez la restriction dans le portail Defender (Entités restreintes) ou via Exchange. La lever avant le nettoyage permet à l’attaquant de reprendre.",
+      "example_scenario": "Un comptable d’un client géré clique sur un faux lien « facture partagée » et saisit son mot de passe Microsoft. Dans la nuit, l’attaquant se connecte depuis un autre pays et envoie 4 000 courriels d’hameçonnage aux contacts du client. EOP détecte le volume anormal et bloque l’envoi, ce qui déclenche cette alerte. L’opérateur la voit dans l’heure, confirme une connexion étrangère, réinitialise le mot de passe, révoque les sessions, supprime une règle de boîte créée par l’attaquant qui supprimait automatiquement les messages de rejet, puis seulement lève la restriction d’envoi. Détecté tôt, la réputation de messagerie du locataire se rétablit et aucun autre compte n’est touché."
     }
   },
   "intune_templates": {
@@ -1012,7 +1020,7 @@
     "fetching_policies": "Récupération des stratégies...",
     "export_policies_btn": "Exporter les stratégies",
     "import_modal_title": "Importer des modèles de stratégies",
-    "import_intro": "Téléversez le ZIP exporté (ou un seul JSON). Sélectionnez les stratégies à importer comme modèles.",
+    "import_intro": "Vous pouvez téléverser un ZIP exporté complet d'un seul coup — vous choisirez ensuite les stratégies à importer — ou un seul fichier JSON de stratégie.",
     "label_zip_file": "Fichier ZIP ou JSON",
     "policies_found": "Stratégies trouvées :",
     "select_all": "Tout sélectionner",
@@ -1071,7 +1079,22 @@
     "alert_email_and_psa": "Courriel + PSA",
     "alert_psa_only": "PSA seulement",
     "alert_email_only": "Courriel seulement",
-    "alert_none": "Aucun"
+    "alert_none": "Aucun",
+    "import_progress": "Importation de {done} sur {total}…",
+    "import_status_imported": "Importé",
+    "import_retry_failed_btn": "Réessayer les échecs ({count})",
+    "import_results_summary": "{imported} importé(s), {failed} en échec :",
+    "import_reason_duplicate_name": "Un modèle portant ce nom existe déjà",
+    "import_reason_db_busy": "Base de données occupée — réessayez dans un instant",
+    "import_reason_too_large": "La stratégie est trop volumineuse pour être importée",
+    "import_reason_missing_fields": "Nom ou données de stratégie manquants",
+    "import_reason_request_failed": "Impossible de joindre le serveur — veuillez réessayer",
+    "import_reason_generic": "Échec de l’importation — consultez le journal du serveur",
+    "import_collisions_summary": "{count} nom(s) existe(nt) déjà — choisissez quoi faire :",
+    "import_collision_deployed_warn": "Déployé sur {count} locataire(s) — l’écrasement modifie leur référence et les signale en dérive jusqu’au redéploiement.",
+    "import_collision_new": "Importer comme nouvelle copie",
+    "import_collision_overwrite": "Écraser l’existant",
+    "import_collision_apply": "Appliquer ({count})"
   },
   "exemptions": {
     "title": "Exemptions — Exceptions accordées dans AC et Intune",
@@ -1258,7 +1281,32 @@
     "toast_heads_up": "Attention : {parts} emplacement(s) nommé(s) sont restés sous forme d’ID bruts. Les emplacements basés sur IP sont propres au locataire et ne seront pas recréés lors du déploiement de ce modèle vers d’autres locataires. Envisagez plutôt de maintenir les stratégies basées sur IP par locataire.",
     "skipped_ip_based": "{count} basés sur IP",
     "skipped_unresolved": "{count} non résolus",
-    "skipped_other": "{count} autres"
+    "skipped_other": "{count} autres",
+    "import_zip_hint": "Téléversez un ZIP exporté complet — vous choisirez les stratégies à importer — ou un seul fichier JSON de stratégie.",
+    "label_zip_file": "Téléverser un fichier ZIP ou JSON",
+    "policies_found": "Stratégies trouvées :",
+    "select_all": "Tout sélectionner",
+    "select_none": "Tout désélectionner",
+    "import_select_count_btn": "Importer la sélection ({count})",
+    "import_retry_failed_btn": "Réessayer les échecs ({count})",
+    "import_progress": "Importation de {done} sur {total}…",
+    "import_status_imported": "Importé",
+    "import_results_summary": "{imported} importé(s), {failed} en échec :",
+    "import_reason_duplicate_name": "Un modèle portant ce nom existe déjà",
+    "import_reason_db_busy": "Base de données occupée — réessayez dans un instant",
+    "import_reason_too_large": "La stratégie est trop volumineuse pour être importée",
+    "import_reason_missing_fields": "Nom ou données de stratégie manquants",
+    "import_reason_request_failed": "Impossible de joindre le serveur — veuillez réessayer",
+    "import_reason_generic": "Échec de l’importation — consultez le journal du serveur",
+    "toast_no_policies_selected": "Aucune stratégie sélectionnée",
+    "toast_zip_read_failed": "Échec de la lecture du ZIP : {message}",
+    "toast_imported": "{imported} modèle(s) importé(s)",
+    "toast_imported_with_failures": "{imported} modèle(s) importé(s), {failed} en échec",
+    "import_collisions_summary": "{count} nom(s) existe(nt) déjà — choisissez quoi faire :",
+    "import_collision_deployed_warn": "Déployé sur {count} locataire(s) — l’écrasement modifie leur référence et les signale en dérive jusqu’au redéploiement.",
+    "import_collision_new": "Importer comme nouvelle copie",
+    "import_collision_overwrite": "Écraser l’existant",
+    "import_collision_apply": "Appliquer ({count})"
   },
   "tenants": {
     "title": "Gestion des locataires",
@@ -1508,7 +1556,10 @@
       "tenant_object_deactivated": "{surface} « {name} » désactivé dans le locataire",
       "tenant_object_restored": "{surface} « {name} » restauré dans le locataire",
       "tenant_object_deleted": "{surface} « {name} » supprimé du locataire",
-      "email_auth_acknowledge": "Dérive d'authentification des courriels acceptée sur {domain} ({mechanism} {changeType}) pour {tenant}"
+      "email_auth_acknowledge": "Dérive d'authentification des courriels acceptée sur {domain} ({mechanism} {changeType}) pour {tenant}",
+      "ca_template.bulk_create": "Importation groupée de {imported} modèle(s) CA, {failed} en échec",
+      "intune_template.bulk_create": "Importation groupée de {imported} modèle(s) Intune, {failed} en échec",
+      "tenant_object_accept_baseline": "État actuel de {surface} « {name} » accepté comme nouvelle référence surveillée"
     },
     "tenant_change": {
       "ca_deploy": "Déploiement de la politique CA « {policyName} »",
@@ -1689,7 +1740,8 @@
       "adopt_native_appeared": "Nouvelle configuration {surface} créée en dehors de Panoptica : « {name} »",
       "adopt_drift": "{surface} issu du locataire « {name} » modifié par rapport à l’état initial : {count} champ(s) ({fields})",
       "adopt_removed": "{surface} issu du locataire « {name} » a été supprimé du locataire en dehors de Panoptica",
-      "adopt_reenabled": "{surface} issu du locataire désactivé « {name} » a été réactivé en dehors de Panoptica"
+      "adopt_reenabled": "{surface} issu du locataire désactivé « {name} » a été réactivé en dehors de Panoptica",
+      "ual_restricted_sender": "{policyName} : {affectedUser} bloqué pour l’envoi de courrier par {source} — compromission de compte possible"
     },
     "section": {
       "details": "Détails",
@@ -3828,7 +3880,14 @@
       "tile_delete": "Supprimer",
       "hint_panoptica_only": "Panoptica seulement",
       "hint_reversible": "Réversible",
-      "hint_permanent": "Permanent"
+      "hint_permanent": "Permanent",
+      "accept_btn": "Accepter comme référence",
+      "hint_accept": "Redéfinir sur l’état actuel",
+      "accept_title": "Accepter l’état actuel comme référence",
+      "accept_confirm": "Accepter l’état actuel de « {name} » comme nouvelle référence surveillée ? La dérive est effacée et Panoptica surveille désormais par rapport à cet état.",
+      "accept_hint": "Met à jour uniquement la référence de Panoptica — aucune modification dans le locataire.",
+      "accept_done": "Référence mise à jour — dérive effacée",
+      "accept_not_found": "Cette stratégie n’existe plus dans le locataire"
     },
     "view_trends": "Tendances",
     "trends": {
@@ -4573,7 +4632,8 @@
         "update_checker": "Vérificateur de mises à jour",
         "retention": "Rétention des données",
         "ca_drift": "Planificateur de dérive CA",
-        "intune_drift": "Planificateur de dérive Intune"
+        "intune_drift": "Planificateur de dérive Intune",
+        "adopt_drift": "Dérive des stratégies adoptées (horaire)"
       },
       "table_worker": "Processus",
       "table_status": "État",

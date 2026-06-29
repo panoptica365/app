@@ -12,6 +12,7 @@ const graph = require('../graph');
 const notifier = require('../notifier');
 const changeLog = require('../change-log');
 const mspAudit = require('../msp-audit');
+const { classifyImportError } = require('../lib/import-error-reason');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -809,7 +810,51 @@ router.post('/templates', auth.requireAdmin, async (req, res) => {
   }
 });
 
+// Duplicate-import helpers (#P3 — warn and choose). Match by exact display name
+// (no UNIQUE constraint on intune_templates.name → first by id wins).
+async function findIntuneTemplateByName(name) {
+  return db.queryOne('SELECT id FROM intune_templates WHERE name = ? ORDER BY id LIMIT 1', [name]);
+}
+
+// Tenants this template is actively DEPLOYED to (a live policy exists) — the
+// overwrite blast radius: each will read as drifted until redeployed.
+async function intuneDeployedCount(templateId) {
+  const row = await db.queryOne(
+    "SELECT COUNT(*) AS n FROM intune_deployments WHERE template_id = ? AND status = 'deployed'",
+    [templateId]
+  );
+  return row ? Number(row.n) : 0;
+}
+
+async function uniqueIntuneTemplateName(name) {
+  const taken = async (n) => !!(await db.queryOne('SELECT id FROM intune_templates WHERE name = ? LIMIT 1', [n]));
+  if (!await taken(name)) return name;
+  for (let i = 2; i <= 999; i++) {
+    const cand = `${name} (${i})`;
+    if (!await taken(cand)) return cand;
+  }
+  return `${name} (${Date.now()})`;
+}
+
+// Overwrite an existing template's BASELINE policy + its policy-derived metadata.
+// Keeps the operator-set name, assignment_target, alert_routing, tags.
+async function overwriteIntuneTemplate(id, t) {
+  const jsonStr = typeof t.policy_json === 'string' ? t.policy_json : JSON.stringify(t.policy_json);
+  await db.execute(
+    `UPDATE intune_templates
+        SET policy_json = ?, category = ?, policy_type = ?, platform = ?, template_family = ?
+      WHERE id = ?`,
+    [jsonStr, t.category || 'other', t.policy_type || 'configurationPolicies',
+     t.platform || 'windows10', t.template_family || null, id]
+  );
+}
+
 // A3 (May 9, 2026): admin — template BULK CREATE.
+// Per-item isolated (each insert in its own try/catch): one bad policy is
+// recorded in errors[] and the rest still import. The frontend posts in small
+// chunks (#20) so the whole-request body never blows the JSON size cap. A name
+// that collides with an existing template is REPORTED (not silently duplicated);
+// the operator then re-submits it with on_collision: 'new' | 'overwrite' (#P3).
 router.post('/templates/bulk', auth.requireAdmin, async (req, res) => {
   try {
     const { templates } = req.body;
@@ -818,28 +863,74 @@ router.post('/templates/bulk', auth.requireAdmin, async (req, res) => {
 
     const imported = [];
     const errors = [];
+    const collisions = [];
+    let overwritten = 0;
 
     for (const t of templates) {
       try {
-        if (!t.name || !t.policy_json) { errors.push({ name: t.name || 'unknown', error: 'Missing name or policy_json' }); continue; }
+        if (!t.name || !t.policy_json) { errors.push({ name: t.name || 'unknown', reason: 'missing_fields', error: 'Missing name or policy data' }); continue; }
+
+        const onCollision = (t.on_collision === 'new' || t.on_collision === 'overwrite') ? t.on_collision : null;
+        const existing = await findIntuneTemplateByName(t.name);
+        if (existing && !onCollision) {
+          collisions.push({ name: t.name, existing_id: existing.id, deployed_count: await intuneDeployedCount(existing.id) });
+          continue;
+        }
+
+        if (existing && onCollision === 'overwrite') {
+          await overwriteIntuneTemplate(existing.id, t);
+          overwritten += 1;
+          // requested_name lets the frontend correlate the row even when 'new'
+          // renames the template (final name != the name it sent).
+          imported.push({ id: existing.id, name: t.name, requested_name: t.name, overwritten: true });
+          continue;
+        }
+
         const jsonStr = typeof t.policy_json === 'string' ? t.policy_json : JSON.stringify(t.policy_json);
         const validTargets = ['none', 'all_users', 'all_devices'];
         const assignTarget = validTargets.includes(t.assignment_target) ? t.assignment_target : 'none';
         const validRouting = ['support', 'personal', 'both', 'none'];
         const routing = validRouting.includes(t.alert_routing) ? t.alert_routing : 'both';
+        const finalName = onCollision === 'new' ? await uniqueIntuneTemplateName(t.name) : t.name;
         const id = await db.insert(
           `INSERT INTO intune_templates (name, description, category, policy_type, platform, template_family, policy_json, source_tenant, tags, assignment_target, alert_routing)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [t.name, t.description || null, t.category || 'other', t.policy_type || 'configurationPolicies',
+          [finalName, t.description || null, t.category || 'other', t.policy_type || 'configurationPolicies',
            t.platform || 'windows10', t.template_family || null, jsonStr, t.source_tenant || null, t.tags || null, assignTarget, routing]
         );
-        imported.push({ id, name: t.name });
+        imported.push({ id, name: finalName, requested_name: t.name });
       } catch (tErr) {
-        errors.push({ name: t.name || 'unknown', error: tErr.message });
+        console.error(`[Intune:Templates] Bulk import item "${t.name || 'unknown'}" failed:`, tErr);
+        const { reason, error } = classifyImportError(tErr);
+        errors.push({ name: t.name || 'unknown', reason, error });
       }
     }
 
-    res.json({ imported: imported.length, failed: errors.length, templates: imported, errors: errors.length > 0 ? errors : undefined });
+    // #20 — one audit row per batch (the single-create route audits per item;
+    // bulk imports previously left no trail at all). Skip if nothing was written.
+    if (imported.length > 0) {
+      mspAudit.logMspAudit({
+        category: mspAudit.CATEGORY.TEMPLATE_CRUD,
+        action: 'intune_template.bulk_create',
+        description: `Bulk-imported ${imported.length} Intune template(s)${overwritten ? `, ${overwritten} overwritten` : ''}${errors.length ? `, ${errors.length} failed` : ''}`,
+        templateKey: 'intune_template.bulk_create',
+        templateParams: { imported: imported.length, failed: errors.length },
+        targetType: 'intune_template',
+        targetId: null,
+        targetName: `${imported.length} template(s)`,
+        metadata: { imported: imported.length, overwritten, failed: errors.length },
+        req,
+      }).catch(() => {});
+    }
+
+    res.json({
+      imported: imported.length,
+      failed: errors.length,
+      overwritten,
+      templates: imported,
+      errors: errors.length > 0 ? errors : undefined,
+      collisions: collisions.length > 0 ? collisions : undefined,
+    });
   } catch (err) {
     console.error('[Intune:Templates] Bulk import error:', err);
     res.status(500).json({ error: err.message });

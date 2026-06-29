@@ -5,6 +5,38 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.28 — 2026-06-28
+
+### L'importation d'un lot de modèles de stratégies Intune n'échoue plus
+
+L'importation d'un export complet de stratégies de configuration Intune — par exemple un ZIP de onze stratégies — dans votre bibliothèque de modèles échouait auparavant avec **« Échec de l'importation : HTTP 500 »**, et il fallait les importer une à la fois. Panoptica365 importe désormais le lot par petits groupes : un ZIP volumineux passe en une seule action, avec un indicateur de progression **« Importation de X sur Y… »** en direct. Si une stratégie ne peut pas être importée, les autres réussissent quand même : la fenêtre d'importation reste ouverte et indique exactement quelles stratégies ont échoué et pourquoi — par exemple *« La stratégie est trop volumineuse pour être importée »* — afin que vous puissiez réessayer uniquement celles-ci en un clic au lieu de tout recommencer. Cela ne concerne que la bibliothèque de modèles de Panoptica365 ; vos locataires clients ne sont pas touchés.
+
+### L'importation d'accès conditionnel, simplifiée
+
+L'importation de modèles d'accès conditionnel fonctionne désormais comme celle d'Intune : téléversez un **ZIP** exporté (ou le fichier JSON d'une seule stratégie), choisissez les stratégies à importer, et elles sont ajoutées par lots robustes — avec progression en direct, résultats par élément et réessai en un clic. Le nom et la description du modèle proviennent directement de chaque stratégie; il n'y a donc plus de formulaire à remplir. Lorsque le ZIP provient d'un locataire géré par Panoptica365, les références aux emplacements nommés sont automatiquement converties en espaces réservés portables.
+
+### La détection de dérive d'accès conditionnel surveille toute la stratégie
+
+Auparavant, vous choisissiez *quels champs* d'une stratégie d'accès conditionnel surveiller. Désormais, Panoptica365 surveille la **stratégie entière** — exactement comme pour Intune — et signale tout changement significatif, en ignorant le bruit comme les identifiants internes et les horodatages. Rien à configurer. **À noter :** comme une plus grande partie de chaque stratégie est maintenant comparée, les affectations existantes peuvent faire apparaître une dérive sur des champs qui n'étaient pas surveillés auparavant (emplacements, contrôles de session, risque de connexion/utilisateur, plateformes…), et toute dérive que vous aviez déjà *acceptée* peut réapparaître une fois — il suffit de l'accepter à nouveau pour l'effacer.
+
+### Les stratégies adoptées sont désormais vérifiées toutes les heures
+
+Lorsque vous adoptez une stratégie d'accès conditionnel ou Intune qui existe déjà dans un locataire, Panoptica365 en surveille les modifications. Cette vérification s'exécute maintenant **toutes les heures** au lieu d'une fois par jour : un changement affaiblissant une stratégie adoptée est détecté dans l'heure plutôt que le lendemain. Les nouvelles stratégies qui apparaissent dans un locataire sont prises en compte lors de ce même passage horaire : chacune devient une carte surveillée et déclenche une seule alerte **« nouvelle stratégie apparue »** à examiner — ainsi, une stratégie ajoutée en dehors de Panoptica365 n'est jamais silencieusement considérée comme normale.
+
+### Accepter l'état actuel d'une stratégie adoptée comme nouvelle référence
+
+Lorsqu'une stratégie adoptée a dérivé et que vous estimez le changement intentionnel, vous pouvez désormais cliquer sur **Accepter comme référence** sur sa carte. Panoptica365 enregistre l'état actuel comme nouvelle référence surveillée, efface la dérive et résout l'alerte — puis surveille par rapport à cet état. Cela ne met à jour que l'enregistrement de Panoptica365 ; rien n'est écrit dans le locataire. La réimportation de vos paramètres existants ne déplace jamais une référence d'elle-même, de sorte qu'un changement silencieux ne peut pas s'y glisser.
+
+### L'importation d'un modèle qui existe déjà vous demande quoi faire
+
+Si vous importez une stratégie dont le nom correspond à un modèle que vous possédez déjà, Panoptica365 ne crée plus de doublon silencieux. Il s'arrête et vous laisse choisir, pour chaque conflit : **importer comme nouvelle copie** (l'original reste intact) ou **écraser** le modèle existant. Si le modèle à écraser est déjà déployé sur des locataires, vous êtes averti du nombre — l'écrasement modifie leur référence de conformité et les signale en dérive jusqu'au redéploiement, qui demeure une étape distincte et délibérée.
+
+### Nouvelle alerte : un compte bloqué pour l'envoi de courrier (compromission possible)
+
+Lorsque Microsoft bloque l'un des comptes d'un locataire pour l'envoi de courrier parce que son volume sortant a dépassé les seuils anti-pourriel, il s'agit presque toujours d'un compte compromis utilisé pour envoyer du pourriel ou de l'hameçonnage. Panoptica365 signale désormais cela comme une alerte dédiée de **gravité élevée**, avec sa propre explication et sa marche à suivre, au lieu de la fondre dans une alerte « Defender » générique. Cela fonctionne avec Business Premium — Defender pour Office 365 P2 n'est pas requis. Les autres alertes Microsoft Defender sont inchangées.
+
+---
+
 ## Version 0.2.27 — 2026-06-27
 
 ### Les réglages de sécurité affichent maintenant la conformité réelle d'un coup d'œil
