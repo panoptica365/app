@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Deploy Conditional Access policies">
 <meta name="lesson:subtitle" content="Assign templates from your library, deploy them to the tenant, and let drift detection guard them afterward.">
 <meta name="lesson:icon" content="key-round">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -78,6 +78,17 @@
     <div class="clabel">Before you deploy</div>
     <p>Before your first real deployment, read the <em>pre-flight checklist</em> lesson in the Conditional Access card of Learn. Break-glass accounts and service-account inventory are not optional. A CA policy deployed in haste can lock an entire customer out.</p>
   </div>
+
+  <h2>Building your template library (import)</h2>
+
+  <p>Templates come from real tenants. Export the Conditional Access policies you want to standardise on — from a reference tenant — and bring them into your library by <strong>file</strong>: on the <strong>CA Policies</strong> tab, click <strong>Import</strong> and upload the export. Import is <strong>bulk and file-based</strong> — drop in a <strong>ZIP</strong> (many policies) or a single <strong>JSON</strong>, and Panoptica lists every policy it found so you can tick the ones to bring in. There's no pasting JSON by hand and no choosing which fields to watch.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Whole-policy monitoring</div>
+    <p>Panoptica monitors the <strong>entire</strong> policy, not a hand-picked subset of fields. Microsoft's volatile and computed fields (timestamps, <code>@odata</code> noise, <code>templateId</code>) are excluded automatically, so watching everything doesn't manufacture false drift.</p>
+  </div>
+
+  <p><strong>Duplicate names.</strong> If a policy you're importing has the same name as a template you already hold, Panoptica asks which you mean: import it as a <strong>new (renamed) copy</strong>, or <strong>overwrite</strong> the existing template. Overwriting matters when that template is already <strong>deployed to tenants</strong> — it changes their baseline, so those tenants show as drifted until you redeploy. A warning tells you how many tenants are affected before you commit.</p>
 
   <h2>Assigning templates to a tenant</h2>
 
@@ -196,7 +207,7 @@
   <ul>
     <li><strong>No duplicates.</strong> Policies you already deployed from a template are matched by their object id and skipped — even if you renamed them in the tenant. The button stays available, and re-clicking is safe: it only adopts settings that are genuinely new.</li>
     <li><strong>Microsoft-managed policies</strong> are adopted too, flagged as such. Where Microsoft refuses a change, the action degrades gracefully ("managed by Microsoft, cannot be changed here") instead of failing. <strong>Security Defaults</strong> is <em>not</em> a policy — it's shown as a simple on/off indicator, never a card.</li>
-    <li><strong>Drift from as-found.</strong> A tenant-sourced card's alert reads <em>"changed from as-found"</em> — not "deviates from your standard," because there's no template behind it yet. The daily sweep catches changes; a brand-new CA policy created directly in the console is caught within minutes.</li>
+    <li><strong>Drift from as-found.</strong> A tenant-sourced card's alert reads <em>"changed from as-found"</em> — not "deviates from your standard," because there's no template behind it yet. An <strong>hourly</strong> check catches changes — the same cadence that guards your deployed templates, so adopted and templated policies are watched alike.</li>
   </ul>
 
   <h3>What you can do with a tenant-sourced card</h3>
@@ -211,9 +222,11 @@
 
   <p>Every one of these is recorded in the audit log and the tenant's Change Log, with your name and the policy name.</p>
 
+  <p>When an adopted card <strong>drifts</strong> and the new state is intentional, open it and choose <strong>Accept current as baseline</strong> (the button reads <strong>Accept as baseline</strong>): the drift clears and Panoptica monitors against the new state from then on. Only <strong>adopting</strong> a policy and <strong>accepting</strong> its current state move the baseline — re-importing never does.</p>
+
   <h3>Watching for what appears later</h3>
 
-  <p>Adoption aside, Panoptica watches <strong>every</strong> tenant — templated or not — for a CA policy that appears <strong>outside Panoptica</strong> (created directly in the Entra console). When one shows up it becomes a tenant-sourced card and fires a <em>"configuration created outside Panoptica"</em> alert, so a change made around your process doesn't slip by. As you later roll out your own standards, you can deactivate or delete the messy native policies — or just keep monitoring them.</p>
+  <p>Adoption aside, Panoptica watches <strong>every</strong> tenant — templated or not — for a CA policy that appears <strong>outside Panoptica</strong> (created directly in the Entra console). On the <strong>next hourly check</strong> it's auto-discovered, monitored from its as-found state, and raises a <strong>new unmanaged policy discovered</strong> alert (<em>"configuration created outside Panoptica"</em>) so a change made around your process doesn't slip by. Policies that already existed when you first connected are different — they're recorded quietly and brought under watch by a one-time <strong>Import existing settings</strong>, not auto-alerted at onboarding. As you later roll out your own standards, you can deactivate or delete the messy native policies — or just keep monitoring them.</p>
 
   <h2>Operating note</h2>
 

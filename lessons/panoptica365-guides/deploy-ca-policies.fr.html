@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Déployez des stratégies d'accès conditionnel">
 <meta name="lesson:subtitle" content="Affectez des modèles de votre bibliothèque, déployez-les sur le locataire, et laissez la détection de dérive les garder par la suite.">
 <meta name="lesson:icon" content="key-round">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -78,6 +78,17 @@
     <div class="clabel">Avant de déployer</div>
     <p>Avant votre premier vrai déploiement, lisez la leçon sur la <em>liste de vérification pré-déploiement</em> dans la carte Accès conditionnel d'Apprendre. Les comptes bris de glace et l'inventaire des comptes de service ne sont pas optionnels. Une stratégie AC déployée à la hâte peut verrouiller un client entier dehors.</p>
   </div>
+
+  <h2>Constituer votre bibliothèque de modèles (importation)</h2>
+
+  <p>Les modèles proviennent de locataires réels. Exportez les stratégies d'accès conditionnel sur lesquelles vous voulez vous standardiser — depuis un locataire de référence — et amenez-les dans votre bibliothèque par <strong>fichier</strong> : sous l'onglet <strong>Stratégies AC</strong>, cliquez sur <strong>Importer</strong> et téléversez l'exportation. L'importation est <strong>groupée et basée sur fichier</strong> — déposez un <strong>ZIP</strong> (plusieurs stratégies) ou un seul <strong>JSON</strong>, et Panoptica liste chaque stratégie trouvée pour que vous cochiez celles à importer. Plus de JSON à coller à la main ni de champs à choisir pour la surveillance.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Surveillance de la stratégie entière</div>
+    <p>Panoptica surveille la stratégie <strong>entière</strong>, pas un sous-ensemble de champs choisi à la main. Les champs volatils et calculés de Microsoft (horodatages, bruit <code>@odata</code>, <code>templateId</code>) sont exclus automatiquement, de sorte que tout surveiller ne fabrique pas de fausse dérive.</p>
+  </div>
+
+  <p><strong>Noms en double.</strong> Si une stratégie que vous importez porte le même nom qu'un modèle que vous possédez déjà, Panoptica vous demande ce que vous voulez : l'importer comme une <strong>nouvelle copie (renommée)</strong>, ou <strong>écraser</strong> le modèle existant. L'écrasement compte lorsque ce modèle est déjà <strong>déployé chez des locataires</strong> — il change leur référence, de sorte que ces locataires apparaissent en dérive jusqu'à ce que vous les redéployiez. Un avertissement vous indique combien de locataires sont touchés avant de confirmer.</p>
 
   <h2>Affecter des modèles à un locataire</h2>
 
@@ -197,7 +208,7 @@
   <ul>
     <li><strong>Aucun doublon.</strong> Les stratégies que vous avez déjà déployées à partir d'un modèle sont reconnues par leur identifiant d'objet et ignorées — même si vous les avez renommées dans le locataire. Le bouton reste disponible, et recliquer est sans risque : seuls les paramètres réellement nouveaux sont adoptés.</li>
     <li><strong>Les stratégies gérées par Microsoft</strong> sont aussi adoptées, signalées comme telles. Là où Microsoft refuse une modification, l'action se dégrade proprement (« géré par Microsoft, ne peut pas être modifié ici ») au lieu d'échouer. Les <strong>paramètres de sécurité par défaut</strong> ne sont <em>pas</em> une stratégie — ils sont affichés comme un simple indicateur activé/désactivé, jamais comme une carte.</li>
-    <li><strong>Dérive par rapport à l'état initial.</strong> L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em> — et non « s'écarte de votre standard », car il n'y a pas encore de modèle derrière. La surveillance quotidienne détecte les changements; une toute nouvelle stratégie AC créée directement dans la console est détectée en quelques minutes.</li>
+    <li><strong>Dérive par rapport à l'état initial.</strong> L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em> — et non « s'écarte de votre standard », car il n'y a pas encore de modèle derrière. Une vérification <strong>horaire</strong> détecte les changements — la même cadence qui garde vos modèles déployés, de sorte que stratégies adoptées et modélisées sont surveillées pareillement.</li>
   </ul>
 
   <h3>Ce que vous pouvez faire avec une carte issue du locataire</h3>
@@ -212,9 +223,11 @@
 
   <p>Chacune de ces actions est consignée dans le journal d'audit et dans le journal des modifications du locataire, avec votre nom et le nom de la stratégie.</p>
 
+  <p>Lorsqu'une carte adoptée <strong>dérive</strong> et que le nouvel état est intentionnel, ouvrez-la et choisissez <strong>Accepter l'état actuel comme référence</strong> (le bouton affiche <strong>Accepter comme référence</strong>) : la dérive s'efface et Panoptica surveille désormais par rapport au nouvel état. Seuls l'<strong>adoption</strong> d'une stratégie et l'<strong>acceptation</strong> de son état actuel déplacent la référence — réimporter ne le fait jamais.</p>
+
   <h3>Surveiller ce qui apparaît plus tard</h3>
 
-  <p>Au-delà de l'adoption, Panoptica surveille <strong>chaque</strong> locataire — avec ou sans modèles — pour détecter une stratégie AC qui apparaît <strong>en dehors de Panoptica</strong> (créée directement dans la console Entra). Lorsqu'elle surgit, elle devient une carte issue du locataire et déclenche une alerte <em>« configuration créée en dehors de Panoptica »</em>, afin qu'un changement effectué hors de votre processus ne passe pas inaperçu. À mesure que vous déployez ensuite vos propres standards, vous pouvez désactiver ou supprimer les stratégies natives encombrantes — ou simplement continuer à les surveiller.</p>
+  <p>Au-delà de l'adoption, Panoptica surveille <strong>chaque</strong> locataire — avec ou sans modèles — pour détecter une stratégie AC qui apparaît <strong>en dehors de Panoptica</strong> (créée directement dans la console Entra). À la <strong>prochaine vérification horaire</strong>, elle est découverte automatiquement, surveillée à partir de son état initial, et déclenche une alerte <strong>nouvelle stratégie non gérée découverte</strong> (<em>« configuration créée en dehors de Panoptica »</em>), afin qu'un changement effectué hors de votre processus ne passe pas inaperçu. Les stratégies qui existaient déjà lors de votre première connexion sont différentes — elles sont enregistrées discrètement et mises sous surveillance par une opération <strong>Importer les paramètres existants</strong> ponctuelle, sans alerte automatique à l'intégration. À mesure que vous déployez ensuite vos propres standards, vous pouvez désactiver ou supprimer les stratégies natives encombrantes — ou simplement continuer à les surveiller.</p>
 
   <h2>Note d'exploitation</h2>
 

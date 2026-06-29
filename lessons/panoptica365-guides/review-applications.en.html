@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Review applications — approve what you trust, triage the rest">
 <meta name="lesson:subtitle" content="The Applications tab workflow: Refresh, mark Known good, Save — and let Sonnet triage everything you didn't approve.">
 <meta name="lesson:icon" content="app-window">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -206,6 +206,12 @@
   </figure>
 
   <p>This is the defense against a classic attack pattern: a legitimate, long-trusted app whose credentials are stolen and which suddenly sprouts <code>Mail.Read</code> for the whole tenant. You approved what it was — Panoptica365 tells you when it becomes something else.</p>
+
+  <h2>Credential expiry</h2>
+
+  <p>Beyond permissions, Panoptica watches each app registration's <strong>credentials</strong> — its client secrets and certificates — for expiry. When one falls within <strong>30 or 7 days</strong> of its expiry date (or has already <strong>expired</strong>), the app row carries an <strong>expiring / expired badge</strong>, the date is coloured amber or red in the expanded detail, and the tab summary shows a count of affected apps. The same milestones fire an <strong>App secret / certificate expiry</strong> alert.</p>
+
+  <p>This one is operational, not a compromise signal: an expired secret silently breaks whatever the app powered — a backup job, a connector, an unattended script — usually surfacing as an opaque 401 at the worst possible moment. Catching it 30 days out turns an outage into a planned five-minute rotation. Rotate the credential in <strong>Entra → App registrations → Certificates &amp; secrets</strong>; if the app is no longer used, remove it entirely, which shrinks the attack surface too.</p>
 
   <h2>When to redo this</h2>
 

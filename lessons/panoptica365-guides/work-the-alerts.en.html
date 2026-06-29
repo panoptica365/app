@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Work the alerts">
 <meta name="lesson:subtitle" content="Your actual day-to-day: triage, the detail slideout, AI analysis, the Identity Timeline, and resolving with discipline.">
 <meta name="lesson:icon" content="bell-ring">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -176,6 +176,26 @@
   </figure>
 
   <p>It's deliberately conservative — it will not narrate a compromise that isn't supported by the events. Deep links take you to the user in Entra and the incident in Defender; <strong>Re-analyze</strong> (Operator role and up) reruns the correlation after things change.</p>
+
+  <h2>Alert types worth recognizing</h2>
+
+  <p>Most of the queue is sign-ins, audit-log events, and drift, but a few types carry their own playbook:</p>
+
+  <ul>
+    <li><strong>App secret / certificate expiry</strong> — an app-registration credential is within 30 or 7 days of expiry (or already expired). Operational, not an attack: rotate the credential before the integration silently breaks. Also surfaced on the <strong>Applications</strong> tab.</li>
+    <li><strong>User restricted from sending email</strong> — Exchange Online Protection blocked one of the tenant's own accounts for outbound spam. Treat it as <strong>possible account compromise</strong>: check the user's recent sign-ins, reset the password and revoke sessions, audit inbox rules and Sent Items, then release the restriction.</li>
+    <li><strong>New unmanaged policy discovered</strong> — a Conditional Access or Intune policy appeared in a tenant that Panoptica wasn't managing. Review it, then adopt, deactivate, or delete it from the policy tab.</li>
+    <li><strong>CA / Intune policy drift</strong> — a monitored policy (deployed or adopted) changed. The two deploy guides cover how to respond.</li>
+  </ul>
+
+  <h3>Inbound spam and phishing already blocked — "Create exception"</h3>
+
+  <p>Some Defender signals are noise by the time you see them: Microsoft already blocked the inbound spam or phish. These alerts now carry a <strong>Create exception</strong> button — it silences that policy for <strong>this tenant only</strong> or <strong>all managed tenants</strong>, resolves the open ones, and auto-resolves future matches (revoke it later on the Exemptions page). Reach for it when a policy reliably reports things Microsoft already handles.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Inbound noise vs outbound signal</div>
+    <p>Silencing <em>inbound</em> spam that's already blocked is safe housekeeping. <strong>Outbound</strong> spam — the "user restricted from sending email" alert above — is the opposite: a loud signal of a likely compromised account. It keeps firing, and it should.</p>
+  </div>
 
   <h2>Resolution discipline</h2>
 

@@ -5,6 +5,14 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.29 — 2026-06-29
+
+### Guides opérateur mis à jour pour la dernière version
+
+Les **Guides Panoptica365** du carrefour Apprendre sont maintenant à jour avec les dernières versions. Les guides Accès conditionnel et Intune décrivent la nouvelle importation groupée par fichier (avec gestion des noms en double et résultats par élément), la surveillance de dérive sur la stratégie entière, les vérifications horaires des stratégies adoptées, et l'acceptation de l'état actuel d'une stratégie dérivée comme nouvelle référence. Le guide des paramètres de sécurité reflète le modèle de conformité en un coup d'œil, où un paramètre passe au vert de lui-même dès qu'il correspond, **Appliquer** et **Accepter l'état actuel comme référence** étant les deux actions. Les guides d'alertes ajoutent les nouveaux types d'alertes — expiration de secret/certificat d'application, un utilisateur bloqué pour l'envoi de courrier, et les nouvelles stratégies non gérées découvertes — ainsi que la **Créer une exception** en un clic pour le pourriel entrant déjà bloqué. Les guides du tableau de bord, des applications, des rapports et des exemptions intègrent le stockage en GB, l'onglet **Audits** de SharePoint, les badges d'expiration d'identifiant, et la liste plus complète des administrateurs dans le rapport de Documentation de configuration. Le guide du tableau de bord couvre désormais les dix onglets, et un tout nouveau guide **Authentification des courriels** explique l'onglet Auth. courriel — le SPF, le DKIM et le DMARC de chaque domaine, notés et surveillés contre la dérive. Tous les guides sont mis à jour en français, en anglais et en espagnol.
+
+---
+
 ## Version 0.2.28 — 2026-06-28
 
 ### L'importation d'un lot de modèles de stratégies Intune n'échoue plus

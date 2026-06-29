@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Revise las aplicaciones — apruebe lo que es de confianza y deje el triaje al resto">
 <meta name="lesson:subtitle" content="El flujo de la pestaña Aplicaciones: Actualizar, marcar De confianza, Guardar — y dejar que Sonnet haga el triaje de todo lo que no aprobó.">
 <meta name="lesson:icon" content="app-window">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -205,6 +205,12 @@
   </figure>
 
   <p>Esta es la defensa contra un patrón de ataque clásico: una aplicación legítima y de confianza desde hace años cuyas credenciales son robadas y que de pronto brota con <code>Mail.Read</code> para todo el inquilino. Usted aprobó lo que era — Panoptica365 le avisa cuando se convierte en otra cosa.</p>
+
+  <h2>Caducidad de credenciales</h2>
+
+  <p>Más allá de los permisos, Panoptica vigila las <strong>credenciales</strong> de cada registro de aplicación — sus secretos de cliente y certificados — ante su caducidad. Cuando una está a <strong>30 o 7 días</strong> de su fecha de caducidad (o ya ha <strong>caducado</strong>), la fila de la aplicación lleva un <strong>distintivo «por caducar / caducada»</strong>, la fecha se colorea en ámbar o rojo en el detalle desplegado, y el resumen de la pestaña muestra un recuento de las aplicaciones afectadas. Esos mismos hitos generan una alerta de <strong>Expiración de secreto / certificado de aplicación</strong>.</p>
+
+  <p>Esta es operativa, no una señal de compromiso: un secreto caducado rompe en silencio lo que la aplicación impulsaba — un trabajo de copia de seguridad, un conector, un script desatendido — y suele manifestarse como un 401 opaco en el peor momento. Detectarla con 30 días de antelación convierte una interrupción en una rotación planificada de cinco minutos. Rote la credencial en <strong>Entra → Registros de aplicaciones → Certificados y secretos</strong>; si la aplicación ya no se usa, elimínela por completo, lo que también reduce la superficie de ataque.</p>
 
   <h2>Cuándo repetir esto</h2>
 

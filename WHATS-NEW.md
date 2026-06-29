@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.2.29 — 2026-06-29
+
+### Operator guides refreshed for the latest release
+
+The **Panoptica365 Guides** in the Learn hub are now up to date with the last few releases. The Conditional Access and Intune guides describe the new file-based bulk import (with duplicate-name handling and per-item results), whole-policy drift monitoring, hourly checks on adopted policies, and accepting a drifted policy's current state as its new baseline. The Security-settings guide reflects the at-a-glance compliance model, where a setting turns green on its own once it matches and **Apply** and **Accept current as baseline** are the two actions. The alerts guides add the new alert types — app secret/certificate expiry, a user blocked from sending mail, and newly discovered unmanaged policies — and the one-click **Create exception** for already-blocked inbound spam. The dashboard, applications, reports and exemptions guides pick up storage shown in GB, the SharePoint **Audits** tab, credential-expiry badges, and the fuller administrator roster in the Configuration Documentation report. The tenant-dashboard guide now covers all ten tabs, and a brand-new **Email authentication** guide explains the Email Auth tab — each domain's SPF, DKIM and DMARC, graded and watched for drift. Every guide is updated in English, French and Spanish.
+
+---
+
 ## Version 0.2.28 — 2026-06-28
 
 ### Importing a batch of Intune policy templates no longer fails

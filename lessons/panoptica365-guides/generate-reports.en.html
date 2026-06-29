@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Generate reports">
 <meta name="lesson:subtitle" content="Four report types and when to use each: posture for the QBR, documentation for the binder, quick assessment for the prospect.">
 <meta name="lesson:icon" content="file-text">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -98,7 +98,7 @@
 
   <p><strong>Security Posture Report (PDF).</strong> The flagship customer deliverable: Secure Score and trends, Conditional Access coverage, alert activity over the selected period, charts, and an AI-written analysis of the tenant's posture. Takes a <strong>time range</strong> — last 7, 30, or 90 days. This is your QBR document.</p>
 
-  <p><strong>Configuration Documentation (PDF).</strong> A point-in-time snapshot of the tenant's configuration, organized like the dashboard: identity, access policies, devices, email, collaboration. No time range — it documents <em>now</em>. This is the binder document: onboarding records, audit and insurance evidence, offboarding handovers. When a previous snapshot exists it's loaded for comparison.</p>
+  <p><strong>Configuration Documentation (PDF).</strong> A point-in-time snapshot of the tenant's configuration, organized like the dashboard: identity, access policies, devices, email, collaboration. No time range — it documents <em>now</em>. This is the binder document: onboarding records, audit and insurance evidence, offboarding handovers. When a previous snapshot exists it's loaded for comparison. Its administrator section now lists <strong>every account holding any admin role</strong> — Exchange, Compliance, Teams, SharePoint, Intune, User, Helpdesk, and the rest — not just Global Admins, with the Global-Admin count kept as a headline figure. (Roles a user is only <em>eligible</em> for through PIM but hasn't activated aren't included yet.)</p>
 
   <p><strong>Quick Assessment (PDF).</strong> Built for the audit-only / prospect scenario: a concise, findings-first assessment of a tenant's current state. Before generating, an optional <strong>context box</strong> lets you tell the AI what kind of organization this is — <em>"e.g. 40-person accounting firm"</em> — which sharpens the recommendations considerably. Fill it in; two sentences of context noticeably improve the output. Pairs naturally with audit-only tenants and their 14-day window.</p>
 
@@ -151,6 +151,8 @@
   <p>Reports carry your branding — company name and logo on the cover and footers — configured once by an Admin in <strong>Settings → Report Branding</strong> (transparent PNG, max 2 MB). Do this before the first customer-facing report goes out.</p>
 
   <p>Reports are generated in the <strong>tenant's language</strong> (the Language field on the tenant), in all three locales — set a French-speaking customer's tenant to <em>fr</em> once, and every deliverable comes out in French.</p>
+
+  <p>The same goes for the <strong>SharePoint permissions PDF</strong> (exported from a permissions audit): it renders in the tenant's language, <strong>wraps long entries</strong> instead of overlapping them, and resolves raw group IDs to readable names.</p>
 
   <h2>Choosing, in practice</h2>
 

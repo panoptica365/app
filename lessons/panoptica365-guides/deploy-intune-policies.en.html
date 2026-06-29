@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Deploy Intune policies">
 <meta name="lesson:subtitle" content="Same template-and-drift model as CA, applied to device configuration: assign, deploy, watch.">
 <meta name="lesson:icon" content="monitor-smartphone">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -74,6 +74,17 @@
   <p>If you've read the CA policies guide, this one will feel familiar — deliberately. Intune deployments use the same template-and-drift model: a library you maintain (sidebar → <strong>Intune Policies</strong>), per-tenant deployments, and continuous drift detection on what's live.</p>
 
   <p>The templates themselves — what settings to pick, what a sane Windows baseline looks like — are covered in the <strong>Intune Template Settings</strong> card in Learn. This guide is the mechanics.</p>
+  </div>
+
+  <h2>Building your Intune template library (import)</h2>
+
+  <p>Your library is filled by <strong>file import</strong>, in bulk. Export the Intune configurations you want to standardise on from a reference tenant, then on the <strong>Intune Policies</strong> tab click <strong>Import</strong> and upload the export — a <strong>ZIP</strong> of many policies or a single <strong>JSON</strong>. Panoptica lists everything it found and you tick what to bring in. There's no pasting JSON by hand and no choosing which fields to watch.</p>
+
+  <p><strong>Partial success.</strong> A bulk import processes each policy <strong>independently</strong> — one bad item no longer fails the whole batch. You get a per-item result — <em>"18 imported, 2 failed: ‹name› — ‹reason›"</em> — with the failures explained so you can fix and retry just those. If an incoming policy's name matches one you already hold, Panoptica asks the same question as CA: import a <strong>new (renamed) copy</strong>, or <strong>overwrite</strong> the existing template. Overwriting a template already deployed to tenants re-baselines them and shows them drifted until you redeploy — a warning gives the count.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Whole-policy monitoring</div>
+    <p>Panoptica watches the <strong>entire</strong> configuration, not a chosen subset of settings. Microsoft's volatile and computed fields are excluded automatically, so monitoring everything doesn't produce false drift.</p>
   </div>
 
   <h2>Deploying policies to a tenant</h2>
@@ -186,7 +197,7 @@
 
   <p>Just like CA, you can adopt a tenant's <strong>existing</strong> Intune configurations instead of pushing your templates first. On the <strong>Intune Policies</strong> tab, click <strong>Import existing settings</strong>. Panoptica reads the tenant's live configurations — across the same types your library supports (settings catalogs, device configurations, compliance policies, administrative templates, security baselines) — and creates a <strong>Tenant-sourced</strong> card (red edge + badge) for each one it doesn't already manage. Anything you deployed from a template is matched by object id and skipped, so you never get duplicates; re-clicking is safe.</p>
 
-  <p>Each card is baselined as-found — both the configuration <strong>and its assignments</strong> — and watched for change. A tenant-sourced card's alert reads <em>"changed from as-found."</em> Intune drift is caught on the <strong>daily</strong> sweep: unlike new CA policies, Intune changes aren't in the audit-log stream, so there's no minutes-latency path — the daily reconcile is the backstop.</p>
+  <p>Each card is baselined as-found — both the configuration <strong>and its assignments</strong> — and watched for change. A tenant-sourced card's alert reads <em>"changed from as-found."</em> Both adopted configs and your deployed templates are drift-checked on the <strong>hourly</strong> reconcile (Intune changes aren't in the audit-log stream, so the hourly pass is how they're caught).</p>
 
   <p>Open a card's <strong>Actions</strong> for three choices:</p>
 
@@ -228,7 +239,7 @@
     <figcaption>Three actions, from harmless to permanent — only delete cannot be undone.</figcaption>
   </figure>
 
-  <p>All three are recorded in the MSP audit log and the tenant's Change Log. And as with CA, Panoptica watches every tenant for an Intune configuration created <strong>outside Panoptica</strong> and surfaces it as a tenant-sourced card plus an alert.</p>
+  <p>All three are recorded in the MSP audit log and the tenant's Change Log. When an adopted card <strong>drifts</strong> and the new state is intentional, open it and choose <strong>Accept current as baseline</strong> (the button reads <strong>Accept as baseline</strong>): the drift clears and monitoring continues against the new state. Only adopting a config and accepting its current state move the baseline — re-importing never does. And as with CA, Panoptica watches every tenant for an Intune configuration created <strong>outside Panoptica</strong>; on the <strong>next hourly check</strong> it's auto-discovered, monitored from as-found, and raises a <strong>new unmanaged policy discovered</strong> alert.</p>
 
   <h2>The rhythm</h2>
 

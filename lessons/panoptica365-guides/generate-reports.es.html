@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Genere informes">
 <meta name="lesson:subtitle" content="Cuatro tipos de informe y cuándo usar cada uno: postura para la revisión trimestral, documentación para el expediente, evaluación rápida para el prospecto.">
 <meta name="lesson:icon" content="file-text">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -98,7 +98,7 @@
 
   <p><strong>Informe de postura de seguridad (PDF).</strong> El entregable estrella para el cliente: Puntuación de seguridad y tendencias, cobertura de Acceso Condicional, actividad de alertas en el periodo elegido, gráficos y un análisis de la postura del inquilino escrito por IA. Toma un <strong>intervalo de tiempo</strong> — últimos 7, 30 o 90 días. Es su documento para la revisión trimestral (QBR).</p>
 
-  <p><strong>Documentación de configuración (PDF).</strong> Una instantánea puntual de la configuración del inquilino, organizada como el panel: identidad, directivas de acceso, dispositivos, correo, colaboración. Sin intervalo de tiempo — documenta el <em>ahora</em>. Es el documento de expediente: registros de incorporación, evidencia para auditorías y aseguradoras, traspasos de salida. Cuando existe una instantánea anterior, se carga para comparar.</p>
+  <p><strong>Documentación de configuración (PDF).</strong> Una instantánea puntual de la configuración del inquilino, organizada como el panel: identidad, directivas de acceso, dispositivos, correo, colaboración. Sin intervalo de tiempo — documenta el <em>ahora</em>. Es el documento de expediente: registros de incorporación, evidencia para auditorías y aseguradoras, traspasos de salida. Cuando existe una instantánea anterior, se carga para comparar. Su sección de administradores ahora enumera <strong>cada cuenta que posee algún rol de administración</strong> — Exchange, Cumplimiento, Teams, SharePoint, Intune, Usuario, Soporte técnico, y los demás — no solo los administradores globales, conservando el recuento de administradores globales como cifra destacada. (Los roles para los que un usuario solo es <em>elegible</em> mediante PIM, sin haberlos activado, todavía no se incluyen.)</p>
 
   <p><strong>Evaluación rápida (PDF).</strong> Pensada para el escenario de solo auditoría / prospecto: una evaluación concisa, centrada en los hallazgos, del estado actual de un inquilino. Antes de generar, un <strong>cuadro de contexto</strong> opcional le permite contarle a la IA qué tipo de organización es — <em>«p. ej. firma contable de 40 personas»</em> — lo que afina considerablemente las recomendaciones. Rellénelo; dos frases de contexto mejoran el resultado de forma notable. Encaja de forma natural con los inquilinos solo auditoría y su ventana de 14 días.</p>
 
@@ -151,6 +151,8 @@
   <p>Los informes llevan su marca — nombre de empresa y logotipo en la portada y los pies de página — configurada una sola vez por un Administrador en <strong>Configuración → Marca de los informes</strong> (PNG transparente, máximo 2 MB). Hágalo antes de que salga el primer informe de cara al cliente.</p>
 
   <p>Los informes se generan en el <strong>idioma del inquilino</strong> (el campo Idioma del inquilino), en los tres idiomas disponibles — ponga una vez el inquilino de un cliente francófono en <em>fr</em>, y todos sus entregables saldrán en francés.</p>
+
+  <p>Lo mismo ocurre con el <strong>PDF de permisos de SharePoint</strong> (exportado desde una auditoría de permisos): se genera en el idioma del inquilino, <strong>ajusta las entradas largas</strong> en lugar de superponerlas, y resuelve los identificadores de grupo en nombres legibles.</p>
 
   <h2>Cuál elegir, en la práctica</h2>
 

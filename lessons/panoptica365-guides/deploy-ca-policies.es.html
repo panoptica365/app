@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Despliegue directivas de Acceso Condicional">
 <meta name="lesson:subtitle" content="Asigne plantillas desde su biblioteca, despliéguelas en el inquilino y deje que la detección de deriva las custodie después.">
 <meta name="lesson:icon" content="key-round">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -78,6 +78,17 @@
     <div class="clabel">Antes de desplegar</div>
     <p>Antes de su primer despliegue real, lea la lección de la <em>lista de verificación previa</em> en la tarjeta de Acceso Condicional de Aprender. Las cuentas de emergencia (break-glass) y el inventario de cuentas de servicio no son opcionales. Una directiva de CA desplegada con prisas puede dejar fuera a un cliente entero.</p>
   </div>
+
+  <h2>Construir su biblioteca de plantillas (importación)</h2>
+
+  <p>Las plantillas provienen de inquilinos reales. Exporte las directivas de Acceso Condicional sobre las que quiere estandarizarse — desde un inquilino de referencia — y tráigalas a su biblioteca por <strong>archivo</strong>: en la pestaña <strong>Directivas de CA</strong>, haga clic en <strong>Importar</strong> y suba la exportación. La importación es <strong>masiva y basada en archivos</strong> — suelte un <strong>ZIP</strong> (muchas directivas) o un solo <strong>JSON</strong>, y Panoptica enumera cada directiva encontrada para que marque las que desea importar. Sin pegar JSON a mano ni elegir qué campos vigilar.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Supervisión de la directiva completa</div>
+    <p>Panoptica supervisa la directiva <strong>completa</strong>, no un subconjunto de campos elegido a mano. Los campos volátiles y calculados de Microsoft (marcas de tiempo, ruido de <code>@odata</code>, <code>templateId</code>) se excluyen automáticamente, de modo que vigilarlo todo no fabrica falsas derivas.</p>
+  </div>
+
+  <p><strong>Nombres duplicados.</strong> Si una directiva que importa tiene el mismo nombre que una plantilla que ya posee, Panoptica le pregunta qué quiere: importarla como una <strong>copia nueva (renombrada)</strong>, o <strong>sobrescribir</strong> la plantilla existente. Sobrescribir importa cuando esa plantilla ya está <strong>implementada en inquilinos</strong> — cambia su línea base, así que esos inquilinos aparecen con deriva hasta que los vuelva a implementar. Una advertencia le indica cuántos inquilinos se ven afectados antes de confirmar.</p>
 
   <h2>Asignar plantillas a un inquilino</h2>
 
@@ -197,7 +208,7 @@
   <ul>
     <li><strong>Sin duplicados.</strong> Las directivas que ya implementó desde una plantilla se reconocen por su identificador de objeto y se omiten — incluso si las renombró en el inquilino. El botón permanece disponible, y volver a hacer clic es seguro: solo se adopta lo que es genuinamente nuevo.</li>
     <li><strong>Las directivas administradas por Microsoft</strong> también se adoptan, señaladas como tales. Donde Microsoft rechaza un cambio, la acción se degrada con elegancia («administrada por Microsoft, no se puede cambiar aquí») en lugar de fallar. Los <strong>valores predeterminados de seguridad</strong> <em>no</em> son una directiva — se muestran como un simple indicador activado/desactivado, nunca como una tarjeta.</li>
-    <li><strong>Deriva respecto al estado original.</strong> La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em> — no «se desvía de su estándar», porque todavía no hay una plantilla detrás. La supervisión diaria detecta los cambios; una directiva de AC totalmente nueva creada directamente en la consola se detecta en minutos.</li>
+    <li><strong>Deriva respecto al estado original.</strong> La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em> — no «se desvía de su estándar», porque todavía no hay una plantilla detrás. Una comprobación <strong>horaria</strong> detecta los cambios — la misma cadencia que protege sus plantillas implementadas, de modo que las directivas adoptadas y las de plantilla se vigilan por igual.</li>
   </ul>
 
   <h3>Qué puede hacer con una tarjeta de origen del inquilino</h3>
@@ -212,9 +223,11 @@
 
   <p>Cada una de estas acciones queda registrada en el registro de auditoría y en el registro de cambios del inquilino, con su nombre y el nombre de la directiva.</p>
 
+  <p>Cuando una tarjeta adoptada <strong>deriva</strong> y el nuevo estado es intencional, ábrala y elija <strong>Aceptar el estado actual como referencia</strong> (el botón dice <strong>Aceptar como referencia</strong>): la deriva se borra y Panoptica supervisa a partir de ahora con respecto al nuevo estado. Solo <strong>adoptar</strong> una directiva y <strong>aceptar</strong> su estado actual mueven la línea base — reimportar nunca lo hace.</p>
+
   <h3>Vigilar lo que aparezca más tarde</h3>
 
-  <p>Más allá de la adopción, Panoptica vigila <strong>cada</strong> inquilino — con plantillas o sin ellas — en busca de una directiva de AC que aparezca <strong>fuera de Panoptica</strong> (creada directamente en la consola de Entra). Cuando surge, se convierte en una tarjeta de origen del inquilino y activa una alerta <em>«configuración creada fuera de Panoptica»</em>, para que un cambio hecho al margen de su proceso no se le escape. A medida que después implemente sus propios estándares, puede desactivar o eliminar las directivas nativas desordenadas — o simplemente seguir supervisándolas.</p>
+  <p>Más allá de la adopción, Panoptica vigila <strong>cada</strong> inquilino — con plantillas o sin ellas — en busca de una directiva de AC que aparezca <strong>fuera de Panoptica</strong> (creada directamente en la consola de Entra). En la <strong>siguiente comprobación horaria</strong> se descubre automáticamente, se supervisa desde su estado original y genera una alerta de <strong>nueva directiva no administrada descubierta</strong> (<em>«configuración creada fuera de Panoptica»</em>), para que un cambio hecho al margen de su proceso no se le escape. Las directivas que ya existían cuando se conectó por primera vez son distintas — se registran en silencio y se ponen bajo vigilancia mediante una operación puntual de <strong>Importar la configuración existente</strong>, sin alerta automática en la incorporación. A medida que después implemente sus propios estándares, puede desactivar o eliminar las directivas nativas desordenadas — o simplemente seguir supervisándolas.</p>
 
   <h2>Nota operativa</h2>
 

@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Supervise la configuración de seguridad">
 <meta name="lesson:subtitle" content="La superficie de deriva a nivel de inquilino: configuración de M365, Entra, Exchange, Teams y SharePoint — leída, comparada y custodiada.">
 <meta name="lesson:icon" content="sliders-horizontal">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -105,7 +105,7 @@
     <li><strong>Prioridad</strong>: Todos / Crítico / Alto / Medio / Bajo.</li>
   </ul>
 
-  <p>Cada fila de configuración muestra su nombre, el valor actual en vivo (interpretado en lenguaje llano, no la salida cruda de la API), la licencia que requiere si la hay, y un estado:</p>
+  <p>Cada fila de configuración muestra su nombre, el valor actual en vivo (interpretado en lenguaje llano, no la salida cruda de la API), la licencia que requiere si la hay, y un estado. El estado es la <strong>conformidad real, reevaluada en cada sondeo</strong> — usted no configura nada para que una opción «cuente»:</p>
 
   <div class="table-wrap">
     <table>
@@ -113,27 +113,28 @@
         <tr><th>Estado</th><th>Qué significa</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Supervisado — OK</strong></td><td>el valor en vivo coincide con el estado deseado que usted configuró.</td></tr>
-        <tr><td><strong>Deriva detectada</strong></td><td>el valor en vivo ya no coincide. Esto también dispara una alerta de deriva de seguridad por el canal normal de alertas.</td></tr>
-        <tr><td><strong>No aplicado</strong></td><td>aún no ha definido un estado deseado para esta configuración en este inquilino.</td></tr>
-        <tr><td><strong>Error de sondeo</strong></td><td>el lector no pudo obtener el valor (a menudo por licencia o permisos).</td></tr>
+        <tr><td><strong>Conforme — supervisado</strong> (verde)</td><td>El valor en vivo ya coincide con el valor recomendado — o con un valor que usted aceptó como línea base de este inquilino. Custodiado de aquí en adelante. No hace falta acción; pasa a verde por sí solo en el siguiente sondeo.</td></tr>
+        <tr><td><strong>Fuera de lo recomendado — revisar</strong> (naranja)</td><td>Un valor legible que no coincide con la recomendación y que usted no ha aceptado. Una señal para revisar — <strong>no</strong> genera alerta.</td></tr>
+        <tr><td><strong>No configurado — nada que supervisar</strong> (gris)</td><td>Nada que evaluar: el objeto subyacente no existe o no se puede leer (un inquilino sin directivas DLP, un preajuste de protección de correo que nunca se activó). Sin alerta.</td></tr>
+        <tr><td><strong>Deriva detectada</strong> (rojo)</td><td>Una configuración que estaba conforme o aceptada ha cambiado desde entonces. Esto dispara una alerta de deriva de seguridad por el canal normal de alertas.</td></tr>
+        <tr><td><strong>Error de sondeo</strong> (gris)</td><td>El lector no pudo obtener el valor — normalmente una carencia de licencia o permisos.</td></tr>
       </tbody>
     </table>
   </div>
 
   <p>Haga clic en una configuración para ver el detalle: qué hace, por qué importa, el impacto en los usuarios al cambiarla, notas para el operador, y los valores esperado vs. real cuando hay deriva.</p>
 
-  <h2>Aplicar y coincidir</h2>
+  <h2>Aplicar y aceptar</h2>
 
-  <p>Dos verbos cubren el flujo de trabajo:</p>
+  <p>Primero, el cambio más importante: el estado refleja la <strong>conformidad real, reevaluada en cada sondeo</strong>. Ya no define un estado deseado para que una opción «cuente» — un inquilino que ya coincide con la recomendación pasa a verde por sí solo, sin nada que hacer clic. Quedan dos verbos, y solo recurre a ellos en una configuración <strong>naranja (fuera de lo recomendado)</strong>:</p>
 
   <ul>
-    <li><strong>Aplicar</strong> — envía al inquilino el valor deseado configurado. Las aplicaciones se ejecutan <strong>de forma asíncrona</strong>: el trabajo se pone en cola, un worker lo ejecuta y la fila se actualiza cuando termina (con una comprobación de refresco poco después para confirmar que el valor quedó fijado). Puede seguir trabajando mientras se ejecuta.</li>
-    <li><strong>Coincidir</strong> — adopta el valor actual en vivo del inquilino como estado deseado. Úselo cuando la configuración existente del inquilino es correcta y solo quiere que quede <em>custodiada</em> de ahora en adelante.</li>
+    <li><strong>Aplicar</strong> — envía al inquilino el valor recomendado. Úselo en una configuración naranja que quiera alinear. Las aplicaciones se ejecutan <strong>de forma asíncrona</strong>: el trabajo se pone en cola, un worker lo ejecuta y la fila se actualiza cuando termina (con una comprobación de refresco poco después para confirmar que el valor quedó fijado). Puede seguir trabajando mientras se ejecuta.</li>
+    <li><strong>Aceptar el estado actual como referencia</strong> — para una configuración naranja cuyo valor no recomendado es <em>intencional para este inquilino</em>, adopte el valor en vivo como línea base supervisada. La configuración pasa a verde y queda custodiada frente a <em>ese valor aceptado</em> desde entonces; si luego cambia, pasa a rojo y genera alerta. Así es como un inquilino legítimamente no estándar vive sin una señal naranja permanente.</li>
   </ul>
 
   <figure class="figsmall">
-    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Dos verbos llegan al mismo estado final: Aplicar envía el valor deseado a un inquilino descuidado, Coincidir adopta el valor en vivo de un inquilino bien configurado; ambos terminan en un valor deseado custodiado.">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Dos verbos actúan sobre una configuración fuera de lo recomendado: Aplicar envía el valor recomendado al inquilino, Aceptar adopta el valor intencional del inquilino como referencia; ambos terminan en un valor custodiado cuya desviación futura genera una alerta de deriva.">
       <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
       <defs><marker id="vArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
 
@@ -141,31 +142,31 @@
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="34" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
         <text x="124" y="58" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Aplicar</text>
-        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11.5">inquilino descuidado</text>
-        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11">envía el valor deseado</text>
+        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11">opción naranja a corregir</text>
+        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11">envía el valor recomendado</text>
         <path d="M214 62 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
-      <!-- Match row -->
+      <!-- Accept row -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="130" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
-        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Coincidir</text>
-        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">inquilino bien configurado</text>
-        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11">adopta el valor en vivo</text>
+        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Aceptar</text>
+        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">valor no estándar intencional</text>
+        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11">adopta como referencia</text>
         <path d="M214 158 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
       <!-- shared end state -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="408" y="72" width="278" height="76" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
-        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">Valor deseado custodiado</text>
+        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Valor custodiado</text>
         <text x="547" y="126" text-anchor="middle" fill="#A8E1F8" font-size="11.5">desviación futura → alerta de deriva</text>
       </g>
     </svg>
-    <figcaption>Aplicar y Coincidir llegan al mismo lugar — un valor deseado custodiado, donde cualquier desviación futura genera una alerta de deriva.</figcaption>
+    <figcaption>Aplicar y Aceptar llegan al mismo lugar — un valor custodiado, donde cualquier desviación futura genera una alerta de deriva.</figcaption>
   </figure>
 
-  <p>Esa distinción importa durante la incorporación: en un inquilino bien configurado usará sobre todo Coincidir (capturar la realidad como línea base), y en uno descuidado usará sobre todo Aplicar (imponer su estándar). En ambos casos, el estado final es el mismo — cada configuración tiene un valor deseado, y cualquier desviación futura produce una alerta de deriva.</p>
+  <p>La distinción importa durante la incorporación. Las configuraciones naranja de un inquilino descuidado reciben <strong>Aplicar</strong> — imponga su estándar. Un inquilino bien configurado que ejecuta legítimamente un valor diferente recibe <strong>Aceptar</strong> — capture esa realidad como su línea base. En ambos casos la configuración termina verde y custodiada, y cualquier desviación futura produce una alerta de deriva.</p>
 
   <h2>Configuraciones de solo auditoría</h2>
 

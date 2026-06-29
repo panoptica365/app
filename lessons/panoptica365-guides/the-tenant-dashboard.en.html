@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The tenant dashboard — Panoptica365 Guides</title>
 <meta name="lesson:title" content="The tenant dashboard">
-<meta name="lesson:subtitle" content="Six tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.">
+<meta name="lesson:subtitle" content="Ten tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.">
 <meta name="lesson:icon" content="gauge">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -15,23 +15,27 @@
 
   <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>The tenant dashboard</span></div>
   <h1>The tenant dashboard</h1>
-  <p class="dek">Six tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.</p>
+  <p class="dek">Ten tabs, two zones: the metric cards, the drill-down panels, and where each workflow lives.</p>
 
   <figure>
-    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A tenant dashboard layout: a row of six tabs above two stacked zones — a grid of metric cards and the drill-down panels beneath them.">
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A tenant dashboard layout: a row of ten tabs above two stacked zones — a grid of metric cards and the drill-down panels beneath them.">
       <defs>
         <radialGradient id="tdBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#102A4C"/><stop offset="100%" stop-color="#071221"/></radialGradient>
       </defs>
       <rect width="1120" height="340" fill="url(#tdBg)"/>
 
-      <!-- six tabs -->
+      <!-- ten tabs -->
       <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
-        <g><rect x="60" y="36" width="158" height="40" rx="8" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="139" y="61" fill="#7DD9F9" font-size="14" font-weight="700">Overview</text></g>
-        <g><rect x="230" y="36" width="138" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="299" y="61" fill="#A8E1F8" font-size="13.5">Alerts</text></g>
-        <g><rect x="380" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="459" y="61" fill="#A8E1F8" font-size="13.5">CA Policies</text></g>
-        <g><rect x="550" y="36" width="172" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="636" y="61" fill="#A8E1F8" font-size="13.5">Intune Policies</text></g>
-        <g><rect x="734" y="36" width="158" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="813" y="61" fill="#A8E1F8" font-size="13.5">Applications</text></g>
-        <g><rect x="904" y="36" width="156" height="40" rx="8" fill="#0E2640" stroke="#2A6F9E"/><text x="982" y="61" fill="#A8E1F8" font-size="13.5">Change Log</text></g>
+        <g><rect x="40" y="36" width="98" height="40" rx="6" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/><text x="89" y="61" fill="#7DD9F9" font-size="11" font-weight="700">Overview</text></g>
+        <g><rect x="144" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="193" y="61" fill="#A8E1F8" font-size="11">Trends</text></g>
+        <g><rect x="248" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="297" y="61" fill="#A8E1F8" font-size="11">Alerts</text></g>
+        <g><rect x="352" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="401" y="61" fill="#A8E1F8" font-size="11">Security</text></g>
+        <g><rect x="456" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="505" y="61" fill="#A8E1F8" font-size="10">Access Review</text></g>
+        <g><rect x="560" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="609" y="61" fill="#A8E1F8" font-size="10.5">Applications</text></g>
+        <g><rect x="664" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="713" y="61" fill="#A8E1F8" font-size="11">Email Auth</text></g>
+        <g><rect x="768" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="817" y="61" fill="#A8E1F8" font-size="11">CA Policies</text></g>
+        <g><rect x="872" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="921" y="61" fill="#A8E1F8" font-size="10">Intune Policies</text></g>
+        <g><rect x="976" y="36" width="98" height="40" rx="6" fill="#0E2640" stroke="#2A6F9E"/><text x="1025" y="61" fill="#A8E1F8" font-size="10.5">Change Log</text></g>
       </g>
 
       <!-- zone 1: metric cards grid -->
@@ -69,15 +73,19 @@
   </figure>
 
   <div class="lead">
-  <p>Click a tenant on the Main Console and you land on its dashboard. This is the single richest page in Panoptica365 — everything known about one tenant, organized into six tabs:</p>
+  <p>Click a tenant on the Main Console and you land on its dashboard. This is the single richest page in Panoptica365 — everything known about one tenant, organized into ten tabs:</p>
   </div>
 
   <ol>
     <li><strong>Overview</strong> — the configuration and activity snapshot (this guide).</li>
-    <li><strong>Alerts</strong> — this tenant's alerts, same workflow as the global Alerts page.</li>
-    <li><strong>CA Policies</strong> — Conditional Access templates assigned to this tenant (own guide).</li>
-    <li><strong>Intune Policies</strong> — Intune templates deployed to this tenant (own guide).</li>
-    <li><strong>Applications</strong> — the enterprise app inventory and approval workflow (own guide).</li>
+    <li><strong>Trends</strong> — this tenant's posture over time: Secure Score, score by category, issues caught and resolved (own guide, <em>Trend dashboards</em>).</li>
+    <li><strong>Alerts</strong> — this tenant's alerts, same workflow as the global Alerts page (own guide, <em>Work the alerts</em>).</li>
+    <li><strong>Security</strong> — the tenant-wide security-settings surface: dozens of monitored switches across M365, Entra, Exchange, Teams and SharePoint, read and guarded for drift (own guide, <em>Monitor security settings</em>).</li>
+    <li><strong>Access Review</strong> — who holds admin roles, which accounts are dormant, and the break-glass workflow (own guide, <em>Access review</em>).</li>
+    <li><strong>Applications</strong> — the enterprise app inventory and approval workflow (own guide, <em>Review applications</em>).</li>
+    <li><strong>Email Auth</strong> — each domain's email-authentication posture: SPF, DKIM and DMARC, graded and watched for drift (own guide, <em>Email authentication</em>).</li>
+    <li><strong>CA Policies</strong> — Conditional Access templates assigned to this tenant (own guide, <em>Deploy Conditional Access policies</em>).</li>
+    <li><strong>Intune Policies</strong> — Intune templates deployed to this tenant (own guide, <em>Deploy Intune policies</em>).</li>
     <li><strong>Change Log</strong> — the history of every change made to this tenant, both changes Panoptica365 made (deployments, applies) and changes operators logged manually. Drift alerts link back to entries here when a change explains them.</li>
   </ol>
 
@@ -121,9 +129,15 @@
 
   <h2>The Overview tab: drill-down panels</h2>
 
-  <p>Below the cards, collapsible panels carry the detail behind each card: the licensing breakdown, the actual list of global admins, users without MFA, per-policy CA details, the full Intune device table, top mailboxes by storage, anonymous sharing links by site, all inbox rules grouped by user, inactive user and device lists, registered and third-party apps, and DNS records per domain.</p>
+  <p>Below the cards, collapsible panels carry the detail behind each card: the licensing breakdown, the actual list of global admins, users without MFA, per-policy CA details, the full Intune device table, <strong>Top Users by Storage</strong> and <strong>Top Mailboxes by Storage</strong> (shown in GB), anonymous sharing links by site, all inbox rules grouped by user, inactive user and device lists, registered and third-party apps, and DNS records per domain.</p>
 
   <p>You'll use these panels constantly during assessments and customer conversations — "you have four global admins and two of them are unlicensed accounts nobody owns" comes straight from here.</p>
+
+  <h2>SharePoint: storage and audits</h2>
+
+  <p>The SharePoint drill-down has its own tabs — Inventory, Library Permissions, User Permissions, <strong>Storage Overview</strong>, and <strong>Audits</strong>. <strong>Storage Overview</strong> is <strong>per-site</strong>: each site is listed once with its real storage (in GB) and its library count, so the totals add up instead of repeating a site's storage on every library.</p>
+
+  <p>The <strong>Audits</strong> tab runs a SharePoint permissions audit and tracks it as a <strong>background job</strong>. Launch one per library, per site (<em>"audit all libraries in this site"</em>), or across the whole tenant with <strong>Audit All Sites</strong> — confirmations are tiered, and the all-sites one warns that it's heavy and can hit Microsoft Graph throttling. Because audits are tracked jobs, <strong>launching one no longer navigates you away</strong>: the Audits tab lists every job as running, queued, done, or failed; you can cancel queued ones and re-run failed ones, and the inventory carries a <strong>Last Audit Date</strong> column.</p>
 
   <h2>Data freshness</h2>
 
@@ -131,13 +145,13 @@
 
   <h2>Where to next</h2>
 
-  <p>A sensible first pass over a freshly onboarded tenant: skim the Overview for anything alarming, then work through <strong>Applications</strong> (approve what you trust), then <strong>CA Policies</strong> and <strong>Intune Policies</strong> (deploy your baselines), then <strong>Security</strong> (the tenant-wide settings surface, from the sidebar). The next four guides walk through each.</p>
+  <p>A sensible first pass over a freshly onboarded tenant: skim the Overview for anything alarming, then work through <strong>Applications</strong> (approve what you trust), then <strong>CA Policies</strong> and <strong>Intune Policies</strong> (deploy your baselines), then <strong>Security</strong> (the tenant-wide settings surface, its own tab). The next four guides walk through each.</p>
 
   <div class="crosslinks">
     <div class="xl"><div class="xnum">1</div><div class="xt"><b>Applications</b> — approve what you trust.</div></div>
     <div class="xl"><div class="xnum">2</div><div class="xt"><b>CA Policies</b> — deploy your baselines.</div></div>
     <div class="xl"><div class="xnum">3</div><div class="xt"><b>Intune Policies</b> — deploy your baselines.</div></div>
-    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Security</b> — the tenant-wide settings surface, from the sidebar.</div></div>
+    <div class="xl"><div class="xnum">4</div><div class="xt"><b>Security</b> — the tenant-wide settings surface, its own tab.</div></div>
   </div>
 
 </div>

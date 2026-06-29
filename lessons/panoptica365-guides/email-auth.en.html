@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Email authentication — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Email authentication">
+<meta name="lesson:subtitle" content="The Email Auth tab: each domain's SPF, DKIM and DMARC — read from public DNS, graded, and watched for the drift that re-opens a domain to spoofing.">
+<meta name="lesson:icon" content="mail-check">
+<meta name="lesson:last_updated" content="2026-06-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Email authentication</span></div>
+  <h1>Email authentication</h1>
+  <p class="dek">The Email Auth tab: each domain's SPF, DKIM and DMARC — read from public DNS, graded, and watched for the drift that re-opens a domain to spoofing.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="A domain's public DNS email-authentication records — SPF, DKIM and DMARC — are read into a graded posture score, then re-checked daily so a regression raises a drift alert.">
+      <defs>
+        <radialGradient id="eaBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="eaGrade" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2EE8A0"/><stop offset="100%" stop-color="#2A7FA3"/></linearGradient>
+        <marker id="eaArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="eaArrDanger" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#eaBg)"/>
+
+      <!-- left: domain DNS records -->
+      <text x="170" y="54" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">PUBLIC DNS</text>
+      <g font-family="Geist,Inter,sans-serif" font-size="13" fill="#A8E1F8">
+        <g transform="translate(60,76)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">SPF</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">-all (hard fail)</text></g>
+        <g transform="translate(60,118)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">DKIM</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">selector signs</text></g>
+        <g transform="translate(60,160)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">DMARC</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">p=reject</text></g>
+        <g transform="translate(60,202)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#8FB4D6" font-size="11.5">DNSSEC · MTA-STS · TLS-RPT</text></g>
+      </g>
+
+      <!-- read arrow -->
+      <path d="M300 163 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#eaArr)"/>
+      <text x="346" y="153" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">read</text>
+
+      <!-- center: graded posture gauge -->
+      <g transform="translate(540,168)">
+        <circle r="78" fill="none" stroke="#1F3C5C" stroke-width="12"/>
+        <circle r="78" fill="none" stroke="url(#eaGrade)" stroke-width="12" stroke-dasharray="368 122" stroke-linecap="round" transform="rotate(-90)"/>
+        <circle r="62" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.2"/>
+        <text x="0" y="10" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="46" font-weight="700">A</text>
+        <text x="0" y="36" text-anchor="middle" fill="#8FB4D6" font-family="Geist,Inter,sans-serif" font-size="12">posture grade</text>
+      </g>
+
+      <!-- watch arrow -->
+      <path d="M626 163 H720" stroke="#335F92" stroke-width="2.5" marker-end="url(#eaArr)"/>
+      <text x="673" y="153" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">re-check daily</text>
+
+      <!-- right: regression -> drift alert -->
+      <g transform="translate(748,114)">
+        <rect width="312" height="60" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="20" y="26" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13.5" font-weight="700">DMARC weakened → p=none</text>
+        <text x="20" y="46" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11.5">a regression at the DNS host</text>
+      </g>
+      <path d="M904 174 V212" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#eaArrDanger)"/>
+      <g transform="translate(748,218)">
+        <rect width="312" height="56" rx="12" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="156" y="25" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="13" font-weight="700">Email-auth drift alert</text>
+        <text x="156" y="43" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">before → after, every regression</text>
+      </g>
+    </svg>
+    <figcaption>Panoptica reads each domain's public DNS, grades the email-authentication posture, and re-checks daily — a regression raises a drift alert. It never changes your records.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>A tenant's other surfaces live inside Microsoft 365. Email authentication lives in <strong>public DNS</strong> — the SPF, DKIM and DMARC records that tell the world's mail servers who is allowed to send as your customer's domains. The <strong>Email Auth</strong> tab reads those records for every domain, grades the posture, and watches the managed ones for the kind of quiet regression that re-opens a domain to spoofing.</p>
+  </div>
+
+  <h2>What you see</h2>
+
+  <p>Pick a tenant and click <strong>Refresh</strong>; Panoptica reads each domain's live DNS and lays out a card per domain:</p>
+
+  <ul>
+    <li>A <strong>weighted posture score</strong> with a letter <strong>Grade</strong> (A–F) — the headline number, weighted by how much each record matters.</li>
+    <li>A row of <strong>per-record cards</strong> — <strong>MX</strong>, <strong>SPF</strong>, <strong>DKIM</strong>, <strong>DMARC</strong>, plus the supporting records <strong>DNSSEC</strong>, <strong>MTA-STS</strong> and <strong>TLS-RPT</strong> — each marked <em>Pass</em>, <em>Partial</em>, <em>Fail</em> or <em>Absent</em>, with a plain-language finding (for example, <em>"SPF ends in ~all (soft fail) — move to -all once the sender list is confirmed"</em>).</li>
+    <li><strong>Detected senders</strong> — the mail providers Panoptica inferred from the records (Microsoft 365, a marketing platform, a ticketing system), so a missing DKIM selector points at a specific provider to fix.</li>
+    <li>An <strong>AI analysis</strong> that reads the whole posture and tells you what to fix first.</li>
+  </ul>
+
+  <p>A domain that <em>shouldn't</em> send mail at all is handled differently: it's scored as a <strong>non-mail domain (anti-spoof posture)</strong> — the right answer there is a hard SPF <code>-all</code> and a DMARC <code>p=reject</code> that say "nothing sends from here," not a full sending setup. Microsoft's own routing domain (<code>onmicrosoft.com</code>) is shown for reference but not graded.</p>
+
+  <h2>The three that carry the weight</h2>
+
+  <p>The supporting records harden transport, but spoofing protection rests on three:</p>
+
+  <ul>
+    <li><strong>SPF</strong> lists the servers allowed to send for the domain. The tail matters: <code>-all</code> hard-fails forgeries; <code>~all</code> only soft-fails them; <code>+all</code> authorizes anyone — effectively no protection. SPF also has a hard limit of 10 DNS lookups; overflow makes strict receivers ignore it entirely.</li>
+    <li><strong>DKIM</strong> signs outbound mail so receivers can verify it wasn't tampered with. A published, signing selector is a pass; a revoked (empty key) or test-mode selector means mail is effectively unsigned.</li>
+    <li><strong>DMARC</strong> ties the two together and tells receivers what to do with mail that fails: <code>p=reject</code> (enforced), <code>p=quarantine</code> (to junk), or <code>p=none</code> (monitor only — no enforcement). Dropping to <code>p=none</code> is the single most common way a domain quietly becomes spoofable again.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Three records combine into anti-spoofing: SPF authorizes senders, DKIM signs the mail, DMARC enforces what happens on failure.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eaSmall" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="15" refY="5" orient="auto"><path d="M0 0 L12 5 L0 10 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="34" y="50" width="150" height="50" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="109" y="73" fill="#A8E1F8" font-size="14" font-weight="700">SPF</text>
+        <text x="109" y="90" fill="#6B85A6" font-size="11">who may send</text>
+        <path d="M184 75 H214" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="216" y="50" width="150" height="50" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="291" y="73" fill="#A8E1F8" font-size="14" font-weight="700">DKIM</text>
+        <text x="291" y="90" fill="#6B85A6" font-size="11">signs the mail</text>
+        <path d="M366 75 H396" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="398" y="50" width="150" height="50" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="473" y="73" fill="#7DD9F9" font-size="14" font-weight="700">DMARC</text>
+        <text x="473" y="90" fill="#6B85A6" font-size="11">enforces on fail</text>
+        <path d="M548 75 H578" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="580" y="50" width="106" height="50" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+        <text x="633" y="79" fill="#2EE8A0" font-size="12.5" font-weight="700">no spoofing</text>
+      </g>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">THE ANTI-SPOOF CHAIN</text>
+    </svg>
+    <figcaption>SPF says who may send, DKIM signs it, DMARC decides what happens when a message fails both — all three are needed.</figcaption>
+  </figure>
+
+  <h2>Refresh, and drift</h2>
+
+  <p><strong>Refresh</strong> reads live DNS, re-scores, and regenerates the analysis on demand. For <strong>managed</strong> tenants, Panoptica also re-checks the monitored domains <strong>daily</strong> and diffs them against the last good snapshot. A <strong>regression</strong> — DMARC downgraded, a DKIM selector revoked or vanished, SPF loosened, a transport record removed — raises an <strong>email-auth drift alert</strong> that names exactly what changed, before → after. Improvements are recorded silently; only changes that make spoofing easier alert.</p>
+
+  <p>That matters because this drift leaves <strong>no sign-in log and no audit trail</strong> — it happens at the DNS host, not in Microsoft 365. A registrar migration, or a "helpful" web host that republishes its own SPF, can undo months of anti-spoofing work, and nothing inside the tenant would show it. This tab is the early warning.</p>
+
+  <h2>Accepting a change</h2>
+
+  <p>When the change was intentional — you (or the domain owner) switched a provider or tightened a record — open the domain and click <strong>Accept</strong> on the flagged change to set the current records as the new baseline; the linked alert resolves. When it wasn't, fix it at the <strong>DNS host</strong> (restore the DMARC policy, re-publish the DKIM selector, tighten SPF) and Refresh to confirm it cleared.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Read-only by design</div>
+    <p>Panoptica reads public DNS — it <strong>never changes your records</strong>. Every fix is made by you at the registrar or DNS host. The tab tells you what's wrong and watches for regressions; the edit is always yours.</p>
+  </div>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">→</div><div class="xt"><b>Monitor security settings</b> — the same read · score · drift · accept model, applied to tenant settings inside M365 instead of public DNS.</div></div>
+    <div class="xl"><div class="xnum">→</div><div class="xt"><b>Work the alerts</b> — where the email-auth drift alert lands, with its before → after detail.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

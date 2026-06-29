@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Autenticación de correo — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Autenticación de correo">
+<meta name="lesson:subtitle" content="La pestaña Aut. correo: el SPF, el DKIM y el DMARC de cada dominio — leídos del DNS público, calificados, y vigilados ante la deriva que vuelve a abrir un dominio a la suplantación.">
+<meta name="lesson:icon" content="mail-check">
+<meta name="lesson:last_updated" content="2026-06-29">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Autenticación de correo</span></div>
+  <h1>Autenticación de correo</h1>
+  <p class="dek">La pestaña Aut. correo: el SPF, el DKIM y el DMARC de cada dominio — leídos del DNS público, calificados, y vigilados ante la deriva que vuelve a abrir un dominio a la suplantación.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Los registros de autenticación de correo del DNS público de un dominio — SPF, DKIM y DMARC — se leen en una puntuación de postura calificada, y luego se reverifican a diario de modo que una regresión genera una alerta de deriva.">
+      <defs>
+        <radialGradient id="eaBg" cx="50%" cy="30%" r="85%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <linearGradient id="eaGrade" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2EE8A0"/><stop offset="100%" stop-color="#2A7FA3"/></linearGradient>
+        <marker id="eaArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+        <marker id="eaArrDanger" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#FF5A6E"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#eaBg)"/>
+
+      <!-- left: domain DNS records -->
+      <text x="170" y="54" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="13" letter-spacing="2">DNS PÚBLICO</text>
+      <g font-family="Geist,Inter,sans-serif" font-size="13" fill="#A8E1F8">
+        <g transform="translate(60,76)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">SPF</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">-all (fallo estricto)</text></g>
+        <g transform="translate(60,118)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">DKIM</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">el selector firma</text></g>
+        <g transform="translate(60,160)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" font-weight="600">DMARC</text><text x="118" y="22" fill="#6B85A6" font-size="11.5">p=reject</text></g>
+        <g transform="translate(60,202)"><rect width="220" height="34" rx="8" fill="#0E2236" stroke="#33527A"/><text x="16" y="22" fill="#8FB4D6" font-size="11.5">DNSSEC · MTA-STS · TLS-RPT</text></g>
+      </g>
+
+      <!-- read arrow -->
+      <path d="M300 163 H392" stroke="#335F92" stroke-width="2.5" marker-end="url(#eaArr)"/>
+      <text x="346" y="153" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">lectura</text>
+
+      <!-- center: graded posture gauge -->
+      <g transform="translate(540,168)">
+        <circle r="78" fill="none" stroke="#1F3C5C" stroke-width="12"/>
+        <circle r="78" fill="none" stroke="url(#eaGrade)" stroke-width="12" stroke-dasharray="368 122" stroke-linecap="round" transform="rotate(-90)"/>
+        <circle r="62" fill="#0E2640" stroke="#5CCBF4" stroke-width="1.2"/>
+        <text x="0" y="10" text-anchor="middle" fill="#2EE8A0" font-family="Geist,Inter,sans-serif" font-size="46" font-weight="700">A</text>
+        <text x="0" y="36" text-anchor="middle" fill="#8FB4D6" font-family="Geist,Inter,sans-serif" font-size="12">calificación de postura</text>
+      </g>
+
+      <!-- watch arrow -->
+      <path d="M626 163 H720" stroke="#335F92" stroke-width="2.5" marker-end="url(#eaArr)"/>
+      <text x="673" y="153" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="11">reverificado a diario</text>
+
+      <!-- right: regression -> drift alert -->
+      <g transform="translate(748,114)">
+        <rect width="312" height="60" rx="12" fill="#2A0F16" stroke="#FF5A6E" stroke-width="1.4"/>
+        <text x="20" y="26" fill="#FF8A98" font-family="Geist,Inter,sans-serif" font-size="13.5" font-weight="700">DMARC debilitado → p=none</text>
+        <text x="20" y="46" fill="#E2A0AA" font-family="Geist,Inter,sans-serif" font-size="11.5">una regresión en el proveedor de DNS</text>
+      </g>
+      <path d="M904 174 V212" stroke="#FF5A6E" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#eaArrDanger)"/>
+      <g transform="translate(748,218)">
+        <rect width="312" height="56" rx="12" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="156" y="25" text-anchor="middle" fill="#7DD9F9" font-family="Geist,Inter,sans-serif" font-size="12.5" font-weight="700">Alerta de desviación de aut. correo</text>
+        <text x="156" y="43" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="11.5">antes → después, cada regresión</text>
+      </g>
+    </svg>
+    <figcaption>Panoptica lee el DNS público de cada dominio, califica la postura de autenticación de correo y reverifica a diario — una regresión genera una alerta de deriva. Nunca cambia sus registros.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>Las demás superficies de un inquilino viven dentro de Microsoft 365. La autenticación de correo, en cambio, vive en el <strong>DNS público</strong> — los registros SPF, DKIM y DMARC que indican a los servidores de correo de todo el mundo quién puede enviar en nombre de los dominios de su cliente. La pestaña <strong>Aut. correo</strong> lee esos registros para cada dominio, califica la postura, y vigila los dominios gestionados ante el tipo de regresión silenciosa que vuelve a abrir un dominio a la suplantación.</p>
+  </div>
+
+  <h2>Qué ve</h2>
+
+  <p>Elija un inquilino y haga clic en <strong>Actualizar</strong>; Panoptica lee el DNS en vivo de cada dominio y presenta una tarjeta por dominio:</p>
+
+  <ul>
+    <li>Una <strong>puntuación de postura ponderada</strong> con una <strong>Calificación</strong> en letra (A–F) — la cifra destacada, ponderada según la importancia de cada registro.</li>
+    <li>Una fila de <strong>tarjetas por registro</strong> — <strong>MX</strong>, <strong>SPF</strong>, <strong>DKIM</strong>, <strong>DMARC</strong>, más los registros de apoyo <strong>DNSSEC</strong>, <strong>MTA-STS</strong> y <strong>TLS-RPT</strong> — cada una marcada <em>Aprobado</em>, <em>Parcial</em>, <em>Fallo</em> o <em>Ausente</em>, con una explicación en lenguaje llano (por ejemplo, <em>«SPF termina en ~all (fallo suave) — pase a -all una vez confirmada la lista de remitentes»</em>).</li>
+    <li>Los <strong>remitentes detectados</strong> — los proveedores de correo que Panoptica dedujo de los registros (Microsoft 365, una plataforma de marketing, un sistema de tiques), de modo que un selector DKIM ausente apunta a un proveedor concreto que corregir.</li>
+    <li>Un <strong>análisis con IA</strong> que lee toda la postura y le dice qué corregir primero.</li>
+  </ul>
+
+  <p>Un dominio que <em>no debería</em> enviar correo en absoluto se trata de otra manera: se califica como <strong>dominio sin correo (postura anti-suplantación)</strong> — la respuesta correcta ahí es un SPF estricto <code>-all</code> y un DMARC <code>p=reject</code> que dicen «nada sale de aquí», y no una configuración de envío completa. El dominio de enrutamiento de Microsoft (<code>onmicrosoft.com</code>) se muestra como referencia pero no se califica.</p>
+
+  <h2>Los tres que más pesan</h2>
+
+  <p>Los registros de apoyo refuerzan el transporte, pero la protección contra la suplantación recae en tres:</p>
+
+  <ul>
+    <li><strong>SPF</strong> enumera los servidores autorizados a enviar para el dominio. La terminación importa: <code>-all</code> rechaza las falsificaciones (fallo estricto); <code>~all</code> solo las marca con fallo suave; <code>+all</code> autoriza a cualquiera — es decir, ninguna protección. SPF tiene además un límite estricto de 10 búsquedas DNS; un desbordamiento hace que los destinatarios estrictos lo ignoren por completo.</li>
+    <li><strong>DKIM</strong> firma el correo saliente para que los destinatarios puedan verificar que no fue alterado. Un selector publicado y que firma es un aprobado; un selector revocado (clave vacía) o en modo de prueba significa que el correo está, en la práctica, sin firmar.</li>
+    <li><strong>DMARC</strong> une los dos e indica a los destinatarios qué hacer con el correo que falla: <code>p=reject</code> (aplicado), <code>p=quarantine</code> (a correo no deseado) o <code>p=none</code> (solo supervisión — sin aplicación). Bajar a <code>p=none</code> es la forma más común de volver a hacer un dominio suplantable de forma silenciosa.</li>
+  </ul>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 150" role="img" aria-label="Tres registros se combinan en anti-suplantación: SPF autoriza a los remitentes, DKIM firma el correo, DMARC aplica lo que ocurre al fallar.">
+      <rect width="720" height="150" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="eaSmall" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="15" refY="5" orient="auto"><path d="M0 0 L12 5 L0 10 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="34" y="50" width="150" height="50" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="109" y="73" fill="#A8E1F8" font-size="14" font-weight="700">SPF</text>
+        <text x="109" y="90" fill="#6B85A6" font-size="11">quién puede enviar</text>
+        <path d="M184 75 H214" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="216" y="50" width="150" height="50" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="291" y="73" fill="#A8E1F8" font-size="14" font-weight="700">DKIM</text>
+        <text x="291" y="90" fill="#6B85A6" font-size="11">firma el correo</text>
+        <path d="M366 75 H396" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="398" y="50" width="150" height="50" rx="10" fill="#10243B" stroke="#5CCBF4"/>
+        <text x="473" y="73" fill="#7DD9F9" font-size="14" font-weight="700">DMARC</text>
+        <text x="473" y="90" fill="#6B85A6" font-size="11">aplica al fallar</text>
+        <path d="M548 75 H578" stroke="#335F92" stroke-width="2" marker-end="url(#eaSmall)"/>
+        <rect x="580" y="50" width="106" height="50" rx="10" fill="#0E2236" stroke="#2EE8A0"/>
+        <text x="633" y="79" fill="#2EE8A0" font-size="11.5" font-weight="700">sin suplantación</text>
+      </g>
+      <text x="360" y="30" text-anchor="middle" fill="#6B85A6" font-family="Geist,Inter,sans-serif" font-size="12" letter-spacing="2">LA CADENA ANTI-SUPLANTACIÓN</text>
+    </svg>
+    <figcaption>SPF dice quién puede enviar, DKIM lo firma, DMARC decide qué pasa cuando un mensaje falla en ambos — los tres son necesarios.</figcaption>
+  </figure>
+
+  <h2>Actualizar, y la deriva</h2>
+
+  <p><strong>Actualizar</strong> lee el DNS en vivo, recalcula la puntuación y regenera el análisis a demanda. Para los inquilinos <strong>gestionados</strong>, Panoptica también reverifica los dominios supervisados <strong>a diario</strong> y los compara con la última instantánea buena. Una <strong>regresión</strong> — DMARC rebajado, un selector DKIM revocado o desaparecido, SPF aflojado, un registro de transporte eliminado — genera una <strong>alerta de desviación de aut. correo</strong> que nombra exactamente qué cambió, antes → después. Las mejoras se registran en silencio; solo los cambios que facilitan la suplantación generan alerta.</p>
+
+  <p>Esto importa porque esta deriva no deja <strong>ningún registro de inicio de sesión ni rastro de auditoría</strong> — ocurre en el proveedor de DNS, no en Microsoft 365. Una migración de registrador, o un proveedor de alojamiento web «servicial» que vuelve a publicar su propio SPF, puede deshacer meses de trabajo anti-suplantación, y nada dentro del inquilino lo mostraría. Esta pestaña es la alerta temprana.</p>
+
+  <h2>Aceptar un cambio</h2>
+
+  <p>Cuando el cambio fue intencional — usted (o el propietario del dominio) cambió de proveedor o reforzó un registro — abra el dominio y haga clic en <strong>Aceptar</strong> en el cambio señalado para establecer los registros actuales como la nueva línea base; la alerta vinculada se resuelve. Cuando no lo fue, corríjalo en el <strong>proveedor de DNS</strong> (restaure la política DMARC, vuelva a publicar el selector DKIM, refuerce SPF) y Actualice para confirmar que se resolvió.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Solo lectura por diseño</div>
+    <p>Panoptica lee el DNS público — <strong>nunca cambia sus registros</strong>. Cada corrección la hace usted en el registrador o el proveedor de DNS. La pestaña le dice qué está mal y vigila las regresiones; la edición siempre es suya.</p>
+  </div>
+
+  <div class="crosslinks">
+    <div class="xl"><div class="xnum">→</div><div class="xt"><b>Supervise la configuración de seguridad</b> — el mismo modelo de leer · calificar · deriva · aceptar, aplicado a la configuración del inquilino dentro de M365 en lugar del DNS público.</div></div>
+    <div class="xl"><div class="xnum">→</div><div class="xt"><b>Trabaje las alertas</b> — donde aterriza la alerta de desviación de aut. correo, con su detalle antes → después.</div></div>
+  </div>
+
+</div>
+</body>
+</html>

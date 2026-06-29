@@ -23,6 +23,7 @@
     "deploy-ca-policies",
     "deploy-intune-policies",
     "monitor-security-settings",
+    "email-auth",
     "work-the-alerts",
     "tune-alert-policies",
     "manage-exemptions",

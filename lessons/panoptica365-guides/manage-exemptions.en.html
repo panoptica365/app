@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Manage exemptions">
 <meta name="lesson:subtitle" content="Documented, time-boxed exceptions: how they're created from CA, Intune and alerts, and how to keep them honest.">
 <meta name="lesson:icon" content="shield-off">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -75,9 +75,12 @@
     <li><strong>CA drift acceptance</strong> — accepting CA policy drift <em>with expiry</em> lifts the excluded principals (users or groups) into exemptions. Scope: per-principal.</li>
     <li><strong>Intune drift acceptance</strong> — same flow; scope is <strong>policy-wide</strong> for that deployment.</li>
     <li><strong>Alert exemptions</strong> — from an alert's slideout, exempting a recurring pattern: a user, optionally constrained by country and/or IP range. Scope: the pattern.</li>
+    <li><strong>Defender alert exceptions</strong> — the inbound-spam / phishing <strong>Create exception</strong> (see <em>Work the alerts</em>) silences an already-handled Defender policy for <strong>this tenant only</strong> or <strong>all managed tenants</strong>, and lands here too. Unlike the drift acceptances, it has <strong>no expiry</strong> — it holds until you revoke it.</li>
   </ul>
 
-  <p>The default expiry is <strong>180 days</strong>. Accepting requires Operator role or up, and a reason is always required.</p>
+  <p>The default expiry is <strong>180 days</strong> (the Defender exception above is the exception — it's permanent). Accepting requires Operator role or up, and a reason is always required.</p>
+
+  <p>Don't confuse an exemption with the Security page's <strong>Accept current as baseline</strong>: that <em>adopts</em> a tenant's value as the monitored baseline — it changes what "good" means — whereas an exemption <em>suppresses</em> an alert you've chosen to tolerate. Different tools, different intent.</p>
 
   <figure class="figsmall">
     <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Three sources feed exemptions: CA drift acceptance with per-principal scope, Intune drift acceptance with policy-wide scope, and alert exemptions with pattern scope.">

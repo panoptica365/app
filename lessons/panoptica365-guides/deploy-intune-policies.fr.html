@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Déployez des stratégies Intune">
 <meta name="lesson:subtitle" content="Le même modèle « modèle et dérive » que l'AC, appliqué à la configuration des appareils : affecter, déployer, surveiller.">
 <meta name="lesson:icon" content="monitor-smartphone">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -74,6 +74,17 @@
   <p>Si vous avez lu le guide des stratégies AC, celui-ci vous semblera familier — c'est voulu. Les déploiements Intune utilisent le même modèle « modèle et dérive » : une bibliothèque que vous maintenez (barre latérale → <strong>Stratégies Intune</strong>), des déploiements par locataire, et une détection de dérive continue sur ce qui est actif.</p>
 
   <p>Les modèles eux-mêmes — quels paramètres choisir, à quoi ressemble une référence Windows saine — sont couverts dans la carte <strong>Paramètres des modèles Intune</strong> d'Apprendre. Ce guide, c'est la mécanique.</p>
+  </div>
+
+  <h2>Constituer votre bibliothèque de modèles Intune (importation)</h2>
+
+  <p>Votre bibliothèque se remplit par <strong>importation de fichiers</strong>, en lot. Exportez depuis un locataire de référence les configurations Intune sur lesquelles vous voulez vous standardiser, puis sous l'onglet <strong>Stratégies Intune</strong> cliquez sur <strong>Importer</strong> et téléversez l'exportation — un <strong>ZIP</strong> de plusieurs stratégies ou un seul <strong>JSON</strong>. Panoptica liste tout ce qu'il a trouvé et vous cochez ce qu'il faut importer. Plus de JSON à coller à la main ni de champs à choisir pour la surveillance.</p>
+
+  <p><strong>Succès partiel.</strong> Une importation en lot traite chaque stratégie <strong>indépendamment</strong> — un seul élément défectueux ne fait plus échouer tout le lot. Vous obtenez un résultat par élément — <em>« 18 importées, 2 échouées : ‹nom› — ‹raison› »</em> — avec les échecs expliqués pour que vous corrigiez et réessayiez seulement ceux-là. Si le nom d'une stratégie entrante correspond à un modèle que vous possédez déjà, Panoptica pose la même question que pour l'AC : importer une <strong>nouvelle copie (renommée)</strong>, ou <strong>écraser</strong> le modèle existant. Écraser un modèle déjà déployé chez des locataires les redéfinit et les affiche en dérive jusqu'au redéploiement — un avertissement en donne le nombre.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Surveillance de la stratégie entière</div>
+    <p>Panoptica surveille la configuration <strong>entière</strong>, pas un sous-ensemble de paramètres choisi. Les champs volatils et calculés de Microsoft sont exclus automatiquement, de sorte que tout surveiller ne produit pas de fausse dérive.</p>
   </div>
 
   <h2>Déployer des stratégies sur un locataire</h2>
@@ -186,7 +197,7 @@
 
   <p>Tout comme pour l'AC, vous pouvez adopter les configurations Intune <strong>existantes</strong> d'un locataire au lieu de pousser d'abord vos modèles. Sous l'onglet <strong>Stratégies Intune</strong>, cliquez sur <strong>Importer les paramètres existants</strong>. Panoptica lit les configurations en vigueur dans le locataire — pour les mêmes types que votre bibliothèque prend en charge (catalogues de paramètres, configurations d'appareils, stratégies de conformité, modèles d'administration, bases de référence de sécurité) — et crée une carte <strong>Issu du locataire</strong> (bordure rouge et badge) pour chacune qu'il ne gère pas déjà. Tout ce que vous avez déployé à partir d'un modèle est reconnu par son identifiant d'objet et ignoré, vous n'obtenez donc jamais de doublons; recliquer est sans risque.</p>
 
-  <p>Chaque carte est enregistrée telle que trouvée — la configuration <strong>et ses attributions</strong> — et surveillée pour tout changement. L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em>. La dérive Intune est détectée par la surveillance <strong>quotidienne</strong> : contrairement aux nouvelles stratégies AC, les changements Intune ne figurent pas dans le flux du journal d'audit, il n'y a donc pas de voie à latence de quelques minutes — la réconciliation quotidienne est le filet de sécurité.</p>
+  <p>Chaque carte est enregistrée telle que trouvée — la configuration <strong>et ses attributions</strong> — et surveillée pour tout changement. L'alerte d'une carte issue du locataire indique <em>« modifié par rapport à l'état initial »</em>. Les configurations adoptées comme vos modèles déployés sont vérifiées pour la dérive lors de la réconciliation <strong>horaire</strong> (les changements Intune ne figurent pas dans le flux du journal d'audit, c'est donc le passage horaire qui les détecte).</p>
 
   <p>Ouvrez les <strong>Actions</strong> d'une carte pour trois choix :</p>
 
@@ -228,7 +239,7 @@
     <figcaption>Trois actions, de l'inoffensif au définitif — seule la suppression est irréversible.</figcaption>
   </figure>
 
-  <p>Ces trois actions sont consignées dans le journal d'audit MSP et dans le journal des modifications du locataire. Et comme pour l'AC, Panoptica surveille chaque locataire pour détecter une configuration Intune créée <strong>en dehors de Panoptica</strong> et la présente comme une carte issue du locataire accompagnée d'une alerte.</p>
+  <p>Ces trois actions sont consignées dans le journal d'audit MSP et dans le journal des modifications du locataire. Lorsqu'une carte adoptée <strong>dérive</strong> et que le nouvel état est intentionnel, ouvrez-la et choisissez <strong>Accepter l'état actuel comme référence</strong> (le bouton affiche <strong>Accepter comme référence</strong>) : la dérive s'efface et la surveillance continue par rapport au nouvel état. Seuls l'adoption d'une configuration et l'acceptation de son état actuel déplacent la référence — réimporter ne le fait jamais. Et comme pour l'AC, Panoptica surveille chaque locataire pour détecter une configuration Intune créée <strong>en dehors de Panoptica</strong>; à la <strong>prochaine vérification horaire</strong>, elle est découverte automatiquement, surveillée à partir de son état initial, et déclenche une alerte <strong>nouvelle stratégie non gérée découverte</strong>.</p>
 
   <h2>Le rythme</h2>
 

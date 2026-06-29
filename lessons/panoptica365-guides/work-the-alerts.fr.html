@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Travaillez les alertes">
 <meta name="lesson:subtitle" content="Votre véritable quotidien : le triage, le panneau de détail, l'analyse IA, la chronologie de l'identité, et résoudre avec discipline.">
 <meta name="lesson:icon" content="bell-ring">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -175,6 +175,26 @@
   </figure>
 
   <p>Elle est délibérément prudente — elle ne racontera pas une compromission que les événements ne soutiennent pas. Des liens directs vous amènent à l'utilisateur dans Entra et à l'incident dans Defender; <strong>Réanalyser</strong> (rôle Opérateur et plus) relance la corrélation quand les choses ont changé.</p>
+
+  <h2>Types d'alertes à reconnaître</h2>
+
+  <p>L'essentiel de la file, ce sont des connexions, des événements du journal d'audit et des dérives, mais quelques types ont leur propre marche à suivre :</p>
+
+  <ul>
+    <li><strong>Expiration de secret / certificat d'application</strong> — un identifiant d'inscription d'application arrive à 30 ou 7 jours de l'expiration (ou est déjà expiré). Opérationnel, pas une attaque : renouvelez l'identifiant avant que l'intégration ne cesse de fonctionner en silence. Affiché aussi sous l'onglet <strong>Applications</strong>.</li>
+    <li><strong>Utilisateur bloqué pour l'envoi de courrier</strong> — Exchange Online Protection a bloqué l'un des comptes du locataire pour pourriel sortant. Traitez-le comme une <strong>possible compromission de compte</strong> : vérifiez les connexions récentes de l'utilisateur, réinitialisez le mot de passe et révoquez les sessions, examinez les règles de boîte de réception et les éléments envoyés, puis levez la restriction.</li>
+    <li><strong>Nouvelle stratégie non gérée découverte</strong> — une stratégie d'accès conditionnel ou Intune est apparue dans un locataire que Panoptica ne gérait pas. Examinez-la, puis adoptez-la, désactivez-la ou supprimez-la depuis l'onglet des stratégies.</li>
+    <li><strong>Dérive de stratégie AC / Intune</strong> — une stratégie surveillée (déployée ou adoptée) a changé. Les deux guides de déploiement expliquent comment réagir.</li>
+  </ul>
+
+  <h3>Pourriel et hameçonnage entrants déjà bloqués — « Créer une exception »</h3>
+
+  <p>Certains signaux Defender sont du bruit au moment où vous les voyez : Microsoft a déjà bloqué le pourriel ou l'hameçonnage entrant. Ces alertes portent désormais un bouton <strong>Créer une exception</strong> — il met en sourdine cette politique pour <strong>ce locataire seulement</strong> ou <strong>tous les locataires gérés</strong>, résout celles ouvertes et résout automatiquement les correspondances futures (révoquez-la plus tard depuis la page Exemptions). Utilisez-le quand une politique signale de façon fiable des choses que Microsoft gère déjà.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Bruit entrant vs signal sortant</div>
+    <p>Mettre en sourdine le pourriel <em>entrant</em> déjà bloqué est un entretien sans risque. Le pourriel <strong>sortant</strong> — l'alerte « utilisateur bloqué pour l'envoi de courrier » ci-dessus — est l'inverse : un signal fort d'un compte probablement compromis. Il continue de se déclencher, et c'est voulu.</p>
+  </div>
 
   <h2>La discipline de résolution</h2>
 

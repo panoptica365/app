@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Générez des rapports">
 <meta name="lesson:subtitle" content="Quatre types de rapports et quand utiliser chacun : la posture pour la revue trimestrielle, la documentation pour le cartable, l'évaluation rapide pour le prospect.">
 <meta name="lesson:icon" content="file-text">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -98,7 +98,7 @@
 
   <p><strong>Rapport de posture de sécurité (PDF).</strong> Le livrable client vedette : Secure Score et tendances, couverture de l'accès conditionnel, activité d'alertes sur la période choisie, graphiques, et une analyse de la posture du locataire rédigée par l'IA. Prend une <strong>période</strong> — 7, 30 ou 90 derniers jours. C'est votre document de revue trimestrielle.</p>
 
-  <p><strong>Documentation de configuration (PDF).</strong> Un instantané ponctuel de la configuration du locataire, organisé comme le tableau de bord : identité, stratégies d'accès, appareils, courriel, collaboration. Pas de période — il documente <em>maintenant</em>. C'est le document de cartable : dossiers d'intégration, preuves d'audit et d'assurance, transferts de fin de mandat. Quand un instantané précédent existe, il est chargé pour comparaison.</p>
+  <p><strong>Documentation de configuration (PDF).</strong> Un instantané ponctuel de la configuration du locataire, organisé comme le tableau de bord : identité, stratégies d'accès, appareils, courriel, collaboration. Pas de période — il documente <em>maintenant</em>. C'est le document de cartable : dossiers d'intégration, preuves d'audit et d'assurance, transferts de fin de mandat. Quand un instantané précédent existe, il est chargé pour comparaison. Sa section des administrateurs liste désormais <strong>chaque compte détenant un rôle d'administration</strong> — Exchange, Conformité, Teams, SharePoint, Intune, Utilisateur, Centre d'assistance, et les autres — pas seulement les administrateurs globaux, le nombre d'administrateurs globaux étant conservé comme chiffre clé. (Les rôles pour lesquels un utilisateur est seulement <em>admissible</em> via PIM sans les avoir activés ne sont pas encore inclus.)</p>
 
   <p><strong>Évaluation rapide (PDF).</strong> Conçue pour le scénario audit seulement / prospect : une évaluation concise, axée sur les constats, de l'état actuel d'un locataire. Avant la génération, une <strong>boîte de contexte</strong> facultative vous permet de dire à l'IA quel genre d'organisation c'est — <em>« p. ex. cabinet comptable de 40 personnes »</em> — ce qui affine considérablement les recommandations. Remplissez-la; deux phrases de contexte améliorent nettement le résultat. Se marie naturellement avec les locataires en audit seulement et leur fenêtre de 14 jours.</p>
 
@@ -151,6 +151,8 @@
   <p>Les rapports portent votre image de marque — nom d'entreprise et logo sur la couverture et les pieds de page — configurée une fois par un Administrateur dans <strong>Paramètres → Image de marque des rapports</strong> (PNG transparent, max 2 Mo). Faites-le avant que le premier rapport destiné à un client ne sorte.</p>
 
   <p>Les rapports sont générés dans la <strong>langue du locataire</strong> (le champ Langue du locataire), dans les trois langues offertes — réglez une fois le locataire d'un client francophone à <em>fr</em>, et chaque livrable sort en français.</p>
+
+  <p>Il en va de même pour le <strong>PDF des autorisations SharePoint</strong> (exporté depuis un audit des autorisations) : il est rendu dans la langue du locataire, <strong>retourne à la ligne sur les entrées longues</strong> au lieu de les faire se chevaucher, et résout les identifiants de groupe bruts en noms lisibles.</p>
 
   <h2>Choisir, en pratique</h2>
 

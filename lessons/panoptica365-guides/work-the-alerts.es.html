@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Trabaje las alertas">
 <meta name="lesson:subtitle" content="Su verdadero día a día: triaje, el panel lateral de detalle, el análisis de IA, la Cronología de identidad y resolver con disciplina.">
 <meta name="lesson:icon" content="bell-ring">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -175,6 +175,26 @@
   </figure>
 
   <p>Es deliberadamente conservadora — no va a narrar un compromiso que los eventos no respalden. Los enlaces directos le llevan al usuario en Entra y al incidente en Defender; <strong>Reanalizar</strong> (rol de Operador o superior) vuelve a ejecutar la correlación cuando las cosas cambian.</p>
+
+  <h2>Tipos de alerta que conviene reconocer</h2>
+
+  <p>La mayor parte de la cola son inicios de sesión, eventos del registro de auditoría y derivas, pero algunos tipos tienen su propio procedimiento:</p>
+
+  <ul>
+    <li><strong>Expiración de secreto / certificado de aplicación</strong> — una credencial de un registro de aplicación está a 30 o 7 días de caducar (o ya caducó). Operativo, no un ataque: rote la credencial antes de que la integración deje de funcionar en silencio. También aparece en la pestaña <strong>Aplicaciones</strong>.</li>
+    <li><strong>Usuario restringido para enviar correo</strong> — Exchange Online Protection bloqueó una de las propias cuentas del inquilino por correo no deseado saliente. Trátelo como un <strong>posible compromiso de cuenta</strong>: revise los inicios de sesión recientes del usuario, restablezca la contraseña y revoque las sesiones, audite las reglas de bandeja de entrada y los elementos enviados, y luego levante la restricción.</li>
+    <li><strong>Nueva directiva no administrada descubierta</strong> — apareció una directiva de Acceso Condicional o de Intune en un inquilino que Panoptica no administraba. Revísela, y luego adóptela, desactívela o elimínela desde la pestaña de directivas.</li>
+    <li><strong>Deriva de directiva de CA / Intune</strong> — una directiva supervisada (implementada o adoptada) cambió. Las dos guías de despliegue explican cómo responder.</li>
+  </ul>
+
+  <h3>Correo no deseado y phishing entrantes ya bloqueados — «Crear excepción»</h3>
+
+  <p>Algunas señales de Defender ya son ruido cuando las ve: Microsoft ya bloqueó el correo no deseado o el phishing entrante. Estas alertas ahora llevan un botón <strong>Crear excepción</strong> — silencia esa política para <strong>solo este inquilino</strong> o <strong>todos los inquilinos gestionados</strong>, resuelve las abiertas y resuelve automáticamente las coincidencias futuras (revóquela más tarde en la página Exenciones). Recurra a él cuando una política informe de forma fiable cosas que Microsoft ya maneja.</p>
+
+  <div class="callout caution">
+    <div class="clabel">Ruido entrante vs señal saliente</div>
+    <p>Silenciar el correo no deseado <em>entrante</em> que ya está bloqueado es mantenimiento sin riesgo. El correo no deseado <strong>saliente</strong> — la alerta «usuario restringido para enviar correo» de arriba — es lo contrario: una señal fuerte de una cuenta probablemente comprometida. Sigue activándose, y así debe ser.</p>
+  </div>
 
   <h2>Disciplina de resolución</h2>
 

@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Monitor security settings">
 <meta name="lesson:subtitle" content="The tenant-wide drift surface: settings across M365, Entra, Exchange, Teams and SharePoint — read, compared, and guarded.">
 <meta name="lesson:icon" content="sliders-horizontal">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -105,7 +105,7 @@
     <li><strong>Priority</strong>: All / Critical / High / Medium / Low.</li>
   </ul>
 
-  <p>Each setting row shows its name, the current live value (interpreted into plain language, not raw API output), the license it requires if any, and a status:</p>
+  <p>Each setting row shows its name, the current live value (interpreted into plain language, not raw API output), the license it requires if any, and a status. The status is <strong>actual compliance, re-evaluated on every poll</strong> — you don't configure anything to make a setting "count":</p>
 
   <div class="table-wrap">
     <table>
@@ -113,27 +113,28 @@
         <tr><th>Status</th><th>What it means</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Monitored, OK</strong></td><td>live value matches what you've configured as the desired state.</td></tr>
-        <tr><td><strong>Drift Detected</strong></td><td>the live value no longer matches. This also fires a security-drift alert through the normal alert pipeline.</td></tr>
-        <tr><td><strong>Not Applied</strong></td><td>you haven't set a desired state for this setting on this tenant yet.</td></tr>
-        <tr><td><strong>Poll Error</strong></td><td>the reader couldn't fetch the value (often license or permission related).</td></tr>
+        <tr><td><strong>Compliant — monitored</strong> (green)</td><td>The live value already matches the recommended value — or a value you accepted as this tenant's baseline. Guarded from here on. No action needed; it turns green on the next poll on its own.</td></tr>
+        <tr><td><strong>Off recommended — review</strong> (orange)</td><td>A readable value that doesn't match the recommendation, and you haven't accepted it. A flag to review — it does <strong>not</strong> alert.</td></tr>
+        <tr><td><strong>Not configured — nothing to monitor</strong> (grey)</td><td>Nothing to evaluate: the underlying object doesn't exist or can't be read (a tenant with no DLP policies, an email-protection preset never turned on). No alert.</td></tr>
+        <tr><td><strong>Drift Detected</strong> (red)</td><td>A setting that was compliant or accepted has since changed. This fires a security-drift alert through the normal alert pipeline.</td></tr>
+        <tr><td><strong>Poll Error</strong> (grey)</td><td>The reader couldn't fetch the value — usually a license or permission gap.</td></tr>
       </tbody>
     </table>
   </div>
 
   <p>Click a setting for the detail view: what the setting does, why it matters, the user impact of changing it, operator notes, and the expected vs actual values when drifted.</p>
 
-  <h2>Applying and matching</h2>
+  <h2>Applying and accepting</h2>
 
-  <p>Two verbs cover the workflow:</p>
+  <p>First, the change that matters most: the status reflects <strong>actual compliance, re-evaluated on every poll</strong>. You no longer set a desired state to make a setting "count" — a tenant that already matches the recommendation turns green on its own, with nothing to click. Two verbs remain, and you reach for them only on an <strong>orange (off-recommended)</strong> setting:</p>
 
   <ul>
-    <li><strong>Apply</strong> — push the configured desired value to the tenant. Applies run <strong>asynchronously</strong>: the job is queued, a worker executes it, and the row updates when it completes (with a refresh check shortly after to confirm the value stuck). You can keep working while it runs.</li>
-    <li><strong>Match</strong> — adopt the tenant's current live value as the desired state. Use this when the tenant's existing configuration is correct and you just want it <em>guarded</em> from now on.</li>
+    <li><strong>Apply</strong> — push the recommended value to the tenant. Use it on an orange setting you want to bring into line. Applies run <strong>asynchronously</strong>: the job is queued, a worker executes it, and the row updates when it completes (with a refresh check shortly after to confirm the value stuck). You can keep working while it runs.</li>
+    <li><strong>Accept current as baseline</strong> — for an orange setting whose non-recommended value is <em>intentional for this tenant</em>, adopt the live value as the monitored baseline. The setting turns green and is guarded against <em>that accepted value</em> from then on; if it later changes, it goes red and alerts. This is how a legitimately non-standard tenant lives without a permanent orange flag.</li>
   </ul>
 
   <figure class="figsmall">
-    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Two verbs reach the same end state: Apply pushes the desired value to a neglected tenant, Match adopts the live value of a well-configured tenant; both end with a guarded desired value.">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Two verbs act on an off-recommended setting: Apply pushes the recommended value to the tenant, Accept adopts the tenant's intentional value as the baseline; both end with a guarded value whose future deviation raises a drift alert.">
       <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
       <defs><marker id="vArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
 
@@ -141,31 +142,31 @@
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="34" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
         <text x="124" y="58" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Apply</text>
-        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11.5">neglected tenant</text>
-        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11.5">push desired value</text>
+        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11.5">orange setting to fix</text>
+        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11.5">push recommended value</text>
         <path d="M214 62 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
-      <!-- Match row -->
+      <!-- Accept row -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="130" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
-        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Match</text>
-        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11.5">well-configured tenant</text>
-        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11.5">adopt live value</text>
+        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Accept</text>
+        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">intentional non-standard value</text>
+        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11.5">adopt as baseline</text>
         <path d="M214 158 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
       <!-- shared end state -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="408" y="72" width="278" height="76" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
-        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Guarded desired value</text>
+        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Guarded value</text>
         <text x="547" y="126" text-anchor="middle" fill="#A8E1F8" font-size="12">future deviation → drift alert</text>
       </g>
     </svg>
-    <figcaption>Apply and Match arrive at the same place — a guarded desired value, with any future deviation raising a drift alert.</figcaption>
+    <figcaption>Apply and Accept arrive at the same place — a guarded value, with any future deviation raising a drift alert.</figcaption>
   </figure>
 
-  <p>That distinction matters during onboarding: for a well-configured tenant you'll mostly Match (capture reality as the baseline), and for a neglected one you'll mostly Apply (impose your standard). Either way, the end state is the same — every setting has a desired value, and any future deviation produces a drift alert.</p>
+  <p>The distinction matters during onboarding. A neglected tenant's orange settings get <strong>Apply</strong> — impose your standard. A well-configured tenant that legitimately runs a different value gets <strong>Accept</strong> — capture that reality as its baseline. Either way the setting ends up green and guarded, and any future deviation produces a drift alert.</p>
 
   <h2>Audit-only settings</h2>
 

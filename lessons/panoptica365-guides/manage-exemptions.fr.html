@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Gérez les exemptions">
 <meta name="lesson:subtitle" content="Des exceptions documentées et limitées dans le temps : comment elles naissent de l'AC, d'Intune et des alertes, et comment les garder honnêtes.">
 <meta name="lesson:icon" content="shield-off">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -73,9 +73,12 @@
     <li><strong>Acceptation de dérive AC</strong> — accepter une dérive de stratégie AC <em>avec expiration</em> transfère les principaux exclus (utilisateurs ou groupes) en exemptions. Portée : par principal.</li>
     <li><strong>Acceptation de dérive Intune</strong> — même flux; la portée est <strong>à l'échelle de la stratégie</strong> pour ce déploiement.</li>
     <li><strong>Exemptions d'alerte</strong> — depuis le panneau de détail d'une alerte, pour exempter un schéma récurrent : un utilisateur, optionnellement restreint par pays et/ou plage d'IP. Portée : le schéma.</li>
+    <li><strong>Exceptions d'alerte Defender</strong> — le bouton <strong>Créer une exception</strong> pour le pourriel / hameçonnage entrant (voir <em>Travaillez les alertes</em>) met en sourdine une politique Defender déjà gérée pour <strong>ce locataire seulement</strong> ou <strong>tous les locataires gérés</strong>, et apparaît ici aussi. Contrairement aux acceptations de dérive, elle n'a <strong>pas d'expiration</strong> — elle tient jusqu'à ce que vous la révoquiez.</li>
   </ul>
 
-  <p>L'expiration par défaut est de <strong>180 jours</strong>. Accepter exige le rôle Opérateur ou plus, et une raison est toujours obligatoire.</p>
+  <p>L'expiration par défaut est de <strong>180 jours</strong> (l'exception Defender ci-dessus fait exception — elle est permanente). Accepter exige le rôle Opérateur ou plus, et une raison est toujours obligatoire.</p>
+
+  <p>Ne confondez pas une exemption avec l'<strong>Accepter l'état actuel comme référence</strong> de la page Sécurité : celle-ci <em>adopte</em> la valeur d'un locataire comme référence surveillée — elle change ce que « bon » signifie — tandis qu'une exemption <em>supprime</em> une alerte que vous avez choisi de tolérer. Outils différents, intentions différentes.</p>
 
   <figure class="figsmall">
     <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Trois sources alimentent les exemptions : l'acceptation de dérive AC avec portée par principal, l'acceptation de dérive Intune avec portée à l'échelle de la stratégie, et les exemptions d'alerte avec portée par schéma.">

@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Gestione las exenciones">
 <meta name="lesson:subtitle" content="Excepciones documentadas y con fecha de caducidad: cómo se crean desde CA, Intune y las alertas, y cómo mantenerlas honestas.">
 <meta name="lesson:icon" content="shield-off">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -73,9 +73,12 @@
     <li><strong>Aceptación de desviación de CA</strong> — aceptar una desviación de directiva de CA <em>con vencimiento</em> eleva los principales excluidos (usuarios o grupos) a exenciones. Ámbito: por principal.</li>
     <li><strong>Aceptación de desviación de Intune</strong> — mismo flujo; el ámbito es <strong>toda la directiva</strong> para ese despliegue.</li>
     <li><strong>Exenciones de alerta</strong> — desde el panel lateral de una alerta, eximiendo un patrón recurrente: un usuario, opcionalmente acotado por país y/o rango de IP. Ámbito: el patrón.</li>
+    <li><strong>Excepciones de alerta de Defender</strong> — el botón <strong>Crear excepción</strong> para el correo no deseado / phishing entrante (vea <em>Trabaje las alertas</em>) silencia una política de Defender ya gestionada para <strong>solo este inquilino</strong> o <strong>todos los inquilinos gestionados</strong>, y aparece aquí también. A diferencia de las aceptaciones de desviación, no tiene <strong>caducidad</strong> — se mantiene hasta que la revoque.</li>
   </ul>
 
-  <p>La caducidad predeterminada es de <strong>180 días</strong>. Aceptar requiere rol de Operador o superior, y el motivo es siempre obligatorio.</p>
+  <p>La caducidad predeterminada es de <strong>180 días</strong> (la excepción de Defender de arriba es la excepción — es permanente). Aceptar requiere rol de Operador o superior, y el motivo es siempre obligatorio.</p>
+
+  <p>No confunda una exención con <strong>Aceptar el estado actual como referencia</strong> de la página Seguridad: esa <em>adopta</em> el valor de un inquilino como línea base supervisada — cambia lo que significa «bueno» — mientras que una exención <em>suprime</em> una alerta que ha decidido tolerar. Herramientas distintas, intenciones distintas.</p>
 
   <figure class="figsmall">
     <svg class="diagram" viewBox="0 0 720 240" role="img" aria-label="Tres orígenes alimentan las exenciones: la aceptación de desviación de CA con ámbito por principal, la aceptación de desviación de Intune con ámbito de toda la directiva, y las exenciones de alerta con ámbito de patrón.">

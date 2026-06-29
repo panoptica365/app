@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Despliegue directivas de Intune">
 <meta name="lesson:subtitle" content="El mismo modelo de plantilla y deriva que en CA, aplicado a la configuración de dispositivos: asignar, desplegar, vigilar.">
 <meta name="lesson:icon" content="monitor-smartphone">
-<meta name="lesson:last_updated" content="2026-06-15">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -74,6 +74,17 @@
   <p>Si ya leyó la guía de directivas de CA, esta le resultará familiar — a propósito. Los despliegues de Intune usan el mismo modelo de plantilla y deriva: una biblioteca que usted mantiene (barra lateral → <strong>Directivas de Intune</strong>), despliegues por inquilino y detección continua de deriva sobre lo que está activo.</p>
 
   <p>Las plantillas en sí — qué opciones elegir, cómo es una línea base de Windows sensata — se tratan en la tarjeta <strong>Intune Template Settings</strong> de Aprender. Esta guía es la mecánica.</p>
+  </div>
+
+  <h2>Construir su biblioteca de plantillas de Intune (importación)</h2>
+
+  <p>Su biblioteca se llena por <strong>importación de archivos</strong>, en bloque. Exporte desde un inquilino de referencia las configuraciones de Intune sobre las que quiere estandarizarse, luego en la pestaña <strong>Directivas de Intune</strong> haga clic en <strong>Importar</strong> y suba la exportación — un <strong>ZIP</strong> de muchas directivas o un solo <strong>JSON</strong>. Panoptica enumera todo lo que encontró y usted marca lo que desea importar. Sin pegar JSON a mano ni elegir qué campos vigilar.</p>
+
+  <p><strong>Éxito parcial.</strong> Una importación masiva procesa cada directiva de forma <strong>independiente</strong> — un solo elemento defectuoso ya no hace fallar todo el lote. Obtiene un resultado por elemento — <em>«18 importadas, 2 con error: ‹nombre› — ‹motivo›»</em> — con los fallos explicados para que corrija y reintente solo esos. Si el nombre de una directiva entrante coincide con una plantilla que ya posee, Panoptica le hace la misma pregunta que con CA: importar una <strong>copia nueva (renombrada)</strong>, o <strong>sobrescribir</strong> la plantilla existente. Sobrescribir una plantilla ya implementada en inquilinos los vuelve a fijar como línea base y los muestra con deriva hasta que los vuelva a implementar — una advertencia da el recuento.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Supervisión de la directiva completa</div>
+    <p>Panoptica vigila la configuración <strong>completa</strong>, no un subconjunto de opciones elegido. Los campos volátiles y calculados de Microsoft se excluyen automáticamente, de modo que vigilarlo todo no produce falsas derivas.</p>
   </div>
 
   <h2>Desplegar directivas en un inquilino</h2>
@@ -186,7 +197,7 @@
 
   <p>Igual que con CA, puede adoptar las configuraciones de Intune <strong>existentes</strong> de un inquilino en lugar de enviar primero sus plantillas. En la pestaña <strong>Directivas de Intune</strong>, haga clic en <strong>Importar la configuración existente</strong>. Panoptica lee las configuraciones vigentes en el inquilino — para los mismos tipos que admite su biblioteca (catálogos de configuración, configuraciones de dispositivos, directivas de cumplimiento, plantillas administrativas, líneas base de seguridad) — y crea una tarjeta <strong>Origen: inquilino</strong> (borde rojo y distintivo) para cada una que aún no administra. Todo lo que implementó desde una plantilla se reconoce por su identificador de objeto y se omite, por lo que nunca obtiene duplicados; volver a hacer clic es seguro.</p>
 
-  <p>Cada tarjeta se registra tal como se encontró — la configuración <strong>y sus asignaciones</strong> — y se vigila ante cualquier cambio. La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em>. La deriva de Intune se detecta en la supervisión <strong>diaria</strong>: a diferencia de las directivas de AC nuevas, los cambios de Intune no están en el flujo del registro de auditoría, por lo que no hay una vía con latencia de minutos — la reconciliación diaria es la red de seguridad.</p>
+  <p>Cada tarjeta se registra tal como se encontró — la configuración <strong>y sus asignaciones</strong> — y se vigila ante cualquier cambio. La alerta de una tarjeta de origen del inquilino dice <em>«cambió respecto al estado original»</em>. Tanto las configuraciones adoptadas como sus plantillas implementadas se revisan en busca de deriva en la reconciliación <strong>horaria</strong> (los cambios de Intune no están en el flujo del registro de auditoría, así que el paso horario es como se detectan).</p>
 
   <p>Abra las <strong>Acciones</strong> de una tarjeta para tres opciones:</p>
 
@@ -228,7 +239,7 @@
     <figcaption>Tres acciones, de lo inofensivo a lo permanente — solo eliminar es irreversible.</figcaption>
   </figure>
 
-  <p>Las tres acciones quedan registradas en el registro de auditoría del MSP y en el registro de cambios del inquilino. Y como con CA, Panoptica vigila cada inquilino en busca de una configuración de Intune creada <strong>fuera de Panoptica</strong> y la presenta como una tarjeta de origen del inquilino junto con una alerta.</p>
+  <p>Las tres acciones quedan registradas en el registro de auditoría del MSP y en el registro de cambios del inquilino. Cuando una tarjeta adoptada <strong>deriva</strong> y el nuevo estado es intencional, ábrala y elija <strong>Aceptar el estado actual como referencia</strong> (el botón dice <strong>Aceptar como referencia</strong>): la deriva se borra y la supervisión continúa con respecto al nuevo estado. Solo adoptar una configuración y aceptar su estado actual mueven la línea base — reimportar nunca lo hace. Y como con CA, Panoptica vigila cada inquilino en busca de una configuración de Intune creada <strong>fuera de Panoptica</strong>; en la <strong>siguiente comprobación horaria</strong> se descubre automáticamente, se supervisa desde su estado original y genera una alerta de <strong>nueva directiva no administrada descubierta</strong>.</p>
 
   <h2>El ritmo</h2>
 

@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Examinez les applications — approuvez ce en quoi vous avez confiance, triez le reste">
 <meta name="lesson:subtitle" content="Le flux de travail de l'onglet Applications : Actualiser, cocher Approuvée, Enregistrer — et laisser Sonnet trier tout ce que vous n'avez pas approuvé.">
 <meta name="lesson:icon" content="app-window">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -205,6 +205,12 @@
   </figure>
 
   <p>C'est la défense contre un schéma d'attaque classique : une application légitime, de confiance depuis longtemps, dont les identifiants sont volés et qui se voit soudainement greffer <code>Mail.Read</code> pour tout le locataire. Vous avez approuvé ce qu'elle était — Panoptica365 vous avertit quand elle devient autre chose.</p>
+
+  <h2>Expiration des identifiants</h2>
+
+  <p>Au-delà des permissions, Panoptica surveille les <strong>identifiants</strong> de chaque inscription d'application — ses secrets client et ses certificats — pour leur expiration. Lorsqu'un identifiant arrive à <strong>30 ou 7 jours</strong> de son expiration (ou est déjà <strong>expiré</strong>), la ligne de l'application porte un <strong>badge « expire bientôt / expiré »</strong>, la date est colorée en ambre ou en rouge dans le détail déplié, et le résumé de l'onglet affiche un décompte des applications concernées. Les mêmes échéances déclenchent une alerte <strong>Expiration de secret / certificat d'application</strong>.</p>
+
+  <p>Celle-ci est opérationnelle, pas un signal de compromission : un secret expiré brise en silence ce que l'application alimentait — une tâche de sauvegarde, un connecteur, un script sans surveillance — se manifestant généralement par un 401 opaque au pire moment. La détecter 30 jours à l'avance transforme une panne en un renouvellement planifié de cinq minutes. Renouvelez l'identifiant dans <strong>Entra → Inscriptions d'applications → Certificats et secrets</strong>; si l'application n'est plus utilisée, supprimez-la entièrement, ce qui réduit aussi la surface d'attaque.</p>
 
   <h2>Quand refaire l'exercice</h2>
 

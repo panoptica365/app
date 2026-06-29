@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.29 — 2026-06-29
+
+### Guías del operador actualizadas para la última versión
+
+Las **Guías de Panoptica365** del centro Aprender ya están al día con las últimas versiones. Las guías de Acceso Condicional e Intune describen la nueva importación masiva por archivo (con gestión de nombres duplicados y resultados por elemento), la supervisión de desviación sobre la directiva completa, las comprobaciones horarias de las directivas adoptadas, y la aceptación del estado actual de una directiva desviada como su nueva referencia. La guía de ajustes de seguridad refleja el modelo de conformidad de un vistazo, donde un ajuste pasa a verde por sí solo en cuanto coincide, siendo **Aplicar** y **Aceptar el estado actual como referencia** las dos acciones. Las guías de alertas añaden los nuevos tipos de alerta — expiración de secreto/certificado de aplicación, un usuario bloqueado para enviar correo, y las nuevas directivas no administradas descubiertas — además de **Crear excepción** con un clic para el correo no deseado entrante ya bloqueado. Las guías del panel, de aplicaciones, de informes y de exenciones incorporan el almacenamiento en GB, la pestaña **Auditorías** de SharePoint, los distintivos de caducidad de credenciales, y la lista más completa de administradores en el informe de Documentación de configuración. La guía del panel del inquilino ahora cubre las diez pestañas, y una guía completamente nueva, **Autenticación de correo**, explica la pestaña Aut. correo — el SPF, el DKIM y el DMARC de cada dominio, calificados y vigilados ante la deriva. Todas las guías se actualizan en español, inglés y francés.
+
+---
+
 ## Versión 0.2.28 — 2026-06-28
 
 ### Importar un lote de plantillas de directivas de Intune ya no falla

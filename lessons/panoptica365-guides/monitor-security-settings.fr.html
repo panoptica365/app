@@ -7,7 +7,7 @@
 <meta name="lesson:title" content="Surveillez les paramètres de sécurité">
 <meta name="lesson:subtitle" content="La surface de dérive à l'échelle du locataire : des paramètres à travers M365, Entra, Exchange, Teams et SharePoint — lus, comparés et gardés.">
 <meta name="lesson:icon" content="sliders-horizontal">
-<meta name="lesson:last_updated" content="2026-06-07">
+<meta name="lesson:last_updated" content="2026-06-29">
 <link rel="stylesheet" href="../learn-base.css">
 </head>
 <body>
@@ -105,7 +105,7 @@
     <li><strong>Priorité</strong> : Toutes / Critique / Élevée / Moyenne / Faible.</li>
   </ul>
 
-  <p>Chaque ligne de paramètre montre son nom, la valeur active actuelle (interprétée en langage clair, pas la sortie brute de l'API), la licence requise s'il y a lieu, et un état :</p>
+  <p>Chaque ligne de paramètre montre son nom, la valeur active actuelle (interprétée en langage clair, pas la sortie brute de l'API), la licence requise s'il y a lieu, et un état. L'état correspond à la <strong>conformité réelle, réévaluée à chaque interrogation</strong> — vous ne configurez rien pour qu'un paramètre « compte » :</p>
 
   <div class="table-wrap">
     <table>
@@ -113,27 +113,28 @@
         <tr><th>État</th><th>Ce que ça signifie</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Surveillé — OK</strong></td><td>la valeur active correspond à l'état souhaité que vous avez configuré.</td></tr>
-        <tr><td><strong>Dérive détectée</strong></td><td>la valeur active ne correspond plus. Cela déclenche aussi une alerte de dérive de sécurité par le pipeline d'alertes habituel.</td></tr>
-        <tr><td><strong>Non appliqué</strong></td><td>vous n'avez pas encore défini d'état souhaité pour ce paramètre sur ce locataire.</td></tr>
-        <tr><td><strong>Erreur d'interrogation</strong></td><td>le lecteur n'a pas pu récupérer la valeur (souvent une question de licence ou d'autorisation).</td></tr>
+        <tr><td><strong>Conforme — surveillé</strong> (vert)</td><td>La valeur active correspond déjà à la valeur recommandée — ou à une valeur que vous avez acceptée comme référence pour ce locataire. Gardée à partir d'ici. Aucune action requise; elle passe au vert d'elle-même à la prochaine interrogation.</td></tr>
+        <tr><td><strong>Hors recommandation — à examiner</strong> (orange)</td><td>Une valeur lisible qui ne correspond pas à la recommandation et que vous n'avez pas acceptée. Un signal à examiner — elle ne déclenche <strong>pas</strong> d'alerte.</td></tr>
+        <tr><td><strong>Non configuré — rien à surveiller</strong> (gris)</td><td>Rien à évaluer : l'objet sous-jacent n'existe pas ou ne peut être lu (un locataire sans stratégie DLP, un préréglage de protection du courrier jamais activé). Aucune alerte.</td></tr>
+        <tr><td><strong>Dérive détectée</strong> (rouge)</td><td>Un paramètre qui était conforme ou accepté a changé depuis. Cela déclenche une alerte de dérive de sécurité par le pipeline d'alertes habituel.</td></tr>
+        <tr><td><strong>Erreur d'interrogation</strong> (gris)</td><td>Le lecteur n'a pas pu récupérer la valeur — généralement une question de licence ou d'autorisation.</td></tr>
       </tbody>
     </table>
   </div>
 
   <p>Cliquez sur un paramètre pour la vue détaillée : ce que fait le paramètre, pourquoi il compte, l'impact utilisateur d'un changement, les notes pour l'opérateur, et les valeurs attendues vs réelles en cas de dérive.</p>
 
-  <h2>Appliquer et faire correspondre</h2>
+  <h2>Appliquer et accepter</h2>
 
-  <p>Deux verbes couvrent le flux de travail :</p>
+  <p>D'abord, le changement le plus important : l'état reflète la <strong>conformité réelle, réévaluée à chaque interrogation</strong>. Vous ne définissez plus d'état souhaité pour qu'un paramètre « compte » — un locataire qui correspond déjà à la recommandation passe au vert de lui-même, sans rien à cliquer. Deux verbes subsistent, et vous n'y recourez que sur un paramètre <strong>orange (hors recommandation)</strong> :</p>
 
   <ul>
-    <li><strong>Appliquer</strong> — pousse la valeur souhaitée configurée vers le locataire. Les applications s'exécutent <strong>de façon asynchrone</strong> : la tâche est mise en file, un processus l'exécute, et la ligne se met à jour à la fin (avec une vérification de rafraîchissement peu après pour confirmer que la valeur a tenu). Vous pouvez continuer à travailler pendant l'exécution.</li>
-    <li><strong>Faire correspondre</strong> — adopte la valeur active actuelle du locataire comme état souhaité. Utilisez ceci quand la configuration existante du locataire est correcte et que vous voulez simplement la <em>garder</em> à partir de maintenant.</li>
+    <li><strong>Appliquer</strong> — pousse la valeur recommandée vers le locataire. Utilisez-le sur un paramètre orange que vous voulez remettre en ligne. Les applications s'exécutent <strong>de façon asynchrone</strong> : la tâche est mise en file, un processus l'exécute, et la ligne se met à jour à la fin (avec une vérification de rafraîchissement peu après pour confirmer que la valeur a tenu). Vous pouvez continuer à travailler pendant l'exécution.</li>
+    <li><strong>Accepter l'état actuel comme référence</strong> — pour un paramètre orange dont la valeur non recommandée est <em>intentionnelle pour ce locataire</em>, adoptez la valeur active comme référence surveillée. Le paramètre passe au vert et est gardé par rapport à <em>cette valeur acceptée</em> dès lors; s'il change ensuite, il passe au rouge et déclenche une alerte. C'est ainsi qu'un locataire légitimement non standard vit sans signal orange permanent.</li>
   </ul>
 
   <figure class="figsmall">
-    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Deux verbes mènent au même état final : Appliquer pousse la valeur souhaitée vers un locataire négligé, Faire correspondre adopte la valeur active d'un locataire bien configuré ; les deux aboutissent à une valeur souhaitée gardée.">
+    <svg class="diagram" viewBox="0 0 720 220" role="img" aria-label="Deux verbes agissent sur un paramètre hors recommandation : Appliquer pousse la valeur recommandée vers le locataire, Accepter adopte la valeur intentionnelle du locataire comme référence ; les deux aboutissent à une valeur gardée dont toute déviation future soulève une alerte de dérive.">
       <rect width="720" height="220" rx="12" fill="#071221" stroke="#1F3C5C"/>
       <defs><marker id="vArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
 
@@ -141,31 +142,31 @@
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="34" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
         <text x="124" y="58" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Appliquer</text>
-        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11.5">locataire négligé</text>
-        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11">pousse la valeur souhaitée</text>
+        <text x="124" y="78" text-anchor="middle" fill="#6B85A6" font-size="11">paramètre orange à corriger</text>
+        <text x="266" y="56" text-anchor="middle" fill="#52708F" font-size="11">pousse la valeur recommandée</text>
         <path d="M214 62 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
-      <!-- Match row -->
+      <!-- Accept row -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="34" y="130" width="180" height="56" rx="10" fill="#0E2640" stroke="#2A6F9E"/>
-        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="14" font-weight="700">Faire correspondre</text>
-        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">locataire bien configuré</text>
-        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11">adopte la valeur active</text>
+        <text x="124" y="154" text-anchor="middle" fill="#A8E1F8" font-size="15" font-weight="700">Accepter</text>
+        <text x="124" y="174" text-anchor="middle" fill="#6B85A6" font-size="11">valeur non standard voulue</text>
+        <text x="266" y="152" text-anchor="middle" fill="#52708F" font-size="11">adopte comme référence</text>
         <path d="M214 158 H400" stroke="#335F92" stroke-width="2" marker-end="url(#vArr)"/>
       </g>
 
       <!-- shared end state -->
       <g font-family="Geist,Inter,sans-serif">
         <rect x="408" y="72" width="278" height="76" rx="12" fill="#10243B" stroke="#5CCBF4" stroke-width="1.6"/>
-        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="14" font-weight="700">Valeur souhaitée gardée</text>
+        <text x="547" y="104" text-anchor="middle" fill="#7DD9F9" font-size="15" font-weight="700">Valeur gardée</text>
         <text x="547" y="126" text-anchor="middle" fill="#A8E1F8" font-size="11.5">déviation future → alerte de dérive</text>
       </g>
     </svg>
-    <figcaption>Appliquer et Faire correspondre aboutissent au même endroit — une valeur souhaitée gardée, toute déviation future soulevant une alerte de dérive.</figcaption>
+    <figcaption>Appliquer et Accepter aboutissent au même endroit — une valeur gardée, toute déviation future soulevant une alerte de dérive.</figcaption>
   </figure>
 
-  <p>Cette distinction compte pendant l'intégration : pour un locataire bien configuré, vous ferez surtout Faire correspondre (capturer la réalité comme référence), et pour un locataire négligé, surtout Appliquer (imposer votre standard). Dans les deux cas, l'état final est le même — chaque paramètre a une valeur souhaitée, et toute déviation future produit une alerte de dérive.</p>
+  <p>La distinction compte pendant l'intégration. Les paramètres orange d'un locataire négligé reçoivent <strong>Appliquer</strong> — imposez votre standard. Un locataire bien configuré qui exécute légitimement une valeur différente reçoit <strong>Accepter</strong> — capturez cette réalité comme sa référence. Dans les deux cas, le paramètre finit vert et gardé, et toute déviation future produit une alerte de dérive.</p>
 
   <h2>Paramètres en audit seulement</h2>
 
