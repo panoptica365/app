@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.2.31 — 2026-06-30
+
+### Sharper AI analysis, now powered by Claude Sonnet 5
+
+Panoptica365's deeper AI write-ups now run on **Claude Sonnet 5**, Anthropic's newest Sonnet model, upgraded from Claude Sonnet 4.6. This is the model behind the features that read your environment and explain it in plain language: the known-good **application triage**, the **identity threat-correlation** timeline, the 24-hour **alert digest**, the **Security Posture** report narrative, and the **email-authentication** summaries. Sonnet 5 brings stronger reasoning and better-calibrated judgement, so those verdicts and narratives are more accurate. Nothing changes in how you use Panoptica365 — the same actions simply produce better analysis.
+
+---
+
 ## Version 0.2.30 — 2026-06-29
 
 ### OAuth consent alerts are clearer — and no longer flood

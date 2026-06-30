@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.31 — 2026-06-30
+
+### Análisis de IA más preciso, ahora con Claude Sonnet 5
+
+Los análisis de IA más detallados de Panoptica365 ahora funcionan con **Claude Sonnet 5**, el modelo Sonnet más reciente de Anthropic, en sustitución de Claude Sonnet 4.6. Es el modelo detrás de las funciones que interpretan su entorno y lo explican en lenguaje claro: el **triaje de aplicaciones** de confianza, la línea de tiempo de **correlación de amenazas de identidad**, el **resumen de alertas** de 24 horas, la narrativa del informe de **Postura de seguridad** y los resúmenes de **autenticación de correo**. Sonnet 5 aporta un razonamiento más sólido y un juicio mejor calibrado, por lo que esos veredictos y textos son más precisos. Nada cambia en su forma de usar Panoptica365: las mismas acciones simplemente producen un mejor análisis.
+
+---
+
 ## Versión 0.2.30 — 2026-06-29
 
 ### Las alertas de consentimiento de OAuth son más claras — y ya no saturan

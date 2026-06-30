@@ -720,7 +720,7 @@ async function generateAnalysis(events) {
   // times a day, not dozens — the extra cents buy a materially better verdict.
   // Override with IDENTITY_TIMELINE_MODEL if ever needed.
   const model = (config.ai && (config.ai.identityTimelineModel || config.ai.sonnetModel))
-    || 'claude-sonnet-4-6';
+    || 'claude-sonnet-5';
   const gate = await aiGuard.preflight('identity_timeline');
   if (!gate.allowed) {
     console.warn(`[IdentityTimeline] Skipping analysis — ${gate.reason}`);
