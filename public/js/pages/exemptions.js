@@ -212,6 +212,13 @@
       if (e.match_alert_type) {
         return `<code style="font-size:0.75rem;">${esc(e.match_alert_type)}</code>${scopeBadge}`;
       }
+      // Per-credential rule (Jun 29, 2026): App-credential-expiry exception keyed
+      // on `${appId}:${credId}`. MUST come before the no-UPN "entire policy" case
+      // below — a credential rule also leaves match_upn NULL, so without this it
+      // would mis-render as a whole-policy exemption. Always tenant-scoped.
+      if (e.match_credential) {
+        return `<span style="font-style:italic;">${esc(window.t('exemptions.alert_credential'))}</span> <code style="font-size:0.72rem; color:var(--p-text-muted);" title="${esc(e.match_credential)}">${esc(e.match_credential)}</code>${scopeBadge}`;
+      }
       // Policy-level rule (#7/#23): whole category, no UPN. Show "entire policy".
       if (!e.match_upn) {
         return `<span style="font-style:italic;">${esc(window.t('exemptions.alert_entire_policy'))}</span>${scopeBadge}`;

@@ -5,6 +5,22 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.30 — 2026-06-29
+
+### Las alertas de consentimiento de OAuth son más claras — y ya no saturan
+
+Cuando un usuario o un administrador consiente a una aplicación, la alerta ahora nombra la **aplicación** a la que se concedió acceso y el **recurso** al que puede llegar — por ejemplo *«…consintió a Acme Mail Connector para el acceso a Microsoft Graph»* — en lugar de una cadena ilegible de identificadores de Microsoft. Los consentimientos idénticos repetidos del mismo usuario a la misma aplicación ahora se **agrupan en una sola alerta** con un contador de recurrencia, en vez de crear una fila nueva cada vez, de modo que una aplicación que un usuario vuelve a aprobar una y otra vez ya no sepulta el panel. El consentimiento habitual del usuario a permisos seguros ahora es de gravedad **baja** (antes era media); un consentimiento de administrador, o cualquier consentimiento que solicite un permiso de alto riesgo, sigue mostrándose como **alto** o **grave**. Y una escalación — el mismo usuario y la misma aplicación que ahora pasan a consentimiento de administrador o solicitan un permiso de riesgo — siempre genera una alerta nueva señalada por separado, en lugar de quedar absorbida silenciosamente en la habitual.
+
+### Agregar alertas a una agrupación existente
+
+Las agrupaciones permiten reunir alertas relacionadas bajo un solo elemento para investigarlas juntas. Hasta ahora solo podía agrupar alertas en el momento de crear la agrupación. Ahora puede **agregar más alertas a una agrupación abierta existente** desde dos lugares: seleccione alertas en la lista y elija **Agregar a agrupación**, o abra una agrupación y use **Agregar alertas** para elegir entre las alertas abiertas de ese cliente. Las alertas agregadas se incorporan exactamente como en una combinación, la gravedad de la agrupación aumenta si se une una alerta más grave, y cualquier ticket de PSA vinculado se actualiza en su lugar en vez de abrir uno nuevo. Solo del mismo cliente; disponible para operadores Miembro y Administrador.
+
+### Silenciar una alerta de vencimiento de credencial mientras espera a un tercero
+
+Cuando Panoptica365 advierte que el secreto de cliente o el certificado de una aplicación venció o está por vencer, la solución a veces está fuera de su control — por ejemplo el complemento de correo WordPress de un cliente cuyo secreto solo puede rotar su agencia web. Hasta ahora esa alerta volvía en cada sondeo. Ahora puede hacer clic en **Crear excepción** en una alerta de vencimiento de credencial, agregar una nota (p. ej. *«cliente avisado, a la espera de su agencia web»*) y deja de volver a dispararse — **solo para esa credencial**. Todas las demás aplicaciones y credenciales siguen alertando, y cuando la credencial finalmente se rota, la nueva se rastrea por separado y avisará en su propio vencimiento. Revoque la excepción en cualquier momento desde la página de Exenciones.
+
+---
+
 ## Versión 0.2.29 — 2026-06-29
 
 ### Guías del operador actualizadas para la última versión

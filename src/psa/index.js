@@ -763,6 +763,108 @@ async function consolidateRollupTickets(childAlertIds, opts = {}) {
   return { survivor: survivorId, survivorNumber, closed };
 }
 
+/**
+ * Append newly-added children to an EXISTING roll-up's survivor ticket (Add to
+ * Roll-up, 2026-06-29). Unlike consolidateRollupTickets — which picks a survivor
+ * from the passed child ids — this resolves the survivor from the PARENT's open
+ * 'appended' link (inserted at consolidation time), then closes each newly-added
+ * child's open ticket with a pointer note and records the additions on the
+ * survivor. NEVER opens a second survivor.
+ *
+ * Fallback: if the parent has no survivor link (roll-up created while PSA was
+ * off, or all original children were ticketless), establish one from the new
+ * children via consolidateRollupTickets. Best-effort; never throws.
+ * Returns { survivor, survivorNumber, closed } | null.
+ */
+async function appendToRollupTicket(parentAlertId, newChildIds, opts = {}) {
+  if (!isConfigured()) return null;
+  const { parentTenantId, title, operatorEmail } = opts;
+  const childIds = (newChildIds || []).map(Number).filter(Number.isFinite);
+  if (childIds.length === 0) return null;
+
+  // Resolve the parent's existing survivor ticket from its open link.
+  let survivorId = null;
+  let survivorNumber = null;
+  try {
+    const parentLinks = await store.getOpenLinksForAlertIds([parentAlertId]);
+    const pl = parentLinks.get(Number(parentAlertId));
+    if (pl && Number(pl.ticket_id) > 0) {
+      survivorId = Number(pl.ticket_id);
+      survivorNumber = pl.ticket_number || ('#' + survivorId);
+    }
+  } catch (err) {
+    console.warn(`[PSA] append: parent link lookup failed for #${parentAlertId}: ${err.message}`);
+  }
+
+  // No survivor yet → establish one from the new children (creates the parent link).
+  if (!survivorId) {
+    return consolidateRollupTickets(childIds, { parentAlertId, parentTenantId, title, operatorEmail });
+  }
+
+  const c = tc();
+  const lang = ticketLang();
+  const nowSql = toMysqlDatetime(new Date());
+
+  // Close each newly-added child's open ticket (other than the survivor) with a
+  // cross-reference note, and close its open links.
+  let map;
+  try { map = await store.getOpenLinksForAlertIds(childIds); }
+  catch (err) { console.warn(`[PSA] append: child link lookup failed: ${err.message}`); map = new Map(); }
+  const byTicket = new Map();
+  for (const link of map.values()) {
+    const tid = Number(link.ticket_id);
+    if (tid > 0 && tid !== survivorId && !byTicket.has(tid)) byTicket.set(tid, link);
+  }
+
+  let closed = 0;
+  for (const tid of byTicket.keys()) {
+    try {
+      if (c.closeStatusId != null) await client.patchTicketStatus(tid, c.closeStatusId);
+      await client.createTicketNote(tid, {
+        title: i18n.t('psa.ticket.note.rollup_absorbed_title', { lang }),
+        description: i18n.t('psa.ticket.note.rollup_absorbed', { survivor: survivorNumber, lang }),
+        noteType: c.noteTypeId,
+        publish: c.publishId,
+      });
+      const links = await store.getLinksForTicket(tid);
+      for (const l of links) {
+        if (l.state === 'open') await store.updateLink(l.id, { state: 'closed', closed_at: nowSql, last_synced_at: nowSql });
+      }
+      recoverAuthIfNeeded();
+      closed += 1;
+    } catch (err) {
+      if ((err && err.statusCode) === 401) await flipAuthUnhealthy(err.message);
+      console.warn(`[PSA] append: absorb-close failed for ticket ${tid}: ${err.message}`);
+    }
+  }
+
+  // Record the additions on the survivor.
+  try {
+    await client.createTicketNote(survivorId, {
+      title: i18n.t('psa.ticket.note.rollup_survivor_title', { lang }),
+      description: i18n.t('psa.ticket.note.rollup_appended', { count: childIds.length, lang }),
+      noteType: c.noteTypeId,
+      publish: c.publishId,
+    });
+    recoverAuthIfNeeded();
+  } catch (err) {
+    if ((err && err.statusCode) === 401) await flipAuthUnhealthy(err.message);
+    console.warn(`[PSA] append: survivor note failed for ticket ${survivorId}: ${err.message}`);
+  }
+
+  mspAudit.logMspAudit({
+    category: mspAudit.CATEGORY.OTHER,
+    action: 'psa.rollup_appended',
+    description: `Roll-up #${parentAlertId}: appended ${childIds.length} alert(s) to ticket ${survivorNumber}, closed ${closed} absorbed`,
+    templateKey: 'psa.rollup_appended',
+    templateParams: { survivor: survivorNumber, count: childIds.length, closed, alertId: parentAlertId, operator: operatorEmail || '' },
+    targetType: 'alert', targetId: String(parentAlertId), targetName: survivorNumber,
+  }).catch(() => {});
+
+  console.log(`[PSA] Roll-up #${parentAlertId}: appended ${childIds.length} to survivor ${survivorNumber}, closed ${closed} absorbed`);
+  return { survivor: survivorId, survivorNumber, closed };
+}
+
 // ─── Auth health (§7) ───
 
 async function flipAuthUnhealthy(reason) {
@@ -916,6 +1018,7 @@ module.exports = {
   noteTicketForAlert,
   closeTicketsForResolvedAlerts,
   consolidateRollupTickets,
+  appendToRollupTicket,
   // worker
   retryErroredLink,
   pollLinkedTickets,

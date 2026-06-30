@@ -1146,7 +1146,8 @@
     "status_no_expiry": "sans expiration",
     "alert_scope_all": "tous les locataires",
     "alert_scope_tenant": "ce locataire",
-    "alert_entire_policy": "Politique entière"
+    "alert_entire_policy": "Politique entière",
+    "alert_credential": "Identifiant"
   },
   "alert_exemption": {
     "btn_label": "Créer une exemption",
@@ -1199,6 +1200,15 @@
     "err_save": "Échec de la création de l’exception : ",
     "toast_missing_type": "Impossible de créer une exception — aucun type d’alerte Defender dans les données de l’alerte",
     "toast_created": "Exception créée — alertes correspondantes envoyées à l’historique"
+  },
+  "credential_exception": {
+    "btn_title": "Désactiver les alertes d’expiration pour cet identifiant précis et envoyer les alertes correspondantes à l’historique",
+    "modal_title": "Créer une exception d’expiration d’identifiant",
+    "modal_subtitle": "Résoudre automatiquement les alertes d’expiration de cet identifiant précis et les envoyer à l’historique",
+    "field_credential": "Identifiant",
+    "note_body": "Ceci désactive les alertes d’expiration UNIQUEMENT pour cet identifiant, sur ce client, jusqu’à ce que vous la révoquiez dans la page Exemptions. Les autres applications et autres identifiants continuent d’alerter. Lorsque l’identifiant est renouvelé, le nouveau est suivi séparément et alertera à sa propre expiration.",
+    "reason_placeholder": "p. ex. Client avisé; en attente de la rotation du secret par leur agence web",
+    "toast_missing": "Impossible de créer l’exception — aucun identifiant dans les données de l’alerte"
   },
   "ca_templates": {
     "title": "Accès conditionnel — Modèles de stratégies",
@@ -1540,6 +1550,7 @@
       "diagnostics.captured": "Dossier de diagnostic capturé ({id})",
       "diagnostics.downloaded": "Dossier de diagnostic téléchargé ({id})",
       "alert_rollup.create": "Fusion de {count} alertes dans le regroupement « {title} » ({tenantName})",
+      "alert_rollup.add": "Ajout de {count} alerte(s) au regroupement « {title} » ({tenantName})",
       "psa.ticket_created": "Billet Autotask {ticket} créé pour l’alerte nº {alertId} ({tenant})",
       "psa.note_appended": "Alerte nº {alertId} ajoutée au billet Autotask {ticket} ({tenant})",
       "psa.ticket_closed_by_operator": "Billet Autotask {ticket} fermé par {operator} (alerte nº {alertId})",
@@ -1550,6 +1561,7 @@
       "psa.sync_error": "Échec Autotask ({op}) pour l’alerte nº {alertId} : {error}",
       "settings.psa.update": "Réglages de l’intégration PSA modifiés ({fields})",
       "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)",
+      "psa.rollup_appended": "Alerte de regroupement nº {alertId} : {count} alerte(s) ajoutée(s) au billet Autotask {survivor}, {closed} billet(s) absorbé(s) fermé(s)",
       "settings.retention.update": "Fenêtres de rétention des données modifiées ({fields})",
       "tenant_config_imported": "{count} configuration(s) {surface} existante(s) importée(s) dans la surveillance",
       "tenant_card_stop_monitoring": "Surveillance de {surface} « {name} » arrêtée (aucune modification du locataire)",
@@ -1712,7 +1724,8 @@
       },
       "ual_mailbox_permission_added": "{policyName} : {operator} a accordé {accessRights} sur la boîte de {mailbox} à {grantee}",
       "ual_file_access_anomalous_geo": "{policyName} : {user} a effectué {operation} depuis {country} sur le fichier {fileName}",
-      "ual_oauth_consent": "{policyName} : {operator} a accordé un consentement {consentType} à « {appName} » — autorisations : {scopes}",
+      "ual_oauth_consent": "{policyName} : {operator} a accordé un consentement {consentType} à « {appName} »{resourceClause} — autorisations : {scopes}",
+      "ual_oauth_consent_resource": " pour l’accès à « {resource} »",
       "ual_sp_credentials_added": "{policyName} : {operator} a ajouté un identifiant de type {keyType} à « {appName} » (expire le {endDate})",
       "ual_privileged_role_assigned": "{policyName} : {operator} a attribué le rôle « {roleName} » à {targetUser}",
       "ual_breakglass_signin": "{policyName} : le compte d’urgence {upn} s’est connecté",
@@ -1916,7 +1929,25 @@
     "rollup_err_too_few": "Sélectionnez au moins deux alertes à fusionner.",
     "rollup_err_empty_title": "Saisissez un titre pour le regroupement.",
     "rollup_err_title_too_long": "Le titre du regroupement est trop long (512 caractères maximum).",
-    "rollup_err_generic": "Impossible de fusionner les alertes sélectionnées."
+    "rollup_err_generic": "Impossible de fusionner les alertes sélectionnées.",
+    "add_to_rollup": "Ajouter au regroupement",
+    "add_to_rollup_title": "Ajouter à un regroupement",
+    "add_to_rollup_intro": "Ajouter {count} alerte(s) à quel regroupement ?",
+    "add_rollup_child_count": "{count} alertes",
+    "add_no_rollups": "Aucun regroupement ouvert pour ce client — utilisez Fusionner pour en créer un.",
+    "add_confirm_btn": "Ajouter",
+    "rollup_add_alerts": "Ajouter des alertes",
+    "rollup_add_alerts_title": "Ajouter des alertes à ce regroupement",
+    "rollup_add_alerts_intro": "Choisissez les alertes ouvertes à intégrer à « {title} ».",
+    "rollup_add_no_candidates": "Aucune autre alerte ouverte à ajouter pour ce client.",
+    "toast_rollup_added": "{count} alerte(s) ajoutée(s) au regroupement.",
+    "add_err_parent_not_open": "Ce regroupement n’est plus ouvert — rouvrez-le d’abord, puis ajoutez.",
+    "add_err_parent_not_found": "Ce regroupement est introuvable.",
+    "add_err_not_addable": "Une ou plusieurs alertes sélectionnées ne peuvent pas être ajoutées (déjà résolues, déjà un regroupement ou déjà dans un regroupement).",
+    "add_err_multi_tenant": "Les alertes ne peuvent être ajoutées à un regroupement que pour un même client.",
+    "add_err_too_few": "Sélectionnez au moins une alerte à ajouter.",
+    "add_err_not_found": "Une ou plusieurs alertes sélectionnées sont introuvables.",
+    "add_err_generic": "Impossible d’ajouter les alertes sélectionnées au regroupement."
   },
   "reports": {
     "title": "Génération de rapports",
@@ -4761,7 +4792,8 @@
         "rollup_survivor_title": "Regroupement consolidé",
         "rollup_survivor": "Ce billet consolide maintenant un regroupement Panoptica365 : « {title} » — couvrant {count} alertes. Les billets liés ont été fermés et pointent ici.",
         "rollup_absorbed_title": "Consolidé dans un autre billet",
-        "rollup_absorbed": "Consolidé dans le billet {survivor} au moyen d’un regroupement Panoptica365. Ce billet a été fermé — poursuivez dans {survivor}."
+        "rollup_absorbed": "Consolidé dans le billet {survivor} au moyen d’un regroupement Panoptica365. Ce billet a été fermé — poursuivez dans {survivor}.",
+        "rollup_appended": "{count} alerte(s) supplémentaire(s) ont été ajoutées à ce regroupement Panoptica365 consolidé. Les billets liés ont été fermés et pointent ici."
       }
     },
     "settings": {

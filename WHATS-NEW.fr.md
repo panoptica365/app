@@ -5,6 +5,22 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.30 — 2026-06-29
+
+### Les alertes de consentement OAuth sont plus claires — et n'inondent plus
+
+Lorsqu'un utilisateur ou un administrateur consent à une application, l'alerte nomme désormais l'**application** à laquelle l'accès a été accordé et la **ressource** qu'elle peut atteindre — par exemple *« …a consenti à Acme Mail Connector pour l'accès à Microsoft Graph »* — au lieu d'une chaîne illisible d'identifiants Microsoft. Les consentements identiques répétés du même utilisateur à la même application sont maintenant **regroupés en une seule alerte** avec un compteur de récurrence, plutôt que de créer une nouvelle ligne chaque fois — ainsi, une application qu'un utilisateur réapprouve sans cesse n'ensevelit plus le tableau de bord. Le consentement utilisateur courant à des autorisations sûres est maintenant de gravité **faible** (il était moyen) ; un consentement administrateur, ou tout consentement demandant une autorisation à risque élevé, demeure **élevé** ou **grave**. Et une escalade — le même utilisateur et la même application passant au consentement administrateur ou demandant une autorisation à risque — déclenche toujours une nouvelle alerte signalée séparément, au lieu d'être absorbée discrètement dans l'alerte courante.
+
+### Ajouter des alertes à un regroupement existant
+
+Les regroupements permettent de réunir des alertes connexes sous un même élément pour les examiner ensemble. Jusqu'ici, vous ne pouviez regrouper des alertes qu'au moment de créer le regroupement. Vous pouvez maintenant **ajouter d'autres alertes à un regroupement ouvert existant**, à deux endroits : sélectionnez des alertes dans la liste et choisissez **Ajouter au regroupement**, ou ouvrez un regroupement et utilisez **Ajouter des alertes** pour choisir parmi les alertes ouvertes de ce client. Les alertes ajoutées y sont intégrées exactement comme lors d'une fusion, la gravité du regroupement augmente si une alerte plus grave s'y joint, et tout billet PSA lié est mis à jour sur place au lieu d'en ouvrir un nouveau. Un seul client à la fois ; offert aux opérateurs Membre et Administrateur.
+
+### Mettre en sourdine une alerte d'expiration d'identifiant en attendant un tiers
+
+Lorsque Panoptica365 signale qu'un secret client ou un certificat d'une application a expiré ou est sur le point d'expirer, la correction échappe parfois à votre contrôle — par exemple le greffon de messagerie WordPress d'un client dont seul son agence web peut renouveler le secret. Jusqu'ici, cette alerte revenait à chaque sondage. Vous pouvez maintenant cliquer sur **Créer une exception** sur une alerte d'expiration d'identifiant, ajouter une note (p. ex. *« client avisé, en attente de leur agence web »*), et elle cesse de se redéclencher — pour **cet identifiant uniquement**. Toutes les autres applications et tous les autres identifiants continuent d'alerter, et lorsque l'identifiant est enfin renouvelé, le remplaçant est suivi séparément et avertira à sa propre expiration. Révoquez l'exception à tout moment depuis la page Exemptions.
+
+---
+
 ## Version 0.2.29 — 2026-06-29
 
 ### Guides opérateur mis à jour pour la dernière version

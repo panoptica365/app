@@ -49,6 +49,10 @@ const adoptService = require('./lib/adopt-service');
 const accessReviewStore = require('./lib/access-review-store');
 // Break-glass CA coverage check (Graph). break-glass-graph → ./graph only.
 const bgGraph = require('./lib/break-glass-graph');
+// Enterprise Apps inventory (Feature 8.9) — authoritative per-tenant app-name
+// source for the OAuth-consent evaluator. known-good-store only requires
+// ./db/database, so no require cycle. Read once per evaluator pass (cache-first).
+const knownGoodStore = require('./lib/known-good-store');
 
 // Policy names — idempotent bootstrap targets in alert_policies
 const POLICY_MAILBOX_PERMISSION = 'UAL: Mailbox permission added';
@@ -1422,6 +1426,122 @@ function classifyRole({ templateId, displayName }) {
 // ──────────────────────────────────────────────────────────────────────
 
 /**
+ * Well-known Microsoft first-party application IDs → display name. Keyed by the
+ * stable *application* (client) appId GUID, lower-cased. Lets even an
+ * un-inventoried Microsoft app render a real name instead of a bare GUID.
+ *
+ * Source: Microsoft's published "Verify first-party Microsoft applications"
+ * app-ID list (learn.microsoft.com/troubleshoot/azure/entra/entra-id/governance/
+ * verify-first-party-apps-sign-in). Kept deliberately small — common clients
+ * the field actually sees. NOT used to "vouch" for an app (a display name is
+ * attacker-controllable for third-party apps); purely a label of last resort
+ * for genuine first-party client IDs.
+ */
+const WELLKNOWN_MS_APPS = new Map([
+  ['1fec8e78-bce4-4aaf-ab1b-5451cc387264', 'Microsoft Teams'],
+  ['1b730954-1685-4b74-9bfd-dac224a7b894', 'Azure Active Directory PowerShell'],
+  ['04b07795-8ddb-461a-bbee-02f9e1bf7b46', 'Microsoft Azure CLI'],
+  ['1950a258-227b-4e31-a9cf-717495945fc2', 'Microsoft Azure PowerShell'],
+  ['de8bc8b5-d9f9-48b1-a8ad-b748da725064', 'Graph Explorer'],
+  ['14d82eec-204b-4c2f-b7e8-296a70dab67e', 'Microsoft Graph Command Line Tools'],
+  ['d3590ed6-52b3-4102-aeff-aad2292ab01c', 'Microsoft Office'],
+  ['ab9b8c07-8f02-4f72-87fa-80105867a763', 'OneDrive Sync Engine'],
+  ['00000002-0000-0ff1-ce00-000000000000', 'Office 365 Exchange Online'],
+  ['00000003-0000-0000-c000-000000000000', 'Microsoft Graph'],
+  ['c44b4083-3bb0-49c1-b47d-974e53cbdf3c', 'Azure Portal'],
+  ['872cd9fa-d31f-45e0-9eab-6e460a02d1f1', 'Visual Studio'],
+]);
+
+/**
+ * Well-known *resource* service principals keyed by appId GUID → friendly name.
+ * The consent record's `TargetId.ServicePrincipalNames` is the resource SP's
+ * identifier-URI list (e.g. Microsoft Graph's), which is what `normalizeResource`
+ * collapses into a readable resource name.
+ */
+const WELLKNOWN_RESOURCES = new Map([
+  ['00000003-0000-0000-c000-000000000000', 'Microsoft Graph'],
+  ['00000002-0000-0000-c000-000000000000', 'Azure Active Directory Graph'],
+  ['00000002-0000-0ff1-ce00-000000000000', 'Office 365 Exchange Online'],
+  ['00000003-0000-0ff1-ce00-000000000000', 'Office 365 SharePoint Online'],
+  ['00000004-0000-0ff1-ce00-000000000000', 'Skype for Business Online'],
+  ['00000009-0000-0000-c000-000000000000', 'Power BI Service'],
+  ['797f4846-ba00-4fd7-ba43-dac1f8f63013', 'Windows Azure Service Management API'],
+]);
+
+/**
+ * Strip the AAD audit Target prefix (`ServicePrincipal_` / `Application_`) so a
+ * raw consent appId like "ServicePrincipal_b634571f-…" reduces to the bare GUID
+ * used to join against inventory / well-known maps. Never throws.
+ */
+function stripSpPrefix(id) {
+  return String(id == null ? '' : id).replace(/^(ServicePrincipal_|Application_)/, '');
+}
+
+/**
+ * Collapse a resource SPN list into a single readable resource name.
+ *   - Graph's `00000003-…;…;https://graph.microsoft.com;…` → "Microsoft Graph"
+ *   - else the first well-known GUID's name, else the first URL's host, else the
+ *     first non-GUID token, else null.
+ */
+function normalizeResource(raw) {
+  if (!raw) return null;
+  const tokens = String(raw).split(';').map(s => s.trim()).filter(Boolean);
+  if (tokens.length === 0) return null;
+  // 1. Any token that is a well-known resource appId GUID.
+  for (const tok of tokens) {
+    const hit = WELLKNOWN_RESOURCES.get(tok.toLowerCase());
+    if (hit) return hit;
+  }
+  // 2. First URL token → its host (e.g. https://graph.microsoft.com → graph.microsoft.com).
+  for (const tok of tokens) {
+    if (/^https?:\/\//i.test(tok)) {
+      const m = /^https?:\/\/([^/]+)/i.exec(tok);
+      if (m) return m[1];
+    }
+  }
+  // 3. First token that isn't a bare GUID.
+  for (const tok of tokens) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tok)) return tok;
+  }
+  return tokens[0];
+}
+
+/**
+ * Resolve a consent appId to a human name from a pre-built inventory map, then
+ * the well-known first-party map. Returns null when neither knows it (caller
+ * applies the cleaned-id fallback). `invByGuid` is Map<lowercased-guid → name>,
+ * built ONCE per evaluator pass from the Enterprise Apps inventory.
+ */
+function resolveConsentAppName(rawAppId, invByGuid) {
+  const guid = stripSpPrefix(rawAppId).toLowerCase();
+  if (!guid) return null;
+  if (invByGuid && invByGuid.has(guid)) return invByGuid.get(guid);
+  if (WELLKNOWN_MS_APPS.has(guid)) return WELLKNOWN_MS_APPS.get(guid);
+  return null;
+}
+
+/**
+ * Cleaned-id fallback: strip the "ServicePrincipal_" prefix so the operator at
+ * least sees a clean GUID, never the resource URI salad. Never empty.
+ */
+function cleanedAppIdLabel(rawAppId) {
+  return stripSpPrefix(rawAppId) || '(unknown app)';
+}
+
+/**
+ * Stable dedup key for an OAuth consent. Collapses repeats of the SAME
+ * user→app→risk-profile consent so a re-grant ticks recurrence_count instead of
+ * spawning a new row. The risk suffix (admin/high-risk) means an ESCALATION —
+ * same user/app now admin-consenting or requesting a high-risk scope — produces
+ * a DISTINCT key → a fresh alert, which is the signal we must not mask. Mirrors
+ * the inbox-rule-mod actionHash dedup pattern.
+ */
+function oauthConsentDedupKey(tenantId, parsed) {
+  const riskSuffix = `${parsed.isAdminConsent ? 'a' : 'u'}${parsed.highRiskScopes ? 'h' : 's'}`;
+  return `ual_oauth_consent:${tenantId}:${parsed.operator}:${parsed.appId}:${riskSuffix}`;
+}
+
+/**
  * Parse a consent / app-role-grant record.
  * Returns null if the record is malformed or doesn't represent a consent we
  * want to alert on.
@@ -1450,14 +1570,26 @@ function parseConsentRecord(record) {
   const isAdminConsentRaw = props['ConsentContext.IsAdminConsent'] || '';
   const isAdminConsent = /true/i.test(String(isAdminConsentRaw));
 
-  // Target app — Type=2 is ServicePrincipal/Application in AAD audit records
+  // Target app — Type=2 is ServicePrincipal/Application in AAD audit records.
   const appTarget = findTarget(record, 2);
   const appId = appTarget?.ID || record.ApplicationId || null;
-  const appName =
-    props['TargetId.ServicePrincipalNames']
-    || props['TargetId.DisplayName']
-    || appId
-    || '(unknown app)';
+
+  // Client app display name — the app the user consented to.
+  // TargetId.ServicePrincipalNames is the RESOURCE's URI list (e.g. Graph's),
+  // NOT the client app name — never use it for appName. Prefer a real display
+  // name here; the evaluator loop resolves the rest (inventory → MS map →
+  // cleaned id) so it can share a single inventory read across the batch.
+  const rawAppName =
+    props['TargetId.DisplayName']
+    || appTarget?.Name              // findTarget(record, 2) may carry .Name
+    || null;
+
+  // The resource being accessed (what the grant is FOR) — genuinely useful, and
+  // the field that previously leaked into appName. Collapse the SPN salad into a
+  // readable name ("Microsoft Graph", etc.).
+  const resource = normalizeResource(
+    props['TargetId.ServicePrincipalNames'] || props['TargetId.DisplayName'] || null
+  );
 
   if (!operator || !appId) return null;
 
@@ -1467,7 +1599,10 @@ function parseConsentRecord(record) {
   return {
     operator: String(operator),
     appId: String(appId),
-    appName: String(appName),
+    // May be null when the record carries no display name — finalized in the
+    // evaluator loop via resolveConsentAppName() + the cleaned-id fallback.
+    appName: rawAppName ? String(rawAppName) : null,
+    resource: resource ? String(resource) : null,
     scopes,
     isAdminConsent,
     highRiskScopes: highRisk,
@@ -1478,18 +1613,21 @@ function parseConsentRecord(record) {
 function classifyConsent(parsed) {
   // Severity ladder:
   //   Admin consent + high-risk scopes → severe (apex OAuth phish pattern)
-  //   Admin consent + safe scopes → high (still warrants visibility)
-  //   User consent + high-risk scopes → high (user-only consent for risky scope is a tell)
-  //   User consent + safe scopes → medium (background visibility)
+  //   Admin consent + safe scopes      → high   (still warrants visibility)
+  //   User consent  + high-risk scopes → high   (user-only consent for risky scope is a tell)
+  //   User consent  + safe scopes      → low    (background; the single most
+  //     common benign OAuth event in M365 — must NOT paint the board medium)
   let severity;
   if (parsed.isAdminConsent && parsed.highRiskScopes) severity = 'severe';
   else if (parsed.isAdminConsent || parsed.highRiskScopes) severity = 'high';
-  else severity = 'medium';
+  else severity = 'low';
 
+  const appLabel = parsed.appName || '(unknown app)';
+  const forResource = parsed.resource ? ` for access to "${parsed.resource}"` : '';
   return {
     alert: true,
     severity,
-    reason: `${parsed.operator} ${parsed.isAdminConsent ? 'admin-consented' : 'consented'} to "${parsed.appName}" — scopes: ${parsed.scopes || '(none recorded)'}`,
+    reason: `${parsed.operator} ${parsed.isAdminConsent ? 'admin-consented' : 'consented'} to "${appLabel}"${forResource} — scopes: ${parsed.scopes || '(none recorded)'}`,
   };
 }
 
@@ -1518,16 +1656,53 @@ async function evaluateOauthConsent(tenant, sinceTime, untilTime) {
         || op.startsWith('add delegated permission grant');
   });
 
+  // Resolve app display names from the Enterprise Apps inventory (Feature 8.9)
+  // in ONE read for the whole batch (cache-first; never N queries per record).
+  // Keyed by BOTH appId and objectId (lower-cased): a consent record's appId is
+  // the SP OBJECT id ("ServicePrincipal_<objectId>"), while inventory rows also
+  // carry the client appId — either may be the GUID we strip to.
+  const invByGuid = new Map();
+  try {
+    const inv = await knownGoodStore.readInventory(tenant.id);
+    if (inv && Array.isArray(inv.apps)) {
+      for (const a of inv.apps) {
+        const name = a && a.displayName ? String(a.displayName) : null;
+        if (!name) continue;
+        if (a.appId) invByGuid.set(String(a.appId).toLowerCase(), name);
+        if (a.objectId) invByGuid.set(String(a.objectId).toLowerCase(), name);
+      }
+    }
+  } catch (e) {
+    console.warn(`[UalEvaluators] oauth-consent inventory read failed (tenant ${tenant.id}): ${e.message}`);
+  }
+
   let fired = 0;
   let skipped = 0;
 
   for (const event of candidates) {
     const parsed = parseConsentRecord(event.raw_record);
     if (!parsed) { skipped += 1; continue; }
+
+    // Finalize the client app name: real display name (from parse) → inventory /
+    // well-known first-party map → cleaned GUID. Done here so the whole batch
+    // shares one inventory read, and before classifyConsent so the reason reads
+    // with the resolved name.
+    if (!parsed.appName) {
+      parsed.appName = resolveConsentAppName(parsed.appId, invByGuid) || cleanedAppIdLabel(parsed.appId);
+    }
+
     const decision = classifyConsent(parsed);
 
+    // Optional " for access to {resource}" clause — rendered via the *Key sub-
+    // fragment mechanism so it stays localized and collapses cleanly when the
+    // record carries no readable resource (renderAlertMessage / notifier both
+    // resolve <var>Key + the parent params).
+    const resourceParams = parsed.resource
+      ? { resource: parsed.resource, resourceClauseKey: 'alerts.message_format.ual_oauth_consent_resource' }
+      : { resourceClause: '' };
+
     const alertData = {
-      dedup_key: `ual_oauth_consent:${event.id}`,
+      dedup_key: oauthConsentDedupKey(tenant.id, parsed),
       severity: decision.severity,
       message: decision.reason,
       raw_data: {
@@ -1538,6 +1713,7 @@ async function evaluateOauthConsent(tenant, sinceTime, untilTime) {
           appName: parsed.appName,
           consentType: parsed.isAdminConsent ? 'admin' : 'user',
           scopes: parsed.scopes || '(none recorded)',
+          ...resourceParams,
         },
         ual_event_id: event.id,
         ual_record_id: event.record_id,
@@ -1545,6 +1721,7 @@ async function evaluateOauthConsent(tenant, sinceTime, untilTime) {
         operator: parsed.operator,
         appId: parsed.appId,
         appName: parsed.appName,
+        resource: parsed.resource,
         scopes: parsed.scopes,
         isAdminConsent: parsed.isAdminConsent,
         highRiskScopes: parsed.highRiskScopes,
@@ -4944,6 +5121,11 @@ module.exports = {
   _classifyMailboxPermission: classifyMailboxPermission,
   _parseConsentRecord: parseConsentRecord,
   _classifyConsent: classifyConsent,
+  _normalizeResource: normalizeResource,
+  _stripSpPrefix: stripSpPrefix,
+  _resolveConsentAppName: resolveConsentAppName,
+  _oauthConsentDedupKey: oauthConsentDedupKey,
+  WELLKNOWN_MS_APPS,
   _parseSpCredentialRecord: parseSpCredentialRecord,
   _parseRoleAssignmentRecord: parseRoleAssignmentRecord,
   _classifyRole: classifyRole,

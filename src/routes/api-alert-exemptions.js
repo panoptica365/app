@@ -91,6 +91,12 @@ router.post('/', auth.requireMemberOrAdmin, async (req, res) => {
     if (req.body && typeof req.body.match_alert_type === 'string' && req.body.match_alert_type.trim()) {
       return await createDefenderTypeException(req, res);
     }
+    // Jun 29, 2026 — per-credential exception (operator "Create exception" on App
+    // credential expiry alerts). Keyed on `${appId}:${credId}`; tenant-scoped;
+    // permanent. Routed before the UPN path so it never trips UPN validation.
+    if (req.body && typeof req.body.match_credential === 'string' && req.body.match_credential.trim()) {
+      return await createCredentialException(req, res);
+    }
 
     const {
       tenant_id,
@@ -274,6 +280,7 @@ router.get('/', async (req, res) => {
               r.match_ip_cidr,
               r.match_asn,
               r.match_alert_type,
+              r.match_credential,
               r.all_tenants,
               r.reason,
               r.expires_at,
@@ -341,7 +348,7 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     // the row is already revoked.
     const rule = await db.queryOne(
       `SELECT r.id, r.tenant_id, r.policy_id, r.match_upn, r.match_country,
-              r.match_alert_type, r.all_tenants,
+              r.match_alert_type, r.match_credential, r.all_tenants,
               r.revoked_at, p.name AS policy_name, tn.display_name AS tenant_name
          FROM alert_exemption_rules r
          JOIN tenants tn ON tn.id = r.tenant_id
@@ -355,10 +362,15 @@ router.delete('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     }
 
     const actor = actorFor(req);
-    // Describe whichever rule kind this is: Defender alert-type, or UPN.
+    // Describe whichever rule kind this is: Defender alert-type, per-credential,
+    // policy-wide, or UPN.
     const matchDesc = rule.match_alert_type
       ? `type "${rule.match_alert_type}"${rule.all_tenants ? ' (all tenants)' : ''}`
-      : `UPN ${rule.match_upn}${rule.match_country ? ' / ' + rule.match_country : ''}`;
+      : rule.match_credential
+        ? `credential ${rule.match_credential}`
+        : rule.match_upn
+          ? `UPN ${rule.match_upn}${rule.match_country ? ' / ' + rule.match_country : ''}`
+          : `entire policy${rule.all_tenants ? ' (all tenants)' : ''}`;
 
     await db.execute(
       `UPDATE alert_exemption_rules
@@ -615,6 +627,103 @@ async function createDefenderTypeException(req, res) {
     policy_id: policyId,
     match_alert_type: alertType,
     all_tenants: fleetWide ? 1 : 0,
+    reason: reasonClamped,
+    expires_at: null,
+    created_by: actor,
+    resolved_count: resolvedCount,
+  });
+}
+
+// ─── Per-credential exception (Jun 29, 2026) ─────────────────────────
+// "Create exception" on an App-credential-expiry alert. Two effects:
+//   1. Persist a rule keyed on the exact credential (`${appId}:${credId}`) that
+//      the alert engine reads (findMatchingCredentialRule) to auto-resolve FUTURE
+//      detections of THIS credential's expiry.
+//   2. Immediately resolve the currently-open alert(s) for that credential so the
+//      operator's board clears right away.
+// Tenant-scoped only — a credId is tenant-specific, so there is no fleet-wide
+// form. Permanent until revoked.
+async function createCredentialException(req, res) {
+  const { tenant_id, policy_id, match_credential, reason, source_alert_id } = req.body || {};
+
+  const tenantId = parseInt(tenant_id, 10);
+  const policyId = parseInt(policy_id, 10);
+  if (!Number.isFinite(tenantId) || !Number.isFinite(policyId)) {
+    return res.status(400).json({ error: 'tenant_id and policy_id are required integers' });
+  }
+
+  const credentialKey = String(match_credential).trim().slice(0, 255);
+  if (!credentialKey) return res.status(400).json({ error: 'match_credential is required' });
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'reason is required' });
+  }
+  const reasonClamped = String(reason).slice(0, 1000);
+
+  const tenant = await db.queryOne('SELECT id, display_name FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) return res.status(404).json({ error: 'tenant not found' });
+  const policy = await db.queryOne('SELECT id, name FROM alert_policies WHERE id = ?', [policyId]);
+  if (!policy) return res.status(404).json({ error: 'alert policy not found' });
+
+  const actor = actorFor(req);
+
+  // expires_at NULL = permanent until manually revoked. all_tenants stays 0.
+  const ruleId = await db.insert(
+    `INSERT INTO alert_exemption_rules
+       (tenant_id, policy_id, match_credential, all_tenants, reason, expires_at, created_by)
+     VALUES (?, ?, ?, 0, ?, NULL, ?)`,
+    [tenantId, policyId, credentialKey, reasonClamped, actor]
+  );
+
+  // Resolve the currently-open alert(s) for this exact credential. Match by
+  // reconstructing `${appId}:${credId}` from raw_data; scoped to this tenant.
+  let resolvedCount = 0;
+  try {
+    resolvedCount = await db.execute(
+      `UPDATE alerts a
+          SET a.status             = 'resolved',
+              a.resolution_reason  = 'exemption_rule',
+              a.resolution_rule_id = ?,
+              a.closed_at          = NOW(),
+              a.notes              = CONCAT(COALESCE(a.notes, ''),
+                                           '\n[', NOW(), '] Resolved by alert exemption rule #', ?, ': ', ?)
+        WHERE a.tenant_id = ?
+          AND a.status IN ('new', 'investigating')
+          AND CONCAT(
+                JSON_UNQUOTE(JSON_EXTRACT(a.raw_data, '$.appId')), ':',
+                JSON_UNQUOTE(JSON_EXTRACT(a.raw_data, '$.credId'))
+              ) = ?`,
+      [ruleId, ruleId, reasonClamped.slice(0, 500), tenantId, credentialKey]
+    ) || 0;
+    if (ruleId && resolvedCount > 0) {
+      await db.execute(
+        'UPDATE alert_exemption_rules SET match_count = match_count + ?, last_matched_at = UTC_TIMESTAMP() WHERE id = ?',
+        [resolvedCount, ruleId]
+      ).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[AlertExemptions] Credential bulk resolve failed (rule still created):', e.message);
+  }
+
+  await changeLog.logPanopticaChange({
+    tenantId,
+    category: changeLog.CATEGORY.ALERT_EXEMPTION_APPLY,
+    surfaces: [changeLog.SURFACE.IDENTITY],
+    description: `Credential expiry exception created — credential ${credentialKey} — scope: ${tenant.display_name} — permanent — reason: ${reasonClamped.slice(0, 200)}`,
+    templateKey: 'alert_exemption.apply',
+    templateParams: { policyName: policy.name, matchUpn: `credential: ${credentialKey} (${tenant.display_name})`, expiresAt: 'permanent', reason: reasonClamped.slice(0, 200) },
+    createdBy: actor,
+    ...changeLog.captureActorContext(req),
+  }).catch(e => {
+    console.error('[AlertExemptions] Credential change-log write failed (rule still created):', e.message);
+  });
+
+  return res.status(201).json({
+    id: ruleId,
+    tenant_id: tenantId,
+    policy_id: policyId,
+    match_credential: credentialKey,
+    all_tenants: 0,
     reason: reasonClamped,
     expires_at: null,
     created_by: actor,

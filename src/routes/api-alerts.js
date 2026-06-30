@@ -412,6 +412,44 @@ router.patch('/policies/:id/toggle', auth.requireAdmin, async (req, res) => {
 });
 
 /**
+ * GET /api/alerts/rollups?tenant_id=<id>&status=open — open roll-ups for a
+ * tenant, used to populate the "Add to Roll-up" picker (2026-06-29). Read-only;
+ * router-level requireAuth covers it (any authenticated role may list — the
+ * write controls are gated separately). child_count is the actual number of
+ * cross-linked children (rollup_parent_id), type-independent of the raw_data
+ * JSON denormalization.
+ *
+ * MUST be declared before GET /:id, or ":id" would swallow "rollups".
+ */
+router.get('/rollups', async (req, res) => {
+  try {
+    const tenantId = parseInt(req.query.tenant_id, 10);
+    if (!Number.isInteger(tenantId) || tenantId <= 0) {
+      return res.status(400).json({ error: 'tenant_id required' });
+    }
+    const rows = await db.queryRows(
+      `SELECT a.id, a.message, a.severity,
+              (SELECT COUNT(*) FROM alerts c WHERE c.rollup_parent_id = a.id) AS child_count
+         FROM alerts a
+        WHERE a.is_rollup = 1 AND a.tenant_id = ? AND a.status IN ('new','investigating')
+        ORDER BY a.triggered_at DESC`,
+      [tenantId]
+    );
+    res.json({
+      rollups: rows.map(r => ({
+        id: r.id,
+        message: r.message,
+        severity: r.severity,
+        child_count: Number(r.child_count) || 0,
+      })),
+    });
+  } catch (err) {
+    console.error('[API] List roll-ups failed:', err.message);
+    res.status(500).json({ error: 'Failed to list roll-ups' });
+  }
+});
+
+/**
  * GET /api/alerts/:id — Full alert detail.
  *
  * Phase 9a (May 2, 2026): the slideout passes `?lang=en|fr|es` so the
@@ -1061,6 +1099,167 @@ router.post('/rollup', auth.requireMemberOrAdmin, async (req, res) => {
     }
     console.error('[API] Alert roll-up failed:', err.message);
     res.status(500).json({ error: 'Failed to merge alerts' });
+  }
+});
+
+/**
+ * POST /api/alerts/rollup/:parentId/children — Add alerts to an EXISTING open
+ * roll-up (2026-06-29, extends Alert Merge). The operator-chosen open alerts
+ * become children of the roll-up: resolved with resolution_reason='rolled_up'
+ * and rollup_parent_id=<parent>, exactly like create-time merge. The parent's
+ * denormalized children blob is appended to, and its severity rises to
+ * max(parent, added) — never lowers, policy_id untouched. Like /rollup the
+ * parent never enters processNewAlert (no Haiku, no email); the children already
+ * got theirs. Purely manual grouping — no affinity/dedup matching.
+ *
+ * Body: { alert_ids: [int, …] }
+ * Stable 400 codes (frontend → localized toasts):
+ *   parent_not_found | parent_not_open | too_few | not_found | multi_tenant
+ *   | not_addable
+ * Response: { id: <parentId>, added: <count> }.
+ */
+// A2/A3: adding to a roll-up is an alert-triage action (member tier), matching
+// the data-role-required="member" Add controls.
+router.post('/rollup/:parentId/children', auth.requireMemberOrAdmin, async (req, res) => {
+  const SEV_RANK = { info: 0, low: 1, medium: 2, high: 3, severe: 4 };
+  const reject = (code) => { const e = new Error(code); e.rollupCode = code; throw e; };
+
+  try {
+    const parentId = parseInt(req.params.parentId, 10);
+    if (!Number.isInteger(parentId) || parentId <= 0) {
+      return res.status(400).json({ error: 'parent_not_found' });
+    }
+
+    // Candidate ids: coerce to positive ints, dedupe, drop the parent itself,
+    // require ≥ 1.
+    const ids = Array.isArray(req.body?.alert_ids)
+      ? [...new Set(req.body.alert_ids
+          .map(n => parseInt(n, 10))
+          .filter(n => Number.isInteger(n) && n > 0 && n !== parentId))]
+      : [];
+    if (ids.length < 1) return res.status(400).json({ error: 'too_few' });
+
+    const placeholders = ids.map(() => '?').join(',');
+
+    const result = await db.withTransaction(async (conn) => {
+      // Lock the parent roll-up for the duration of the add.
+      const [prows] = await conn.execute(
+        `SELECT a.id, a.tenant_id, a.severity, a.status, a.is_rollup, a.message,
+                a.raw_data, t.display_name AS tenant_name
+           FROM alerts a
+           JOIN tenants t ON a.tenant_id = t.id
+          WHERE a.id = ?
+          FOR UPDATE`,
+        [parentId]
+      );
+      // Missing OR not actually a roll-up → parent_not_found; closed → parent_not_open.
+      if (prows.length === 0 || !prows[0].is_rollup) reject('parent_not_found');
+      const parent = prows[0];
+      if (parent.status !== 'new' && parent.status !== 'investigating') reject('parent_not_open');
+
+      const tenantId = parent.tenant_id;
+      const tenantName = parent.tenant_name;
+
+      // Lock the candidate rows.
+      const [rows] = await conn.execute(
+        `SELECT id, tenant_id, severity, status, is_rollup, rollup_parent_id, message
+           FROM alerts
+          WHERE id IN (${placeholders})
+          FOR UPDATE`,
+        ids
+      );
+
+      if (rows.length !== ids.length) reject('not_found');             // some id missing
+      if (rows.some(r => r.tenant_id !== tenantId)) reject('multi_tenant');
+      // Each candidate must be an addable OPEN alert: open status, not itself a
+      // roll-up, and not already a child of another roll-up.
+      if (rows.some(r =>
+        (r.status !== 'new' && r.status !== 'investigating') ||
+        r.is_rollup ||
+        r.rollup_parent_id != null
+      )) reject('not_addable');
+
+      // Children: resolve + cross-link. The rollup_parent_id IS NULL + is_rollup=0
+      // guards are the final backstop against a race (candidate merged into two
+      // roll-ups, or resolved elsewhere between the lock and here).
+      await conn.execute(
+        `UPDATE alerts
+            SET status='resolved', resolution_reason='rolled_up',
+                rollup_parent_id=?, closed_at=NOW()
+          WHERE id IN (${placeholders}) AND tenant_id=?
+            AND rollup_parent_id IS NULL AND is_rollup=0`,
+        [parentId, ...ids, tenantId]
+      );
+
+      // Parent: append the denormalized children blob + bump severity. Read-
+      // modify-write under the FOR UPDATE lock so concurrent adds can't clobber
+      // each other's children. raw_data is a JSON column → mysql2 hands it back
+      // parsed; tolerate a string too (defensive).
+      let raw = parent.raw_data;
+      if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch { raw = {}; } }
+      raw = (raw && typeof raw === 'object') ? raw : {};
+      const existingChildren = Array.isArray(raw.children) ? raw.children : [];
+      const existingIds = Array.isArray(raw.child_alert_ids)
+        ? raw.child_alert_ids
+        : existingChildren.map(c => c.id);
+      const addedChildren = rows.map(r => ({ id: r.id, message: r.message, severity: r.severity }));
+      raw.rollup = true;
+      raw.children = [...existingChildren, ...addedChildren];
+      raw.child_alert_ids = [...new Set([...existingIds, ...rows.map(r => r.id)])];
+
+      let newSeverity = parent.severity;
+      for (const r of rows) {
+        if ((SEV_RANK[r.severity] ?? 0) > (SEV_RANK[newSeverity] ?? 0)) newSeverity = r.severity;
+      }
+
+      await conn.execute(
+        `UPDATE alerts SET severity=?, raw_data=? WHERE id=? AND is_rollup=1`,
+        [newSeverity, JSON.stringify(raw), parentId]
+      );
+
+      return {
+        parentId, count: rows.length, tenantId, tenantName,
+        parentMessage: parent.message, addedIds: rows.map(r => r.id),
+      };
+    });
+
+    console.log(`[API] Alert roll-up #${result.parentId}: added ${result.count} alert(s) (tenant=${result.tenantName}) by ${req.session.user.email}`);
+
+    // Audit (non-blocking, Phase 11 pattern). OTHER category — an alert-triage action.
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.OTHER,
+      action: 'alert_rollup.add',
+      templateKey: 'alert_rollup.add',
+      templateParams: { count: result.count, tenantName: result.tenantName, title: result.parentMessage },
+      description: `Added ${result.count} alert(s) to roll-up #${result.parentId} "${result.parentMessage}" (${result.tenantName})`,
+      targetType: 'alert',
+      targetId: String(result.parentId),
+      targetName: result.parentMessage,
+      metadata: { addedCount: result.count },
+      req,
+    }).catch(err => console.warn('[API] mspAudit.logMspAudit (alert_rollup.add) failed (non-blocking):', err.message));
+
+    // PSA — append the added children to the roll-up's EXISTING survivor ticket;
+    // never open new tickets. Best-effort — never breaks the add.
+    if (psa.isConfigured()) {
+      try {
+        await psa.appendToRollupTicket(result.parentId, result.addedIds, {
+          parentTenantId: result.tenantId,
+          title: result.parentMessage,
+          operatorEmail: req.session?.user?.email || null,
+        });
+      } catch (err) {
+        console.warn(`[API] PSA roll-up append for parent #${result.parentId} failed (non-fatal): ${err.message}`);
+      }
+    }
+
+    res.json({ id: result.parentId, added: result.count });
+  } catch (err) {
+    if (err && err.rollupCode) {
+      return res.status(400).json({ error: err.rollupCode });
+    }
+    console.error('[API] Alert roll-up add failed:', err.message);
+    res.status(500).json({ error: 'Failed to add alerts to roll-up' });
   }
 });
 

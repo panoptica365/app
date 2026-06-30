@@ -163,15 +163,20 @@
     // (they carry no defender_alert_type — that's why the button was missing).
     const defenderAlertType = extractDefenderAlertType(alert);
     const isEmailThreat = isEmailThreatAlert(alert);
+    const credentialInfo = extractCredentialKey(alert);
     let exceptionKind = null;
     if (defenderAlertType) exceptionKind = 'defender_type';
     else if (isEmailThreat) exceptionKind = 'policy';
+    else if (credentialInfo) exceptionKind = 'credential';
     const canCreateException = !isResolvedAlready && !wasAutoResolved && !!exceptionKind;
+    const exceptionBtnTitle = exceptionKind === 'credential'
+      ? window.t('credential_exception.btn_title')
+      : window.t('defender_exception.btn_title');
     const createDefenderExceptionBtnHtml = canCreateException
       ? `<button id="alert-create-defender-exception" class="alert-filter-select" data-role-required="member"
              data-exception-kind="${esc(exceptionKind)}"
              style="font-family:Inter,sans-serif;font-size:0.75rem;padding:4px 10px;cursor:pointer;"
-             title="${esc(window.t('defender_exception.btn_title'))}">
+             title="${esc(exceptionBtnTitle)}">
            ${esc(window.t('defender_exception.btn_label'))}
          </button>`
       : '';
@@ -445,9 +450,20 @@
           <span class="alert-severity-badge sev-${esc(c.severity || 'info')}" style="font-size:0.72rem;">${esc(window.t('alerts.' + (c.severity || 'info')).toUpperCase())}</span>
           <span class="alert-rollup-child-title">${esc(c.message || ('#' + c.id))}</span>
         </div>`).join('');
+      // "Add alerts" (Add to Roll-up, 2026-06-29) — only on an OPEN roll-up;
+      // adding to a resolved/false-positive roll-up is rejected server-side, so
+      // we don't offer it. Member+ via data-role-required (auto-gated by app.js).
+      const isOpenRollup = alert.status === 'new' || alert.status === 'investigating';
+      const addAlertsBtn = isOpenRollup
+        ? `<button id="alert-rollup-add-${esc(String(alert.id))}" class="alert-rollup-add-btn" data-role-required="member"
+             style="font-family:Inter,sans-serif;font-size:0.74rem;font-weight:600;padding:4px 10px;cursor:pointer;color:var(--p-accent,#2563eb);background:transparent;border:1px solid var(--p-accent,#2563eb);border-radius:6px;">${esc(window.t('alerts.rollup_add_alerts'))}</button>`
+        : '';
       rollupChildrenHtml = `
         <div class="alert-detail-section">
-          <div class="alert-detail-label">${esc(window.t('alerts.rollup_children_header', { count: children.length }))}</div>
+          <div class="alert-detail-label" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <span>${esc(window.t('alerts.rollup_children_header', { count: children.length }))}</span>
+            ${addAlertsBtn}
+          </div>
           <div class="alert-rollup-no-ai">${esc(window.t('alerts.rollup_no_ai'))}</div>
           ${rows}
         </div>`;
@@ -634,6 +650,23 @@
           if (parentId) open(parentId, callbacks);
         });
       }
+      // "Add alerts" → shared Add-to-Roll-up flow (entry B). onDone re-opens this
+      // roll-up (refreshes the child list + raised severity) and refreshes the
+      // host page's table via the existing onStatusChanged callback.
+      const addBtn = document.getElementById(`alert-rollup-add-${alert.id}`);
+      if (addBtn && window.Panoptica && Panoptica.RollupAdd) {
+        addBtn.addEventListener('click', () => {
+          Panoptica.RollupAdd.addAlertsToRollup(alert.id, alert.tenant_id, {
+            parentMessage: alert.message,
+            onDone: () => {
+              open(alert.id, callbacks);
+              if (typeof callbacks.onStatusChanged === 'function') {
+                try { callbacks.onStatusChanged(); } catch (_) {}
+              }
+            },
+          });
+        });
+      }
     }, 0);
 
     // Wire the attribution "view change" button — closes the slideout,
@@ -797,6 +830,24 @@
       try { raw = JSON.parse(raw); } catch (_) { return false; }
     }
     return !!(raw.emailDirection || raw.threatTypes || raw.deliveryAction);
+  }
+
+  // Jun 29, 2026 — App-credential-expiry alert? Its raw_data carries appId +
+  // credId + stage (the expiry-stage discriminator; known-good-DRIFT alerts have
+  // appId but no credId/stage). Returns { key, appName, credName } for the
+  // exemption, where key = `${appId}:${credId}` (the exact matcher key), or null.
+  function extractCredentialKey(alert) {
+    if (!alert || !alert.raw_data) return null;
+    let raw = alert.raw_data;
+    if (typeof raw === 'string') {
+      try { raw = JSON.parse(raw); } catch (_) { return null; }
+    }
+    if (!raw.appId || !raw.credId || !raw.stage) return null;
+    return {
+      key: `${raw.appId}:${raw.credId}`,
+      appName: raw.appName || raw.appId,
+      credName: raw.credName || raw.credId,
+    };
   }
 
   function t(key, fallback) {
@@ -1071,6 +1122,14 @@
     // Resolve the subject being exempted + the POST body, per kind.
     //   'policy'        → exempt the whole policy (email-threat "category");
     //   'defender_type' → exempt the Defender XDR alert type string.
+    // Title/subtitle default to the Defender wording; the credential kind swaps
+    // them (it isn't a Defender alert). showScope=false hides the tenant/all-
+    // tenants picker for the credential kind (a credId is tenant-specific).
+    let modalTitle = t('defender_exception.modal_title', 'Create Defender alert exception');
+    let modalSubtitle = t('defender_exception.modal_subtitle', 'Auto-resolve alerts of this Microsoft Defender type and send them to history');
+    let reasonPlaceholder = t('defender_exception.reason_placeholder', 'e.g. Microsoft already blocks/remediates this inbound class; not actionable for us');
+    let showScope = true;
+
     let subjectLabel, subjectValue, noteText, buildBody;
     if (kind === 'policy') {
       if (!alert.policy_id) {
@@ -1090,6 +1149,30 @@
         tenant_id: alert.tenant_id,
         policy_id: alert.policy_id,
         all_tenants: scope === 'all',
+        reason: reasonStr,
+        source_alert_id: alert.id,
+      });
+    } else if (kind === 'credential') {
+      const info = extractCredentialKey(alert);
+      if (!info) {
+        Panoptica.showToast(t('credential_exception.toast_missing',
+          'Cannot create exception — no credential in alert data'), 'error');
+        return;
+      }
+      modalTitle = t('credential_exception.modal_title', 'Create credential-expiry exception');
+      modalSubtitle = t('credential_exception.modal_subtitle', 'Auto-resolve expiry alerts for this specific credential and send them to history');
+      subjectValue = `${info.appName} — ${info.credName}`;
+      subjectLabel = t('credential_exception.field_credential', 'Credential');
+      noteText = t('credential_exception.note_body',
+        'This silences expiry alerts for ONLY this credential, on this tenant, until you revoke it on the Exemptions page. Other apps and other credentials keep alerting. When the credential is rotated, the new one is tracked separately and will alert on its own expiry.');
+      reasonPlaceholder = t('credential_exception.reason_placeholder',
+        'e.g. Advised the client; waiting on their web agency to rotate the secret');
+      showScope = false;
+      buildBody = (_scope, reasonStr) => ({
+        credential_exemption: true,
+        tenant_id: alert.tenant_id,
+        policy_id: alert.policy_id,
+        match_credential: info.key,
         reason: reasonStr,
         source_alert_id: alert.id,
       });
@@ -1136,24 +1219,9 @@
 
     const tenantName = alert.tenant_name || '';
 
-    modal.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-        <div>
-          <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--p-text);">
-            <span data-i18n="defender_exception.modal_title">Create Defender alert exception</span>
-          </h3>
-          <div style="font-size:0.82rem;color:var(--p-text-muted);">
-            <span data-i18n="defender_exception.modal_subtitle">Auto-resolve alerts of this Microsoft Defender type and send them to history</span>
-          </div>
-        </div>
-        <button id="defex-close" type="button"
-                style="background:transparent;border:none;color:var(--p-text-muted);font-size:1.4rem;cursor:pointer;line-height:1;">&times;</button>
-      </div>
-
-      <table class="alert-detail-table" style="width:100%;margin-bottom:14px;font-size:0.85rem;">
-        <tr><td style="opacity:0.7;width:120px;">${esc(subjectLabel)}</td><td><code>${esc(subjectValue)}</code></td></tr>
-      </table>
-
+    // Scope picker — hidden for the credential kind (a credId is tenant-specific,
+    // so there is no fleet-wide form; submit reads no radio → buildBody ignores it).
+    const scopeBlockHtml = showScope ? `
       <div style="margin-bottom:14px;">
         <div style="font-size:0.78rem;color:var(--p-text-muted);margin-bottom:6px;">
           <span data-i18n="defender_exception.label_scope">Apply to</span> <span style="color:var(--p-danger,#c44);">*</span>
@@ -1166,14 +1234,30 @@
             <span data-i18n="defender_exception.scope_all">All managed tenants</span>
           </label>
         </div>
+      </div>` : '';
+
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px 0;font-size:1.1rem;color:var(--p-text);">${esc(modalTitle)}</h3>
+          <div style="font-size:0.82rem;color:var(--p-text-muted);">${esc(modalSubtitle)}</div>
+        </div>
+        <button id="defex-close" type="button"
+                style="background:transparent;border:none;color:var(--p-text-muted);font-size:1.4rem;cursor:pointer;line-height:1;">&times;</button>
       </div>
+
+      <table class="alert-detail-table" style="width:100%;margin-bottom:14px;font-size:0.85rem;">
+        <tr><td style="opacity:0.7;width:120px;">${esc(subjectLabel)}</td><td><code>${esc(subjectValue)}</code></td></tr>
+      </table>
+
+      ${scopeBlockHtml}
 
       <div style="margin-bottom:14px;">
         <label style="display:block;font-size:0.78rem;color:var(--p-text-muted);margin-bottom:6px;">
           <span data-i18n="defender_exception.label_reason">Justification</span> <span style="color:var(--p-danger,#c44);">*</span>
         </label>
         <textarea id="defex-reason" class="form-control" rows="3"
-                  placeholder="${esc(t('defender_exception.reason_placeholder', 'e.g. Microsoft already blocks/remediates this inbound class; not actionable for us'))}"
+                  placeholder="${esc(reasonPlaceholder)}"
                   style="width:100%;padding:6px 8px;background:var(--p-surface-sunken);border:1px solid var(--p-border-subtle);border-radius:4px;color:var(--p-text);font-family:inherit;"></textarea>
       </div>
 

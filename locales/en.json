@@ -1146,7 +1146,8 @@
     "status_no_expiry": "no expiry",
     "alert_scope_all": "all tenants",
     "alert_scope_tenant": "this tenant",
-    "alert_entire_policy": "Entire policy"
+    "alert_entire_policy": "Entire policy",
+    "alert_credential": "Credential"
   },
   "alert_exemption": {
     "btn_label": "Create exemption",
@@ -1199,6 +1200,15 @@
     "err_save": "Failed to create exception: ",
     "toast_missing_type": "Cannot create exception — no Defender alert type in alert data",
     "toast_created": "Exception created — matching alerts sent to history"
+  },
+  "credential_exception": {
+    "btn_title": "Silence expiry alerts for this specific credential and send matching alerts to history",
+    "modal_title": "Create credential-expiry exception",
+    "modal_subtitle": "Auto-resolve expiry alerts for this specific credential and send them to history",
+    "field_credential": "Credential",
+    "note_body": "This silences expiry alerts for ONLY this credential, on this tenant, until you revoke it on the Exemptions page. Other apps and other credentials keep alerting. When the credential is rotated, the new one is tracked separately and will alert on its own expiry.",
+    "reason_placeholder": "e.g. Advised the client; waiting on their web agency to rotate the secret",
+    "toast_missing": "Cannot create exception — no credential in alert data"
   },
   "ca_templates": {
     "title": "Conditional Access — Policy Templates",
@@ -1540,6 +1550,7 @@
       "diagnostics.captured": "Diagnostics bundle captured ({id})",
       "diagnostics.downloaded": "Diagnostics bundle downloaded ({id})",
       "alert_rollup.create": "Merged {count} alerts into roll-up \"{title}\" ({tenantName})",
+      "alert_rollup.add": "Added {count} alert(s) to roll-up \"{title}\" ({tenantName})",
       "psa.ticket_created": "Autotask ticket {ticket} created for alert #{alertId} ({tenant})",
       "psa.note_appended": "Alert #{alertId} appended to Autotask ticket {ticket} ({tenant})",
       "psa.ticket_closed_by_operator": "Autotask ticket {ticket} closed by {operator} (alert #{alertId})",
@@ -1550,6 +1561,7 @@
       "psa.sync_error": "Autotask {op} failed for alert #{alertId}: {error}",
       "settings.psa.update": "PSA integration settings changed ({fields})",
       "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
+      "psa.rollup_appended": "Roll-up alert #{alertId}: appended {count} alert(s) to Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
       "settings.retention.update": "Data retention windows changed ({fields})",
       "tenant_config_imported": "Imported {count} existing {surface} configuration(s) into monitoring",
       "tenant_card_stop_monitoring": "Stopped monitoring {surface} \"{name}\" (no tenant change)",
@@ -1712,7 +1724,8 @@
       },
       "ual_mailbox_permission_added": "{policyName}: {operator} granted {accessRights} on {mailbox} to {grantee}",
       "ual_file_access_anomalous_geo": "{policyName}: {user} {operation} from {country}: {fileName}",
-      "ual_oauth_consent": "{policyName}: {operator} {consentType}-consented to \"{appName}\" — scopes: {scopes}",
+      "ual_oauth_consent": "{policyName}: {operator} {consentType}-consented to \"{appName}\"{resourceClause} — scopes: {scopes}",
+      "ual_oauth_consent_resource": " for access to \"{resource}\"",
       "ual_sp_credentials_added": "{policyName}: {operator} added {keyType} credential to \"{appName}\" (expires {endDate})",
       "ual_privileged_role_assigned": "{policyName}: {operator} assigned \"{roleName}\" to {targetUser}",
       "ual_breakglass_signin": "{policyName}: break-glass account {upn} signed in",
@@ -1916,7 +1929,25 @@
     "rollup_err_too_few": "Select at least two alerts to merge.",
     "rollup_err_empty_title": "Enter a title for the roll-up.",
     "rollup_err_title_too_long": "The roll-up title is too long (max 512 characters).",
-    "rollup_err_generic": "Could not merge the selected alerts."
+    "rollup_err_generic": "Could not merge the selected alerts.",
+    "add_to_rollup": "Add to Roll-up",
+    "add_to_rollup_title": "Add to a roll-up",
+    "add_to_rollup_intro": "Add {count} alert(s) to which roll-up?",
+    "add_rollup_child_count": "{count} alerts",
+    "add_no_rollups": "No open roll-ups for this tenant — use Merge to create one.",
+    "add_confirm_btn": "Add",
+    "rollup_add_alerts": "Add alerts",
+    "rollup_add_alerts_title": "Add alerts to this roll-up",
+    "rollup_add_alerts_intro": "Choose open alerts to fold into \"{title}\".",
+    "rollup_add_no_candidates": "No other open alerts for this tenant to add.",
+    "toast_rollup_added": "{count} alert(s) added to the roll-up.",
+    "add_err_parent_not_open": "That roll-up is no longer open — reopen it first, then add.",
+    "add_err_parent_not_found": "That roll-up could not be found.",
+    "add_err_not_addable": "One or more selected alerts can't be added (already resolved, a roll-up, or already in a roll-up).",
+    "add_err_multi_tenant": "Alerts can only be added to a roll-up from the same tenant.",
+    "add_err_too_few": "Select at least one alert to add.",
+    "add_err_not_found": "One or more selected alerts could not be found.",
+    "add_err_generic": "Could not add the selected alerts to the roll-up."
   },
   "reports": {
     "title": "Report Generation",
@@ -4761,7 +4792,8 @@
         "rollup_survivor_title": "Consolidated roll-up",
         "rollup_survivor": "This ticket now consolidates a Panoptica365 roll-up: \"{title}\" — covering {count} alerts. Related tickets were closed and point here.",
         "rollup_absorbed_title": "Consolidated into another ticket",
-        "rollup_absorbed": "Consolidated into ticket {survivor} via a Panoptica365 roll-up. This ticket was closed — continue in {survivor}."
+        "rollup_absorbed": "Consolidated into ticket {survivor} via a Panoptica365 roll-up. This ticket was closed — continue in {survivor}.",
+        "rollup_appended": "{count} additional alert(s) were added to this consolidated Panoptica365 roll-up. Related tickets were closed and point here."
       }
     },
     "settings": {

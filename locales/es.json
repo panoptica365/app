@@ -1146,7 +1146,8 @@
     "status_no_expiry": "sin caducidad",
     "alert_scope_all": "todos los inquilinos",
     "alert_scope_tenant": "este inquilino",
-    "alert_entire_policy": "Política completa"
+    "alert_entire_policy": "Política completa",
+    "alert_credential": "Credencial"
   },
   "alert_exemption": {
     "btn_label": "Crear exención",
@@ -1199,6 +1200,15 @@
     "err_save": "Error al crear la excepción: ",
     "toast_missing_type": "No se puede crear la excepción — no hay tipo de alerta de Defender en los datos de alerta",
     "toast_created": "Excepción creada — alertas coincidentes enviadas al historial"
+  },
+  "credential_exception": {
+    "btn_title": "Silenciar las alertas de vencimiento de esta credencial específica y enviar las alertas coincidentes al historial",
+    "modal_title": "Crear excepción de vencimiento de credencial",
+    "modal_subtitle": "Resolver automáticamente las alertas de vencimiento de esta credencial específica y enviarlas al historial",
+    "field_credential": "Credencial",
+    "note_body": "Esto silencia las alertas de vencimiento SOLO de esta credencial, en este cliente, hasta que la revoque en la página de Exenciones. Otras aplicaciones y otras credenciales siguen alertando. Cuando la credencial se rota, la nueva se rastrea por separado y alertará en su propio vencimiento.",
+    "reason_placeholder": "p. ej. Cliente avisado; a la espera de que su agencia web rote el secreto",
+    "toast_missing": "No se puede crear la excepción — no hay credencial en los datos de la alerta"
   },
   "ca_templates": {
     "title": "Acceso Condicional — Plantillas de directiva",
@@ -1540,6 +1550,7 @@
       "diagnostics.captured": "Paquete de diagnóstico capturado ({id})",
       "diagnostics.downloaded": "Paquete de diagnóstico descargado ({id})",
       "alert_rollup.create": "Se combinaron {count} alertas en la agrupación «{title}» ({tenantName})",
+      "alert_rollup.add": "Se agregaron {count} alerta(s) a la agrupación «{title}» ({tenantName})",
       "psa.ticket_created": "Ticket de Autotask {ticket} creado para la alerta n.º {alertId} ({tenant})",
       "psa.note_appended": "Alerta n.º {alertId} añadida al ticket de Autotask {ticket} ({tenant})",
       "psa.ticket_closed_by_operator": "Ticket de Autotask {ticket} cerrado por {operator} (alerta n.º {alertId})",
@@ -1550,6 +1561,7 @@
       "psa.sync_error": "Autotask ({op}) falló para la alerta n.º {alertId}: {error}",
       "settings.psa.update": "Ajustes de la integración con PSA modificados ({fields})",
       "psa.rollup_consolidated": "Alerta de agrupación n.º {alertId}: se conservó el ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)",
+      "psa.rollup_appended": "Alerta de agrupación n.º {alertId}: se agregaron {count} alerta(s) al ticket de Autotask {survivor}, se cerraron {closed} ticket(s) absorbido(s)",
       "settings.retention.update": "Ventanas de retención de datos modificadas ({fields})",
       "tenant_config_imported": "Se importaron {count} configuración(es) de {surface} existentes a la supervisión",
       "tenant_card_stop_monitoring": "Se dejó de supervisar {surface} «{name}» (sin cambios en el inquilino)",
@@ -1712,7 +1724,8 @@
       },
       "ual_mailbox_permission_added": "{policyName}: {operator} concedió {accessRights} en el buzón de {mailbox} a {grantee}",
       "ual_file_access_anomalous_geo": "{policyName}: {user} realizó {operation} desde {country} sobre el archivo {fileName}",
-      "ual_oauth_consent": "{policyName}: {operator} otorgó consentimiento de tipo {consentType} a «{appName}» — permisos: {scopes}",
+      "ual_oauth_consent": "{policyName}: {operator} otorgó consentimiento de tipo {consentType} a «{appName}»{resourceClause} — permisos: {scopes}",
+      "ual_oauth_consent_resource": " para acceder a «{resource}»",
       "ual_sp_credentials_added": "{policyName}: {operator} agregó una credencial de tipo {keyType} a «{appName}» (vence el {endDate})",
       "ual_privileged_role_assigned": "{policyName}: {operator} asignó el rol «{roleName}» a {targetUser}",
       "ual_breakglass_signin": "{policyName}: la cuenta de emergencia {upn} inició sesión",
@@ -1916,7 +1929,25 @@
     "rollup_err_too_few": "Seleccione al menos dos alertas para combinar.",
     "rollup_err_empty_title": "Ingrese un título para la agrupación.",
     "rollup_err_title_too_long": "El título de la agrupación es demasiado largo (máximo 512 caracteres).",
-    "rollup_err_generic": "No se pudieron combinar las alertas seleccionadas."
+    "rollup_err_generic": "No se pudieron combinar las alertas seleccionadas.",
+    "add_to_rollup": "Agregar a agrupación",
+    "add_to_rollup_title": "Agregar a una agrupación",
+    "add_to_rollup_intro": "¿A qué agrupación desea agregar {count} alerta(s)?",
+    "add_rollup_child_count": "{count} alertas",
+    "add_no_rollups": "No hay agrupaciones abiertas para este cliente: use Combinar para crear una.",
+    "add_confirm_btn": "Agregar",
+    "rollup_add_alerts": "Agregar alertas",
+    "rollup_add_alerts_title": "Agregar alertas a esta agrupación",
+    "rollup_add_alerts_intro": "Elija las alertas abiertas que desea incorporar a «{title}».",
+    "rollup_add_no_candidates": "No hay otras alertas abiertas de este cliente para agregar.",
+    "toast_rollup_added": "Se agregaron {count} alerta(s) a la agrupación.",
+    "add_err_parent_not_open": "Esa agrupación ya no está abierta: reábrala primero y luego agregue.",
+    "add_err_parent_not_found": "No se encontró esa agrupación.",
+    "add_err_not_addable": "Una o más alertas seleccionadas no se pueden agregar (ya resueltas, son una agrupación o ya están en una agrupación).",
+    "add_err_multi_tenant": "Solo se pueden agregar a una agrupación alertas del mismo cliente.",
+    "add_err_too_few": "Seleccione al menos una alerta para agregar.",
+    "add_err_not_found": "No se encontraron una o más de las alertas seleccionadas.",
+    "add_err_generic": "No se pudieron agregar las alertas seleccionadas a la agrupación."
   },
   "reports": {
     "title": "Generación de informes",
@@ -4761,7 +4792,8 @@
         "rollup_survivor_title": "Agrupación consolidada",
         "rollup_survivor": "Este ticket ahora consolida una agrupación de Panoptica365: «{title}», que abarca {count} alertas. Los tickets relacionados se cerraron y apuntan aquí.",
         "rollup_absorbed_title": "Consolidado en otro ticket",
-        "rollup_absorbed": "Consolidado en el ticket {survivor} mediante una agrupación de Panoptica365. Este ticket se cerró: continúe en {survivor}."
+        "rollup_absorbed": "Consolidado en el ticket {survivor} mediante una agrupación de Panoptica365. Este ticket se cerró: continúe en {survivor}.",
+        "rollup_appended": "Se agregaron {count} alerta(s) adicional(es) a esta agrupación consolidada de Panoptica365. Los tickets relacionados se cerraron y apuntan aquí."
       }
     },
     "settings": {

@@ -177,10 +177,19 @@
     // selection (incl. the sentinel). The `disabled` attribute is independent
     // of role gating (data-role-required uses a `role-hidden` class), so this
     // never reveals controls to viewers.
+    // "Add to Roll-up" enables on ≥1 EXPLICIT selection that is single-tenant
+    // and contains no roll-up and no already-rolled-up child (those can't be
+    // re-parented). The __ALL_FILTERED__ sentinel is unsupported (same as Merge).
+    const meta = selectionMeta();
     document.querySelectorAll('.alert-bulk-btn').forEach(btn => {
-      const enabled = btn.dataset.action === 'merge'
-        ? (count >= 2 && !isAllFiltered)
-        : (count >= 1);
+      let enabled;
+      if (btn.dataset.action === 'merge') {
+        enabled = (count >= 2 && !isAllFiltered);
+      } else if (btn.dataset.action === 'add-to-rollup') {
+        enabled = (count >= 1 && !isAllFiltered && meta.singleTenant && !meta.anyRollup && !meta.anyChild);
+      } else {
+        enabled = (count >= 1);
+      }
       btn.disabled = !enabled;
     });
 
@@ -272,6 +281,7 @@
         const action = btn.dataset.action;
         if (!action || btn.disabled) return;
         if (action === 'merge') { startMerge(); return; }
+        if (action === 'add-to-rollup') { startAddToRollup(); return; }
         if (selectedIds.size > 0) bulkAction(action);
       });
     });
@@ -321,6 +331,41 @@
     titleInput.value = proposed;
     el('alert-rollup-overlay').classList.add('active');
     setTimeout(() => { titleInput.focus(); titleInput.select(); }, 50);
+  }
+
+  // Metadata about the current EXPLICIT selection (ignores the __ALL_FILTERED__
+  // sentinel), used to gate the Add-to-Roll-up button + flow: single-tenant,
+  // and whether any selected row is itself a roll-up or already a child.
+  function selectionMeta() {
+    const ids = [...selectedIds].filter(id => id !== '__ALL_FILTERED__');
+    const rows = currentAlerts.filter(a => ids.includes(a.id));
+    const tenantIds = new Set(rows.map(a => a.tenant_id));
+    return {
+      ids,
+      rows,
+      tenantId: rows[0] ? rows[0].tenant_id : null,
+      singleTenant: tenantIds.size <= 1,
+      anyRollup: rows.some(a => !!a.is_rollup),
+      anyChild: rows.some(a => a.rollup_parent_id != null),
+    };
+  }
+
+  // Open the "Add to Roll-up" flow: hand the shared module the selected ids +
+  // tenant; it fetches open roll-ups, shows the picker, and POSTs. On success we
+  // clear the selection, reload, and open the target roll-up's detail panel.
+  function startAddToRollup() {
+    const meta = selectionMeta();
+    if (meta.ids.length < 1) return;
+    if (!meta.singleTenant) { el('alert-rollup-multi-overlay').classList.add('active'); return; }
+    if (meta.anyRollup || meta.anyChild) return; // button is disabled in this state; belt-and-suspenders
+    if (!window.Panoptica || !Panoptica.RollupAdd) return;
+    Panoptica.RollupAdd.addToRollup(meta.ids, meta.tenantId, {
+      onDone: (parentId) => {
+        selectedIds.clear();
+        Panoptica.refreshAlertSignals?.();
+        loadAlerts(currentPage).then(() => { if (parentId) openDetail(parentId); });
+      },
+    });
   }
 
   // Translate a policy name the same way the table/slideout do, so the

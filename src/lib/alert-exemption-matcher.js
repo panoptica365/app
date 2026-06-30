@@ -183,11 +183,14 @@ async function findMatchingDefenderTypeRule(tenantId, alertType) {
  * outbound spam / malware / phish are different policies and are untouched.
  *
  * A policy-level rule is identified by having NO narrower match keys set
- * (match_upn IS NULL AND match_alert_type IS NULL) — so it can't be confused
- * with a UPN risky-sign-in rule or a Defender alert-type rule. Scope is one
- * tenant (tenant_id) OR fleet-wide (all_tenants=1). Permanent unless an
- * expiry was set. Same fail-safe contract as the other matchers: any error
- * returns null and the alert behaves exactly as before.
+ * (match_upn IS NULL AND match_alert_type IS NULL AND match_credential IS NULL)
+ * — so it can't be confused with a UPN risky-sign-in rule, a Defender alert-type
+ * rule, or a per-credential rule. The match_credential exclusion is LOAD-BEARING:
+ * without it a narrow per-credential rule (which also leaves upn/type NULL) would
+ * be read here as a whole-policy exemption and silence every credential-expiry
+ * alert in the tenant. Scope is one tenant (tenant_id) OR fleet-wide
+ * (all_tenants=1). Permanent unless an expiry was set. Same fail-safe contract
+ * as the other matchers: any error returns null and the alert behaves as before.
  *
  * @param {number} tenantId  — internal tenants.id of the would-be alert
  * @param {number} policyId  — alert_policies.id
@@ -202,6 +205,7 @@ async function findMatchingPolicyRule(tenantId, policyId) {
         WHERE policy_id         = ?
           AND match_upn         IS NULL
           AND match_alert_type  IS NULL
+          AND match_credential  IS NULL
           AND revoked_at        IS NULL
           AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
           AND (all_tenants = 1 OR tenant_id = ?)
@@ -212,6 +216,46 @@ async function findMatchingPolicyRule(tenantId, policyId) {
     return (rows && rows.length) ? rows[0] : null;
   } catch (err) {
     console.warn(`[AlertExemptionMatcher] Policy-rule query failed (tenant=${tenantId}, policy=${policyId}): ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * Find an active per-CREDENTIAL exception rule for a would-be alert.
+ *
+ * The operator-driven "Create exception" on an App-credential-expiry alert. Keyed
+ * on the exact credential — `${appId}:${credId}` — so silencing ONE expired
+ * secret/certificate never silences other apps' or other credentials' expiry
+ * (the operator advised the client and is waiting on a third party to rotate it).
+ * A rotated credential gets a fresh credId → a new, separately-flagged alert, so
+ * an exemption can't mask a different credential's expiry.
+ *
+ * Tenant-scoped only (a credId is tenant-specific; there is no fleet-wide form).
+ * Permanent until revoked (expires_at NULL), but a non-NULL expiry is honoured
+ * defensively. Same fail-safe contract as the other matchers.
+ *
+ * @param {number} tenantId       — internal tenants.id of the would-be alert
+ * @param {string} credentialKey  — `${appId}:${credId}` from raw_data
+ * @returns {Promise<object|null>} rule row or null
+ */
+async function findMatchingCredentialRule(tenantId, credentialKey) {
+  if (!tenantId || !credentialKey || typeof credentialKey !== 'string') return null;
+  const key = credentialKey.trim();
+  if (!key) return null;
+  try {
+    const rows = await db.queryRows(
+      `SELECT id, tenant_id, policy_id, match_credential, reason, created_by
+         FROM alert_exemption_rules
+        WHERE match_credential = ?
+          AND tenant_id        = ?
+          AND revoked_at       IS NULL
+          AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP())
+        LIMIT 1`,
+      [key, tenantId]
+    );
+    return (rows && rows.length) ? rows[0] : null;
+  } catch (err) {
+    console.warn(`[AlertExemptionMatcher] Credential query failed (tenant=${tenantId}, cred="${credentialKey}"): ${err.message}`);
     return null;
   }
 }
@@ -318,6 +362,7 @@ module.exports = {
   findMatchingRule,
   findMatchingDefenderTypeRule,
   findMatchingPolicyRule,
+  findMatchingCredentialRule,
   recordRuleMatch,
   extractSignal,
 };

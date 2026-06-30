@@ -5,6 +5,22 @@ that release, newest first.
 
 ---
 
+## Version 0.2.30 — 2026-06-29
+
+### OAuth consent alerts are clearer — and no longer flood
+
+When a user or admin consents to an application, the alert now names the **application** that was granted access and the **resource** it can reach — for example *"…consented to Acme Mail Connector for access to Microsoft Graph"* — instead of an unreadable string of Microsoft identifiers. Repeated identical consents from the same user to the same app now **collapse into a single alert** with a recurrence count, rather than creating a new row every time, so an app a user keeps re-approving no longer buries the dashboard. Routine user consent to safe permissions is now **low** severity (it was medium); an admin consent, or any consent that requests a high-risk permission, still surfaces as **high** or **severe**. And an escalation — the same user and app now admin-consenting or requesting a risky permission — always raises a fresh, separately-flagged alert instead of being quietly absorbed into the routine one.
+
+### Add alerts to an existing roll-up
+
+Roll-ups let you group related alerts under one item to investigate together. Until now you could only group alerts at the moment you created the roll-up. You can now **add more alerts to an existing open roll-up** from two places: select alerts in the list and choose **Add to Roll-up**, or open a roll-up and use **Add alerts** to pick from that tenant's open alerts. The added alerts are folded in exactly like a merge, the roll-up's severity rises if a more serious alert joins, and any linked PSA ticket is updated in place rather than opening a new one. Same tenant only; available to Member and Admin operators.
+
+### Silence a credential-expiry alert you're waiting on someone else to fix
+
+When Panoptica365 warns that an app's client secret or certificate has expired or is about to, the fix is sometimes out of your hands — for example a client's WordPress mail plugin whose secret only their web agency can rotate. Until now that alert came back on every poll. You can now click **Create exception** on a credential-expiry alert, add a note (e.g. *"advised client, waiting on their web agency"*), and it stops re-firing — for **that one credential only**. Every other app and credential keeps alerting, and when the credential is finally rotated the replacement is tracked on its own and will warn on its own expiry. Revoke the exception any time from the Exemptions page.
+
+---
+
 ## Version 0.2.29 — 2026-06-29
 
 ### Operator guides refreshed for the latest release

@@ -803,6 +803,10 @@ async function ensureAlertColumns() {
   const exemptionColumns = [
     { name: 'match_alert_type', sql: "ALTER TABLE alert_exemption_rules ADD COLUMN match_alert_type VARCHAR(255) DEFAULT NULL COMMENT 'Microsoft Defender alert type/name; case-insensitive exact match' AFTER match_asn" },
     { name: 'all_tenants', sql: "ALTER TABLE alert_exemption_rules ADD COLUMN all_tenants TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = fleet-wide (match ignores tenant_id); 0 = this tenant only' AFTER match_alert_type" },
+    // Jun 29, 2026 — per-credential exception ("Create exception" on App
+    // credential expiry alerts). Stores the exact `${appId}:${credId}` so one
+    // expired secret/cert can be silenced without touching others.
+    { name: 'match_credential', sql: "ALTER TABLE alert_exemption_rules ADD COLUMN match_credential VARCHAR(255) DEFAULT NULL COMMENT 'App credential identity `${appId}:${credId}`; exact match, tenant-scoped' AFTER all_tenants" },
   ];
   for (const col of exemptionColumns) {
     try {
@@ -845,6 +849,18 @@ async function ensureAlertColumns() {
     if (idxExists.length === 0) {
       await db.execute("ALTER TABLE alert_exemption_rules ADD INDEX idx_alert_type (match_alert_type, all_tenants, revoked_at)");
       console.log('[AlertEngine] Added index alert_exemption_rules.idx_alert_type');
+    }
+  } catch (e) {
+    // Index may already exist
+  }
+  // Index to support the per-credential matcher's hot path (Jun 29, 2026).
+  try {
+    const idxExists = await db.queryRows(
+      "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alert_exemption_rules' AND INDEX_NAME = 'idx_credential'"
+    );
+    if (idxExists.length === 0) {
+      await db.execute("ALTER TABLE alert_exemption_rules ADD INDEX idx_credential (match_credential, tenant_id, revoked_at)");
+      console.log('[AlertEngine] Added index alert_exemption_rules.idx_credential');
     }
   } catch (e) {
     // Index may already exist
@@ -3012,6 +3028,26 @@ async function createOrUpdateAlert(tenant, policy, alertData) {
       }
     } catch (e) {
       console.warn(`[AlertEngine] Defender-type exemption match failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
+      matchedRule = null;
+    }
+  }
+
+  // Jun 29, 2026 — Per-credential exception rules (operator "Create exception"
+  // on App credential expiry alerts). Keyed on the exact credential
+  // (`${appId}:${credId}`) so silencing ONE expired secret/cert never silences
+  // other apps' or other credentials' expiry — the operator advised the client
+  // and is waiting on a third party to rotate it. Checked BEFORE the policy-level
+  // matcher so a narrow per-credential rule is honoured as itself (the policy
+  // matcher also excludes match_credential rows, so this is belt-and-suspenders).
+  if (!matchedRule) {
+    try {
+      const rd = alertData.raw_data;
+      if (rd && rd.appId && rd.credId) {
+        const credentialKey = `${rd.appId}:${rd.credId}`;
+        matchedRule = await alertExemptionMatcher.findMatchingCredentialRule(tenant.id, credentialKey);
+      }
+    } catch (e) {
+      console.warn(`[AlertEngine] Credential exemption match failed for tenant ${tenant.id}, policy ${policy.id}: ${e.message}`);
       matchedRule = null;
     }
   }
