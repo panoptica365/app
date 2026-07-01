@@ -1563,6 +1563,7 @@
       "psa.rollup_consolidated": "Alerte de regroupement nº {alertId} : billet Autotask {survivor} conservé, {closed} billet(s) absorbé(s) fermé(s)",
       "psa.rollup_appended": "Alerte de regroupement nº {alertId} : {count} alerte(s) ajoutée(s) au billet Autotask {survivor}, {closed} billet(s) absorbé(s) fermé(s)",
       "settings.retention.update": "Fenêtres de rétention des données modifiées ({fields})",
+      "settings.release_channel.update": "Canal de versions changé de {from} à {to}",
       "tenant_config_imported": "{count} configuration(s) {surface} existante(s) importée(s) dans la surveillance",
       "tenant_card_stop_monitoring": "Surveillance de {surface} « {name} » arrêtée (aucune modification du locataire)",
       "tenant_object_deactivated": "{surface} « {name} » désactivé dans le locataire",
@@ -2929,6 +2930,8 @@
     "card_disk_desc": "L’espace de stockage utilisé sur votre serveur. Vous avertit avant qu’il ne soit plein.",
     "card_retention_title": "Rétention des données",
     "card_retention_desc": "Durée de conservation des données historiques avant le nettoyage automatique.",
+    "card_release_title": "Paramètres de versions",
+    "card_release_desc": "Choisissez si cette installation reçoit les versions stables ou les versions anticipées, avant qu’elles ne soient largement testées.",
     "retention": {
       "section_title": "Rétention des données",
       "intro": "Un nettoyage nocturne empêche la base de données de croître sans limite. Chaque type de données ci-dessous est conservé pour la période indiquée, puis supprimé automatiquement. Les alertes ne sont jamais supprimées automatiquement.",
@@ -2968,6 +2971,19 @@
         "metric_snapshots_raw": "Détail complet de chaque sondage, utilisé par les alertes de détection de changement (comparaison avec le sondage précédent). Augmenter cette valeur fait grossir la base rapidement — environ un gigaoctet par locataire par mois.",
         "metric_snapshots_agg": "Une valeur de Secure Score par locataire et par jour, alimentant la tendance des rapports. Doit couvrir votre plus longue période de rapport (90 jours). Coût de stockage négligeable."
       }
+    },
+    "release": {
+      "section_title": "Paramètres de versions",
+      "intro": "Panoptica365 vérifie la disponibilité de nouvelles versions et vous les propose ici, dans les Paramètres. Ceci détermine quel flux de versions cette installation suit.",
+      "loading": "Chargement…",
+      "stable_title": "Stable (recommandé)",
+      "stable_desc": "Recevez chaque version après qu’elle a fonctionné quelques jours sur les installations anticipées. C’est le bon choix pour presque tout le monde.",
+      "early_title": "Anticipé",
+      "early_desc": "Recevez les nouvelles versions avant qu’elles ne soient largement testées. Ne choisissez ceci que si vous souhaitez aider à valider les mises à jour et que vous pouvez tolérer quelques imperfections occasionnelles.",
+      "early_warning": "Les versions anticipées ont été moins éprouvées sur le terrain. Si une version anticipée cause un problème, vous pouvez revenir à Stable ici en tout temps.",
+      "save_btn": "Enregistrer",
+      "toast_saved": "Canal de versions enregistré.",
+      "load_failed": "Impossible de charger les paramètres de versions."
     },
     "disk": {
       "section_title": "Espace disque",

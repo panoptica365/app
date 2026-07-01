@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.2.32 — 2026-07-01
+
+### Elija su canal de versiones: Estable o Anticipada
+
+Panoptica365 ahora le permite decidir qué flujo de versiones sigue esta instalación. Una nueva tarjeta **Configuración de versiones**, en **Configuración**, ofrece dos opciones. **Estable** (la predeterminada) entrega cada actualización después de que haya estado funcionando unos días en las instalaciones anticipadas — la opción adecuada para casi todo el mundo. **Anticipada** entrega las nuevas versiones antes de que se prueben ampliamente, para los operadores que desean ayudar a validar las actualizaciones y pueden tolerar alguna imperfección ocasional. El ajuste se aplica a toda la instalación y es solo para administradores. El cambio surte efecto de inmediato: solo modifica con qué versión se compara el aviso de *«actualización disponible»* — usted siempre aplica las actualizaciones desde el aviso, nunca de forma automática. Si una versión anticipada causa algún problema, puede volver a **Estable** aquí en cualquier momento.
+
+### Navegación más limpia: la Seguridad vive en cada tenant
+
+Los ajustes de seguridad por tenant ahora se encuentran únicamente en la pestaña **Seguridad** de cada tenant, por lo que se ha eliminado la entrada de menú **Seguridad** de nivel superior, ya redundante. No se pierde nada: abra cualquier tenant y elija la pestaña **Seguridad** para encontrar los mismos ajustes, comprobaciones y acciones — ahora con el contexto completo de ese tenant.
+
+---
+
 ## Versión 0.2.31 — 2026-06-30
 
 ### Análisis de IA más preciso, ahora con Claude Sonnet 5

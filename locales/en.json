@@ -1563,6 +1563,7 @@
       "psa.rollup_consolidated": "Roll-up alert #{alertId}: kept Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
       "psa.rollup_appended": "Roll-up alert #{alertId}: appended {count} alert(s) to Autotask ticket {survivor}, closed {closed} absorbed ticket(s)",
       "settings.retention.update": "Data retention windows changed ({fields})",
+      "settings.release_channel.update": "Release channel changed from {from} to {to}",
       "tenant_config_imported": "Imported {count} existing {surface} configuration(s) into monitoring",
       "tenant_card_stop_monitoring": "Stopped monitoring {surface} \"{name}\" (no tenant change)",
       "tenant_object_deactivated": "Deactivated {surface} \"{name}\" in the tenant",
@@ -2929,6 +2930,8 @@
     "card_disk_desc": "How much storage your server has used. Warns before it runs out.",
     "card_retention_title": "Data retention",
     "card_retention_desc": "How long historical data is kept before automatic cleanup.",
+    "card_release_title": "Release Settings",
+    "card_release_desc": "Choose whether this install gets stable releases or early releases before they are widely tested.",
     "retention": {
       "section_title": "Data retention",
       "intro": "A nightly cleanup keeps the database from growing without limit. Each data type below is kept for the period shown, then deleted automatically. Alerts are never auto-deleted.",
@@ -2968,6 +2971,19 @@
         "metric_snapshots_raw": "Full detail from every poll, used by the change-detection alerts (they compare against the previous poll). Raising this grows the database quickly — roughly a gigabyte per tenant per month.",
         "metric_snapshots_agg": "One Secure Score reading per tenant per day, powering the report trend line. Must cover your longest report period (90 days). Storage cost is negligible."
       }
+    },
+    "release": {
+      "section_title": "Release Settings",
+      "intro": "Panoptica365 checks for new versions and offers them to you here in Settings. This controls which stream of releases this install follows.",
+      "loading": "Loading…",
+      "stable_title": "Stable (recommended)",
+      "stable_desc": "Get each release after it has been running on early installs for a few days. This is the right choice for almost everyone.",
+      "early_title": "Early",
+      "early_desc": "Get new releases before they are widely tested. Choose this only if you want to help validate updates and can tolerate the occasional rough edge.",
+      "early_warning": "Early releases have had less field testing. If an early release causes a problem, you can switch back to Stable here at any time.",
+      "save_btn": "Save",
+      "toast_saved": "Release channel saved.",
+      "load_failed": "Could not load release settings."
     },
     "disk": {
       "section_title": "Disk space",

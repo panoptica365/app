@@ -19,6 +19,7 @@
     document.getElementById('card-disk')?.addEventListener('click', () => showView('disk'));
     document.getElementById('card-psa')?.addEventListener('click', () => showView('psa'));
     document.getElementById('card-retention')?.addEventListener('click', () => showView('retention'));
+    document.getElementById('card-release')?.addEventListener('click', () => showView('release'));
     // License Agreement — opens the shared EULA modal in read-only mode
     // (provenance + acceptance history). No sub-view.
     document.getElementById('card-eula')?.addEventListener('click', () => {
@@ -50,6 +51,10 @@
     // Data retention handlers
     document.getElementById('retention-back')?.addEventListener('click', () => showView('cards'));
     document.getElementById('retention-save')?.addEventListener('click', saveRetention);
+
+    // Release Settings handlers (Early/Stable, 2026-07-01)
+    document.getElementById('release-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('release-save')?.addEventListener('click', saveReleaseChannel);
 
     // Daily Summary handlers
     document.getElementById('briefing-save')?.addEventListener('click', saveBriefing);
@@ -502,6 +507,53 @@
     }
   }
 
+  // ─── Release Settings (Early/Stable, 2026-07-01) ───
+  async function loadReleaseChannel() {
+    const loading = document.getElementById('release-loading');
+    const body = document.getElementById('release-body');
+    const errEl = document.getElementById('release-error');
+    const statusEl = document.getElementById('release-status');
+    if (statusEl) statusEl.textContent = '';
+    if (loading) loading.style.display = '';
+    if (body) body.style.display = 'none';
+    if (errEl) errEl.style.display = 'none';
+    try {
+      const data = await Panoptica.api('/api/settings/release-channel');
+      const channel = data.channel === 'early' ? 'early' : 'stable';
+      const radio = document.querySelector(`input[name="release-channel"][value="${channel}"]`);
+      if (radio) radio.checked = true;
+      if (loading) loading.style.display = 'none';
+      if (body) body.style.display = '';
+    } catch (err) {
+      if (loading) loading.style.display = 'none';
+      if (errEl) {
+        errEl.textContent = (err && err.message) || window.t('settings.release.load_failed');
+        errEl.style.display = '';
+      }
+    }
+  }
+
+  async function saveReleaseChannel() {
+    const statusEl = document.getElementById('release-status');
+    const picked = document.querySelector('input[name="release-channel"]:checked');
+    if (!picked) return;
+    statusEl.textContent = window.t('settings.status.saving');
+    statusEl.style.color = 'var(--p-text-muted)';
+    try {
+      await Panoptica.api('/api/settings/release-channel', {
+        method: 'PUT',
+        body: JSON.stringify({ channel: picked.value }),
+      });
+      statusEl.textContent = window.t('settings.status.saved');
+      statusEl.style.color = '#27ae60';
+      Panoptica.showToast(window.t('settings.release.toast_saved'), 'success');
+    } catch (err) {
+      statusEl.textContent = window.t('settings.status.error');
+      statusEl.style.color = '#e74c3c';
+      Panoptica.showToast(window.t('settings.toast_save_failed', { message: err.message }), 'error');
+    }
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -525,6 +577,7 @@
       disk: document.getElementById('settings-disk-view'),
       psa: document.getElementById('settings-psa-view'),
       retention: document.getElementById('settings-retention-view'),
+      release: document.getElementById('settings-release-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -543,6 +596,7 @@
     if (view === 'disk') loadDisk();
     if (view === 'psa') loadPsa();
     if (view === 'retention') loadRetention();
+    if (view === 'release') loadReleaseChannel();
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───

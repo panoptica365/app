@@ -27,6 +27,11 @@ router.use(auth.requireAdmin);
 
 const GUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
+// Release channel allowlist (Early/Stable, 2026-07-01). Anything not in this
+// list is rejected by the PUT below; 'stable' is the default every install
+// follows. See src/lib/update/update-checker.js getChannel().
+const RELEASE_CHANNELS = ['stable', 'early'];
+
 const ENV_PATH = path.join(__dirname, '..', '..', '.env');
 
 // ─── Helpers ───
@@ -1001,6 +1006,63 @@ router.put('/retention', (req, res) => {
   } catch (err) {
     console.error('[Settings] Retention save failed:', err.message);
     res.status(500).json({ error: 'Failed to save retention settings' });
+  }
+});
+
+// ─── Release channel (Early/Stable, 2026-07-01) ───
+// One instance-wide choice persisted as UPDATE_CHANNEL in .env. 'stable' is the
+// default every install follows; 'early' opts this install into releases that
+// are published to the manifest's `early` block before they are promoted to
+// stable (i.e. before they are widely tested). The update-checker reads the
+// channel LIVE per-check (getChannel), so a switch here takes effect on the next
+// check with no restart. See RELEASING.md §"Release channels".
+
+router.get('/release-channel', (req, res) => {
+  const updateChecker = require('../lib/update/update-checker');
+  const channel = updateChecker.getChannel ? updateChecker.getChannel()
+    : (String(process.env.UPDATE_CHANNEL || 'stable').toLowerCase() === 'early' ? 'early' : 'stable');
+  res.json({ channel });
+});
+
+router.put('/release-channel', async (req, res) => {
+  try {
+    const raw = String((req.body && req.body.channel) || '').toLowerCase().trim();
+    if (!RELEASE_CHANNELS.includes(raw)) {
+      return res.status(400).json({ error: 'invalid_channel', allowed: RELEASE_CHANNELS });
+    }
+
+    const updateChecker = require('../lib/update/update-checker');
+    const current = updateChecker.getChannel ? updateChecker.getChannel() : 'stable';
+    if (raw === current) {
+      return res.json({ success: true, no_changes: true, channel: raw });
+    }
+
+    // Persist to .env + process.env in place. The checker reads it live.
+    updateEnvVars({ UPDATE_CHANNEL: raw });
+
+    console.log(`[Settings] Release channel changed to '${raw}' by ${req.session.user.email}`);
+    mspAudit.logMspAudit({
+      category: mspAudit.CATEGORY.SETTINGS_CHANGE,
+      action: 'settings.release_channel.update',
+      description: `Release channel changed from ${current} to ${raw}`,
+      templateKey: 'settings.release_channel.update',
+      templateParams: { from: current, to: raw },
+      targetType: 'setting',
+      targetId: 'release_channel',
+      targetName: 'Release Channel',
+      metadata: { from: current, to: raw },
+      req,
+    }).catch(() => {});
+
+    // Surface the effect immediately: re-check the manifest so the update banner
+    // reflects the new channel now, not at the next hourly poll. Never throws.
+    let check = null;
+    try { check = await updateChecker.checkNow(); } catch (e) { /* non-event */ }
+
+    res.json({ success: true, channel: raw, check });
+  } catch (err) {
+    console.error('[Settings] Release channel save failed:', err.message);
+    res.status(500).json({ error: 'Failed to save release channel' });
   }
 });
 

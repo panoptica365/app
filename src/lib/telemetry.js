@@ -99,7 +99,10 @@ async function buildPayload() {
     current_jwt: require('./license/store').getEnvToken() || null,
     // instance facts
     app_version: versionInfo.version,
-    channel: (process.env.UPDATE_CHANNEL || 'stable').toLowerCase() === 'early' ? 'early' : 'stable',
+    // Single source of truth for channel normalization — read live from the
+    // update-checker so telemetry always reports the same value the checker acts
+    // on (including a runtime switch via Settings → Release Settings).
+    channel: require('./update/update-checker').getChannel(),
     environment: isContainerEnv() ? 'container' : 'native',
     uptime_seconds: Math.round(process.uptime()),
     tenant_count: tenantCount,

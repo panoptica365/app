@@ -22,9 +22,10 @@ const workerHeartbeat = require('../../worker-heartbeat');
 
 const MANIFEST_URL = process.env.UPDATE_MANIFEST_URL || 'https://updates.panoptica365.com/latest.json';
 // Release channel (Reliability 1.7): 'stable' (default) follows manifest
-// `latest`; 'early' additionally considers the optional `early` block when
-// it is newer. Anything other than the literal 'early' means stable.
-const CHANNEL = (process.env.UPDATE_CHANNEL || 'stable').toLowerCase() === 'early' ? 'early' : 'stable';
+// `latest`; 'early' additionally considers the optional `early` block when it is
+// newer. The channel is read LIVE per-check via getChannel() (below) rather than
+// captured at module load, so a runtime UPDATE_CHANNEL switch from Settings →
+// Release Settings takes effect on the next check with NO container restart.
 const CHECK_INTERVAL_MS = parseInt(process.env.UPDATE_CHECK_INTERVAL || '3600000', 10) || 3600000; // 1h
 const FETCH_TIMEOUT_MS = parseInt(process.env.UPDATE_FETCH_TIMEOUT_MS || '8000', 10) || 8000;
 const INITIAL_DELAY_MS = 15000; // let the app finish booting before the first check
@@ -75,6 +76,17 @@ function compareSemver(a, b) {
 }
 
 function isPlainSemver(v) { return /^\d+\.\d+\.\d+$/.test(String(v || '').trim()); }
+
+/**
+ * Read the configured release channel LIVE from the environment on every call.
+ * The Settings → Release Settings save writes UPDATE_CHANNEL into .env and into
+ * process.env in place (updateEnvVars), so reading it per-check lets a channel
+ * switch take effect without a container restart. Anything other than the exact
+ * string 'early' means stable (matches .env.template + the original 1.7 design).
+ */
+function getChannel() {
+  return String(process.env.UPDATE_CHANNEL || 'stable').toLowerCase() === 'early' ? 'early' : 'stable';
+}
 
 function loadCacheFromDisk() {
   try {
@@ -179,7 +191,8 @@ async function checkInner() {
   // few days before the fleet's stable channel sees it.
   let entry = m.latest;
   let channel = 'stable';
-  if (CHANNEL === 'early') {
+  const configuredChannel = getChannel();
+  if (configuredChannel === 'early') {
     const e = m.early;
     if (e && isPlainSemver(e.version) && e.image_tag && IMAGE_TAG_RE.test(e.image_tag)
         && compareSemver(e.version, m.latest.version) > 0) {
@@ -200,7 +213,7 @@ async function checkInner() {
     update_available: available,
     running_version: RUNNING_VERSION,
     channel,
-    configured_channel: CHANNEL,
+    configured_channel: configuredChannel,
     latest_version: entry.version,
     latest_image_tag: entry.image_tag,
     released_at: entry.released_at || null,
@@ -288,4 +301,4 @@ async function reconcileTerminalStatus() {
   } catch (e) { warn(`could not write audit marker: ${e.message}`); }
 }
 
-module.exports = { start, stop, check, checkNow, getStatus, compareSemver, reconcileTerminalStatus };
+module.exports = { start, stop, check, checkNow, getStatus, compareSemver, reconcileTerminalStatus, getChannel };

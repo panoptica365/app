@@ -98,6 +98,13 @@
     <div class="settings-card-desc" data-i18n="settings.card_retention_desc">How long historical data is kept before automatic cleanup.</div>
   </div>
 
+  <!-- Release Settings Card (Early/Stable channel, 2026-07-01) -->
+  <div class="settings-card" id="card-release" style="cursor:pointer;" data-role-required="admin">
+    <div class="settings-card-icon"><i data-lucide="git-branch"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_release_title">Release Settings</div>
+    <div class="settings-card-desc" data-i18n="settings.card_release_desc">Choose whether this install gets stable releases or early releases before they are widely tested.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -718,5 +725,53 @@
     </div>
 
     <div id="retention-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
+  </div>
+</div>
+
+<!-- ─── Release Settings Sub-View ─── -->
+<div id="settings-release-view" style="display:none;">
+  <button class="btn-secondary" id="release-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.release.section_title">Release Settings</div>
+
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.release.intro">
+      Panoptica365 checks for new versions and offers them to you here in Settings. This controls which stream of releases this install follows.
+    </div>
+
+    <div id="release-loading" class="form-hint" data-i18n="settings.release.loading">Loading…</div>
+
+    <div id="release-body" style="display:none;">
+      <!-- Radio cards use the .mode-picker/.mode-card component (built to bypass
+           the global .form-group label-uppercase + input-width:100% cascade). -->
+      <div class="mode-picker">
+        <label class="mode-card" style="border:1px solid rgba(102,119,153,0.22);">
+          <input type="radio" name="release-channel" value="stable">
+          <div class="mode-card-body">
+            <div class="mode-card-title" data-i18n="settings.release.stable_title">Stable (recommended)</div>
+            <div class="mode-card-desc" data-i18n="settings.release.stable_desc">Get each release after it has been running on early installs for a few days. This is the right choice for almost everyone.</div>
+          </div>
+        </label>
+
+        <label class="mode-card" style="border:1px solid rgba(102,119,153,0.22);">
+          <input type="radio" name="release-channel" value="early">
+          <div class="mode-card-body">
+            <div class="mode-card-title" data-i18n="settings.release.early_title">Early</div>
+            <div class="mode-card-desc" data-i18n="settings.release.early_desc">Get new releases before they are widely tested. Choose this only if you want to help validate updates and can tolerate the occasional rough edge.</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="form-hint" style="margin-bottom:16px; color:var(--p-warn);" data-i18n="settings.release.early_warning">
+        Early releases have had less field testing. If an early release causes a problem, you can switch back to Stable here at any time.
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:8px; align-items:center;">
+        <button class="btn-primary" id="release-save" data-i18n="settings.release.save_btn">Save</button>
+        <span id="release-status" style="font-size:0.85rem;"></span>
+      </div>
+    </div>
+
+    <div id="release-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
   </div>
 </div>

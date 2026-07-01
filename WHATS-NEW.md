@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.2.32 — 2026-07-01
+
+### Choose your release channel: Stable or Early
+
+Panoptica365 now lets you decide which stream of releases this install follows. A new **Release Settings** card under **Settings** offers two choices. **Stable** (the default) delivers each update after it has been running on early installs for a few days — the right choice for almost everyone. **Early** delivers new releases before they are widely tested, for operators who want to help validate updates and can tolerate the occasional rough edge. The setting is instance-wide and admin-only. Switching takes effect immediately: it changes only which version the *"update available"* banner compares against — updates are still applied by you from the update banner, never automatically. If an early release ever causes trouble, you can switch back to **Stable** here at any time.
+
+### Cleaner navigation — Security lives in each tenant
+
+Per-tenant security settings now live only in each tenant's **Security** tab, so the redundant top-level **Security** menu item has been removed. Nothing is lost: open any tenant and choose the **Security** tab for the same settings, checks and actions — now with that tenant's full context around them.
+
+---
+
 ## Version 0.2.31 — 2026-06-30
 
 ### Sharper AI analysis, now powered by Claude Sonnet 5

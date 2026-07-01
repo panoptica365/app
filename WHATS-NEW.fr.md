@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.2.32 — 2026-07-01
+
+### Choisissez votre canal de versions : Stable ou Anticipé
+
+Panoptica365 vous permet désormais de décider quel flux de versions cette installation suit. Une nouvelle carte **Paramètres de versions**, dans les **Paramètres**, offre deux choix. **Stable** (par défaut) livre chaque mise à jour après qu'elle a fonctionné quelques jours sur les installations anticipées — le bon choix pour presque tout le monde. **Anticipé** livre les nouvelles versions avant qu'elles ne soient largement testées, pour les opérateurs qui veulent aider à valider les mises à jour et peuvent tolérer quelques imperfections occasionnelles. Le paramètre s'applique à toute l'installation et est réservé aux administrateurs. Le changement prend effet immédiatement : il ne modifie que la version à laquelle la bannière *« mise à jour disponible »* se compare — les mises à jour sont toujours appliquées par vous depuis la bannière, jamais automatiquement. Si une version anticipée cause un problème, vous pouvez revenir à **Stable** ici en tout temps.
+
+### Navigation allégée — la Sécurité vit dans chaque locataire
+
+Les paramètres de sécurité par locataire se trouvent maintenant uniquement dans l'onglet **Sécurité** de chaque locataire; l'entrée de menu **Sécurité** de premier niveau, devenue redondante, a donc été retirée. Rien n'est perdu : ouvrez un locataire et choisissez l'onglet **Sécurité** pour retrouver les mêmes paramètres, vérifications et actions — désormais avec le contexte complet de ce locataire.
+
+---
+
 ## Version 0.2.31 — 2026-06-30
 
 ### Analyse IA plus fine, maintenant propulsée par Claude Sonnet 5
