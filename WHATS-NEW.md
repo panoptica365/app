@@ -5,6 +5,22 @@ that release, newest first.
 
 ---
 
+## Version 0.3.3 — 2026-07-02
+
+### "Accept with expiry" now works for Conditional Access exceptions that aren't tied to a specific user or group
+
+You can now put a time limit on **any** accepted Conditional Access drift, not only ones that exclude specific users or groups. Before, choosing **Accept with expiry** on a drift that changed something else — for example, adding a country to a policy's excluded named locations so a travelling employee can sign in from their phone — failed with *"No principals to exempt."* That kind of temporary exception is exactly what an expiry is for, so it now records as a time-boxed acceptance: when the timer runs out, the drift is automatically re-raised so you can renew it, revoke it, or make the change permanent. Accepting a drift *forever* continues to work exactly as before.
+
+### Fixed a phantom "drift" on Conditional Access policies that don't set an authentication strength
+
+Some Conditional Access policies were being reported as drifted on a field called `grantControls.authenticationStrength@odata.context`, shown as changing from "empty" to "empty." This was never a real change — it is a bookkeeping annotation that Microsoft Graph attaches to certain unset fields, which Panoptica was mistakenly treating as part of your configuration. These annotations are now ignored wherever drift is calculated, so affected policies read cleanly. On the first check after upgrading, any policy that carried only this phantom quietly returns to **OK**; a policy that also had a real change re-surfaces that real change — now without the noise — for you to review.
+
+### Accepting a Conditional Access drift now closes its linked Autotask ticket
+
+When you accept a Conditional Access drift, Panoptica resolves the alert and now also closes the PSA (Autotask) ticket that was opened to track it, with a closing note — the same behaviour Intune drift acceptance already had. Previously the ticket was left open even though its alert was resolved. This applies to acceptances made from now on; any ticket already left open by an earlier acceptance can be closed directly in Autotask.
+
+---
+
 ## Version 0.3.2 — 2026-07-02
 
 ### Fix: false "policy was removed" alerts during Microsoft rate-limiting

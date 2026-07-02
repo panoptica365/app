@@ -81,10 +81,15 @@ const DEFAULT_VOLATILE_KEYS = new Set([
 ]);
 
 /**
- * Deep-clone `obj` with volatile keys removed and any `@odata.*` annotation
- * keys dropped, so the result is a stable representation of the *authored*
- * configuration. Object keys are left as-is here; ordering is handled at
- * serialization time by canonicalJsonStringify.
+ * Deep-clone `obj` with volatile keys removed and any OData annotation keys
+ * dropped, so the result is a stable representation of the *authored*
+ * configuration. This covers BOTH object-scoped annotations (`@odata.context`,
+ * `@odata.type`) AND property-scoped ones (`authenticationStrength@odata.context`,
+ * `foo@odata.count`) — Graph sprinkles these onto nested objects and they are
+ * never part of the config an operator authored. `@` never appears in a real
+ * Graph property name, so "key contains @" is a safe, exhaustive predicate.
+ * Object keys are left as-is here; ordering is handled at serialization time by
+ * canonicalJsonStringify.
  *
  * @param {*} obj
  * @param {object} [opts]
@@ -102,7 +107,12 @@ function normalizeForBaseline(obj, opts = {}) {
       const out = {};
       for (const k of Object.keys(node)) {
         if (volatile.has(k)) continue;
-        if (k.startsWith('@')) continue; // @odata.type, @odata.context, etc.
+        // Drop every OData annotation — object-scoped (@odata.context) AND
+        // property-scoped (authenticationStrength@odata.context). Using the
+        // former startsWith('@') here missed property-scoped annotations, which
+        // then surfaced as phantom drift (e.g. "grantControls.authenticationStrength
+        // @odata.context: empty → empty"). '@' is never in an authored Graph key.
+        if (k.includes('@')) continue;
         out[k] = walk(node[k]);
       }
       return out;

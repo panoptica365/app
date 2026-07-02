@@ -5,6 +5,22 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.3.3 — 2026-07-02
+
+### «Aceptar con vencimiento» ahora funciona para excepciones de acceso condicional que no están ligadas a un usuario o grupo específico
+
+Ahora puede poner un límite de tiempo a **cualquier** desviación de acceso condicional aceptada, no solo a las que excluyen usuarios o grupos específicos. Antes, elegir **Aceptar con vencimiento** en una desviación que cambiaba otra cosa — por ejemplo, agregar un país a las ubicaciones con nombre excluidas de una política para que un empleado de viaje pueda iniciar sesión desde su teléfono — fallaba con el mensaje *«No principals to exempt»*. Ese tipo de excepción temporal es precisamente para lo que sirve un vencimiento, así que ahora se registra como una aceptación por tiempo limitado: cuando el temporizador termina, la desviación se vuelve a plantear automáticamente para que pueda renovarla, revocarla o hacer que el cambio sea permanente. Aceptar una desviación *para siempre* sigue funcionando exactamente igual que antes.
+
+### Se corrigió una «desviación» fantasma en políticas de acceso condicional que no definen una fuerza de autenticación
+
+Algunas políticas de acceso condicional se informaban como desviadas en un campo llamado `grantControls.authenticationStrength@odata.context`, que aparecía como si cambiara de «vacío» a «vacío». Esto nunca fue un cambio real: es una anotación interna que Microsoft Graph agrega a ciertos campos sin definir, y que Panoptica trataba erróneamente como parte de su configuración. Estas anotaciones ahora se ignoran en todos los lugares donde se calcula la desviación, de modo que las políticas afectadas se muestran correctamente. En la primera verificación después de actualizar, cualquier política que solo tuviera esta desviación fantasma vuelve discretamente a **OK**; una política que además tenía un cambio real vuelve a mostrar ese cambio real — ahora sin el ruido — para que usted lo revise.
+
+### Aceptar una desviación de acceso condicional ahora cierra su ticket de Autotask vinculado
+
+Cuando acepta una desviación de acceso condicional, Panoptica resuelve la alerta y ahora también cierra el ticket de PSA (Autotask) que se abrió para darle seguimiento, con una nota de cierre — el mismo comportamiento que ya tenía la aceptación de desviación de Intune. Antes, el ticket quedaba abierto aunque su alerta estuviera resuelta. Esto se aplica a las aceptaciones realizadas de ahora en adelante; cualquier ticket ya dejado abierto por una aceptación anterior puede cerrarse directamente en Autotask.
+
+---
+
 ## Versión 0.3.2 — 2026-07-02
 
 ### Corrección: falsas alertas de «política eliminada» durante la limitación de velocidad de Microsoft

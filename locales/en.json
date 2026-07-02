@@ -3768,6 +3768,7 @@
         "other": "Exemption granted — {count} principals, expires {date}"
       },
       "toast_drift_accepted": "Drift accepted",
+      "toast_drift_accepted_expires": "Drift accepted — expires {date}",
       "drift_log": {
         "col_time": "Time",
         "col_template": "Template",

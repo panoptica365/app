@@ -3768,6 +3768,7 @@
         "other": "Exención concedida — {count} principales, vence {date}"
       },
       "toast_drift_accepted": "Desviación aceptada",
+      "toast_drift_accepted_expires": "Desviación aceptada — vence {date}",
       "drift_log": {
         "col_time": "Hora",
         "col_template": "Plantilla",

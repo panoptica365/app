@@ -3405,9 +3405,18 @@
         }
         if (result && result.ok) {
           Panoptica.closeModal();
-          const msg = path === 'exemption'
-            ? window.t('tenant_dashboard.ca.toast_exemption_granted', { count: (result.exempted || []).length, date: (result.expires_at || '').slice(0, 10) })
-            : window.t('tenant_dashboard.ca.toast_drift_accepted');
+          let msg;
+          if (path === 'exemption') {
+            const exemptedCount = (result.exempted || []).length;
+            const date = (result.expires_at || '').slice(0, 10);
+            // Zero principals = a policy-wide time-box (e.g. a geo/location
+            // exception), not a per-principal carve-out. Don't say "0 principals".
+            msg = exemptedCount > 0
+              ? window.t('tenant_dashboard.ca.toast_exemption_granted', { count: exemptedCount, date })
+              : window.t('tenant_dashboard.ca.toast_drift_accepted_expires', { date });
+          } else {
+            msg = window.t('tenant_dashboard.ca.toast_drift_accepted');
+          }
           Panoptica.showToast(msg, 'success');
           await loadCaAssignments();
         } else {

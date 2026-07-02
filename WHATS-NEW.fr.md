@@ -5,6 +5,22 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.3.3 — 2026-07-02
+
+### « Accepter avec expiration » fonctionne maintenant pour les exceptions d'accès conditionnel qui ne visent pas un utilisateur ou un groupe précis
+
+Vous pouvez désormais fixer une limite de temps à **n'importe quelle** dérive d'accès conditionnel acceptée, et non plus seulement à celles qui excluent des utilisateurs ou des groupes précis. Auparavant, choisir **Accepter avec expiration** sur une dérive qui modifiait autre chose — par exemple, l'ajout d'un pays aux emplacements nommés exclus d'une politique afin qu'un employé en déplacement puisse se connecter depuis son téléphone — échouait avec le message *« No principals to exempt »*. Ce genre d'exception temporaire est précisément la raison d'être d'une expiration : elle est maintenant enregistrée comme une acceptation à durée limitée. À l'échéance du délai, la dérive est automatiquement resignalée afin que vous puissiez la renouveler, la révoquer ou rendre le changement permanent. L'acceptation d'une dérive *pour toujours* fonctionne exactement comme avant.
+
+### Correction d'une fausse « dérive » sur les politiques d'accès conditionnel qui ne définissent pas de force d'authentification
+
+Certaines politiques d'accès conditionnel étaient signalées comme dérivées sur un champ nommé `grantControls.authenticationStrength@odata.context`, présenté comme passant de « vide » à « vide ». Il ne s'agissait jamais d'un vrai changement : c'est une annotation technique que Microsoft Graph ajoute à certains champs non définis, et que Panoptica interprétait à tort comme faisant partie de votre configuration. Ces annotations sont désormais ignorées partout où la dérive est calculée, de sorte que les politiques touchées s'affichent proprement. À la première vérification après la mise à jour, toute politique qui ne portait que cette fausse dérive revient discrètement à **OK** ; une politique qui comportait aussi un vrai changement fait de nouveau ressortir ce changement réel — cette fois sans le bruit — pour que vous puissiez l'examiner.
+
+### L'acceptation d'une dérive d'accès conditionnel ferme maintenant le billet Autotask lié
+
+Lorsque vous acceptez une dérive d'accès conditionnel, Panoptica résout l'alerte et ferme désormais aussi le billet PSA (Autotask) ouvert pour la suivre, avec une note de fermeture — le même comportement que l'acceptation de dérive Intune possédait déjà. Auparavant, le billet restait ouvert même si son alerte était résolue. Cela s'applique aux acceptations effectuées à partir de maintenant ; tout billet déjà laissé ouvert par une acceptation antérieure peut être fermé directement dans Autotask.
+
+---
+
 ## Version 0.3.2 — 2026-07-02
 
 ### Correctif : fausses alertes « politique supprimée » lors de la limitation de débit Microsoft

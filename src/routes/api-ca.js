@@ -242,6 +242,12 @@ async function ensureCaAlertSchema() {
     { name: 'acknowledged_drift_payload', def: "JSON         DEFAULT NULL AFTER acknowledged_drift_hash" },
     { name: 'acknowledged_at',            def: "DATETIME     DEFAULT NULL AFTER acknowledged_drift_payload" },
     { name: 'acknowledged_by',            def: "VARCHAR(255) DEFAULT NULL AFTER acknowledged_at" },
+    // Assignment-level time-boxed acceptance (mirrors intune_deployments). Lets
+    // "Accept with expiry" work for drifts that have NO principals to exempt —
+    // e.g. a named-location / geo exclusion, grant-control or session-control
+    // change. NULL expires_at = accepted forever. See accept-drift-as-exemption.
+    { name: 'acknowledged_expires_at',    def: "DATETIME     DEFAULT NULL AFTER acknowledged_by" },
+    { name: 'acknowledged_reason',        def: "TEXT         DEFAULT NULL AFTER acknowledged_expires_at" },
   ];
   for (const col of ackCols) {
     try {
@@ -2700,7 +2706,9 @@ async function checkDrift(assignment) {
               acknowledged_drift_hash = NULL,
               acknowledged_drift_payload = NULL,
               acknowledged_at = NULL,
-              acknowledged_by = NULL
+              acknowledged_by = NULL,
+              acknowledged_expires_at = NULL,
+              acknowledged_reason = NULL
         WHERE id = ?`,
       [assignment.id]
     );
@@ -2985,7 +2993,9 @@ router.post('/accept-drift/:assignmentId', auth.requireMemberOrAdmin, async (req
               acknowledged_drift_hash = ?,
               acknowledged_drift_payload = ?,
               acknowledged_at = ?,
-              acknowledged_by = ?
+              acknowledged_by = ?,
+              acknowledged_expires_at = NULL,
+              acknowledged_reason = NULL
         WHERE id = ?`,
       [hash, JSON.stringify(drifts), acceptedAt, actor, assignmentId]
     );
@@ -3012,6 +3022,19 @@ router.post('/accept-drift/:assignmentId', auth.requireMemberOrAdmin, async (req
         );
         resolvedAlertId = openAlert.id;
         console.log(`[CA] Auto-resolved alert ${openAlert.id} via accept-drift on assignment ${assignmentId}`);
+
+        // PSA (Feature 8.3): the linked Autotask ticket exists only to track this
+        // drift; the operator just accepted it, so close the ticket too rather
+        // than orphan it. Best-effort — never blocks the accept. Mirrors the
+        // Intune accept path (api-intune.js) and the email-auth acknowledge path.
+        try {
+          const psa = require('../psa');
+          if (psa.isConfigured()) {
+            await psa.closeTicketsForResolvedAlerts([openAlert.id], { operatorEmail: actor });
+          }
+        } catch (psaErr) {
+          console.warn(`[CA] PSA ticket close on accept-drift failed (non-fatal): ${psaErr.message}`);
+        }
       }
     } catch (alertErr) {
       console.warn(`[CA] Failed to auto-resolve alert for accept-drift: ${alertErr.message}`);
@@ -3160,10 +3183,15 @@ router.post('/assignments/:assignmentId/accept-drift-as-exemption', auth.require
       ];
     }
 
-    if (toExempt.length === 0) {
-      return res.status(400).json({ error: 'No principals to exempt (empty excludeUsers/excludeGroups)' });
-    }
-
+    // NOTE: an empty principal set is NOT an error. It just means the drift the
+    // operator is accepting isn't a user/group carve-out — e.g. they excluded a
+    // named location (a country) from a geo policy, or changed a grant/session
+    // control. There are no principals to lift into ca_exemptions, but the
+    // acceptance is still valid and time-boxed: it's recorded on the assignment
+    // (acknowledged_expires_at below) and the drift re-raises on expiry. Only
+    // the per-principal alert suppression is skipped, because there's no
+    // principal to suppress. (Historically this returned a 400 "No principals to
+    // exempt", which blocked the entirely-legitimate travel-exception workflow.)
     const actor = req.session?.user?.email || 'unknown';
     const acceptedAt = new Date();
     const expiresAt = new Date(acceptedAt.getTime() + days * 24 * 60 * 60 * 1000);
@@ -3222,9 +3250,11 @@ router.post('/assignments/:assignmentId/accept-drift-as-exemption', auth.require
                   acknowledged_drift_hash = ?,
                   acknowledged_drift_payload = ?,
                   acknowledged_at = ?,
-                  acknowledged_by = ?
+                  acknowledged_by = ?,
+                  acknowledged_expires_at = ?,
+                  acknowledged_reason = ?
             WHERE id = ?`,
-          [hash, JSON.stringify(drifts), acceptedAt, actor, assignmentId]
+          [hash, JSON.stringify(drifts), acceptedAt, actor, expiresAt, reason.trim(), assignmentId]
         );
         // Auto-resolve any matching open drift alert (best-effort)
         const dedupKey = `ca_drift_${assignmentId}_det`;
@@ -3235,24 +3265,41 @@ router.post('/assignments/:assignmentId/accept-drift-as-exemption', auth.require
           [assignment.tenant_id, dedupKey]
         );
         if (openAlert) {
-          const note = `<p><em>Drift accepted as exemption by ${actor} at ${acceptedAt.toISOString()} — ${inserted.length} principal(s), expires ${expiresAt.toISOString().slice(0, 10)}.</em></p>`;
+          const noteScope = inserted.length > 0 ? `${inserted.length} principal(s)` : 'policy-wide';
+          const note = `<p><em>Drift accepted by ${actor} at ${acceptedAt.toISOString()} — ${noteScope}, expires ${expiresAt.toISOString().slice(0, 10)}.</em></p>`;
           await db.execute(
             `UPDATE alerts SET status = 'resolved', closed_at = NOW(),
                     notes = CONCAT(COALESCE(notes, ''), ?) WHERE id = ?`,
             [note, openAlert.id]
           );
+
+          // PSA (Feature 8.3): close the linked Autotask ticket too — accepting
+          // the drift is a resolution, not an orphan. Best-effort; never blocks.
+          try {
+            const psa = require('../psa');
+            if (psa.isConfigured()) {
+              await psa.closeTicketsForResolvedAlerts([openAlert.id], { operatorEmail: actor });
+            }
+          } catch (psaErr) {
+            console.warn(`[CA] PSA ticket close on accept-drift-as-exemption failed (non-fatal): ${psaErr.message}`);
+          }
         }
       }
     }
 
-    console.log(`[CA] Exemption grant on assignment ${assignmentId} by ${actor} — ${inserted.length} principal(s), expires ${expiresAt.toISOString().slice(0, 10)}`);
+    // Describe the scope for logs/audit — a policy-wide (no-principal) acceptance
+    // reads differently from a per-principal carve-out.
+    const scopeDesc = inserted.length > 0
+      ? `${inserted.length} principal(s)`
+      : 'policy-wide (no principals)';
+    console.log(`[CA] Drift acceptance on assignment ${assignmentId} by ${actor} — ${scopeDesc}, expires ${expiresAt.toISOString().slice(0, 10)}`);
 
-    // Audit: exemption grant on tenant
+    // Audit: drift acceptance on tenant
     await changeLog.logPanopticaChange({
       tenantId: assignment.tenant_id,
       category: changeLog.CATEGORY.EXEMPTION_APPLY,
       surfaces: [changeLog.SURFACE.CA],
-      description: `Granted CA exemption on "${assignment.template_name}" — ${inserted.length} principal(s), expires ${expiresAt.toISOString().slice(0, 10)}`,
+      description: `Accepted CA drift on "${assignment.template_name}" — ${scopeDesc}, expires ${expiresAt.toISOString().slice(0, 10)}`,
       templateKey: 'exemption.apply',
       templateParams: { settingName: assignment.template_name, expiresAt: expiresAt.toISOString().slice(0, 10) },
       createdBy: actor,
@@ -3365,7 +3412,9 @@ router.post('/exemptions/:id/revoke', auth.requireMemberOrAdmin, async (req, res
               acknowledged_drift_hash = NULL,
               acknowledged_drift_payload = NULL,
               acknowledged_at = NULL,
-              acknowledged_by = NULL
+              acknowledged_by = NULL,
+              acknowledged_expires_at = NULL,
+              acknowledged_reason = NULL
         WHERE id = ?
           AND drift_status = 'accepted'`,
       [exemption.assignment_id]
@@ -3404,7 +3453,9 @@ async function expireExemptions() {
          FROM ca_exemptions
         WHERE revoked_at IS NULL AND expires_at <= NOW()`
     );
-    if (overdue.length === 0) return 0;
+    // NOTE: do not early-return when there are no overdue principal exemptions —
+    // the policy-wide acknowledgment sweep at the end of this function must still
+    // run. The loops below no-op naturally on an empty `overdue`.
 
     const affectedAssignments = new Set();
     for (const e of overdue) {
@@ -3439,15 +3490,60 @@ async function expireExemptions() {
                 acknowledged_drift_hash = NULL,
                 acknowledged_drift_payload = NULL,
                 acknowledged_at = NULL,
-                acknowledged_by = NULL
+                acknowledged_by = NULL,
+                acknowledged_expires_at = NULL,
+                acknowledged_reason = NULL
           WHERE id = ?
             AND drift_status = 'accepted'`,
         [assignmentId]
       );
     }
 
-    console.log(`[CA] Auto-expired ${overdue.length} exemption(s) across ${affectedAssignments.size} assignment(s); drift re-raised.`);
-    return overdue.length;
+    if (overdue.length > 0) {
+      console.log(`[CA] Auto-expired ${overdue.length} exemption(s) across ${affectedAssignments.size} assignment(s); drift re-raised.`);
+    }
+
+    // ── Policy-wide time-boxed acceptances ────────────────────────────────
+    // "Accept with expiry" on a drift that had NO principals to exempt (e.g. a
+    // named-location / geo exclusion, or a grant/session-control change) lives
+    // only on the ca_assignments acknowledgment — there is no ca_exemptions row,
+    // so the principal sweep above can't see it. Re-raise those drifts once their
+    // timer passes so the operator re-reviews, renews, or reverts. Mirrors
+    // expireIntuneAcknowledgments() in api-intune.js.
+    let ackExpired = 0;
+    const overdueAck = await db.queryRows(
+      `SELECT id FROM ca_assignments
+        WHERE drift_status = 'accepted'
+          AND acknowledged_expires_at IS NOT NULL
+          AND acknowledged_expires_at <= NOW()`
+    );
+    for (const a of overdueAck) {
+      await db.execute(
+        `UPDATE ca_assignments
+            SET drift_status = 'drifted',
+                acknowledged_drift_hash = NULL,
+                acknowledged_drift_payload = NULL,
+                acknowledged_at = NULL,
+                acknowledged_by = NULL,
+                acknowledged_expires_at = NULL,
+                acknowledged_reason = NULL
+          WHERE id = ? AND drift_status = 'accepted'`,
+        [a.id]
+      );
+      try {
+        await db.execute(
+          `INSERT INTO ca_drift_log (assignment_id, drift_type, actual_value)
+           VALUES (?, 'exemption_expired', ?)`,
+          [a.id, JSON.stringify({ policy_wide: true, auto_expired: true })]
+        );
+      } catch (_e) { /* ENUM guard — 'exemption_expired' added in migrate-ca-exemptions.sql */ }
+      ackExpired++;
+    }
+    if (ackExpired > 0) {
+      console.log(`[CA] Expired ${ackExpired} policy-wide drift acceptance(s); drift re-raised for re-review.`);
+    }
+
+    return overdue.length + ackExpired;
   } catch (err) {
     console.warn(`[CA] expireExemptions failed: ${err.message}`);
     return 0;

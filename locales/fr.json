@@ -3768,6 +3768,7 @@
         "other": "Exemption accordée — {count} principaux, expire {date}"
       },
       "toast_drift_accepted": "Dérive acceptée",
+      "toast_drift_accepted_expires": "Dérive acceptée — expire {date}",
       "drift_log": {
         "col_time": "Heure",
         "col_template": "Modèle",

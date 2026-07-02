@@ -38,6 +38,38 @@ test('normalizeForBaseline strips volatile + @odata keys', () => {
   assert.deepStrictEqual(norm, { displayName: 'P', state: 'enabled' });
 });
 
+test('normalizeForBaseline strips PROPERTY-scoped @odata annotations (phantom-drift regression)', () => {
+  // Graph emits annotations for a property `foo` as a sibling key
+  // `foo@odata.context` / `foo@odata.type`. These are NOT authored config. The
+  // former startsWith('@') filter missed them, so a live policy carrying
+  // `authenticationStrength@odata.context` read as drift against a template that
+  // didn't ("grantControls.authenticationStrength@odata.context: empty→empty").
+  const norm = cj.normalizeForBaseline({
+    grantControls: {
+      'authenticationStrength@odata.context': 'https://graph.microsoft.com/v1.0/$metadata#...',
+      builtInControls: ['mfa'],
+    },
+  });
+  assert.deepStrictEqual(norm, { grantControls: { builtInControls: ['mfa'] } });
+
+  // End-to-end: a live policy differing from the template ONLY by a
+  // property-scoped annotation must produce ZERO structural diffs.
+  const template = { grantControls: { builtInControls: ['mfa'] } };
+  const live = {
+    grantControls: {
+      builtInControls: ['mfa'],
+      'authenticationStrength@odata.context': 'https://graph.microsoft.com/...',
+    },
+  };
+  const diffs = cj.structuralDiff(cj.normalizeForBaseline(template), cj.normalizeForBaseline(live));
+  assert.deepStrictEqual(diffs, [], 'annotation-only difference must not be drift');
+
+  // ...but a REAL change on the same object must still surface.
+  const live2 = { grantControls: { builtInControls: ['mfa', 'compliantDevice'] } };
+  const realDiffs = cj.structuralDiff(cj.normalizeForBaseline(template), cj.normalizeForBaseline(live2));
+  assert.ok(realDiffs.length > 0, 'a real control change must still be detected');
+});
+
 test('structuralDiff reports leaf-level changes with paths', () => {
   const d = cj.structuralDiff(
     { state: 'enabled', grant: { controls: ['mfa'] } },
