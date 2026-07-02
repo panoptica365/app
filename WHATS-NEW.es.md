@@ -5,6 +5,14 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.3.1 — 2026-07-02
+
+### Corrección: error «módulo no preparado» al enviar una implementación
+
+En algunas instalaciones, el primer arranque tras actualizar a 0.3.0 podía dejar la nueva funcionalidad de Despliegues a medio inicializar: los grupos de inquilinos y los paquetes funcionaban, pero enviar una implementación fallaba con «Bundle-deploy module not ready — schema migration failed.» Se trataba de una condición de carrera puntual entre las migraciones de base de datos en el primer arranque. Ya está corregido de raíz: las migraciones se ordenan explícitamente y, si algo interrumpe un primer arranque, el módulo ahora se repara solo en el siguiente uso en lugar de quedarse bloqueado hasta un reinicio. Si vio este error en 0.3.0, actualizar a 0.3.1 (o simplemente reiniciar la aplicación) lo elimina.
+
+---
+
 ## Versión 0.3.0 — 2026-07-02
 
 ### Grupos de inquilinos: organice su flota y filtre cada vista

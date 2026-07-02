@@ -127,18 +127,30 @@ async function ensureOrgSchema() {
 // Fired eagerly at module load. The promise itself NEVER rejects (a rejected
 // module-level promise with no awaiter yet would trip the process-level
 // unhandledRejection handler at boot); failure is captured and re-thrown by
-// whenReady() so every consumer still fails loud per-request.
+// whenReady(). The DDL is idempotent, so a FAILED attempt is re-run on the
+// next use instead of latching a bad boot until restart (transient DB or
+// boot-ordering failures self-heal — lesson from the 0.3.0 errno-1824 race).
 let schemaError = null;
-const schemaReady = ensureOrgSchema()
-  .then(() => { console.log('[Org] Schema ready (tenant groups + lookup lists)'); })
-  .catch(err => {
-    schemaError = err;
-    console.error('[Org] Schema migration failed:', err.message);
-  });
+let schemaAttempt = runSchemaMigration();
 
-/** Await the migration; throws (per-request, catchable) if it failed. */
+function runSchemaMigration() {
+  return ensureOrgSchema()
+    .then(() => {
+      schemaError = null;
+      console.log('[Org] Schema ready (tenant groups + lookup lists)');
+    })
+    .catch(err => {
+      schemaError = err;
+      console.error('[Org] Schema migration failed (will retry on next use):', err.message);
+    });
+}
+
+/** Await the migration; retries a failed attempt once per call; throws if still failing. */
 async function whenReady() {
-  await schemaReady;
+  await schemaAttempt;
+  if (!schemaError) return;
+  schemaAttempt = runSchemaMigration();
+  await schemaAttempt;
   if (schemaError) {
     throw new Error(`Organization schema migration failed: ${schemaError.message}`);
   }
@@ -215,9 +227,11 @@ async function resolveGroupMembers(groupId) {
 }
 
 module.exports = {
-  schemaReady,
   whenReady,
   ensureOrgSchema,
   resolveGroupMembers,
   resolveDynamicRule,
 };
+// Current-attempt promise for boot-ordering consumers (mirrors the
+// api-ca/api-intune router.schemaReady contract; stays fresh across retries).
+Object.defineProperty(module.exports, 'schemaReady', { get: () => schemaAttempt });

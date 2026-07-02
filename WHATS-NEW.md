@@ -5,6 +5,14 @@ that release, newest first.
 
 ---
 
+## Version 0.3.1 — 2026-07-02
+
+### Fix: "module not ready" error when submitting a deployment
+
+On some installs, the very first start after updating to 0.3.0 could leave the new Deployments feature half-initialized: tenant groups and bundles worked, but submitting a deployment failed with *"Bundle-deploy module not ready — schema migration failed."* This was a one-time race between the database migrations on first boot. It is now fixed at the root — the migrations are explicitly ordered and, if anything does interrupt a first boot, the module now repairs itself automatically on the next use instead of staying stuck until a restart. If you saw this error on 0.3.0, updating to 0.3.1 (or simply restarting the app) clears it.
+
+---
+
 ## Version 0.3.0 — 2026-07-02
 
 ### Tenant Groups — organize your fleet and filter every view

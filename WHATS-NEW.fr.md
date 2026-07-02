@@ -5,6 +5,14 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.3.1 — 2026-07-02
+
+### Correctif : erreur « module non prêt » lors de la soumission d'un déploiement
+
+Sur certaines installations, le tout premier démarrage après la mise à jour vers 0.3.0 pouvait laisser la nouvelle fonctionnalité Déploiements à moitié initialisée : les groupes de locataires et les ensembles fonctionnaient, mais la soumission d'un déploiement échouait avec « Bundle-deploy module not ready — schema migration failed. » Il s'agissait d'une course ponctuelle entre les migrations de base de données au premier démarrage. C'est maintenant corrigé à la racine — les migrations sont explicitement ordonnées et, si quelque chose interrompt malgré tout un premier démarrage, le module se répare désormais de lui-même à la prochaine utilisation au lieu de rester bloqué jusqu'à un redémarrage. Si vous avez vu cette erreur sur 0.3.0, la mise à jour vers 0.3.1 (ou un simple redémarrage de l'application) la fait disparaître.
+
+---
+
 ## Version 0.3.0 — 2026-07-02
 
 ### Groupes de locataires — organisez votre flotte et filtrez chaque vue

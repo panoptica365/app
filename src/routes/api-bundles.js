@@ -80,23 +80,48 @@ async function ensureBundleSchema() {
   `);
 }
 
-// Never-rejecting boot promise + captured error, re-thrown per-request by
-// the gate below (same rationale as org-store: a rejected module-level
-// promise with no awaiter would trip unhandledRejection at boot).
+// Never-rejecting boot attempt + captured error (a rejected module-level
+// promise with no awaiter would trip unhandledRejection at boot). The DDL
+// is idempotent, so a FAILED attempt is re-run on the next use instead of
+// latching a bad boot until restart — a boot-order race on a fresh 0.3.0
+// install did exactly that (errno 1824) at a customer on 2026-07-02.
 let schemaError = null;
-const schemaReady = ensureBundleSchema()
-  .then(() => { console.log('[Bundles] Schema ready (config bundles + item tables)'); })
-  .catch(err => {
-    schemaError = err;
-    console.error('[Bundles] Schema migration failed:', err.message);
-  });
+let schemaAttempt = runSchemaMigration();
+
+function runSchemaMigration() {
+  return ensureBundleSchema()
+    .then(() => {
+      schemaError = null;
+      console.log('[Bundles] Schema ready (config bundles + item tables)');
+    })
+    .catch(err => {
+      schemaError = err;
+      console.error('[Bundles] Schema migration failed (will retry on next use):', err.message);
+    });
+}
+
+/** Await the migration; retries a failed attempt once per call; throws if still failing. */
+async function whenReady() {
+  await schemaAttempt;
+  if (!schemaError) return;
+  schemaAttempt = runSchemaMigration();
+  await schemaAttempt;
+  if (schemaError) throw new Error(`Bundles schema migration failed: ${schemaError.message}`);
+}
+
+// Exported for cross-module boot ordering (bundle-deploy-jobs FKs these
+// tables). `schemaReady` mirrors the api-ca/api-intune contract and always
+// points at the CURRENT attempt; `whenReady` is the retrying form.
+Object.defineProperty(router, 'schemaReady', { get: () => schemaAttempt });
+router.whenReady = whenReady;
 
 router.use(async (req, res, next) => {
-  await schemaReady;
-  if (schemaError) {
-    return res.status(503).json({ error: 'Bundles module not ready — schema migration failed.' });
+  try {
+    await whenReady();
+    next();
+  } catch (err) {
+    res.status(503).json({ error: 'Bundles module not ready — schema migration failed.' });
   }
-  next();
 });
 
 // ─────────────────────────────────────────────────────────────────────────

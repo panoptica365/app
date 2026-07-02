@@ -312,6 +312,15 @@ async function processJob(job) {
 
 async function tick() {
   if (stopRequested) return;
+  // Schema gate first: drives the migration retry after a failed boot and
+  // keeps a missing-table state from spamming a scan error every 3 seconds
+  // (both happened at a customer on the 0.3.0 boot race).
+  try {
+    await jobs.whenReady();
+  } catch (err) {
+    workerHeartbeat.stampError('bundle_deploy', `schema not ready: ${err.message}`);
+    return;
+  }
   const now = Date.now();
   if (now - lastHeartbeat > HEARTBEAT_THROTTLE_MS) {
     workerHeartbeat.stampStart('bundle_deploy');

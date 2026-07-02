@@ -42,9 +42,24 @@ const orgStore = require('./org-store');
 
 async function ensureSchema() {
   // Item tables FK config_bundles + tenants; bundles module creates
-  // config_bundles at its own module load — await it to keep fresh-install
-  // boots deterministic (same cross-await rationale as api-bundles.js).
-  await Promise.allSettled([require('../routes/api-bundles').schemaReady]);
+  // config_bundles at its own module load — await it so our FK CREATEs can
+  // never race it (a fresh-0.3.0 boot lost this race at a customer:
+  // errno 1824 "Failed to open the referenced table 'config_bundles'",
+  // because api-bundles didn't export the promise and awaiting the missing
+  // property was a silent no-op). Fail LOUD if the contract ever breaks
+  // again; tolerate a failed bundles migration — our own CREATE then fails
+  // with the real error and this module's retry logic takes over.
+  const bundlesRouter = require('../routes/api-bundles');
+  if (typeof bundlesRouter.whenReady === 'function') {
+    try {
+      await bundlesRouter.whenReady();
+    } catch (err) {
+      console.error('[BundleDeploy] api-bundles schema not ready before FK creation:', err.message);
+    }
+  } else {
+    console.error('[BundleDeploy] api-bundles.whenReady export MISSING — FK creation may race the config_bundles CREATE. Fix the export in api-bundles.js.');
+    await Promise.allSettled([bundlesRouter.schemaReady].filter(Boolean));
+  }
 
   await db.execute(`
     CREATE TABLE IF NOT EXISTS bundle_deployments (
@@ -88,16 +103,28 @@ async function ensureSchema() {
   `);
 }
 
+// Never-rejecting boot attempt; a FAILED attempt re-runs on the next use
+// (idempotent DDL) instead of latching a bad boot until restart.
 let schemaError = null;
-const schemaReady = ensureSchema()
-  .then(() => { console.log('[BundleDeploy] Schema ready (job ledger)'); })
-  .catch(err => {
-    schemaError = err;
-    console.error('[BundleDeploy] Schema migration failed:', err.message);
-  });
+let schemaAttempt = runSchemaMigration();
+
+function runSchemaMigration() {
+  return ensureSchema()
+    .then(() => {
+      schemaError = null;
+      console.log('[BundleDeploy] Schema ready (job ledger)');
+    })
+    .catch(err => {
+      schemaError = err;
+      console.error('[BundleDeploy] Schema migration failed (will retry on next use):', err.message);
+    });
+}
 
 async function whenReady() {
-  await schemaReady;
+  await schemaAttempt;
+  if (!schemaError) return;
+  schemaAttempt = runSchemaMigration();
+  await schemaAttempt;
   if (schemaError) throw new Error(`Bundle-deploy schema migration failed: ${schemaError.message}`);
 }
 
@@ -633,7 +660,6 @@ async function pruneOldJobs() {
 }
 
 module.exports = {
-  schemaReady,
   whenReady,
   createDeployment,
   runPreflight,
@@ -647,3 +673,5 @@ module.exports = {
   pruneOldJobs,
   JOB_RETENTION_DAYS,
 };
+// Current-attempt promise for boot-ordering consumers (stays fresh across retries).
+Object.defineProperty(module.exports, 'schemaReady', { get: () => schemaAttempt });
