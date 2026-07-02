@@ -105,6 +105,20 @@
     <div class="settings-card-desc" data-i18n="settings.card_release_desc">Choose whether this install gets stable releases or early releases before they are widely tested.</div>
   </div>
 
+  <!-- Service Tiers Card (Tenant Groups Phase 1, 2026-07-01) -->
+  <div class="settings-card" id="card-tiers" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="layers"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_tiers_title">Service Tiers</div>
+    <div class="settings-card-desc" data-i18n="settings.card_tiers_desc">The service levels you sell (e.g. Bronze, Silver, Gold). Assign one to each tenant to group and filter by tier.</div>
+  </div>
+
+  <!-- Sales Reps Card (Tenant Groups Phase 1, 2026-07-01) -->
+  <div class="settings-card" id="card-reps" style="cursor:pointer;">
+    <div class="settings-card-icon"><i data-lucide="users"></i></div>
+    <div class="settings-card-title" data-i18n="settings.card_reps_title">Sales Reps</div>
+    <div class="settings-card-desc" data-i18n="settings.card_reps_desc">Your account managers. Assign one to each tenant so a rep can filter dashboards to their own book of business.</div>
+  </div>
+
 </div>
 
 <!-- ─── SMTP Sub-View ─── -->
@@ -773,5 +787,43 @@
     </div>
 
     <div id="release-error" class="form-hint" style="display:none; color:var(--p-danger);"></div>
+  </div>
+</div>
+
+<!-- ─── Service Tiers Sub-View (Tenant Groups Phase 1) ─── -->
+<div id="settings-tiers-view" style="display:none;">
+  <button class="btn-secondary" id="tiers-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.org.tiers_section_title">Service Tiers</div>
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.org.tiers_hint">
+      Assign a tier to each tenant from the tenant's edit dialog. Deactivating a tier hides it from new assignments without touching tenants that already have it; a tier can only be deleted once nothing references it.
+    </div>
+
+    <div class="form-group" style="display:flex; gap:10px; align-items:center;">
+      <input type="text" id="tiers-new-name" maxlength="100" style="flex:1;" placeholder="e.g. Silver" data-i18n-attr-placeholder="settings.org.tiers_add_placeholder">
+      <button class="btn-primary" id="tiers-add-btn" data-i18n="settings.org.add_btn" style="flex:0 0 auto;">Add</button>
+    </div>
+
+    <div id="tiers-list"></div>
+  </div>
+</div>
+
+<!-- ─── Sales Reps Sub-View (Tenant Groups Phase 1) ─── -->
+<div id="settings-reps-view" style="display:none;">
+  <button class="btn-secondary" id="reps-back" style="margin-bottom:16px;" data-i18n="settings.back_to_settings">&larr; Back to Settings</button>
+
+  <div class="settings-form-panel">
+    <div class="settings-section-title" data-i18n="settings.org.reps_section_title">Sales Reps</div>
+    <div class="form-hint" style="margin-bottom:16px;" data-i18n="settings.org.reps_hint">
+      Assign a rep to each tenant from the tenant's edit dialog. When a rep leaves, deactivate them — existing assignments stay intact until you reassign those tenants; a rep can only be deleted once nothing references them.
+    </div>
+
+    <div class="form-group" style="display:flex; gap:10px; align-items:center;">
+      <input type="text" id="reps-new-name" maxlength="150" style="flex:1;" placeholder="e.g. Marie Tremblay" data-i18n-attr-placeholder="settings.org.reps_add_placeholder">
+      <button class="btn-primary" id="reps-add-btn" data-i18n="settings.org.add_btn" style="flex:0 0 auto;">Add</button>
+    </div>
+
+    <div id="reps-list"></div>
   </div>
 </div>

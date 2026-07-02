@@ -20,6 +20,8 @@
     document.getElementById('card-psa')?.addEventListener('click', () => showView('psa'));
     document.getElementById('card-retention')?.addEventListener('click', () => showView('retention'));
     document.getElementById('card-release')?.addEventListener('click', () => showView('release'));
+    document.getElementById('card-tiers')?.addEventListener('click', () => showView('tiers'));
+    document.getElementById('card-reps')?.addEventListener('click', () => showView('reps'));
     // License Agreement — opens the shared EULA modal in read-only mode
     // (provenance + acceptance history). No sub-view.
     document.getElementById('card-eula')?.addEventListener('click', () => {
@@ -54,6 +56,17 @@
 
     // Release Settings handlers (Early/Stable, 2026-07-01)
     document.getElementById('release-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('tiers-back')?.addEventListener('click', () => showView('cards'));
+    document.getElementById('reps-back')?.addEventListener('click', () => showView('cards'));
+
+    // Organization lists (Service Tiers / Sales Reps) — add entry via button
+    // or Enter in the input.
+    for (const kind of ['tiers', 'reps']) {
+      document.getElementById(`${kind}-add-btn`)?.addEventListener('click', () => addOrgEntry(kind));
+      document.getElementById(`${kind}-new-name`)?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addOrgEntry(kind); }
+      });
+    }
     document.getElementById('release-save')?.addEventListener('click', saveReleaseChannel);
 
     // Daily Summary handlers
@@ -578,6 +591,8 @@
       psa: document.getElementById('settings-psa-view'),
       retention: document.getElementById('settings-retention-view'),
       release: document.getElementById('settings-release-view'),
+      tiers: document.getElementById('settings-tiers-view'),
+      reps: document.getElementById('settings-reps-view'),
     };
     Object.entries(blocks).forEach(([k, el]) => {
       if (el) el.style.display = (k === view) ? '' : 'none';
@@ -597,6 +612,164 @@
     if (view === 'psa') loadPsa();
     if (view === 'retention') loadRetention();
     if (view === 'release') loadReleaseChannel();
+    if (view === 'tiers') loadOrgList('tiers');
+    if (view === 'reps') loadOrgList('reps');
+  }
+
+  // ─── Organization lists: Service Tiers & Sales Reps (Tenant Groups Phase 1) ───
+  // Two managed lookup lists behind /api/org. Shared renderer — the two
+  // widgets are identical except for the endpoint slug and i18n keys.
+
+  const ORG_KINDS = {
+    tiers: { slug: 'service-tiers', maxLen: 100 },
+    reps: { slug: 'sales-reps', maxLen: 150 },
+  };
+  const orgState = {
+    tiers: { rows: [], editingId: null },
+    reps: { rows: [], editingId: null },
+  };
+
+  // Panoptica.api() throws away structured error bodies; the delete guard's
+  // 409 carries the blocking tenant/group names we must show, so org
+  // mutations use this raw wrapper instead.
+  async function orgApiRaw(url, options = {}) {
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      ...options,
+    });
+    let body = null;
+    try { body = await res.json(); } catch (_) { /* empty body */ }
+    return { ok: res.ok, status: res.status, body: body || {} };
+  }
+
+  async function loadOrgList(kind) {
+    const cfg = ORG_KINDS[kind];
+    const listEl = document.getElementById(`${kind}-list`);
+    if (!listEl) return;
+    listEl.innerHTML = `<div class="form-hint">${escHtml(window.t('settings.org.loading'))}</div>`;
+    try {
+      const rows = await Panoptica.api(`/api/org/${cfg.slug}`);
+      orgState[kind].rows = Array.isArray(rows) ? rows : [];
+      orgState[kind].editingId = null;
+      renderOrgList(kind);
+    } catch (err) {
+      listEl.innerHTML = `<div class="form-hint" style="color:var(--p-danger);">${escHtml(window.t('settings.org.load_failed', { message: err.message }))}</div>`;
+    }
+  }
+
+  function renderOrgList(kind) {
+    const st = orgState[kind];
+    const cfg = ORG_KINDS[kind];
+    const listEl = document.getElementById(`${kind}-list`);
+    if (!listEl) return;
+    if (!st.rows.length) {
+      listEl.innerHTML = `<div class="form-hint">${escHtml(window.t('settings.org.empty'))}</div>`;
+      return;
+    }
+    listEl.innerHTML = st.rows.map(r => {
+      const editing = st.editingId === r.id;
+      const usage = window.t('settings.org.in_use', { tenants: r.tenant_count, groups: r.group_rule_count });
+      const nameCell = editing
+        ? `<input type="text" id="${kind}-edit-name" value="${escHtml(r.name)}" maxlength="${cfg.maxLen}" style="flex:1;">`
+        : `<span style="flex:1;${r.active ? '' : ' opacity:0.55;'}">${escHtml(r.name)}${r.active ? '' : ` <em style="font-size:0.75rem; color:var(--p-text-muted);">${escHtml(window.t('settings.org.inactive_badge'))}</em>`}</span>`;
+      const btns = editing
+        ? `<button class="btn-primary" data-org-act="rename-save" data-id="${r.id}">${escHtml(window.t('modals.save'))}</button>
+           <button class="btn-secondary" data-org-act="rename-cancel" data-id="${r.id}">${escHtml(window.t('modals.cancel'))}</button>`
+        : `<button class="btn-secondary" data-org-act="rename" data-id="${r.id}">${escHtml(window.t('settings.org.rename_btn'))}</button>
+           <button class="btn-secondary" data-org-act="toggle" data-id="${r.id}">${escHtml(window.t(r.active ? 'settings.org.deactivate_btn' : 'settings.org.reactivate_btn'))}</button>
+           <button class="btn-danger" data-org-act="delete" data-id="${r.id}">${escHtml(window.t('settings.org.delete_btn'))}</button>`;
+      return `<div style="display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--p-border-subtle);">
+        ${nameCell}
+        <span style="font-size:0.75rem; color:var(--p-text-muted); white-space:nowrap;">${escHtml(usage)}</span>
+        ${btns}
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-org-act]').forEach(btn => {
+      btn.addEventListener('click', () => onOrgAction(kind, btn.dataset.orgAct, parseInt(btn.dataset.id, 10)));
+    });
+  }
+
+  async function addOrgEntry(kind) {
+    const cfg = ORG_KINDS[kind];
+    const input = document.getElementById(`${kind}-new-name`);
+    const name = input?.value?.trim();
+    if (!name) return;
+    const r = await orgApiRaw(`/api/org/${cfg.slug}`, { method: 'POST', body: JSON.stringify({ name }) });
+    if (r.ok) {
+      if (input) input.value = '';
+      Panoptica.showToast(window.t('settings.org.toast_added', { name }), 'success');
+      await loadOrgList(kind);
+    } else if (r.status === 409) {
+      Panoptica.showToast(window.t('settings.org.toast_duplicate', { name }), 'error');
+    } else {
+      Panoptica.showToast(window.t('settings.toast_save_failed', { message: r.body.error || `HTTP ${r.status}` }), 'error');
+    }
+  }
+
+  async function onOrgAction(kind, act, id) {
+    const cfg = ORG_KINDS[kind];
+    const st = orgState[kind];
+    const row = st.rows.find(x => x.id === id);
+    if (!row) return;
+
+    if (act === 'rename') { st.editingId = id; renderOrgList(kind); document.getElementById(`${kind}-edit-name`)?.focus(); return; }
+    if (act === 'rename-cancel') { st.editingId = null; renderOrgList(kind); return; }
+
+    if (act === 'rename-save') {
+      const name = document.getElementById(`${kind}-edit-name`)?.value?.trim();
+      if (!name) return;
+      if (name === row.name) { st.editingId = null; renderOrgList(kind); return; }
+      const r = await orgApiRaw(`/api/org/${cfg.slug}/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+      if (r.ok) {
+        Panoptica.showToast(window.t('settings.org.toast_renamed', { from: row.name, to: name }), 'success');
+        await loadOrgList(kind);
+      } else if (r.status === 409) {
+        Panoptica.showToast(window.t('settings.org.toast_duplicate', { name }), 'error');
+      } else {
+        Panoptica.showToast(window.t('settings.toast_save_failed', { message: r.body.error || `HTTP ${r.status}` }), 'error');
+      }
+      return;
+    }
+
+    if (act === 'toggle') {
+      const r = await orgApiRaw(`/api/org/${cfg.slug}/${id}`, { method: 'PATCH', body: JSON.stringify({ active: !row.active }) });
+      if (r.ok) {
+        Panoptica.showToast(window.t(row.active ? 'settings.org.toast_deactivated' : 'settings.org.toast_reactivated', { name: row.name }), 'success');
+        await loadOrgList(kind);
+      } else {
+        Panoptica.showToast(window.t('settings.toast_save_failed', { message: r.body.error || `HTTP ${r.status}` }), 'error');
+      }
+      return;
+    }
+
+    if (act === 'delete') {
+      const proceed = await Panoptica.confirmModal(window.t('settings.org.confirm_delete', { name: row.name }), { danger: true });
+      if (!proceed) return;
+      const r = await orgApiRaw(`/api/org/${cfg.slug}/${id}`, { method: 'DELETE' });
+      if (r.ok) {
+        Panoptica.showToast(window.t('settings.org.toast_deleted', { name: row.name }), 'success');
+        await loadOrgList(kind);
+      } else if (r.status === 409 && r.body.error === 'in_use') {
+        // Delete guard — show WHO is blocking so the operator knows what to
+        // reassign, and point at deactivate as the graceful path.
+        const tenants = Array.isArray(r.body.blocking_tenants) ? r.body.blocking_tenants : [];
+        const groups = Array.isArray(r.body.blocking_groups) ? r.body.blocking_groups : [];
+        const listHtml = (title, items) => items.length
+          ? `<div style="margin-top:10px;"><b>${escHtml(title)}</b><ul style="margin:6px 0 0 18px; padding:0;">${items.map(n => `<li>${escHtml(n)}</li>`).join('')}</ul></div>`
+          : '';
+        Panoptica.openModal(
+          window.t('settings.org.blocked_title'),
+          `<p style="margin:0;">${escHtml(window.t('settings.org.blocked_intro', { name: row.name }))}</p>` +
+          listHtml(window.t('settings.org.blocked_tenants'), tenants) +
+          listHtml(window.t('settings.org.blocked_groups'), groups) +
+          `<p style="margin:12px 0 0; color:var(--p-text-muted); font-size:0.85rem;">${escHtml(window.t('settings.org.blocked_hint'))}</p>`,
+          `<button class="btn-secondary" onclick="Panoptica.closeModal()">${escHtml(window.t('modals.close'))}</button>`
+        );
+      } else {
+        Panoptica.showToast(window.t('settings.toast_save_failed', { message: r.body.error || `HTTP ${r.status}` }), 'error');
+      }
+    }
   }
 
   // ─── Microsoft Message Feed (Feature 8.8) ───

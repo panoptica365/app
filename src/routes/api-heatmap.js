@@ -51,6 +51,7 @@ const express = require('express');
 const auth = require('../auth');
 const db = require('../db/database');
 const { SETTINGS } = require('../lib/security-settings/registry');
+const orgStore = require('../lib/org-store');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -275,12 +276,30 @@ router.get('/', async (req, res) => {
   try {
     await ensurePostureTable();
 
+    // ── Optional tenant-group filter (Tenant Groups Phase 1 rider) ──
+    // ?group=<tenant_groups.id> scopes the whole roll-up (grid, fleet %,
+    // campaigns, movers) to that group's members. Membership comes from the
+    // shared resolver — never re-implemented here.
+    let groupFilter = null;
+    if (req.query.group != null && req.query.group !== '') {
+      const gid = Number(req.query.group);
+      if (!Number.isInteger(gid) || gid <= 0) {
+        return res.status(400).json({ error: 'invalid_group' });
+      }
+      const memberIds = await orgStore.resolveGroupMembers(gid);
+      if (memberIds === null) return res.status(404).json({ error: 'unknown_group' });
+      groupFilter = new Set(memberIds);
+    }
+
     // ── Tenant census (managed vs audit-only reconciliation for the caption) ──
+    // When a group filter is active, the WHOLE census is scoped to the group
+    // so the caption's managed/total/audit-only numbers stay consistent.
     const allTenants = await db.queryRows(
       `SELECT id, display_name, mode FROM tenants WHERE enabled = TRUE`
     );
-    const managed = allTenants.filter(t => t.mode === 'managed');
-    const auditOnly = allTenants.filter(t => t.mode === 'audit_only');
+    const censusTenants = groupFilter ? allTenants.filter(t => groupFilter.has(t.id)) : allTenants;
+    const managed = censusTenants.filter(t => t.mode === 'managed');
+    const auditOnly = censusTenants.filter(t => t.mode === 'audit_only');
     const managedIds = managed.map(t => t.id);
     const tenantById = new Map(managed.map(t => [t.id, t]));
 
@@ -304,7 +323,7 @@ router.get('/', async (req, res) => {
     if (managedIds.length === 0) {
       return res.json({
         managed_count: 0,
-        total_count: allTenants.length,
+        total_count: censusTenants.length,
         audit_only_count: auditOnly.length,
         stale_tenant_count: 0,
         active_exemptions: 0,
@@ -454,7 +473,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       managed_count: managed.length,
-      total_count: allTenants.length,
+      total_count: censusTenants.length,
       audit_only_count: auditOnly.length,
       stale_tenant_count: staleTenantCount,
       active_exemptions: activeExemptions,

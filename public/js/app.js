@@ -38,6 +38,7 @@
     'intune-templates': { partial: '/partials/intune-templates', script: '/js/pages/intune-templates.js' },
     'security':         { partial: '/partials/security',         script: '/js/pages/security.js' },
     'exemptions':       { partial: '/partials/exemptions',       script: '/js/pages/exemptions.js' },
+    'deployment':       { partial: '/partials/deployment',       script: '/js/pages/deployment.js' },
     // Admin-only. Server-side requireAdmin gates both the /partials/audit-log
     // route and the /api/msp-audit/* endpoints. The sidebar nav item is also
     // hidden for non-admins via applyRoleVisibility() — see init() below. That

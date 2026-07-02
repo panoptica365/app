@@ -55,6 +55,9 @@ const mspAuditApiRoutes = require('./routes/api-msp-audit');
 const securityApiRoutes = require('./routes/api-security');
 const heatmapApiRoutes = require('./routes/api-heatmap');
 const globalTrendsApiRoutes = require('./routes/api-global-trends');
+const orgApiRoutes = require('./routes/api-org');
+const bundlesApiRoutes = require('./routes/api-bundles');
+const bundleDeployApiRoutes = require('./routes/api-bundle-deploy');
 const userPrefsApiRoutes = require('./routes/api-user-prefs');
 const metaApiRoutes = require('./routes/api-meta');
 const updateApiRoutes = require('./routes/api-update');
@@ -115,6 +118,8 @@ const accessReviewStore = require('./lib/access-review-store');
 const securityApplyWorker = require('./security-apply-worker');
 const spAuditWorker = require('./sp-audit-worker');
 const spAuditJobs = require('./lib/sharepoint-audit-jobs');
+const bundleDeployWorker = require('./bundle-deploy-worker');
+const bundleDeployJobs = require('./lib/bundle-deploy-jobs');
 const securityApplyJobs = require('./lib/security-settings/apply-jobs');
 const psaWorker = require('./psa-worker');
 const psaStore = require('./psa/store');
@@ -345,6 +350,9 @@ app.use('/api/msp-audit', mspAuditApiRoutes);
 app.use('/api/security', securityApiRoutes);
 app.use('/api/heatmap', heatmapApiRoutes);
 app.use('/api/global-trends', globalTrendsApiRoutes);
+app.use('/api/org', orgApiRoutes);
+app.use('/api/bundles', bundlesApiRoutes);
+app.use('/api/bundle-deployments', bundleDeployApiRoutes);
 app.use('/api/user-prefs', userPrefsApiRoutes);
 
 // Learn lesson assets — the standalone lesson HTML + its two stylesheets,
@@ -662,6 +670,15 @@ async function start() {
     );
     spAuditWorker.start();
 
+    // Bundle deployment jobs (Tenant Groups & Config Bundles Phase 3).
+    // Close any jobs stranded 'running' by a restart FIRST (executed items
+    // keep their recorded results; pending items are marked skipped with an
+    // explicit note), then start the fan-out worker (serial per tenant,
+    // small bounded concurrency across tenants).
+    bundleDeployJobs.recoverStrandedJobs()
+      .catch(err => console.error('[Server] bundle-deploy recoverStrandedJobs failed at boot:', err.message))
+      .finally(() => bundleDeployWorker.start()); // start only after recovery settles
+
     // License refresh client (v0.1.8). Schedules a weekly heartbeat to the
     // license server based on the current JWT's iat. On success, writes the
     // new token to both .env and the cache sidecar; on failure, retries in
@@ -719,6 +736,7 @@ async function shutdown(signal) {
   emailAuthWorker.stop();
   securityApplyWorker.stop();
   spAuditWorker.stop();
+  bundleDeployWorker.stop();
   licenseRefresh.stop();
   psaWorker.stop();
   retentionWorker.stop();

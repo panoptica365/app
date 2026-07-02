@@ -53,6 +53,7 @@ const KNOWN_WORKERS = new Set([
   'intune_drift',
   'adopt_drift',
   'sp_audit',
+  'bundle_deploy',
 ]);
 
 let schemaReady = null;

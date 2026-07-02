@@ -7,6 +7,16 @@
   'use strict';
 
   let tenants = [];
+  // Managed lookup lists for the Service Tier / Sales Rep dropdowns
+  // (Tenant Groups Phase 1). Loaded alongside the tenant list; a load
+  // failure degrades to empty dropdowns rather than breaking the page.
+  let serviceTiers = [];
+  let salesReps = [];
+  // True only after the lookups actually loaded. When false the tier/rep
+  // fields are left out of the edit modal AND the save payload — otherwise a
+  // transient lookup failure would render empty dropdowns and saving any
+  // other field would silently null the tenant's existing assignments.
+  let orgLookupsLoaded = false;
 
   async function init(params = {}) {
     // Check for consent callback messages. The SPA router (app.js) strips
@@ -33,12 +43,48 @@
     // Wire the Management Consoles tab (tabs, view toggle, search, picker).
     setupConsolesUI();
 
-    await loadTenants();
+    await Promise.all([loadTenants(), loadOrgLookups()]);
   }
 
   function destroy() {
     tenants = [];
+    serviceTiers = [];
+    salesReps = [];
+    orgLookupsLoaded = false;
     focusTenantId = null;
+  }
+
+  async function loadOrgLookups() {
+    try {
+      const [tiers, reps] = await Promise.all([
+        Panoptica.api('/api/org/service-tiers'),
+        Panoptica.api('/api/org/sales-reps'),
+      ]);
+      serviceTiers = Array.isArray(tiers) ? tiers : [];
+      salesReps = Array.isArray(reps) ? reps : [];
+      orgLookupsLoaded = true;
+    } catch (err) {
+      serviceTiers = [];
+      salesReps = [];
+      orgLookupsLoaded = false;
+      console.warn('[Tenants] Service tier / sales rep lookup load failed:', err.message);
+    }
+  }
+
+  // Options for the tier/rep dropdowns. Soft-deleted (inactive) entries are
+  // hidden for NEW assignments but kept — flagged — when they are the
+  // tenant's current value, so opening + saving the modal never silently
+  // drops an existing assignment.
+  function orgOptions(list, currentId) {
+    const cur = currentId == null ? null : Number(currentId);
+    let html = `<option value=""${cur === null ? ' selected' : ''}>${escHtml(window.t('tenants.modal_option_none'))}</option>`;
+    for (const item of list) {
+      const inactive = !item.active;
+      if (inactive && Number(item.id) !== cur) continue;
+      const label = inactive ? window.t('tenants.modal_option_inactive', { name: item.name }) : item.name;
+      html += `<option value="${Number(item.id)}"${Number(item.id) === cur ? ' selected' : ''}>${escHtml(label)}</option>`;
+    }
+    return html;
   }
 
   function showConsentMessage(text, type) {
@@ -304,6 +350,22 @@
         <label>${escHtml(window.t('tenants.col_psa_name'))}</label>
         <input type="text" id="edit-psa-name" value="${escAttr(t.psa_name || '')}" placeholder="${escAttr(window.t('tenants.modal_edit_psa_placeholder'))}">
       </div>
+      ${orgLookupsLoaded ? `<div class="form-row">
+        <div class="form-group">
+          <label>${escHtml(window.t('tenants.modal_label_service_tier'))}</label>
+          <div class="form-helper" style="font-size:0.78rem; color:var(--p-text-muted); margin-bottom:6px;">
+            ${escHtml(window.t('tenants.modal_helper_service_tier'))}
+          </div>
+          <select id="edit-service-tier">${orgOptions(serviceTiers, t.service_tier_id)}</select>
+        </div>
+        <div class="form-group">
+          <label>${escHtml(window.t('tenants.modal_label_sales_rep'))}</label>
+          <div class="form-helper" style="font-size:0.78rem; color:var(--p-text-muted); margin-bottom:6px;">
+            ${escHtml(window.t('tenants.modal_helper_sales_rep'))}
+          </div>
+          <select id="edit-sales-rep">${orgOptions(salesReps, t.sales_rep_id)}</select>
+        </div>
+      </div>` : ''}
       <div class="form-row">
         <div class="form-group">
           <label>${escHtml(window.t('tenants.col_language'))}</label>
@@ -416,6 +478,14 @@
       mode: document.getElementById('edit-mode')?.value,
       polling_interval: parseInt(document.getElementById('edit-polling')?.value, 10),
     };
+    // Presence-based on the server: keys absent = unchanged. Only send the
+    // tier/rep when the lookups loaded and the fields were actually rendered.
+    if (orgLookupsLoaded && document.getElementById('edit-service-tier')) {
+      payload.service_tier_id = document.getElementById('edit-service-tier').value
+        ? parseInt(document.getElementById('edit-service-tier').value, 10) : null;
+      payload.sales_rep_id = document.getElementById('edit-sales-rep')?.value
+        ? parseInt(document.getElementById('edit-sales-rep').value, 10) : null;
+    }
 
     if (!payload.display_name) {
       Panoptica.showToast(window.t('tenants.toast_display_name_required'), 'error');

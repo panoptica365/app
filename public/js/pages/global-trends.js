@@ -15,8 +15,11 @@
 
   let charts = [];
   let currentRange = '30d';
+  let currentGroup = null; // tenant-group filter (Phase 1 rider): null = whole fleet
   let _themeObs = null;
-  const cache = new Map(); // range → response
+  const cache = new Map(); // `${range}|${group}` → response
+
+  function cacheKey() { return `${currentRange}|${currentGroup || ''}`; }
 
   function gtT(key, params) { return window.t('global_trends.' + key, params); }
   function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
@@ -52,10 +55,21 @@
     if (refresh) refresh.addEventListener('click', () => load(true));
     document.querySelectorAll('#gt-view .gt-pill').forEach(b => b.classList.toggle('active', b.dataset.range === currentRange));
 
+    // Mount the shared group-filter dropdown (fail-soft — absent until a
+    // group exists; a load failure leaves the page exactly as before).
+    currentGroup = null;
+    const filterHost = el('gt-group-filter');
+    if (filterHost && window.PanopticaGroupFilter) {
+      window.PanopticaGroupFilter.mount(filterHost, {
+        value: null,
+        onChange: (groupId) => { currentGroup = groupId; load(); },
+      });
+    }
+
     // Re-resolve chart colours on a light/dark theme switch.
     const themeLink = document.getElementById('theme-css');
     if (themeLink && window.MutationObserver) {
-      _themeObs = new MutationObserver(() => { if (cache.has(currentRange)) render(cache.get(currentRange)); });
+      _themeObs = new MutationObserver(() => { if (cache.has(cacheKey())) render(cache.get(cacheKey())); });
       _themeObs.observe(themeLink, { attributes: true, attributeFilter: ['href'] });
     }
 
@@ -67,16 +81,24 @@
     if (_themeObs) { try { _themeObs.disconnect(); } catch (_) {} _themeObs = null; }
   }
 
+  let loadSeq = 0; // guards out-of-order responses on quick range/group flips
+
   async function load(force) {
+    const seq = ++loadSeq;
     const status = el('gt-status');
-    if (!force && cache.has(currentRange)) { render(cache.get(currentRange)); return; }
+    if (!force && cache.has(cacheKey())) { render(cache.get(cacheKey())); return; }
     if (status) status.textContent = gtT('loading');
+    const key = cacheKey();
     try {
-      const data = await window.Panoptica.api('/api/global-trends?range=' + encodeURIComponent(currentRange));
-      cache.set(currentRange, data);
+      const url = '/api/global-trends?range=' + encodeURIComponent(currentRange)
+        + (currentGroup ? '&group=' + encodeURIComponent(currentGroup) : '');
+      const data = await window.Panoptica.api(url);
+      cache.set(key, data); // cache under the key this fetch was issued for
+      if (seq !== loadSeq) return; // a newer load superseded this one
       render(data);
       if (status) status.textContent = '';
     } catch (e) {
+      if (seq !== loadSeq) return;
       destroyCharts();
       if (status) status.textContent = gtT('load_failed');
     }

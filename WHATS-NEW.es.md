@@ -5,6 +5,26 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.3.0 — 2026-07-02
+
+### Grupos de inquilinos: organice su flota y filtre cada vista
+
+Ahora puede agrupar los inquilinos tal como piensa su cartera. Cree **grupos manuales** (elija los miembros de una lista) o **grupos dinámicos** cuya pertenencia sigue una regla — nivel de servicio y/o representante — y se mantiene al día por sí sola cuando los inquilinos cambian. Los cimientos son dos nuevas listas gestionadas en **Configuración**: **Niveles de servicio** y **Representantes**, asignados a cada inquilino desde su ventana de edición. Un nuevo filtro **Grupo de inquilinos** en el **Mapa de calor** y en **Tendencias** limita esas vistas a cualquier grupo: un representante ve solo sus propias cuentas con un clic.
+
+### Paquetes de configuración: su línea base como paquete reutilizable
+
+Un **paquete de configuración** es una colección con nombre de directivas de acceso condicional y configuraciones de Intune tomadas de sus bibliotecas de modelos, con las elecciones por elemento guardadas dentro del paquete: cada directiva de acceso condicional se marca como **Solo informe** (la opción segura por defecto) o **Activado (aplicado)**, y cada configuración de Intune lleva su destino de asignación (Ninguno / Todos los usuarios / Todos los dispositivos) más una anulación opcional del enrutamiento de alertas. Construya el paquete una vez en la nueva sección **Despliegues** y despliéguelo tantas veces como quiera.
+
+### Despliegues: implementación de flota con comprobaciones previas obligatorias
+
+La nueva página **Despliegues** (menú Directivas) despliega un paquete en uno o varios inquilinos — o en grupos completos, contando cada inquilino una sola vez — en un único trabajo. La seguridad forma parte del flujo y no puede omitirse: **Enviar** solo crea el trabajo y ejecuta comprobaciones previas deterministas (consentimiento válido, detección de elementos ya presentes, barrera de inquilinos gestionados, avisos de cambio de destino de asignación); no se escribe nada hasta que usted revisa los resultados y pulsa **Desplegar** en el trabajo verificado. Los elementos ya presentes en un inquilino se omiten por defecto: sobrescribir es una elección explícita, por elemento o en una sola acción. La pestaña **Cola de trabajos** muestra cada trabajo como un registro plegable Trabajo ▸ Inquilino ▸ Configuración con progreso en vivo y resultados por elemento, y sirve además como historial de implementaciones. Las escrituras son prudentes por diseño: una configuración a la vez dentro de cada inquilino, ritmo mesurado entre inquilinos, y el fallo de un inquilino nunca detiene a los demás. Las directivas desplegadas por paquete quedan exactamente como si las hubiera desplegado a mano desde el panel del inquilino — mismos registros, misma supervisión de desviaciones — y cada paso queda en el registro de auditoría.
+
+### Nueva guía en el centro de aprendizaje
+
+Una nueva guía de **Paquetes de configuración** recorre toda la funcionalidad — grupos de inquilinos, paquetes y flujo de despliegue — disponible en los tres idiomas.
+
+---
+
 ## Versión 0.2.32 — 2026-07-01
 
 ### Elija su canal de versiones: Estable o Anticipada

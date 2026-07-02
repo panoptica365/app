@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desplegar paquetes de configuración — Guías de Panoptica365</title>
+<meta name="lesson:title" content="Desplegar paquetes de configuración">
+<meta name="lesson:subtitle" content="Agrupe sus inquilinos, reúna sus políticas de AC y ajustes de Intune en un paquete, y empuje toda una línea base a varios inquilinos en un solo trabajo protegido por comprobaciones.">
+<meta name="lesson:icon" content="rocket">
+<meta name="lesson:last_updated" content="2026-07-02">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guías de Panoptica365</span> <span class="sep">·</span> <span>Desplegar paquetes de configuración</span></div>
+  <h1>Desplegar paquetes de configuración</h1>
+  <p class="dek">Agrupe sus inquilinos, reúna sus políticas de AC y ajustes de Intune en un paquete, y empuje toda una línea base a varios inquilinos en un solo trabajo protegido por comprobaciones.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="La cadena de despliegue de flota en Panoptica365: las listas de Configuración alimentan los grupos de inquilinos, se ensambla un paquete de configuración, una comprobación previa lo verifica y luego se difunde a varios inquilinos.">
+      <defs>
+        <radialGradient id="dbBg" cx="50%" cy="30%" r="90%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="dbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dbBg)"/>
+
+      <g transform="translate(60,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="16" y="16" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="42" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="68" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="142" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="1.5">NIVELES Y REPR.</text>
+      </g>
+      <path d="M192 170 H262" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <g transform="translate(278,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="40" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="78" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="59" cy="74" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">GRUPO</text>
+      </g>
+      <path d="M410 170 H480" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <g transform="translate(496,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <path d="M22 34 L59 18 L96 34 V78 L59 96 L22 78 Z" fill="#102A4C" stroke="#7DD9F9" stroke-width="1.5"/>
+        <path d="M22 34 L59 52 L96 34 M59 52 V96" fill="none" stroke="#5CCBF4" stroke-width="1.2"/>
+        <text x="59" y="142" text-anchor="middle" fill="#7DD9F9" font-size="12" letter-spacing="1.5">PAQUETE</text>
+      </g>
+      <path d="M628 170 H698" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="663" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">comprob.</text>
+
+      <g transform="translate(714,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M40 58 L54 72 L82 40" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">COMPROB.</text>
+      </g>
+      <path d="M846 170 H916" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="881" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">desplegar</text>
+
+      <g transform="translate(1000,170)" font-family="Geist,Inter,sans-serif">
+        <path d="M-70 0 H-24" stroke="#274B72" stroke-width="1.4"/>
+        <path d="M-24 0 C-8 -46 8 -46 20 -52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <path d="M-24 0 C-8 46 8 46 20 52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <g stroke="#5CCBF4" fill="#0E2640">
+          <path d="M30 -74 L52 -61 V-35 H8 V-61 Z"/>
+          <path d="M30 -13 L52 0 V26 H8 V0 Z"/>
+          <path d="M30 48 L52 61 V87 H8 V61 Z"/>
+        </g>
+        <text x="30" y="112" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="600" letter-spacing="1.5">INQUILINOS</text>
+      </g>
+    </svg>
+    <figcaption>La cadena: sus listas de Configuración alimentan los grupos de inquilinos, se ensambla un paquete una vez, una comprobación lo verifica y un solo trabajo lo difunde a los inquilinos.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La sección <strong>Despliegues</strong> (barra lateral → <strong>Despliegues</strong>) es donde deja de configurar los inquilinos uno por uno. Organiza sus inquilinos en <strong>grupos</strong>, ensambla un <strong>paquete de configuración</strong> de políticas de Acceso Condicional (AC) y ajustes de Intune, y luego empuja toda la línea base a un inquilino — o a un grupo entero de inquilinos — en un solo trabajo. El resultado es idéntico a desplegar cada ajuste a mano desde el panel del inquilino, sin los clics de «desplegar, desplegar, desplegar».</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Empiece en Configuración</div>
+    <p>Antes de que nada de esto funcione, vaya a <strong>Configuración</strong> y prepare dos listas: <strong>Niveles de servicio</strong> y <strong>Representantes</strong>. Son las que le permiten etiquetar cada inquilino y crear grupos por nivel o por representante. Gestionar estas listas es una tarea <strong>solo para administradores</strong> — hágalo una vez, desde el principio. Si lo omite, su única opción de agrupación es elegir los inquilinos a mano.</p>
+  </div>
+
+  <h2>Paso 1 — Prepare sus listas y luego etiquete sus inquilinos</h2>
+
+  <p>En la página <strong>Configuración</strong> encontrará dos pequeños gestores: <strong>Niveles de servicio</strong> (p. ej. Bronce, Plata, Oro) y <strong>Representantes</strong> (las personas responsables de las cuentas). Añada las entradas que reflejen cómo funciona realmente su MSP. Después abra la ventana de edición de cada inquilino y asígnele su <strong>Nivel de servicio</strong> y su <strong>Representante</strong> desde los menús desplegables — ambos son opcionales, pero son la materia prima de los grupos dinámicos y del filtrado.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Cuando alguien se va</div>
+    <p>No puede eliminar de forma definitiva un nivel o un representante que todavía esté asignado a inquilinos (o referenciado por la regla de un grupo) — Panoptica lo bloquea y enumera exactamente qué inquilinos y qué grupos lo impiden, de modo que un representante que se marcha no vacíe un grupo en silencio. <strong>Desactive</strong> la entrada en su lugar: desaparece del menú de asignación para el trabajo nuevo, mientras que los inquilinos existentes conservan su asignación hasta que los reasigne.</p>
+  </div>
+
+  <h2>Paso 2 — Cree sus grupos de inquilinos</h2>
+
+  <p>Abra <strong>Despliegues</strong> → la pestaña <strong>Grupos y paquetes</strong>. El panel izquierdo lista sus grupos de inquilinos, cada uno con una insignia que muestra cuántos inquilinos contiene. Haga clic en <strong>Añadir grupo</strong> y elija uno de dos tipos:</p>
+
+  <ul>
+    <li><strong>Manual</strong> — una lista con casillas de todos los inquilinos; marque los que quiera. Ideal para grupos arbitrarios («inquilinos piloto», «los tres que estoy migrando este mes»).</li>
+    <li><strong>Dinámico</strong> — una regla sobre el <strong>nivel de servicio</strong> y/o el <strong>representante</strong>, combinada con <em>Ambos</em> (Y) o <em>Cualquiera</em> (O). Por ejemplo, «nivel Plata <em>y</em> representante = John». La pertenencia es viva: en cuanto incorpora un inquilino que coincide, se une al grupo automáticamente — sin mantenimiento.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel">Un inquilino pertenece a varios grupos</div>
+    <p>Los grupos se solapan a propósito — el mismo inquilino puede ser «nivel Oro», «cuentas de Marie» y «Quebec» a la vez. No hay problema: cuando más adelante despliegue a dos grupos que comparten un inquilino, se despliega <strong>una sola vez</strong>, nunca dos.</p>
+  </div>
+
+  <p><strong>Extra:</strong> una vez creados sus grupos, aparece un filtro <strong>Filtrar por grupo de inquilinos</strong> en los paneles <strong>Mapa de calor</strong> y <strong>Tendencias</strong> (global). Un representante puede ahora ver cómo va solo su cartera de cuentas — y con un grupo dinámico, esa vista se mantiene al día por sí sola.</p>
+
+  <h2>Paso 3 — Ensamble un paquete de configuración</h2>
+
+  <p>El panel derecho son sus <strong>paquetes de configuración</strong>. Un paquete es una receta con nombre — una lista de las políticas de AC y los ajustes de Intune que quiere que tenga un inquilino. Entre en un paquete para editarlo y añada elementos desde sus bibliotecas existentes:</p>
+
+  <ul>
+    <li><strong>Políticas de AC</strong> — elija plantillas de su biblioteca <strong>Políticas de AC</strong>. Para cada una, elija el <strong>Estado</strong> con el que debe llegar: <strong>Solo informe</strong> (el valor por defecto y la opción segura — la política se crea pero no se aplica) o <strong>Activado (aplicado)</strong> (en vigor y bloqueando). Esto se ajusta por política, directamente en el paquete, de modo que decide una vez y no vuelve a tocarlo al desplegar.</li>
+    <li><strong>Ajustes de Intune</strong> — elija plantillas de su biblioteca <strong>Políticas de Intune</strong>. Para cada uno, elija un <strong>destino de asignación</strong>: <em>sin asignación</em>, <em>todos los usuarios</em> o <em>todos los dispositivos</em>. No hay valor por defecto — usted elige deliberadamente.</li>
+  </ul>
+
+  <p>También puede anular el <strong>enrutamiento de alertas</strong> por elemento si este paquete debe notificar de forma distinta al valor por defecto de la plantilla. Nada se despliega mientras construye — un paquete es solo la receta. Constrúyalo, revíselo, reutilícelo en toda la flota.</p>
+
+  <div class="callout insight">
+    <div class="clabel">«Grupo» siempre significa un grupo de inquilinos</div>
+    <p>El destino de los paquetes es deliberadamente amplio — <em>todos los usuarios</em> o <em>todos los dispositivos</em> de un inquilino, nunca un grupo de seguridad <em>dentro</em> de un inquilino. Cuando Panoptica365 dice «grupo», siempre se refiere a un grupo de <strong>inquilinos</strong>. Las excepciones por usuario o por dispositivo se hacen después, en el inquilino individual.</p>
+  </div>
+
+  <h2>Paso 4 — Despliegue (y la comprobación previa que lo protege)</h2>
+
+  <p>Haga clic en <strong>Desplegar…</strong> en la parte superior de la sección. Una breve ventana lo guía:</p>
+
+  <ol>
+    <li>Elija el tipo de destino — un solo <strong>inquilino</strong>, o un <strong>grupo de inquilinos</strong>.</li>
+    <li>Haga una selección múltiple en la lista que aparece (puede elegir varios inquilinos, o varios grupos).</li>
+    <li>Elija el <strong>paquete</strong> que desea desplegar.</li>
+    <li>Haga clic en <strong>Enviar</strong>.</li>
+  </ol>
+
+  <p><strong>Enviar no despliega nada.</strong> Crea el trabajo y ejecuta una <strong>comprobación previa</strong> — un conjunto de verificaciones de solo lectura — y luego lo deja en la pestaña <strong>Cola de trabajos</strong> para revisar los resultados. No se escribe nada en ningún inquilino hasta que pulse explícitamente Desplegar en el trabajo verificado.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="El modelo de seguridad en dos pasos: Enviar crea y comprueba el trabajo, luego Desplegar dispara las escrituras.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="sbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="44" width="176" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="65" fill="#A8E1F8" font-size="13.5" font-weight="600">Enviar</text>
+        <text x="118" y="80" fill="#6B85A6" font-size="10.5">crear + comprobar</text>
+
+        <rect x="272" y="44" width="176" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="65" fill="#C4D4E8" font-size="13">Revisar</text>
+        <text x="360" y="80" fill="#6B85A6" font-size="10.5">omitir / sobrescribir</text>
+
+        <rect x="514" y="44" width="176" height="44" rx="22" fill="#3A1420" stroke="#FF8A98"/>
+        <text x="602" y="65" fill="#FF8A98" font-size="13.5" font-weight="700">Desplegar</text>
+        <text x="602" y="80" fill="#C98A93" font-size="10.5">escritura real</text>
+      </g>
+      <path d="M206 66 H272" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+      <path d="M448 66 H514" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+    </svg>
+    <figcaption>Enviar es económico y seguro; Desplegar es el único botón que cambia los inquilinos. No hay forma de saltarse la comprobación previa.</figcaption>
+  </figure>
+
+  <h3>Qué comprueba la verificación previa</h3>
+
+  <p>Para cada ajuste en cada inquilino, la comprobación previa señala cualquier cosa que merezca su atención <em>antes</em> de la más mínima escritura:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Comprobación</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Consentimiento</strong></td><td>El inquilino debe tener un token de consentimiento de administrador válido, o sus elementos quedan <strong>bloqueados</strong>.</td></tr>
+        <tr><td><strong>Solo gestionados</strong></td><td>Los inquilinos en solo auditoría o desactivados quedan <strong>bloqueados</strong> — un grupo dinámico no puede arrastrar por accidente a un inquilino de solo supervisión a una escritura real.</td></tr>
+        <tr><td><strong>Ya presente</strong></td><td>Si el inquilino ya tiene esa política, el elemento pasa por defecto a <strong>Omitir</strong>. Puede cambiarlo a <strong>Sobrescribir</strong>.</td></tr>
+        <tr><td><strong>Ubicación con nombre</strong></td><td>Para las políticas de AC, verifica que las ubicaciones con nombre del inquilino son legibles (se crean automáticamente al desplegar).</td></tr>
+        <tr><td><strong>Cambio de destino</strong></td><td>Si un ajuste de Intune ya existe con un destino de asignación <em>distinto</em>, la nota se lo advierte en lugar de cambiarlo en silencio.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Use el control masivo — <em>«Acción a tomar si una política o un ajuste ya existe en el inquilino»</em> — para poner de una vez todos los elementos ya presentes en Omitir o Sobrescribir, o ajuste elementos individuales para las excepciones. Cuando esté conforme, el botón <strong>Desplegar</strong> se arma (una confirmación nombra primero el paquete y el número de inquilinos, porque va en serio).</p>
+
+  <div class="callout insight">
+    <div class="clabel">La comprobación puede quedar obsoleta — el motor vuelve a verificar</div>
+    <p>El consentimiento puede caducar entre la comprobación previa y su clic. El motor vuelve a verificar el consentimiento y el estado de gestión <em>también en el momento de la ejecución</em>, de modo que un inquilino que haya cambiado entretanto falla limpiamente en su propio elemento en lugar de hacer fallar todo el trabajo.</p>
+  </div>
+
+  <h2>La Cola de trabajos</h2>
+
+  <p>La pestaña <strong>Cola de trabajos</strong> es su ventana a cada despliegue, en vivo y en el historial. Cada trabajo se despliega en tres niveles — <strong>Trabajo ▸ Inquilino ▸ Ajuste</strong> — con un resumen en cada nivel («6/8 inquilinos OK», «2 elementos con error»). Se actualiza solo mientras se ejecuta.</p>
+
+  <p>Por dentro, el motor es deliberadamente cauteloso: <strong>un trabajo a la vez</strong>, un pequeño número de inquilinos en paralelo, y <strong>estrictamente un ajuste a la vez por inquilino</strong> (AC antes que Intune), cada uno esperando un éxito limpio antes del siguiente. La limitación de Microsoft se gestiona automáticamente con espera.</p>
+
+  <div class="callout insight">
+    <div class="clabel">El éxito parcial es el resultado normal</div>
+    <p>En un grupo de inquilinos con distintos estados de consentimiento y de licencia, algunos elementos fallarán — y eso está bien. Un fallo en el inquilino 4 nunca detiene a los inquilinos 5 al 8. Cada elemento registra su propio éxito o su propio mensaje de error, de modo que la cola se lee como <em>«desplegado en 6, el inquilino 4 falló en 2 políticas de AC — aquí está el porqué».</em> Los trabajos terminados permanecen en la cola durante 90 días como historial de despliegue.</p>
+  </div>
+
+  <p>Una cosa que la comprobación previa <em>no</em> prejuzga es la licencia. Un ajuste de Intune que necesita una licencia que un inquilino no tiene fallará en <strong>su propio elemento</strong> en la ejecución, con el mensaje de capacidad de Microsoft en el error — el resto del trabajo se despliega igual.</p>
+
+  <h2>Qué ocurre después en el inquilino</h2>
+
+  <div class="callout insight">
+    <div class="clabel">Un despliegue por paquete es idéntico a uno manual</div>
+    <p>Todo lo que empuja un paquete se crea exactamente como si lo hubiera desplegado usted mismo desde el panel del inquilino. Las políticas de AC y los ajustes de Intune aparecen en las propias pestañas <strong>Políticas de AC</strong> y <strong>Políticas de Intune</strong> de ese inquilino, la detección de desvíos los protege desde ese instante, y las exenciones se aplican — ninguna diferencia. El paquete es solo el camino rápido.</p>
+  </div>
+
+  <p>Por eso, las <strong>excepciones por inquilino pertenecen al inquilino</strong>, no al paquete. Si un cliente necesita ajustar una política o añadir una exclusión, haga el cambio en su panel después y luego <strong>acepte el desvío</strong> allí. El paquete lo llevó a una línea de salida coherente en toda la flota de una sola vez; las pestañas del inquilino son donde gestiona los casos particulares.</p>
+
+  <h2>Quién puede hacer qué</h2>
+
+  <p>Los <strong>operadores</strong> pueden crear grupos, ensamblar paquetes y ejecutar despliegues — es trabajo de flota del día a día, no una palanca solo para administradores. Los <strong>observadores</strong> pueden mirar pero no disparar. La gestión de las listas <strong>Niveles de servicio</strong> y <strong>Representantes</strong> vive en la página de Configuración, solo para administradores. Cada acción — cambios de grupos y paquetes, y cada despliegue con su lista completa de destinos resuelta — se escribe en el registro de auditoría con su nombre.</p>
+
+  <div class="callout danger">
+    <div class="clabel">El Acceso Condicional puede dejar fuera a un inquilino — esa parte le corresponde a usted</div>
+    <p>Solo informe es el valor por defecto por una razón: una política de AC desplegada en modo aplicado sobre un grupo, con un error dentro, puede dejar fuera a los administradores de cada uno de esos inquilinos a la vez. Panoptica365 le da el cinturón de seguridad — informe primero, una confirmación que nombra los inquilinos, un rastro de auditoría completo — pero no salvará una política que usted no diseñó ni probó. Pruebe sus plantillas de AC en un inquilino en modo informe antes de poner un elemento del paquete en Activado (aplicado) y apuntarlo a un grupo.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">Nota de operación</div>
+    <p>El paquete es un multiplicador de fuerza en ambos sentidos. Desplegado con cuidado, convierte una línea base de seguridad coherente en toda una cartera en un trabajo de cinco minutos. Desplegado sin cuidado, multiplica un solo error por el tamaño del grupo. Trate el primer despliegue de un AC aplicado a cualquier grupo con el mismo respeto que daría a una ventana de cambio en su cliente más grande — porque eso es exactamente lo que es.</p>
+  </div>
+
+</div>
+</body>
+</html>

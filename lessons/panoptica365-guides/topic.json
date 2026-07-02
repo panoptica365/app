@@ -22,6 +22,7 @@
     "access-review",
     "deploy-ca-policies",
     "deploy-intune-policies",
+    "configuration-bundles",
     "monitor-security-settings",
     "email-auth",
     "work-the-alerts",

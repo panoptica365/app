@@ -131,7 +131,8 @@ router.get('/', async (req, res) => {
               default_domain, initial_domain,
               language, mode, audit_expires_at, audit_expiry_warned_at,
               polling_interval, enabled, consented_at,
-              last_polled_at, created_at
+              last_polled_at, created_at,
+              service_tier_id, sales_rep_id
        FROM tenants ORDER BY display_name`
     );
     res.json(tenants);
@@ -175,6 +176,39 @@ router.put('/:id', auth.requireMemberOrAdmin, async (req, res) => {
       mode = b.mode;
     }
 
+    // Org attributes (Tenant Groups Phase 1): presence-based semantics —
+    // the key absent means "unchanged"; an explicit null (or '') clears the
+    // assignment. COALESCE can't express "set to NULL", so these two build
+    // their own SET clauses below. Non-null values must reference an
+    // existing lookup row; assigning a NEW inactive tier/rep is rejected
+    // (soft-deleted entries stay valid only for tenants that already hold them).
+    const orgAttrs = [
+      { key: 'service_tier_id', table: 'service_tiers' },
+      { key: 'sales_rep_id', table: 'sales_reps' },
+    ];
+    const orgSet = [];
+    const orgParams = [];
+    const orgSubmitted = {}; // key → normalized value (null = clear)
+    const orgRefs = {}; // key → lookup row (for the inactive check below)
+    for (const { key, table } of orgAttrs) {
+      if (!(key in b)) continue;
+      let val = b[key];
+      if (val === null || val === '' || val === undefined) {
+        val = null;
+      } else {
+        val = Number(val);
+        if (!Number.isInteger(val) || val <= 0) {
+          return res.status(400).json({ error: `Invalid ${key}` });
+        }
+        const ref = await db.queryOne(`SELECT id, name, active FROM ${table} WHERE id = ?`, [val]);
+        if (!ref) return res.status(400).json({ error: `Unknown ${key}` });
+        orgRefs[key] = ref;
+      }
+      orgSubmitted[key] = val;
+      orgSet.push(`, ${key} = ?`);
+      orgParams.push(val);
+    }
+
     // A3 RBAC (May 9, 2026): operators can edit safe per-tenant fields but
     // NOT lifecycle/licensing/operational-tuning fields. The middleware
     // already admitted them — reject here if they attempted a privileged
@@ -198,10 +232,20 @@ router.put('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     // changed (non-null in body AND different from stored value) produce
     // audit text; full row dump would be noise.
     const prior = await db.queryOne(
-      'SELECT display_name, psa_name, language, mode, audit_expires_at, polling_interval, enabled FROM tenants WHERE id = ?',
+      'SELECT display_name, psa_name, language, mode, audit_expires_at, polling_interval, enabled, service_tier_id, sales_rep_id FROM tenants WHERE id = ?',
       [req.params.id]
     );
     if (!prior) return res.status(404).json({ error: 'Tenant not found' });
+
+    // Inactive (soft-deleted) tier/rep entries stay valid only for tenants
+    // that already hold them — re-saving the same value is fine; assigning
+    // one as a NEW value is rejected. Checked against `prior` (post-404).
+    for (const { key } of orgAttrs) {
+      const ref = orgRefs[key];
+      if (ref && !ref.active && prior[key] !== orgSubmitted[key]) {
+        return res.status(400).json({ error: `Cannot assign an inactive entry (${key})` });
+      }
+    }
 
     // Mode transition logic. UTC_TIMESTAMP() per the project rule (Eastern session
     // tz vs JS UTC otherwise mismatches). Asymmetric by design:
@@ -238,10 +282,11 @@ router.put('/:id', auth.requireMemberOrAdmin, async (req, res) => {
         mode = COALESCE(?, mode),
         polling_interval = COALESCE(?, polling_interval),
         enabled = COALESCE(?, enabled)
+        ${orgSet.join('')}
         ${auditExpiresClause}
         ${auditWarnedClause}
        WHERE id = ?`,
-      [display_name, psa_name, language, mode, polling_interval, enabled, req.params.id]
+      [display_name, psa_name, language, mode, polling_interval, enabled, ...orgParams, req.params.id]
     );
 
     // Bust the tenant-mode cache so subsequent requireManagedMode checks see
@@ -276,6 +321,22 @@ router.put('/:id', auth.requireMemberOrAdmin, async (req, res) => {
     const enabledNormPrior = !!prior.enabled;
     if (enabledNormSubmitted !== null && enabledNormSubmitted !== enabledNormPrior) {
       diffs.push(`enabled: ${enabledNormPrior} → ${enabledNormSubmitted}`);
+    }
+    // Org attribute diffs use the human-readable lookup names, per the
+    // no-internal-IDs-in-operator-copy rule. Best-effort name resolution —
+    // a lookup failure falls back to the raw id rather than dropping the diff.
+    for (const { key, table } of orgAttrs) {
+      if (!(key in orgSubmitted)) continue;
+      if (orgSubmitted[key] === prior[key]) continue;
+      const nameOf = async (id) => {
+        if (id == null) return null;
+        try {
+          const r = await db.queryOne(`SELECT name FROM ${table} WHERE id = ?`, [id]);
+          return r ? r.name : `#${id}`;
+        } catch (_) { return `#${id}`; }
+      };
+      const label = key === 'service_tier_id' ? 'service_tier' : 'sales_rep';
+      diffs.push(`${label}: ${JSON.stringify(await nameOf(prior[key]))} → ${JSON.stringify(await nameOf(orgSubmitted[key]))}`);
     }
 
     if (diffs.length > 0) {

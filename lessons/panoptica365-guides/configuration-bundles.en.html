@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy configuration bundles — Panoptica365 Guides</title>
+<meta name="lesson:title" content="Deploy configuration bundles">
+<meta name="lesson:subtitle" content="Group your tenants, bundle your CA and Intune settings, and push a whole baseline to many tenants in one preflight-guarded job.">
+<meta name="lesson:icon" content="rocket">
+<meta name="lesson:last_updated" content="2026-07-02">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Panoptica365 Guides</span> <span class="sep">·</span> <span>Deploy configuration bundles</span></div>
+  <h1>Deploy configuration bundles</h1>
+  <p class="dek">Group your tenants, bundle your CA and Intune settings, and push a whole baseline to many tenants in one preflight-guarded job.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="The fleet deployment pipeline in Panoptica365: settings lists feed tenant groups, a configuration bundle is assembled, a preflight checks it, then it fans out to many tenants.">
+      <defs>
+        <radialGradient id="dbBg" cx="50%" cy="30%" r="90%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="dbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dbBg)"/>
+
+      <!-- 1: settings lists -->
+      <g transform="translate(60,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="16" y="16" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="42" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="68" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="142" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="1.5">TIERS &amp; REPS</text>
+      </g>
+      <path d="M192 170 H262" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <!-- 2: tenant group -->
+      <g transform="translate(278,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="40" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="78" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="59" cy="74" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">TENANT GROUP</text>
+      </g>
+      <path d="M410 170 H480" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <!-- 3: bundle -->
+      <g transform="translate(496,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <path d="M22 34 L59 18 L96 34 V78 L59 96 L22 78 Z" fill="#102A4C" stroke="#7DD9F9" stroke-width="1.5"/>
+        <path d="M22 34 L59 52 L96 34 M59 52 V96" fill="none" stroke="#5CCBF4" stroke-width="1.2"/>
+        <text x="59" y="142" text-anchor="middle" fill="#7DD9F9" font-size="12" letter-spacing="1.5">BUNDLE</text>
+      </g>
+      <path d="M628 170 H698" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="663" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">preflight</text>
+
+      <!-- 4: preflight gate -->
+      <g transform="translate(714,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M40 58 L54 72 L82 40" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">PREFLIGHT</text>
+      </g>
+      <path d="M846 170 H916" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="881" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">deploy</text>
+
+      <!-- 5: fan-out to tenants -->
+      <g transform="translate(1000,170)" font-family="Geist,Inter,sans-serif">
+        <path d="M-70 0 H-24" stroke="#274B72" stroke-width="1.4"/>
+        <path d="M-24 0 C-8 -46 8 -46 20 -52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <path d="M-24 0 C-8 46 8 46 20 52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <g stroke="#5CCBF4" fill="#0E2640">
+          <path d="M30 -74 L52 -61 V-35 H8 V-61 Z"/>
+          <path d="M30 -13 L52 0 V26 H8 V0 Z"/>
+          <path d="M30 48 L52 61 V87 H8 V61 Z"/>
+        </g>
+        <text x="30" y="112" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="600" letter-spacing="1.5">TENANTS</text>
+      </g>
+    </svg>
+    <figcaption>The pipeline: your Settings lists feed tenant groups, a bundle is assembled once, a preflight checks it, and one job fans it out across the tenants.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>The <strong>Deployments</strong> section (sidebar → <strong>Deployments</strong>) is where you stop configuring tenants one at a time. You organise your tenants into <strong>groups</strong>, assemble a <strong>Configuration Bundle</strong> of Conditional Access policies and Intune settings, then push the whole baseline to a tenant — or a whole group of tenants — in a single job. The result is identical to deploying each setting by hand from the tenant dashboard, minus the deploy-deploy-deploy clicking.</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Start in Settings</div>
+    <p>Before any of this works, go to <strong>Settings</strong> and set up two lists: <strong>Service Tiers</strong> and <strong>Sales Reps</strong>. These are what let you tag each tenant and build groups by tier or by rep. Managing these lists is an <strong>admin-only</strong> job — do it once, up front. Skip it and your only grouping option is picking tenants by hand.</p>
+  </div>
+
+  <h2>Step 1 — Set up your lists, then tag your tenants</h2>
+
+  <p>On the <strong>Settings</strong> page you'll find two small managers: <strong>Service Tiers</strong> (e.g. Bronze, Silver, Gold) and <strong>Sales Reps</strong> (the people who own accounts). Add the entries that match how your MSP actually works. Then open each tenant's edit modal and assign its <strong>Service Tier</strong> and <strong>Sales Rep</strong> from the dropdowns — both are optional, but they're the raw material for dynamic groups and for filtering.</p>
+
+  <div class="callout insight">
+    <div class="clabel">When someone leaves</div>
+    <p>You can't hard-delete a tier or rep that's still assigned to tenants (or referenced by a group rule) — Panoptica blocks it and lists exactly which tenants and groups are in the way, so a departing rep can't silently empty a group. <strong>Deactivate</strong> the entry instead: it disappears from the assign dropdown for new work while existing tenants keep their assignment until you reassign them.</p>
+  </div>
+
+  <h2>Step 2 — Build your tenant groups</h2>
+
+  <p>Open <strong>Deployments</strong> → the <strong>Groups &amp; Bundles</strong> tab. The left pane lists your tenant groups, each with a count badge showing how many tenants it holds. Click <strong>Add Group</strong> and choose one of two kinds:</p>
+
+  <ul>
+    <li><strong>Manual</strong> — a checklist of every tenant; tick the ones you want. Best for arbitrary buckets ("pilot tenants", "the three I'm migrating this month").</li>
+    <li><strong>Dynamic</strong> — a rule over <strong>service tier</strong> and/or <strong>sales rep</strong>, combined with <em>all</em> (AND) or <em>any</em> (OR). For example, "Silver tier <em>and</em> rep = John". Membership is live: as you onboard a tenant that matches, it joins the group automatically — no maintenance.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel">A tenant belongs to many groups</div>
+    <p>Groups overlap on purpose — the same tenant can be "Gold tier", "Marie's accounts" and "Quebec" at once. That's fine: when you later deploy to two groups that share a tenant, it's deployed to <strong>once</strong>, never twice.</p>
+  </div>
+
+  <p><strong>Bonus:</strong> once your groups exist, a <strong>Filter by Tenant Group</strong> dropdown appears on the <strong>Heatmap</strong> and the global <strong>Trends</strong> dashboards. A sales rep can now see how just their book of business is doing — and with a dynamic group, that view stays current on its own.</p>
+
+  <h2>Step 3 — Assemble a Configuration Bundle</h2>
+
+  <p>The right pane is your <strong>Configuration Bundles</strong>. A bundle is a named recipe — a list of the CA policies and Intune settings you want a tenant to have. Click into a bundle to edit it, then add items from your existing libraries:</p>
+
+  <ul>
+    <li><strong>CA policies</strong> — pick templates from your <strong>CA Policies</strong> library. For each one, choose the <strong>State</strong> it should land in: <strong>Report-only</strong> (the default and the safe choice — the policy is created but not enforced) or <strong>On (enforced)</strong> (live and blocking). This is set per policy, right in the bundle, so you decide once and never fiddle with it at deploy time.</li>
+    <li><strong>Intune settings</strong> — pick templates from your <strong>Intune Policies</strong> library. For each one, choose an <strong>assignment target</strong>: <em>no assignment</em>, <em>all users</em>, or <em>all devices</em>. There's no default — you pick deliberately.</li>
+  </ul>
+
+  <p>You can also override the <strong>alert routing</strong> per item if this bundle should notify differently from the template's default. Nothing deploys while you're building — a bundle is just the recipe. Build it, review it, reuse it across the whole fleet.</p>
+
+  <div class="callout insight">
+    <div class="clabel">"Group" always means a group of tenants</div>
+    <p>Bundle targeting is deliberately coarse — <em>all users</em> or <em>all devices</em> in a tenant, never a security group <em>inside</em> a tenant. When Panoptica365 says "group", it always means a group of <strong>tenants</strong>. Per-user or per-device exceptions are made afterwards, in the individual tenant.</p>
+  </div>
+
+  <h2>Step 4 — Deploy (and the preflight that guards it)</h2>
+
+  <p>Click <strong>Deploy…</strong> at the top of the section. A short modal walks you through it:</p>
+
+  <ol>
+    <li>Choose the target kind — a single <strong>tenant</strong>, or a <strong>tenant group</strong>.</li>
+    <li>Multi-select from the list that appears (you can pick several tenants, or several groups).</li>
+    <li>Pick the <strong>bundle</strong> to deploy.</li>
+    <li>Click <strong>Submit</strong>.</li>
+  </ol>
+
+  <p><strong>Submit does not deploy anything.</strong> It builds the job and runs a <strong>preflight</strong> — a dry set of read-only checks — then drops you on the <strong>Job Queue</strong> tab to review the results. Nothing is written to any tenant until you explicitly click Deploy on the armed job.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="The two-step safety model: Submit builds and preflights the job, then Deploy fires the writes.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="sbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="44" width="176" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="65" fill="#A8E1F8" font-size="13.5" font-weight="600">Submit</text>
+        <text x="118" y="80" fill="#6B85A6" font-size="10.5">build + preflight</text>
+
+        <rect x="272" y="44" width="176" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="65" fill="#C4D4E8" font-size="13.5">Review preflight</text>
+        <text x="360" y="80" fill="#6B85A6" font-size="10.5">skip / overwrite</text>
+
+        <rect x="514" y="44" width="176" height="44" rx="22" fill="#3A1420" stroke="#FF8A98"/>
+        <text x="602" y="65" fill="#FF8A98" font-size="13.5" font-weight="700">Deploy</text>
+        <text x="602" y="80" fill="#C98A93" font-size="10.5">writes go live</text>
+      </g>
+      <path d="M206 66 H272" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+      <path d="M448 66 H514" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+    </svg>
+    <figcaption>Submit is cheap and safe; Deploy is the one button that changes tenants. There is no way to skip the preflight.</figcaption>
+  </figure>
+
+  <h3>What the preflight checks</h3>
+
+  <p>For every setting on every tenant, the preflight flags anything worth your attention <em>before</em> a single write:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Check</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Consent</strong></td><td>The tenant must have a valid admin-consent token, or its items are <strong>blocked</strong>.</td></tr>
+        <tr><td><strong>Managed only</strong></td><td>Audit-only or disabled tenants are <strong>blocked</strong> — a dynamic group can't accidentally sweep a monitor-only tenant into a live write.</td></tr>
+        <tr><td><strong>Already present</strong></td><td>If the tenant already has that policy, the item defaults to <strong>skip</strong>. You can switch it to <strong>overwrite</strong>.</td></tr>
+        <tr><td><strong>Named location</strong></td><td>For CA policies, checks that the tenant's named locations are readable (they're auto-created at deploy).</td></tr>
+        <tr><td><strong>Target change</strong></td><td>If an Intune setting already exists with a <em>different</em> assignment target, the note warns you rather than changing it silently.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Use the bulk control — <em>"Action to take if a policy or setting already exists"</em> — to set every already-present item to Skip or Overwrite at once, or set individual items by hand for exceptions. When you're satisfied, the <strong>Deploy</strong> button arms (a confirmation names the bundle and the number of tenants first, because it means it).</p>
+
+  <div class="callout insight">
+    <div class="clabel">Preflight can go stale — the worker re-checks</div>
+    <p>Consent can lapse between the preflight and your click. The engine re-checks consent and managed status <em>at execution time</em> too, so a tenant that changed in the meantime fails its own item gracefully instead of erroring the whole job.</p>
+  </div>
+
+  <h2>The Job Queue</h2>
+
+  <p>The <strong>Job Queue</strong> tab is your window into every deployment, live and historical. Each job is collapsible in three levels — <strong>Job ▸ Tenant ▸ Setting</strong> — with a rollup at each level ("6/8 tenants OK", "2 items failed"). It refreshes on its own while a job runs.</p>
+
+  <p>Under the hood the engine is deliberately careful: <strong>one job at a time</strong>, a small number of tenants in parallel, and <strong>strictly one setting at a time within a tenant</strong> (CA before Intune), each waiting for a clean success before the next. Microsoft throttling is handled automatically with backoff.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Partial success is the normal outcome</div>
+    <p>Across a group of tenants with different consent and licensing states, some items will fail — and that's fine. A failure on tenant 4 never stops tenants 5 through 8. Every item records its own success or its own error message, so the queue reads like <em>"deployed to 6, tenant 4 failed on 2 CA policies — here's why."</em> Finished jobs stay in the queue for 90 days as a deployment history.</p>
+  </div>
+
+  <p>One thing the preflight does <em>not</em> pre-judge is licensing. An Intune setting that needs a SKU a tenant doesn't have will fail <strong>its own item</strong> at execution, with Microsoft's capability message in the error — the rest of the job still lands.</p>
+
+  <h2>What happens in the tenant afterward</h2>
+
+  <div class="callout insight">
+    <div class="clabel">A bundle deploy is identical to a hand deploy</div>
+    <p>Everything a bundle pushes is created exactly as if you'd deployed it yourself from the tenant dashboard. The CA policies and Intune settings appear on that tenant's own <strong>CA Policies</strong> and <strong>Intune Policies</strong> tabs, drift detection guards them from that moment, and exemptions apply — no difference at all. The bundle is just the fast way in.</p>
+  </div>
+
+  <p>Because of that, <strong>per-tenant exceptions belong in the tenant</strong>, not in the bundle. If one customer needs a policy tweaked or an exclusion added, make the change in their tenant dashboard afterward, then <strong>accept the drift</strong> there. The bundle got you to a consistent starting line across the fleet in one shot; the tenant tabs are where you handle the one-offs.</p>
+
+  <h2>Who can do what</h2>
+
+  <p><strong>Operators</strong> can build groups, assemble bundles, and run deployments — this is day-to-day fleet work, not an admin-only lever. <strong>Viewers</strong> can look but not fire. Managing the <strong>Service Tier</strong> and <strong>Sales Rep</strong> lists lives on the admin-only Settings page. Every action — group and bundle changes, and every deployment with its full resolved target list — is written to the audit log with your name on it.</p>
+
+  <div class="callout danger">
+    <div class="clabel">Conditional Access can lock a tenant out — that part is on you</div>
+    <p>Report-only is the default for a reason: a CA policy deployed enforced across a group, with a mistake in it, can lock admins out of every one of those tenants at once. Panoptica365 gives you the seatbelt — report-only first, a named-tenant confirmation, a full audit trail — but it will not save a policy you didn't design and test. Prove your CA templates on one tenant in report-only before you set a bundle item to On (enforced) and aim it at a group.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">Operating note</div>
+    <p>The bundle is a force multiplier in both directions. Deployed carefully, it makes a consistent security baseline across an entire book of business a five-minute job. Deployed carelessly, it multiplies a single mistake by the size of the group. Treat the first enforced-CA deploy to any group with the same respect you'd give a change window on your biggest customer — because that's effectively what it is.</p>
+  </div>
+
+</div>
+</body>
+</html>

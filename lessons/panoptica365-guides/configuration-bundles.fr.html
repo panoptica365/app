@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Déployer des ensembles de configuration — Guides Panoptica365</title>
+<meta name="lesson:title" content="Déployer des ensembles de configuration">
+<meta name="lesson:subtitle" content="Regroupez vos locataires, réunissez vos politiques AC et paramètres Intune en un ensemble, et poussez toute une ligne de base vers plusieurs locataires en une seule tâche protégée par des vérifications.">
+<meta name="lesson:icon" content="rocket">
+<meta name="lesson:last_updated" content="2026-07-02">
+<link rel="stylesheet" href="../learn-base.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow"><span>Guides Panoptica365</span> <span class="sep">·</span> <span>Déployer des ensembles de configuration</span></div>
+  <h1>Déployer des ensembles de configuration</h1>
+  <p class="dek">Regroupez vos locataires, réunissez vos politiques AC et paramètres Intune en un ensemble, et poussez toute une ligne de base vers plusieurs locataires en une seule tâche protégée par des vérifications.</p>
+
+  <figure>
+    <svg class="hero" viewBox="0 0 1120 340" role="img" aria-label="Le pipeline de déploiement de flotte dans Panoptica365 : les listes des paramètres alimentent les groupes de locataires, un ensemble de configuration est assemblé, une vérification préalable le contrôle, puis il est diffusé vers plusieurs locataires.">
+      <defs>
+        <radialGradient id="dbBg" cx="50%" cy="30%" r="90%"><stop offset="0%" stop-color="#15325A"/><stop offset="100%" stop-color="#071221"/></radialGradient>
+        <marker id="dbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker>
+      </defs>
+      <rect width="1120" height="340" fill="url(#dbBg)"/>
+
+      <g transform="translate(60,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <rect x="16" y="16" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="42" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <rect x="16" y="68" width="86" height="16" rx="4" fill="#102A4C" stroke="#2A6F9E"/>
+        <text x="59" y="142" text-anchor="middle" fill="#6B85A6" font-size="12" letter-spacing="1.5">NIVEAUX &amp; REPR.</text>
+      </g>
+      <path d="M192 170 H262" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <g transform="translate(278,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <circle cx="40" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="78" cy="40" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <circle cx="59" cy="74" r="13" fill="#102A4C" stroke="#5CCBF4"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">GROUPE</text>
+      </g>
+      <path d="M410 170 H480" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+
+      <g transform="translate(496,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2236" stroke="#33527A"/>
+        <path d="M22 34 L59 18 L96 34 V78 L59 96 L22 78 Z" fill="#102A4C" stroke="#7DD9F9" stroke-width="1.5"/>
+        <path d="M22 34 L59 52 L96 34 M59 52 V96" fill="none" stroke="#5CCBF4" stroke-width="1.2"/>
+        <text x="59" y="142" text-anchor="middle" fill="#7DD9F9" font-size="12" letter-spacing="1.5">ENSEMBLE</text>
+      </g>
+      <path d="M628 170 H698" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="663" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">vérif.</text>
+
+      <g transform="translate(714,112)" font-family="Geist,Inter,sans-serif">
+        <rect x="0" y="-2" width="118" height="120" rx="12" fill="#0E2640" stroke="#2A6F9E"/>
+        <path d="M40 58 L54 72 L82 40" fill="none" stroke="#2EE8A0" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="59" y="142" text-anchor="middle" fill="#A8E1F8" font-size="12" letter-spacing="1.5">VÉRIF.</text>
+      </g>
+      <path d="M846 170 H916" stroke="#335F92" stroke-width="2.5" marker-end="url(#dbArr)"/>
+      <text x="881" y="158" text-anchor="middle" fill="#52708F" font-family="Geist,Inter,sans-serif" font-size="12">déployer</text>
+
+      <g transform="translate(1000,170)" font-family="Geist,Inter,sans-serif">
+        <path d="M-70 0 H-24" stroke="#274B72" stroke-width="1.4"/>
+        <path d="M-24 0 C-8 -46 8 -46 20 -52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <path d="M-24 0 C-8 46 8 46 20 52" stroke="#274B72" stroke-width="1.4" fill="none"/>
+        <g stroke="#5CCBF4" fill="#0E2640">
+          <path d="M30 -74 L52 -61 V-35 H8 V-61 Z"/>
+          <path d="M30 -13 L52 0 V26 H8 V0 Z"/>
+          <path d="M30 48 L52 61 V87 H8 V61 Z"/>
+        </g>
+        <text x="30" y="112" text-anchor="middle" fill="#7DD9F9" font-size="12" font-weight="600" letter-spacing="1.5">LOCATAIRES</text>
+      </g>
+    </svg>
+    <figcaption>Le pipeline : vos listes de Paramètres alimentent les groupes de locataires, un ensemble est assemblé une fois, une vérification le contrôle, puis une seule tâche le diffuse vers les locataires.</figcaption>
+  </figure>
+
+  <div class="lead">
+  <p>La section <strong>Déploiements</strong> (barre latérale → <strong>Déploiements</strong>) est l'endroit où vous cessez de configurer les locataires un à un. Vous organisez vos locataires en <strong>groupes</strong>, vous assemblez un <strong>ensemble de configuration</strong> de politiques d'Accès conditionnel (AC) et de paramètres Intune, puis vous poussez toute la ligne de base vers un locataire — ou vers un groupe entier de locataires — en une seule tâche. Le résultat est identique à un déploiement manuel de chaque paramètre depuis le tableau de bord du locataire, sans les clics « déployer, déployer, déployer ».</p>
+  </div>
+
+  <div class="callout caution">
+    <div class="clabel">Commencez par les Paramètres</div>
+    <p>Avant que tout cela ne fonctionne, allez dans <strong>Paramètres</strong> et configurez deux listes : <strong>Niveaux de service</strong> et <strong>Représentants</strong>. Ce sont elles qui vous permettent d'étiqueter chaque locataire et de bâtir des groupes par niveau ou par représentant. La gestion de ces listes est réservée aux <strong>administrateurs</strong> — faites-le une fois, dès le départ. Sans cela, votre seule option de regroupement est de choisir les locataires à la main.</p>
+  </div>
+
+  <h2>Étape 1 — Configurez vos listes, puis étiquetez vos locataires</h2>
+
+  <p>Sur la page <strong>Paramètres</strong>, vous trouverez deux petits gestionnaires : <strong>Niveaux de service</strong> (p. ex. Bronze, Argent, Or) et <strong>Représentants</strong> (les personnes responsables des comptes). Ajoutez les entrées qui correspondent au fonctionnement réel de votre MSP. Ouvrez ensuite la fenêtre d'édition de chaque locataire et attribuez-lui son <strong>Niveau de service</strong> et son <strong>Représentant</strong> à partir des menus déroulants — les deux sont facultatifs, mais ce sont la matière première des groupes dynamiques et du filtrage.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Quand quelqu'un part</div>
+    <p>Vous ne pouvez pas supprimer définitivement un niveau ou un représentant encore attribué à des locataires (ou référencé par une règle de groupe) — Panoptica le bloque et énumère exactement quels locataires et quels groupes font obstacle, afin qu'un représentant qui s'en va ne vide pas un groupe en silence. <strong>Désactivez</strong> plutôt l'entrée : elle disparaît du menu d'attribution pour les nouvelles opérations, tandis que les locataires existants conservent leur attribution jusqu'à ce que vous les réassigniez.</p>
+  </div>
+
+  <h2>Étape 2 — Bâtissez vos groupes de locataires</h2>
+
+  <p>Ouvrez <strong>Déploiements</strong> → l'onglet <strong>Groupes et ensembles</strong>. Le volet de gauche liste vos groupes de locataires, chacun avec un badge indiquant le nombre de locataires qu'il contient. Cliquez sur <strong>Ajouter un groupe</strong> et choisissez l'un des deux types :</p>
+
+  <ul>
+    <li><strong>Manuel</strong> — une liste à cocher de tous les locataires; cochez ceux que vous voulez. Idéal pour des regroupements arbitraires (« locataires pilotes », « les trois que je migre ce mois-ci »).</li>
+    <li><strong>Dynamique</strong> — une règle sur le <strong>niveau de service</strong> et/ou le <strong>représentant</strong>, combinée avec <em>Les deux</em> (ET) ou <em>L'un ou l'autre</em> (OU). Par exemple, « niveau Argent <em>et</em> représentant = John ». L'appartenance est vivante : dès que vous intégrez un locataire correspondant, il rejoint le groupe automatiquement — aucun entretien.</li>
+  </ul>
+
+  <div class="callout insight">
+    <div class="clabel">Un locataire appartient à plusieurs groupes</div>
+    <p>Les groupes se chevauchent volontairement — le même locataire peut être « niveau Or », « comptes de Marie » et « Québec » à la fois. C'est très bien : lorsque vous déploierez plus tard vers deux groupes qui partagent un locataire, il n'est déployé qu'<strong>une seule fois</strong>, jamais deux.</p>
+  </div>
+
+  <p><strong>Bonus :</strong> une fois vos groupes créés, un filtre <strong>Filtrer par groupe de locataires</strong> apparaît sur les tableaux de bord <strong>Carte thermique</strong> et <strong>Tendances</strong> (global). Un représentant peut désormais voir comment se porte uniquement son portefeuille de comptes — et avec un groupe dynamique, cette vue reste à jour toute seule.</p>
+
+  <h2>Étape 3 — Assemblez un ensemble de configuration</h2>
+
+  <p>Le volet de droite, ce sont vos <strong>ensembles de configuration</strong>. Un ensemble est une recette nommée — une liste des politiques AC et des paramètres Intune que vous voulez voir dans un locataire. Cliquez sur un ensemble pour l'éditer, puis ajoutez des éléments depuis vos bibliothèques existantes :</p>
+
+  <ul>
+    <li><strong>Politiques AC</strong> — choisissez des modèles dans votre bibliothèque <strong>Politiques AC</strong>. Pour chacun, choisissez l'<strong>État</strong> dans lequel il doit arriver : <strong>Rapport uniquement</strong> (la valeur par défaut et le choix sûr — la politique est créée mais non appliquée) ou <strong>Activé (appliqué)</strong> (en vigueur et bloquant). Cela se règle par politique, directement dans l'ensemble, de sorte que vous décidez une fois et n'y touchez plus au moment du déploiement.</li>
+    <li><strong>Paramètres Intune</strong> — choisissez des modèles dans votre bibliothèque <strong>Politiques Intune</strong>. Pour chacun, choisissez une <strong>cible d'attribution</strong> : <em>aucune attribution</em>, <em>tous les utilisateurs</em> ou <em>tous les appareils</em>. Il n'y a pas de valeur par défaut — vous choisissez délibérément.</li>
+  </ul>
+
+  <p>Vous pouvez aussi remplacer le <strong>routage des alertes</strong> par élément si cet ensemble doit notifier différemment de la valeur par défaut du modèle. Rien ne se déploie pendant que vous construisez — un ensemble n'est que la recette. Construisez-le, révisez-le, réutilisez-le sur toute la flotte.</p>
+
+  <div class="callout insight">
+    <div class="clabel">« Groupe » signifie toujours un groupe de locataires</div>
+    <p>Le ciblage des ensembles est volontairement grossier — <em>tous les utilisateurs</em> ou <em>tous les appareils</em> d'un locataire, jamais un groupe de sécurité <em>à l'intérieur</em> d'un locataire. Quand Panoptica365 dit « groupe », il s'agit toujours d'un groupe de <strong>locataires</strong>. Les exceptions par utilisateur ou par appareil se font ensuite, dans le locataire individuel.</p>
+  </div>
+
+  <h2>Étape 4 — Déployez (et la vérification préalable qui la protège)</h2>
+
+  <p>Cliquez sur <strong>Déployer…</strong> en haut de la section. Une courte fenêtre vous guide :</p>
+
+  <ol>
+    <li>Choisissez le type de cible — un seul <strong>locataire</strong>, ou un <strong>groupe de locataires</strong>.</li>
+    <li>Faites une sélection multiple dans la liste qui apparaît (vous pouvez choisir plusieurs locataires, ou plusieurs groupes).</li>
+    <li>Choisissez l'<strong>ensemble</strong> à déployer.</li>
+    <li>Cliquez sur <strong>Soumettre</strong>.</li>
+  </ol>
+
+  <p><strong>Soumettre ne déploie rien.</strong> Cela crée la tâche et exécute une <strong>vérification préalable</strong> — une série de contrôles en lecture seule — puis vous dépose sur l'onglet <strong>File des tâches</strong> pour examiner les résultats. Rien n'est écrit dans aucun locataire tant que vous n'avez pas explicitement cliqué sur Déployer sur la tâche vérifiée.</p>
+
+  <figure class="figsmall">
+    <svg class="diagram" viewBox="0 0 720 130" role="img" aria-label="Le modèle de sécurité en deux temps : Soumettre crée et vérifie la tâche, puis Déployer déclenche les écritures.">
+      <rect width="720" height="130" rx="12" fill="#071221" stroke="#1F3C5C"/>
+      <defs><marker id="sbArr" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="12" refX="17" refY="6" orient="auto"><path d="M0 0 L14 6 L0 12 z" fill="#335F92"/></marker></defs>
+      <g font-family="Geist,Inter,sans-serif" text-anchor="middle">
+        <rect x="30" y="44" width="176" height="44" rx="22" fill="#0E2640" stroke="#2A6F9E"/>
+        <text x="118" y="65" fill="#A8E1F8" font-size="13.5" font-weight="600">Soumettre</text>
+        <text x="118" y="80" fill="#6B85A6" font-size="10.5">créer + vérifier</text>
+
+        <rect x="272" y="44" width="176" height="44" rx="22" fill="#0E2236" stroke="#33527A"/>
+        <text x="360" y="65" fill="#C4D4E8" font-size="13">Examiner</text>
+        <text x="360" y="80" fill="#6B85A6" font-size="10.5">ignorer / écraser</text>
+
+        <rect x="514" y="44" width="176" height="44" rx="22" fill="#3A1420" stroke="#FF8A98"/>
+        <text x="602" y="65" fill="#FF8A98" font-size="13.5" font-weight="700">Déployer</text>
+        <text x="602" y="80" fill="#C98A93" font-size="10.5">écriture réelle</text>
+      </g>
+      <path d="M206 66 H272" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+      <path d="M448 66 H514" stroke="#335F92" stroke-width="2" marker-end="url(#sbArr)"/>
+    </svg>
+    <figcaption>Soumettre est économique et sans risque; Déployer est le seul bouton qui change les locataires. Il n'existe aucun moyen de sauter la vérification préalable.</figcaption>
+  </figure>
+
+  <h3>Ce que vérifie le contrôle préalable</h3>
+
+  <p>Pour chaque paramètre sur chaque locataire, la vérification préalable signale ce qui mérite votre attention <em>avant</em> la moindre écriture :</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Vérification</th><th>Ce qu'elle fait</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Consentement</strong></td><td>Le locataire doit disposer d'un jeton de consentement administrateur valide, sinon ses éléments sont <strong>bloqués</strong>.</td></tr>
+        <tr><td><strong>Gérés seulement</strong></td><td>Les locataires en audit seul ou désactivés sont <strong>bloqués</strong> — un groupe dynamique ne peut pas balayer par accident un locataire en surveillance seule vers une écriture réelle.</td></tr>
+        <tr><td><strong>Déjà présent</strong></td><td>Si le locataire possède déjà cette politique, l'élément passe par défaut à <strong>Ignorer</strong>. Vous pouvez le basculer sur <strong>Écraser</strong>.</td></tr>
+        <tr><td><strong>Emplacement nommé</strong></td><td>Pour les politiques AC, vérifie que les emplacements nommés du locataire sont lisibles (ils sont créés automatiquement au déploiement).</td></tr>
+        <tr><td><strong>Changement de cible</strong></td><td>Si un paramètre Intune existe déjà avec une cible d'attribution <em>différente</em>, la note vous en avertit au lieu de la modifier en silence.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Utilisez le contrôle groupé — <em>« Action à prendre si une stratégie ou un paramètre existe déjà sur le locataire »</em> — pour régler d'un coup tous les éléments déjà présents sur Ignorer ou Écraser, ou réglez des éléments individuellement pour les exceptions. Lorsque vous êtes satisfait, le bouton <strong>Déployer</strong> s'arme (une confirmation nomme d'abord l'ensemble et le nombre de locataires, parce qu'elle est sérieuse).</p>
+
+  <div class="callout insight">
+    <div class="clabel">La vérification peut vieillir — le moteur re-contrôle</div>
+    <p>Le consentement peut expirer entre la vérification et votre clic. Le moteur re-contrôle le consentement et le statut de gestion <em>aussi au moment de l'exécution</em>, de sorte qu'un locataire qui a changé entre-temps échoue proprement sur son propre élément au lieu de faire échouer toute la tâche.</p>
+  </div>
+
+  <h2>La File des tâches</h2>
+
+  <p>L'onglet <strong>File des tâches</strong> est votre fenêtre sur chaque déploiement, en direct comme dans l'historique. Chaque tâche se déplie sur trois niveaux — <strong>Tâche ▸ Locataire ▸ Paramètre</strong> — avec un récapitulatif à chaque niveau (« 6/8 locataires OK », « 2 éléments en échec »). Elle se rafraîchit d'elle-même pendant l'exécution.</p>
+
+  <p>Sous le capot, le moteur est délibérément prudent : <strong>une tâche à la fois</strong>, un petit nombre de locataires en parallèle, et <strong>strictement un paramètre à la fois par locataire</strong> (AC avant Intune), chacun attendant un succès net avant le suivant. La limitation de débit de Microsoft est gérée automatiquement avec temporisation.</p>
+
+  <div class="callout insight">
+    <div class="clabel">Le succès partiel est le résultat normal</div>
+    <p>Sur un groupe de locataires aux états de consentement et de licence différents, certains éléments échoueront — et c'est très bien. Un échec sur le locataire 4 n'arrête jamais les locataires 5 à 8. Chaque élément enregistre son propre succès ou son propre message d'erreur, si bien que la file se lit comme <em>« déployé sur 6, le locataire 4 a échoué sur 2 politiques AC — voici pourquoi ».</em> Les tâches terminées restent dans la file pendant 90 jours comme historique de déploiement.</p>
+  </div>
+
+  <p>Une chose que la vérification préalable ne pré-juge <em>pas</em>, c'est la licence. Un paramètre Intune qui exige une licence qu'un locataire n'a pas échouera sur <strong>son propre élément</strong> à l'exécution, avec le message de capacité de Microsoft dans l'erreur — le reste de la tâche se déploie quand même.</p>
+
+  <h2>Ce qui se passe ensuite dans le locataire</h2>
+
+  <div class="callout insight">
+    <div class="clabel">Un déploiement par ensemble est identique à un déploiement manuel</div>
+    <p>Tout ce qu'un ensemble pousse est créé exactement comme si vous l'aviez déployé vous-même depuis le tableau de bord du locataire. Les politiques AC et les paramètres Intune apparaissent dans les propres onglets <strong>Politiques AC</strong> et <strong>Politiques Intune</strong> de ce locataire, la détection de dérive les protège dès cet instant, et les exemptions s'appliquent — aucune différence. L'ensemble n'est que le chemin rapide.</p>
+  </div>
+
+  <p>C'est pourquoi les <strong>exceptions par locataire appartiennent au locataire</strong>, et non à l'ensemble. Si un client a besoin d'un ajustement de politique ou d'une exclusion, faites le changement dans son tableau de bord ensuite, puis <strong>acceptez la dérive</strong> là. L'ensemble vous a amené à une ligne de départ cohérente sur toute la flotte d'un seul coup; les onglets du locataire sont l'endroit où vous gérez les cas particuliers.</p>
+
+  <h2>Qui peut faire quoi</h2>
+
+  <p>Les <strong>opérateurs</strong> peuvent bâtir des groupes, assembler des ensembles et lancer des déploiements — c'est du travail de flotte au quotidien, pas un levier réservé aux administrateurs. Les <strong>lecteurs</strong> peuvent regarder sans déclencher. La gestion des listes <strong>Niveaux de service</strong> et <strong>Représentants</strong> se trouve sur la page Paramètres, réservée aux administrateurs. Chaque action — modifications de groupes et d'ensembles, et chaque déploiement avec sa liste de cibles résolue au complet — est inscrite au journal d'audit à votre nom.</p>
+
+  <div class="callout danger">
+    <div class="clabel">L'Accès conditionnel peut verrouiller un locataire — cette partie vous revient</div>
+    <p>Rapport uniquement est la valeur par défaut pour une raison : une politique AC déployée en mode appliqué sur un groupe, avec une erreur dedans, peut verrouiller les administrateurs hors de chacun de ces locataires d'un seul coup. Panoptica365 vous donne la ceinture de sécurité — rapport d'abord, une confirmation nommant les locataires, une piste d'audit complète — mais il ne sauvera pas une politique que vous n'avez pas conçue et testée. Éprouvez vos modèles AC sur un locataire en mode rapport avant de régler un élément d'ensemble sur Activé (appliqué) et de le pointer vers un groupe.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="clabel">Note d'exploitation</div>
+    <p>L'ensemble est un multiplicateur de force dans les deux sens. Déployé avec soin, il fait d'une ligne de base de sécurité cohérente sur tout un portefeuille l'affaire de cinq minutes. Déployé sans soin, il multiplie une seule erreur par la taille du groupe. Traitez le premier déploiement d'une AC appliquée vers un groupe avec le même respect que vous accorderiez à une fenêtre de changement chez votre plus gros client — parce que c'est exactement ce que c'est.</p>
+  </div>
+
+</div>
+</body>
+</html>

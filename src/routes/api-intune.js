@@ -1041,20 +1041,51 @@ router.delete('/templates/:id', auth.requireAdmin, async (req, res) => {
 // A3 (May 9, 2026): operator — per-tenant deployment.
 router.post('/deploy', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const { templateId, tenantId, assignment_target: reqAssignTarget } = req.body;
+    const r = await deployIntuneTemplateCore({
+      templateId: req.body.templateId,
+      tenantId: req.body.tenantId,
+      assignmentTarget: req.body.assignment_target,
+      deployedBy: req.session.user?.email || 'unknown',
+      actorContext: changeLog.captureActorContext(req),
+    });
+    res.status(r.httpStatus).json(r.body);
+  } catch (err) {
+    console.error('[Intune:Deploy] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * Core Intune deploy engine — req/res-free so the bundle-deploy worker can
+ * reuse the EXACT code path the dashboard deploy button uses (a bundle-
+ * deployed policy must be byte-identical to a hand-deployed one). Extracted
+ * verbatim from the POST /deploy handler for Tenant Groups & Configuration
+ * Bundles Phase 3 (2026-07-01); behavior unchanged — same smart create/
+ * update/link logic, assignment posting, verification, and audit trail.
+ *
+ * @param {object} p
+ * @param {number} p.templateId          intune_templates.id
+ * @param {number} p.tenantId            tenants.id (Panoptica internal id)
+ * @param {string} [p.assignmentTarget]  'none'|'all_users'|'all_devices' override
+ * @param {string} [p.deployedBy]        operator identity for records/audit
+ * @param {object} [p.actorContext]      changeLog.captureActorContext() shape
+ * @returns {Promise<{httpStatus:number, body:object}>} same payload the HTTP route returns
+ */
+async function deployIntuneTemplateCore({ templateId, tenantId, assignmentTarget, deployedBy = 'unknown', actorContext = {} }) {
+    const reqAssignTarget = assignmentTarget;
     if (!templateId || !tenantId)
-      return res.status(400).json({ error: 'templateId and tenantId are required' });
+      return { httpStatus: 400, body: { error: 'templateId and tenantId are required' } };
 
     const template = await db.queryOne('SELECT * FROM intune_templates WHERE id = ?', [templateId]);
-    if (!template) return res.status(404).json({ error: 'Template not found' });
+    if (!template) return { httpStatus: 404, body: { error: 'Template not found' } };
 
     const tenant = await db.queryOne('SELECT id, tenant_id, display_name FROM tenants WHERE id = ?', [tenantId]);
-    if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
+    if (!tenant) return { httpStatus: 404, body: { error: 'Tenant not found' } };
 
     const policyData = JSON.parse(template.policy_json);
     const azureTenantId = tenant.tenant_id;
     const pType = getPolicyType(template.policy_type);
-    if (!pType) return res.status(400).json({ error: `Unsupported policy type: ${template.policy_type}` });
+    if (!pType) return { httpStatus: 400, body: { error: `Unsupported policy type: ${template.policy_type}` } };
 
     // Check for existing deployment record (any active status — pending, deployed, or failed)
     const existingDeployment = await db.queryOne(
@@ -1113,13 +1144,13 @@ router.post('/deploy', auth.requireMemberOrAdmin, async (req, res) => {
       deploymentId = existingDeployment.id;
       await db.execute(
         `UPDATE intune_deployments SET status = 'pending', error_message = NULL, deployed_by = ? WHERE id = ?`,
-        [req.session.user?.email || 'unknown', deploymentId]
+        [deployedBy, deploymentId]
       );
     } else {
       deploymentId = await db.insert(
         `INSERT INTO intune_deployments (template_id, tenant_id, status, deployed_by)
          VALUES (?, ?, 'pending', ?)`,
-        [templateId, tenantId, req.session.user?.email || 'unknown']
+        [templateId, tenantId, deployedBy]
       );
     }
 
@@ -1443,8 +1474,8 @@ router.post('/deploy', auth.requireMemberOrAdmin, async (req, res) => {
           description,
           templateKey: action === 'updated' ? 'intune_push.update' : 'intune_push.create',
           templateParams: { policyName: templateName, policyType: template.policy_type, assignmentTarget: assignSuffix.replace(/^[^A-Za-z]+/, '') || 'none' },
-          createdBy: req.session.user?.email || 'unknown',
-          ...changeLog.captureActorContext(req),
+          createdBy: deployedBy,
+          ...actorContext,
         });
       }
 
@@ -1456,19 +1487,22 @@ router.post('/deploy', auth.requireMemberOrAdmin, async (req, res) => {
         assignmentStatus === 'failed' ? 207 :
         200;
 
-      res.status(httpStatus).json({
-        success: verification.ok && assignmentStatus !== 'failed',
-        deploymentId,
-        deployedPolicyId,
-        action,
-        assignment_target: effectiveTarget,
-        assignment_status: assignmentStatus,
-        assignment_error: assignmentError,
-        verified: verification.ok,
-        verification_error: verification.ok ? null : verification.error,
-        warnings,
-        message: actionMessages[action],
-      });
+      return {
+        httpStatus,
+        body: {
+          success: verification.ok && assignmentStatus !== 'failed',
+          deploymentId,
+          deployedPolicyId,
+          action,
+          assignment_target: effectiveTarget,
+          assignment_status: assignmentStatus,
+          assignment_error: assignmentError,
+          verified: verification.ok,
+          verification_error: verification.ok ? null : verification.error,
+          warnings,
+          message: actionMessages[action],
+        },
+      };
 
     } catch (deployErr) {
       console.error(`[Intune:Deploy] Failed: ${deployErr.message}`);
@@ -1476,14 +1510,11 @@ router.post('/deploy', auth.requireMemberOrAdmin, async (req, res) => {
         `UPDATE intune_deployments SET status = 'failed', error_message = ? WHERE id = ?`,
         [deployErr.message, deploymentId]
       );
-      res.status(502).json({ success: false, deploymentId, error: deployErr.message });
+      return { httpStatus: 502, body: { success: false, deploymentId, error: deployErr.message } };
     }
-
-  } catch (err) {
-    console.error('[Intune:Deploy] Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+}
+// Reused by the bundle-deploy worker (Phase 3) — same code path as the button.
+router.deployIntuneTemplateCore = deployIntuneTemplateCore;
 
 // ═══════════════════════════════════════════
 // DRIFT DETECTION

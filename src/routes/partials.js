@@ -80,6 +80,10 @@ router.get('/alert-policies', servePartial('alert-policies.html'));
 // ─── CA Exemptions (Phase 3) ───
 router.get('/exemptions', servePartial('exemptions.html'));
 
+// ─── Deployment (Tenant Groups & Configuration Bundles) ───
+// All roles — viewers read-only; mutations gated by API RBAC.
+router.get('/deployment', servePartial('deployment.html'));
+
 // ─── Settings (Admin-only) ───
 // A3 (May 9, 2026): admin-only — System section page partial.
 router.get('/settings', auth.requireAdmin, servePartial('settings.html'));

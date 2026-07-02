@@ -421,22 +421,46 @@
   // Lifecycle
   // ════════════════════════════════════════════════════════════════
 
-  async function init(params) {
-    state = null;
-    expanded.clear();
+  // Tenant-group filter (Phase 1 rider): null = whole fleet.
+  let currentGroup = null;
+  let loadSeq = 0; // guards out-of-order responses when the filter is flipped quickly
+
+  async function load() {
+    const seq = ++loadSeq;
     const root = document.getElementById('hm-content');
     if (root) root.innerHTML = `<div class="hm-loading">${esc(tt('heatmap.loading', 'Building heatmap…'))}</div>`;
-
     try {
-      const res = await fetch('/api/heatmap', { credentials: 'same-origin' });
+      const url = '/api/heatmap' + (currentGroup ? `?group=${encodeURIComponent(currentGroup)}` : '');
+      const res = await fetch(url, { credentials: 'same-origin' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      state = await res.json();
+      const data = await res.json();
+      if (seq !== loadSeq) return; // a newer load superseded this one
+      state = data;
     } catch (e) {
+      if (seq !== loadSeq) return;
+      state = null;
       if (root) root.innerHTML = `<div class="hm-error">${esc(tt('heatmap.load_failed', 'Could not load the heatmap.'))} (${esc(e.message)})</div>`;
       return;
     }
-
     render();
+  }
+
+  async function init(params) {
+    state = null;
+    expanded.clear();
+    currentGroup = null;
+
+    // Mount the shared group-filter dropdown (fail-soft — absent until a
+    // group exists; a load failure leaves the page exactly as before).
+    const filterHost = document.getElementById('hm-group-filter');
+    if (filterHost && window.PanopticaGroupFilter) {
+      window.PanopticaGroupFilter.mount(filterHost, {
+        value: null,
+        onChange: (groupId) => { currentGroup = groupId; load(); },
+      });
+    }
+
+    await load();
 
     if (!listenersBound) {
       document.addEventListener('click', onClick);

@@ -1,0 +1,157 @@
+<!--
+  Deployment — Tenant Groups & Configuration Bundles (Phase 1: groups only).
+  Two-pane shell: left = tenant groups (live), right = configuration bundles
+  (placeholder until Phase 2). Styles scoped here, theme-variable driven,
+  same convention as heatmap.html.
+-->
+<style>
+  .dep-wrap { padding: 4px 2px 40px; font-family: var(--font-body); color: var(--p-text); }
+  .dep-caption { font-size: .8rem; color: var(--p-text-muted); margin: -8px 0 16px; font-style: italic; }
+
+  .dep-panes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .dep-panes { grid-template-columns: 1fr; } }
+
+  .dep-pane { border: 1px solid var(--p-border); border-left: 3px solid var(--p-accent); border-radius: var(--corner-radius); background: var(--p-surface); padding: 14px 16px; }
+  .dep-pane-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .dep-pane-head h3 { margin: 0; flex: 1; font-family: var(--font-heading); font-size: .95rem; color: var(--p-text); }
+
+  .dep-loading, .dep-empty, .dep-error { padding: 18px 4px; color: var(--p-text-muted); font-size: .85rem; }
+  .dep-error { color: var(--p-danger); }
+  .dep-placeholder { padding: 26px 8px; color: var(--p-text-muted); font-size: .85rem; font-style: italic; }
+
+  .dep-group-row { display: flex; align-items: center; gap: 10px; padding: 10px 6px; border-bottom: 1px solid var(--p-border-subtle); }
+  .dep-group-row:last-child { border-bottom: none; }
+  .dep-group-main { flex: 1; min-width: 0; }
+  .dep-group-name { font-weight: 600; color: var(--p-text); font-size: .9rem; }
+  .dep-group-desc { font-size: .76rem; color: var(--p-text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dep-type-pill { display: inline-block; font-size: .66rem; padding: 1px 8px; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border: 1px solid rgba(102,119,153,0.22); color: var(--p-text-secondary); }
+  .dep-type-pill.dynamic { color: var(--p-accent); border-color: var(--p-accent); }
+  .dep-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; padding: 2px 9px; border-radius: 999px; background: var(--p-surface-deep); color: var(--p-accent); font-weight: 700; font-size: .78rem; font-variant-numeric: tabular-nums; }
+  .dep-row-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .dep-row-actions .btn-secondary, .dep-row-actions .btn-danger { padding: 4px 10px; font-size: .74rem; }
+
+  /* Bundle list + editor (Phase 2) */
+  .dep-count-pill { display: inline-block; font-size: .68rem; padding: 1px 8px; border-radius: 999px; border: 1px solid rgba(102,119,153,0.22); color: var(--p-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .dep-back-link { background: none; border: none; padding: 0; margin: 0 0 10px; cursor: pointer; color: var(--p-accent); font-size: .8rem; font-family: var(--font-body); }
+  .dep-back-link:hover { text-decoration: underline; }
+  .dep-bundle-title { display: flex; align-items: center; gap: 10px; margin: 0 0 2px; }
+  .dep-bundle-title h4 { margin: 0; flex: 1; font-family: var(--font-heading); font-size: 1rem; color: var(--p-text); }
+  .dep-bundle-desc { font-size: .78rem; color: var(--p-text-muted); margin: 0 0 12px; }
+  .dep-section-head { display: flex; align-items: center; gap: 10px; margin: 16px 0 6px; padding-bottom: 5px; border-bottom: 1px solid var(--p-border-subtle); }
+  .dep-section-head h5 { margin: 0; flex: 1; font-family: var(--font-heading); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--p-accent); }
+  .dep-section-head .btn-secondary { padding: 3px 10px; font-size: .74rem; }
+  .dep-item-row { padding: 9px 4px; border-bottom: 1px solid var(--p-border-subtle); }
+  .dep-item-row:last-child { border-bottom: none; }
+  .dep-item-head { display: flex; align-items: center; gap: 8px; }
+  .dep-item-name { flex: 1; font-size: .86rem; font-weight: 600; color: var(--p-text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dep-item-remove { background: none; border: none; cursor: pointer; color: var(--p-text-muted); font-size: 1rem; line-height: 1; padding: 2px 6px; }
+  .dep-item-remove:hover { color: var(--p-danger); }
+  .dep-item-ctrls { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .dep-item-ctrls label { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--p-text-muted); }
+  .dep-item-ctrls select { font-size: .78rem; padding: 3px 8px; background: var(--p-surface); color: var(--p-text); border: 1px solid var(--p-border); border-radius: var(--corner-radius); }
+
+  /* Tabs + Job Queue (Phase 3) */
+  .dep-tabs { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; }
+  .dep-tab { background: var(--p-surface); border: 1px solid var(--p-border); border-radius: 999px; padding: 5px 16px; cursor: pointer; color: var(--p-text-secondary); font-size: .8rem; font-family: var(--font-body); transition: all var(--p-transition); }
+  .dep-tab:hover { border-color: var(--p-accent); color: var(--p-accent); }
+  .dep-tab.active { border-color: var(--p-accent); color: var(--p-accent); font-weight: 600; background: var(--p-surface-deep); }
+
+  .dep-job { border: 1px solid var(--p-border); border-left: 3px solid var(--p-accent); border-radius: var(--corner-radius); background: var(--p-surface); margin-bottom: 12px; }
+  .dep-job-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; flex-wrap: wrap; }
+  .dep-job-title { font-weight: 700; color: var(--p-text); font-size: .92rem; }
+  .dep-job-meta { font-size: .74rem; color: var(--p-text-muted); }
+  .dep-job-rollup { margin-left: auto; font-size: .78rem; color: var(--p-text-secondary); font-variant-numeric: tabular-nums; }
+  .dep-status { display: inline-block; font-size: .66rem; padding: 2px 9px; border-radius: 999px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .dep-status.preflight { background: var(--p-warn-glow-rgba, rgba(230,160,0,.15)); color: var(--p-warn); }
+  .dep-status.armed { background: rgba(56,139,253,.12); color: var(--p-accent); }
+  .dep-status.running { background: rgba(56,139,253,.12); color: var(--p-accent); }
+  .dep-status.done { background: rgba(46,160,67,.12); color: var(--p-success); }
+  .dep-status.failed { background: var(--p-danger-glow-rgba, rgba(218,54,51,.12)); color: var(--p-danger); }
+  .dep-status.cancelled { background: var(--p-surface-sunken); color: var(--p-text-muted); }
+  .dep-job-body { border-top: 1px solid var(--p-border-subtle); padding: 6px 14px 12px; }
+  .dep-armed-bar { padding: 10px 12px; margin: 8px 0; border: 1px solid var(--p-border); border-radius: var(--corner-radius); background: var(--p-surface-deep); font-size: .8rem; }
+  .dep-armed-hint { margin-bottom: 10px; color: var(--p-text-secondary); line-height: 1.45; }
+  .dep-armed-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .dep-armed-controls .dep-armed-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .dep-present-ctl { display: flex; align-items: center; gap: 8px; }
+  .dep-present-ctl label { font-size: .76rem; color: var(--p-text-secondary); }
+  .dep-present-ctl select { font-size: .78rem; padding: 4px 8px; background: var(--p-surface); color: var(--p-text); border: 1px solid var(--p-border); border-radius: var(--corner-radius-sm); }
+  .dep-jt { margin: 8px 0 0; border: 1px solid var(--p-border-subtle); border-radius: var(--corner-radius-sm); }
+  .dep-jt-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; background: var(--p-surface-alt); }
+  .dep-jt-name { font-weight: 600; font-size: .84rem; color: var(--p-text); flex: 1; }
+  .dep-jt-rollup { font-size: .74rem; color: var(--p-text-secondary); font-variant-numeric: tabular-nums; }
+  .dep-ji { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; border-top: 1px solid var(--p-border-subtle); font-size: .8rem; flex-wrap: wrap; }
+  .dep-ji-name { font-weight: 600; color: var(--p-text); min-width: 160px; }
+  .dep-ji-note { flex-basis: 100%; font-size: .72rem; color: var(--p-text-muted); margin: 2px 0 0 0; }
+  .dep-ji-err { flex-basis: 100%; font-size: .72rem; color: var(--p-danger); margin: 2px 0 0 0; }
+  .dep-pf { display: inline-block; font-size: .64rem; padding: 1px 7px; border-radius: 999px; font-weight: 600; }
+  .dep-pf.ok { background: rgba(46,160,67,.12); color: var(--p-success); }
+  .dep-pf.skip_present { background: var(--p-surface-sunken); color: var(--p-text-secondary); }
+  .dep-pf.warn { background: var(--p-warn-glow-rgba, rgba(230,160,0,.15)); color: var(--p-warn); }
+  .dep-pf.blocked { background: var(--p-danger-glow-rgba, rgba(218,54,51,.12)); color: var(--p-danger); }
+  .dep-ex.pending { color: var(--p-text-muted); }
+  .dep-ex.success { color: var(--p-success); font-weight: 700; }
+  .dep-ex.failed { color: var(--p-danger); font-weight: 700; }
+  .dep-ex.skipped { color: var(--p-text-muted); }
+  .dep-ji select { font-size: .74rem; padding: 2px 6px; background: var(--p-surface); color: var(--p-text); border: 1px solid var(--p-border); border-radius: var(--corner-radius-sm); }
+  .dep-caret { font-size: .7rem; color: var(--p-text-muted); }
+
+  /* Add/Edit modal internals */
+  .dep-member-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--p-border); border-radius: var(--corner-radius); padding: 6px 10px; }
+  .dep-member-list label { display: flex; align-items: center; gap: 10px; padding: 6px 2px; font-size: .86rem; cursor: pointer; border-bottom: 1px solid var(--p-border-subtle); }
+  .dep-member-list label:last-child { border-bottom: none; }
+  .dep-member-list input[type="checkbox"] { width: auto; margin: 0; flex: 0 0 auto; }
+  .dep-rule-preview { font-size: .82rem; color: var(--p-accent); margin-top: 8px; min-height: 1.2em; }
+</style>
+
+<div class="dep-wrap">
+  <div class="panel-header">
+    <span class="panel-elbow"></span>
+    <span class="panel-title" data-i18n="deployment.title">Deployments</span>
+  </div>
+
+  <div class="dep-caption" data-i18n="deployment.subtitle">
+    Organize tenants into groups, then deploy configuration bundles to them in one step.
+  </div>
+
+  <!-- Tabs: Groups & Bundles (authoring) | Job Queue (preflight + deploy ledger).
+       The Deploy button is the ONLY entry point into a deployment — it always
+       creates a preflighted job; there is no quick-deploy path. -->
+  <div class="dep-tabs">
+    <button class="dep-tab active" data-dep-tab="overview" data-i18n="deployment.tab_overview">Groups &amp; Bundles</button>
+    <button class="dep-tab" data-dep-tab="queue" data-i18n="deployment.tab_queue">Job Queue</button>
+    <button class="btn-primary" id="dep-deploy-btn" data-role-required="member" style="margin-left:auto;" data-i18n="deployment.deploy_btn">Deploy…</button>
+  </div>
+
+  <div id="dep-tab-queue" style="display:none;">
+    <div id="dep-queue-list">
+      <div class="dep-loading" data-i18n="deployment.queue_loading">Loading deployment jobs…</div>
+    </div>
+  </div>
+
+  <div id="dep-tab-overview">
+  <div class="dep-panes">
+    <!-- Left pane — Tenant Groups -->
+    <div class="dep-pane" id="dep-groups-pane">
+      <div class="dep-pane-head">
+        <h3 data-i18n="deployment.groups_title">Tenant Groups</h3>
+        <button class="btn-primary" id="dep-add-group" data-role-required="member" data-i18n="deployment.add_group">+ Add Group</button>
+      </div>
+      <div id="dep-groups-list">
+        <div class="dep-loading" data-i18n="deployment.groups_loading">Loading groups…</div>
+      </div>
+    </div>
+
+    <!-- Right pane — Configuration Bundles (Phase 2: authoring only, no deploy) -->
+    <div class="dep-pane" id="dep-bundles-pane">
+      <div class="dep-pane-head">
+        <h3 data-i18n="deployment.bundles_title">Configuration Bundles</h3>
+        <button class="btn-primary" id="dep-add-bundle" data-role-required="member" data-i18n="deployment.add_bundle">+ Add Bundle</button>
+      </div>
+      <div id="dep-bundles-body">
+        <div class="dep-loading" data-i18n="deployment.bundles_loading">Loading bundles…</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /dep-tab-overview -->
+</div>

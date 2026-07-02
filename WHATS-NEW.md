@@ -5,6 +5,26 @@ that release, newest first.
 
 ---
 
+## Version 0.3.0 — 2026-07-02
+
+### Tenant Groups — organize your fleet and filter every view
+
+You can now group tenants the way you think about your book of business. Create **manual groups** (pick the members from a checklist) or **dynamic groups** whose membership follows a rule — service tier and/or sales rep — and stays current on its own as tenants change. The building blocks are two new managed lists under **Settings**: **Service Tiers** and **Sales Reps**, assigned to each tenant from the tenant's edit dialog. A new **Tenant group** filter on the **Heatmap** and **Trends** pages scopes those views to any group — a rep can see just their own accounts in one click.
+
+### Configuration Bundles — your baseline as a reusable package
+
+A **Configuration Bundle** is a named collection of CA policies and Intune settings from your template libraries, with the per-item choices saved inside the bundle: each CA policy is marked **Report-only** (the safe default) or **On (enforced)**, and each Intune setting carries its assignment target (None / All Users / All Devices) plus an optional alert-routing override. Build the bundle once in the new **Deployments** section, then deploy it as many times as you like.
+
+### Deployments — fleet deployment with mandatory pre-flight checks
+
+The new **Deployments** page (in the Policies menu) deploys a bundle to one or more tenants — or to whole tenant groups, each tenant counted once — in a single job. Safety is built into the flow and cannot be skipped: **Submit** only builds the job and runs deterministic pre-flight checks (valid consent, already-present detection, managed-tenant gate, assignment-target change warnings); nothing is written until you review the results and press **Deploy** on the checked job. Items already present on a tenant are skipped by default — overwriting is an explicit choice, per item or in one action. The **Job Queue** tab shows each job as a collapsible Job ▸ Tenant ▸ Setting ledger with live progress and per-item results, and doubles as your deployment history. The writes themselves are careful by design: one setting at a time within each tenant, gentle pacing across tenants, and one tenant's failure never stops the rest. Bundle-deployed policies land exactly as if you had deployed them by hand from the tenant dashboard — same records, same drift monitoring — and every step is in the audit log.
+
+### New guide in the Learn hub
+
+A new **Configuration Bundles** guide walks through the whole feature — tenant groups, bundles, and the deploy flow — available in all three languages.
+
+---
+
 ## Version 0.2.32 — 2026-07-01
 
 ### Choose your release channel: Stable or Early

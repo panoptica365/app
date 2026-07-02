@@ -18,6 +18,7 @@ const express = require('express');
 const auth = require('../auth');
 const db = require('../db/database');
 const th = require('../lib/trend-helpers');
+const orgStore = require('../lib/org-store');
 
 const router = express.Router();
 router.use(auth.requireAuth);
@@ -34,9 +35,23 @@ router.get('/', async (req, res) => {
   try {
     // ── Managed-tenant census (the only filter, applied everywhere) ──
     // Matches the Heatmap / polling-engine selection: enabled + mode='managed'.
-    const managedTenants = await db.queryRows(
+    let managedTenants = await db.queryRows(
       "SELECT id, tenant_id, display_name, created_at FROM tenants WHERE enabled = TRUE AND mode = 'managed'"
     );
+
+    // Optional tenant-group filter (Tenant Groups Phase 1 rider):
+    // ?group=<tenant_groups.id> scopes every aggregate below to the group's
+    // members via the shared resolver — same semantics as the Heatmap filter.
+    if (req.query.group != null && req.query.group !== '') {
+      const gid = Number(req.query.group);
+      if (!Number.isInteger(gid) || gid <= 0) {
+        return res.status(400).json({ error: 'invalid_group' });
+      }
+      const memberIds = await orgStore.resolveGroupMembers(gid);
+      if (memberIds === null) return res.status(404).json({ error: 'unknown_group' });
+      const memberSet = new Set(memberIds);
+      managedTenants = managedTenants.filter(t => memberSet.has(t.id));
+    }
     const managedIds = managedTenants.map(t => t.id);
 
     const rangeStartRow = await db.queryOne(
@@ -175,7 +190,9 @@ router.get('/', async (req, res) => {
       }
     }
 
-    // ── Alert operations (fleet, managed-only via JOIN tenants) ──
+    // ── Alert operations — scoped to the census (managed + optional group
+    //    filter) via t.id IN (idCsv), so every aggregate below respects the
+    //    same tenant set as the Secure Score charts. ──
     const resolvedRows = await db.queryRows(
       `SELECT DATE_FORMAT(a.closed_at, '%Y-%m') AS m,
               SUM(a.severity = 'severe')           AS severe,
@@ -183,7 +200,7 @@ router.get('/', async (req, res) => {
               SUM(a.severity = 'low')              AS low,
               SUM(a.severity = 'info')             AS info
          FROM alerts a
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.status = 'resolved' AND a.closed_at IS NOT NULL
           AND a.closed_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
         GROUP BY DATE_FORMAT(a.closed_at, '%Y-%m')
@@ -214,7 +231,7 @@ router.get('/', async (req, res) => {
       `SELECT YEARWEEK(a.closed_at, 3) AS yw,
               TIMESTAMPDIFF(MINUTE, a.triggered_at, a.closed_at) AS mins
          FROM alerts a
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.status = 'resolved'
           AND a.closed_at IS NOT NULL AND a.triggered_at IS NOT NULL
           AND a.closed_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)`
@@ -239,7 +256,7 @@ router.get('/', async (req, res) => {
               SUM(a.severity = 'low')              AS low,
               SUM(a.severity = 'info')             AS info
          FROM alerts a
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
         GROUP BY YEARWEEK(a.triggered_at, 3)
         ORDER BY YEARWEEK(a.triggered_at, 3)`
@@ -252,7 +269,7 @@ router.get('/', async (req, res) => {
       `SELECT YEARWEEK(a.triggered_at, 3) AS yw, p.category AS cat, COUNT(*) AS c
          FROM alerts a
          JOIN alert_policies p ON p.id = a.policy_id
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL ${days} DAY)
         GROUP BY YEARWEEK(a.triggered_at, 3), p.category
         ORDER BY YEARWEEK(a.triggered_at, 3)`
@@ -277,7 +294,7 @@ router.get('/', async (req, res) => {
               SUM(a.severity = 'info')             AS c_info
          FROM alerts a
          JOIN alert_policies p ON p.id = a.policy_id
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.triggered_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)
         GROUP BY a.policy_id, p.name
         ORDER BY count DESC
@@ -298,7 +315,7 @@ router.get('/', async (req, res) => {
          FROM heatmap_posture_daily h
          JOIN (SELECT tenant_id, MAX(snapshot_date) AS md FROM heatmap_posture_daily GROUP BY tenant_id) last
            ON h.tenant_id = last.tenant_id AND h.snapshot_date = last.md
-         JOIN tenants t ON t.id = h.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = h.tenant_id AND t.id IN (${idCsv})
         WHERE h.score_pct IS NOT NULL`
     );
     const covPcts = covRows.map(r => th.num(r.score_pct));
@@ -312,14 +329,14 @@ router.get('/', async (req, res) => {
     const statRow = await db.queryOne(
       `SELECT COUNT(*) AS resolved_90d, SUM(a.severity IN ('severe','high')) AS severe_high_90d
          FROM alerts a
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.status = 'resolved'
           AND a.closed_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)`
     );
     const openNowRow = await db.queryOne(
       `SELECT COUNT(*) AS open_now
          FROM alerts a
-         JOIN tenants t ON t.id = a.tenant_id AND t.mode = 'managed' AND t.enabled = TRUE
+         JOIN tenants t ON t.id = a.tenant_id AND t.id IN (${idCsv})
         WHERE a.is_rollup = 0 AND a.status IN ('new','investigating')`
     );
 

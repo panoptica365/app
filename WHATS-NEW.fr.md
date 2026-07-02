@@ -5,6 +5,26 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.3.0 — 2026-07-02
+
+### Groupes de locataires — organisez votre flotte et filtrez chaque vue
+
+Vous pouvez désormais regrouper les locataires comme vous pensez votre portefeuille. Créez des **groupes manuels** (choisissez les membres dans une liste) ou des **groupes dynamiques** dont l'appartenance suit une règle — niveau de service et/ou représentant — et reste à jour d'elle-même quand les locataires changent. Les briques de base sont deux nouvelles listes gérées dans les **Paramètres** : **Niveaux de service** et **Représentants**, attribués à chaque locataire depuis sa fenêtre de modification. Un nouveau filtre **Groupe de locataires** sur la **Carte thermique** et les **Tendances** limite ces vues à n'importe quel groupe — un représentant voit ses propres comptes en un clic.
+
+### Ensembles de configuration — votre base de référence en paquet réutilisable
+
+Un **ensemble de configuration** est une collection nommée de stratégies d'accès conditionnel et de paramètres Intune tirés de vos bibliothèques de modèles, avec les choix par élément enregistrés dans l'ensemble : chaque stratégie d'accès conditionnel est marquée **Rapport uniquement** (le choix sûr par défaut) ou **Activé (appliqué)**, et chaque paramètre Intune porte sa cible d'attribution (Aucune / Tous les utilisateurs / Tous les appareils) ainsi qu'un remplacement facultatif du routage des alertes. Construisez l'ensemble une fois dans la nouvelle section **Déploiements**, puis déployez-le autant de fois que vous le souhaitez.
+
+### Déploiements — déploiement de flotte avec vérifications préalables obligatoires
+
+La nouvelle page **Déploiements** (menu Stratégies) déploie un ensemble vers un ou plusieurs locataires — ou vers des groupes entiers, chaque locataire compté une seule fois — en une seule tâche. La sécurité fait partie du flux et ne peut pas être contournée : **Soumettre** ne fait que créer la tâche et exécuter des vérifications préalables déterministes (consentement valide, détection des éléments déjà présents, garde des locataires gérés, avertissements de changement de cible d'attribution) ; rien n'est écrit tant que vous n'avez pas examiné les résultats et appuyé sur **Déployer** sur la tâche vérifiée. Les éléments déjà présents sur un locataire sont ignorés par défaut — l'écrasement est un choix explicite, par élément ou en une seule action. L'onglet **File des tâches** présente chaque tâche comme un registre repliable Tâche ▸ Locataire ▸ Paramètre avec la progression en direct et les résultats par élément, et sert aussi d'historique de déploiement. Les écritures elles-mêmes sont prudentes par conception : un paramètre à la fois dans chaque locataire, un rythme mesuré entre les locataires, et l'échec d'un locataire n'arrête jamais les autres. Les stratégies déployées par ensemble atterrissent exactement comme si vous les aviez déployées à la main depuis le tableau de bord du locataire — mêmes enregistrements, même surveillance de dérive — et chaque étape figure dans le journal d'audit.
+
+### Nouveau guide dans le centre d'apprentissage
+
+Un nouveau guide **Ensembles de configuration** parcourt toute la fonctionnalité — groupes de locataires, ensembles et flux de déploiement — offert dans les trois langues.
+
+---
+
 ## Version 0.2.32 — 2026-07-01
 
 ### Choisissez votre canal de versions : Stable ou Anticipé

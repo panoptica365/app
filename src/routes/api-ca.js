@@ -1666,87 +1666,125 @@ router.post('/assignments/:id/auto-match', auth.requireMemberOrAdmin, async (req
  */
 router.post('/assignments/:id/deploy', auth.requireMemberOrAdmin, async (req, res) => {
   try {
-    const assignment = await db.queryOne(
-      `SELECT a.*, t.policy_json, t.name AS template_name, tn.tenant_id AS azure_tenant_id
-       FROM ca_assignments a
-       JOIN ca_templates t ON t.id = a.template_id
-       JOIN tenants tn ON tn.id = a.tenant_id
-       WHERE a.id = ?`,
-      [req.params.id]
-    );
+    const assignment = await loadAssignmentForDeploy(req.params.id);
     if (!assignment) return res.status(404).json({ error: 'Assignment not found' });
 
     if (assignment.live_policy_id) {
       return res.status(409).json({ error: 'Policy already linked to this assignment. Use remediate to push changes.' });
     }
 
-    const templatePolicy = typeof assignment.policy_json === 'string'
-      ? JSON.parse(assignment.policy_json)
-      : assignment.policy_json;
-
-    // Build the policy body for creation — strip read-only fields that Graph won't accept
-    const createBody = buildDeployBody(templatePolicy);
-
-    // Use the Panoptica template name, not the original JSON displayName
-    createBody.displayName = assignment.template_name;
-
-    // Resolve named-location placeholders (e.g. __PANOPTICA_CANADA_LOCATION__)
-    // and translate any hardcoded GUIDs from the source tenant
-    await resolveNamedLocationPlaceholders(createBody, assignment.azure_tenant_id, undefined, {
-      internalTenantId: assignment.tenant_id,
+    const result = await deployCaAssignment(assignment, {
       createdBy: req.session.user.email,
       actorContext: changeLog.captureActorContext(req),
     });
-    await resolveHardcodedLocationGUIDs(createBody, assignment.azure_tenant_id);
-
-    console.log(`[CA] Deploying policy "${createBody.displayName}" to tenant ${assignment.azure_tenant_id}`);
-    console.log(`[CA] Deploy payload:`, JSON.stringify(createBody, null, 2));
-
-    const created = await graph.callGraph(
-      assignment.azure_tenant_id,
-      '/identity/conditionalAccess/policies',
-      { version: 'v1.0', method: 'POST', body: createBody }
-    );
-
-    console.log(`[CA] Graph response:`, JSON.stringify(created, null, 2));
-
-    if (!created || !created.id) {
-      throw new Error('Graph API did not return a policy ID — response: ' + JSON.stringify(created));
-    }
-
-    // Link the new policy to the assignment
-    await db.execute(
-      `UPDATE ca_assignments SET live_policy_id = ?, drift_status = 'ok',
-       last_checked_at = NOW(), drift_details = NULL WHERE id = ?`,
-      [created.id, assignment.id]
-    );
-
-    console.log(`[CA] Policy "${createBody.displayName}" deployed as ${created.id} in tenant ${assignment.azure_tenant_id} by ${req.session.user.email}`);
-
-    // Audit + drift-attribution: log the Panoptica-initiated change
-    await changeLog.logPanopticaChange({
-      tenantId: assignment.tenant_id,
-      category: changeLog.CATEGORY.CA_POLICY_PUSH,
-      surfaces: [changeLog.SURFACE.CA],
-      description: `Deployed CA policy "${createBody.displayName}" (template: ${assignment.template_name})`,
-      templateKey: 'ca_deploy',
-      templateParams: { policyName: createBody.displayName, templateName: assignment.template_name },
-      createdBy: req.session.user.email,
-      ...changeLog.captureActorContext(req),
-    });
-
-    res.json({
-      success: true,
-      live_policy_id: created.id,
-      displayName: created.displayName,
-      state: created.state,
-      message: `Policy "${created.displayName}" created in tenant`,
-    });
+    res.json(result);
   } catch (err) {
     console.error('[CA] Deploy failed:', err.message);
     res.status(500).json({ error: 'Deploy failed: ' + err.message });
   }
 });
+
+/**
+ * Load the joined assignment row the deploy path needs (assignment + template
+ * policy JSON + Azure tenant GUID). Shared by the HTTP route and the
+ * bundle-deploy worker.
+ */
+async function loadAssignmentForDeploy(assignmentId) {
+  return db.queryOne(
+    `SELECT a.*, t.policy_json, t.name AS template_name, tn.tenant_id AS azure_tenant_id
+     FROM ca_assignments a
+     JOIN ca_templates t ON t.id = a.template_id
+     JOIN tenants tn ON tn.id = a.tenant_id
+     WHERE a.id = ?`,
+    [assignmentId]
+  );
+}
+
+/**
+ * Core CA deploy engine — req/res-free so the bundle-deploy worker can reuse
+ * the EXACT code path the tenant-dashboard deploy button uses (a bundle-
+ * deployed policy must be byte-identical to a hand-deployed one). Extracted
+ * verbatim from the POST /assignments/:id/deploy handler for Tenant Groups &
+ * Configuration Bundles Phase 3 (2026-07-01); behavior unchanged except the
+ * optional `stateOverride`, which the bundle item's ca_state supplies
+ * ('enabledForReportingButNotEnforced' | 'enabled') — set on the policy JSON
+ * `state` field before the Graph POST, per the locked Phase 3 design.
+ *
+ * Caller guarantees: assignment came from loadAssignmentForDeploy() and has
+ * NO live_policy_id yet (already-linked assignments use remediate instead).
+ *
+ * @throws on Graph/DB failure — caller records the error per item.
+ */
+async function deployCaAssignment(assignment, { createdBy, actorContext = {}, stateOverride = null } = {}) {
+  const templatePolicy = typeof assignment.policy_json === 'string'
+    ? JSON.parse(assignment.policy_json)
+    : assignment.policy_json;
+
+  // Build the policy body for creation — strip read-only fields that Graph won't accept
+  const createBody = buildDeployBody(templatePolicy);
+
+  // Use the Panoptica template name, not the original JSON displayName
+  createBody.displayName = assignment.template_name;
+
+  // Bundle deploys carry an explicit per-item state (bundle-item wins);
+  // manual deploys pass no override and keep buildDeployBody's safe default.
+  if (stateOverride === 'enabled' || stateOverride === 'enabledForReportingButNotEnforced') {
+    createBody.state = stateOverride;
+  }
+
+  // Resolve named-location placeholders (e.g. __PANOPTICA_CANADA_LOCATION__)
+  // and translate any hardcoded GUIDs from the source tenant
+  await resolveNamedLocationPlaceholders(createBody, assignment.azure_tenant_id, undefined, {
+    internalTenantId: assignment.tenant_id,
+    createdBy,
+    actorContext,
+  });
+  await resolveHardcodedLocationGUIDs(createBody, assignment.azure_tenant_id);
+
+  console.log(`[CA] Deploying policy "${createBody.displayName}" to tenant ${assignment.azure_tenant_id}`);
+  console.log(`[CA] Deploy payload:`, JSON.stringify(createBody, null, 2));
+
+  const created = await graph.callGraph(
+    assignment.azure_tenant_id,
+    '/identity/conditionalAccess/policies',
+    { version: 'v1.0', method: 'POST', body: createBody }
+  );
+
+  console.log(`[CA] Graph response:`, JSON.stringify(created, null, 2));
+
+  if (!created || !created.id) {
+    throw new Error('Graph API did not return a policy ID — response: ' + JSON.stringify(created));
+  }
+
+  // Link the new policy to the assignment
+  await db.execute(
+    `UPDATE ca_assignments SET live_policy_id = ?, drift_status = 'ok',
+     last_checked_at = NOW(), drift_details = NULL WHERE id = ?`,
+    [created.id, assignment.id]
+  );
+
+  console.log(`[CA] Policy "${createBody.displayName}" deployed as ${created.id} in tenant ${assignment.azure_tenant_id} by ${createdBy}`);
+
+  // Audit + drift-attribution: log the Panoptica-initiated change
+  await changeLog.logPanopticaChange({
+    tenantId: assignment.tenant_id,
+    category: changeLog.CATEGORY.CA_POLICY_PUSH,
+    surfaces: [changeLog.SURFACE.CA],
+    description: `Deployed CA policy "${createBody.displayName}" (template: ${assignment.template_name})`,
+    templateKey: 'ca_deploy',
+    templateParams: { policyName: createBody.displayName, templateName: assignment.template_name },
+    createdBy,
+    ...actorContext,
+  });
+
+  return {
+    success: true,
+    live_policy_id: created.id,
+    displayName: created.displayName,
+    state: created.state,
+    message: `Policy "${created.displayName}" created in tenant`,
+  };
+}
 
 /**
  * Build a clean policy body for Graph API POST (create).
@@ -3470,6 +3508,10 @@ async function exportNamedLocationsLive(tenant) {
 // Export router as default, plus checkDrift for the drift scheduler
 router.checkDrift = checkDrift;
 router.expireExemptions = expireExemptions;
+// Reused by the bundle-deploy worker (Phase 3) — same code paths as the buttons.
+router.deployCaAssignment = deployCaAssignment;
+router.loadAssignmentForDeploy = loadAssignmentForDeploy;
+router.remediatePolicy = remediatePolicy;
 router.exportCaPoliciesLive = exportCaPoliciesLive;
 router.exportNamedLocationsLive = exportNamedLocationsLive;
 router.schemaReady = caSchemaReady;
