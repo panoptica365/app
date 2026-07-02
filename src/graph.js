@@ -48,6 +48,12 @@ async function callGraph(tenantId, endpoint, options = {}) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '5', 10);
         console.warn(`[Graph] 429 rate limited on ${endpoint} — waiting ${retryAfter}s (attempt ${attempt}/${retries})`);
         await updateApiHealth(tenantId, endpoint, 'degraded', `Rate limited (429)`);
+        if (attempt === retries) {
+          // MUST throw on exhaustion. `continue` past the final attempt falls
+          // out of the loop and resolves undefined, which callers read as an
+          // empty result set — mass false "removed" alerts (2026-07-02).
+          throw new GraphError(429, `Rate limited (429) — retries exhausted after ${retries} attempts`, endpoint);
+        }
         await sleep(retryAfter * 1000);
         continue;
       }
@@ -169,10 +175,21 @@ async function callGraph(tenantId, endpoint, options = {}) {
       await sleep(config.graph.retryDelayMs * attempt);
     }
   }
+
+  // Every branch above either returns or throws on the final attempt; this
+  // guard makes that a hard invariant. callGraph must NEVER resolve to
+  // undefined — callers treat a nullish result as an empty data set.
+  throw new GraphError(0, `Retry loop exhausted without a result`, endpoint);
 }
 
 /**
  * Fetch all pages from a paginated Graph API response.
+ *
+ * Every Graph collection endpoint returns `{ value: [...] }` — even when the
+ * collection is empty. A page WITHOUT a value array (empty body, non-JSON
+ * fallback payload) is a malformed/degraded response, not an empty list, and
+ * MUST throw: returning [] would let callers diff a bogus empty enumeration
+ * against a full baseline and fire mass false "removed" alerts.
  */
 async function callGraphPaged(tenantId, endpoint, options = {}) {
   const allValues = [];
@@ -182,10 +199,11 @@ async function callGraphPaged(tenantId, endpoint, options = {}) {
 
   while (url && pageCount < maxPages) {
     const data = await callGraph(tenantId, url, options);
-    if (data && data.value) {
-      allValues.push(...data.value);
+    if (!data || !Array.isArray(data.value)) {
+      throw new GraphError(0, `Malformed collection page (no value[]) on ${url}`, endpoint);
     }
-    url = data?.['@odata.nextLink'] || null;
+    allValues.push(...data.value);
+    url = data['@odata.nextLink'] || null;
     pageCount++;
   }
 

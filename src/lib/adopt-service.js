@@ -384,6 +384,10 @@ async function reconcileTenantSurface(tenant, surface, { fireAlerts = true } = {
     ? { id: v.id, displayName: v.displayName, config: v, assignments: null, state: v.state }
     : { id: v.id, displayName: v.displayName, config: v.config, assignments: v.assignments, policyType: v.policyType });
   const liveById = new Map(liveList.map(o => [o.id, o]));
+  // Intune types that were actually read this cycle (a 403-gated type is
+  // skipped from values). Absence from a SKIPPED type is not evidence of
+  // removal. null (CA surface / older shape) = no per-type gating.
+  const enumeratedTypes = Array.isArray(read.enumeratedTypes) ? new Set(read.enumeratedTypes) : null;
 
   // First-ever enumeration with no watermark → silent baseline (no cards, no alerts).
   if (!await store.isWatermarkEstablished(tenant.id, surface)) {
@@ -429,6 +433,9 @@ async function reconcileTenantSurface(tenant, surface, { fireAlerts = true } = {
     const live = liveById.get(card.source_object_id);
 
     if (!live) {
+      // Only trust "removed" if this card's type was enumerated this cycle —
+      // a per-type capability gate must never read as mass deletion.
+      if (enumeratedTypes && card.policy_type && !enumeratedTypes.has(card.policy_type)) continue;
       // Adopted object no longer present in the tenant — a change from as-found.
       if (card.lifecycle_state === 'active' && card.drift_status !== 'drifted') {
         await store.setDrift(card.id, 'drifted', { reason: 'removed' });

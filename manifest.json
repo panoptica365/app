@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "latest": {
-    "version": "0.3.1",
-    "image_tag": "v0.3.1",
+    "version": "0.3.2",
+    "image_tag": "v0.3.2",
     "released_at": "2026-07-02",
     "mandatory": false,
     "min_supported": "0.1.0",
     "notes_summary": {
-      "en": "Fixes a first-boot race after updating to 0.3.0 that could leave the Deployments feature reporting \"Bundle-deploy module not ready — schema migration failed\" when submitting a deployment. Migrations are now explicitly ordered and self-repair on the next use if a first boot is interrupted. If you saw the error on 0.3.0, updating (or restarting the app) clears it. No other changes.",
-      "fr": "Corrige une course au premier démarrage après la mise à jour vers 0.3.0 qui pouvait faire échouer la soumission d’un déploiement avec « Bundle-deploy module not ready — schema migration failed ». Les migrations sont désormais explicitement ordonnées et se réparent d’elles-mêmes à la prochaine utilisation si un premier démarrage est interrompu. Si vous avez vu cette erreur sur 0.3.0, la mise à jour (ou un redémarrage de l’application) la fait disparaître. Aucun autre changement.",
-      "es": "Corrige una condición de carrera en el primer arranque tras actualizar a 0.3.0 que podía hacer que el envío de una implementación fallara con «Bundle-deploy module not ready — schema migration failed». Las migraciones ahora se ordenan explícitamente y se reparan solas en el siguiente uso si un primer arranque se interrumpe. Si vio el error en 0.3.0, actualizar (o reiniciar la aplicación) lo elimina. Sin otros cambios."
+      "en": "Fixes rare false \"Tenant-sourced Intune policy was removed from the tenant outside Panoptica\" alerts (with their emails and PSA tickets) that could fire when Microsoft rate-limited Panoptica's reads long enough for a policy enumeration to come back empty. Failed or partial reads are now always retried on the next cycle instead of being misread as deletions; real removals are still detected exactly as before. No tenant configuration was ever affected.",
+      "fr": "Corrige de rares fausses alertes « Tenant-sourced Intune policy was removed from the tenant outside Panoptica » (avec leurs courriels et billets PSA) qui pouvaient se déclencher lorsque Microsoft limitait le débit des lectures de Panoptica assez longtemps pour qu'une énumération de politiques revienne vide. Les lectures échouées ou partielles sont désormais toujours reprises au cycle suivant au lieu d'être interprétées comme des suppressions; les suppressions réelles sont toujours détectées exactement comme avant. Aucune configuration de locataire n'a jamais été affectée.",
+      "es": "Corrige raras falsas alertas «Tenant-sourced Intune policy was removed from the tenant outside Panoptica» (con sus correos y tickets de PSA) que podían dispararse cuando Microsoft limitaba la velocidad de las lecturas de Panoptica el tiempo suficiente para que una enumeración de políticas volviera vacía. Las lecturas fallidas o parciales ahora siempre se reintentan en el siguiente ciclo en lugar de interpretarse como eliminaciones; las eliminaciones reales se siguen detectando exactamente igual que antes. Ninguna configuración de inquilino se vio afectada."
     }
   },
   "yanked": []

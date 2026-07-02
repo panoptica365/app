@@ -109,11 +109,16 @@ async function readSecurityDefaults(azureTenantId) {
  *                                         never leave a partial baseline)
  *   - otherwise                         → ok, values = union across types
  *
- * @returns { ok:true, values:[{policyType, id, displayName, config, assignments}] }
+ * enumeratedTypes lists the type keys that were ACTUALLY read this cycle —
+ * a 403-gated type is skipped from values but must never be interpreted
+ * downstream as "all of that type's objects were deleted".
+ *
+ * @returns { ok:true, values:[{policyType, id, displayName, config, assignments}], enumeratedTypes:[key] }
  *        | { ok:false, reason, detail }
  */
 async function readIntuneObjects(azureTenantId) {
   const values = [];
+  const enumeratedTypes = [];
   let licenseGated = 0;
   for (const t of INTUNE_TYPES) {
     let objects;
@@ -121,7 +126,11 @@ async function readIntuneObjects(azureTenantId) {
       objects = await graph.callGraphPaged(azureTenantId, t.list, { version: t.version, maxPages: 50 });
     } catch (e) {
       const c = classifyReadError(e);
-      if (c.reason === 'unlicensed') { licenseGated += 1; continue; }
+      if (c.reason === 'unlicensed') {
+        console.log(`[Adopt] Intune type ${t.key} skipped for ${azureTenantId} (403 license/capability gate)`);
+        licenseGated += 1;
+        continue;
+      }
       return { ok: false, reason: 'transient', detail: `${t.key}: ${c.detail}` };
     }
     for (const o of objects || []) {
@@ -141,11 +150,12 @@ async function readIntuneObjects(azureTenantId) {
         assignments: assignments || [],
       });
     }
+    enumeratedTypes.push(t.key);
   }
   if (licenseGated === INTUNE_TYPES.length) {
     return { ok: false, reason: 'unlicensed', detail: 'deviceManagement not licensed for this tenant' };
   }
-  return { ok: true, values };
+  return { ok: true, values, enumeratedTypes };
 }
 
 /** Read one CA policy live (for drift/reconcile). Returns the object or null (404). */

@@ -5,6 +5,18 @@ that release, newest first.
 
 ---
 
+## Version 0.3.2 — 2026-07-02
+
+### Fix: false "policy was removed" alerts during Microsoft rate-limiting
+
+In rare conditions, when Microsoft's servers rate-limited Panoptica's reads for long enough (for example during a burst of activity right after a restart, or during a Microsoft service slowdown), a read of a tenant's Intune policies could come back empty and be misread as those policies having been **deleted** from the tenant. This fired false *"Tenant-sourced Intune policy was removed from the tenant outside Panoptica"* alerts — including their email notifications and PSA tickets — even though nothing in the tenant had changed.
+
+This is now fixed at the root, in the shared Microsoft Graph reading layer used by every monitor: a read that exhausts its rate-limit retries, or returns a malformed response, is now treated as a **failed read to retry on the next cycle** — never as an empty tenant. In addition, the tenant-sourced policy monitor will only report a policy as removed when the policy's category was actually readable during that cycle, so a partial read can never be interpreted as a mass deletion.
+
+No tenant configuration was ever touched by this issue, and real removals are still detected exactly as before. If you received a batch of these alerts, mark them as false positives — the affected policy cards recover on their own at the next hourly check.
+
+---
+
 ## Version 0.3.1 — 2026-07-02
 
 ### Fix: "module not ready" error when submitting a deployment

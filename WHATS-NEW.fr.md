@@ -5,6 +5,18 @@ qui a changé dans cette version, les plus récentes en premier.
 
 ---
 
+## Version 0.3.2 — 2026-07-02
+
+### Correctif : fausses alertes « politique supprimée » lors de la limitation de débit Microsoft
+
+Dans de rares conditions, lorsque les serveurs de Microsoft limitaient le débit des lectures de Panoptica suffisamment longtemps (par exemple lors d'un pic d'activité juste après un redémarrage, ou lors d'un ralentissement du service Microsoft), une lecture des politiques Intune d'un locataire pouvait revenir vide et être interprétée à tort comme si ces politiques avaient été **supprimées** du locataire. Cela déclenchait de fausses alertes *« Tenant-sourced Intune policy was removed from the tenant outside Panoptica »* — y compris leurs notifications par courriel et leurs billets PSA — alors que rien n'avait changé dans le locataire.
+
+C'est maintenant corrigé à la racine, dans la couche de lecture Microsoft Graph partagée par tous les moniteurs : une lecture qui épuise ses tentatives face à la limitation de débit, ou qui reçoit une réponse malformée, est désormais traitée comme une **lecture échouée à reprendre au prochain cycle** — jamais comme un locataire vide. De plus, le moniteur des politiques provenant du locataire ne signale une politique comme supprimée que si sa catégorie a réellement pu être lue pendant ce cycle, de sorte qu'une lecture partielle ne peut jamais être interprétée comme une suppression massive.
+
+Aucune configuration de locataire n'a jamais été touchée par ce problème, et les suppressions réelles sont toujours détectées exactement comme avant. Si vous avez reçu une série de ces alertes, marquez-les comme faux positifs — les fiches de politiques concernées se rétablissent d'elles-mêmes à la prochaine vérification horaire.
+
+---
+
 ## Version 0.3.1 — 2026-07-02
 
 ### Correctif : erreur « module non prêt » lors de la soumission d'un déploiement

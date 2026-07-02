@@ -5,6 +5,18 @@ lo que cambió en esa entrega, comenzando por la más reciente.
 
 ---
 
+## Versión 0.3.2 — 2026-07-02
+
+### Corrección: falsas alertas de «política eliminada» durante la limitación de velocidad de Microsoft
+
+En condiciones poco frecuentes, cuando los servidores de Microsoft limitaban la velocidad de las lecturas de Panoptica durante el tiempo suficiente (por ejemplo, durante una ráfaga de actividad justo después de un reinicio, o durante una degradación del servicio de Microsoft), una lectura de las políticas de Intune de un inquilino podía volver vacía e interpretarse erróneamente como si esas políticas hubieran sido **eliminadas** del inquilino. Esto generaba falsas alertas *«Tenant-sourced Intune policy was removed from the tenant outside Panoptica»* — incluidas sus notificaciones por correo y sus tickets de PSA — aunque nada había cambiado en el inquilino.
+
+Ahora está corregido de raíz, en la capa de lectura de Microsoft Graph compartida por todos los monitores: una lectura que agota sus reintentos por limitación de velocidad, o que recibe una respuesta malformada, se trata ahora como una **lectura fallida que se reintenta en el siguiente ciclo** — nunca como un inquilino vacío. Además, el monitor de políticas originadas en el inquilino solo informa una política como eliminada cuando su categoría pudo leerse realmente durante ese ciclo, de modo que una lectura parcial nunca puede interpretarse como una eliminación masiva.
+
+Ninguna configuración de inquilino fue afectada por este problema, y las eliminaciones reales se siguen detectando exactamente igual que antes. Si recibió un lote de estas alertas, márquelas como falsos positivos — las fichas de políticas afectadas se recuperan por sí solas en la siguiente verificación horaria.
+
+---
+
 ## Versión 0.3.1 — 2026-07-02
 
 ### Corrección: error «módulo no preparado» al enviar una implementación
